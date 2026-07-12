@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GuestGuard } from "@/components/layout/guest-guard";
 import { IconEye, IconEyeOff } from "@/components/ui/icons";
-import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
 export default function RegisterPage() {
@@ -19,7 +18,6 @@ export default function RegisterPage() {
 }
 
 function RegisterForm() {
-  const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
   const [username, setUsername] = createSignal("");
@@ -49,9 +47,8 @@ function RegisterForm() {
     setError("");
     setPending(true);
     try {
-      const user = await postRegister({ username: u, password: p });
-      auth.setUser(user);
-      void navigate({ to: "/" });
+      await postRegister({ username: u, password: p });
+      void navigate({ to: "/login" });
     } catch (err) {
       setError(formatApiError(err));
     } finally {

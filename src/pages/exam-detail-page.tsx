@@ -177,7 +177,7 @@ function ExamDetailContent() {
       >
         {(ex) => (
           <Show when={accessReady()} fallback={<PageSpinner />}>
-            <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.notFound")}</Alert>}>
+            <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
             <PageHeader
               accent="rose"

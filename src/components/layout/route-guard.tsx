@@ -5,9 +5,11 @@ import { Alert } from "@/components/ui/alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
+import { useT } from "@/stores/preferences-context";
 
 export function RouteGuard(props: ParentProps<{ minRole?: Role }>) {
   const auth = useAuth();
+  const t = useT();
 
   return (
     <Show when={!auth.loading()} fallback={<PageSpinner />}>
@@ -17,7 +19,7 @@ export function RouteGuard(props: ParentProps<{ minRole?: Role }>) {
             when={!props.minRole || hasMinRole(u().role, props.minRole)}
             fallback={
               <Alert variant="destructive">
-                You do not have permission to view this page.
+                {t("common.accessDenied")}
               </Alert>
             }
           >

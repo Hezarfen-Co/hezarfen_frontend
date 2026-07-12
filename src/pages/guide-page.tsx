@@ -39,15 +39,17 @@ function GuideContent() {
       <div class="grid gap-4 lg:grid-cols-2">
         <For each={STEPS}>
           {(step, i) => (
-            <article class="surface-card relative overflow-hidden p-6">
-              <div class="absolute right-4 top-4 font-display text-5xl font-semibold text-primary/10">
+            <article class="surface-card group relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm sm:p-6">
+              <div class="absolute right-4 top-4 font-display text-5xl font-semibold text-primary/10 transition-transform group-hover:scale-110">
                 {i() + 1}
               </div>
-              <h2 class="font-display text-xl font-semibold">{t(step.title)}</h2>
-              <p class="mt-2 text-sm leading-relaxed text-muted-foreground">{t(step.body)}</p>
+              <div class="relative max-w-[calc(100%-3rem)]">
+                <h2 class="font-display text-xl font-semibold leading-tight">{t(step.title)}</h2>
+                <p class="mt-2 text-sm leading-relaxed text-muted-foreground">{t(step.body)}</p>
+              </div>
               <div class="mt-5">
                 <Link to={step.to}>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" class="w-full rounded-md sm:w-auto">
                     {t(step.cta)} →
                   </Button>
                 </Link>
@@ -57,15 +59,17 @@ function GuideContent() {
         </For>
       </div>
 
-      <CollapsibleHelp title={t("guide.rolesTitle")}>{t("guide.rolesBody")}</CollapsibleHelp>
+      <CollapsibleHelp title={t("guide.rolesTitle")} class="rounded-lg">
+        {t("guide.rolesBody")}
+      </CollapsibleHelp>
 
-      <div class="hero-panel rounded-md border p-6 sm:p-8">
+      <div class="hero-panel rounded-lg border p-5 sm:p-8">
         <h2 class="font-display text-xl font-semibold">{t("guide.tipsTitle")}</h2>
         <ul class="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-          <li class="rounded-md bg-card/70 px-4 py-3">{t("guide.tip1")}</li>
-          <li class="rounded-md bg-card/70 px-4 py-3">{t("guide.tip2")}</li>
-          <li class="rounded-md bg-card/70 px-4 py-3">{t("guide.tip3")}</li>
-          <li class="rounded-md bg-card/70 px-4 py-3">{t("guide.tip4")}</li>
+          <li class="rounded-lg border border-border/60 bg-card/70 px-4 py-3">{t("guide.tip1")}</li>
+          <li class="rounded-lg border border-border/60 bg-card/70 px-4 py-3">{t("guide.tip2")}</li>
+          <li class="rounded-lg border border-border/60 bg-card/70 px-4 py-3">{t("guide.tip3")}</li>
+          <li class="rounded-lg border border-border/60 bg-card/70 px-4 py-3">{t("guide.tip4")}</li>
         </ul>
       </div>
     </div>

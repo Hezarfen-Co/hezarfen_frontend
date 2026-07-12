@@ -33,6 +33,7 @@ export type MessageKey =
   | "common.or"
   | "common.tryAgain"
   | "common.notFound"
+  | "common.accessDenied"
   | "common.goHome"
   | "common.learnMore"
   | "common.gotIt"
@@ -386,6 +387,7 @@ const en: Dict = {
   "common.or": "or",
   "common.tryAgain": "Try again",
   "common.notFound": "Page not found",
+  "common.accessDenied": "You do not have access to this content.",
   "common.goHome": "Go home",
   "common.learnMore": "Learn more",
   "common.gotIt": "Got it",
@@ -752,6 +754,7 @@ const tr: Dict = {
   "common.or": "veya",
   "common.tryAgain": "Tekrar dene",
   "common.notFound": "Sayfa bulunamadı",
+  "common.accessDenied": "Bu içeriğe erişimin yok.",
   "common.goHome": "Ana sayfaya dön",
   "common.learnMore": "Daha fazla",
   "common.gotIt": "Anladım",
