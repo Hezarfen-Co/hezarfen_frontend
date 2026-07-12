@@ -7,6 +7,7 @@ import { getExamResult } from "@/api/getExamResult";
 import { getExamResults } from "@/api/getExamResults";
 import { getExamStatistics } from "@/api/getExamStatistics";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
+import { getMyCourses } from "@/api/getMyCourses";
 import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
@@ -94,6 +95,10 @@ function ExamDetailContent() {
     () => (isTeacherPlus() ? exam()?.course ?? null : null),
     async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
   );
+  const [mine] = createResource(
+    () => (auth.user()?.role === "student" ? true : null),
+    async (enabled) => (enabled ? getMyCourses() : []),
+  );
 
   const [editing, setEditing] = createSignal(false);
   const [error, setError] = createSignal("");
@@ -120,6 +125,15 @@ function ExamDetailContent() {
     if (isFinished()) return false;
     return e.creator === u.id || hasMinRole(u.role, "manager");
   };
+
+  const canViewExam = () => {
+    const e = exam();
+    const u = auth.user();
+    if (!e || !u) return false;
+    if (u.role !== "student") return true;
+    return (mine() ?? []).some((course) => course.id === e.course);
+  };
+  const accessReady = () => auth.user()?.role !== "student" || mine() !== undefined;
 
   const examModeLabel = (mode: string | null) => {
     if (mode === "sync") return t("exams.mode.sync");
@@ -162,6 +176,8 @@ function ExamDetailContent() {
         }
       >
         {(ex) => (
+          <Show when={accessReady()} fallback={<PageSpinner />}>
+            <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.notFound")}</Alert>}>
           <div class="space-y-6">
             <PageHeader
               accent="rose"
@@ -458,6 +474,8 @@ function ExamDetailContent() {
               }}
             />
           </div>
+            </Show>
+          </Show>
         )}
       </Show>
     </Suspense>

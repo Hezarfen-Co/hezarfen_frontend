@@ -1,6 +1,7 @@
 import { Link, useParams } from "@tanstack/solid-router";
 import { Show, Suspense, createResource } from "solid-js";
 import { getExamById } from "@/api/getExamById";
+import { getMyCourses } from "@/api/getMyCourses";
 import { ApiError } from "@/api/client";
 import { ExamRoomWS } from "@/components/exams/exam-room-ws";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -9,6 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { IconChevronLeft } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
 export default function ExamRoomPage() {
@@ -21,9 +23,22 @@ export default function ExamRoomPage() {
 
 function ExamRoomContent() {
   const params = useParams({ from: "/exam-room/$id" });
+  const auth = useAuth();
   const t = useT();
   const id = () => params().id;
   const [exam] = createResource(id, (examId) => getExamById(examId));
+  const [mine] = createResource(
+    () => (auth.user()?.role === "student" ? true : null),
+    async (enabled) => (enabled ? getMyCourses() : []),
+  );
+  const canViewExam = () => {
+    const e = exam();
+    const u = auth.user();
+    if (!e || !u) return false;
+    if (u.role !== "student") return true;
+    return (mine() ?? []).some((course) => course.id === e.course);
+  };
+  const accessReady = () => auth.user()?.role !== "student" || mine() !== undefined;
 
   return (
     <Suspense fallback={<PageSpinner />}>
@@ -38,6 +53,8 @@ function ExamRoomContent() {
         }
       >
         {(ex) => (
+          <Show when={accessReady()} fallback={<PageSpinner />}>
+            <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.notFound")}</Alert>}>
           <div class="space-y-6">
             <PageHeader
               compact
@@ -58,6 +75,8 @@ function ExamRoomContent() {
             />
             <ExamRoomWS exam={ex()} />
           </div>
+            </Show>
+          </Show>
         )}
       </Show>
     </Suspense>

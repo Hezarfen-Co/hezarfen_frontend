@@ -2,6 +2,7 @@ import { For, Show, Suspense, createMemo, createResource, createSignal } from "s
 import { Link } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
 import { getExams } from "@/api/getExams";
+import { getMyCourses } from "@/api/getMyCourses";
 import { ExamCard } from "@/components/exams/exam-card";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -33,21 +34,32 @@ function ExamsContent() {
   const now = createNow();
   const [exams] = createResource(() => getExams());
   const [courses] = createResource(() => getCourses());
+  const [mine] = createResource(
+    () => (auth.user()?.role === "student" ? true : null),
+    async (enabled) => (enabled ? getMyCourses() : []),
+  );
   const [openCourse, setOpenCourse] = createSignal<string | null>(null);
   const [sectionPages, setSectionPages] = createSignal<Record<string, number>>({});
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
+  const isStudent = () => auth.user()?.role === "student";
+  const visibleCourses = createMemo(() => (isStudent() ? mine() : courses()) ?? []);
+  const visibleExams = createMemo(() => {
+    const all = exams() ?? [];
+    if (!isStudent()) return all;
+    const allowed = new Set(visibleCourses().map((course) => course.id));
+    return all.filter((exam) => allowed.has(exam.course));
+  });
 
   const courseSections = createMemo(() => {
-    const all = exams();
-    if (!all) return [];
+    const all = visibleExams();
     const grouped = new Map<string, typeof all>();
     for (const exam of all) {
       const cid = exam.course;
       if (!grouped.has(cid)) grouped.set(cid, []);
       grouped.get(cid)!.push(exam);
     }
-    const knownCourseIds = new Set((courses() ?? []).map((c) => c.id));
-    const sections = (courses() ?? [])
+    const knownCourseIds = new Set(visibleCourses().map((c) => c.id));
+    const sections = visibleCourses()
       .filter((c) => (grouped.get(c.id)?.length ?? 0) > 0)
       .map((c) => ({ id: c.id, title: c.title, exams: grouped.get(c.id)! }));
     const missingCourseExams = all.filter((exam) => !knownCourseIds.has(exam.course));
@@ -89,9 +101,8 @@ function ExamsContent() {
           <Alert variant="destructive">{formatApiError(exams.error)}</Alert>
         </Show>
         <Show when={exams()}>
-          {(list) => (
             <Show
-              when={list().length > 0}
+              when={visibleExams().length > 0}
               fallback={
                 <div class="rounded-md border border-dashed px-6 py-16 text-center text-sm text-muted-foreground">
                   {t("exams.empty")}
@@ -145,7 +156,6 @@ function ExamsContent() {
                 </For>
               </div>
             </Show>
-          )}
         </Show>
       </Suspense>
     </div>

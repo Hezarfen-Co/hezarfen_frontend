@@ -41,7 +41,8 @@ function CoursesContent() {
   const [pending, setPending] = createSignal(false);
   const [page, setPage] = createSignal(0);
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
-  const courseList = createMemo(() => courses() ?? []);
+  const isStudent = () => auth.user()?.role === "student";
+  const courseList = createMemo(() => (isStudent() ? mine() : courses()) ?? []);
   const totalPages = createMemo(() => Math.max(1, Math.ceil(courseList().length / COURSE_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
   const pageItems = createMemo(() => {

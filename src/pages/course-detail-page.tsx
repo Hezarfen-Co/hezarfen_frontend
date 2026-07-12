@@ -5,6 +5,7 @@ import { deleteCourseEnrollmentByUserId } from "@/api/deleteCourseEnrollmentByUs
 import { getCourseById } from "@/api/getCourseById";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { getCourseExams } from "@/api/getCourseExams";
+import { getMyCourses } from "@/api/getMyCourses";
 import { getUsers } from "@/api/getUsers";
 import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
@@ -21,6 +22,7 @@ import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { Select } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -61,6 +63,10 @@ function CourseDetailContent() {
     () => (hasMinRole(auth.user()?.role, "admin") ? true : null),
     async (enabled) => (enabled ? getUsers() : []),
   );
+  const [mine] = createResource(
+    () => (auth.user()?.role === "student" ? true : null),
+    async (enabled) => (enabled ? getMyCourses() : []),
+  );
 
   const [editing, setEditing] = createSignal(false);
   const [title, setTitle] = createSignal("");
@@ -79,6 +85,14 @@ function CourseDetailContent() {
     return c.creator === u.id || hasMinRole(u.role, "manager");
   };
 
+  const canViewCourse = () => {
+    const u = auth.user();
+    if (!u) return false;
+    if (u.role !== "student") return true;
+    return (mine() ?? []).some((myCourse) => myCourse.id === id());
+  };
+  const accessReady = () => auth.user()?.role !== "student" || mine() !== undefined;
+
   const examModeLabel = (mode: string | null) => {
     if (mode === "sync") return t("exams.mode.sync");
     if (mode === "async") return t("exams.mode.async");
@@ -92,6 +106,10 @@ function CourseDetailContent() {
   const enrollableUsers = () => {
     const enrolled = new Set((roster() ?? []).map((row) => row.user.id));
     return (users() ?? []).filter((user) => user.role === "student" && !enrolled.has(user.id));
+  };
+  const userOptionLabel = (user: { id: string; username: string; name: string | null; surname: string | null }) => {
+    const fullName = [user.name, user.surname].filter(Boolean).join(" ").trim();
+    return `${fullName || user.username} - ${user.id}`;
   };
 
   const wrap = async (fn: () => Promise<void>) => {
@@ -127,6 +145,8 @@ function CourseDetailContent() {
         }
       >
         {(c) => (
+          <Show when={accessReady()} fallback={<PageSpinner />}>
+            <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.notFound")}</Alert>}>
           <div class="space-y-6">
             <PageHeader
               accent="violet"
@@ -394,19 +414,19 @@ function CourseDetailContent() {
                         />
                       }
                     >
-                      <Input
-                        class="h-10"
-                        list="enrollable-students"
-                        placeholder={enrollableUsers().length === 0 ? t("form.noStudents") : t("form.selectStudent")}
+                      <Select
+                        class="h-10 rounded-md bg-background text-foreground"
                         value={enrollUserId()}
                         disabled={enrollableUsers().length === 0}
-                        onInput={(e) => setEnrollUserId(e.currentTarget.value)}
-                      />
-                      <datalist id="enrollable-students">
+                        onChange={(e) => setEnrollUserId(e.currentTarget.value)}
+                      >
+                        <option value="">
+                          {enrollableUsers().length === 0 ? t("form.noStudents") : t("form.selectStudent")}
+                        </option>
                         <For each={enrollableUsers()}>
-                          {(user) => <option value={user.id} label={`${user.username} · ${user.id}`} />}
+                          {(user) => <option value={user.id}>{userOptionLabel(user)}</option>}
                         </For>
-                      </datalist>
+                      </Select>
                     </Show>
                   </div>
                   <Button type="submit" class="h-10" disabled={pending()}>
@@ -471,6 +491,8 @@ function CourseDetailContent() {
               </section>
             </Show>
           </div>
+            </Show>
+          </Show>
         )}
       </Show>
     </Suspense>

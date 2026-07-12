@@ -24,7 +24,7 @@ const PAGE_SIZE = 10;
 
 export default function LiveMonitorPage() {
   return (
-    <RouteGuard>
+    <RouteGuard minRole="teacher">
       <LiveMonitorContent />
     </RouteGuard>
   );
@@ -45,6 +45,30 @@ function labelFromStatus(status: string, t: (key: MessageKey) => string): string
 function progressPercent(entry: LiveRosterEntry, questionCount: number): number {
   if (questionCount <= 0) return 0;
   return Math.round(((entry.answered ?? 0) / questionCount) * 100);
+}
+
+function textField(record: Record<string, unknown>, key: string): string {
+  const value = record[key];
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function liveRosterName(entry: LiveRosterEntry, fallback: string): string {
+  const record = entry as unknown as Record<string, unknown>;
+  const nestedUser = typeof record.user === "object" && record.user !== null
+    ? (record.user as Record<string, unknown>)
+    : null;
+  const fullName = [textField(record, "name"), textField(record, "surname")].filter(Boolean).join(" ");
+  return (
+    textField(record, "display_name") ||
+    (nestedUser ? textField(nestedUser, "display_name") : "") ||
+    fullName ||
+    textField(record, "username") ||
+    textField(record, "user_name") ||
+    (nestedUser ? textField(nestedUser, "username") : "") ||
+    (typeof record.user === "string" ? record.user : "") ||
+    textField(record, "user_id") ||
+    fallback
+  );
 }
 
 function LiveMonitorContent() {
@@ -108,7 +132,7 @@ function LiveMonitorContent() {
     const d = sortDir();
     const cmp = (() => {
       const k = sortKey();
-      if (k === "username") return (a.display_name || a.username || "").localeCompare(b.display_name || b.username || "");
+      if (k === "username") return liveRosterName(a, "").localeCompare(liveRosterName(b, ""));
       if (k === "status") return labelFromStatus(a.status, t).localeCompare(labelFromStatus(b.status, t));
       if (k === "progress") return (a.answered ?? 0) - (b.answered ?? 0);
       if (k === "remaining") return (a.remaining_ms ?? 0) - (b.remaining_ms ?? 0);
@@ -216,7 +240,7 @@ function LiveMonitorContent() {
                             {(entry) => (
                               <TableRow>
                                 <TableCell class="font-medium">
-                                  {entry.display_name || entry.username || t("exams.nameless")}
+                                  {liveRosterName(entry, t("exams.nameless"))}
                                 </TableCell>
                                 <TableCell class="text-center">
                                   <Badge
