@@ -215,7 +215,10 @@ function EventDetailContent() {
                       onClick={() =>
                         void wrap(async () => {
                           const uid = otherUserId().trim();
-                          if (!uid) throw new Error(t("events.userId"));
+                          if (!uid) {
+                            setError(t("events.userIdRequired"));
+                            return;
+                          }
                           await postEventAttendance(id(), {
                             status: status(),
                             user_id: uid,

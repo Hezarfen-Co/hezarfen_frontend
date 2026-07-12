@@ -70,6 +70,7 @@ function CourseDetailContent() {
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
+  const [removeTarget, setRemoveTarget] = createSignal<{ userId: string; userName: string } | null>(null);
 
   const canManage = () => {
     const c = course();
@@ -179,6 +180,26 @@ function CourseDetailContent() {
                   await deleteCourseById(id());
                   void navigate({ to: "/courses" });
                 });
+              }}
+            />
+
+            <ConfirmDialog
+              open={removeTarget() !== null}
+              onOpenChange={() => setRemoveTarget(null)}
+              title={t("course.removeStudent")}
+              variant="destructive"
+              summary={`${t("course.removeStudentConfirm")} "${removeTarget()?.userName}"?`}
+              onConfirm={async () => {
+                const target = removeTarget();
+                if (!target) return;
+                try {
+                  await deleteCourseEnrollmentByUserId(id(), target.userId);
+                  await refetchRoster();
+                } catch (err) {
+                  setError(formatApiError(err));
+                } finally {
+                  setRemoveTarget(null);
+                }
               }}
             />
 
@@ -422,9 +443,9 @@ function CourseDetailContent() {
                                       size="sm"
                                       class="text-destructive"
                                       onClick={() =>
-                                        void wrap(async () => {
-                                          await deleteCourseEnrollmentByUserId(id(), row.user.id);
-                                          await refetchRoster();
+                                        setRemoveTarget({
+                                          userId: row.user.id,
+                                          userName: row.user.display_name || row.user.username,
                                         })
                                       }
                                     >

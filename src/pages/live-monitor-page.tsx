@@ -1,8 +1,8 @@
 import { For, Show, Suspense, createEffect, createResource, createSignal, onCleanup } from "solid-js";
-import { Link, useLocation } from "@tanstack/solid-router";
+import { Link, useParams } from "@tanstack/solid-router";
 import { getExamLive } from "@/api/getExamLive";
 import { getExamById } from "@/api/getExamById";
-import { ApiError, formatApiError } from "@/api/client";
+import { formatApiError } from "@/api/client";
 import type { LiveMonitor, LiveRosterEntry } from "@/api/types";
 import type { MessageKey } from "@/i18n/messages";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -48,11 +48,11 @@ function progressPercent(entry: LiveRosterEntry, questionCount: number): number 
 }
 
 function LiveMonitorContent() {
-  const location = useLocation();
+  const params = useParams({ from: "/exams/$id/live" });
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
-  const id = () => decodeURIComponent(location().pathname.split("/")[2] ?? "");
+  const id = () => params().id;
 
   const [exam] = createResource(id, (eid) => getExamById(eid));
   const [snapshot, setSnapshot] = createSignal<LiveMonitor | null>(null);
@@ -73,7 +73,7 @@ function LiveMonitorContent() {
       setSnapshot(data);
     } catch (err) {
       console.error("[live-monitor] fetch error:", err);
-      setError(err instanceof ApiError ? formatApiError(err, locale()) : formatApiError(err, locale()));
+      setError(formatApiError(err, locale()));
     }
   };
 
@@ -122,6 +122,9 @@ function LiveMonitorContent() {
   return (
     <Suspense fallback={<PageSpinner />}>
       <div class="space-y-6">
+        <Show when={!snapshot() && !error()}>
+          <PageSpinner />
+        </Show>
         <Show when={exam()}>
           {(ex) => (
             <PageHeader

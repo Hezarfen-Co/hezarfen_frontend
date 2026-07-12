@@ -213,11 +213,13 @@ export function ExamForm(props: {
                 onInput={(e) => setStartsText(withDate(startsText(), e.currentTarget.value))}
               />
               <Input
+                id="exam-starts-time"
                 class="rounded-sm font-mono"
                 value={timePart(startsText())}
                 placeholder="14:30"
                 required
                 pattern="[0-2][0-9]:[0-5][0-9]"
+                aria-label={t("exams.startTime")}
                 onInput={(e) => setStartsText(withTime(startsText(), e.currentTarget.value))}
               />
             </div>
@@ -234,11 +236,13 @@ export function ExamForm(props: {
                 onInput={(e) => setEndsText(withDate(endsText(), e.currentTarget.value))}
               />
               <Input
+                id="exam-ends-time"
                 class="rounded-sm font-mono"
                 value={timePart(endsText())}
                 placeholder="15:30"
                 required
                 pattern="[0-2][0-9]:[0-5][0-9]"
+                aria-label={t("exams.endTime")}
                 onInput={(e) => setEndsText(withTime(endsText(), e.currentTarget.value))}
               />
             </div>

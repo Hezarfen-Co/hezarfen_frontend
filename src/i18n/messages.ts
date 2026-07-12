@@ -169,6 +169,8 @@ export type MessageKey =
   | "exams.durationMinutes"
   | "exams.durationRequired"
   | "exams.durationRange"
+  | "exams.startTime"
+  | "exams.endTime"
   | "exams.scheduleRequired"
   | "questions.title"
   | "questions.add"
@@ -341,7 +343,10 @@ export type MessageKey =
   | "ws.connected"
   | "ws.disconnected"
   | "ws.error"
-  | "ws.ping";
+  | "ws.ping"
+  | "course.removeStudent"
+  | "course.removeStudentConfirm"
+  | "events.userIdRequired";
 
 type Dict = Record<MessageKey, string>;
 
@@ -517,6 +522,8 @@ const en: Dict = {
   "exams.durationMinutes": "Duration (minutes)",
   "exams.durationRequired": "Async exams need a duration",
   "exams.durationRange": "Duration must be from 1 minute to 24 hours",
+  "exams.startTime": "Start time",
+  "exams.endTime": "End time",
   "exams.scheduleRequired": "Scheduled exams need start and end times",
   "questions.title": "Questions",
   "questions.add": "Add question",
@@ -701,6 +708,9 @@ const en: Dict = {
   "ws.disconnected": "Disconnected",
   "ws.error": "Connection error",
   "ws.ping": "Ping",
+  "course.removeStudent": "Remove student",
+  "course.removeStudentConfirm": "Are you sure you want to remove",
+  "events.userIdRequired": "Please select a student first.",
 };
 
 const tr: Dict = {
@@ -875,6 +885,8 @@ const tr: Dict = {
   "exams.durationMinutes": "Süre (dakika)",
   "exams.durationRequired": "Asenkron sınav için süre gerekli",
   "exams.durationRange": "Süre 1 dakika ile 24 saat arasında olmalı",
+  "exams.startTime": "Başlangıç saati",
+  "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",
   "questions.title": "Sorular",
   "questions.add": "Soru ekle",
@@ -1059,6 +1071,9 @@ const tr: Dict = {
   "ws.disconnected": "Bağlantı kesildi",
   "ws.error": "Bağlantı hatası",
   "ws.ping": "Ping",
+  "course.removeStudent": "Öğrenciyi çıkar",
+  "course.removeStudentConfirm": "Bu öğrenciyi çıkarmak istediğine emin misin?",
+  "events.userIdRequired": "Önce bir öğrenci seçmelisin.",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };
