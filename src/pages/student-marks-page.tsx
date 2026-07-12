@@ -29,11 +29,20 @@ function StudentMarksContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader accent="violet" eyebrow={t("nav.admin")} title={t("nav.studentMarks")} description={t("marks.lookup")} />
+      <PageHeader
+        accent="violet"
+        eyebrow={t("nav.admin")}
+        title={t("nav.studentMarks")}
+        description={t("marks.lookup")}
+      />
 
       <section class="surface-card space-y-4 p-5">
+        <div>
+          <h2 class="font-display text-lg font-semibold">{t("nav.studentMarks")}</h2>
+          <p class="mt-1 text-sm text-muted-foreground">{t("marks.lookup")}</p>
+        </div>
         <form
-          class="flex flex-col gap-2 sm:flex-row sm:items-end"
+          class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
           onSubmit={(e) => {
             e.preventDefault();
             const id = userId().trim();
@@ -43,21 +52,30 @@ function StudentMarksContent() {
         >
           <div class="min-w-0 flex-1 space-y-1.5">
             <Label for="student-marks-user">{t("marks.userIdentity")}</Label>
-            <Input id="student-marks-user" class="h-10" value={userId()} onInput={(e) => setUserId(e.currentTarget.value)} />
+            <Input
+              id="student-marks-user"
+              class="h-10"
+              value={userId()}
+              onInput={(e) => setUserId(e.currentTarget.value)}
+            />
           </div>
-          <Button type="submit" class="h-10">{t("marks.show")}</Button>
+          <Button type="submit" class="h-10 w-full sm:w-auto">{t("marks.show")}</Button>
         </form>
 
         <Show when={report.error}>
-          <p class="text-sm text-destructive">{formatApiError(report.error)}</p>
+          <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {formatApiError(report.error)}
+          </p>
         </Show>
       </section>
 
       <Suspense fallback={<PageSpinner />}>
         <Show when={report()}>
           {(r) => (
-            <div class="space-y-3">
-              <p class="text-sm text-muted-foreground">{t("marks.forUser", { user: lookupId() ?? "" })}</p>
+            <div class="space-y-4">
+              <p class="rounded-lg border bg-background/60 px-4 py-3 text-sm text-muted-foreground">
+                {t("marks.forUser", { user: lookupId() ?? "" })}
+              </p>
               <MarksReportView report={r()} />
             </div>
           )}

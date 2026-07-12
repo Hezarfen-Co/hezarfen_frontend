@@ -33,11 +33,17 @@ function MarksContent() {
         <Show when={mine.error}>
           <Alert variant="destructive">{formatApiError(mine.error)}</Alert>
         </Show>
-        <Show when={mine()} fallback={<p class="text-sm text-muted-foreground">{t("marks.empty")}</p>}>
+        <Show
+          when={mine()}
+          fallback={
+            <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+              {t("marks.empty")}
+            </div>
+          }
+        >
           {(report) => <MarksReportView report={report()} />}
         </Show>
       </Suspense>
-
     </div>
   );
 }

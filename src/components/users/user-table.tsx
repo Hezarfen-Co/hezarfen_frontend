@@ -33,7 +33,7 @@ function UserRoleRow(props: {
       <TableCell class="font-mono text-xs text-muted-foreground">{props.user.id}</TableCell>
       <TableCell class="space-y-2">
         <Select
-          class="rounded-sm"
+          class="h-10 rounded-md"
           value={pendingRole()}
           disabled={isSelf()}
           onChange={(e) => setPendingRole(e.currentTarget.value as Role)}
@@ -44,7 +44,7 @@ function UserRoleRow(props: {
           ))}
         </Select>
         <Show when={!isSelf() && dirty()}>
-          <Button type="button" size="sm" onClick={() => setConfirmOpen(true)}>
+          <Button type="button" size="sm" class="rounded-md" onClick={() => setConfirmOpen(true)}>
             <IconCheck />
             {t("common.update")}
           </Button>
@@ -75,25 +75,27 @@ export function UserTable(props: {
 }) {
   const t = useT();
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{t("admin.username")}</TableHead>
-          <TableHead>{t("admin.id")}</TableHead>
-          <TableHead class="w-56">{t("admin.role")}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <For each={props.users}>
-          {(user) => (
-            <UserRoleRow
-              user={user}
-              currentUserId={props.currentUserId}
-              onRoleChange={props.onRoleChange}
-            />
-          )}
-        </For>
-      </TableBody>
-    </Table>
+    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("admin.username")}</TableHead>
+            <TableHead>{t("admin.id")}</TableHead>
+            <TableHead class="w-56">{t("admin.role")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <For each={props.users}>
+            {(user) => (
+              <UserRoleRow
+                user={user}
+                currentUserId={props.currentUserId}
+                onRoleChange={props.onRoleChange}
+              />
+            )}
+          </For>
+        </TableBody>
+      </Table>
+    </div>
   );
 }

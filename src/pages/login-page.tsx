@@ -54,8 +54,8 @@ function LoginForm() {
   };
 
   return (
-    <div class="-mx-4 -my-6 flex h-[calc(100dvh-3.5rem)] items-center justify-center overflow-hidden px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-my-8 lg:px-8">
-      <div class="surface-card w-full max-w-sm p-8 shadow-lg">
+    <div class="-mx-4 -my-6 flex min-h-[calc(100dvh-3.5rem)] items-center justify-center overflow-hidden px-4 py-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-my-8 lg:px-8">
+      <div class="surface-card w-full max-w-sm p-6 shadow-lg sm:p-8">
         <div class="mb-8 text-center">
           <h1 class="font-display text-3xl font-semibold tracking-tight">{t("auth.loginTitle")}</h1>
           <p class="mt-1.5 text-sm text-muted-foreground">{t("auth.loginSubtitle")}</p>

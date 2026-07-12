@@ -43,18 +43,20 @@ function AdminUsersContent() {
         description={t("admin.subtitle")}
       />
 
-      {error() && (
-        <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
-      )}
+      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
-      <div class="surface-card overflow-hidden p-2 sm:p-4">
+      <div class="surface-card space-y-4 p-5">
+        <div>
+          <h2 class="font-display text-lg font-semibold">{t("nav.users")}</h2>
+          <p class="mt-1 text-sm text-muted-foreground">{t("admin.subtitle")}</p>
+        </div>
         <Suspense fallback={<PageSpinner />}>
           <Show when={users()}>
             {(list) => (
               <Show
                 when={list().length > 0}
                 fallback={
-                  <div class="rounded-sm border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
+                  <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
                     {t("admin.noUsers")}
                   </div>
                 }

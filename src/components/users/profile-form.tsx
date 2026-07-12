@@ -74,31 +74,33 @@ export function ProfileForm(props: { user: User; onSaved: () => void }) {
   };
 
   return (
-    <form onSubmit={submit} class="space-y-3">
+    <form onSubmit={submit} class="space-y-4">
       <div class="grid gap-3 sm:grid-cols-2">
         <div class="space-y-1.5">
           <Label for="pf-name">{t("profile.name")}</Label>
-          <Input id="pf-name" value={name()} onInput={(e) => setName(e.currentTarget.value)} />
+          <Input id="pf-name" class="h-10" value={name()} onInput={(e) => setName(e.currentTarget.value)} />
         </div>
         <div class="space-y-1.5">
           <Label for="pf-surname">{t("profile.surname")}</Label>
-          <Input id="pf-surname" value={surname()} onInput={(e) => setSurname(e.currentTarget.value)} />
+          <Input id="pf-surname" class="h-10" value={surname()} onInput={(e) => setSurname(e.currentTarget.value)} />
         </div>
       </div>
       <div class="space-y-1.5">
         <Label for="pf-email">{t("profile.email")}</Label>
-        <Input id="pf-email" type="email" value={email()} onInput={(e) => setEmail(e.currentTarget.value)} />
+        <Input id="pf-email" class="h-10" type="email" value={email()} onInput={(e) => setEmail(e.currentTarget.value)} />
       </div>
       <div class="space-y-1.5">
         <Label for="pf-phone">{t("profile.phone")}</Label>
-        <Input id="pf-phone" type="tel" value={phone()} onInput={(e) => setPhone(e.currentTarget.value)} />
+        <Input id="pf-phone" class="h-10" type="tel" value={phone()} onInput={(e) => setPhone(e.currentTarget.value)} />
       </div>
       <div class="space-y-1.5">
         <Label for="pf-birth">{t("profile.birthDate")}</Label>
-        <Input id="pf-birth" type="date" value={birthDate()} onInput={(e) => setBirthDate(e.currentTarget.value)} />
+        <Input id="pf-birth" class="h-10" type="date" value={birthDate()} onInput={(e) => setBirthDate(e.currentTarget.value)} />
       </div>
-      {error() && <p class="text-sm text-destructive">{error()}</p>}
-      <Button type="submit" disabled={pending()}>{t("common.save")}</Button>
+      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      <div class="flex justify-end">
+        <Button type="submit" class="w-full sm:w-auto" disabled={pending()}>{t("common.save")}</Button>
+      </div>
     </form>
   );
 }
