@@ -12,7 +12,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconGlobe, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
+import { IconEdit, IconGlobe, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -161,6 +161,13 @@ export function UserMenu() {
                 </div>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem onSelect={() => void navigate({ to: "/profile" })}>
+              <IconEdit class="h-4 w-4 shrink-0" />
+              <span>{t("profile.edit")}</span>
+            </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 

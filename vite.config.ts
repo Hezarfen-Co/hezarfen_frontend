@@ -13,7 +13,7 @@ export default defineConfig({
   },
   server: {
     proxy: Object.fromEntries(
-      ["/auth", "/users", "/notes", "/events", "/exams", "/courses", "/marks", "/health"].map((p) => [
+      ["/auth", "/users", "/notes", "/events", "/exams", "/courses", "/marks", "/health", "/time"].map((p) => [
         p,
         { target, changeOrigin: true },
       ]),

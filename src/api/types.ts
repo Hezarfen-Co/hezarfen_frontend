@@ -9,6 +9,19 @@ export type User = {
   id: string;
   username: string;
   role: Role;
+  name: string | null;
+  surname: string | null;
+  email: string | null;
+  phone: string | null;
+  birth_date: string | null;
+};
+
+export type ProfileUpdate = {
+  name?: string | null;
+  surname?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  birth_date?: string | null;
 };
 
 export type PersonRef = {
@@ -134,6 +147,57 @@ export type MarksReport = {
   user: string;
   courses: CourseMarks[];
   overall_average: number | null;
+};
+
+export type ExamStatistics = {
+  graded: number;
+  average: number | null;
+  min: number | null;
+  max: number | null;
+};
+
+export type GradedAnswer = {
+  question_id: string;
+  text: string;
+  kind: QuestionKind;
+  points: number;
+  choices: string[] | null;
+  correct: number | null;
+  selected: number | null;
+  text_answer: string | null;
+  is_correct: boolean | null;
+  auto_score: { earned: number; possible: number };
+};
+
+export type StudentAnswerSheet = {
+  user: string;
+  answers: GradedAnswer[];
+  auto_score: { earned: number; possible: number };
+};
+
+export type LiveRosterEntry = {
+  user: string;
+  username: string;
+  display_name: string | null;
+  status: AttemptStatus | "not_started";
+  deadline: number | null;
+  remaining_ms: number;
+  mark: number | null;
+  answered: number;
+  last_activity: number | null;
+};
+
+export type LiveMonitor = {
+  exam: string;
+  now: number;
+  question_count: number;
+  students: LiveRosterEntry[];
+  counts: {
+    not_started: number;
+    in_progress: number;
+    submitted: number;
+    expired: number;
+  };
 };
 
 export const EXAM_KINDS: ExamKind[] = [

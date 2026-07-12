@@ -25,7 +25,7 @@ type QuestionValues = {
   correct: number | null;
 };
 
-export function ExamQuestionsPanel(props: { examId: string }) {
+export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean }) {
   const t = useT();
   const [questions, { refetch }] = createResource(() => props.examId, async (examId) => {
     try {
@@ -63,18 +63,20 @@ export function ExamQuestionsPanel(props: { examId: string }) {
     <section class="surface-card space-y-4 p-5">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="font-display text-lg font-semibold">{t("questions.title")}</h2>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setEditing(null);
-            setShowForm((v) => !v);
-          }}
-        >
-          <IconPlus class="h-4 w-4" />
-          {t("questions.add")}
-        </Button>
+        <Show when={!props.readOnly}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setEditing(null);
+              setShowForm((v) => !v);
+            }}
+          >
+            <IconPlus class="h-4 w-4" />
+            {t("questions.add")}
+          </Button>
+        </Show>
       </div>
 
       <Show when={showForm() || editing()}>
@@ -121,14 +123,16 @@ export function ExamQuestionsPanel(props: { examId: string }) {
                         </ol>
                       </Show>
                     </div>
-                    <div class="flex gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => setEditing(q)}>
-                        {t("common.edit")}
-                      </Button>
-                      <Button type="button" variant="ghost" size="sm" class="text-destructive" onClick={() => setRemoveQuestion(q)}>
-                        <IconTrash class="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Show when={!props.readOnly}>
+                      <div class="flex gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => setEditing(q)}>
+                          {t("common.edit")}
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" class="text-destructive" onClick={() => setRemoveQuestion(q)}>
+                          <IconTrash class="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </Show>
                   </div>
                 </li>
               )}

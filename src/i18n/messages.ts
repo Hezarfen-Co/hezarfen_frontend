@@ -291,7 +291,50 @@ export type MessageKey =
   | "marks.exam"
   | "marks.weight"
   | "marks.mark"
-  | "exams.mustBelongCourse";
+  | "exams.mustBelongCourse"
+  | "exams.statistics"
+  | "exams.graded"
+  | "exams.average"
+  | "exams.min"
+  | "exams.max"
+  | "exams.finished"
+  | "exams.active"
+  | "exams.upcoming"
+  | "exams.liveMonitor"
+  | "exams.liveMonitorDesc"
+  | "exams.finalState"
+  | "exams.finalStateDesc"
+  | "exams.liveRoster"
+  | "exams.notStarted"
+  | "exams.lastActivity"
+  | "exams.answerSheet"
+  | "exams.autoScore"
+  | "exams.earned"
+  | "exams.possible"
+  | "exams.isCorrect"
+  | "exams.textAnswer"
+  | "exams.nameless"
+  | "exams.emptyRoster"
+  | "exams.selectStudent"
+  | "exams.viewSheet"
+  | "profile.title"
+  | "profile.subtitle"
+  | "profile.name"
+  | "profile.surname"
+  | "profile.email"
+  | "profile.phone"
+  | "profile.birthDate"
+  | "profile.edit"
+  | "profile.saved"
+  | "profile.emailInvalid"
+  | "profile.phoneInvalid"
+  | "profile.dateInvalid"
+  | "profile.clearField"
+  | "ws.connecting"
+  | "ws.connected"
+  | "ws.disconnected"
+  | "ws.error"
+  | "ws.ping";
 
 type Dict = Record<MessageKey, string>;
 
@@ -601,6 +644,49 @@ const en: Dict = {
   "marks.weight": "Weight",
   "marks.mark": "Mark",
   "exams.mustBelongCourse": "Exams are created under a course. Open a course to add one.",
+  "exams.statistics": "Statistics",
+  "exams.graded": "Graded",
+  "exams.average": "Average",
+  "exams.min": "Min",
+  "exams.max": "Max",
+  "exams.finished": "Finished",
+  "exams.active": "Active",
+  "exams.upcoming": "Upcoming",
+  "exams.liveMonitor": "Live Monitor",
+  "exams.liveMonitorDesc": "Real-time exam roster, progress, and marks.",
+  "exams.finalState": "Final State",
+  "exams.finalStateDesc": "Final exam results, progress, and marks.",
+  "exams.liveRoster": "Live Roster",
+  "exams.notStarted": "Not started",
+  "exams.lastActivity": "Last activity",
+  "exams.answerSheet": "Answer Sheet",
+  "exams.autoScore": "Auto-score",
+  "exams.earned": "Earned",
+  "exams.possible": "Possible",
+  "exams.isCorrect": "Correct",
+  "exams.textAnswer": "Text answer",
+  "exams.nameless": "Unnamed",
+  "exams.emptyRoster": "No enrolled students yet.",
+  "exams.selectStudent": "Select a student from the roster",
+  "exams.viewSheet": "View answers",
+  "profile.title": "My Profile",
+  "profile.subtitle": "Personal information (optional).",
+  "profile.name": "Name",
+  "profile.surname": "Surname",
+  "profile.email": "Email",
+  "profile.phone": "Phone",
+  "profile.birthDate": "Birth date",
+  "profile.edit": "Edit profile",
+  "profile.saved": "Profile saved",
+  "profile.emailInvalid": "Enter a valid email address (e.g. name@example.com)",
+  "profile.phoneInvalid": "Enter a valid phone number (7-15 digits, optional +)",
+  "profile.dateInvalid": "Enter a real YYYY-MM-DD date, not in the future",
+  "profile.clearField": "Clear",
+  "ws.connecting": "Connecting…",
+  "ws.connected": "Connected",
+  "ws.disconnected": "Disconnected",
+  "ws.error": "Connection error",
+  "ws.ping": "Ping",
 };
 
 const tr: Dict = {
@@ -909,6 +995,49 @@ const tr: Dict = {
   "marks.weight": "Ağırlık",
   "marks.mark": "Not",
   "exams.mustBelongCourse": "Sınavlar ders altında oluşturulur. Eklemek için bir ders aç.",
+  "exams.statistics": "İstatistikler",
+  "exams.graded": "Notlanan",
+  "exams.average": "Ortalama",
+  "exams.min": "En düşük",
+  "exams.max": "En yüksek",
+  "exams.finished": "Bitti",
+  "exams.active": "Aktif",
+  "exams.upcoming": "Yakında",
+  "exams.liveMonitor": "Canlı İzleme",
+  "exams.liveMonitorDesc": "Sınav durumu, ilerleme ve notlar gerçek zamanlı.",
+  "exams.finalState": "Son Durum",
+  "exams.finalStateDesc": "Sınav sonuçları, ilerleme ve notlar.",
+  "exams.liveRoster": "Canlı Liste",
+  "exams.notStarted": "Başlamadı",
+  "exams.lastActivity": "Son hareket",
+  "exams.answerSheet": "Cevap Kâğıdı",
+  "exams.autoScore": "Otomatik puan",
+  "exams.earned": "Alınan",
+  "exams.possible": "Mümkün",
+  "exams.isCorrect": "Doğru",
+  "exams.textAnswer": "Metin cevap",
+  "exams.nameless": "İsimsiz",
+  "exams.emptyRoster": "Henüz kayıtlı öğrenci yok.",
+  "exams.selectStudent": "Listeden bir öğrenci seç",
+  "exams.viewSheet": "Cevapları gör",
+  "profile.title": "Profilim",
+  "profile.subtitle": "Kişisel bilgiler (isteğe bağlı).",
+  "profile.name": "Ad",
+  "profile.surname": "Soyad",
+  "profile.email": "E-posta",
+  "profile.phone": "Telefon",
+  "profile.birthDate": "Doğum tarihi",
+  "profile.edit": "Profili düzenle",
+  "profile.saved": "Profil kaydedildi",
+  "profile.emailInvalid": "Geçerli bir e-posta adresi girin (örn. ad@ornek.com)",
+  "profile.phoneInvalid": "Geçerli bir telefon numarası girin (7-15 hane, isteğe bağlı +)",
+  "profile.dateInvalid": "Geçerli bir YYYY-AA-GG tarihi girin, gelecekte olmasın",
+  "profile.clearField": "Temizle",
+  "ws.connecting": "Bağlanıyor…",
+  "ws.connected": "Bağlı",
+  "ws.disconnected": "Bağlantı kesildi",
+  "ws.error": "Bağlantı hatası",
+  "ws.ping": "Ping",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

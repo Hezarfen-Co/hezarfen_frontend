@@ -5,12 +5,14 @@ import { deleteExamResultByUserId } from "@/api/deleteExamResultByUserId";
 import { getExamById } from "@/api/getExamById";
 import { getExamResult } from "@/api/getExamResult";
 import { getExamResults } from "@/api/getExamResults";
+import { getExamStatistics } from "@/api/getExamStatistics";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
 import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
+import { AnswerSheetView } from "@/components/exams/answer-sheet-view";
 import { ExamResultBadge } from "@/components/exams/exam-result-badge";
 import { GradeForm } from "@/components/exams/grade-form";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -19,7 +21,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconChevronLeft, IconEdit, IconExam, IconTrash } from "@/components/ui/icons";
+import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import {
   Table,
@@ -32,6 +34,7 @@ import {
 import { hasMinRole } from "@/lib/roles";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -74,6 +77,17 @@ function ExamDetailContent() {
       return getExamResults(examId);
     },
   );
+  const [stats] = createResource(
+    () => (isTeacherPlus() ? id() : null),
+    async (examId) => {
+      if (!examId) return null;
+      try {
+        return await getExamStatistics(examId);
+      } catch {
+        return null;
+      }
+    },
+  );
   const [roster] = createResource(
     () => (isTeacherPlus() ? exam()?.course ?? null : null),
     async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
@@ -84,11 +98,24 @@ function ExamDetailContent() {
   const [pending, setPending] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
+  const [sheetUserId, setSheetUserId] = createSignal<string | null>(null);
+
+  const examStatus = () => {
+    const e = exam();
+    if (!e) return { finished: false, upcoming: false };
+    const now = Date.now();
+    const finished = e.ends_at != null && e.ends_at < now;
+    const upcoming = e.starts_at != null && e.starts_at > now;
+    return { finished, upcoming };
+  };
+  const isFinished = () => examStatus().finished;
+  const isUpcoming = () => examStatus().upcoming;
 
   const canManage = () => {
     const e = exam();
     const u = auth.user();
     if (!e || !u) return false;
+    if (isFinished()) return false;
     return e.creator === u.id || hasMinRole(u.role, "manager");
   };
 
@@ -147,11 +174,19 @@ function ExamDetailContent() {
                       {t("common.back")}
                     </Button>
                   </Link>
-                  <Show when={ex().mode === "sync" || ex().mode === "async"}>
+                  <Show when={!isFinished() && !isUpcoming() && (ex().mode === "sync" || ex().mode === "async")}>
                     <Link to="/exam-room/$id" params={{ id: id() }}>
                       <Button size="sm" class="rounded-sm">
                         <IconExam class="h-4 w-4" />
                         {t("attempt.openRoom")}
+                      </Button>
+                    </Link>
+                  </Show>
+                  <Show when={isTeacherPlus() && !isUpcoming() && (ex().mode === "sync" || ex().mode === "async")}>
+                    <Link to="/exams/$id/live" params={{ id: id() }}>
+                      <Button variant="outline" size="sm" class="rounded-sm">
+                        <IconEye class="h-4 w-4" />
+                        {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                       </Button>
                     </Link>
                   </Show>
@@ -183,6 +218,20 @@ function ExamDetailContent() {
               }
             >
               <div class="flex flex-wrap items-center gap-2 pt-1">
+                <Badge variant="outline" class={cn(
+                  "rounded-sm capitalize",
+                  isFinished() && "bg-muted text-muted-foreground border-muted",
+                  !isFinished() && !isUpcoming() && "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+                  isUpcoming() && "bg-amber-500/15 text-amber-600 border-amber-500/30",
+                )}>
+                  <span class={cn(
+                    "mr-1.5 inline-block h-1.5 w-1.5 rounded-full",
+                    isFinished() && "bg-muted-foreground",
+                    !isFinished() && !isUpcoming() && "bg-emerald-600",
+                    isUpcoming() && "bg-amber-600",
+                  )} />
+                  {isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
+                </Badge>
                 <Badge variant="outline" class="rounded-sm capitalize">
                   {examKindLabel(String(ex().kind), t)}
                 </Badge>
@@ -259,19 +308,58 @@ function ExamDetailContent() {
               </section>
             </Show>
 
-            <Show when={isTeacherPlus()}>
-              <ExamQuestionsPanel examId={id()} />
-
+            <Show when={isTeacherPlus() && sheetUserId()}>
               <section class="surface-card p-5">
-                <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.gradeStudent")}</h2>
-                <GradeForm
-                  students={gradeStudents()}
-                  onSubmit={async (values) => {
-                    await postExamResult(id(), values);
-                    await refetchResults();
-                  }}
-                />
+                <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.answerSheet")} — {sheetUserId()}</h2>
+                <Suspense fallback={<PageSpinner />}>
+                  <AnswerSheetView examId={id()} userId={sheetUserId()!} />
+                </Suspense>
               </section>
+            </Show>
+
+            <Show when={isTeacherPlus()}>
+              <section class="surface-card p-5">
+                <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.statistics")}</h2>
+                <Suspense fallback={<PageSpinner />}>
+                  <Show when={stats()}>
+                    {(s) => (
+                      <div class="grid gap-3 text-sm sm:grid-cols-4">
+                        <div class="rounded-md border p-3">
+                          <p class="text-xs text-muted-foreground">{t("exams.graded")}</p>
+                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().graded}</p>
+                        </div>
+                        <div class="rounded-md border p-3">
+                          <p class="text-xs text-muted-foreground">{t("exams.average")}</p>
+                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
+                        </div>
+                        <div class="rounded-md border p-3">
+                          <p class="text-xs text-muted-foreground">{t("exams.min")}</p>
+                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
+                        </div>
+                        <div class="rounded-md border p-3">
+                          <p class="text-xs text-muted-foreground">{t("exams.max")}</p>
+                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
+                        </div>
+                      </div>
+                    )}
+                  </Show>
+                </Suspense>
+              </section>
+
+              <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} />
+
+              <Show when={!isFinished()}>
+                <section class="surface-card p-5">
+                  <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.gradeStudent")}</h2>
+                  <GradeForm
+                    students={gradeStudents()}
+                    onSubmit={async (values) => {
+                      await postExamResult(id(), values);
+                      await refetchResults();
+                    }}
+                  />
+                </section>
+              </Show>
 
               <section class="surface-card p-5">
                 <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.results")}</h2>
@@ -290,7 +378,10 @@ function ExamDetailContent() {
                           <TableHead>{t("events.userId")}</TableHead>
                           <TableHead>{t("form.mark")}</TableHead>
                           <TableHead>{t("exams.gradedBy")}</TableHead>
-                          <TableHead class="w-24" />
+                          <TableHead>{t("exams.answerSheet")}</TableHead>
+                          <Show when={!isFinished()}>
+                            <TableHead class="w-24" />
+                          </Show>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -307,13 +398,26 @@ function ExamDetailContent() {
                                   type="button"
                                   variant="ghost"
                                   size="sm"
-                                  class="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                  onClick={() => setRemoveUserId(row.user)}
+                                  class="rounded-sm"
+                                  onClick={() => setSheetUserId(sheetUserId() === row.user ? null : row.user)}
                                 >
-                                  <IconTrash class="h-4 w-4" />
-                                  {t("common.remove")}
+                                  <IconEye class="h-4 w-4" />
                                 </Button>
                               </TableCell>
+                              <Show when={!isFinished()}>
+                                <TableCell>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => setRemoveUserId(row.user)}
+                                  >
+                                    <IconTrash class="h-4 w-4" />
+                                    {t("common.remove")}
+                                  </Button>
+                                </TableCell>
+                              </Show>
                             </TableRow>
                           )}
                         </For>

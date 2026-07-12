@@ -2,7 +2,7 @@ import { Link, useLocation } from "@tanstack/solid-router";
 import { Show, Suspense, createResource } from "solid-js";
 import { getExamById } from "@/api/getExamById";
 import { ApiError } from "@/api/client";
-import { StudentExamRoom } from "@/components/exams/student-exam-room";
+import { ExamRoomWS } from "@/components/exams/exam-room-ws";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -56,7 +56,7 @@ function ExamRoomContent() {
                 </div>
               }
             />
-            <StudentExamRoom exam={ex()} compact />
+            <ExamRoomWS exam={ex()} />
           </div>
         )}
       </Show>
