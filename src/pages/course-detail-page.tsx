@@ -9,7 +9,7 @@ import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
 import { postCourseExam } from "@/api/postCourseExam";
 import { ApiError, formatApiError } from "@/api/client";
-import { EXAM_KINDS } from "@/api/types";
+import { ExamForm } from "@/components/exams/exam-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -20,7 +20,6 @@ import { IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { Select } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -61,10 +60,6 @@ function CourseDetailContent() {
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
-  const [examTitle, setExamTitle] = createSignal("");
-  const [examDesc, setExamDesc] = createSignal("");
-  const [examKind, setExamKind] = createSignal("homework");
-  const [examWeight, setExamWeight] = createSignal("1");
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -221,78 +216,19 @@ function CourseDetailContent() {
               </div>
 
               <Show when={showExamForm() && canManage()}>
-                <form
-                  class="space-y-3 rounded-md border p-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void wrap(async () => {
+                <div class="rounded-md border p-4">
+                  <ExamForm
+                    submitLabel={t("common.create")}
+                    onSubmit={async (values) => {
                       await postCourseExam(id(), {
-                        title: examTitle().trim(),
-                        description: examDesc().trim() || undefined,
-                        kind: examKind(),
-                        weight: Number(examWeight()) || 1,
-                        mode: null,
-                        starts_at: null,
-                        ends_at: null,
-                        duration_ms: null,
+                        ...values,
+                        description: values.description.trim() || undefined,
                       });
-                      setExamTitle("");
-                      setExamDesc("");
-                      setExamKind("homework");
-                      setExamWeight("1");
                       setShowExamForm(false);
                       await refetchExams();
-                    });
-                  }}
-                >
-                  <div class="grid gap-3 sm:grid-cols-2">
-                    <div class="space-y-1.5 sm:col-span-2">
-                      <Label for="exam-title">{t("form.title")}</Label>
-                      <Input
-                        id="exam-title"
-                        required
-                        value={examTitle()}
-                        onInput={(e) => setExamTitle(e.currentTarget.value)}
-                      />
-                    </div>
-                    <div class="space-y-1.5 sm:col-span-2">
-                      <Label for="exam-desc">{t("form.description")}</Label>
-                      <Textarea
-                        id="exam-desc"
-                        rows={2}
-                        value={examDesc()}
-                        onInput={(e) => setExamDesc(e.currentTarget.value)}
-                      />
-                    </div>
-                    <div class="space-y-1.5">
-                      <Label for="exam-kind">{t("exams.kind")}</Label>
-                      <Select
-                        id="exam-kind"
-                        value={examKind()}
-                        onChange={(e) => setExamKind(e.currentTarget.value)}
-                      >
-                        <For each={EXAM_KINDS}>
-                          {(k) => <option value={k}>{k}</option>}
-                        </For>
-                      </Select>
-                    </div>
-                    <div class="space-y-1.5">
-                      <Label for="exam-weight">{t("courses.weight")}</Label>
-                      <Input
-                        id="exam-weight"
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={examWeight()}
-                        required
-                        onInput={(e) => setExamWeight(e.currentTarget.value)}
-                      />
-                    </div>
-                  </div>
-                  <Button type="submit" disabled={pending()}>
-                    {t("common.create")}
-                  </Button>
-                </form>
+                    }}
+                  />
+                </div>
               </Show>
 
               <Suspense fallback={<PageSpinner />}>
@@ -314,7 +250,7 @@ function CourseDetailContent() {
                             <div class="min-w-0">
                               <p class="truncate font-medium">{exam.title}</p>
                               <p class="text-xs text-muted-foreground">
-                                {t("courses.weight")}: {exam.weight}
+                                {t("courses.weight")}: {exam.weight} · {exam.mode ?? t("exams.unscheduled")}
                               </p>
                             </div>
                             <Badge variant="outline" class="capitalize">

@@ -6,6 +6,10 @@ export type PatchExamBody = {
   description?: string;
   kind?: string;
   weight?: number;
+  mode?: string | null;
+  starts_at?: number | null;
+  ends_at?: number | null;
+  duration_ms?: number | null;
 };
 
 export function patchExamById(id: string, body: PatchExamBody): Promise<Exam> {

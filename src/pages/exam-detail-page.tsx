@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasMinRole } from "@/lib/roles";
+import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
@@ -119,6 +120,9 @@ function ExamDetailContent() {
                   <Badge variant="outline" class="rounded-sm capitalize">
                     {ex().kind}
                   </Badge>
+                  <Badge variant="outline" class="rounded-sm capitalize">
+                    {t("courses.weight")}: {ex().weight}
+                  </Badge>
                   <Link to="/exams">
                     <Button variant="outline" size="sm" class="rounded-sm">
                       {t("common.back")}
@@ -177,6 +181,28 @@ function ExamDetailContent() {
                 />
               </section>
             </Show>
+
+            <section class="surface-card p-5">
+              <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.schedule")}</h2>
+              <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                <div class="rounded-md border p-3">
+                  <p class="text-xs text-muted-foreground">{t("exams.mode")}</p>
+                  <p class="mt-1 font-medium capitalize">{ex().mode ?? t("exams.unscheduled")}</p>
+                </div>
+                <div class="rounded-md border p-3">
+                  <p class="text-xs text-muted-foreground">{t("events.starts")}</p>
+                  <p class="mt-1 font-medium">{formatDateTime(ex().starts_at)}</p>
+                </div>
+                <div class="rounded-md border p-3">
+                  <p class="text-xs text-muted-foreground">{t("events.ends")}</p>
+                  <p class="mt-1 font-medium">{formatDateTime(ex().ends_at)}</p>
+                </div>
+                <div class="rounded-md border p-3">
+                  <p class="text-xs text-muted-foreground">{t("exams.durationMinutes")}</p>
+                  <p class="mt-1 font-medium">{formatDurationMinutes(ex().duration_ms)}</p>
+                </div>
+              </div>
+            </section>
 
             <Show when={!isTeacherPlus()}>
               <section class="surface-card p-6">

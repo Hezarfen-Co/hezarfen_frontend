@@ -148,6 +148,17 @@ export type MessageKey =
   | "exams.gradeStudent"
   | "exams.results"
   | "exams.noResults"
+  | "exams.schedule"
+  | "exams.window"
+  | "exams.unscheduled"
+  | "exams.mode"
+  | "exams.mode.unscheduled"
+  | "exams.mode.sync"
+  | "exams.mode.async"
+  | "exams.durationMinutes"
+  | "exams.durationRequired"
+  | "exams.durationRange"
+  | "exams.scheduleRequired"
   | "exams.helpTitle"
   | "exams.helpBody"
   | "admin.title"
@@ -181,6 +192,9 @@ export type MessageKey =
   | "form.title"
   | "form.content"
   | "form.description"
+  | "form.year"
+  | "form.month"
+  | "form.day"
   | "form.mark"
   | "form.studentId"
   | "form.titleRequired"
@@ -188,6 +202,7 @@ export type MessageKey =
   | "form.contentMax"
   | "form.descriptionMax"
   | "form.timeOrder"
+  | "form.weightRange"
   | "form.markRange"
   | "events.markedBy"
   | "exams.gradedBy"
@@ -383,6 +398,17 @@ const en: Dict = {
   "exams.gradeStudent": "Grade a student",
   "exams.results": "Results table",
   "exams.noResults": "No results yet.",
+  "exams.schedule": "Schedule",
+  "exams.window": "Window",
+  "exams.unscheduled": "Unscheduled",
+  "exams.mode": "Mode",
+  "exams.mode.unscheduled": "Unscheduled / offline grading",
+  "exams.mode.sync": "Sync: one fixed window",
+  "exams.mode.async": "Async: personal time budget",
+  "exams.durationMinutes": "Duration (minutes)",
+  "exams.durationRequired": "Async exams need a duration",
+  "exams.durationRange": "Duration must be from 1 minute to 24 hours",
+  "exams.scheduleRequired": "Scheduled exams need start and end times",
   "exams.helpTitle": "About exams",
   "exams.helpBody":
     "Exams belong to a course. Teachers add them from the course page with a kind and weight (1–100). Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
@@ -427,6 +453,9 @@ const en: Dict = {
   "form.title": "Title",
   "form.content": "Content",
   "form.description": "Description",
+  "form.year": "Year",
+  "form.month": "Month",
+  "form.day": "Day",
   "form.mark": "Mark",
   "form.studentId": "Student user id",
   "form.titleRequired": "Title is required",
@@ -434,6 +463,7 @@ const en: Dict = {
   "form.contentMax": "Content must be at most 10 000 characters",
   "form.descriptionMax": "Description must be at most 2 000 characters",
   "form.timeOrder": "End time must be on or after start time",
+  "form.weightRange": "Weight must be an integer from 1 to 100",
   "form.markRange": "Mark must be an integer from 0 to 100",
   "events.markedBy": "Marked by",
   "exams.gradedBy": "Graded by",
@@ -628,6 +658,17 @@ const tr: Dict = {
   "exams.gradeStudent": "Öğrenci notla",
   "exams.results": "Sonuç tablosu",
   "exams.noResults": "Henüz sonuç yok.",
+  "exams.schedule": "Zamanlama",
+  "exams.window": "Aralık",
+  "exams.unscheduled": "Zamansız",
+  "exams.mode": "Mod",
+  "exams.mode.unscheduled": "Zamansız / çevrimdışı notlama",
+  "exams.mode.sync": "Senkron: tek sabit aralık",
+  "exams.mode.async": "Asenkron: kişisel süre",
+  "exams.durationMinutes": "Süre (dakika)",
+  "exams.durationRequired": "Asenkron sınav için süre gerekli",
+  "exams.durationRange": "Süre 1 dakika ile 24 saat arasında olmalı",
+  "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",
   "exams.helpTitle": "Sınavlar hakkında",
   "exams.helpBody":
     "Sınavlar bir derse aittir. Öğretmenler ders sayfasından tür ve ağırlık (1–100) ile ekler. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",
@@ -672,6 +713,9 @@ const tr: Dict = {
   "form.title": "Başlık",
   "form.content": "İçerik",
   "form.description": "Açıklama",
+  "form.year": "Yıl",
+  "form.month": "Ay",
+  "form.day": "Gün",
   "form.mark": "Not",
   "form.studentId": "Öğrenci kullanıcı id",
   "form.titleRequired": "Başlık gerekli",
@@ -679,6 +723,7 @@ const tr: Dict = {
   "form.contentMax": "İçerik en fazla 10 000 karakter olmalı",
   "form.descriptionMax": "Açıklama en fazla 2 000 karakter olmalı",
   "form.timeOrder": "Bitiş, başlangıçtan önce olamaz",
+  "form.weightRange": "Ağırlık 1–100 arası tam sayı olmalı",
   "form.markRange": "Not 0–100 arası tam sayı olmalı",
   "events.markedBy": "İşaretleyen",
   "exams.gradedBy": "Notlayan",

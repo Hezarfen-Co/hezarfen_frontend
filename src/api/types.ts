@@ -103,3 +103,5 @@ export const EXAM_KINDS: ExamKind[] = [
   "project",
   "oral",
 ];
+
+export const EXAM_MODES: ExamMode[] = ["sync", "async"];

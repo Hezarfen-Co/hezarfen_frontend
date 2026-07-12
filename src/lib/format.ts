@@ -22,3 +22,39 @@ export function msToLocalInput(ms: number | null | undefined): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+export function msToLocalDate(ms: number | null | undefined): string {
+  return msToLocalInput(ms).slice(0, 10);
+}
+
+export function msToLocalHour(ms: number | null | undefined): string {
+  return msToLocalInput(ms).slice(11, 13);
+}
+
+export function msToLocalMinute(ms: number | null | undefined): string {
+  return msToLocalInput(ms).slice(14, 16);
+}
+
+export function localPartsToMs(date: string, hour: string, minute: string): number | null {
+  if (!date || !hour || !minute) return null;
+  const [year, month, day] = date.split("-").map(Number);
+  const h = Number(hour);
+  const m = Number(minute);
+  if (![year, month, day, h, m].every(Number.isInteger)) return null;
+  const d = new Date(year, month - 1, day, h, m, 0, 0);
+  if (
+    d.getFullYear() !== year ||
+    d.getMonth() !== month - 1 ||
+    d.getDate() !== day ||
+    d.getHours() !== h ||
+    d.getMinutes() !== m
+  ) {
+    return null;
+  }
+  return d.getTime();
+}
+
+export function formatDurationMinutes(ms: number | null | undefined): string {
+  if (ms == null) return "—";
+  return `${Math.round(ms / 60_000)} min`;
+}
