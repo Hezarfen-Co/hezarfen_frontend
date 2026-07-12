@@ -55,6 +55,7 @@ function StudentMarksContent() {
             <Input
               id="student-marks-user"
               class="h-10"
+              placeholder={t("marks.userIdentity")}
               value={userId()}
               onInput={(e) => setUserId(e.currentTarget.value)}
             />
