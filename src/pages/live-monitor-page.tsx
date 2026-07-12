@@ -134,9 +134,9 @@ function LiveMonitorContent() {
               title={ex().title}
               description={isFinished() ? t("exams.finalStateDesc") : t("exams.liveMonitorDesc")}
               actions={
-                <div class="flex flex-wrap items-center gap-1 rounded-md border bg-background/70 p-1 shadow-sm">
+                <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
                   <Link to="/exams/$id" params={{ id: id() }}>
-                    <Button variant="ghost" size="sm" class="rounded-sm">
+                    <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
                       <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
@@ -163,36 +163,43 @@ function LiveMonitorContent() {
             return (
               <>
                 <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <div class="surface-card p-4">
+                  <div class="surface-card bg-card/80 p-4">
                     <p class="text-xs text-muted-foreground">{t("exams.notStarted")}</p>
                     <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.not_started}</p>
                   </div>
-                  <div class="surface-card p-4">
+                  <div class="surface-card bg-card/80 p-4">
                     <p class="text-xs text-muted-foreground">{t("attempt.inProgress")}</p>
                     <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.in_progress}</p>
                   </div>
-                  <div class="surface-card p-4">
+                  <div class="surface-card bg-card/80 p-4">
                     <p class="text-xs text-muted-foreground">{t("attempt.submitted")}</p>
                     <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.submitted}</p>
                   </div>
-                  <div class="surface-card p-4">
+                  <div class="surface-card bg-card/80 p-4">
                     <p class="text-xs text-muted-foreground">{t("attempt.expired")}</p>
                     <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.expired}</p>
                   </div>
                 </section>
 
-                <section class="surface-card p-2 sm:p-4">
-                  <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <h2 class="font-display text-lg font-semibold">{t("exams.liveRoster")}</h2>
+                <section class="surface-card space-y-4 p-5">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h2 class="font-display text-lg font-semibold">{t("exams.liveRoster")}</h2>
+                      <p class="mt-1 text-sm text-muted-foreground">{t("attempt.progress")}</p>
+                    </div>
                     <Badge variant="outline" class="rounded-full px-3 py-1">
                       {sorted.length} / {m.question_count}
                     </Badge>
                   </div>
                   <Show
                     when={sorted.length > 0}
-                    fallback={<p class="rounded-lg bg-muted/40 px-3 py-4 text-sm text-muted-foreground">{t("exams.emptyRoster")}</p>}
+                    fallback={
+                      <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                        {t("exams.emptyRoster")}
+                      </p>
+                    }
                   >
-                    <div class="overflow-hidden rounded-lg border border-border/70">
+                    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -254,26 +261,26 @@ function LiveMonitorContent() {
                     </div>
 
                     <Show when={sorted.length > PAGE_SIZE}>
-                      <div class="mt-4 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
+                      <div class="mt-4 flex flex-col items-stretch gap-2 border-t border-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          class="h-8 gap-1"
+                          class="h-9 gap-1 rounded-md"
                           disabled={safePage <= 0}
                           onClick={() => setPage((p) => Math.max(0, p - 1))}
                         >
                           <IconChevronLeft class="h-3.5 w-3.5" />
                           {t("common.prev")}
                         </Button>
-                        <span class="text-xs tabular-nums text-muted-foreground">
+                        <span class="text-center text-xs tabular-nums text-muted-foreground">
                           {t("common.pageOf", { page: safePage + 1, total: totalPages })}
                         </span>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          class="h-8 gap-1"
+                          class="h-9 gap-1 rounded-md"
                           disabled={safePage >= totalPages - 1}
                           onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                         >

@@ -233,25 +233,25 @@ export function ExamRoomWS(props: { exam: Exam }) {
   });
 
   return (
-    <section class="surface-card space-y-4 p-5">
+    <section class="surface-card space-y-5 p-5">
       <Show when={!roomOpen()}>
-        <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
             <p class="mt-1 text-sm text-muted-foreground">
               {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : t("attempt.unscheduled")}
             </p>
           </div>
-          <Show when={scheduled()} fallback={<Badge variant="outline">{t("attempt.unscheduled")}</Badge>}>
+          <Show when={scheduled()} fallback={<Badge variant="outline" class="w-fit rounded-full px-3 py-1">{t("attempt.unscheduled")}</Badge>}>
             <Show
               when={attempt()}
               fallback={
-                <Button type="button" disabled={pending()} onClick={() => void start()}>
+                <Button type="button" class="w-full sm:w-auto" disabled={pending()} onClick={() => void start()}>
                   {t("attempt.start")}
                 </Button>
               }
             >
-              <Button type="button" variant="outline" disabled={pending()} onClick={() => void resume()}>
+              <Button type="button" variant="outline" class="w-full sm:w-auto" disabled={pending()} onClick={() => void resume()}>
                 {t("attempt.resume")}
               </Button>
             </Show>
@@ -259,18 +259,25 @@ export function ExamRoomWS(props: { exam: Exam }) {
         </div>
       </Show>
 
-      {error() && <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
       <Suspense fallback={<PageSpinner />}>
         <Show when={scheduled()}>
-          <Show when={attempt()} fallback={<p class="rounded-sm bg-muted/40 px-3 py-4 text-sm text-muted-foreground">{t("attempt.notStarted")}</p>}>
+          <Show
+            when={attempt()}
+            fallback={
+              <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                {t("attempt.notStarted")}
+              </p>
+            }
+          >
             {(a) => <AttemptSummaryWS attempt={a()} remainingMs={remainingMs()} wsState={wsState()} />}
           </Show>
         </Show>
 
         <Show when={attempt() && roomOpen()}>
           <Show when={!canWrite()}>
-            <p class="rounded-sm bg-muted/40 px-3 py-3 text-sm text-muted-foreground">{t("attempt.closed")}</p>
+            <p class="rounded-lg border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">{t("attempt.closed")}</p>
           </Show>
           <div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_12rem] xl:grid-cols-[minmax(0,1fr)_13rem] 2xl:grid-cols-[minmax(0,1fr)_14rem]">
             <div class="grid auto-rows-fr items-stretch gap-4 2xl:grid-cols-2">
@@ -286,7 +293,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
                 )}
               </For>
             </div>
-            <aside class="surface-card sticky top-4 space-y-3 p-4">
+            <aside class="surface-card order-first space-y-3 p-4 lg:sticky lg:top-4 lg:order-none">
               <div>
                 <h3 class="font-display text-sm font-semibold">{t("questions.title")}</h3>
                 <p class="mt-1 text-xs text-muted-foreground">
@@ -310,7 +317,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
                 </For>
               </div>
               <Show when={canWrite()}>
-                <Button type="button" variant="destructive" class="w-full" disabled={pending()} onClick={() => setFinishOpen(true)}>
+                <Button type="button" variant="destructive" class="h-10 w-full" disabled={pending()} onClick={() => setFinishOpen(true)}>
                   {t("attempt.finish")}
                 </Button>
               </Show>
@@ -350,7 +357,7 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number; ws
     return t("ws.disconnected");
   };
   return (
-    <div class="grid auto-rows-fr gap-3 text-sm sm:grid-cols-2 xl:grid-cols-6">
+    <div class="grid auto-rows-fr gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
       <div class="h-full rounded-lg border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.status")}</p>
         <p class="mt-1 font-medium">{statusLabel()}</p>
@@ -444,8 +451,9 @@ function QuestionAnswerCardWS(props: {
       <Show
         when={props.question.kind === "choice"}
         fallback={
-          <Textarea
-            value={value()}
+           <Textarea
+             class="min-h-32"
+             value={value()}
             rows={4}
             disabled={props.disabled}
             maxlength={10000}
@@ -461,7 +469,7 @@ function QuestionAnswerCardWS(props: {
             {(choice, choiceIndex) => (
               <button
                 type="button"
-                class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+                class="flex w-full items-center gap-3 rounded-lg border bg-background/60 px-3 py-2.5 text-left text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={props.disabled}
                 onClick={() => {
                   setSaved(false);
@@ -488,7 +496,7 @@ function QuestionAnswerCardWS(props: {
       <Button
         type="button"
         size="sm"
-        class="mt-3"
+        class="mt-4 w-full sm:w-auto"
         disabled={props.disabled || (props.question.kind === "choice" && value() === "")}
         onClick={() => void save()}
       >
