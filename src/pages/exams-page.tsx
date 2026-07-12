@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { IconChevronRight } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { cn } from "@/lib/cn";
+import { createNow } from "@/lib/create-now";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
@@ -26,6 +27,7 @@ export default function ExamsPage() {
 function ExamsContent() {
   const auth = useAuth();
   const t = useT();
+  const now = createNow();
   const [exams] = createResource(() => getExams());
   const [courses] = createResource(() => getCourses());
   const [openCourse, setOpenCourse] = createSignal<string | null>(null);
@@ -40,9 +42,15 @@ function ExamsContent() {
       if (!grouped.has(cid)) grouped.set(cid, []);
       grouped.get(cid)!.push(exam);
     }
-    return (courses() ?? [])
+    const knownCourseIds = new Set((courses() ?? []).map((c) => c.id));
+    const sections = (courses() ?? [])
       .filter((c) => (grouped.get(c.id)?.length ?? 0) > 0)
       .map((c) => ({ id: c.id, title: c.title, exams: grouped.get(c.id)! }));
+    const missingCourseExams = all.filter((exam) => !knownCourseIds.has(exam.course));
+    if (missingCourseExams.length > 0) {
+      sections.push({ id: "__missing_course__", title: t("exams.missingCourse"), exams: missingCourseExams });
+    }
+    return sections;
   });
 
   const toggleCourse = (id: string) => {
@@ -114,7 +122,7 @@ function ExamsContent() {
                               <For each={section.exams}>
                                 {(exam) => (
                                   <li>
-                                    <ExamCard exam={exam} courseTitle={section.title} />
+                                    <ExamCard exam={exam} courseTitle={section.title} now={now()} />
                                   </li>
                                 )}
                               </For>

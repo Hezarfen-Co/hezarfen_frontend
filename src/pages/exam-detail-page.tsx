@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasMinRole } from "@/lib/roles";
+import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -52,6 +53,7 @@ function ExamDetailContent() {
   const navigate = useNavigate();
   const t = useT();
   const { locale } = usePreferences();
+  const now = createNow();
   const id = () => decodeURIComponent(location().pathname.split("/")[2] ?? "");
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
@@ -103,9 +105,9 @@ function ExamDetailContent() {
   const examStatus = () => {
     const e = exam();
     if (!e) return { finished: false, upcoming: false };
-    const now = Date.now();
-    const finished = e.ends_at != null && e.ends_at < now;
-    const upcoming = e.starts_at != null && e.starts_at > now;
+    const current = now();
+    const finished = e.ends_at != null && e.ends_at < current;
+    const upcoming = e.starts_at != null && e.starts_at > current;
     return { finished, upcoming };
   };
   const isFinished = () => examStatus().finished;

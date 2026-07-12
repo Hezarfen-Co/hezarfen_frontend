@@ -14,6 +14,7 @@ import { IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { createNow } from "@/lib/create-now";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
@@ -45,6 +46,7 @@ function LiveMonitorContent() {
   const location = useLocation();
   const t = useT();
   const { locale } = usePreferences();
+  const now = createNow();
   const id = () => decodeURIComponent(location().pathname.split("/")[2] ?? "");
 
   const [exam] = createResource(id, (eid) => getExamById(eid));
@@ -57,7 +59,7 @@ function LiveMonitorContent() {
   const isFinished = () => {
     const e = exam();
     if (!e || e.ends_at == null) return false;
-    return e.ends_at < Date.now();
+    return e.ends_at < now();
   };
 
   const fetchSnapshot = async () => {
@@ -72,10 +74,18 @@ function LiveMonitorContent() {
 
   createEffect(() => {
     const eid = id();
-    if (!eid) return;
+    const e = exam();
+    if (!eid || !e) return;
     void fetchSnapshot();
-    if (isFinished()) return;
-    const interval = setInterval(fetchSnapshot, 2000);
+    if (e.ends_at != null && e.ends_at < Date.now()) return;
+    const interval = setInterval(() => {
+      if (e.ends_at != null && e.ends_at < Date.now()) {
+        clearInterval(interval);
+        void fetchSnapshot();
+        return;
+      }
+      void fetchSnapshot();
+    }, 2000);
     onCleanup(() => clearInterval(interval));
   });
 

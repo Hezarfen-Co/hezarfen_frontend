@@ -7,7 +7,7 @@ import { examKindLabel } from "@/lib/exam-labels";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-export function ExamCard(props: { exam: Exam; courseTitle?: string }) {
+export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number }) {
   const t = useT();
   const { locale } = usePreferences();
   const modeLabel = () => {
@@ -17,9 +17,9 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string }) {
   };
 
   const status = () => {
-    const now = Date.now();
-    if (props.exam.ends_at != null && props.exam.ends_at < now) return "finished";
-    if (props.exam.starts_at != null && props.exam.starts_at > now) return "upcoming";
+    const current = props.now ?? Date.now();
+    if (props.exam.ends_at != null && props.exam.ends_at < current) return "finished";
+    if (props.exam.starts_at != null && props.exam.starts_at > current) return "upcoming";
     return "active";
   };
 

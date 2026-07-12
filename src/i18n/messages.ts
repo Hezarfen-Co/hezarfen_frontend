@@ -292,6 +292,7 @@ export type MessageKey =
   | "marks.weight"
   | "marks.mark"
   | "exams.mustBelongCourse"
+  | "exams.missingCourse"
   | "exams.statistics"
   | "exams.graded"
   | "exams.average"
@@ -644,6 +645,7 @@ const en: Dict = {
   "marks.weight": "Weight",
   "marks.mark": "Mark",
   "exams.mustBelongCourse": "Exams are created under a course. Open a course to add one.",
+  "exams.missingCourse": "Course unavailable",
   "exams.statistics": "Statistics",
   "exams.graded": "Graded",
   "exams.average": "Average",
@@ -995,6 +997,7 @@ const tr: Dict = {
   "marks.weight": "Ağırlık",
   "marks.mark": "Not",
   "exams.mustBelongCourse": "Sınavlar ders altında oluşturulur. Eklemek için bir ders aç.",
+  "exams.missingCourse": "Ders bilgisi yok",
   "exams.statistics": "İstatistikler",
   "exams.graded": "Notlanan",
   "exams.average": "Ortalama",
