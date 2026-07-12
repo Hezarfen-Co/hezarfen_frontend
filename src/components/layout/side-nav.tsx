@@ -63,18 +63,18 @@ function NavLink(props: {
       title={t(props.item.labelKey)}
       aria-current={active() ? "page" : undefined}
       class={cn(
-        "flex h-10 w-full items-center rounded-md text-sm font-medium outline-none",
-        "transition-colors duration-100",
-        props.collapsed ? "justify-center px-0" : "gap-3 px-2",
+        "group relative flex h-10 w-full items-center rounded-lg text-sm font-medium outline-none",
+        "transition-all duration-150",
+        props.collapsed ? "justify-center px-0" : "gap-2 px-2",
         active()
-          ? "bg-primary text-primary-foreground"
-          : "text-sidebar-foreground hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/[0.06]",
+          ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/15"
+          : "text-sidebar-foreground/80 hover:bg-muted/60 hover:text-foreground",
       )}
     >
       <span
         class={cn(
-          "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
-          active() ? "bg-primary-foreground/15" : "bg-transparent",
+          "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors",
+          active() ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground group-hover:bg-background/50 group-hover:text-foreground",
         )}
       >
         <props.item.Icon class="h-4 w-4" />
@@ -106,14 +106,23 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
         <For each={items()}>
           {(item, index) => (
             <>
-              <Show when={item.minRole && !items()[index() - 1]?.minRole && !props.collapsed}>
-                <div class="flex items-center gap-2 px-2 pb-0.5 pt-3">
-                  <span class="h-px flex-1 bg-border" />
-                  <span lang="en" class="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
-                    {t("nav.admin")}
-                  </span>
-                  <span class="h-px flex-1 bg-border" />
-                </div>
+              <Show when={item.minRole && !items()[index() - 1]?.minRole}>
+                <Show
+                  when={!props.collapsed}
+                  fallback={
+                    <div class="px-3 pb-1 pt-4">
+                      <span class="block h-px bg-border/80" />
+                    </div>
+                  }
+                >
+                  <div class="flex items-center gap-2 px-2 pb-1 pt-4">
+                    <span class="h-px flex-1 bg-border/70" />
+                    <span lang="en" class="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+                      {t("nav.admin")}
+                    </span>
+                    <span class="h-px flex-1 bg-border/70" />
+                  </div>
+                </Show>
               </Show>
               <NavLink item={item} collapsed={props.collapsed} onNavigate={props.onNavigate} />
             </>
@@ -121,7 +130,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
         </For>
       </div>
 
-      <div class="mt-auto border-t border-border px-2 pb-1 pt-2">
+      <div class="mt-auto border-t border-border px-2 py-1.5">
         <NavLink item={GUIDE_ITEM} collapsed={props.collapsed} onNavigate={props.onNavigate} />
       </div>
     </nav>

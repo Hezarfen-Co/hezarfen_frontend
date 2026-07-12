@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
-import type { Locale } from "@/i18n/messages";
+import type { Locale, MessageKey } from "@/i18n/messages";
 import { RoleBadge } from "@/components/layout/role-badge";
 import {
   DropdownMenu,
@@ -16,6 +16,21 @@ import { IconEdit, IconGlobe, IconLogout, IconMoon, IconSun } from "@/components
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
+import type { User } from "@/api/types";
+
+function titleCase(value: string) {
+  return value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toLocaleUpperCase("tr-TR") + part.slice(1))
+    .join(" ");
+}
+
+function displayName(user: User) {
+  const fullName = [user.name, user.surname].filter(Boolean).join(" ");
+  return titleCase(fullName || user.username);
+}
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -67,17 +82,20 @@ export function UserMenu() {
         <DropdownMenu placement="bottom-end" gutter={8}>
           <DropdownMenuTrigger
             class={cn(
-              "inline-flex h-9 max-w-[12rem] items-center gap-2 rounded-md border border-input bg-background px-1.5 pr-2 text-sm shadow-sm outline-none transition-colors sm:max-w-none",
+              "inline-flex h-11 max-w-[16rem] items-center gap-2.5 rounded-lg border border-input bg-background px-2.5 pr-3 text-sm shadow-sm outline-none transition-colors sm:max-w-[22rem]",
               "hover:bg-accent hover:text-accent-foreground",
               "focus-visible:ring-2 focus-visible:ring-ring",
               "data-[expanded]:bg-accent data-[expanded]:text-accent-foreground",
             )}
             aria-label={t("nav.account")}
           >
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground">
-              {initials(u().username)}
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground shadow-sm">
+              {initials(displayName(u()))}
             </span>
-            <span class="hidden min-w-0 truncate font-medium sm:inline">{u().username}</span>
+            <span class="hidden min-w-0 flex-col text-left leading-tight sm:flex">
+              <span class="truncate font-semibold">{displayName(u())}</span>
+              <span class="truncate text-[11px] font-medium text-muted-foreground">{t(`role.${u().role}` as MessageKey)}</span>
+            </span>
             <svg
               viewBox="0 0 24 24"
               class="h-4 w-4 shrink-0 opacity-50"
@@ -90,13 +108,16 @@ export function UserMenu() {
             </svg>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent class="w-[min(16rem,calc(100vw-1.5rem))]">
-            <div class="flex items-center gap-2 p-2">
-              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
-                {initials(u().username)}
+          <DropdownMenuContent class="w-[min(20rem,calc(100vw-1.5rem))]">
+            <div class="flex items-center gap-3 p-3">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-sm">
+                {initials(displayName(u()))}
               </span>
-              <div class="flex min-w-0 flex-col gap-1">
-                <p class="truncate text-sm font-medium leading-none">{u().username}</p>
+              <div class="flex min-w-0 flex-1 items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-semibold leading-tight">{displayName(u())}</p>
+                  <p class="truncate text-xs text-muted-foreground">@{u().username}</p>
+                </div>
                 <RoleBadge role={u().role} />
               </div>
             </div>

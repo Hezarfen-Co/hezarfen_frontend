@@ -27,14 +27,14 @@ export function AppShell(props: ParentProps) {
         <Show when={auth.user()}>
           <aside
             class={cn(
-              "sticky top-14 z-30 hidden h-[calc(100vh-3.5rem)] shrink-0 border-r border-border bg-sidebar lg:flex lg:flex-col",
+              "sticky top-14 z-30 hidden h-[calc(100vh-3.5rem)] shrink-0 border-r border-border/70 bg-sidebar/95 shadow-[inset_-1px_0_0_hsl(var(--border)/0.35)] backdrop-blur lg:flex lg:flex-col",
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
             )}
           >
             <div
               class={cn(
-                "flex h-12 shrink-0 items-center border-b border-border",
-                collapsed() ? "justify-center px-1" : "px-2",
+                "flex h-14 shrink-0 items-center border-b border-border/70",
+                collapsed() ? "justify-center px-2" : "px-3",
               )}
             >
               <Button
@@ -42,8 +42,8 @@ export function AppShell(props: ParentProps) {
                 variant="ghost"
                 size="sm"
                 class={cn(
-                  "h-9 text-muted-foreground hover:text-foreground",
-                  collapsed() ? "w-9 justify-center px-0" : "w-full justify-between px-2",
+                  "h-9 rounded-lg text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  collapsed() ? "w-9 justify-center px-0" : "w-full justify-between px-3",
                 )}
                 aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
                 title={collapsed() ? t("nav.expand") : t("nav.collapse")}
@@ -59,14 +59,14 @@ export function AppShell(props: ParentProps) {
             </div>
 
             {/* Nav fills remaining height; guide is pinned above footer inside SideNav */}
-            <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-2">
+            <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-3 pb-1">
               <SideNav collapsed={collapsed()} />
             </div>
 
             <div
               class={cn(
                 "shrink-0 border-t border-border",
-                collapsed() ? "hidden" : "flex items-center justify-center px-3 py-3",
+                collapsed() ? "hidden" : "flex items-center justify-center px-3 py-2",
               )}
             >
               <p class="text-center text-[11px] leading-relaxed text-muted-foreground">
