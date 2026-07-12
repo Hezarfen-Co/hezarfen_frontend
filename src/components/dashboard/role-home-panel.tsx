@@ -35,11 +35,13 @@ const ROLE_ACTIONS: Record<Role, RoleAction[]> = {
     { to: "/courses", title: "nav.courses", hint: "courses.subtitle", marker: "▣", tone: "violet" },
     { to: "/events", title: "nav.events", hint: "events.subtitle", marker: "◷", tone: "sky" },
     { to: "/exams", title: "exams.liveMonitor", hint: "exams.liveMonitorDesc", marker: "◎", tone: "amber" },
+    { to: "/marks", title: "dashboard.action.marks", hint: "dashboard.action.marksHint", marker: "▤", tone: "mint" },
   ],
   admin: [
     { to: "/admin/users", title: "nav.users", hint: "admin.subtitle", marker: "◉", tone: "amber" },
     { to: "/courses", title: "nav.courses", hint: "courses.subtitle", marker: "▣", tone: "violet" },
     { to: "/events", title: "nav.events", hint: "events.subtitle", marker: "◷", tone: "sky" },
+    { to: "/exams", title: "exams.liveMonitor", hint: "exams.liveMonitorDesc", marker: "◎", tone: "rose" },
   ],
 };
 
@@ -68,7 +70,7 @@ export function RoleHomePanel(props: { role: Role }) {
         </div>
       </div>
 
-      <div class="grid gap-3 md:grid-cols-3">
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <For each={actions()}>
           {(action) => (
             <Link

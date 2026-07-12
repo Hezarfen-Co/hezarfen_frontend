@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/solid-router";
-import { For, createMemo, type Component } from "solid-js";
+import { For, Show, createMemo, type Component } from "solid-js";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
@@ -96,12 +96,25 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
     MAIN_ITEMS.filter((item) => !item.adminOnly || hasMinRole(auth.user()?.role, "admin")),
   );
 
+  const t = useT();
+
   return (
     <nav class="flex h-full flex-col" aria-label="Main">
       <div class="flex flex-col gap-1 px-2">
         <For each={items()}>
           {(item) => (
-            <NavLink item={item} collapsed={props.collapsed} onNavigate={props.onNavigate} />
+            <>
+              <Show when={item.adminOnly && !props.collapsed}>
+                <div class="flex items-center gap-2 px-2 pb-0.5 pt-3">
+                  <span class="h-px flex-1 bg-border" />
+                  <span lang="en" class="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
+                    {t("nav.admin")}
+                  </span>
+                  <span class="h-px flex-1 bg-border" />
+                </div>
+              </Show>
+              <NavLink item={item} collapsed={props.collapsed} onNavigate={props.onNavigate} />
+            </>
           )}
         </For>
       </div>

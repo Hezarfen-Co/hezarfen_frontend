@@ -3,7 +3,12 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  isRedirect,
+  redirect,
 } from "@tanstack/solid-router";
+import { getMe } from "@/api/getMe";
+import { hasMinRole } from "@/lib/roles";
+import { ApiError } from "@/api/client";
 import { Suspense, lazy, type Component } from "solid-js";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -143,6 +148,20 @@ const profileRoute = createRoute({
 const adminUsersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin/users",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (!hasMinRole(user.role, "admin")) {
+        throw redirect({ to: "/" });
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        throw redirect({ to: "/login" });
+      }
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: AdminUsersPage,
 });
 

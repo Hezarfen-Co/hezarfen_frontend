@@ -12,6 +12,7 @@ export type MessageKey =
   | "nav.users"
   | "nav.guide"
   | "nav.logout"
+  | "nav.admin"
   | "nav.menu"
   | "nav.close"
   | "nav.collapse"
@@ -350,6 +351,7 @@ const en: Dict = {
   "nav.marks": "Report card",
   "nav.users": "Users",
   "nav.guide": "Guide",
+  "nav.admin": "Admin",
   "nav.logout": "Log out",
   "nav.menu": "Menu",
   "nav.close": "Close",
@@ -702,6 +704,7 @@ const tr: Dict = {
   "nav.marks": "Karnem",
   "nav.users": "Kullanıcılar",
   "nav.guide": "Rehber",
+  "nav.admin": "Yönetim",
   "nav.logout": "Çıkış yap",
   "nav.menu": "Menü",
   "nav.close": "Kapat",
