@@ -18,9 +18,10 @@ export function NoteCard(props: {
   const [deleteOpen, setDeleteOpen] = createSignal(false);
 
   return (
-    <article class="surface-card flex h-full flex-col overflow-hidden">
-      <div class="flex items-start justify-between gap-2 border-b border-border/60 bg-gradient-to-r from-amber-500/10 to-transparent px-5 py-4">
-        <h3 class="font-display text-lg font-semibold leading-snug">{props.note.title}</h3>
+    <article class="surface-card relative flex h-full min-h-48 flex-col overflow-hidden transition-all hover:border-amber-500/30 hover:shadow-sm">
+      <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500/70 via-orange-400/50 to-transparent" />
+      <div class="flex items-start justify-between gap-3 border-b border-border/60 px-4 py-4">
+        <h3 class="line-clamp-2 min-w-0 font-display text-lg font-semibold leading-snug">{props.note.title}</h3>
         <div class="flex shrink-0 gap-1">
           <Button type="button" variant="ghost" size="sm" onClick={() => setEditing((v) => !v)}>
             {editing() ? t("common.cancel") : t("common.edit")}
@@ -37,7 +38,7 @@ export function NoteCard(props: {
           </Button>
         </div>
       </div>
-      <div class="flex flex-1 flex-col gap-4 p-5">
+      <div class="flex flex-1 flex-col gap-4 p-4">
         <Show
           when={editing()}
           fallback={

@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { getEvents } from "@/api/getEvents";
 import { postEvent } from "@/api/postEvent";
 import { formatApiError } from "@/api/client";
@@ -9,9 +9,12 @@ import { EventForm } from "@/components/events/event-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
+
+const EVENT_PAGE_SIZE = 9;
 
 export default function EventsPage() {
   return (
@@ -27,7 +30,15 @@ function EventsContent() {
   const [events, { refetch }] = createResource(() => getEvents());
   const [error, setError] = createSignal("");
   const [showForm, setShowForm] = createSignal(false);
+  const [page, setPage] = createSignal(0);
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
+  const eventList = createMemo(() => events() ?? []);
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(eventList().length / EVENT_PAGE_SIZE)));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+  const pageItems = createMemo(() => {
+    const start = safePage() * EVENT_PAGE_SIZE;
+    return eventList().slice(start, start + EVENT_PAGE_SIZE);
+  });
 
   return (
     <div class="space-y-6">
@@ -90,15 +101,20 @@ function EventsContent() {
                 </div>
               }
             >
-              <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                <For each={list()}>
-                  {(event) => (
-                    <li class="animate-fade-up">
-                      <EventCard event={event} />
-                    </li>
-                  )}
-                </For>
-              </ul>
+              <div class="space-y-4">
+                <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <For each={pageItems()}>
+                    {(event) => (
+                      <li class="animate-fade-up">
+                        <EventCard event={event} />
+                      </li>
+                    )}
+                  </For>
+                </ul>
+                <Show when={eventList().length > EVENT_PAGE_SIZE}>
+                  <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+                </Show>
+              </div>
             </Show>
           )}
         </Show>

@@ -105,7 +105,7 @@ export function EventForm(props: {
         <Label for="event-title">{t("form.title")}</Label>
         <Input
           id="event-title"
-          class="rounded-sm"
+          class="h-10 rounded-sm"
           value={title()}
           maxlength={200}
           required
@@ -116,7 +116,7 @@ export function EventForm(props: {
         <Label for="event-description">{t("form.description")}</Label>
         <Textarea
           id="event-description"
-          class="rounded-sm"
+          class="min-h-28 rounded-sm"
           value={description()}
           maxlength={2000}
           rows={3}
@@ -128,7 +128,7 @@ export function EventForm(props: {
           <Label for="event-starts">{t("events.starts")}</Label>
           <Input
             id="event-starts"
-            class="rounded-sm"
+            class="h-10 rounded-sm"
             type="datetime-local"
             value={startsLocal()}
             onInput={(e) => {
@@ -144,7 +144,7 @@ export function EventForm(props: {
           <Label for="event-ends">{t("events.ends")}</Label>
           <Input
             id="event-ends"
-            class="rounded-sm"
+            class="h-10 rounded-sm"
             type="datetime-local"
             value={endsLocal()}
             onInput={(e) => {
@@ -159,12 +159,12 @@ export function EventForm(props: {
       </div>
       {error() && <p class="text-sm text-destructive">{error()}</p>}
       <div class="flex flex-wrap items-center gap-2">
-        <Button type="submit" disabled={pending()}>
+        <Button type="submit" class="h-10" disabled={pending()}>
           <IconSave />
           {props.submitLabel ?? t("common.save")}
         </Button>
         {props.onCancel && (
-          <Button type="button" variant="outline" onClick={props.onCancel}>
+          <Button type="button" variant="outline" class="h-10" onClick={props.onCancel}>
             {t("common.cancel")}
           </Button>
         )}
