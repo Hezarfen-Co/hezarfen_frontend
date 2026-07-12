@@ -42,17 +42,17 @@ export function PageHeader(
           "relative flex flex-col sm:flex-row sm:items-center sm:justify-between",
           props.compact
             ? "gap-3 px-4 py-3 sm:px-5 sm:py-3.5"
-            : "gap-4 p-6 sm:items-end sm:p-8",
+            : "gap-3 px-4 py-4 sm:items-end sm:px-5 sm:py-5",
         )}
       >
-        <div class={cn("min-w-0", props.compact ? "space-y-0.5" : "max-w-2xl space-y-1.5")}>
+        <div class={cn("min-w-0", props.compact ? "space-y-0.5" : "max-w-2xl space-y-1")}>
           <Show when={props.eyebrow && !props.compact}>
             <p class="text-xs font-medium text-muted-foreground">{props.eyebrow}</p>
           </Show>
           <h1
             class={cn(
               "font-display font-semibold tracking-tight",
-              props.compact ? "text-lg sm:text-xl" : "text-2xl sm:text-3xl",
+              props.compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl",
             )}
           >
             {props.title}
@@ -61,7 +61,7 @@ export function PageHeader(
             <p
               class={cn(
                 "text-muted-foreground",
-                props.compact ? "text-xs sm:text-sm" : "text-sm sm:text-base",
+                props.compact ? "text-xs sm:text-sm" : "text-sm",
               )}
             >
               {props.description}

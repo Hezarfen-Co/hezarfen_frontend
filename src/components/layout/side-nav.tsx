@@ -26,11 +26,11 @@ type NavItem = {
 
 const MAIN_ITEMS: NavItem[] = [
   { to: "/", labelKey: "nav.home", Icon: IconHome, exact: true },
-  { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
-  { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
   { to: "/courses", labelKey: "nav.courses", Icon: IconBook },
   { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
   { to: "/marks", labelKey: "nav.marks", Icon: IconChart },
+  { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
+  { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
   { to: "/admin/users", labelKey: "nav.users", Icon: IconUsers, adminOnly: true },
 ];
 
@@ -119,7 +119,6 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
         </For>
       </div>
 
-      {/* Guide sits just above the sidebar footer */}
       <div class="mt-auto border-t border-border px-2 pb-1 pt-2">
         <NavLink item={GUIDE_ITEM} collapsed={props.collapsed} onNavigate={props.onNavigate} />
       </div>

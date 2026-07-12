@@ -47,9 +47,9 @@ function NotesContent() {
 
       <CollapsibleHelp title={t("notes.helpTitle")}>{t("notes.helpBody")}</CollapsibleHelp>
 
-      <div class="grid gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
-        <section class="surface-card h-fit p-5 lg:sticky lg:top-24">
-          <h2 class="mb-4 font-display text-lg font-semibold">{t("notes.new")}</h2>
+      <div class="space-y-5">
+        <section class="surface-card p-4 sm:p-5">
+          <h2 class="mb-3 font-display text-lg font-semibold">{t("notes.new")}</h2>
           <NoteForm
             submitLabel={t("common.create")}
             onSubmit={(values) =>
@@ -64,7 +64,7 @@ function NotesContent() {
           {error() && <p class="mt-3 text-sm text-destructive">{error()}</p>}
         </section>
 
-        <section>
+        <section class="min-w-0">
           <Suspense fallback={<PageSpinner />}>
             <Show when={notes.error}>
               <Alert variant="destructive">{formatApiError(notes.error)}</Alert>

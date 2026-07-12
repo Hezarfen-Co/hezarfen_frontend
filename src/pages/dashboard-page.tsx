@@ -8,7 +8,6 @@ import { formatApiError } from "@/api/client";
 import type { Event, Exam, Note } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
-import { RoleHomePanel } from "@/components/dashboard/role-home-panel";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,7 +63,6 @@ function DashboardContent() {
 
   return (
     <div class="space-y-5">
-      {/* Compact greeting + guide */}
       <PageHeader
         compact
         accent="mint"
@@ -78,8 +76,6 @@ function DashboardContent() {
           </Link>
         }
       />
-
-      <RoleHomePanel role={user().role} />
 
       <Show when={resourceError()}>
         {(msg) => <Alert variant="destructive">{msg()}</Alert>}

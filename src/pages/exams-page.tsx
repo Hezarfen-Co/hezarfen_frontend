@@ -8,7 +8,6 @@ import { PageHeader } from "@/components/layout/page-header";
 import { CollapsibleHelp } from "@/components/ui/collapsible-help";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatApiError } from "@/api/client";
 import { IconChevronRight } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -66,13 +65,6 @@ function ExamsContent() {
         eyebrow={t("nav.exams")}
         title={t("exams.title")}
         description={t("exams.subtitle")}
-        actions={
-          canCreate() ? (
-            <Link to="/courses">
-              <Button>{t("courses.addExam")}</Button>
-            </Link>
-          ) : undefined
-        }
       />
 
       <CollapsibleHelp title={t("exams.helpTitle")}>

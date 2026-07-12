@@ -17,7 +17,7 @@ export function NoteList(props: {
         </div>
       }
     >
-      <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+      <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <For each={props.notes}>
           {(note) => (
             <li class="animate-fade-up">
