@@ -7,6 +7,7 @@ import { getNotes } from "@/api/getNotes";
 import type { Event, Exam, Note } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { RoleHomePanel } from "@/components/dashboard/role-home-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,6 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { examKindLabel } from "@/lib/exam-labels";
-import { hasMinRole } from "@/lib/roles";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
@@ -75,78 +75,7 @@ function DashboardContent() {
         }
       />
 
-      {/* Action CTAs — not sidebar mirrors; 4 verb-style shortcuts */}
-      <section>
-        <h2 class="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("dashboard.quickActions")}
-        </h2>
-        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Show
-            when={hasMinRole(user().role, "teacher")}
-            fallback={
-              <>
-                <ActionCard
-                  to="/notes"
-                  title={t("dashboard.action.note")}
-                  hint={t("dashboard.action.noteHint")}
-                  icon="✎"
-                  tone="amber"
-                />
-                <ActionCard
-                  to="/events"
-                  title={t("dashboard.action.attend")}
-                  hint={t("dashboard.action.attendHint")}
-                  icon="◷"
-                  tone="sky"
-                />
-                <ActionCard
-                  to="/courses"
-                  title={t("nav.courses")}
-                  hint={t("courses.subtitle")}
-                  icon="▣"
-                  tone="violet"
-                />
-                <ActionCard
-                  to="/marks"
-                  title={t("dashboard.action.marks")}
-                  hint={t("dashboard.action.marksHint")}
-                  icon="▤"
-                  tone="mint"
-                />
-              </>
-            }
-          >
-            <ActionCard
-              to="/notes"
-              title={t("dashboard.action.note")}
-              hint={t("dashboard.action.noteHint")}
-              icon="✎"
-              tone="amber"
-            />
-            <ActionCard
-              to="/events"
-              title={t("dashboard.action.event")}
-              hint={t("dashboard.action.eventHint")}
-              icon="◷"
-              tone="sky"
-            />
-            <ActionCard
-              to="/courses"
-              title={t("dashboard.action.course")}
-              hint={t("dashboard.action.courseHint")}
-              icon="▣"
-              tone="violet"
-            />
-            <ActionCard
-              to="/courses"
-              title={t("dashboard.action.exam")}
-              hint={t("dashboard.action.examHint")}
-              icon="☰"
-              tone="rose"
-            />
-          </Show>
-        </div>
-      </section>
+      <RoleHomePanel role={user().role} />
 
       {/* KPIs below actions */}
       <Suspense fallback={<PageSpinner />}>
@@ -426,53 +355,6 @@ function StatTile(props: {
     );
   }
   return inner;
-}
-
-function ActionCard(props: {
-  to: string;
-  title: string;
-  hint: string;
-  icon: string;
-  tone: "mint" | "sky" | "amber" | "violet" | "rose";
-}) {
-  const ring = {
-    mint: "hover:border-emerald-500/40",
-    sky: "hover:border-sky-500/40",
-    amber: "hover:border-amber-500/40",
-    violet: "hover:border-violet-500/40",
-    rose: "hover:border-rose-500/40",
-  };
-  const iconBg = {
-    mint: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-    sky: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
-    amber: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
-    violet: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
-    rose: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
-  };
-
-  return (
-    <Link
-      to={props.to}
-      class={cn(
-        "flex items-center gap-3 rounded-md border border-border bg-card px-3.5 py-3 shadow-sm transition-all",
-        "hover:-translate-y-0.5 hover:shadow-md",
-        ring[props.tone],
-      )}
-    >
-      <span
-        class={cn(
-          "flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-base",
-          iconBg[props.tone],
-        )}
-      >
-        {props.icon}
-      </span>
-      <span class="min-w-0">
-        <span class="block truncate text-sm font-semibold">{props.title}</span>
-        <span class="block truncate text-xs text-muted-foreground">{props.hint}</span>
-      </span>
-    </Link>
-  );
 }
 
 function EmptyPanel(props: {
