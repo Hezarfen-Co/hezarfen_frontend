@@ -5,33 +5,53 @@ import type { Exam } from "@/api/types";
 import { EXAM_KINDS, EXAM_MODES } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 import { IconSave } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { examKindLabel } from "@/lib/exam-labels";
-import { dateTimeTextToMs, msToDateTimeText } from "@/lib/format";
 import { useT } from "@/stores/preferences-context";
 
 const UI_EXAM_KINDS = EXAM_KINDS.filter((kind) => kind !== "homework");
 
-function datePart(value: string): string {
-  return value.split(" ")[0] ?? "";
+function dateInputFromMs(ms: number | null | undefined): string {
+  if (ms == null) return "";
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
 }
 
-function timePart(value: string): string {
-  return value.split(" ")[1] ?? "";
+function timeInputFromMs(ms: number | null | undefined): string {
+  if (ms == null) return "";
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function withDate(value: string, date: string): string {
-  const time = timePart(value);
-  return time ? `${date} ${time}` : date;
-}
-
-function withTime(value: string, time: string): string {
-  const date = datePart(value);
-  return date ? `${date} ${time}` : time;
+function scheduleInputToMs(date: string, time: string): number | null {
+  const dateMatch = date.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const timeMatch = time.trim().match(/^(\d{2}):(\d{2})$/);
+  if (!dateMatch || !timeMatch) return null;
+  const [, dayRaw, monthRaw, yearRaw] = dateMatch;
+  const [, hourRaw, minuteRaw] = timeMatch;
+  const day = Number(dayRaw);
+  const month = Number(monthRaw);
+  const year = Number(yearRaw);
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  const d = new Date(year, month - 1, day, hour, minute, 0, 0);
+  if (
+    d.getFullYear() !== year ||
+    d.getMonth() !== month - 1 ||
+    d.getDate() !== day ||
+    d.getHours() !== hour ||
+    d.getMinutes() !== minute
+  ) {
+    return null;
+  }
+  return d.getTime();
 }
 
 export type ExamFormValues = {
@@ -57,8 +77,10 @@ export function ExamForm(props: {
   const [kind, setKind] = createSignal(String(props.initial?.kind && props.initial.kind !== "homework" ? props.initial.kind : "quiz"));
   const [weight, setWeight] = createSignal(String(props.initial?.weight ?? 1));
   const [mode, setMode] = createSignal(String(props.initial?.mode ?? ""));
-  const [startsText, setStartsText] = createSignal(msToDateTimeText(props.initial?.starts_at));
-  const [endsText, setEndsText] = createSignal(msToDateTimeText(props.initial?.ends_at));
+  const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
+  const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
+  const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
+  const [endsTime, setEndsTime] = createSignal(timeInputFromMs(props.initial?.ends_at));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
@@ -96,8 +118,10 @@ export function ExamForm(props: {
         setKind("quiz");
         setWeight("1");
         setMode("");
-        setStartsText("");
-        setEndsText("");
+        setStartsDate("");
+        setStartsTime("");
+        setEndsDate("");
+        setEndsTime("");
       }
     } catch (err) {
       setError(formatApiError(err));
@@ -108,8 +132,8 @@ export function ExamForm(props: {
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
-    const starts_at = mode() ? dateTimeTextToMs(startsText()) : null;
-    const ends_at = mode() ? dateTimeTextToMs(endsText()) : null;
+    const starts_at = mode() ? scheduleInputToMs(startsDate(), startsTime()) : null;
+    const ends_at = mode() ? scheduleInputToMs(endsDate(), endsTime()) : null;
     const duration_ms = mode() === "async" && starts_at != null && ends_at != null ? ends_at - starts_at : null;
     const v = validate(starts_at, ends_at, duration_ms);
     if (v) {
@@ -204,46 +228,46 @@ export function ExamForm(props: {
           <div class="space-y-1.5">
             <Label for="exam-starts">{t("events.starts")}</Label>
             <div class="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
-              <Input
+              <DatePicker
                 id="exam-starts"
-                class="rounded-sm"
-                type="date"
-                value={datePart(startsText())}
+                placeholder={t("form.datePlaceholder")}
+                value={startsDate()}
                 required
-                onInput={(e) => setStartsText(withDate(startsText(), e.currentTarget.value))}
+                onChange={setStartsDate}
               />
               <Input
                 id="exam-starts-time"
-                class="rounded-sm font-mono"
-                value={timePart(startsText())}
+                class="rounded-sm font-mono placeholder:text-muted-foreground/45"
+                inputMode="numeric"
                 placeholder="14:30"
-                required
                 pattern="[0-2][0-9]:[0-5][0-9]"
+                value={startsTime()}
+                required
                 aria-label={t("exams.startTime")}
-                onInput={(e) => setStartsText(withTime(startsText(), e.currentTarget.value))}
+                onInput={(e) => setStartsTime(e.currentTarget.value)}
               />
             </div>
           </div>
           <div class="space-y-1.5">
             <Label for="exam-ends">{t("events.ends")}</Label>
             <div class="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
-              <Input
+              <DatePicker
                 id="exam-ends"
-                class="rounded-sm"
-                type="date"
-                value={datePart(endsText())}
+                placeholder={t("form.datePlaceholder")}
+                value={endsDate()}
                 required
-                onInput={(e) => setEndsText(withDate(endsText(), e.currentTarget.value))}
+                onChange={setEndsDate}
               />
               <Input
                 id="exam-ends-time"
-                class="rounded-sm font-mono"
-                value={timePart(endsText())}
+                class="rounded-sm font-mono placeholder:text-muted-foreground/45"
+                inputMode="numeric"
                 placeholder="15:30"
-                required
                 pattern="[0-2][0-9]:[0-5][0-9]"
+                value={endsTime()}
+                required
                 aria-label={t("exams.endTime")}
-                onInput={(e) => setEndsText(withTime(endsText(), e.currentTarget.value))}
+                onInput={(e) => setEndsTime(e.currentTarget.value)}
               />
             </div>
           </div>

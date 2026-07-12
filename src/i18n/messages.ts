@@ -249,6 +249,7 @@ export type MessageKey =
   | "form.year"
   | "form.month"
   | "form.day"
+  | "form.datePlaceholder"
   | "form.mark"
   | "form.studentId"
   | "form.selectStudent"
@@ -613,6 +614,7 @@ const en: Dict = {
   "form.year": "Year",
   "form.month": "Month",
   "form.day": "Day",
+  "form.datePlaceholder": "DD/MM/YYYY",
   "form.mark": "Mark",
   "form.studentId": "Student user id",
   "form.selectStudent": "Select student",
@@ -976,6 +978,7 @@ const tr: Dict = {
   "form.year": "Yıl",
   "form.month": "Ay",
   "form.day": "Gün",
+  "form.datePlaceholder": "GG/AA/YYYY",
   "form.mark": "Not",
   "form.studentId": "Öğrenci kullanıcı id",
   "form.selectStudent": "Öğrenci seç",
