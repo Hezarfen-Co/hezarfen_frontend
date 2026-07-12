@@ -1,13 +1,12 @@
 import { Link, useNavigate } from "@tanstack/solid-router";
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { postLogin } from "@/api/postLogin";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GuestGuard } from "@/components/layout/guest-guard";
-import { LocaleSwitcher } from "@/components/layout/locale-switcher";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { IconEye, IconEyeOff } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
@@ -25,6 +24,7 @@ function LoginForm() {
   const t = useT();
   const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
+  const [showPassword, setShowPassword] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
 
@@ -54,36 +54,19 @@ function LoginForm() {
   };
 
   return (
-    <div class="relative mx-auto grid min-h-[calc(100vh-5rem)] max-w-5xl items-center gap-8 lg:grid-cols-2">
-      <div class="hero-panel relative hidden overflow-hidden rounded-[2rem] border border-border/60 p-10 lg:block">
-        <div class="absolute -right-8 -top-8 h-40 w-40 rounded-sm bg-primary/20 blur-2xl" />
-        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{t("app.name")}</p>
-        <h1 class="mt-4 font-display text-4xl font-semibold leading-tight">{t("auth.welcomeBack")}</h1>
-        <p class="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">{t("app.tagline")}</p>
-        <ul class="mt-10 space-y-3 text-sm text-muted-foreground">
-          <li class="rounded-sm bg-card/70 px-4 py-3">{t("auth.featureModules")}</li>
-          <li class="rounded-sm bg-card/70 px-4 py-3">{t("auth.featurePrefs")}</li>
-        </ul>
-      </div>
-
-      <div class="surface-card mx-auto w-full max-w-md p-6 sm:p-8">
-        <div class="mb-6 flex items-start justify-between gap-3">
-          <div>
-            <h2 class="font-display text-2xl font-semibold">{t("auth.loginTitle")}</h2>
-            <p class="mt-1 text-sm text-muted-foreground">{t("auth.loginSubtitle")}</p>
-          </div>
-          <div class="flex items-center gap-1">
-            <LocaleSwitcher />
-            <ThemeToggle />
-          </div>
+    <div class="-mx-4 -my-6 flex h-[calc(100dvh-3.5rem)] items-center justify-center overflow-hidden px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-my-8 lg:px-8">
+      <div class="surface-card w-full max-w-sm p-8 shadow-lg">
+        <div class="mb-8 text-center">
+          <h1 class="font-display text-3xl font-semibold tracking-tight">{t("auth.loginTitle")}</h1>
+          <p class="mt-1.5 text-sm text-muted-foreground">{t("auth.loginSubtitle")}</p>
         </div>
 
-        <form class="space-y-4" onSubmit={handleSubmit}>
-          <div class="space-y-1.5">
+        <form class="space-y-5" onSubmit={handleSubmit}>
+          <div class="space-y-2">
             <Label for="login-username">{t("auth.username")}</Label>
             <Input
               id="login-username"
-              class="h-11 rounded-sm"
+              class="h-11"
               autocomplete="username"
               minlength={3}
               maxlength={32}
@@ -91,32 +74,46 @@ function LoginForm() {
               value={username()}
               onInput={(e) => setUsername(e.currentTarget.value)}
             />
-            <p class="text-xs text-muted-foreground">{t("auth.usernameHint")}</p>
           </div>
-          <div class="space-y-1.5">
+
+          <div class="space-y-2">
             <Label for="login-password">{t("auth.password")}</Label>
-            <Input
-              id="login-password"
-              class="h-11 rounded-sm"
-              type="password"
-              autocomplete="current-password"
-              minlength={6}
-              maxlength={128}
-              required
-              value={password()}
-              onInput={(e) => setPassword(e.currentTarget.value)}
-            />
-            <p class="text-xs text-muted-foreground">{t("auth.passwordHint")}</p>
+            <div class="relative">
+              <Input
+                id="login-password"
+                class="h-11 pr-10"
+                type={showPassword() ? "text" : "password"}
+                autocomplete="current-password"
+                minlength={6}
+                maxlength={128}
+                required
+                value={password()}
+                onInput={(e) => setPassword(e.currentTarget.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword())}
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                tabIndex={-1}
+                aria-label={showPassword() ? "Hide password" : "Show password"}
+              >
+                <Show when={showPassword()} fallback={<IconEye class="h-4 w-4" />}>
+                  <IconEyeOff class="h-4 w-4" />
+                </Show>
+              </button>
+            </div>
           </div>
+
           {error() && (
-            <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+            <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
           )}
-          <Button type="submit" class="h-11 w-full rounded-sm text-base" disabled={pending()}>
+
+          <Button type="submit" class="h-11 w-full text-base" disabled={pending()}>
             {t("auth.login")}
           </Button>
         </form>
 
-        <p class="mt-6 text-center text-sm text-muted-foreground">
+        <p class="mt-8 text-center text-sm text-muted-foreground">
           {t("auth.noAccount")}{" "}
           <Link to="/register" class="font-semibold text-primary underline-offset-4 hover:underline">
             {t("auth.register")}

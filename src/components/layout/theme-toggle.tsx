@@ -1,21 +1,17 @@
-import { Button } from "@/components/ui/button";
+import { IconSun, IconMoon } from "@/components/ui/icons";
 import { usePreferences } from "@/stores/preferences-context";
 
 export function ThemeToggle() {
   const prefs = usePreferences();
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
-      size="sm"
-      class="h-9 w-9 rounded-sm px-0"
+      class="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       aria-label={prefs.t("theme.toggle")}
       title={prefs.theme() === "dark" ? prefs.t("theme.light") : prefs.t("theme.dark")}
       onClick={() => prefs.toggleTheme()}
     >
-      <span class="text-base leading-none" aria-hidden>
-        {prefs.theme() === "dark" ? "☀" : "☾"}
-      </span>
-    </Button>
+      {prefs.theme() === "dark" ? <IconSun class="h-4 w-4" /> : <IconMoon class="h-4 w-4" />}
+    </button>
   );
 }
