@@ -4,10 +4,13 @@
 import { A } from "@solidjs/router";
 import { For, Show, createResource, createSignal } from "solid-js";
 import { Empty, ErrorLine, Loading } from "../components/Feedback";
+import { UserPicker } from "../components/UserPicker";
 import { createAction } from "../lib/action";
 import { marks } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import type { MarksReport } from "../lib/types";
+import { personLabel } from "../lib/format";
+import { t } from "../lib/i18n";
+import type { MarksReport, PersonRef } from "../lib/types";
 
 const round = (value: number) => (Math.round(value * 100) / 100).toString();
 
@@ -19,13 +22,13 @@ export default function Marks() {
     <section class="page">
       <header class="page-head">
         <div>
-          <h1>My marks</h1>
-          <p class="sub">Graded exams per course, weighted averages included.</p>
+          <h1>{t("marksTitle")}</h1>
+          <p class="sub">{t("marksSub")}</p>
         </div>
       </header>
 
       <Show when={!mine.loading} fallback={<Loading />}>
-        <Show when={mine()} fallback={<Empty>Failed to load your marks.</Empty>}>
+        <Show when={mine()} fallback={<Empty>{t("marksLoadFailed")}</Empty>}>
           {(report) => <Report report={report()} />}
         </Show>
       </Show>
@@ -37,9 +40,10 @@ export default function Marks() {
   );
 }
 
-/** Teacher+ tool: fetch any student's report by id. */
+/** Teacher+ tool: look up any student's report. */
 function Lookup() {
   const [report, setReport] = createSignal<MarksReport | null>(null);
+  const [who, setWho] = createSignal<PersonRef | null>(null);
 
   const fetch = createAction(async (form: HTMLFormElement) => {
     const data = new FormData(form);
@@ -48,17 +52,17 @@ function Lookup() {
 
   return (
     <article class="card stack gap-top">
-      <h2>Student lookup</h2>
+      <h2>{t("studentLookup")}</h2>
       <form
-        class="row"
+        class="row row-end"
         onSubmit={(e) => {
           e.preventDefault();
           void fetch.run(e.currentTarget);
         }}
       >
-        <input name="user_id" placeholder="Student id" required />
+        <UserPicker name="user_id" label={t("student")} onPick={setWho} />
         <button type="submit" disabled={fetch.pending()}>
-          Show marks
+          {t("showMarks")}
         </button>
       </form>
       <ErrorLine error={fetch.error()} />
@@ -66,9 +70,9 @@ function Lookup() {
       <Show when={report()}>
         {(current) => (
           <>
-            <p class="meta">
-              Report for <span class="mono">{current().user}</span>
-            </p>
+            <Show when={who()}>
+              {(person) => <p class="meta">{t("reportFor")(personLabel(person()))}</p>}
+            </Show>
             <Report report={current()} />
           </>
         )}
@@ -81,11 +85,11 @@ function Report(props: { report: MarksReport }) {
   return (
     <Show
       when={props.report.courses.length}
-      fallback={<Empty>Not enrolled in any course.</Empty>}
+      fallback={<Empty>{t("notEnrolledAny")}</Empty>}
     >
       <div class="stack">
-        <div class="card row" title="mean of the course averages">
-          <span class="muted">Overall average</span>
+        <div class="card row" title={t("overallAverageTitle")}>
+          <span class="muted">{t("overallAverage")}</span>
           <p class="mark push">
             {props.report.overall_average === null ? (
               "—"
@@ -105,22 +109,22 @@ function Report(props: { report: MarksReport }) {
                 <h3>
                   <A href={`/courses/${block.course.id}`}>{block.course.title}</A>
                 </h3>
-                <span class="badge" title="weighted course average">
+                <span class="badge" title={t("courseAverageTitle")}>
                   {block.average === null ? "—" : round(block.average)}
                 </span>
               </header>
               <Show
                 when={block.results.length}
-                fallback={<Empty>Nothing graded yet.</Empty>}
+                fallback={<Empty>{t("nothingGradedYet")}</Empty>}
               >
                 <div class="table-wrap">
                   <table>
                     <thead>
                       <tr>
-                        <th>Exam</th>
-                        <th>Kind</th>
-                        <th>Weight</th>
-                        <th>Mark</th>
+                        <th>{t("examCol")}</th>
+                        <th>{t("kind")}</th>
+                        <th>{t("weight")}</th>
+                        <th>{t("markCol")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -131,9 +135,9 @@ function Report(props: { report: MarksReport }) {
                               <A href={`/exams/${entry.exam}`}>{entry.title}</A>
                             </td>
                             <td>
-                              <span class="badge">{entry.kind}</span>
+                              <span class="badge">{t("kindWord")(entry.kind)}</span>
                             </td>
-                            <td>×{entry.weight}</td>
+                            <td>{t("weightBadge")(entry.weight)}</td>
                             <td>{entry.mark}</td>
                           </tr>
                         )}

@@ -3,19 +3,28 @@
 // backend's `{ "error": "..." }` message and the HTTP status.
 
 import type {
+  AnswerSaved,
   AppEvent,
   Attendance,
   AttendanceStatus,
+  AttemptAnswers,
+  AttemptQuestion,
   Course,
   Enrollment,
   Exam,
+  ExamAttempt,
+  ExamLive,
+  ExamQuestion,
   ExamResult,
   ExamStatistics,
   MarksReport,
   Note,
+  PersonRef,
   Role,
   User,
 } from "./types";
+
+import { t } from "./i18n";
 
 const BASE = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -40,7 +49,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError(0, "network error — is the backend up?");
+    throw new ApiError(0, t("networkError"));
   }
 
   if (!res.ok) {
@@ -87,6 +96,8 @@ export interface ProfilePatch {
 export const users = {
   list: () => get<User[]>("/users"),
   get: (id: string) => get<User>(`/users/${id}`),
+  /** Fragment search over username/name/surname; teacher+, max 10 rows. */
+  search: (q: string) => get<PersonRef[]>(`/users/search?q=${encodeURIComponent(q)}`),
   setRole: (id: string, role: Role) => patch<User>(`/users/${id}/role`, { role }),
   /** The caller's own profile. */
   updateMyProfile: (body: ProfilePatch) => patch<User>("/users/me", body),
@@ -147,7 +158,17 @@ export const courses = {
   exams: (id: string) => get<Exam[]>(`/courses/${id}/exams`),
   createExam: (
     id: string,
-    body: { title: string; description?: string; kind: string; weight: number },
+    body: {
+      title: string;
+      description?: string;
+      kind: string;
+      weight: number;
+      /** Schedule as a unit: all null for an unscheduled exam. */
+      mode: string | null;
+      starts_at: number | null;
+      ends_at: number | null;
+      duration_ms: number | null;
+    },
   ) => post<Exam>(`/courses/${id}/exams`, body),
 };
 
@@ -155,9 +176,19 @@ export const exams = {
   list: () => get<Exam[]>("/exams"),
   get: (id: string) => get<Exam>(`/exams/${id}`),
   // Creation lives under the course: `courses.createExam`.
+  /** Schedule fields are set-or-clear: explicit `null` clears, omit keeps. */
   update: (
     id: string,
-    body: { title?: string; description?: string; kind?: string; weight?: number },
+    body: {
+      title?: string;
+      description?: string;
+      kind?: string;
+      weight?: number;
+      mode?: string | null;
+      starts_at?: number | null;
+      ends_at?: number | null;
+      duration_ms?: number | null;
+    },
   ) => patch<Exam>(`/exams/${id}`, body),
   remove: (id: string) => del(`/exams/${id}`),
 
@@ -167,9 +198,65 @@ export const exams = {
     post<ExamResult>(`/exams/${id}/results`, { mark, user_id: userId }),
   removeResult: (id: string, userId: string) => del(`/exams/${id}/results/${userId}`),
   statistics: (id: string) => get<ExamStatistics>(`/exams/${id}/statistics`),
+
+  // ---- attempts: sitting a scheduled exam ----
+  /** Start or resume — the backend never resets a running clock. */
+  startAttempt: (id: string) => post<ExamAttempt>(`/exams/${id}/attempt`),
+  /** 404 until started. */
+  myAttempt: (id: string) => get<ExamAttempt>(`/exams/${id}/attempt`),
+  finishAttempt: (id: string) => post<ExamAttempt>(`/exams/${id}/attempt/finish`),
+  /** The sitting student's questions (no `correct`), own answers embedded. */
+  attemptQuestions: (id: string) => get<AttemptQuestion[]>(`/exams/${id}/attempt/questions`),
+  saveAnswer: (id: string, body: { question_id: string; selected?: number; text?: string }) =>
+    post<AnswerSaved>(`/exams/${id}/attempt/answers`, body),
+
+  // ---- questions: authored by teacher+ with course-management rights ----
+  questions: (id: string) => get<ExamQuestion[]>(`/exams/${id}/questions`),
+  createQuestion: (
+    id: string,
+    body: {
+      text: string;
+      kind: string;
+      points: number;
+      choices: string[] | null;
+      correct: number | null;
+    },
+  ) => post<ExamQuestion>(`/exams/${id}/questions`, body),
+  /** `choices`/`correct` are set-or-clear; send the full kind unit. */
+  updateQuestion: (
+    id: string,
+    qid: string,
+    body: {
+      text?: string;
+      points?: number;
+      kind?: string;
+      choices?: string[] | null;
+      correct?: number | null;
+    },
+  ) => patch<ExamQuestion>(`/exams/${id}/questions/${qid}`, body),
+  removeQuestion: (id: string, qid: string) => del(`/exams/${id}/questions/${qid}`),
+
+  // ---- live monitor (teacher+) ----
+  live: (id: string) => get<ExamLive>(`/exams/${id}/live`),
+  /** SSE endpoint for `EventSource` — one `snapshot` event every ~2 s. */
+  liveStreamUrl: (id: string) => `${BASE}/exams/${id}/live/stream`,
+  /** One student's judged answer sheet with the auto-score suggestion. */
+  attemptAnswers: (id: string, userId: string) =>
+    get<AttemptAnswers>(`/exams/${id}/attempts/${userId}/answers`),
+  /** The student exam room WebSocket (autosave acks + server countdown). */
+  attemptSocketUrl: (id: string) => {
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const base = BASE.startsWith("http") ? BASE.replace(/^http/, "ws") : `${proto}//${window.location.host}${BASE}`;
+    return `${base}/exams/${id}/attempt/ws`;
+  },
 };
 
 export const marks = {
   mine: () => get<MarksReport>("/marks/me"),
   forUser: (id: string) => get<MarksReport>(`/marks/${id}`),
+};
+
+export const meta = {
+  /** Server clock, UTC unix-milliseconds — see `lib/clock.ts`. */
+  time: () => get<{ now: number }>("/time"),
 };

@@ -2,10 +2,12 @@
 // the resource from the server's response — the UI never waits on a refetch.
 
 import { For, Show, createResource, createSignal } from "solid-js";
+import { ConfirmButton } from "../components/ConfirmButton";
 import { Empty, ErrorLine, Loading } from "../components/Feedback";
 import { IconEdit, IconPlus, IconTrash } from "../components/Icons";
 import { createAction } from "../lib/action";
 import { notes } from "../lib/api";
+import { t } from "../lib/i18n";
 import { LIMITS, type Note } from "../lib/types";
 
 export default function Notes() {
@@ -31,11 +33,11 @@ export default function Notes() {
     <section class="page">
       <header class="page-head">
         <div>
-          <h1>Notes</h1>
-          <p class="sub">Your personal scratchpad — visible only to you.</p>
+          <h1>{t("notesTitle")}</h1>
+          <p class="sub">{t("notesSub")}</p>
         </div>
         <button onClick={() => setCreating((open) => !open)}>
-          <IconPlus /> New note
+          <IconPlus /> {t("newNote")}
         </button>
       </header>
 
@@ -47,26 +49,31 @@ export default function Notes() {
             void create.run(e.currentTarget);
           }}
         >
-          <input
-            name="title"
-            placeholder="Title"
-            required
-            maxLength={LIMITS.noteTitle}
-            ref={(el) => queueMicrotask(() => el.focus())}
-          />
-          <textarea
-            name="content"
-            placeholder="Write something…"
-            rows={3}
-            maxLength={LIMITS.noteContent}
-          />
+          <label>
+            {t("title")}
+            <input
+              name="title"
+              required
+              maxLength={LIMITS.noteTitle}
+              ref={(el) => queueMicrotask(() => el.focus())}
+            />
+          </label>
+          <label>
+            {t("content")}
+            <textarea
+              name="content"
+              placeholder={t("writeSomething")}
+              rows={3}
+              maxLength={LIMITS.noteContent}
+            />
+          </label>
           <ErrorLine error={create.error()} />
           <span class="row-actions">
             <button type="submit" disabled={create.pending()}>
-              Add note
+              {t("addNote")}
             </button>
             <button type="button" class="ghost" onClick={() => setCreating(false)}>
-              Cancel
+              {t("cancel")}
             </button>
           </span>
         </form>
@@ -75,7 +82,17 @@ export default function Notes() {
       <Show when={!list.loading} fallback={<Loading />}>
         <Show
           when={list()?.length}
-          fallback={<Empty>No notes yet — write your first one.</Empty>}
+          fallback={
+            <Empty
+              action={
+                <button onClick={() => setCreating(true)}>
+                  <IconPlus /> {t("newNote")}
+                </button>
+              }
+            >
+              {t("noNotesYet")}
+            </Empty>
+          }
         >
           <div class="grid">
             <For each={list()}>
@@ -119,28 +136,13 @@ function NoteCard(props: {
           <>
             <header class="row">
               <h3>{props.note.title}</h3>
-              <span class="row-actions">
-                <button
-                  class="ghost icon-btn"
-                  title="Edit"
-                  onClick={() => setEditing(true)}
-                >
-                  <IconEdit />
-                </button>
-                <button
-                  class="ghost icon-btn danger"
-                  title="Delete"
-                  disabled={remove.pending()}
-                  onClick={() => void remove.run()}
-                >
-                  <IconTrash />
-                </button>
-              </span>
+              <button class="ghost" onClick={() => setEditing(true)}>
+                <IconEdit /> {t("edit")}
+              </button>
             </header>
             <Show when={props.note.content}>
               <p class="prewrap">{props.note.content}</p>
             </Show>
-            <ErrorLine error={remove.error()} />
           </>
         }
       >
@@ -151,18 +153,31 @@ function NoteCard(props: {
             void save.run(e.currentTarget);
           }}
         >
-          <input name="title" value={props.note.title} required maxLength={LIMITS.noteTitle} />
-          <textarea name="content" rows={4} maxLength={LIMITS.noteContent}>
-            {props.note.content}
-          </textarea>
-          <ErrorLine error={save.error()} />
+          <label>
+            {t("title")}
+            <input name="title" value={props.note.title} required maxLength={LIMITS.noteTitle} />
+          </label>
+          <label>
+            {t("content")}
+            <textarea name="content" rows={4} maxLength={LIMITS.noteContent}>
+              {props.note.content}
+            </textarea>
+          </label>
+          <ErrorLine error={save.error() ?? remove.error()} />
           <span class="row-actions">
             <button type="submit" disabled={save.pending()}>
-              Save
+              {t("save")}
             </button>
             <button type="button" class="ghost" onClick={() => setEditing(false)}>
-              Cancel
+              {t("cancel")}
             </button>
+            <ConfirmButton
+              class="ghost danger push"
+              disabled={remove.pending()}
+              onConfirm={() => void remove.run()}
+            >
+              <IconTrash /> {t("deleteNote")}
+            </ConfirmButton>
           </span>
         </form>
       </Show>

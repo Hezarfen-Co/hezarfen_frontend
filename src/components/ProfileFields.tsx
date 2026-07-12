@@ -5,6 +5,7 @@
 
 import type { ProfilePatch } from "../lib/api";
 import { today } from "../lib/format";
+import { t } from "../lib/i18n";
 import { LIMITS, type User } from "../lib/types";
 
 /** Matches the backend rule: optional leading +, separators, 7–15 digits. */
@@ -26,16 +27,16 @@ export function ProfileFields(props: { user: User }) {
     <>
       <div class="row">
         <label style={{ flex: 1 }}>
-          Name
+          {t("nameField")}
           <input name="name" value={props.user.name ?? ""} maxLength={LIMITS.personName} />
         </label>
         <label style={{ flex: 1 }}>
-          Surname
+          {t("surnameField")}
           <input name="surname" value={props.user.surname ?? ""} maxLength={LIMITS.personName} />
         </label>
       </div>
       <label>
-        Email
+        {t("emailField")}
         <input
           name="email"
           type="email"
@@ -46,18 +47,18 @@ export function ProfileFields(props: { user: User }) {
       </label>
       <div class="row">
         <label style={{ flex: 1 }}>
-          Phone
+          {t("phoneField")}
           <input
             name="phone"
             type="tel"
             value={props.user.phone ?? ""}
             pattern={PHONE_PATTERN}
-            title={`${LIMITS.phoneDigits.min} to ${LIMITS.phoneDigits.max} digits; +, spaces, dashes, and parentheses are allowed`}
+            title={t("phoneTitle")(LIMITS.phoneDigits.min, LIMITS.phoneDigits.max)}
             placeholder="+90 555 123 45 67"
           />
         </label>
         <label style={{ flex: 1 }}>
-          Birth date
+          {t("birthDateField")}
           <input
             name="birth_date"
             type="date"

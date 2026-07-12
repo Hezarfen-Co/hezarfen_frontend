@@ -8,6 +8,7 @@ import { ProfileFields, profilePatch } from "../components/ProfileFields";
 import { createAction } from "../lib/action";
 import { users } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { t } from "../lib/i18n";
 
 export default function Profile() {
   const { user, update } = useAuth();
@@ -34,8 +35,8 @@ export default function Profile() {
                     current().username}
                 </h1>
                 <p class="sub">
-                  {current().username} · <span class="badge">{current().role}</span> ·{" "}
-                  <span class="mono">{current().id}</span>
+                  {current().username} ·{" "}
+                  <span class="badge">{t("roleWord")(current().role)}</span>
                 </p>
               </div>
             </div>
@@ -48,16 +49,16 @@ export default function Profile() {
               void save.run(e.currentTarget);
             }}
           >
-            <h2>Personal info</h2>
-            <p class="meta">Leave a field empty to clear it.</p>
+            <h2>{t("personalInfo")}</h2>
+            <p class="meta">{t("leaveEmptyToClear")}</p>
             <ProfileFields user={current()} />
             <ErrorLine error={save.error()} />
             <span class="row-actions">
               <button type="submit" disabled={save.pending()}>
-                Save
+                {t("save")}
               </button>
               <Show when={saved() && !save.pending()}>
-                <span class="meta">Saved.</span>
+                <span class="meta">{t("savedDot")}</span>
               </Show>
             </span>
           </form>

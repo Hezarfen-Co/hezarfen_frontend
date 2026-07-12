@@ -8,6 +8,7 @@ import { ProfileFields, profilePatch } from "../components/ProfileFields";
 import { createAction } from "../lib/action";
 import { users } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { t } from "../lib/i18n";
 import { ROLES, type Role, type User } from "../lib/types";
 
 export default function Users() {
@@ -36,26 +37,26 @@ export default function Users() {
   };
 
   return (
-    <Show when={can("admin")} fallback={<Empty>Admins only.</Empty>}>
+    <Show when={can("admin")} fallback={<Empty>{t("adminsOnly")}</Empty>}>
       <section class="page">
         <header class="page-head">
           <div>
-            <h1>Users</h1>
-            <p class="sub">Every account, with roles and personal records.</p>
+            <h1>{t("usersTitle")}</h1>
+            <p class="sub">{t("usersSub")}</p>
           </div>
         </header>
         <ErrorLine error={setRole.error()} />
         <Show when={!list.loading} fallback={<Loading />}>
-          <Show when={list()?.length} fallback={<Empty>No users.</Empty>}>
+          <Show when={list()?.length} fallback={<Empty>{t("noUsers")}</Empty>}>
             <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>User</th>
-                  <th>Id</th>
-                  <th>Contact</th>
-                  <th>Born</th>
-                  <th>Role</th>
+                  <th>{t("userCol")}</th>
+                  <th>{t("idCol")}</th>
+                  <th>{t("contactCol")}</th>
+                  <th>{t("bornCol")}</th>
+                  <th>{t("roleCol")}</th>
                   <th />
                 </tr>
               </thead>
@@ -81,28 +82,18 @@ export default function Users() {
                         <td>
                           <Show
                             when={entry.id !== user()?.id}
-                            fallback={<em>{entry.role} (you)</em>}
+                            fallback={<em>{t("roleWord")(entry.role)}{t("you")}</em>}
                           >
-                            <select
-                              value={entry.role}
-                              disabled={setRole.pending()}
-                              onChange={(e) =>
-                                void setRole.run(entry, e.currentTarget.value as Role)
-                              }
-                            >
-                              <For each={ROLES}>
-                                {(role) => (
-                                  <option value={role} selected={role === entry.role}>
-                                    {role}
-                                  </option>
-                                )}
-                              </For>
-                            </select>
+                            <RoleCell
+                              entry={entry}
+                              pending={setRole.pending()}
+                              onApply={(role) => setRole.run(entry, role)}
+                            />
                           </Show>
                         </td>
                         <td>
                           <button class="ghost" onClick={() => toggleEdit(entry.id)}>
-                            {editing() === entry.id ? "Close" : "Edit"}
+                            {editing() === entry.id ? t("close") : t("edit")}
                           </button>
                         </td>
                       </tr>
@@ -116,12 +107,12 @@ export default function Users() {
                                 void saveProfile.run(entry, e.currentTarget);
                               }}
                             >
-                              <p class="meta">Leave a field empty to clear it.</p>
+                              <p class="meta">{t("leaveEmptyToClear")}</p>
                               <ProfileFields user={entry} />
                               <ErrorLine error={saveProfile.error()} />
                               <span class="row-actions">
                                 <button type="submit" disabled={saveProfile.pending()}>
-                                  Save profile
+                                  {t("saveProfile")}
                                 </button>
                               </span>
                             </form>
@@ -138,5 +129,47 @@ export default function Users() {
         </Show>
       </section>
     </Show>
+  );
+}
+
+/** Role dropdown that stages the pick behind Apply/Cancel — a stray scroll
+ * over the select must never fire a role change on its own. */
+function RoleCell(props: {
+  entry: User;
+  pending: boolean;
+  onApply: (role: Role) => Promise<boolean>;
+}) {
+  const [staged, setStaged] = createSignal<Role | null>(null);
+  const dirty = () => staged() !== null && staged() !== props.entry.role;
+
+  const apply = async () => {
+    const next = staged();
+    if (next && (await props.onApply(next))) setStaged(null);
+  };
+
+  return (
+    <span class="row-actions">
+      <select
+        value={staged() ?? props.entry.role}
+        disabled={props.pending}
+        onChange={(e) => setStaged(e.currentTarget.value as Role)}
+      >
+        <For each={ROLES}>
+          {(role) => (
+            <option value={role} selected={role === (staged() ?? props.entry.role)}>
+              {t("roleWord")(role)}
+            </option>
+          )}
+        </For>
+      </select>
+      <Show when={dirty()}>
+        <button disabled={props.pending} onClick={() => void apply()}>
+          {t("apply")}
+        </button>
+        <button class="ghost" disabled={props.pending} onClick={() => setStaged(null)}>
+          {t("cancel")}
+        </button>
+      </Show>
+    </span>
   );
 }

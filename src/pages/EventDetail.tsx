@@ -4,12 +4,15 @@
 
 import { useNavigate, useParams } from "@solidjs/router";
 import { For, Show, createResource, createSignal } from "solid-js";
+import { ConfirmButton } from "../components/ConfirmButton";
 import { Empty, ErrorLine, Loading } from "../components/Feedback";
 import { IconEdit } from "../components/Icons";
+import { UserPicker } from "../components/UserPicker";
 import { createAction } from "../lib/action";
 import { ApiError, events } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { formatWindow, fromInputValue, toInputValue } from "../lib/format";
+import { formatWindow, fromInputValue, personLabel, toInputValue } from "../lib/format";
+import { t } from "../lib/i18n";
 import { ATTENDANCE_STATUSES, LIMITS, type AttendanceStatus } from "../lib/types";
 
 export default function EventDetail() {
@@ -25,7 +28,7 @@ export default function EventDetail() {
     const current = event();
     return current !== undefined && (current.creator === user()?.id || can("manager"));
   };
-  const myStatus = () => roster()?.find((a) => a.user === user()?.id)?.status;
+  const myStatus = () => roster()?.find((a) => a.user.id === user()?.id)?.status;
 
   const save = createAction(async (form: HTMLFormElement) => {
     const data = new FormData(form);
@@ -49,14 +52,14 @@ export default function EventDetail() {
     const marked = await events.mark(params.id, status, userId);
     // The backend upserts one row per (event, user); mirror that.
     setRoster((current) => [
-      ...(current ?? []).filter((a) => a.user !== marked.user),
+      ...(current ?? []).filter((a) => a.user.id !== marked.user.id),
       marked,
     ]);
   });
 
   const unmark = createAction(async (userId: string) => {
     await events.unmark(params.id, userId);
-    setRoster((current) => current?.filter((a) => a.user !== userId));
+    setRoster((current) => current?.filter((a) => a.user.id !== userId));
   });
 
   return (
@@ -73,7 +76,7 @@ export default function EventDetail() {
             </div>
             <Show when={canManage()}>
               <button class="ghost" onClick={() => setEditing((open) => !open)}>
-                <IconEdit /> {editing() ? "Close" : "Edit"}
+                <IconEdit /> {editing() ? t("close") : t("edit")}
               </button>
             </Show>
           </header>
@@ -90,18 +93,24 @@ export default function EventDetail() {
                 void save.run(e.currentTarget);
               }}
             >
-              <input
-                name="title"
-                value={current().title}
-                required
-                maxLength={LIMITS.eventTitle}
-              />
-              <textarea name="description" rows={3} maxLength={LIMITS.eventDescription}>
-                {current().description}
-              </textarea>
+              <label>
+                {t("title")}
+                <input
+                  name="title"
+                  value={current().title}
+                  required
+                  maxLength={LIMITS.eventTitle}
+                />
+              </label>
+              <label>
+                {t("description")}
+                <textarea name="description" rows={3} maxLength={LIMITS.eventDescription}>
+                  {current().description}
+                </textarea>
+              </label>
               <div class="row">
                 <label>
-                  Starts
+                  {t("starts")}
                   <input
                     name="starts_at"
                     type="datetime-local"
@@ -109,7 +118,7 @@ export default function EventDetail() {
                   />
                 </label>
                 <label>
-                  Ends
+                  {t("ends")}
                   <input
                     name="ends_at"
                     type="datetime-local"
@@ -120,25 +129,25 @@ export default function EventDetail() {
               <ErrorLine error={save.error() ?? remove.error()} />
               <span class="row-actions">
                 <button type="submit" disabled={save.pending()}>
-                  Save
+                  {t("save")}
                 </button>
                 <button type="button" class="ghost" onClick={() => setEditing(false)}>
-                  Cancel
+                  {t("cancel")}
                 </button>
-                <button
-                  type="button"
+                <ConfirmButton
                   class="ghost danger push"
+                  confirmText={t("reallyDeleteEvent")}
                   disabled={remove.pending()}
-                  onClick={() => void remove.run()}
+                  onConfirm={() => void remove.run()}
                 >
-                  Delete event
-                </button>
+                  {t("deleteEvent")}
+                </ConfirmButton>
               </span>
             </form>
           </Show>
 
           <article class="stack gap-top">
-            <h2>Attendance</h2>
+            <h2>{t("attendance")}</h2>
             <div class="row-actions">
               <For each={ATTENDANCE_STATUSES}>
                 {(status) => (
@@ -147,7 +156,7 @@ export default function EventDetail() {
                     disabled={mark.pending()}
                     onClick={() => void mark.run(status)}
                   >
-                    I'm {status}
+                    {t("iAm")(status)}
                   </button>
                 )}
               </For>
@@ -155,7 +164,7 @@ export default function EventDetail() {
 
             <Show when={can("teacher")}>
               <form
-                class="row"
+                class="row row-end"
                 onSubmit={(e) => {
                   e.preventDefault();
                   const data = new FormData(e.currentTarget);
@@ -165,27 +174,30 @@ export default function EventDetail() {
                   );
                 }}
               >
-                <input name="user_id" placeholder="User id" required />
-                <select name="status">
-                  <For each={ATTENDANCE_STATUSES}>
-                    {(status) => <option value={status}>{status}</option>}
-                  </For>
-                </select>
+                <UserPicker name="user_id" label={t("person")} />
+                <label>
+                  {t("status")}
+                  <select name="status">
+                    <For each={ATTENDANCE_STATUSES}>
+                      {(status) => <option value={status}>{t("attendanceWord")(status)}</option>}
+                    </For>
+                  </select>
+                </label>
                 <button type="submit" disabled={mark.pending()}>
-                  Mark user
+                  {t("markUser")}
                 </button>
               </form>
             </Show>
             <ErrorLine error={mark.error() ?? unmark.error()} />
 
             <Show when={!roster.loading} fallback={<Loading />}>
-              <Show when={roster()?.length} fallback={<Empty>Nobody marked yet.</Empty>}>
+              <Show when={roster()?.length} fallback={<Empty>{t("nobodyMarkedYet")}</Empty>}>
                 <div class="table-wrap">
                   <table>
                     <thead>
                       <tr>
-                        <th>User</th>
-                        <th>Status</th>
+                        <th>{t("userCol")}</th>
+                        <th>{t("status")}</th>
                         <Show when={can("teacher")}>
                           <th />
                         </Show>
@@ -195,21 +207,24 @@ export default function EventDetail() {
                       <For each={roster()}>
                         {(entry) => (
                           <tr>
-                            <td class="mono">
-                              {entry.user === user()?.id ? "you" : entry.user}
+                            <td>
+                              {personLabel(entry.user)}
+                              <Show when={entry.user.id === user()?.id}>{t("you")}</Show>
                             </td>
                             <td>
-                              <span class={`badge badge-${entry.status}`}>{entry.status}</span>
+                              <span class={`badge badge-${entry.status}`}>
+                                {t("attendanceWord")(entry.status)}
+                              </span>
                             </td>
                             <Show when={can("teacher")}>
                               <td>
-                                <button
-                                  class="ghost danger"
+                                <ConfirmButton
+                                  confirmText={t("reallyRemove")}
                                   disabled={unmark.pending()}
-                                  onClick={() => void unmark.run(entry.user)}
+                                  onConfirm={() => void unmark.run(entry.user.id)}
                                 >
-                                  Remove
-                                </button>
+                                  {t("remove")}
+                                </ConfirmButton>
                               </td>
                             </Show>
                           </tr>
@@ -228,9 +243,9 @@ export default function EventDetail() {
 }
 
 function NotFoundMessage(props: { error: unknown }) {
-  const message =
+  const message = () =>
     props.error instanceof ApiError && props.error.status === 404
-      ? "This event does not exist."
-      : "Failed to load the event.";
-  return <Empty>{message}</Empty>;
+      ? t("eventMissing")
+      : t("eventLoadFailed");
+  return <Empty>{message()}</Empty>;
 }

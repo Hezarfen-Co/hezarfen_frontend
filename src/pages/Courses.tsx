@@ -8,6 +8,7 @@ import { IconPlus } from "../components/Icons";
 import { createAction } from "../lib/action";
 import { courses } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { t } from "../lib/i18n";
 import { LIMITS } from "../lib/types";
 
 export default function Courses() {
@@ -32,12 +33,12 @@ export default function Courses() {
     <section class="page">
       <header class="page-head">
         <div>
-          <h1>Courses</h1>
-          <p class="sub">Everything on offer — your enrollments are tagged.</p>
+          <h1>{t("coursesTitle")}</h1>
+          <p class="sub">{t("coursesSub")}</p>
         </div>
         <Show when={can("teacher")}>
           <button onClick={() => setCreating((open) => !open)}>
-            <IconPlus /> New course
+            <IconPlus /> {t("newCourse")}
           </button>
         </Show>
       </header>
@@ -50,33 +51,48 @@ export default function Courses() {
             void create.run(e.currentTarget);
           }}
         >
-          <input
-            name="title"
-            placeholder="Title"
-            required
-            maxLength={LIMITS.courseTitle}
-            ref={(el) => queueMicrotask(() => el.focus())}
-          />
-          <textarea
-            name="description"
-            placeholder="Description"
-            rows={2}
-            maxLength={LIMITS.courseDescription}
-          />
+          <label>
+            {t("title")}
+            <input
+              name="title"
+              required
+              maxLength={LIMITS.courseTitle}
+              ref={(el) => queueMicrotask(() => el.focus())}
+            />
+          </label>
+          <label>
+            {t("description")}
+            <textarea name="description" rows={2} maxLength={LIMITS.courseDescription} />
+          </label>
           <ErrorLine error={create.error()} />
           <span class="row-actions">
             <button type="submit" disabled={create.pending()}>
-              Add course
+              {t("addCourse")}
             </button>
             <button type="button" class="ghost" onClick={() => setCreating(false)}>
-              Cancel
+              {t("cancel")}
             </button>
           </span>
         </form>
       </Show>
 
       <Show when={!list.loading} fallback={<Loading />}>
-        <Show when={list()?.length} fallback={<Empty>No courses yet.</Empty>}>
+        <Show
+          when={list()?.length}
+          fallback={
+            <Empty
+              action={
+                can("teacher") ? (
+                  <button onClick={() => setCreating(true)}>
+                    <IconPlus /> {t("newCourse")}
+                  </button>
+                ) : undefined
+              }
+            >
+              {t("noCoursesYet")}
+            </Empty>
+          }
+        >
           <div class="grid">
             <For each={list()}>
               {(course) => (
@@ -84,7 +100,7 @@ export default function Courses() {
                   <header class="row">
                     <h3>{course.title}</h3>
                     <Show when={enrolled().has(course.id)}>
-                      <span class="badge">enrolled</span>
+                      <span class="badge">{t("enrolledBadge")}</span>
                     </Show>
                   </header>
                   <Show when={course.description}>

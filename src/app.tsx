@@ -16,6 +16,7 @@ const Courses = lazy(() => import("./pages/Courses"));
 const CourseDetail = lazy(() => import("./pages/CourseDetail"));
 const Exams = lazy(() => import("./pages/Exams"));
 const ExamDetail = lazy(() => import("./pages/ExamDetail"));
+const ExamRoom = lazy(() => import("./pages/ExamRoom"));
 const Marks = lazy(() => import("./pages/Marks"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Users = lazy(() => import("./pages/Users"));
@@ -46,6 +47,7 @@ export function App() {
         <Route path="/courses/:id" component={CourseDetail} />
         <Route path="/exams" component={Exams} />
         <Route path="/exams/:id" component={ExamDetail} />
+        <Route path="/exams/:id/room" component={ExamRoom} />
         <Route path="/marks" component={Marks} />
         <Route path="/profile" component={Profile} />
         <Route path="/users" component={Users} />

@@ -3,6 +3,7 @@
 
 import { batch, createSignal, type Accessor } from "solid-js";
 import { ApiError } from "./api";
+import { t } from "./i18n";
 
 export interface Action<Args extends unknown[]> {
   run: (...args: Args) => Promise<boolean>;
@@ -42,8 +43,8 @@ export function createAction<Args extends unknown[]>(
 function describe(err: unknown): string {
   if (err instanceof ApiError) {
     return err.retryAfterSecs !== undefined
-      ? `${err.message} — retry in ${err.retryAfterSecs}s`
+      ? `${err.message} — ${t("retryIn")(err.retryAfterSecs)}`
       : err.message;
   }
-  return err instanceof Error ? err.message : "something went wrong";
+  return err instanceof Error ? err.message : t("somethingWrong");
 }

@@ -20,6 +20,11 @@ export function Loading() {
   );
 }
 
-export function Empty(props: { children: JSX.Element }) {
-  return <p class="empty">{props.children}</p>;
+export function Empty(props: { children: JSX.Element; action?: JSX.Element }) {
+  return (
+    <div class="empty">
+      <p>{props.children}</p>
+      {props.action}
+    </div>
+  );
 }

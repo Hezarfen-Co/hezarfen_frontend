@@ -8,6 +8,7 @@ import { IconBook, IconCalendar, IconChart, IconNote } from "../components/Icons
 import { courses, events, marks, notes } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { formatWindow } from "../lib/format";
+import { locale, t } from "../lib/i18n";
 
 export default function Home() {
   const { user } = useAuth();
@@ -24,14 +25,10 @@ export default function Home() {
       .sort((a, b) => (a.starts_at ?? Infinity) - (b.starts_at ?? Infinity));
   };
 
-  const greeting = () => {
-    const hour = new Date().getHours();
-    const part = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
-    return `Good ${part}, ${user()?.name ?? user()?.username}`;
-  };
-  const today = new Intl.DateTimeFormat(undefined, { dateStyle: "full" }).format(
-    new Date(),
-  );
+  const greeting = () =>
+    t("greeting")(user()?.name ?? user()?.username ?? "", new Date().getHours());
+  const today = () =>
+    new Intl.DateTimeFormat(locale(), { dateStyle: "full" }).format(new Date());
 
   const average = () => {
     const value = report()?.overall_average;
@@ -43,32 +40,32 @@ export default function Home() {
       <header class="page-head">
         <div>
           <h1>{greeting()}</h1>
-          <p class="sub">{today}</p>
+          <p class="sub">{today()}</p>
         </div>
       </header>
 
       <div class="stats">
         <A href="/notes" class="card link-card stat">
           <span class="stat-label">
-            <IconNote /> Notes
+            <IconNote /> {t("statNotes")}
           </span>
           <span class="stat-value">{noteList()?.length ?? "—"}</span>
         </A>
         <A href="/events" class="card link-card stat">
           <span class="stat-label">
-            <IconCalendar /> Upcoming events
+            <IconCalendar /> {t("statUpcoming")}
           </span>
           <span class="stat-value">{eventList() ? upcoming().length : "—"}</span>
         </A>
         <A href="/courses" class="card link-card stat">
           <span class="stat-label">
-            <IconBook /> My courses
+            <IconBook /> {t("statMyCourses")}
           </span>
           <span class="stat-value">{myCourses()?.length ?? "—"}</span>
         </A>
         <A href="/marks" class="card link-card stat">
           <span class="stat-label">
-            <IconChart /> Average
+            <IconChart /> {t("statAverage")}
           </span>
           <span class="stat-value">
             {average() ?? "—"}
@@ -82,11 +79,11 @@ export default function Home() {
       <div class="cols">
         <section class="stack">
           <div class="section-head">
-            <h2>Upcoming events</h2>
-            <A href="/events">View all</A>
+            <h2>{t("upcomingEvents")}</h2>
+            <A href="/events">{t("viewAll")}</A>
           </div>
           <Show when={!eventList.loading} fallback={<Loading />}>
-            <Show when={upcoming().length} fallback={<Empty>Nothing scheduled.</Empty>}>
+            <Show when={upcoming().length} fallback={<Empty>{t("nothingScheduled")}</Empty>}>
               <For each={upcoming().slice(0, 4)}>
                 {(event) => (
                   <A href={`/events/${event.id}`} class="card link-card stack">
@@ -101,13 +98,13 @@ export default function Home() {
 
         <section class="stack">
           <div class="section-head">
-            <h2>My courses</h2>
-            <A href="/courses">View all</A>
+            <h2>{t("myCourses")}</h2>
+            <A href="/courses">{t("viewAll")}</A>
           </div>
           <Show when={!myCourses.loading} fallback={<Loading />}>
             <Show
               when={myCourses()?.length}
-              fallback={<Empty>Not enrolled in any course yet.</Empty>}
+              fallback={<Empty>{t("notEnrolledYet")}</Empty>}
             >
               <For each={myCourses()?.slice(0, 4)}>
                 {(course) => (

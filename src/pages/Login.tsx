@@ -4,15 +4,17 @@
 import { Navigate, useNavigate } from "@solidjs/router";
 import { Show, createSignal } from "solid-js";
 import { ErrorLine } from "../components/Feedback";
-import { IconPlane } from "../components/Icons";
+import { IconEye, IconEyeOff, IconPlane } from "../components/Icons";
 import { createAction } from "../lib/action";
 import { useAuth } from "../lib/auth";
+import { lang, setLang, t } from "../lib/i18n";
 import { LIMITS } from "../lib/types";
 
 export default function Login() {
   const { user, login, register } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = createSignal<"login" | "register">("login");
+  const [showPassword, setShowPassword] = createSignal(false);
 
   const submit = createAction(async (form: HTMLFormElement) => {
     const data = new FormData(form);
@@ -44,14 +46,10 @@ export default function Login() {
               <IconPlane />
             </span>
             <h1>Hezarfen</h1>
-            <p>
-              {mode() === "login"
-                ? "Welcome back — log in to continue."
-                : "Create an account to get started."}
-            </p>
+            <p>{mode() === "login" ? t("loginWelcome") : t("registerWelcome")}</p>
           </header>
           <label>
-            Username
+            {t("username")}
             <input
               name="username"
               required
@@ -62,22 +60,42 @@ export default function Login() {
             />
           </label>
           <label>
-            Password
-            <input
-              name="password"
-              type="password"
-              required
-              minLength={LIMITS.password.min}
-              maxLength={LIMITS.password.max}
-              autocomplete={mode() === "login" ? "current-password" : "new-password"}
-            />
+            {t("password")}
+            <span class="input-group">
+              <input
+                name="password"
+                type={showPassword() ? "text" : "password"}
+                required
+                minLength={LIMITS.password.min}
+                maxLength={LIMITS.password.max}
+                autocomplete={mode() === "login" ? "current-password" : "new-password"}
+              />
+              <button
+                type="button"
+                class="ghost icon-btn"
+                aria-label={showPassword() ? t("hidePassword") : t("showPassword")}
+                onClick={() => setShowPassword((shown) => !shown)}
+              >
+                {showPassword() ? <IconEyeOff /> : <IconEye />}
+              </button>
+            </span>
+            <Show when={mode() === "register"}>
+              <span class="hint">{t("atLeastChars")(LIMITS.password.min)}</span>
+            </Show>
           </label>
           <ErrorLine error={submit.error()} />
           <button type="submit" disabled={submit.pending()}>
-            {mode() === "login" ? "Log in" : "Create account"}
+            {mode() === "login" ? t("logIn") : t("createAccount")}
           </button>
           <button type="button" class="ghost" onClick={switchMode}>
-            {mode() === "login" ? "New here? Register" : "Have an account? Log in"}
+            {mode() === "login" ? t("switchToRegister") : t("switchToLogin")}
+          </button>
+          <button
+            type="button"
+            class="ghost lang-switch"
+            onClick={() => setLang(lang() === "tr" ? "en" : "tr")}
+          >
+            {t("otherLanguage")}
           </button>
         </form>
       </main>

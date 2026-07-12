@@ -9,6 +9,7 @@ import { createAction } from "../lib/action";
 import { events } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { formatWindow, fromInputValue } from "../lib/format";
+import { t } from "../lib/i18n";
 import { LIMITS } from "../lib/types";
 
 export default function Events() {
@@ -35,12 +36,12 @@ export default function Events() {
     <section class="page">
       <header class="page-head">
         <div>
-          <h1>Events</h1>
-          <p class="sub">What's happening — open one to see or mark attendance.</p>
+          <h1>{t("eventsTitle")}</h1>
+          <p class="sub">{t("eventsSub")}</p>
         </div>
         <Show when={can("teacher")}>
           <button onClick={() => setCreating((open) => !open)}>
-            <IconPlus /> New event
+            <IconPlus /> {t("newEvent")}
           </button>
         </Show>
       </header>
@@ -53,43 +54,58 @@ export default function Events() {
             void create.run(e.currentTarget);
           }}
         >
-          <input
-            name="title"
-            placeholder="Title"
-            required
-            maxLength={LIMITS.eventTitle}
-            ref={(el) => queueMicrotask(() => el.focus())}
-          />
-          <textarea
-            name="description"
-            placeholder="Description"
-            rows={2}
-            maxLength={LIMITS.eventDescription}
-          />
+          <label>
+            {t("title")}
+            <input
+              name="title"
+              required
+              maxLength={LIMITS.eventTitle}
+              ref={(el) => queueMicrotask(() => el.focus())}
+            />
+          </label>
+          <label>
+            {t("description")}
+            <textarea name="description" rows={2} maxLength={LIMITS.eventDescription} />
+          </label>
           <div class="row">
             <label>
-              Starts
+              {t("starts")}
               <input name="starts_at" type="datetime-local" />
             </label>
             <label>
-              Ends
+              {t("ends")}
               <input name="ends_at" type="datetime-local" />
             </label>
           </div>
           <ErrorLine error={create.error()} />
           <span class="row-actions">
             <button type="submit" disabled={create.pending()}>
-              Add event
+              {t("addEvent")}
             </button>
             <button type="button" class="ghost" onClick={() => setCreating(false)}>
-              Cancel
+              {t("cancel")}
             </button>
           </span>
         </form>
       </Show>
 
       <Show when={!list.loading} fallback={<Loading />}>
-        <Show when={list()?.length} fallback={<Empty>No events yet.</Empty>}>
+        <Show
+          when={list()?.length}
+          fallback={
+            <Empty
+              action={
+                can("teacher") ? (
+                  <button onClick={() => setCreating(true)}>
+                    <IconPlus /> {t("newEvent")}
+                  </button>
+                ) : undefined
+              }
+            >
+              {t("noEventsYet")}
+            </Empty>
+          }
+        >
           <div class="grid">
             <For each={list()}>
               {(event) => (

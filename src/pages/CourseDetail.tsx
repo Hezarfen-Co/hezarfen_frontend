@@ -4,11 +4,16 @@
 
 import { A, useNavigate, useParams } from "@solidjs/router";
 import { For, Show, createResource, createSignal } from "solid-js";
+import { ConfirmButton } from "../components/ConfirmButton";
 import { Empty, ErrorLine, Loading } from "../components/Feedback";
 import { IconEdit, IconPlus } from "../components/Icons";
+import { ScheduleFields, scheduleFromForm } from "../components/ScheduleFields";
+import { UserPicker } from "../components/UserPicker";
 import { createAction } from "../lib/action";
 import { ApiError, courses } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { personLabel } from "../lib/format";
+import { t } from "../lib/i18n";
 import { EXAM_KINDS, LIMITS, type Enrollment } from "../lib/types";
 
 export default function CourseDetail() {
@@ -52,7 +57,7 @@ export default function CourseDetail() {
             </div>
             <Show when={canManage()}>
               <button class="ghost" onClick={() => setEditing((open) => !open)}>
-                <IconEdit /> {editing() ? "Close" : "Edit"}
+                <IconEdit /> {editing() ? t("close") : t("edit")}
               </button>
             </Show>
           </header>
@@ -69,31 +74,37 @@ export default function CourseDetail() {
                 void save.run(e.currentTarget);
               }}
             >
-              <input
-                name="title"
-                value={current().title}
-                required
-                maxLength={LIMITS.courseTitle}
-              />
-              <textarea name="description" rows={3} maxLength={LIMITS.courseDescription}>
-                {current().description}
-              </textarea>
+              <label>
+                {t("title")}
+                <input
+                  name="title"
+                  value={current().title}
+                  required
+                  maxLength={LIMITS.courseTitle}
+                />
+              </label>
+              <label>
+                {t("description")}
+                <textarea name="description" rows={3} maxLength={LIMITS.courseDescription}>
+                  {current().description}
+                </textarea>
+              </label>
               <ErrorLine error={save.error() ?? remove.error()} />
               <span class="row-actions">
                 <button type="submit" disabled={save.pending()}>
-                  Save
+                  {t("save")}
                 </button>
                 <button type="button" class="ghost" onClick={() => setEditing(false)}>
-                  Cancel
+                  {t("cancel")}
                 </button>
-                <button
-                  type="button"
+                <ConfirmButton
                   class="ghost danger push"
+                  confirmText={t("reallyDeleteCourse")}
                   disabled={remove.pending()}
-                  onClick={() => void remove.run()}
+                  onConfirm={() => void remove.run()}
                 >
-                  Delete course
-                </button>
+                  {t("deleteCourse")}
+                </ConfirmButton>
               </span>
             </form>
           </Show>
@@ -120,6 +131,7 @@ function CourseExams(props: { courseId: string; canManage: boolean }) {
       description: String(data.get("description")),
       kind: String(data.get("kind")),
       weight: Number(data.get("weight")),
+      ...scheduleFromForm(data),
     });
     mutate((current) => [created, ...(current ?? [])]);
     form.reset();
@@ -129,10 +141,10 @@ function CourseExams(props: { courseId: string; canManage: boolean }) {
   return (
     <article class="stack gap-top">
       <div class="section-head">
-        <h2>Exams</h2>
+        <h2>{t("examsTitle")}</h2>
         <Show when={props.canManage}>
           <button class="ghost" onClick={() => setCreating((open) => !open)}>
-            <IconPlus /> New exam
+            <IconPlus /> {t("newExam")}
           </button>
         </Show>
       </div>
@@ -145,28 +157,30 @@ function CourseExams(props: { courseId: string; canManage: boolean }) {
             void create.run(e.currentTarget);
           }}
         >
-          <input
-            name="title"
-            placeholder="Title"
-            required
-            maxLength={LIMITS.examTitle}
-            ref={(el) => queueMicrotask(() => el.focus())}
-          />
-          <textarea
-            name="description"
-            placeholder="Description"
-            rows={2}
-            maxLength={LIMITS.examDescription}
-          />
+          <label>
+            {t("title")}
+            <input
+              name="title"
+              required
+              maxLength={LIMITS.examTitle}
+              ref={(el) => queueMicrotask(() => el.focus())}
+            />
+          </label>
+          <label>
+            {t("description")}
+            <textarea name="description" rows={2} maxLength={LIMITS.examDescription} />
+          </label>
           <div class="row">
             <label>
-              Kind
+              {t("kind")}
               <select name="kind">
-                <For each={EXAM_KINDS}>{(kind) => <option value={kind}>{kind}</option>}</For>
+                <For each={EXAM_KINDS}>
+                  {(kind) => <option value={kind}>{t("kindWord")(kind)}</option>}
+                </For>
               </select>
             </label>
             <label>
-              Weight
+              {t("weight")}
               <input
                 name="weight"
                 type="number"
@@ -177,29 +191,45 @@ function CourseExams(props: { courseId: string; canManage: boolean }) {
               />
             </label>
           </div>
+          <ScheduleFields />
           <ErrorLine error={create.error()} />
           <span class="row-actions">
             <button type="submit" disabled={create.pending()}>
-              Add exam
+              {t("addExam")}
             </button>
             <button type="button" class="ghost" onClick={() => setCreating(false)}>
-              Cancel
+              {t("cancel")}
             </button>
           </span>
         </form>
       </Show>
 
       <Show when={!list.loading} fallback={<Loading />}>
-        <Show when={list()?.length} fallback={<Empty>No exams yet.</Empty>}>
+        <Show
+          when={list()?.length}
+          fallback={
+            <Empty
+              action={
+                props.canManage ? (
+                  <button onClick={() => setCreating(true)}>
+                    <IconPlus /> {t("newExam")}
+                  </button>
+                ) : undefined
+              }
+            >
+              {t("noExamsYet")}
+            </Empty>
+          }
+        >
           <div class="grid">
             <For each={list()}>
               {(exam) => (
                 <A href={`/exams/${exam.id}`} class="card link-card stack">
                   <header class="row">
                     <h3>{exam.title}</h3>
-                    <span class="badge">{exam.kind}</span>
-                    <span class="badge" title="weight in the course average">
-                      ×{exam.weight}
+                    <span class="badge">{t("kindWord")(exam.kind)}</span>
+                    <span class="badge" title={t("weightTitle")}>
+                      {t("weightBadge")(exam.weight)}
                     </span>
                   </header>
                   <Show when={exam.description}>
@@ -225,45 +255,45 @@ function Roster(props: { courseId: string; canManage: boolean }) {
     const enrolled = await courses.enroll(props.courseId, String(data.get("user_id")));
     // Enrolling is an idempotent upsert; one row per (course, user).
     mutate((current) => [
-      ...(current ?? []).filter((e) => e.user !== enrolled.user),
+      ...(current ?? []).filter((e) => e.user.id !== enrolled.user.id),
       enrolled,
     ]);
     form.reset();
   });
 
   const unenroll = createAction(async (entry: Enrollment) => {
-    await courses.unenroll(props.courseId, entry.user);
-    mutate((current) => current?.filter((e) => e.user !== entry.user));
+    await courses.unenroll(props.courseId, entry.user.id);
+    mutate((current) => current?.filter((e) => e.user.id !== entry.user.id));
   });
 
   return (
     <article class="stack gap-top">
-      <h2>Roster</h2>
+      <h2>{t("roster")}</h2>
 
       <Show when={props.canManage}>
         <form
-          class="row"
+          class="row row-end"
           onSubmit={(e) => {
             e.preventDefault();
             void enroll.run(e.currentTarget);
           }}
         >
-          <input name="user_id" placeholder="Student id" required />
+          <UserPicker name="user_id" label={t("student")} />
           <button type="submit" disabled={enroll.pending()}>
-            Enroll
+            {t("enroll")}
           </button>
         </form>
         <ErrorLine error={enroll.error() ?? unenroll.error()} />
       </Show>
 
       <Show when={!roster.loading} fallback={<Loading />}>
-        <Show when={roster()?.length} fallback={<Empty>Nobody enrolled yet.</Empty>}>
+        <Show when={roster()?.length} fallback={<Empty>{t("nobodyEnrolledYet")}</Empty>}>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Student</th>
-                  <th>Enrolled by</th>
+                  <th>{t("student")}</th>
+                  <th>{t("enrolledBy")}</th>
                   <Show when={props.canManage}>
                     <th />
                   </Show>
@@ -273,17 +303,20 @@ function Roster(props: { courseId: string; canManage: boolean }) {
                 <For each={roster()}>
                   {(entry) => (
                     <tr>
-                      <td class="mono">{entry.user === user()?.id ? "you" : entry.user}</td>
-                      <td class="mono">{entry.enrolled_by}</td>
+                      <td>
+                        {personLabel(entry.user)}
+                        <Show when={entry.user.id === user()?.id}>{t("you")}</Show>
+                      </td>
+                      <td class="meta">{personLabel(entry.enrolled_by)}</td>
                       <Show when={props.canManage}>
                         <td>
-                          <button
-                            class="ghost danger"
+                          <ConfirmButton
+                            confirmText={t("reallyRemove")}
                             disabled={unenroll.pending()}
-                            onClick={() => void unenroll.run(entry)}
+                            onConfirm={() => void unenroll.run(entry)}
                           >
-                            Unenroll
-                          </button>
+                            {t("unenroll")}
+                          </ConfirmButton>
                         </td>
                       </Show>
                     </tr>
@@ -299,9 +332,9 @@ function Roster(props: { courseId: string; canManage: boolean }) {
 }
 
 function NotFoundMessage(props: { error: unknown }) {
-  const message =
+  const message = () =>
     props.error instanceof ApiError && props.error.status === 404
-      ? "This course does not exist."
-      : "Failed to load the course.";
-  return <Empty>{message}</Empty>;
+      ? t("courseMissing")
+      : t("courseLoadFailed");
+  return <Empty>{message()}</Empty>;
 }
