@@ -9,7 +9,6 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { NoteForm } from "@/components/notes/note-form";
 import { NoteList } from "@/components/notes/note-list";
-import { CollapsibleHelp } from "@/components/ui/collapsible-help";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useT } from "@/stores/preferences-context";
 
@@ -44,8 +43,6 @@ function NotesContent() {
         title={t("notes.title")}
         description={t("notes.subtitle")}
       />
-
-      <CollapsibleHelp title={t("notes.helpTitle")}>{t("notes.helpBody")}</CollapsibleHelp>
 
       <div class="space-y-5">
         <section class="surface-card p-4 sm:p-5">

@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
 import { getMyCourses } from "@/api/getMyCourses";
@@ -13,9 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
+
+const COURSE_PAGE_SIZE = 9;
 
 export default function CoursesPage() {
   return (
@@ -36,7 +39,15 @@ function CoursesContent() {
   const [description, setDescription] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  const [page, setPage] = createSignal(0);
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
+  const courseList = createMemo(() => courses() ?? []);
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(courseList().length / COURSE_PAGE_SIZE)));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+  const pageItems = createMemo(() => {
+    const start = safePage() * COURSE_PAGE_SIZE;
+    return courseList().slice(start, start + COURSE_PAGE_SIZE);
+  });
 
   const onCreate = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -108,40 +119,48 @@ function CoursesContent() {
           <Alert variant="destructive">{formatApiError(courses.error)}</Alert>
         </Show>
         <Show
-          when={(courses() ?? []).length > 0}
+          when={courseList().length > 0}
           fallback={
             <div class="rounded-md border border-dashed px-6 py-16 text-center text-sm text-muted-foreground">
               {t("courses.empty")}
             </div>
           }
         >
-          <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <For each={courses() ?? []}>
-              {(course) => (
-                <li>
-                  <Link to="/courses/$id" params={{ id: course.id }} class="group block h-full">
-                    <article class="surface-card flex h-full flex-col p-5 transition-all group-hover:-translate-y-0.5 group-hover:border-primary/30">
-                      <div class="mb-2 flex items-start justify-between gap-2">
-                        <h3 class="font-display text-lg font-semibold group-hover:text-primary">
-                          {course.title}
-                        </h3>
-                        <Show when={enrolled().has(course.id)}>
-                          <Badge variant="secondary">{t("courses.enrolled")}</Badge>
-                        </Show>
-                      </div>
-                      <p class="line-clamp-3 flex-1 text-sm text-muted-foreground">
-                        {course.description || "—"}
-                      </p>
-                      <p class="mt-3 text-xs text-muted-foreground">
-                        {t("common.creator")}:{" "}
-                        <span class="font-mono text-foreground">{course.creator}</span>
-                      </p>
-                    </article>
-                  </Link>
-                </li>
-              )}
-            </For>
-          </ul>
+          <div class="space-y-4">
+            <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <For each={pageItems()}>
+                {(course) => (
+                  <li>
+                    <Link to="/courses/$id" params={{ id: course.id }} class="group block h-full">
+                      <article class="surface-card flex h-full min-h-44 flex-col overflow-hidden transition-all group-hover:-translate-y-0.5 group-hover:border-primary/30 group-hover:shadow-sm">
+                        <div class="border-b border-border/50 bg-gradient-to-br from-violet-500/10 via-transparent to-transparent p-4">
+                          <div class="flex items-start justify-between gap-2">
+                            <h3 class="line-clamp-2 font-display text-lg font-semibold leading-snug group-hover:text-primary">
+                              {course.title}
+                            </h3>
+                            <Show when={enrolled().has(course.id)}>
+                              <Badge variant="secondary" class="shrink-0 rounded-sm">{t("courses.enrolled")}</Badge>
+                            </Show>
+                          </div>
+                        </div>
+                        <div class="flex flex-1 flex-col p-4">
+                          <p class="line-clamp-3 flex-1 text-sm text-muted-foreground">
+                            {course.description || "—"}
+                          </p>
+                          <p class="mt-4 truncate text-xs text-muted-foreground">
+                            {t("common.creator")}: <span class="font-mono text-foreground">{course.creator}</span>
+                          </p>
+                        </div>
+                      </article>
+                    </Link>
+                  </li>
+                )}
+              </For>
+            </ul>
+            <Show when={courseList().length > COURSE_PAGE_SIZE}>
+              <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+            </Show>
+          </div>
         </Show>
       </Suspense>
     </div>

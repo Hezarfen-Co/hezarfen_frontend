@@ -5,17 +5,19 @@ import { getExams } from "@/api/getExams";
 import { ExamCard } from "@/components/exams/exam-card";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
-import { CollapsibleHelp } from "@/components/ui/collapsible-help";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { formatApiError } from "@/api/client";
 import { IconChevronRight } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
+
+const EXAM_PAGE_SIZE = 6;
 
 export default function ExamsPage() {
   return (
@@ -32,6 +34,7 @@ function ExamsContent() {
   const [exams] = createResource(() => getExams());
   const [courses] = createResource(() => getCourses());
   const [openCourse, setOpenCourse] = createSignal<string | null>(null);
+  const [sectionPages, setSectionPages] = createSignal<Record<string, number>>({});
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
 
   const courseSections = createMemo(() => {
@@ -58,6 +61,11 @@ function ExamsContent() {
     setOpenCourse((prev) => (prev === id ? null : id));
   };
 
+  const sectionPage = (id: string, totalPages: number) => Math.min(sectionPages()[id] ?? 0, totalPages - 1);
+  const setSectionPage = (id: string, page: number) => {
+    setSectionPages((current) => ({ ...current, [id]: page }));
+  };
+
   return (
     <div class="space-y-6">
       <PageHeader
@@ -66,10 +74,6 @@ function ExamsContent() {
         title={t("exams.title")}
         description={t("exams.subtitle")}
       />
-
-      <CollapsibleHelp title={t("exams.helpTitle")}>
-        {t("exams.helpBody")} {t("exams.mustBelongCourse")}
-      </CollapsibleHelp>
 
       <Show when={canCreate()}>
         <p class="rounded-md border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
@@ -98,12 +102,18 @@ function ExamsContent() {
                 <For each={courseSections()}>
                   {(section) => {
                     const isOpen = () => openCourse() === section.id;
+                    const totalPages = () => Math.max(1, Math.ceil(section.exams.length / EXAM_PAGE_SIZE));
+                    const page = () => sectionPage(section.id, totalPages());
+                    const pageItems = () => {
+                      const start = page() * EXAM_PAGE_SIZE;
+                      return section.exams.slice(start, start + EXAM_PAGE_SIZE);
+                    };
                     return (
                       <section class="surface-card overflow-hidden">
                         <button
                           type="button"
                           onClick={() => toggleCourse(section.id)}
-                          class="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/30"
+                          class="flex w-full items-center justify-between gap-3 bg-gradient-to-r from-rose-500/10 via-transparent to-transparent px-5 py-4 text-left transition-colors hover:bg-muted/30"
                         >
                           <div class="flex items-center gap-3">
                             <IconChevronRight
@@ -114,9 +124,9 @@ function ExamsContent() {
                           <Badge variant="outline" class="rounded-sm">{section.exams.length}</Badge>
                         </button>
                         <Show when={isOpen()}>
-                          <div class="border-t border-border/50 px-5 pb-5 pt-4">
+                          <div class="space-y-4 border-t border-border/50 px-5 pb-5 pt-4">
                             <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                              <For each={section.exams}>
+                              <For each={pageItems()}>
                                 {(exam) => (
                                   <li>
                                     <ExamCard exam={exam} courseTitle={section.title} now={now()} />
@@ -124,6 +134,9 @@ function ExamsContent() {
                                 )}
                               </For>
                             </ul>
+                            <Show when={section.exams.length > EXAM_PAGE_SIZE}>
+                              <PaginationControls page={page()} totalPages={totalPages()} onPageChange={(next) => setSectionPage(section.id, next)} />
+                            </Show>
                           </div>
                         </Show>
                       </section>

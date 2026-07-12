@@ -478,7 +478,7 @@ const en: Dict = {
   "notes.title": "Notes",
   "notes.subtitle": "Private scratchpad for class ideas and reminders.",
   "notes.new": "New note",
-  "notes.empty": "Nothing here yet. Write your first note on the left.",
+  "notes.empty": "Nothing here yet. Write your first note.",
   "notes.noContent": "No content",
   "notes.helpTitle": "About notes",
   "notes.helpBody":
@@ -844,7 +844,7 @@ const tr: Dict = {
   "notes.title": "Notlar",
   "notes.subtitle": "Ders fikirleri ve hatırlatmalar için özel defter.",
   "notes.new": "Yeni not",
-  "notes.empty": "Henüz bir şey yok. Soldan ilk notunu yaz.",
+  "notes.empty": "Henüz bir şey yok. İlk notunu yaz.",
   "notes.noContent": "İçerik yok",
   "notes.helpTitle": "Notlar hakkında",
   "notes.helpBody":

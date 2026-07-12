@@ -8,7 +8,6 @@ import { EventCard } from "@/components/events/event-card";
 import { EventForm } from "@/components/events/event-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
-import { CollapsibleHelp } from "@/components/ui/collapsible-help";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -45,8 +44,6 @@ function EventsContent() {
           ) : undefined
         }
       />
-
-      <CollapsibleHelp title={t("events.helpTitle")}>{t("events.helpBody")}</CollapsibleHelp>
 
       <Show when={canCreate() && showForm()}>
         <section class="surface-card max-w-2xl p-5 animate-fade-up">

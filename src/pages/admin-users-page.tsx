@@ -6,7 +6,6 @@ import type { Role } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { UserTable } from "@/components/users/user-table";
-import { CollapsibleHelp } from "@/components/ui/collapsible-help";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -43,8 +42,6 @@ function AdminUsersContent() {
         title={t("admin.title")}
         description={t("admin.subtitle")}
       />
-
-      <CollapsibleHelp title={t("admin.helpTitle")}>{t("admin.helpBody")}</CollapsibleHelp>
 
       {error() && (
         <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
