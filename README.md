@@ -25,7 +25,7 @@ bun run dev
 
 Open [http://localhost:5173](http://localhost:5173).
 
-The Vite server proxies `/auth`, `/users`, `/notes`, `/events`, `/exams`, `/exam-room`, `/time`, and `/health` to the backend so the HttpOnly session cookie stays same-origin.
+The Vite server proxies `/api/auth`, `/api/users`, `/api/notes`, `/api/events`, `/api/exams`, `/api/courses`, `/api/marks`, `/api/time`, and `/api/health` to the backend so the HttpOnly session cookie stays same-origin while page URLs like `/notes` remain frontend routes on refresh.
 
 ## Scripts
 

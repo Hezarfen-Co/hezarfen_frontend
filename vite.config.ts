@@ -12,12 +12,14 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: Object.fromEntries(
-      ["/auth", "/users", "/notes", "/events", "/exams", "/courses", "/marks", "/health", "/time"].map((p) => [
-        p,
-        { target, changeOrigin: true },
-      ]),
-    ),
+    proxy: {
+      "/api": {
+        target,
+        changeOrigin: true,
+        ws: true,
+        rewrite: (path) => path.replace(/^\/api(?=\/|$)/, ""),
+      },
+    },
   },
   build: {
     target: "esnext",

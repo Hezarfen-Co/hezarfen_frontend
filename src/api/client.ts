@@ -16,6 +16,8 @@ type RequestOptions = {
   signal?: AbortSignal;
 };
 
+const API_PREFIX = "/api";
+
 export async function client<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {};
   let body: string | undefined;
@@ -25,7 +27,7 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
     body = JSON.stringify(options.body);
   }
 
-  const res = await fetch(path, {
+  const res = await fetch(`${API_PREFIX}${path}`, {
     method: options.method ?? "GET",
     headers,
     body,

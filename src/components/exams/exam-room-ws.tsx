@@ -49,7 +49,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
 
   const wsUrl = () => {
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-    return `${proto}//${window.location.host}/exams/${encodeURIComponent(props.exam.id)}/attempt/ws`;
+    return `${proto}//${window.location.host}/api/exams/${encodeURIComponent(props.exam.id)}/attempt/ws`;
   };
 
   const connectWs = () => {
