@@ -12,6 +12,7 @@ import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { ExamResultBadge } from "@/components/exams/exam-result-badge";
 import { GradeForm } from "@/components/exams/grade-form";
+import { StudentExamRoom } from "@/components/exams/student-exam-room";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -204,6 +205,8 @@ function ExamDetailContent() {
                 </div>
               </div>
             </section>
+
+            <StudentExamRoom exam={ex()} />
 
             <Show when={!isTeacherPlus()}>
               <section class="surface-card p-6">

@@ -3,6 +3,7 @@ export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 export type ExamKind = "homework" | "quiz" | "midterm" | "final" | "project" | "oral";
 export type ExamMode = "sync" | "async";
 export type QuestionKind = "choice" | "text";
+export type AttemptStatus = "in_progress" | "submitted" | "expired";
 
 export type User = {
   id: string;
@@ -83,6 +84,35 @@ export type ExamQuestion = {
   points: number;
   choices: string[] | null;
   correct: number | null;
+};
+
+export type ExamAttempt = {
+  id?: string;
+  exam?: string;
+  user?: string;
+  status: AttemptStatus;
+  deadline: number | null;
+  remaining_ms: number;
+  mark: number | null;
+  answered: number;
+  question_count: number;
+  now: number;
+};
+
+export type AttemptAnswer = {
+  selected?: number | null;
+  text?: string | null;
+  updated_at?: number;
+};
+
+export type AttemptQuestion = {
+  id: string;
+  exam: string;
+  text: string;
+  kind: QuestionKind;
+  points: number;
+  choices: string[] | null;
+  answer: AttemptAnswer | null;
 };
 
 export type MarkEntry = {

@@ -1,0 +1,289 @@
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
+import { getExamAttempt } from "@/api/getExamAttempt";
+import { getExamAttemptQuestions } from "@/api/getExamAttemptQuestions";
+import { postExamAttempt } from "@/api/postExamAttempt";
+import { postExamAttemptAnswer } from "@/api/postExamAttemptAnswer";
+import { postExamAttemptFinish } from "@/api/postExamAttemptFinish";
+import { ApiError, formatApiError } from "@/api/client";
+import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
+import { PageSpinner } from "@/components/ui/page-spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { formatDateTime } from "@/lib/format";
+import { useT } from "@/stores/preferences-context";
+
+function formatRemaining(ms: number): string {
+  const safe = Math.max(0, ms);
+  const totalSeconds = Math.floor(safe / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+export function StudentExamRoom(props: { exam: Exam }) {
+  const t = useT();
+  const [attempt, { refetch: refetchAttempt, mutate: setAttempt }] = createResource(
+    () => props.exam.id,
+    async (examId) => {
+      try {
+        return await getExamAttempt(examId);
+      } catch (err) {
+        if (err instanceof ApiError && (err.status === 404 || err.status === 409)) return null;
+        throw err;
+      }
+    },
+  );
+  const [questions, { refetch: refetchQuestions }] = createResource(
+    () => (attempt() ? props.exam.id : null),
+    async (examId) => {
+      if (!examId) return [];
+      return getExamAttemptQuestions(examId);
+    },
+  );
+  const [error, setError] = createSignal("");
+  const [pending, setPending] = createSignal(false);
+  const [finishOpen, setFinishOpen] = createSignal(false);
+  const [remainingMs, setRemainingMs] = createSignal(0);
+  const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async");
+  const canWrite = createMemo(() => attempt()?.status === "in_progress" && remainingMs() > 0);
+
+  createEffect(() => {
+    const current = attempt();
+    setRemainingMs(current?.remaining_ms ?? 0);
+    if (!current || current.status !== "in_progress" || current.remaining_ms <= 0) return;
+    const startedAt = Date.now();
+    const initial = current.remaining_ms;
+    const timer = window.setInterval(() => {
+      setRemainingMs(Math.max(0, initial - (Date.now() - startedAt)));
+    }, 1000);
+    onCleanup(() => window.clearInterval(timer));
+  });
+
+  const start = async () => {
+    setError("");
+    setPending(true);
+    try {
+      const next = await postExamAttempt(props.exam.id);
+      setAttempt(next);
+      await refetchQuestions();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const saveAnswer = async (question: AttemptQuestion, value: string) => {
+    setError("");
+    setPending(true);
+    try {
+      if (question.kind === "choice") {
+        await postExamAttemptAnswer(props.exam.id, { question_id: question.id, selected: Number(value) });
+      } else {
+        await postExamAttemptAnswer(props.exam.id, { question_id: question.id, text: value });
+      }
+      await refetchAttempt();
+      await refetchQuestions();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const finish = async () => {
+    setError("");
+    setPending(true);
+    try {
+      const next = await postExamAttemptFinish(props.exam.id);
+      setAttempt(next);
+      await refetchQuestions();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <section class="surface-card space-y-4 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
+        <Show when={scheduled()} fallback={<Badge variant="outline">{t("attempt.unscheduled")}</Badge>}>
+          <Show
+            when={attempt()}
+            fallback={
+              <Button type="button" disabled={pending()} onClick={() => void start()}>
+                {t("attempt.start")}
+              </Button>
+            }
+          >
+            <Button type="button" variant="outline" disabled={pending()} onClick={() => void start()}>
+              {t("attempt.resume")}
+            </Button>
+          </Show>
+        </Show>
+      </div>
+
+      {error() && <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+
+      <Suspense fallback={<PageSpinner />}>
+        <Show when={scheduled()}>
+          <Show when={attempt()} fallback={<p class="rounded-sm bg-muted/40 px-3 py-4 text-sm text-muted-foreground">{t("attempt.notStarted")}</p>}>
+            {(a) => <AttemptSummary attempt={a()} remainingMs={remainingMs()} />}
+          </Show>
+        </Show>
+
+        <Show when={attempt()}>
+          <Show when={!canWrite()}>
+            <p class="rounded-sm bg-muted/40 px-3 py-3 text-sm text-muted-foreground">{t("attempt.closed")}</p>
+          </Show>
+          <div class="space-y-4">
+            <For each={questions() ?? []}>
+              {(question, index) => (
+                <QuestionAnswerCard
+                  index={index() + 1}
+                  question={question}
+                  disabled={!canWrite() || pending()}
+                  onSave={(value) => saveAnswer(question, value)}
+                />
+              )}
+            </For>
+          </div>
+          <Show when={canWrite()}>
+            <Button type="button" variant="destructive" disabled={pending()} onClick={() => setFinishOpen(true)}>
+              {t("attempt.finish")}
+            </Button>
+          </Show>
+        </Show>
+      </Suspense>
+
+      <ConfirmDialog
+        open={finishOpen()}
+        onOpenChange={setFinishOpen}
+        title={t("attempt.finish")}
+        summary={props.exam.title}
+        onConfirm={finish}
+      />
+    </section>
+  );
+}
+
+function AttemptSummary(props: { attempt: ExamAttempt; remainingMs: number }) {
+  const t = useT();
+  const statusLabel = () => {
+    if (props.attempt.status === "submitted") return t("attempt.submitted");
+    if (props.attempt.status === "expired") return t("attempt.expired");
+    return props.attempt.status;
+  };
+  return (
+    <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-md border p-3">
+        <p class="text-xs text-muted-foreground">{t("attempt.status")}</p>
+        <p class="mt-1 font-medium capitalize">{statusLabel()}</p>
+      </div>
+      <div class="rounded-md border p-3">
+        <p class="text-xs text-muted-foreground">{t("attempt.remaining")}</p>
+        <p class="mt-1 font-mono font-medium">{formatRemaining(props.remainingMs)}</p>
+      </div>
+      <div class="rounded-md border p-3">
+        <p class="text-xs text-muted-foreground">{t("attempt.progress")}</p>
+        <p class="mt-1 font-medium">{props.attempt.answered} / {props.attempt.question_count}</p>
+      </div>
+      <div class="rounded-md border p-3">
+        <p class="text-xs text-muted-foreground">{t("attempt.deadline")}</p>
+        <p class="mt-1 font-medium">{formatDateTime(props.attempt.deadline)}</p>
+      </div>
+    </div>
+  );
+}
+
+function QuestionAnswerCard(props: {
+  index: number;
+  question: AttemptQuestion;
+  disabled: boolean;
+  onSave: (value: string) => Promise<void>;
+}) {
+  const t = useT();
+  const [value, setValue] = createSignal(
+    props.question.kind === "choice"
+      ? props.question.answer?.selected != null
+        ? String(props.question.answer.selected)
+        : ""
+      : props.question.answer?.text ?? "",
+  );
+  const [saved, setSaved] = createSignal(false);
+
+  createEffect(() => {
+    setValue(
+      props.question.kind === "choice"
+        ? props.question.answer?.selected != null
+          ? String(props.question.answer.selected)
+          : ""
+        : props.question.answer?.text ?? "",
+    );
+    setSaved(false);
+  });
+
+  const save = async () => {
+    await props.onSave(value());
+    setSaved(true);
+  };
+
+  return (
+    <article class="rounded-md border p-4">
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <span class="text-xs font-semibold text-muted-foreground">#{props.index}</span>
+        <Badge variant="outline">{props.question.points} {t("questions.points")}</Badge>
+        <Show when={saved()}>
+          <Badge variant="outline">{t("attempt.saved")}</Badge>
+        </Show>
+      </div>
+      <p class="mb-4 whitespace-pre-wrap text-sm font-medium">{props.question.text}</p>
+      <Show
+        when={props.question.kind === "choice"}
+        fallback={
+          <Textarea
+            value={value()}
+            rows={4}
+            disabled={props.disabled}
+            maxlength={10000}
+            onInput={(e) => {
+              setSaved(false);
+              setValue(e.currentTarget.value);
+            }}
+          />
+        }
+      >
+        <div class="space-y-2">
+          <For each={props.question.choices ?? []}>
+            {(choice, choiceIndex) => (
+              <label class="flex items-center gap-2 rounded-sm border px-3 py-2 text-sm">
+                <Input
+                  class="h-4 w-4 shadow-none"
+                  type="radio"
+                  name={props.question.id}
+                  value={choiceIndex()}
+                  checked={value() === String(choiceIndex())}
+                  disabled={props.disabled}
+                  onChange={(e) => {
+                    setSaved(false);
+                    setValue(e.currentTarget.value);
+                  }}
+                />
+                {choice}
+              </label>
+            )}
+          </For>
+        </div>
+      </Show>
+      <Button type="button" size="sm" class="mt-3" disabled={props.disabled} onClick={() => void save()}>
+        {t("attempt.saveAnswer")}
+      </Button>
+    </article>
+  );
+}
