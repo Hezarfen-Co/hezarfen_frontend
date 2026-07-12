@@ -177,6 +177,7 @@ export type MessageKey =
   | "questions.choicesRange"
   | "questions.correctRange"
   | "attempt.title"
+  | "attempt.openRoom"
   | "attempt.start"
   | "attempt.resume"
   | "attempt.finish"
@@ -187,10 +188,14 @@ export type MessageKey =
   | "attempt.notStarted"
   | "attempt.unscheduled"
   | "attempt.saved"
+  | "attempt.savedAt"
+  | "attempt.serverNow"
+  | "attempt.mark"
   | "attempt.saveAnswer"
   | "attempt.submitted"
   | "attempt.expired"
   | "attempt.closed"
+  | "attempt.inProgress"
   | "exams.helpTitle"
   | "exams.helpBody"
   | "admin.title"
@@ -459,6 +464,7 @@ const en: Dict = {
   "questions.choicesRange": "Choice questions need 2–10 choices, each at most 500 characters",
   "questions.correctRange": "Correct index must point to one of the choices",
   "attempt.title": "Exam room",
+  "attempt.openRoom": "Open exam room",
   "attempt.start": "Start exam",
   "attempt.resume": "Resume exam",
   "attempt.finish": "Finish exam",
@@ -469,10 +475,14 @@ const en: Dict = {
   "attempt.notStarted": "Start the scheduled exam to see questions.",
   "attempt.unscheduled": "This exam is not scheduled for online sitting.",
   "attempt.saved": "Saved",
+  "attempt.savedAt": "Saved at",
+  "attempt.serverNow": "Server time",
+  "attempt.mark": "Mark",
   "attempt.saveAnswer": "Save answer",
   "attempt.submitted": "Submitted",
   "attempt.expired": "Expired",
   "attempt.closed": "This attempt is closed. Answers are read-only.",
+  "attempt.inProgress": "In progress",
   "exams.helpTitle": "About exams",
   "exams.helpBody":
     "Exams belong to a course. Teachers add them from the course page with a kind and weight (1–100). Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
@@ -751,6 +761,7 @@ const tr: Dict = {
   "questions.choicesRange": "Seçmeli soruda 2–10 seçenek gerekir; her biri en fazla 500 karakter olmalı",
   "questions.correctRange": "Doğru indeks seçeneklerden birini göstermeli",
   "attempt.title": "Sınav odası",
+  "attempt.openRoom": "Sınav odasını aç",
   "attempt.start": "Sınava başla",
   "attempt.resume": "Sınava devam et",
   "attempt.finish": "Sınavı bitir",
@@ -761,10 +772,14 @@ const tr: Dict = {
   "attempt.notStarted": "Soruları görmek için zamanlı sınavı başlat.",
   "attempt.unscheduled": "Bu sınav çevrim içi oturum için zamanlanmamış.",
   "attempt.saved": "Kaydedildi",
+  "attempt.savedAt": "Kayıt zamanı",
+  "attempt.serverNow": "Sunucu saati",
+  "attempt.mark": "Not",
   "attempt.saveAnswer": "Cevabı kaydet",
   "attempt.submitted": "Teslim edildi",
   "attempt.expired": "Süresi doldu",
   "attempt.closed": "Bu oturum kapalı. Cevaplar salt okunur.",
+  "attempt.inProgress": "Devam ediyor",
   "exams.helpTitle": "Sınavlar hakkında",
   "exams.helpBody":
     "Sınavlar bir derse aittir. Öğretmenler ders sayfasından tür ve ağırlık (1–100) ile ekler. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",

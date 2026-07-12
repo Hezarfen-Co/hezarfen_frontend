@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 function formatRemaining(ms: number): string {
   const safe = Math.max(0, ms);
@@ -24,7 +24,7 @@ function formatRemaining(ms: number): string {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function StudentExamRoom(props: { exam: Exam }) {
+export function StudentExamRoom(props: { exam: Exam; compact?: boolean }) {
   const t = useT();
   const [attempt, { refetch: refetchAttempt, mutate: setAttempt }] = createResource(
     () => props.exam.id,
@@ -48,6 +48,7 @@ export function StudentExamRoom(props: { exam: Exam }) {
   const [pending, setPending] = createSignal(false);
   const [finishOpen, setFinishOpen] = createSignal(false);
   const [remainingMs, setRemainingMs] = createSignal(0);
+  const [roomOpen, setRoomOpen] = createSignal(false);
   const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async");
   const canWrite = createMemo(() => attempt()?.status === "in_progress" && remainingMs() > 0);
 
@@ -69,6 +70,7 @@ export function StudentExamRoom(props: { exam: Exam }) {
     try {
       const next = await postExamAttempt(props.exam.id);
       setAttempt(next);
+      setRoomOpen(true);
       await refetchQuestions();
     } catch (err) {
       setError(formatApiError(err));
@@ -110,9 +112,14 @@ export function StudentExamRoom(props: { exam: Exam }) {
   };
 
   return (
-    <section class="surface-card space-y-4 p-5">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
+    <section class={props.compact ? "space-y-5" : "surface-card space-y-4 p-5"}>
+      <div class="surface-card flex flex-wrap items-center justify-between gap-3 p-5">
+        <div>
+          <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
+          <p class="mt-1 text-sm text-muted-foreground">
+            {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : t("attempt.unscheduled")}
+          </p>
+        </div>
         <Show when={scheduled()} fallback={<Badge variant="outline">{t("attempt.unscheduled")}</Badge>}>
           <Show
             when={attempt()}
@@ -122,7 +129,7 @@ export function StudentExamRoom(props: { exam: Exam }) {
               </Button>
             }
           >
-            <Button type="button" variant="outline" disabled={pending()} onClick={() => void start()}>
+            <Button type="button" variant="outline" disabled={pending()} onClick={() => setRoomOpen(true)}>
               {t("attempt.resume")}
             </Button>
           </Show>
@@ -138,11 +145,11 @@ export function StudentExamRoom(props: { exam: Exam }) {
           </Show>
         </Show>
 
-        <Show when={attempt()}>
+        <Show when={attempt() && roomOpen()}>
           <Show when={!canWrite()}>
             <p class="rounded-sm bg-muted/40 px-3 py-3 text-sm text-muted-foreground">{t("attempt.closed")}</p>
           </Show>
-          <div class="space-y-4">
+          <div class="grid gap-4 lg:grid-cols-2">
             <For each={questions() ?? []}>
               {(question, index) => (
                 <QuestionAnswerCard
@@ -175,29 +182,41 @@ export function StudentExamRoom(props: { exam: Exam }) {
 
 function AttemptSummary(props: { attempt: ExamAttempt; remainingMs: number }) {
   const t = useT();
+  const { locale } = usePreferences();
   const statusLabel = () => {
+    if (props.attempt.status === "in_progress") return t("attempt.inProgress");
     if (props.attempt.status === "submitted") return t("attempt.submitted");
     if (props.attempt.status === "expired") return t("attempt.expired");
     return props.attempt.status;
   };
   return (
-    <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-      <div class="rounded-md border p-3">
+    <div class="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-6">
+      <div class="rounded-md border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.status")}</p>
-        <p class="mt-1 font-medium capitalize">{statusLabel()}</p>
+        <p class="mt-1 font-medium">{statusLabel()}</p>
       </div>
-      <div class="rounded-md border p-3">
+      <div class="rounded-md border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.remaining")}</p>
         <p class="mt-1 font-mono font-medium">{formatRemaining(props.remainingMs)}</p>
       </div>
-      <div class="rounded-md border p-3">
+      <div class="rounded-md border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.progress")}</p>
         <p class="mt-1 font-medium">{props.attempt.answered} / {props.attempt.question_count}</p>
       </div>
-      <div class="rounded-md border p-3">
+      <div class="rounded-md border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.deadline")}</p>
-        <p class="mt-1 font-medium">{formatDateTime(props.attempt.deadline)}</p>
+        <p class="mt-1 font-medium">{formatDateTime(props.attempt.deadline, locale())}</p>
       </div>
+      <div class="rounded-md border bg-background/60 p-3">
+        <p class="text-xs text-muted-foreground">{t("attempt.serverNow")}</p>
+        <p class="mt-1 font-medium">{formatDateTime(props.attempt.now, locale())}</p>
+      </div>
+      <Show when={props.attempt.mark != null}>
+        <div class="rounded-md border bg-background/60 p-3">
+          <p class="text-xs text-muted-foreground">{t("attempt.mark")}</p>
+          <p class="mt-1 font-medium">{props.attempt.mark}</p>
+        </div>
+      </Show>
     </div>
   );
 }
@@ -209,6 +228,7 @@ function QuestionAnswerCard(props: {
   onSave: (value: string) => Promise<void>;
 }) {
   const t = useT();
+  const { locale } = usePreferences();
   const [value, setValue] = createSignal(
     props.question.kind === "choice"
       ? props.question.answer?.selected != null
@@ -241,6 +261,9 @@ function QuestionAnswerCard(props: {
         <Badge variant="outline">{props.question.points} {t("questions.points")}</Badge>
         <Show when={saved()}>
           <Badge variant="outline">{t("attempt.saved")}</Badge>
+        </Show>
+        <Show when={props.question.answer?.updated_at}>
+          {(updatedAt) => <Badge variant="outline">{t("attempt.savedAt")}: {formatDateTime(updatedAt(), locale())}</Badge>}
         </Show>
       </div>
       <p class="mb-4 whitespace-pre-wrap text-sm font-medium">{props.question.text}</p>

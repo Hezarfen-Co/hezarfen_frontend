@@ -12,14 +12,13 @@ import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { ExamResultBadge } from "@/components/exams/exam-result-badge";
 import { GradeForm } from "@/components/exams/grade-form";
-import { StudentExamRoom } from "@/components/exams/student-exam-room";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconTrash } from "@/components/ui/icons";
+import { IconChevronLeft, IconEdit, IconExam, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import {
   Table,
@@ -30,9 +29,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasMinRole } from "@/lib/roles";
-import { formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { useAuth } from "@/stores/auth-context";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 export default function ExamDetailPage() {
   return (
@@ -47,6 +46,7 @@ function ExamDetailContent() {
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
+  const { locale } = usePreferences();
   const id = () => params().id;
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
@@ -86,6 +86,13 @@ function ExamDetailContent() {
     return e.creator === u.id || hasMinRole(u.role, "manager");
   };
 
+  const examModeLabel = (mode: string | null) => {
+    if (mode === "sync") return t("exams.mode.sync");
+    if (mode === "async") return t("exams.mode.async");
+    return t("exams.unscheduled");
+  };
+  const isScheduled = () => exam()?.mode === "sync" || exam()?.mode === "async";
+
   const wrap = async (fn: () => Promise<void>) => {
     setError("");
     setPending(true);
@@ -118,42 +125,60 @@ function ExamDetailContent() {
               title={ex().title}
               description={ex().description || "—"}
               actions={
-                <div class="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" class="rounded-sm capitalize">
-                    {ex().kind}
-                  </Badge>
-                  <Badge variant="outline" class="rounded-sm capitalize">
-                    {t("courses.weight")}: {ex().weight}
-                  </Badge>
+                <div class="flex flex-wrap items-center gap-1 rounded-md border bg-background/70 p-1 shadow-sm">
                   <Link to="/exams">
-                    <Button variant="outline" size="sm" class="rounded-sm">
+                    <Button variant="ghost" size="sm" class="rounded-sm">
+                      <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
                   </Link>
+                  <Show when={ex().mode === "sync" || ex().mode === "async"}>
+                    <Link to="/exam-room/$id" params={{ id: id() }}>
+                      <Button size="sm" class="rounded-sm">
+                        <IconExam class="h-4 w-4" />
+                        {t("attempt.openRoom")}
+                      </Button>
+                    </Link>
+                  </Show>
                   <Show when={canManage()}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      class="rounded-sm"
-                      onClick={() => setEditing((v) => !v)}
-                    >
-                      {editing() ? t("common.cancel") : t("common.edit")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      disabled={pending()}
-                      onClick={() => setDeleteOpen(true)}
-                    >
-                      <IconTrash class="h-4 w-4" />
-                      {t("common.delete")}
-                    </Button>
+                    <div class="ml-1 flex items-center gap-1 border-l pl-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="rounded-sm"
+                        onClick={() => setEditing((v) => !v)}
+                      >
+                        <IconEdit class="h-4 w-4" />
+                        {editing() ? t("common.cancel") : t("common.edit")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        disabled={pending()}
+                        onClick={() => setDeleteOpen(true)}
+                      >
+                        <IconTrash class="h-4 w-4" />
+                        {t("common.delete")}
+                      </Button>
+                    </div>
                   </Show>
                 </div>
               }
-            />
+            >
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <Badge variant="outline" class="rounded-sm capitalize">
+                  {ex().kind}
+                </Badge>
+                <Badge variant="outline" class="rounded-sm">
+                  {t("courses.weight")}: {ex().weight}
+                </Badge>
+                <Badge variant="outline" class="rounded-sm">
+                  {examModeLabel(ex().mode)}
+                </Badge>
+              </div>
+            </PageHeader>
 
             <ConfirmDialog
               open={deleteOpen()}
@@ -189,26 +214,24 @@ function ExamDetailContent() {
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div class="rounded-md border p-3">
                   <p class="text-xs text-muted-foreground">{t("exams.mode")}</p>
-                  <p class="mt-1 font-medium capitalize">{ex().mode ?? t("exams.unscheduled")}</p>
+                  <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
                 </div>
                 <div class="rounded-md border p-3">
                   <p class="text-xs text-muted-foreground">{t("events.starts")}</p>
-                  <p class="mt-1 font-medium">{formatDateTime(ex().starts_at)}</p>
+                  <p class="mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
                 </div>
                 <div class="rounded-md border p-3">
                   <p class="text-xs text-muted-foreground">{t("events.ends")}</p>
-                  <p class="mt-1 font-medium">{formatDateTime(ex().ends_at)}</p>
+                  <p class="mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
                 </div>
                 <div class="rounded-md border p-3">
                   <p class="text-xs text-muted-foreground">{t("exams.durationMinutes")}</p>
-                  <p class="mt-1 font-medium">{formatDurationMinutes(ex().duration_ms)}</p>
+                  <p class="mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at))}</p>
                 </div>
               </div>
             </section>
 
-            <StudentExamRoom exam={ex()} />
-
-            <Show when={!isTeacherPlus()}>
+            <Show when={!isTeacherPlus() && !isScheduled()}>
               <section class="surface-card p-6">
                 <h2 class="font-display text-lg font-semibold">{t("exams.yourResult")}</h2>
                 <div class="mt-4">

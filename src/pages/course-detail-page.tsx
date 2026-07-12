@@ -72,6 +72,12 @@ function CourseDetailContent() {
     return c.creator === u.id || hasMinRole(u.role, "manager");
   };
 
+  const examModeLabel = (mode: string | null) => {
+    if (mode === "sync") return t("exams.mode.sync");
+    if (mode === "async") return t("exams.mode.async");
+    return t("exams.unscheduled");
+  };
+
   const wrap = async (fn: () => Promise<void>) => {
     setError("");
     setPending(true);
@@ -250,7 +256,7 @@ function CourseDetailContent() {
                             <div class="min-w-0">
                               <p class="truncate font-medium">{exam.title}</p>
                               <p class="text-xs text-muted-foreground">
-                                {t("courses.weight")}: {exam.weight} · {exam.mode ?? t("exams.unscheduled")}
+                                {t("courses.weight")}: {exam.weight} · {examModeLabel(exam.mode)}
                               </p>
                             </div>
                             <Badge variant="outline" class="capitalize">

@@ -23,7 +23,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 export default function EventDetailPage() {
   return (
@@ -38,6 +38,7 @@ function EventDetailContent() {
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
+  const { locale } = usePreferences();
   const id = () => params().id;
 
   const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
@@ -90,7 +91,7 @@ function EventDetailContent() {
               accent="sky"
               eyebrow={t("events.title")}
               title={ev().title}
-              description={`${formatDateTime(ev().starts_at)} → ${formatDateTime(ev().ends_at)}`}
+              description={`${formatDateTime(ev().starts_at, locale())} → ${formatDateTime(ev().ends_at, locale())}`}
               actions={
                 <div class="flex flex-wrap gap-2">
                   <Link to="/events">

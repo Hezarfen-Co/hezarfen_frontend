@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useAuth } from "@/stores/auth-context";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -40,6 +40,7 @@ export default function DashboardPage() {
 function DashboardContent() {
   const auth = useAuth();
   const t = useT();
+  const { locale } = usePreferences();
   const user = () => auth.user()!;
 
   const [notes] = createResource(() => getNotes());
@@ -260,7 +261,7 @@ function DashboardContent() {
                           <div class="min-w-0">
                             <p class="truncate text-sm font-medium">{event.title}</p>
                             <p class="text-xs text-muted-foreground">
-                              {formatDateTime(event.starts_at)}
+                              {formatDateTime(event.starts_at, locale())}
                             </p>
                           </div>
                           <span class="text-primary" aria-hidden>

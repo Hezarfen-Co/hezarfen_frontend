@@ -1,4 +1,4 @@
-import { createSignal, Show } from "solid-js";
+import { createEffect, createSignal, Show } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { For } from "solid-js";
 import type { Exam } from "@/api/types";
@@ -62,11 +62,20 @@ export function ExamForm(props: {
   const [durationMinutes, setDurationMinutes] = createSignal(
     props.initial?.duration_ms ? String(Math.round(props.initial.duration_ms / 60_000)) : "",
   );
+  const [durationTouched, setDurationTouched] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<ExamFormValues | null>(null);
   const isEdit = () => !!props.initial?.id;
+
+  createEffect(() => {
+    if (mode() !== "async" || durationTouched()) return;
+    const starts = localPartsToMs(startsDate(), startsHour(), startsMinute());
+    const ends = localPartsToMs(endsDate(), endsHour(), endsMinute());
+    if (starts == null || ends == null || ends <= starts) return;
+    setDurationMinutes(String(Math.min(1440, Math.max(1, Math.round((ends - starts) / 60_000)))));
+  });
 
   const validate = (starts: number | null, ends: number | null, durationMs: number | null): string | null => {
     const value = title().trim();
@@ -106,6 +115,7 @@ export function ExamForm(props: {
         setEndsHour("");
         setEndsMinute("");
         setDurationMinutes("");
+        setDurationTouched(false);
       }
     } catch (err) {
       setError(formatApiError(err));
@@ -270,7 +280,10 @@ export function ExamForm(props: {
                 max={1440}
                 value={durationMinutes()}
                 required
-                onInput={(e) => setDurationMinutes(e.currentTarget.value)}
+                onInput={(e) => {
+                  setDurationTouched(true);
+                  setDurationMinutes(e.currentTarget.value);
+                }}
               />
             </div>
           </Show>

@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/solid-router";
 import type { Event } from "@/api/types";
 import { formatDateTime } from "@/lib/format";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 export function EventCard(props: { event: Event }) {
   const t = useT();
+  const { locale } = usePreferences();
   return (
     <Link to="/events/$id" params={{ id: props.event.id }} class="group block h-full">
       <article class="surface-card relative flex h-full flex-col overflow-hidden transition-all group-hover:-translate-y-0.5 group-hover:border-sky-500/30">
@@ -19,11 +20,11 @@ export function EventCard(props: { event: Event }) {
           <div class="mt-4 space-y-1 rounded-sm bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
             <p>
               <span class="font-medium text-foreground">{t("events.starts")}:</span>{" "}
-              {formatDateTime(props.event.starts_at)}
+              {formatDateTime(props.event.starts_at, locale())}
             </p>
             <p>
               <span class="font-medium text-foreground">{t("events.ends")}:</span>{" "}
-              {formatDateTime(props.event.ends_at)}
+              {formatDateTime(props.event.ends_at, locale())}
             </p>
           </div>
         </div>

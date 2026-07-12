@@ -1,11 +1,11 @@
-const dateTime = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
+import type { Locale } from "@/i18n/messages";
 
-export function formatDateTime(ms: number | null | undefined): string {
+export function formatDateTime(ms: number | null | undefined, locale: Locale = "en"): string {
   if (ms == null) return "—";
-  return dateTime.format(new Date(ms));
+  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(ms));
 }
 
 /** Convert datetime-local input value to unix ms, or null if empty. */
@@ -57,4 +57,10 @@ export function localPartsToMs(date: string, hour: string, minute: string): numb
 export function formatDurationMinutes(ms: number | null | undefined): string {
   if (ms == null) return "—";
   return `${Math.round(ms / 60_000)} min`;
+}
+
+export function examDurationMs(durationMs: number | null | undefined, startsAt: number | null, endsAt: number | null): number | null {
+  if (durationMs != null) return durationMs;
+  if (startsAt == null || endsAt == null || endsAt <= startsAt) return null;
+  return endsAt - startsAt;
 }
