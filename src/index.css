@@ -1,0 +1,123 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 150 20% 98%;
+    --foreground: 168 35% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 168 35% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 168 35% 10%;
+    --primary: 163 72% 28%;
+    --primary-foreground: 150 40% 98%;
+    --secondary: 156 25% 94%;
+    --secondary-foreground: 168 35% 14%;
+    --muted: 150 16% 94%;
+    --muted-foreground: 168 10% 40%;
+    --accent: 168 45% 92%;
+    --accent-foreground: 163 72% 18%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 160 14% 88%;
+    --input: 160 14% 88%;
+    --ring: 163 72% 28%;
+    --radius: 0.2rem;
+    --success: 152 60% 36%;
+    --warning: 38 92% 50%;
+    --info: 210 80% 48%;
+    --surface-elevated: 0 0% 100%;
+    --sidebar: 160 25% 97%;
+    --sidebar-foreground: 168 20% 20%;
+    --hero-from: 163 55% 92%;
+    --hero-to: 190 50% 94%;
+    --glow: 163 72% 40%;
+  }
+
+  [data-kb-theme="dark"] {
+    --background: 168 28% 7%;
+    --foreground: 150 20% 96%;
+    --card: 168 24% 10%;
+    --card-foreground: 150 20% 96%;
+    --popover: 168 24% 10%;
+    --popover-foreground: 150 20% 96%;
+    --primary: 158 65% 48%;
+    --primary-foreground: 168 40% 8%;
+    --secondary: 168 18% 16%;
+    --secondary-foreground: 150 15% 92%;
+    --muted: 168 16% 14%;
+    --muted-foreground: 160 10% 62%;
+    --accent: 168 22% 16%;
+    --accent-foreground: 158 60% 70%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 168 14% 18%;
+    --input: 168 14% 18%;
+    --ring: 158 65% 48%;
+    --success: 152 55% 45%;
+    --warning: 38 90% 55%;
+    --info: 210 80% 60%;
+    --surface-elevated: 168 22% 12%;
+    --sidebar: 168 30% 8%;
+    --sidebar-foreground: 150 15% 90%;
+    --hero-from: 168 30% 12%;
+    --hero-to: 190 25% 12%;
+    --glow: 158 65% 40%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-background font-sans text-foreground antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 10% -10%, hsl(var(--glow) / 0.12), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, hsl(var(--info) / 0.06), transparent);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: "Fraunces", Georgia, serif;
+  }
+
+  .surface-card {
+    @apply rounded-md border bg-card text-card-foreground shadow-sm;
+  }
+
+  .hero-panel {
+    background: linear-gradient(135deg, hsl(var(--hero-from)), hsl(var(--hero-to)));
+  }
+
+  .stat-tile {
+    @apply surface-card relative overflow-hidden p-5 transition-transform duration-200 hover:-translate-y-0.5;
+  }
+
+  .stat-tile::after {
+    content: "";
+    position: absolute;
+    inset: auto -20% -40% auto;
+    width: 8rem;
+    height: 8rem;
+    border-radius: 0.2rem;
+    background: hsl(var(--primary) / 0.08);
+    pointer-events: none;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}

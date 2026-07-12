@@ -1,37 +1,50 @@
-# hezarfen_frontend
+# Hezarfen Frontend
 
-SolidJS SPA for [hezarfen_backend](../../Rust/hezarfen_backend). Bun for tooling,
-Vite for dev/build, `@solidjs/router` for lazy-loaded routes — no other runtime
-dependencies.
+SolidJS + TypeScript frontend for the Hezarfen REST API.
 
-## Run
+## Stack
 
-```sh
-bun install
-bun run dev        # http://localhost:5173, proxies /api -> http://127.0.0.1:8080
+- **SolidJS** + Vite
+- **TanStack Router** (code-based route tree, lazy pages)
+- **shadcn-solid style UI** (Kobalte Button + Tailwind primitives)
+- Session cookie auth via Vite dev proxy (same-origin)
+
+## Prerequisites
+
+- Node.js 20+
+- Hezarfen backend running at `http://127.0.0.1:8080`
+
+## Setup
+
+```bash
+npm install
+npm run dev
 ```
 
-Start the backend first (`cargo run` in the backend repo). The dev server
-proxies `/api/*` to it, so the session cookie stays same-origin and CORS never
-enters the picture.
+Open [http://localhost:5173](http://localhost:5173).
 
-## Build
+The Vite server proxies `/auth`, `/users`, `/notes`, `/events`, `/exams`, and `/health` to the backend so the HttpOnly session cookie stays same-origin.
 
-```sh
-bun run check      # typecheck
-bun run build      # dist/
-```
+## Scripts
 
-Serve `dist/` behind any reverse proxy that maps `/api/*` to the backend
-(strip the `/api` prefix). To point the SPA at an absolute API origin instead,
-set `VITE_API_URL` at build time.
+| Command | Description |
+|---|---|
+| `npm run dev` | Start Vite dev server |
+| `npm run build` | Typecheck + production build |
+| `npm run preview` | Preview production build |
+| `npm run check` | Typecheck only |
 
-## Shape
+## Roles
 
-- `src/lib/api.ts` — typed client; every endpoint, one `ApiError` shape.
-- `src/lib/auth.tsx` — session context; `/auth/me` fetched once, mutated in place.
-- `src/lib/action.ts` — pending/error wrapper for mutations.
-- `src/pages/*` — one file per route, lazy-loaded.
+`student < teacher < manager < admin` — higher roles inherit lower capabilities. Registration always creates a `student`.
 
-Mutations update resources from the server's response (`mutate`), never by
-refetching — the UI reacts in the same frame the request resolves.
+## Pages
+
+| Path | Access |
+|---|---|
+| `/login`, `/register` | Guests |
+| `/` | Authenticated |
+| `/notes` | Student+ |
+| `/events`, `/events/:id` | Student+ (create/edit: teacher+) |
+| `/exams`, `/exams/:id` | Student+ (create/grade: teacher+) |
+| `/admin/users` | Admin |

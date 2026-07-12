@@ -1,0 +1,258 @@
+import { Link, useNavigate, useParams } from "@tanstack/solid-router";
+import { Show, Suspense, createResource, createSignal } from "solid-js";
+import { deleteEventAttendanceByUserId } from "@/api/deleteEventAttendanceByUserId";
+import { deleteEventById } from "@/api/deleteEventById";
+import { getEventAttendance } from "@/api/getEventAttendance";
+import { getEventById } from "@/api/getEventById";
+import { patchEventById } from "@/api/patchEventById";
+import { postEventAttendance } from "@/api/postEventAttendance";
+import { formatApiError, ApiError } from "@/api/client";
+import type { AttendanceStatus } from "@/api/types";
+import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
+import { AttendanceTable } from "@/components/events/attendance-table";
+import { EventForm } from "@/components/events/event-form";
+import { RouteGuard } from "@/components/layout/route-guard";
+import { PageHeader } from "@/components/layout/page-header";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { IconTrash } from "@/components/ui/icons";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PageSpinner } from "@/components/ui/page-spinner";
+import { formatDateTime } from "@/lib/format";
+import { hasMinRole } from "@/lib/roles";
+import { useAuth } from "@/stores/auth-context";
+import { useT } from "@/stores/preferences-context";
+
+export default function EventDetailPage() {
+  return (
+    <RouteGuard>
+      <EventDetailContent />
+    </RouteGuard>
+  );
+}
+
+function EventDetailContent() {
+  const params = useParams({ from: "/events/$id" });
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const t = useT();
+  const id = () => params().id;
+
+  const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
+  const [attendance, { refetch: refetchAttendance }] = createResource(id, (eventId) =>
+    getEventAttendance(eventId),
+  );
+
+  const [status, setStatus] = createSignal<AttendanceStatus>("present");
+  const [otherUserId, setOtherUserId] = createSignal("");
+  const [editing, setEditing] = createSignal(false);
+  const [deleteOpen, setDeleteOpen] = createSignal(false);
+  const [error, setError] = createSignal("");
+  const [pending, setPending] = createSignal(false);
+
+  const canManage = () => {
+    const e = event();
+    const u = auth.user();
+    if (!e || !u) return false;
+    return e.creator === u.id || hasMinRole(u.role, "manager");
+  };
+  const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
+
+  const wrap = async (fn: () => Promise<void>) => {
+    setError("");
+    setPending(true);
+    try {
+      await fn();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <Suspense fallback={<PageSpinner />}>
+      <Show
+        when={event()}
+        fallback={
+          <Show when={event.error}>
+            <Alert variant="destructive">
+              {event.error instanceof ApiError ? event.error.message : t("common.notFound")}
+            </Alert>
+          </Show>
+        }
+      >
+        {(ev) => (
+          <div class="space-y-6">
+            <PageHeader
+              accent="sky"
+              eyebrow={t("events.title")}
+              title={ev().title}
+              description={`${formatDateTime(ev().starts_at)} → ${formatDateTime(ev().ends_at)}`}
+              actions={
+                <div class="flex flex-wrap gap-2">
+                  <Link to="/events">
+                    <Button variant="outline" size="sm" class="rounded-sm">
+                      {t("common.back")}
+                    </Button>
+                  </Link>
+                  <Show when={canManage()}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      class="rounded-sm"
+                      onClick={() => setEditing((v) => !v)}
+                    >
+                      {editing() ? t("common.cancel") : t("common.edit")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      disabled={pending()}
+                      onClick={() => setDeleteOpen(true)}
+                    >
+                      <IconTrash class="h-4 w-4" />
+                      {t("common.delete")}
+                    </Button>
+                  </Show>
+                </div>
+              }
+            >
+              <p class="mt-3 max-w-2xl whitespace-pre-wrap text-sm text-muted-foreground">
+                {ev().description || "—"}
+              </p>
+            </PageHeader>
+
+            <ConfirmDialog
+              open={deleteOpen()}
+              onOpenChange={setDeleteOpen}
+              title={t("confirm.deleteTitle")}
+              variant="destructive"
+              summary={t("confirm.deleteEvent", { title: ev().title })}
+              onConfirm={async () => {
+                await wrap(async () => {
+                  await deleteEventById(id());
+                  void navigate({ to: "/events" });
+                });
+              }}
+            />
+
+            <Show when={editing()}>
+              <section class="surface-card max-w-2xl p-5">
+                <EventForm
+                  initial={ev()}
+                  submitLabel={t("common.update")}
+                  onCancel={() => setEditing(false)}
+                  onSubmit={async (values) => {
+                    const body: Record<string, unknown> = {
+                      title: values.title,
+                      description: values.description,
+                    };
+                    if (values.starts_at !== undefined) body.starts_at = values.starts_at;
+                    if (values.ends_at !== undefined) body.ends_at = values.ends_at;
+                    await patchEventById(id(), body);
+                    setEditing(false);
+                    await refetchEvent();
+                  }}
+                />
+              </section>
+            </Show>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+              <section class="surface-card p-5">
+                <h2 class="font-display text-lg font-semibold">{t("events.markSelf")}</h2>
+                <div class="mt-4 space-y-3">
+                  <AttendanceStatusPicker value={status()} onChange={setStatus} label={t("events.status")} />
+                  <Button
+                    type="button"
+                    class="rounded-sm"
+                    disabled={pending()}
+                    onClick={() =>
+                      void wrap(async () => {
+                        await postEventAttendance(id(), { status: status() });
+                        await refetchAttendance();
+                      })
+                    }
+                  >
+                    {t("events.markSelf")}
+                  </Button>
+                </div>
+              </section>
+
+              <Show when={isTeacherPlus()}>
+                <section class="surface-card p-5">
+                  <h2 class="font-display text-lg font-semibold">{t("events.markOther")}</h2>
+                  <div class="mt-4 grid gap-3">
+                    <div class="space-y-1.5">
+                      <Label for="other-user">{t("events.userId")}</Label>
+                      <Input
+                        id="other-user"
+                        class="rounded-sm"
+                        value={otherUserId()}
+                        onInput={(e) => setOtherUserId(e.currentTarget.value)}
+                      />
+                    </div>
+                    <AttendanceStatusPicker
+                      id="other-status"
+                      value={status()}
+                      onChange={setStatus}
+                      label={t("events.status")}
+                    />
+                    <Button
+                      type="button"
+                      class="rounded-sm"
+                      disabled={pending()}
+                      onClick={() =>
+                        void wrap(async () => {
+                          const uid = otherUserId().trim();
+                          if (!uid) throw new Error(t("events.userId"));
+                          await postEventAttendance(id(), {
+                            status: status(),
+                            user_id: uid,
+                          });
+                          setOtherUserId("");
+                          await refetchAttendance();
+                        })
+                      }
+                    >
+                      {t("events.markOther")}
+                    </Button>
+                  </div>
+                </section>
+              </Show>
+            </div>
+
+            {error() && (
+              <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+            )}
+
+            <section class="surface-card p-5">
+              <h2 class="mb-4 font-display text-lg font-semibold">{t("events.attendance")}</h2>
+              <Suspense fallback={<PageSpinner />}>
+                <Show when={attendance()}>
+                  {(rows) => (
+                    <AttendanceTable
+                      rows={rows()}
+                      emptyLabel={t("events.noAttendance")}
+                      canRemove={isTeacherPlus()}
+                      onRemove={async (userId) => {
+                        await wrap(async () => {
+                          await deleteEventAttendanceByUserId(id(), userId);
+                          await refetchAttendance();
+                        });
+                      }}
+                    />
+                  )}
+                </Show>
+              </Suspense>
+            </section>
+          </div>
+        )}
+      </Show>
+    </Suspense>
+  );
+}
