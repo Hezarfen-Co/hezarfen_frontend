@@ -1,4 +1,4 @@
-import { createEffect, createSignal, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { For } from "solid-js";
 import type { Exam } from "@/api/types";
@@ -10,24 +10,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { localPartsToMs, msToLocalDate, msToLocalHour, msToLocalMinute } from "@/lib/format";
+import { examKindLabel } from "@/lib/exam-labels";
+import { dateTimeTextToMs, msToDateTimeText } from "@/lib/format";
 import { useT } from "@/stores/preferences-context";
 
-const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
-const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
-const MONTHS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
-const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
-const YEARS = Array.from({ length: 51 }, (_, i) => String(new Date().getFullYear() - 10 + i));
+const UI_EXAM_KINDS = EXAM_KINDS.filter((kind) => kind !== "homework");
 
-function datePart(date: string, index: number): string {
-  return date.split("-")[index] ?? "";
+function datePart(value: string): string {
+  return value.split(" ")[0] ?? "";
 }
 
-function withDatePart(date: string, index: number, value: string): string {
-  const parts = date.split("-");
-  const normalized = [parts[0] ?? "", parts[1] ?? "", parts[2] ?? ""];
-  normalized[index] = value;
-  return normalized.every(Boolean) ? normalized.join("-") : normalized.filter(Boolean).join("-");
+function timePart(value: string): string {
+  return value.split(" ")[1] ?? "";
+}
+
+function withDate(value: string, date: string): string {
+  const time = timePart(value);
+  return time ? `${date} ${time}` : date;
+}
+
+function withTime(value: string, time: string): string {
+  const date = datePart(value);
+  return date ? `${date} ${time}` : time;
 }
 
 export type ExamFormValues = {
@@ -50,32 +54,16 @@ export function ExamForm(props: {
   const t = useT();
   const [title, setTitle] = createSignal(props.initial?.title ?? "");
   const [description, setDescription] = createSignal(props.initial?.description ?? "");
-  const [kind, setKind] = createSignal(String(props.initial?.kind ?? "homework"));
+  const [kind, setKind] = createSignal(String(props.initial?.kind && props.initial.kind !== "homework" ? props.initial.kind : "quiz"));
   const [weight, setWeight] = createSignal(String(props.initial?.weight ?? 1));
   const [mode, setMode] = createSignal(String(props.initial?.mode ?? ""));
-  const [startsDate, setStartsDate] = createSignal(msToLocalDate(props.initial?.starts_at));
-  const [startsHour, setStartsHour] = createSignal(msToLocalHour(props.initial?.starts_at));
-  const [startsMinute, setStartsMinute] = createSignal(msToLocalMinute(props.initial?.starts_at));
-  const [endsDate, setEndsDate] = createSignal(msToLocalDate(props.initial?.ends_at));
-  const [endsHour, setEndsHour] = createSignal(msToLocalHour(props.initial?.ends_at));
-  const [endsMinute, setEndsMinute] = createSignal(msToLocalMinute(props.initial?.ends_at));
-  const [durationMinutes, setDurationMinutes] = createSignal(
-    props.initial?.duration_ms ? String(Math.round(props.initial.duration_ms / 60_000)) : "",
-  );
-  const [durationTouched, setDurationTouched] = createSignal(false);
+  const [startsText, setStartsText] = createSignal(msToDateTimeText(props.initial?.starts_at));
+  const [endsText, setEndsText] = createSignal(msToDateTimeText(props.initial?.ends_at));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<ExamFormValues | null>(null);
   const isEdit = () => !!props.initial?.id;
-
-  createEffect(() => {
-    if (mode() !== "async" || durationTouched()) return;
-    const starts = localPartsToMs(startsDate(), startsHour(), startsMinute());
-    const ends = localPartsToMs(endsDate(), endsHour(), endsMinute());
-    if (starts == null || ends == null || ends <= starts) return;
-    setDurationMinutes(String(Math.min(1440, Math.max(1, Math.round((ends - starts) / 60_000)))));
-  });
 
   const validate = (starts: number | null, ends: number | null, durationMs: number | null): string | null => {
     const value = title().trim();
@@ -105,17 +93,11 @@ export function ExamForm(props: {
       if (!isEdit()) {
         setTitle("");
         setDescription("");
-        setKind("homework");
+        setKind("quiz");
         setWeight("1");
         setMode("");
-        setStartsDate("");
-        setStartsHour("");
-        setStartsMinute("");
-        setEndsDate("");
-        setEndsHour("");
-        setEndsMinute("");
-        setDurationMinutes("");
-        setDurationTouched(false);
+        setStartsText("");
+        setEndsText("");
       }
     } catch (err) {
       setError(formatApiError(err));
@@ -126,9 +108,9 @@ export function ExamForm(props: {
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
-    const starts_at = mode() ? localPartsToMs(startsDate(), startsHour(), startsMinute()) : null;
-    const ends_at = mode() ? localPartsToMs(endsDate(), endsHour(), endsMinute()) : null;
-    const duration_ms = mode() === "async" && durationMinutes() ? Number(durationMinutes()) * 60_000 : null;
+    const starts_at = mode() ? dateTimeTextToMs(startsText()) : null;
+    const ends_at = mode() ? dateTimeTextToMs(endsText()) : null;
+    const duration_ms = mode() === "async" && starts_at != null && ends_at != null ? ends_at - starts_at : null;
     const v = validate(starts_at, ends_at, duration_ms);
     if (v) {
       setError(v);
@@ -185,7 +167,7 @@ export function ExamForm(props: {
           value={kind()}
           onChange={(e) => setKind(e.currentTarget.value)}
         >
-          <For each={EXAM_KINDS}>{(k) => <option value={k}>{k}</option>}</For>
+          <For each={UI_EXAM_KINDS}>{(k) => <option value={k}>{examKindLabel(k, t)}</option>}</For>
         </Select>
       </div>
       <div class="grid gap-3 sm:grid-cols-2">
@@ -221,72 +203,46 @@ export function ExamForm(props: {
         <div class="grid gap-3 sm:grid-cols-2">
           <div class="space-y-1.5">
             <Label for="exam-starts">{t("events.starts")}</Label>
-            <div class="grid grid-cols-[1fr_4.5rem_4.5rem_4.5rem_4.5rem] gap-2">
-              <Select id="exam-starts" value={datePart(startsDate(), 0)} required onChange={(e) => setStartsDate(withDatePart(startsDate(), 0, e.currentTarget.value))}>
-                <option value="">{t("form.year")}</option>
-                <For each={YEARS}>{(y) => <option value={y}>{y}</option>}</For>
-              </Select>
-              <Select value={datePart(startsDate(), 1)} required onChange={(e) => setStartsDate(withDatePart(startsDate(), 1, e.currentTarget.value))}>
-                <option value="">{t("form.month")}</option>
-                <For each={MONTHS}>{(m) => <option value={m}>{m}</option>}</For>
-              </Select>
-              <Select value={datePart(startsDate(), 2)} required onChange={(e) => setStartsDate(withDatePart(startsDate(), 2, e.currentTarget.value))}>
-                <option value="">{t("form.day")}</option>
-                <For each={DAYS}>{(d) => <option value={d}>{d}</option>}</For>
-              </Select>
-              <Select value={startsHour()} required onChange={(e) => setStartsHour(e.currentTarget.value)}>
-                <option value="">HH</option>
-                <For each={HOURS}>{(h) => <option value={h}>{h}</option>}</For>
-              </Select>
-              <Select value={startsMinute()} required onChange={(e) => setStartsMinute(e.currentTarget.value)}>
-                <option value="">MM</option>
-                <For each={MINUTES}>{(m) => <option value={m}>{m}</option>}</For>
-              </Select>
+            <div class="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
+              <Input
+                id="exam-starts"
+                class="rounded-sm"
+                type="date"
+                value={datePart(startsText())}
+                required
+                onInput={(e) => setStartsText(withDate(startsText(), e.currentTarget.value))}
+              />
+              <Input
+                class="rounded-sm font-mono"
+                value={timePart(startsText())}
+                placeholder="14:30"
+                required
+                pattern="[0-2][0-9]:[0-5][0-9]"
+                onInput={(e) => setStartsText(withTime(startsText(), e.currentTarget.value))}
+              />
             </div>
           </div>
           <div class="space-y-1.5">
             <Label for="exam-ends">{t("events.ends")}</Label>
-            <div class="grid grid-cols-[1fr_4.5rem_4.5rem_4.5rem_4.5rem] gap-2">
-              <Select id="exam-ends" value={datePart(endsDate(), 0)} required onChange={(e) => setEndsDate(withDatePart(endsDate(), 0, e.currentTarget.value))}>
-                <option value="">{t("form.year")}</option>
-                <For each={YEARS}>{(y) => <option value={y}>{y}</option>}</For>
-              </Select>
-              <Select value={datePart(endsDate(), 1)} required onChange={(e) => setEndsDate(withDatePart(endsDate(), 1, e.currentTarget.value))}>
-                <option value="">{t("form.month")}</option>
-                <For each={MONTHS}>{(m) => <option value={m}>{m}</option>}</For>
-              </Select>
-              <Select value={datePart(endsDate(), 2)} required onChange={(e) => setEndsDate(withDatePart(endsDate(), 2, e.currentTarget.value))}>
-                <option value="">{t("form.day")}</option>
-                <For each={DAYS}>{(d) => <option value={d}>{d}</option>}</For>
-              </Select>
-              <Select value={endsHour()} required onChange={(e) => setEndsHour(e.currentTarget.value)}>
-                <option value="">HH</option>
-                <For each={HOURS}>{(h) => <option value={h}>{h}</option>}</For>
-              </Select>
-              <Select value={endsMinute()} required onChange={(e) => setEndsMinute(e.currentTarget.value)}>
-                <option value="">MM</option>
-                <For each={MINUTES}>{(m) => <option value={m}>{m}</option>}</For>
-              </Select>
-            </div>
-          </div>
-          <Show when={mode() === "async"}>
-            <div class="space-y-1.5">
-              <Label for="exam-duration">{t("exams.durationMinutes")}</Label>
+            <div class="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
               <Input
-                id="exam-duration"
+                id="exam-ends"
                 class="rounded-sm"
-                type="number"
-                min={1}
-                max={1440}
-                value={durationMinutes()}
+                type="date"
+                value={datePart(endsText())}
                 required
-                onInput={(e) => {
-                  setDurationTouched(true);
-                  setDurationMinutes(e.currentTarget.value);
-                }}
+                onInput={(e) => setEndsText(withDate(endsText(), e.currentTarget.value))}
+              />
+              <Input
+                class="rounded-sm font-mono"
+                value={timePart(endsText())}
+                placeholder="15:30"
+                required
+                pattern="[0-2][0-9]:[0-5][0-9]"
+                onInput={(e) => setEndsText(withTime(endsText(), e.currentTarget.value))}
               />
             </div>
-          </Show>
+          </div>
         </div>
       </Show>
       {error() && <p class="text-sm text-destructive">{error()}</p>}

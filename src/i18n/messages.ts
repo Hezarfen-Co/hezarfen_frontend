@@ -143,6 +143,12 @@ export type MessageKey =
   | "exams.create"
   | "exams.empty"
   | "exams.kind"
+  | "exams.kind.homework"
+  | "exams.kind.quiz"
+  | "exams.kind.midterm"
+  | "exams.kind.final"
+  | "exams.kind.project"
+  | "exams.kind.oral"
   | "exams.yourResult"
   | "exams.notGraded"
   | "exams.gradeStudent"
@@ -168,6 +174,9 @@ export type MessageKey =
   | "questions.points"
   | "questions.choices"
   | "questions.choicesHint"
+  | "questions.addChoice"
+  | "questions.choicePlaceholder"
+  | "questions.correctAnswer"
   | "questions.correct"
   | "questions.correctHint"
   | "questions.kind.choice"
@@ -234,6 +243,8 @@ export type MessageKey =
   | "form.day"
   | "form.mark"
   | "form.studentId"
+  | "form.selectStudent"
+  | "form.noStudents"
   | "form.titleRequired"
   | "form.titleMax"
   | "form.contentMax"
@@ -430,6 +441,12 @@ const en: Dict = {
   "exams.create": "Create exam",
   "exams.empty": "No exams published yet.",
   "exams.kind": "Kind",
+  "exams.kind.homework": "Homework",
+  "exams.kind.quiz": "Quiz",
+  "exams.kind.midterm": "Midterm",
+  "exams.kind.final": "Final",
+  "exams.kind.project": "Project",
+  "exams.kind.oral": "Oral",
   "exams.yourResult": "Your result",
   "exams.notGraded": "Not graded yet",
   "exams.gradeStudent": "Grade a student",
@@ -455,6 +472,9 @@ const en: Dict = {
   "questions.points": "Points",
   "questions.choices": "Choices",
   "questions.choicesHint": "One choice per line, 2–10 choices.",
+  "questions.addChoice": "Add choice",
+  "questions.choicePlaceholder": "Choice {index}",
+  "questions.correctAnswer": "Correct answer",
   "questions.correct": "Correct choice index",
   "questions.correctHint": "Zero-based: first choice is 0.",
   "questions.kind.choice": "Choice",
@@ -532,6 +552,8 @@ const en: Dict = {
   "form.day": "Day",
   "form.mark": "Mark",
   "form.studentId": "Student user id",
+  "form.selectStudent": "Select student",
+  "form.noStudents": "No available students",
   "form.titleRequired": "Title is required",
   "form.titleMax": "Title must be at most 200 characters",
   "form.contentMax": "Content must be at most 10 000 characters",
@@ -727,6 +749,12 @@ const tr: Dict = {
   "exams.create": "Sınav oluştur",
   "exams.empty": "Henüz yayınlanmış sınav yok.",
   "exams.kind": "Tür",
+  "exams.kind.homework": "Ödev",
+  "exams.kind.quiz": "Kısa sınav",
+  "exams.kind.midterm": "Vize",
+  "exams.kind.final": "Final",
+  "exams.kind.project": "Proje",
+  "exams.kind.oral": "Sözlü",
   "exams.yourResult": "Sonucun",
   "exams.notGraded": "Henüz notlanmadı",
   "exams.gradeStudent": "Öğrenci notla",
@@ -752,6 +780,9 @@ const tr: Dict = {
   "questions.points": "Puan",
   "questions.choices": "Seçenekler",
   "questions.choicesHint": "Her satıra bir seçenek, 2–10 seçenek.",
+  "questions.addChoice": "Seçenek ekle",
+  "questions.choicePlaceholder": "Seçenek {index}",
+  "questions.correctAnswer": "Doğru cevap",
   "questions.correct": "Doğru seçenek indeksi",
   "questions.correctHint": "Sıfırdan başlar: ilk seçenek 0.",
   "questions.kind.choice": "Seçmeli",
@@ -829,6 +860,8 @@ const tr: Dict = {
   "form.day": "Gün",
   "form.mark": "Not",
   "form.studentId": "Öğrenci kullanıcı id",
+  "form.selectStudent": "Öğrenci seç",
+  "form.noStudents": "Uygun öğrenci yok",
   "form.titleRequired": "Başlık gerekli",
   "form.titleMax": "Başlık en fazla 200 karakter olmalı",
   "form.contentMax": "İçerik en fazla 10 000 karakter olmalı",

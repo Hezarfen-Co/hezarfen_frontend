@@ -5,6 +5,7 @@ import { deleteCourseEnrollmentByUserId } from "@/api/deleteCourseEnrollmentByUs
 import { getCourseById } from "@/api/getCourseById";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { getCourseExams } from "@/api/getCourseExams";
+import { getUsers } from "@/api/getUsers";
 import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
 import { postCourseExam } from "@/api/postCourseExam";
@@ -16,7 +17,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -31,6 +32,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+import { examKindLabel } from "@/lib/exam-labels";
 import { hasMinRole } from "@/lib/roles";
 
 export default function CourseDetailPage() {
@@ -55,6 +57,10 @@ function CourseDetailContent() {
     () => (isTeacherPlus() ? id() : null),
     async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
   );
+  const [users] = createResource(
+    () => (hasMinRole(auth.user()?.role, "admin") ? true : null),
+    async (enabled) => (enabled ? getUsers() : []),
+  );
 
   const [editing, setEditing] = createSignal(false);
   const [title, setTitle] = createSignal("");
@@ -76,6 +82,10 @@ function CourseDetailContent() {
     if (mode === "sync") return t("exams.mode.sync");
     if (mode === "async") return t("exams.mode.async");
     return t("exams.unscheduled");
+  };
+  const enrollableUsers = () => {
+    const enrolled = new Set((roster() ?? []).map((row) => row.user.id));
+    return (users() ?? []).filter((user) => user.role === "student" && !enrolled.has(user.id));
   };
 
   const wrap = async (fn: () => Promise<void>) => {
@@ -118,30 +128,36 @@ function CourseDetailContent() {
               title={c().title}
               description={c().description || undefined}
               actions={
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-wrap items-center gap-1 rounded-md border bg-background/70 p-1 shadow-sm">
                   <Link to="/courses">
-                    <Button variant="outline" size="sm">
+                    <Button variant="ghost" size="sm" class="rounded-sm">
+                      <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
                   </Link>
                   <Show when={canManage()}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => (editing() ? setEditing(false) : startEdit())}
-                    >
-                      {editing() ? t("common.cancel") : t("common.edit")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setDeleteOpen(true)}
-                    >
-                      <IconTrash class="h-4 w-4" />
-                      {t("courses.delete")}
-                    </Button>
+                    <div class="ml-1 flex items-center gap-1 border-l border-border pl-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="rounded-sm"
+                        onClick={() => (editing() ? setEditing(false) : startEdit())}
+                      >
+                        <IconEdit class="h-4 w-4" />
+                        {editing() ? t("common.cancel") : t("common.edit")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        class="rounded-sm"
+                        onClick={() => setDeleteOpen(true)}
+                      >
+                        <IconTrash class="h-4 w-4" />
+                        {t("courses.delete")}
+                      </Button>
+                    </div>
                   </Show>
                 </div>
               }
@@ -260,7 +276,7 @@ function CourseDetailContent() {
                               </p>
                             </div>
                             <Badge variant="outline" class="capitalize">
-                              {exam.kind}
+                              {examKindLabel(String(exam.kind), t)}
                             </Badge>
                           </Link>
                         </li>
@@ -276,7 +292,7 @@ function CourseDetailContent() {
               <section class="surface-card space-y-4 p-5">
                 <h2 class="font-display text-lg font-semibold">{t("courses.roster")}</h2>
                 <form
-                  class="flex flex-col gap-2 sm:flex-row"
+                  class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]"
                   onSubmit={(e) => {
                     e.preventDefault();
                     void wrap(async () => {
@@ -288,13 +304,34 @@ function CourseDetailContent() {
                     });
                   }}
                 >
-                  <Input
-                    class="flex-1"
-                    placeholder={t("events.userId")}
-                    value={enrollUserId()}
-                    onInput={(e) => setEnrollUserId(e.currentTarget.value)}
-                  />
-                  <Button type="submit" disabled={pending()}>
+                  <div class="min-w-0">
+                    <Show
+                      when={(users() ?? []).length > 0}
+                      fallback={
+                        <Input
+                          class="h-10"
+                          placeholder={t("events.userId")}
+                          value={enrollUserId()}
+                          onInput={(e) => setEnrollUserId(e.currentTarget.value)}
+                        />
+                      }
+                    >
+                      <Input
+                        class="h-10"
+                        list="enrollable-students"
+                        placeholder={enrollableUsers().length === 0 ? t("form.noStudents") : t("form.selectStudent")}
+                        value={enrollUserId()}
+                        disabled={enrollableUsers().length === 0}
+                        onInput={(e) => setEnrollUserId(e.currentTarget.value)}
+                      />
+                      <datalist id="enrollable-students">
+                        <For each={enrollableUsers()}>
+                          {(user) => <option value={user.id} label={`${user.username} · ${user.id}`} />}
+                        </For>
+                      </datalist>
+                    </Show>
+                  </div>
+                  <Button type="submit" class="h-10" disabled={pending()}>
                     {t("courses.enroll")}
                   </Button>
                 </form>

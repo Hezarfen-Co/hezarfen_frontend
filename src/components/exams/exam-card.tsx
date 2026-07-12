@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/solid-router";
 import type { Exam } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
+import { examKindLabel } from "@/lib/exam-labels";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -21,7 +22,7 @@ export function ExamCard(props: { exam: Exam }) {
             {props.exam.title}
           </h3>
           <Badge variant="outline" class="rounded-sm capitalize">
-            {props.exam.kind}
+            {examKindLabel(String(props.exam.kind), t)}
           </Badge>
         </div>
         <div class="p-5">
@@ -40,7 +41,7 @@ export function ExamCard(props: { exam: Exam }) {
             {(props.exam.mode === "sync" || props.exam.mode === "async") && (
               <div class="flex justify-between gap-3">
                 <dt>{t("exams.durationMinutes")}</dt>
-                <dd>{formatDurationMinutes(examDurationMs(props.exam.duration_ms, props.exam.starts_at, props.exam.ends_at))}</dd>
+                <dd>{formatDurationMinutes(examDurationMs(props.exam.duration_ms, props.exam.starts_at, props.exam.ends_at), locale())}</dd>
               </div>
             )}
           </dl>

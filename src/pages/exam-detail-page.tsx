@@ -1,10 +1,11 @@
-import { Link, useNavigate, useParams } from "@tanstack/solid-router";
+import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { deleteExamById } from "@/api/deleteExamById";
 import { deleteExamResultByUserId } from "@/api/deleteExamResultByUserId";
 import { getExamById } from "@/api/getExamById";
 import { getExamResult } from "@/api/getExamResult";
 import { getExamResults } from "@/api/getExamResults";
+import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
@@ -29,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasMinRole } from "@/lib/roles";
+import { examKindLabel } from "@/lib/exam-labels";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -42,12 +44,12 @@ export default function ExamDetailPage() {
 }
 
 function ExamDetailContent() {
-  const params = useParams({ from: "/exams/$id" });
+  const location = useLocation();
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
   const { locale } = usePreferences();
-  const id = () => params().id;
+  const id = () => decodeURIComponent(location().pathname.split("/")[2] ?? "");
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
   const isTeacherPlus = createMemo(() => hasMinRole(auth.user()?.role, "teacher"));
@@ -72,6 +74,10 @@ function ExamDetailContent() {
       return getExamResults(examId);
     },
   );
+  const [roster] = createResource(
+    () => (isTeacherPlus() ? exam()?.course ?? null : null),
+    async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
+  );
 
   const [editing, setEditing] = createSignal(false);
   const [error, setError] = createSignal("");
@@ -92,6 +98,15 @@ function ExamDetailContent() {
     return t("exams.unscheduled");
   };
   const isScheduled = () => exam()?.mode === "sync" || exam()?.mode === "async";
+  const gradeStudents = () => {
+    const graded = new Set((results() ?? []).map((row) => row.user));
+    return (roster() ?? [])
+      .filter((row) => !graded.has(row.user.id))
+      .map((row) => ({
+        id: row.user.id,
+        label: `${row.user.display_name || row.user.username} · ${row.user.id}`,
+      }));
+  };
 
   const wrap = async (fn: () => Promise<void>) => {
     setError("");
@@ -141,7 +156,7 @@ function ExamDetailContent() {
                     </Link>
                   </Show>
                   <Show when={canManage()}>
-                    <div class="ml-1 flex items-center gap-1 border-l pl-1">
+                    <div class="ml-1 flex items-center gap-1 border-l border-border pl-1">
                       <Button
                         type="button"
                         variant="outline"
@@ -169,7 +184,7 @@ function ExamDetailContent() {
             >
               <div class="flex flex-wrap items-center gap-2 pt-1">
                 <Badge variant="outline" class="rounded-sm capitalize">
-                  {ex().kind}
+                  {examKindLabel(String(ex().kind), t)}
                 </Badge>
                 <Badge variant="outline" class="rounded-sm">
                   {t("courses.weight")}: {ex().weight}
@@ -195,7 +210,7 @@ function ExamDetailContent() {
             />
 
             <Show when={editing()}>
-              <section class="surface-card max-w-2xl p-5">
+              <section class="surface-card max-w-3xl p-5">
                 <ExamForm
                   initial={ex()}
                   submitLabel={t("common.update")}
@@ -226,7 +241,7 @@ function ExamDetailContent() {
                 </div>
                 <div class="rounded-md border p-3">
                   <p class="text-xs text-muted-foreground">{t("exams.durationMinutes")}</p>
-                  <p class="mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at))}</p>
+                  <p class="mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
                 </div>
               </div>
             </section>
@@ -250,6 +265,7 @@ function ExamDetailContent() {
               <section class="surface-card p-5">
                 <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.gradeStudent")}</h2>
                 <GradeForm
+                  students={gradeStudents()}
                   onSubmit={async (values) => {
                     await postExamResult(id(), values);
                     await refetchResults();

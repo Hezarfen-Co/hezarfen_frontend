@@ -9,7 +9,6 @@ import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Input } from "@/components/ui/input";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
@@ -113,28 +112,30 @@ export function StudentExamRoom(props: { exam: Exam; compact?: boolean }) {
 
   return (
     <section class={props.compact ? "space-y-5" : "surface-card space-y-4 p-5"}>
-      <div class="surface-card flex flex-wrap items-center justify-between gap-3 p-5">
-        <div>
-          <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
-          <p class="mt-1 text-sm text-muted-foreground">
-            {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : t("attempt.unscheduled")}
-          </p>
-        </div>
-        <Show when={scheduled()} fallback={<Badge variant="outline">{t("attempt.unscheduled")}</Badge>}>
-          <Show
-            when={attempt()}
-            fallback={
-              <Button type="button" disabled={pending()} onClick={() => void start()}>
-                {t("attempt.start")}
+      <Show when={!roomOpen()}>
+        <div class="surface-card flex flex-wrap items-center justify-between gap-3 p-5">
+          <div>
+            <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
+            <p class="mt-1 text-sm text-muted-foreground">
+              {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : t("attempt.unscheduled")}
+            </p>
+          </div>
+          <Show when={scheduled()} fallback={<Badge variant="outline">{t("attempt.unscheduled")}</Badge>}>
+            <Show
+              when={attempt()}
+              fallback={
+                <Button type="button" disabled={pending()} onClick={() => void start()}>
+                  {t("attempt.start")}
+                </Button>
+              }
+            >
+              <Button type="button" variant="outline" disabled={pending()} onClick={() => setRoomOpen(true)}>
+                {t("attempt.resume")}
               </Button>
-            }
-          >
-            <Button type="button" variant="outline" disabled={pending()} onClick={() => setRoomOpen(true)}>
-              {t("attempt.resume")}
-            </Button>
+            </Show>
           </Show>
-        </Show>
-      </div>
+        </div>
+      </Show>
 
       {error() && <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
@@ -149,23 +150,41 @@ export function StudentExamRoom(props: { exam: Exam; compact?: boolean }) {
           <Show when={!canWrite()}>
             <p class="rounded-sm bg-muted/40 px-3 py-3 text-sm text-muted-foreground">{t("attempt.closed")}</p>
           </Show>
-          <div class="grid gap-4 lg:grid-cols-2">
-            <For each={questions() ?? []}>
-              {(question, index) => (
-                <QuestionAnswerCard
-                  index={index() + 1}
-                  question={question}
-                  disabled={!canWrite() || pending()}
-                  onSave={(value) => saveAnswer(question, value)}
-                />
-              )}
-            </For>
+          <div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_12rem] xl:grid-cols-[minmax(0,1fr)_13rem] 2xl:grid-cols-[minmax(0,1fr)_14rem]">
+            <div class="grid auto-rows-fr items-stretch gap-4 2xl:grid-cols-2">
+              <For each={questions() ?? []}>
+                {(question, index) => (
+                  <QuestionAnswerCard
+                    index={index() + 1}
+                    nextQuestionId={(questions() ?? [])[index() + 1]?.id}
+                    question={question}
+                    disabled={!canWrite() || pending()}
+                    onSave={(value) => saveAnswer(question, value)}
+                  />
+                )}
+              </For>
+            </div>
+            <aside class="surface-card sticky top-4 space-y-3 p-4">
+              <h3 class="font-display text-sm font-semibold">{t("questions.title")}</h3>
+              <div class="grid grid-cols-4 gap-2">
+                <For each={questions() ?? []}>
+                  {(question, index) => (
+                    <a
+                      href={`#question-${question.id}`}
+                      class="inline-flex h-9 items-center justify-center rounded-sm border bg-background text-sm font-medium hover:bg-accent"
+                    >
+                      {index() + 1}
+                    </a>
+                  )}
+                </For>
+              </div>
+              <Show when={canWrite()}>
+                <Button type="button" variant="destructive" class="w-full" disabled={pending()} onClick={() => setFinishOpen(true)}>
+                  {t("attempt.finish")}
+                </Button>
+              </Show>
+            </aside>
           </div>
-          <Show when={canWrite()}>
-            <Button type="button" variant="destructive" disabled={pending()} onClick={() => setFinishOpen(true)}>
-              {t("attempt.finish")}
-            </Button>
-          </Show>
         </Show>
       </Suspense>
 
@@ -190,29 +209,29 @@ function AttemptSummary(props: { attempt: ExamAttempt; remainingMs: number }) {
     return props.attempt.status;
   };
   return (
-    <div class="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-6">
-      <div class="rounded-md border bg-background/60 p-3">
+    <div class="grid auto-rows-fr gap-3 text-sm sm:grid-cols-2 xl:grid-cols-5">
+      <div class="h-full rounded-md border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.status")}</p>
         <p class="mt-1 font-medium">{statusLabel()}</p>
       </div>
-      <div class="rounded-md border bg-background/60 p-3">
+      <div class="h-full rounded-md border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.remaining")}</p>
         <p class="mt-1 font-mono font-medium">{formatRemaining(props.remainingMs)}</p>
       </div>
-      <div class="rounded-md border bg-background/60 p-3">
+      <div class="h-full rounded-md border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.progress")}</p>
         <p class="mt-1 font-medium">{props.attempt.answered} / {props.attempt.question_count}</p>
       </div>
-      <div class="rounded-md border bg-background/60 p-3">
+      <div class="h-full rounded-md border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.deadline")}</p>
         <p class="mt-1 font-medium">{formatDateTime(props.attempt.deadline, locale())}</p>
       </div>
-      <div class="rounded-md border bg-background/60 p-3">
+      <div class="h-full rounded-md border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.serverNow")}</p>
         <p class="mt-1 font-medium">{formatDateTime(props.attempt.now, locale())}</p>
       </div>
       <Show when={props.attempt.mark != null}>
-        <div class="rounded-md border bg-background/60 p-3">
+        <div class="h-full rounded-md border bg-background/60 p-3">
           <p class="text-xs text-muted-foreground">{t("attempt.mark")}</p>
           <p class="mt-1 font-medium">{props.attempt.mark}</p>
         </div>
@@ -223,6 +242,7 @@ function AttemptSummary(props: { attempt: ExamAttempt; remainingMs: number }) {
 
 function QuestionAnswerCard(props: {
   index: number;
+  nextQuestionId?: string;
   question: AttemptQuestion;
   disabled: boolean;
   onSave: (value: string) => Promise<void>;
@@ -252,10 +272,13 @@ function QuestionAnswerCard(props: {
   const save = async () => {
     await props.onSave(value());
     setSaved(true);
+    if (props.nextQuestionId) {
+      document.getElementById(`question-${props.nextQuestionId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   return (
-    <article class="rounded-md border p-4">
+    <article id={`question-${props.question.id}`} class="surface-card min-h-[18rem] scroll-mt-24 p-5">
       <div class="mb-3 flex flex-wrap items-center gap-2">
         <span class="text-xs font-semibold text-muted-foreground">#{props.index}</span>
         <Badge variant="outline">{props.question.points} {t("questions.points")}</Badge>
@@ -285,26 +308,39 @@ function QuestionAnswerCard(props: {
         <div class="space-y-2">
           <For each={props.question.choices ?? []}>
             {(choice, choiceIndex) => (
-              <label class="flex items-center gap-2 rounded-sm border px-3 py-2 text-sm">
-                <Input
-                  class="h-4 w-4 shadow-none"
-                  type="radio"
-                  name={props.question.id}
-                  value={choiceIndex()}
-                  checked={value() === String(choiceIndex())}
-                  disabled={props.disabled}
-                  onChange={(e) => {
-                    setSaved(false);
-                    setValue(e.currentTarget.value);
-                  }}
-                />
-                {choice}
-              </label>
+              <button
+                type="button"
+                class="flex w-full items-center gap-3 rounded-sm border px-3 py-2 text-left text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={props.disabled}
+                onClick={() => {
+                  setSaved(false);
+                  setValue(String(choiceIndex()));
+                }}
+              >
+                <span
+                  class={
+                    value() === String(choiceIndex())
+                      ? "flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-primary bg-primary"
+                      : "h-4 w-4 shrink-0 rounded-[3px] border border-input bg-background"
+                  }
+                >
+                  <span
+                    class={value() === String(choiceIndex()) ? "h-2 w-2 rounded-[1px] bg-primary-foreground" : "hidden"}
+                  />
+                </span>
+                <span>{choice}</span>
+              </button>
             )}
           </For>
         </div>
       </Show>
-      <Button type="button" size="sm" class="mt-3" disabled={props.disabled} onClick={() => void save()}>
+      <Button
+        type="button"
+        size="sm"
+        class="mt-3"
+        disabled={props.disabled || (props.question.kind === "choice" && value() === "")}
+        onClick={() => void save()}
+      >
         {t("attempt.saveAnswer")}
       </Button>
     </article>

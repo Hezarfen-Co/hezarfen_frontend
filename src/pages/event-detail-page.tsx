@@ -16,7 +16,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconTrash } from "@/components/ui/icons";
+import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -93,32 +93,37 @@ function EventDetailContent() {
               title={ev().title}
               description={`${formatDateTime(ev().starts_at, locale())} → ${formatDateTime(ev().ends_at, locale())}`}
               actions={
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-wrap items-center gap-1 rounded-md border bg-background/70 p-1 shadow-sm">
                   <Link to="/events">
-                    <Button variant="outline" size="sm" class="rounded-sm">
+                    <Button variant="ghost" size="sm" class="rounded-sm">
+                      <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
                   </Link>
                   <Show when={canManage()}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      class="rounded-sm"
-                      onClick={() => setEditing((v) => !v)}
-                    >
-                      {editing() ? t("common.cancel") : t("common.edit")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      disabled={pending()}
-                      onClick={() => setDeleteOpen(true)}
-                    >
-                      <IconTrash class="h-4 w-4" />
-                      {t("common.delete")}
-                    </Button>
+                    <div class="ml-1 flex items-center gap-1 border-l border-border pl-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="rounded-sm"
+                        onClick={() => setEditing((v) => !v)}
+                      >
+                        <IconEdit class="h-4 w-4" />
+                        {editing() ? t("common.cancel") : t("common.edit")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        class="rounded-sm"
+                        disabled={pending()}
+                        onClick={() => setDeleteOpen(true)}
+                      >
+                        <IconTrash class="h-4 w-4" />
+                        {t("common.delete")}
+                      </Button>
+                    </div>
                   </Show>
                 </div>
               }

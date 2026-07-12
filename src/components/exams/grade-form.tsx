@@ -1,10 +1,11 @@
-import { createSignal } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconCheck } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { useT } from "@/stores/preferences-context";
 
 export type GradeFormValues = {
@@ -13,6 +14,7 @@ export type GradeFormValues = {
 };
 
 export function GradeForm(props: {
+  students: { id: string; label: string }[];
   onSubmit: (values: GradeFormValues) => Promise<void>;
 }) {
   const t = useT();
@@ -46,13 +48,19 @@ export function GradeForm(props: {
         <div class="grid gap-3 sm:grid-cols-2">
           <div class="space-y-1.5">
             <Label for="grade-user">{t("form.studentId")}</Label>
-            <Input
+            <Select
               id="grade-user"
               class="rounded-sm"
               value={userId()}
               required
-              onInput={(e) => setUserId(e.currentTarget.value)}
-            />
+              disabled={props.students.length === 0}
+              onChange={(e) => setUserId(e.currentTarget.value)}
+            >
+              <option value="">{props.students.length === 0 ? t("form.noStudents") : t("form.selectStudent")}</option>
+              <For each={props.students}>
+                {(student) => <option value={student.id}>{student.label}</option>}
+              </For>
+            </Select>
           </div>
           <div class="space-y-1.5">
             <Label for="grade-mark">{t("form.mark")}</Label>
@@ -73,6 +81,9 @@ export function GradeForm(props: {
           <IconCheck />
           {t("exams.gradeStudent")}
         </Button>
+        <Show when={props.students.length === 0}>
+          <p class="text-sm text-muted-foreground">{t("form.noStudents")}</p>
+        </Show>
         {error() && <p class="text-sm text-destructive">{error()}</p>}
       </form>
 

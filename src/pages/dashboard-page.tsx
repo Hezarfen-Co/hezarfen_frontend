@@ -20,6 +20,7 @@ import {
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { examKindLabel } from "@/lib/exam-labels";
 import { hasMinRole } from "@/lib/roles";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -316,7 +317,7 @@ function DashboardContent() {
                             </p>
                           </div>
                           <Badge variant="outline" class="shrink-0 capitalize">
-                            {exam.kind}
+                            {examKindLabel(String(exam.kind), t)}
                           </Badge>
                         </Link>
                       </li>

@@ -1,4 +1,5 @@
 import type { ParentProps } from "solid-js";
+import { useLocation } from "@tanstack/solid-router";
 import { Show } from "solid-js";
 import { NavBar } from "@/components/layout/nav-bar";
 import { SideNav } from "@/components/layout/side-nav";
@@ -16,6 +17,8 @@ export function AppShell(props: ParentProps) {
   const prefs = usePreferences();
   const t = useT();
   const collapsed = () => prefs.sidebarCollapsed();
+  const location = useLocation();
+  const wide = () => location().pathname.startsWith("/exam-room/");
 
   return (
     <div class="min-h-screen">
@@ -74,7 +77,7 @@ export function AppShell(props: ParentProps) {
         </Show>
 
         <main class="min-w-0 flex-1">
-          <div class="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div class={cn("mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-8", wide() ? "max-w-none" : "max-w-[1200px]") }>
             {props.children}
           </div>
         </main>

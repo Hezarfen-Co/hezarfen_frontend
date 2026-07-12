@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+import { examKindLabel } from "@/lib/exam-labels";
 import { hasMinRole } from "@/lib/roles";
 
 const round = (n: number) => (Math.round(n * 100) / 100).toString();
@@ -131,7 +132,7 @@ function MarksReportView(props: { report: MarksReport }) {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" class="capitalize">
-                              {entry.kind}
+                              {examKindLabel(entry.kind, t)}
                             </Badge>
                           </TableCell>
                           <TableCell>{entry.weight}</TableCell>
