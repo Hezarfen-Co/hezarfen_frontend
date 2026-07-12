@@ -2,7 +2,7 @@ import { For, Show, Suspense, createEffect, createResource, createSignal, onClea
 import { Link, useLocation } from "@tanstack/solid-router";
 import { getExamLive } from "@/api/getExamLive";
 import { getExamById } from "@/api/getExamById";
-import { ApiError } from "@/api/client";
+import { ApiError, formatApiError } from "@/api/client";
 import type { LiveMonitor, LiveRosterEntry } from "@/api/types";
 import type { MessageKey } from "@/i18n/messages";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -42,6 +42,11 @@ function labelFromStatus(status: string, t: (key: MessageKey) => string): string
   return k ? t(k) : status;
 }
 
+function progressPercent(entry: LiveRosterEntry, questionCount: number): number {
+  if (questionCount <= 0) return 0;
+  return Math.round(((entry.answered ?? 0) / questionCount) * 100);
+}
+
 function LiveMonitorContent() {
   const location = useLocation();
   const t = useT();
@@ -68,7 +73,7 @@ function LiveMonitorContent() {
       setSnapshot(data);
     } catch (err) {
       console.error("[live-monitor] fetch error:", err);
-      setError(err instanceof ApiError ? err.message : "Failed to load");
+      setError(err instanceof ApiError ? formatApiError(err, locale()) : formatApiError(err, locale()));
     }
   };
 
@@ -174,57 +179,76 @@ function LiveMonitorContent() {
                 </section>
 
                 <section class="surface-card p-2 sm:p-4">
-                  <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.liveRoster")}</h2>
+                  <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <h2 class="font-display text-lg font-semibold">{t("exams.liveRoster")}</h2>
+                    <Badge variant="outline" class="rounded-full px-3 py-1">
+                      {sorted.length} / {m.question_count}
+                    </Badge>
+                  </div>
                   <Show
                     when={sorted.length > 0}
-                    fallback={<p class="rounded-sm bg-muted/40 px-3 py-4 text-sm text-muted-foreground">{t("exams.emptyRoster")}</p>}
+                    fallback={<p class="rounded-lg bg-muted/40 px-3 py-4 text-sm text-muted-foreground">{t("exams.emptyRoster")}</p>}
                   >
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <SortHead label={t("admin.username")} sortKey="username" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-left" />
-                          <SortHead label={t("attempt.status")} sortKey="status" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                          <SortHead label={t("attempt.progress")} sortKey="progress" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                          <SortHead label={t("attempt.remaining")} sortKey="remaining" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                          <SortHead label={t("exams.lastActivity")} sortKey="activity" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                          <SortHead label={t("marks.mark")} sortKey="mark" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <For each={pageItems}>
-                          {(entry) => (
-                            <TableRow>
-                              <TableCell class="font-medium">
-                                {entry.display_name || entry.username || t("exams.nameless")}
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant={
-                                  entry.status === "in_progress" ? "default" :
-                                  entry.status === "submitted" ? "secondary" :
-                                  "outline"
-                                }>
-                                  {labelFromStatus(entry.status, t)}
-                                </Badge>
-                              </TableCell>
-                              <TableCell class="tabular-nums text-center">{entry.answered}/{m.question_count}</TableCell>
-                              <TableCell class="tabular-nums text-center">
-                                {entry.status === "in_progress" && entry.remaining_ms > 0
-                                  ? `${Math.ceil(entry.remaining_ms / 60000)}dk`
-                                  : entry.status === "in_progress" && entry.remaining_ms <= 0
-                                    ? `<1dk`
-                                    : "—"}
-                              </TableCell>
-                              <TableCell class="text-xs text-center">
-                                {entry.last_activity ? formatDateTime(entry.last_activity, locale()) : "—"}
-                              </TableCell>
-                              <TableCell class="tabular-nums font-semibold text-center">
-                                {entry.mark != null ? entry.mark : "—"}
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </For>
-                      </TableBody>
-                    </Table>
+                    <div class="overflow-hidden rounded-lg border border-border/70">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <SortHead label={t("admin.username")} sortKey="username" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-left" />
+                            <SortHead label={t("attempt.status")} sortKey="status" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
+                            <SortHead label={t("attempt.progress")} sortKey="progress" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
+                            <SortHead label={t("attempt.remaining")} sortKey="remaining" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
+                            <SortHead label={t("exams.lastActivity")} sortKey="activity" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
+                            <SortHead label={t("marks.mark")} sortKey="mark" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <For each={pageItems}>
+                            {(entry) => (
+                              <TableRow>
+                                <TableCell class="font-medium">
+                                  {entry.display_name || entry.username || t("exams.nameless")}
+                                </TableCell>
+                                <TableCell class="text-center">
+                                  <Badge
+                                    class="rounded-full"
+                                    variant={
+                                      entry.status === "in_progress" ? "default" :
+                                      entry.status === "submitted" ? "secondary" :
+                                      "outline"
+                                    }
+                                  >
+                                    {labelFromStatus(entry.status, t)}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell class="min-w-32 tabular-nums">
+                                  <div class="flex items-center justify-center gap-2">
+                                    <span>{entry.answered}/{m.question_count}</span>
+                                    <div class="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                                      <div class="h-full rounded-full bg-primary" style={{ width: `${progressPercent(entry, m.question_count)}%` }} />
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell class="tabular-nums text-center">
+                                  <span class={entry.status === "in_progress" && entry.remaining_ms <= 5 * 60 * 1000 ? "rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300" : ""}>
+                                    {entry.status === "in_progress" && entry.remaining_ms > 0
+                                      ? `${Math.ceil(entry.remaining_ms / 60000)}dk`
+                                      : entry.status === "in_progress" && entry.remaining_ms <= 0
+                                        ? `<1dk`
+                                        : "—"}
+                                  </span>
+                                </TableCell>
+                                <TableCell class="text-center text-xs">
+                                  {entry.last_activity ? formatDateTime(entry.last_activity, locale()) : "—"}
+                                </TableCell>
+                                <TableCell class="text-center font-semibold tabular-nums">
+                                  {entry.mark != null ? entry.mark : "—"}
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </For>
+                        </TableBody>
+                      </Table>
+                    </div>
 
                     <Show when={sorted.length > PAGE_SIZE}>
                       <div class="mt-4 flex items-center justify-between gap-2 border-t border-border/60 pt-3">

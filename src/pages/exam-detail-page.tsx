@@ -222,17 +222,19 @@ function ExamDetailContent() {
               <div class="flex flex-wrap items-center gap-2 pt-1">
                 <Badge variant="outline" class={cn(
                   "rounded-sm capitalize",
+                  !isScheduled() && "bg-muted text-muted-foreground border-muted",
                   isFinished() && "bg-muted text-muted-foreground border-muted",
-                  !isFinished() && !isUpcoming() && "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+                  isScheduled() && !isFinished() && !isUpcoming() && "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
                   isUpcoming() && "bg-amber-500/15 text-amber-600 border-amber-500/30",
                 )}>
                   <span class={cn(
                     "mr-1.5 inline-block h-1.5 w-1.5 rounded-full",
+                    !isScheduled() && "bg-muted-foreground",
                     isFinished() && "bg-muted-foreground",
-                    !isFinished() && !isUpcoming() && "bg-emerald-600",
+                    isScheduled() && !isFinished() && !isUpcoming() && "bg-emerald-600",
                     isUpcoming() && "bg-amber-600",
                   )} />
-                  {isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
+                  {!isScheduled() ? t("exams.unscheduled") : isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
                 </Badge>
                 <Badge variant="outline" class="rounded-sm capitalize">
                   {examKindLabel(String(ex().kind), t)}

@@ -17,6 +17,7 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
   };
 
   const status = () => {
+    if (props.exam.mode !== "sync" && props.exam.mode !== "async") return "unscheduled";
     const current = props.now ?? Date.now();
     if (props.exam.ends_at != null && props.exam.ends_at < current) return "finished";
     if (props.exam.starts_at != null && props.exam.starts_at > current) return "upcoming";
@@ -25,6 +26,7 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
 
   const statusLabel = () => {
     const s = status();
+    if (s === "unscheduled") return t("exams.unscheduled");
     if (s === "finished") return t("exams.finished");
     if (s === "upcoming") return t("exams.upcoming");
     return t("exams.active");
@@ -32,6 +34,7 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
 
   const statusClass = () => {
     const s = status();
+    if (s === "unscheduled") return "bg-muted text-muted-foreground border-muted";
     if (s === "finished") return "bg-muted text-muted-foreground border-muted";
     if (s === "upcoming") return "bg-amber-500/15 text-amber-600 border-amber-500/30";
     return "bg-emerald-500/15 text-emerald-600 border-emerald-500/30";
@@ -39,6 +42,7 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
 
   const statusDot = () => {
     const s = status();
+    if (s === "unscheduled") return "bg-muted-foreground";
     if (s === "finished") return "bg-muted-foreground";
     if (s === "upcoming") return "bg-amber-600";
     return "bg-emerald-600";
@@ -71,13 +75,15 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
             {props.exam.description || "—"}
           </p>
           <dl class="mt-4 grid gap-2 text-xs text-muted-foreground">
-            <div class="flex justify-between gap-3">
-              <dt>{t("exams.mode")}</dt>
-              <dd class="font-medium text-foreground">{modeLabel()}</dd>
-            </div>
-            <div class="flex justify-between gap-3">
-              <dt>{t("exams.window")}</dt>
-              <dd class="text-right">{formatDateTime(props.exam.starts_at, locale())} → {formatDateTime(props.exam.ends_at, locale())}</dd>
+            <div class="flex flex-wrap gap-2">
+              <Badge variant="outline" class="rounded-full">
+                {modeLabel()}
+              </Badge>
+              <Show when={props.exam.starts_at != null && props.exam.ends_at != null}>
+                <Badge variant="outline" class="rounded-full">
+                  {formatDateTime(props.exam.starts_at, locale())} → {formatDateTime(props.exam.ends_at, locale())}
+                </Badge>
+              </Show>
             </div>
             {(props.exam.mode === "sync" || props.exam.mode === "async") && (
               <div class="flex justify-between gap-3">

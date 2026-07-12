@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { Link, useNavigate, useParams } from "@tanstack/solid-router";
 import { deleteCourseById } from "@/api/deleteCourseById";
 import { deleteCourseEnrollmentByUserId } from "@/api/deleteCourseEnrollmentByUserId";
@@ -83,6 +83,11 @@ function CourseDetailContent() {
     if (mode === "async") return t("exams.mode.async");
     return t("exams.unscheduled");
   };
+
+  const examCount = createMemo(() => exams()?.length ?? 0);
+  const rosterCount = createMemo(() => roster()?.length ?? 0);
+  const totalWeight = createMemo(() => (exams() ?? []).reduce((sum, exam) => sum + exam.weight, 0));
+
   const enrollableUsers = () => {
     const enrolled = new Set((roster() ?? []).map((row) => row.user.id));
     return (users() ?? []).filter((user) => user.role === "student" && !enrolled.has(user.id));
@@ -220,6 +225,34 @@ function CourseDetailContent() {
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
+            <section class="grid gap-3 sm:grid-cols-3">
+              <div class="surface-card p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t("courses.exams")}
+                </p>
+                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{examCount()}</p>
+                <p class="mt-1 text-xs text-muted-foreground">{t("nav.exams")}</p>
+              </div>
+
+              <Show when={isTeacherPlus()}>
+                <div class="surface-card p-4">
+                  <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t("courses.roster")}
+                  </p>
+                  <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{rosterCount()}</p>
+                  <p class="mt-1 text-xs text-muted-foreground">{t("courses.enroll")}</p>
+                </div>
+              </Show>
+
+              <div class="surface-card p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t("courses.weight")}
+                </p>
+                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{totalWeight()}</p>
+                <p class="mt-1 text-xs text-muted-foreground">{t("marks.subtitle")}</p>
+              </div>
+            </section>
+
             {/* Course exams */}
             <section class="surface-card space-y-4 p-5">
               <div class="flex flex-wrap items-center justify-between gap-2">
@@ -257,7 +290,9 @@ function CourseDetailContent() {
                 <Show
                   when={(exams() ?? []).length > 0}
                   fallback={
-                    <p class="text-sm text-muted-foreground">{t("exams.empty")}</p>
+                    <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                      {t("exams.empty")}
+                    </div>
                   }
                 >
                   <ul class="space-y-2">
@@ -267,17 +302,27 @@ function CourseDetailContent() {
                           <Link
                             to="/exams/$id"
                             params={{ id: exam.id }}
-                            class="flex items-center justify-between gap-3 rounded-md border px-3 py-3 transition-colors hover:border-primary/30 hover:bg-accent/40"
+                            class="group flex items-start justify-between gap-3 rounded-lg border border-border/70 bg-background/60 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/35 hover:shadow-sm"
                           >
-                            <div class="min-w-0">
-                              <p class="truncate font-medium">{exam.title}</p>
-                              <p class="text-xs text-muted-foreground">
-                                {t("courses.weight")}: {exam.weight} · {examModeLabel(exam.mode)}
-                              </p>
+                            <div class="min-w-0 space-y-2">
+                              <div>
+                                <p class="truncate font-medium group-hover:text-primary">{exam.title}</p>
+                              </div>
+                              <div class="flex flex-wrap items-center gap-2">
+                                <Badge variant="outline" class="rounded-full capitalize">
+                                  {examKindLabel(String(exam.kind), t)}
+                                </Badge>
+                                <Badge variant="secondary" class="rounded-full">
+                                  {examModeLabel(exam.mode)}
+                                </Badge>
+                              </div>
                             </div>
-                            <Badge variant="outline" class="capitalize">
-                              {examKindLabel(String(exam.kind), t)}
-                            </Badge>
+                            <div class="shrink-0 rounded-lg border bg-card px-3 py-2 text-center shadow-sm">
+                              <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                {t("courses.weight")}
+                              </p>
+                              <p class="font-display text-xl font-semibold tabular-nums">{exam.weight}</p>
+                            </div>
                           </Link>
                         </li>
                       )}
@@ -290,7 +335,12 @@ function CourseDetailContent() {
             {/* Roster */}
             <Show when={isTeacherPlus()}>
               <section class="surface-card space-y-4 p-5">
-                <h2 class="font-display text-lg font-semibold">{t("courses.roster")}</h2>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <h2 class="font-display text-lg font-semibold">{t("courses.roster")}</h2>
+                  <Badge variant="secondary" class="rounded-full px-3 py-1">
+                    {rosterCount()}
+                  </Badge>
+                </div>
                 <form
                   class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]"
                   onSubmit={(e) => {
@@ -337,46 +387,57 @@ function CourseDetailContent() {
                 </form>
 
                 <Suspense fallback={<PageSpinner />}>
-                  <Show when={(roster() ?? []).length > 0} fallback={null}>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t("admin.username")}</TableHead>
-                          <TableHead>{t("admin.id")}</TableHead>
-                          <TableHead class="w-24" />
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <For each={roster() ?? []}>
-                          {(row) => (
-                            <TableRow>
-                              <TableCell class="font-medium">
-                                {row.user.display_name || row.user.username}
-                              </TableCell>
-                              <TableCell class="font-mono text-xs">{row.user.id}</TableCell>
-                              <TableCell>
-                                <Show when={canManage()}>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="text-destructive"
-                                    onClick={() =>
-                                      void wrap(async () => {
-                                        await deleteCourseEnrollmentByUserId(id(), row.user.id);
-                                        await refetchRoster();
-                                      })
-                                    }
-                                  >
-                                    <IconTrash class="h-4 w-4" />
-                                  </Button>
-                                </Show>
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </For>
-                      </TableBody>
-                    </Table>
+                  <Show
+                    when={(roster() ?? []).length > 0}
+                    fallback={
+                      <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                        {t("exams.emptyRoster")}
+                      </div>
+                    }
+                  >
+                    <div class="overflow-hidden rounded-lg border border-border/70">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>{t("admin.username")}</TableHead>
+                            <TableHead>{t("admin.id")}</TableHead>
+                            <TableHead class="w-24" />
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <For each={roster() ?? []}>
+                            {(row) => (
+                              <TableRow>
+                                <TableCell class="font-medium">
+                                  {row.user.display_name || row.user.username}
+                                </TableCell>
+                                <TableCell class="font-mono text-xs text-muted-foreground">
+                                  {row.user.id}
+                                </TableCell>
+                                <TableCell class="text-right">
+                                  <Show when={canManage()}>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      class="text-destructive"
+                                      onClick={() =>
+                                        void wrap(async () => {
+                                          await deleteCourseEnrollmentByUserId(id(), row.user.id);
+                                          await refetchRoster();
+                                        })
+                                      }
+                                    >
+                                      <IconTrash class="h-4 w-4" />
+                                    </Button>
+                                  </Show>
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </For>
+                        </TableBody>
+                      </Table>
+                    </div>
                   </Show>
                 </Suspense>
               </section>

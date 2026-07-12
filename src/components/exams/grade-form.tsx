@@ -1,4 +1,4 @@
-import { For, Show, createSignal } from "solid-js";
+import { For, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -81,9 +81,6 @@ export function GradeForm(props: {
           <IconCheck />
           {t("exams.gradeStudent")}
         </Button>
-        <Show when={props.students.length === 0}>
-          <p class="text-sm text-muted-foreground">{t("form.noStudents")}</p>
-        </Show>
         {error() && <p class="text-sm text-destructive">{error()}</p>}
       </form>
 

@@ -4,7 +4,7 @@ import { getExamAttemptQuestions } from "@/api/getExamAttemptQuestions";
 import { postExamAttempt } from "@/api/postExamAttempt";
 import { postExamAttemptAnswer } from "@/api/postExamAttemptAnswer";
 import { postExamAttemptFinish } from "@/api/postExamAttemptFinish";
-import { formatApiError } from "@/api/client";
+import { formatApiError, formatApiErrorMessage } from "@/api/client";
 import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ function formatRemaining(ms: number): string {
 
 export function ExamRoomWS(props: { exam: Exam }) {
   const t = useT();
+  const { locale } = usePreferences();
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [finishOpen, setFinishOpen] = createSignal(false);
@@ -123,7 +124,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
         break;
       }
       case "error": {
-        setError(msg.message);
+        setError(formatApiErrorMessage(msg.message, locale()));
         break;
       }
     }
@@ -146,7 +147,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       setQuestions(qs);
       connectWs();
     } catch (err) {
-      setError(formatApiError(err));
+      setError(formatApiError(err, locale()));
     } finally {
       setPending(false);
     }
@@ -161,7 +162,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       setQuestions(qs);
       connectWs();
     } catch (err) {
-      setError(formatApiError(err));
+      setError(formatApiError(err, locale()));
     }
   };
 
@@ -191,7 +192,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
         const qs = await getExamAttemptQuestions(props.exam.id);
         setQuestions(qs);
       } catch (err) {
-        setError(formatApiError(err));
+        setError(formatApiError(err, locale()));
       } finally {
         setPending(false);
       }
@@ -210,7 +211,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
         setAttempt(next);
       }
     } catch (err) {
-      setError(formatApiError(err));
+      setError(formatApiError(err, locale()));
     } finally {
       setPending(false);
     }
@@ -286,13 +287,22 @@ export function ExamRoomWS(props: { exam: Exam }) {
               </For>
             </div>
             <aside class="surface-card sticky top-4 space-y-3 p-4">
-              <h3 class="font-display text-sm font-semibold">{t("questions.title")}</h3>
+              <div>
+                <h3 class="font-display text-sm font-semibold">{t("questions.title")}</h3>
+                <p class="mt-1 text-xs text-muted-foreground">
+                  {attempt()?.answered ?? 0} / {attempt()?.question_count ?? questions().length} {t("attempt.progress").toLowerCase()}
+                </p>
+              </div>
               <div class="grid grid-cols-4 gap-2">
                 <For each={questions()}>
                   {(question, index) => (
                     <a
                       href={`#question-${question.id}`}
-                      class="inline-flex h-9 items-center justify-center rounded-sm border bg-background text-sm font-medium hover:bg-accent"
+                      class={
+                        question.answer
+                          ? "inline-flex h-9 items-center justify-center rounded-lg border border-primary/35 bg-primary/10 text-sm font-medium text-primary hover:bg-primary/15"
+                          : "inline-flex h-9 items-center justify-center rounded-lg border bg-background text-sm font-medium hover:bg-accent"
+                      }
                     >
                       {index() + 1}
                     </a>
@@ -323,6 +333,11 @@ export function ExamRoomWS(props: { exam: Exam }) {
 function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number; wsState: WsState }) {
   const t = useT();
   const { locale } = usePreferences();
+  const progressPct = () =>
+    props.attempt.question_count <= 0
+      ? 0
+      : Math.round((props.attempt.answered / props.attempt.question_count) * 100);
+  const remainingWarn = () => props.attempt.status === "in_progress" && props.remainingMs <= 5 * 60 * 1000;
   const statusLabel = () => {
     if (props.attempt.status === "in_progress") return t("attempt.inProgress");
     if (props.attempt.status === "submitted") return t("attempt.submitted");
@@ -336,32 +351,38 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number; ws
   };
   return (
     <div class="grid auto-rows-fr gap-3 text-sm sm:grid-cols-2 xl:grid-cols-6">
-      <div class="h-full rounded-md border bg-background/60 p-3">
+      <div class="h-full rounded-lg border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.status")}</p>
         <p class="mt-1 font-medium">{statusLabel()}</p>
       </div>
-      <div class="h-full rounded-md border bg-background/60 p-3">
+      <div class={remainingWarn() ? "h-full rounded-lg border border-amber-500/40 bg-amber-500/10 p-3" : "h-full rounded-lg border bg-background/60 p-3"}>
         <p class="text-xs text-muted-foreground">{t("attempt.remaining")}</p>
-        <p class="mt-1 font-mono font-medium">{formatRemaining(props.remainingMs)}</p>
+        <p class="mt-1 font-mono text-lg font-semibold tabular-nums">{formatRemaining(props.remainingMs)}</p>
       </div>
-      <div class="h-full rounded-md border bg-background/60 p-3">
+      <div class="h-full rounded-lg border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.progress")}</p>
         <p class="mt-1 font-medium">{props.attempt.answered} / {props.attempt.question_count}</p>
+        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+          <div class="h-full rounded-full bg-primary" style={{ width: `${progressPct()}%` }} />
+        </div>
       </div>
-      <div class="h-full rounded-md border bg-background/60 p-3">
+      <div class="h-full rounded-lg border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.deadline")}</p>
         <p class="mt-1 font-medium">{formatDateTime(props.attempt.deadline, locale())}</p>
       </div>
-      <div class="h-full rounded-md border bg-background/60 p-3">
+      <div class="h-full rounded-lg border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.serverNow")}</p>
         <p class="mt-1 font-medium">{formatDateTime(props.attempt.now, locale())}</p>
       </div>
-      <div class="h-full rounded-md border bg-background/60 p-3">
+      <div class="h-full rounded-lg border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("ws.ping")}</p>
-        <p class="mt-1 font-medium">{wsLabel()}</p>
+        <p class="mt-1 inline-flex items-center gap-2 font-medium">
+          <span class={props.wsState === "connected" ? "h-2 w-2 rounded-full bg-success" : "h-2 w-2 rounded-full bg-warning"} />
+          {wsLabel()}
+        </p>
       </div>
       <Show when={props.attempt.mark != null}>
-        <div class="h-full rounded-md border bg-background/60 p-3">
+        <div class="h-full rounded-lg border bg-background/60 p-3">
           <p class="text-xs text-muted-foreground">{t("attempt.mark")}</p>
           <p class="mt-1 font-medium">{props.attempt.mark}</p>
         </div>
@@ -411,12 +432,12 @@ function QuestionAnswerCardWS(props: {
     <article id={`question-${props.question.id}`} class="surface-card min-h-[18rem] scroll-mt-24 p-5">
       <div class="mb-3 flex flex-wrap items-center gap-2">
         <span class="text-xs font-semibold text-muted-foreground">#{props.index}</span>
-        <Badge variant="outline">{props.question.points} {t("questions.points")}</Badge>
+        <Badge variant="outline" class="rounded-full">{props.question.points} {t("questions.points")}</Badge>
         <Show when={saved()}>
-          <Badge variant="outline">{t("attempt.saved")}</Badge>
+          <Badge variant="outline" class="rounded-full">{t("attempt.saved")}</Badge>
         </Show>
         <Show when={props.question.answer?.updated_at}>
-          {(updatedAt) => <Badge variant="outline">{t("attempt.savedAt")}: {formatDateTime(updatedAt(), locale())}</Badge>}
+          {(updatedAt) => <Badge variant="outline" class="rounded-full">{t("attempt.savedAt")}: {formatDateTime(updatedAt(), locale())}</Badge>}
         </Show>
       </div>
       <p class="mb-4 whitespace-pre-wrap text-sm font-medium">{props.question.text}</p>
@@ -440,7 +461,7 @@ function QuestionAnswerCardWS(props: {
             {(choice, choiceIndex) => (
               <button
                 type="button"
-                class="flex w-full items-center gap-3 rounded-sm border px-3 py-2 text-left text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+                class="flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={props.disabled}
                 onClick={() => {
                   setSaved(false);

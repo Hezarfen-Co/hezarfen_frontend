@@ -1,3 +1,5 @@
+import type { Locale } from "@/i18n/messages";
+
 export class ApiError extends Error {
   readonly status: number;
   readonly retryAfter: number | null;
@@ -17,6 +19,44 @@ type RequestOptions = {
 };
 
 const API_PREFIX = "/api";
+
+const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
+  "not enrolled in this exam's course": {
+    en: "You are not enrolled in this exam's course.",
+    tr: "Bu sınavın dersine kayıtlı değilsin.",
+  },
+  "you are not enrolled in this exam's course": {
+    en: "You are not enrolled in this exam's course.",
+    tr: "Bu sınavın dersine kayıtlı değilsin.",
+  },
+  "exam is not scheduled": {
+    en: "This exam is not scheduled for online sitting.",
+    tr: "Bu sınav çevrim içi oturum için zamanlanmamış.",
+  },
+  "attempt not found": {
+    en: "Start the exam before opening the exam room.",
+    tr: "Sınav odasını açmadan önce sınavı başlat.",
+  },
+  "attempt is closed": {
+    en: "This attempt is closed. Answers are read-only.",
+    tr: "Bu oturum kapalı. Cevaplar salt okunur.",
+  },
+};
+
+function normalizeApiMessage(message: string): string {
+  return message
+    .trim()
+    .replace(/[’‘]/g, "'")
+    .replace(/\s+/g, " ")
+    .replace(/[.!?]+$/, "")
+    .toLowerCase();
+}
+
+function sentenceCase(message: string): string {
+  const trimmed = message.trim();
+  if (!trimmed) return trimmed;
+  return trimmed[0].toLocaleUpperCase("en-US") + trimmed.slice(1);
+}
 
 export async function client<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {};
@@ -70,13 +110,17 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
   return data as T;
 }
 
-export function formatApiError(err: unknown): string {
+export function formatApiErrorMessage(message: string, locale: Locale = "en"): string {
+  return API_ERROR_MESSAGES[normalizeApiMessage(message)]?.[locale] ?? sentenceCase(message);
+}
+
+export function formatApiError(err: unknown, locale: Locale = "en"): string {
   if (err instanceof ApiError) {
     if (err.status === 429 && err.retryAfter != null) {
-      return `Try again in ${err.retryAfter}s`;
+      return locale === "tr" ? `${err.retryAfter} sn sonra tekrar dene.` : `Try again in ${err.retryAfter}s.`;
     }
-    return err.message;
+    return formatApiErrorMessage(err.message, locale);
   }
-  if (err instanceof Error) return err.message;
-  return "Something went wrong";
+  if (err instanceof Error) return formatApiErrorMessage(err.message, locale);
+  return locale === "tr" ? "Bir şeyler ters gitti." : "Something went wrong.";
 }
