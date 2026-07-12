@@ -115,7 +115,7 @@ Rules:
   is given. This applies to every commit, including small ones — no exceptions.
 - **Mandatory pre-commit check, every time:** once approved, right before
   running the commit:
-  1. Run `npm run build` (`tsc -b && vite build`) — the project already has
+  1. Run `bun run build` (`tsc --noEmit && vite build`) — the project already has
      `noUnusedLocals` / `noUnusedParameters` enabled, so any unused import or
      variable fails the build.
   2. If the build fails, remove the unused imports/variables and re-run until
