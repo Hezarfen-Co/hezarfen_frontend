@@ -159,6 +159,23 @@ export type MessageKey =
   | "exams.durationRequired"
   | "exams.durationRange"
   | "exams.scheduleRequired"
+  | "questions.title"
+  | "questions.add"
+  | "questions.edit"
+  | "questions.empty"
+  | "questions.text"
+  | "questions.kind"
+  | "questions.points"
+  | "questions.choices"
+  | "questions.choicesHint"
+  | "questions.correct"
+  | "questions.correctHint"
+  | "questions.kind.choice"
+  | "questions.kind.text"
+  | "questions.textRequired"
+  | "questions.pointsRange"
+  | "questions.choicesRange"
+  | "questions.correctRange"
   | "exams.helpTitle"
   | "exams.helpBody"
   | "admin.title"
@@ -409,6 +426,23 @@ const en: Dict = {
   "exams.durationRequired": "Async exams need a duration",
   "exams.durationRange": "Duration must be from 1 minute to 24 hours",
   "exams.scheduleRequired": "Scheduled exams need start and end times",
+  "questions.title": "Questions",
+  "questions.add": "Add question",
+  "questions.edit": "Edit question",
+  "questions.empty": "No questions yet.",
+  "questions.text": "Question text",
+  "questions.kind": "Question kind",
+  "questions.points": "Points",
+  "questions.choices": "Choices",
+  "questions.choicesHint": "One choice per line, 2–10 choices.",
+  "questions.correct": "Correct choice index",
+  "questions.correctHint": "Zero-based: first choice is 0.",
+  "questions.kind.choice": "Choice",
+  "questions.kind.text": "Text",
+  "questions.textRequired": "Question text is required",
+  "questions.pointsRange": "Points must be an integer from 1 to 100",
+  "questions.choicesRange": "Choice questions need 2–10 choices, each at most 500 characters",
+  "questions.correctRange": "Correct index must point to one of the choices",
   "exams.helpTitle": "About exams",
   "exams.helpBody":
     "Exams belong to a course. Teachers add them from the course page with a kind and weight (1–100). Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
@@ -669,6 +703,23 @@ const tr: Dict = {
   "exams.durationRequired": "Asenkron sınav için süre gerekli",
   "exams.durationRange": "Süre 1 dakika ile 24 saat arasında olmalı",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",
+  "questions.title": "Sorular",
+  "questions.add": "Soru ekle",
+  "questions.edit": "Soruyu düzenle",
+  "questions.empty": "Henüz soru yok.",
+  "questions.text": "Soru metni",
+  "questions.kind": "Soru türü",
+  "questions.points": "Puan",
+  "questions.choices": "Seçenekler",
+  "questions.choicesHint": "Her satıra bir seçenek, 2–10 seçenek.",
+  "questions.correct": "Doğru seçenek indeksi",
+  "questions.correctHint": "Sıfırdan başlar: ilk seçenek 0.",
+  "questions.kind.choice": "Seçmeli",
+  "questions.kind.text": "Metin",
+  "questions.textRequired": "Soru metni gerekli",
+  "questions.pointsRange": "Puan 1–100 arası tam sayı olmalı",
+  "questions.choicesRange": "Seçmeli soruda 2–10 seçenek gerekir; her biri en fazla 500 karakter olmalı",
+  "questions.correctRange": "Doğru indeks seçeneklerden birini göstermeli",
   "exams.helpTitle": "Sınavlar hakkında",
   "exams.helpBody":
     "Sınavlar bir derse aittir. Öğretmenler ders sayfasından tür ve ağırlık (1–100) ile ekler. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",

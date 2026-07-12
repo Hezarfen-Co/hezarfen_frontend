@@ -9,6 +9,7 @@ import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
 import { ExamForm } from "@/components/exams/exam-form";
+import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { ExamResultBadge } from "@/components/exams/exam-result-badge";
 import { GradeForm } from "@/components/exams/grade-form";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -218,6 +219,8 @@ function ExamDetailContent() {
             </Show>
 
             <Show when={isTeacherPlus()}>
+              <ExamQuestionsPanel examId={id()} />
+
               <section class="surface-card p-5">
                 <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.gradeStudent")}</h2>
                 <GradeForm

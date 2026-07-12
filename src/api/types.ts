@@ -2,6 +2,7 @@ export type Role = "student" | "teacher" | "manager" | "admin";
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 export type ExamKind = "homework" | "quiz" | "midterm" | "final" | "project" | "oral";
 export type ExamMode = "sync" | "async";
+export type QuestionKind = "choice" | "text";
 
 export type User = {
   id: string;
@@ -74,6 +75,16 @@ export type ExamResult = {
   graded_by: string;
 };
 
+export type ExamQuestion = {
+  id: string;
+  exam: string;
+  text: string;
+  kind: QuestionKind;
+  points: number;
+  choices: string[] | null;
+  correct: number | null;
+};
+
 export type MarkEntry = {
   exam: string;
   title: string;
@@ -105,3 +116,5 @@ export const EXAM_KINDS: ExamKind[] = [
 ];
 
 export const EXAM_MODES: ExamMode[] = ["sync", "async"];
+
+export const QUESTION_KINDS: QuestionKind[] = ["choice", "text"];
