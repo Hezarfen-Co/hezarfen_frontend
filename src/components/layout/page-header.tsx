@@ -27,7 +27,7 @@ export function PageHeader(
   return (
     <div
       class={cn(
-        "relative overflow-hidden rounded-md border bg-card text-card-foreground shadow-sm",
+        "relative overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm",
         props.class,
       )}
     >
