@@ -81,6 +81,18 @@ export type MessageKey =
   | "dashboard.subtitle"
   | "dashboard.overview"
   | "dashboard.quickActions"
+  | "dashboard.action.note"
+  | "dashboard.action.noteHint"
+  | "dashboard.action.event"
+  | "dashboard.action.eventHint"
+  | "dashboard.action.course"
+  | "dashboard.action.courseHint"
+  | "dashboard.action.exam"
+  | "dashboard.action.examHint"
+  | "dashboard.action.attend"
+  | "dashboard.action.attendHint"
+  | "dashboard.action.marks"
+  | "dashboard.action.marksHint"
   | "dashboard.stats.notes"
   | "dashboard.stats.events"
   | "dashboard.stats.exams"
@@ -301,6 +313,18 @@ const en: Dict = {
   "dashboard.subtitle": "Here’s what’s happening across your workspace.",
   "dashboard.overview": "Overview",
   "dashboard.quickActions": "Quick actions",
+  "dashboard.action.note": "New note",
+  "dashboard.action.noteHint": "Capture something quickly",
+  "dashboard.action.event": "Create event",
+  "dashboard.action.eventHint": "Schedule a session",
+  "dashboard.action.course": "New course",
+  "dashboard.action.courseHint": "Open a class",
+  "dashboard.action.exam": "Add exam",
+  "dashboard.action.examHint": "Under a course",
+  "dashboard.action.attend": "Mark attendance",
+  "dashboard.action.attendHint": "Open events list",
+  "dashboard.action.marks": "My report card",
+  "dashboard.action.marksHint": "See averages",
   "dashboard.stats.notes": "Notes",
   "dashboard.stats.events": "Events",
   "dashboard.stats.exams": "Exams",
@@ -534,6 +558,18 @@ const tr: Dict = {
   "dashboard.subtitle": "Çalışma alanındaki güncel durum burada.",
   "dashboard.overview": "Özet",
   "dashboard.quickActions": "Hızlı işlemler",
+  "dashboard.action.note": "Yeni not",
+  "dashboard.action.noteHint": "Hızlıca bir şey kaydet",
+  "dashboard.action.event": "Etkinlik oluştur",
+  "dashboard.action.eventHint": "Oturum planla",
+  "dashboard.action.course": "Yeni ders",
+  "dashboard.action.courseHint": "Sınıf aç",
+  "dashboard.action.exam": "Sınav ekle",
+  "dashboard.action.examHint": "Dersin içinden",
+  "dashboard.action.attend": "Yoklama işaretle",
+  "dashboard.action.attendHint": "Etkinlik listesine git",
+  "dashboard.action.marks": "Karnem",
+  "dashboard.action.marksHint": "Ortalamaları gör",
   "dashboard.stats.notes": "Notlar",
   "dashboard.stats.events": "Etkinlikler",
   "dashboard.stats.exams": "Sınavlar",

@@ -20,6 +20,8 @@ export function PageHeader(
     accent?: PageAccent;
     actions?: JSX.Element;
     class?: string;
+    /** Compact greeting strip (dashboard). */
+    compact?: boolean;
   }>,
 ) {
   return (
@@ -35,16 +37,35 @@ export function PageHeader(
           ACCENT[props.accent ?? "mint"],
         )}
       />
-      <div class="relative flex flex-col gap-4 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
-        <div class="max-w-2xl space-y-1.5">
-          <Show when={props.eyebrow}>
+      <div
+        class={cn(
+          "relative flex flex-col sm:flex-row sm:items-center sm:justify-between",
+          props.compact
+            ? "gap-3 px-4 py-3 sm:px-5 sm:py-3.5"
+            : "gap-4 p-6 sm:items-end sm:p-8",
+        )}
+      >
+        <div class={cn("min-w-0", props.compact ? "space-y-0.5" : "max-w-2xl space-y-1.5")}>
+          <Show when={props.eyebrow && !props.compact}>
             <p class="text-xs font-medium text-muted-foreground">{props.eyebrow}</p>
           </Show>
-          <h1 class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h1
+            class={cn(
+              "font-display font-semibold tracking-tight",
+              props.compact ? "text-lg sm:text-xl" : "text-2xl sm:text-3xl",
+            )}
+          >
             {props.title}
           </h1>
           <Show when={props.description}>
-            <p class="text-sm text-muted-foreground sm:text-base">{props.description}</p>
+            <p
+              class={cn(
+                "text-muted-foreground",
+                props.compact ? "text-xs sm:text-sm" : "text-sm sm:text-base",
+              )}
+            >
+              {props.description}
+            </p>
           </Show>
           {props.children}
         </div>

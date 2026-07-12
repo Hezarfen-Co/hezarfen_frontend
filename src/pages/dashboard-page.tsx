@@ -7,7 +7,6 @@ import { getNotes } from "@/api/getNotes";
 import type { Event, Exam, Note } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
-import { CollapsibleHelp } from "@/components/ui/collapsible-help";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,24 +57,98 @@ function DashboardContent() {
   const previewExams = createMemo(() => (exams() ?? []).slice(0, PREVIEW_LIMIT));
 
   return (
-    <div class="space-y-8">
+    <div class="space-y-5">
+      {/* Compact greeting + guide */}
       <PageHeader
+        compact
         accent="mint"
-        eyebrow={t("dashboard.overview")}
         title={t("dashboard.greeting", { name: user().username })}
         description={t("dashboard.subtitle")}
         actions={
           <Link to="/guide">
-            <Button variant="outline">{t("dashboard.continueGuide")}</Button>
+            <Button variant="outline" size="sm">
+              {t("dashboard.continueGuide")}
+            </Button>
           </Link>
         }
       />
 
-      <CollapsibleHelp title={t("dashboard.helpTitle")}>{t("dashboard.helpBody")}</CollapsibleHelp>
+      {/* Action CTAs — not sidebar mirrors; 4 verb-style shortcuts */}
+      <section>
+        <h2 class="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("dashboard.quickActions")}
+        </h2>
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Show
+            when={hasMinRole(user().role, "teacher")}
+            fallback={
+              <>
+                <ActionCard
+                  to="/notes"
+                  title={t("dashboard.action.note")}
+                  hint={t("dashboard.action.noteHint")}
+                  icon="✎"
+                  tone="amber"
+                />
+                <ActionCard
+                  to="/events"
+                  title={t("dashboard.action.attend")}
+                  hint={t("dashboard.action.attendHint")}
+                  icon="◷"
+                  tone="sky"
+                />
+                <ActionCard
+                  to="/courses"
+                  title={t("nav.courses")}
+                  hint={t("courses.subtitle")}
+                  icon="▣"
+                  tone="violet"
+                />
+                <ActionCard
+                  to="/marks"
+                  title={t("dashboard.action.marks")}
+                  hint={t("dashboard.action.marksHint")}
+                  icon="▤"
+                  tone="mint"
+                />
+              </>
+            }
+          >
+            <ActionCard
+              to="/notes"
+              title={t("dashboard.action.note")}
+              hint={t("dashboard.action.noteHint")}
+              icon="✎"
+              tone="amber"
+            />
+            <ActionCard
+              to="/events"
+              title={t("dashboard.action.event")}
+              hint={t("dashboard.action.eventHint")}
+              icon="◷"
+              tone="sky"
+            />
+            <ActionCard
+              to="/courses"
+              title={t("dashboard.action.course")}
+              hint={t("dashboard.action.courseHint")}
+              icon="▣"
+              tone="violet"
+            />
+            <ActionCard
+              to="/courses"
+              title={t("dashboard.action.exam")}
+              hint={t("dashboard.action.examHint")}
+              icon="☰"
+              tone="rose"
+            />
+          </Show>
+        </div>
+      </section>
 
-      {/* KPIs — full width, roomy tiles */}
+      {/* KPIs below actions */}
       <Suspense fallback={<PageSpinner />}>
-        <section class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile
             label={t("dashboard.stats.notes")}
             value={String(noteCount())}
@@ -108,31 +181,11 @@ function DashboardContent() {
         </section>
       </Suspense>
 
-      {/* Quick actions — own full-width row so list panels stay wide */}
-      <section class="surface-card p-5 sm:p-6">
-        <h2 class="mb-4 font-display text-lg font-semibold">{t("dashboard.quickActions")}</h2>
-        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <QuickAction to="/courses" title={t("courses.title")} description={t("courses.subtitle")} icon="▣" />
-          <QuickAction to="/marks" title={t("marks.title")} description={t("marks.subtitle")} icon="▤" />
-          <QuickAction to="/notes" title={t("notes.title")} description={t("notes.subtitle")} icon="✎" />
-          <QuickAction to="/events" title={t("events.title")} description={t("events.subtitle")} icon="◷" />
-          <QuickAction to="/exams" title={t("exams.title")} description={t("exams.subtitle")} icon="☰" />
-          <Show when={hasMinRole(user().role, "admin")}>
-            <QuickAction
-              to="/admin/users"
-              title={t("admin.title")}
-              description={t("admin.subtitle")}
-              icon="◎"
-            />
-          </Show>
-        </div>
-      </section>
-
-      {/* Wide equal panels: notes · events · exams */}
-      <section class="grid items-stretch gap-5 lg:grid-cols-3">
-        <div class="surface-card flex min-h-[24rem] flex-col p-5 sm:p-6">
-          <div class="mb-4 flex items-center justify-between gap-2">
-            <h2 class="font-display text-lg font-semibold">{t("dashboard.recentNotes")}</h2>
+      {/* Summaries */}
+      <section class="grid items-stretch gap-4 lg:grid-cols-3">
+        <div class="surface-card flex min-h-[18rem] flex-col p-4 sm:p-5">
+          <div class="mb-3 flex items-center justify-between gap-2">
+            <h2 class="font-display text-base font-semibold sm:text-lg">{t("dashboard.recentNotes")}</h2>
             <Link to="/notes" class="text-sm font-medium text-primary hover:underline">
               {t("dashboard.viewAll")}
             </Link>
@@ -172,9 +225,9 @@ function DashboardContent() {
           </Suspense>
         </div>
 
-        <div class="surface-card flex min-h-[24rem] flex-col p-5 sm:p-6">
-          <div class="mb-4 flex items-center justify-between gap-2">
-            <h2 class="font-display text-lg font-semibold">{t("dashboard.upcomingEvents")}</h2>
+        <div class="surface-card flex min-h-[18rem] flex-col p-4 sm:p-5">
+          <div class="mb-3 flex items-center justify-between gap-2">
+            <h2 class="font-display text-base font-semibold sm:text-lg">{t("dashboard.upcomingEvents")}</h2>
             <Link to="/events" class="text-sm font-medium text-primary hover:underline">
               {t("dashboard.viewAll")}
             </Link>
@@ -223,9 +276,9 @@ function DashboardContent() {
           </Suspense>
         </div>
 
-        <div class="surface-card flex min-h-[24rem] flex-col p-5 sm:p-6">
-          <div class="mb-4 flex items-center justify-between gap-2">
-            <h2 class="font-display text-lg font-semibold">{t("dashboard.myExams")}</h2>
+        <div class="surface-card flex min-h-[18rem] flex-col p-4 sm:p-5">
+          <div class="mb-3 flex items-center justify-between gap-2">
+            <h2 class="font-display text-base font-semibold sm:text-lg">{t("dashboard.myExams")}</h2>
             <Link to="/exams" class="text-sm font-medium text-primary hover:underline">
               {t("dashboard.viewAll")}
             </Link>
@@ -274,6 +327,7 @@ function DashboardContent() {
           </Suspense>
         </div>
       </section>
+
     </div>
   );
 }
@@ -350,15 +404,15 @@ function StatTile(props: {
   };
 
   const inner = (
-    <div class="stat-tile h-full min-h-[8.5rem] p-6">
-      <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{props.label}</p>
-      <p class={cn("mt-3 font-display text-4xl font-semibold tracking-tight tabular-nums", tones[props.tone])}>
+    <div class="stat-tile h-full min-h-[5.5rem] p-4">
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{props.label}</p>
+      <p class={cn("mt-1.5 font-display text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl", tones[props.tone])}>
         {props.value}
         <Show when={props.suffix}>
-          <span class="text-lg font-medium text-muted-foreground"> {props.suffix}</span>
+          <span class="text-sm font-medium text-muted-foreground"> {props.suffix}</span>
         </Show>
       </p>
-      <p class="mt-2 text-sm text-muted-foreground">{props.hint}</p>
+      <p class="mt-1 text-xs text-muted-foreground">{props.hint}</p>
     </div>
   );
 
@@ -372,18 +426,48 @@ function StatTile(props: {
   return inner;
 }
 
-function QuickAction(props: { to: string; title: string; description: string; icon: string }) {
+function ActionCard(props: {
+  to: string;
+  title: string;
+  hint: string;
+  icon: string;
+  tone: "mint" | "sky" | "amber" | "violet" | "rose";
+}) {
+  const ring = {
+    mint: "hover:border-emerald-500/40",
+    sky: "hover:border-sky-500/40",
+    amber: "hover:border-amber-500/40",
+    violet: "hover:border-violet-500/40",
+    rose: "hover:border-rose-500/40",
+  };
+  const iconBg = {
+    mint: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    sky: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    amber: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    violet: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
+    rose: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  };
+
   return (
     <Link
       to={props.to}
-      class="flex flex-1 items-center gap-3 rounded-md border border-border/70 bg-background/60 px-3 py-3 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm"
+      class={cn(
+        "flex items-center gap-3 rounded-md border border-border bg-card px-3.5 py-3 shadow-sm transition-all",
+        "hover:-translate-y-0.5 hover:shadow-md",
+        ring[props.tone],
+      )}
     >
-      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-lg text-primary">
+      <span
+        class={cn(
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-base",
+          iconBg[props.tone],
+        )}
+      >
         {props.icon}
       </span>
       <span class="min-w-0">
-        <span class="block text-sm font-semibold">{props.title}</span>
-        <span class="block truncate text-xs text-muted-foreground">{props.description}</span>
+        <span class="block truncate text-sm font-semibold">{props.title}</span>
+        <span class="block truncate text-xs text-muted-foreground">{props.hint}</span>
       </span>
     </Link>
   );
