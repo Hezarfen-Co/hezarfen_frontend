@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createSignal } from "solid-js";
+import { For, Index, Show, createEffect, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
 import type { ExamQuestion, QuestionKind } from "@/api/types";
 import { QUESTION_KINDS } from "@/api/types";
@@ -161,23 +161,23 @@ export function QuestionForm(props: {
             </Button>
           </div>
           <div class="grid gap-3 xl:grid-cols-2">
-            <For each={choices()}>
+            <Index each={choices()}>
               {(choice, index) => (
                 <div class="min-h-28 rounded-md border bg-background p-3">
                   <div class="mb-2 flex items-center justify-between gap-2">
                     <button
                       type="button"
                       class={
-                        correct() === index()
+                        correct() === index
                           ? "inline-flex h-8 items-center gap-2 rounded-sm bg-primary px-2 text-xs font-medium text-primary-foreground"
                           : "inline-flex h-8 items-center gap-2 rounded-sm border px-2 text-xs font-medium text-muted-foreground hover:bg-accent"
                       }
-                      onClick={() => setCorrect(index())}
+                      onClick={() => setCorrect(index)}
                     >
                       <span class="inline-flex h-5 w-5 items-center justify-center rounded-[3px] border bg-background text-foreground">
-                        {String.fromCharCode(65 + index())}
+                        {String.fromCharCode(65 + index)}
                       </span>
-                      {correct() === index() ? <IconCheck class="h-3.5 w-3.5" /> : t("questions.correct")}
+                      {correct() === index ? <IconCheck class="h-3.5 w-3.5" /> : t("questions.correct")}
                     </button>
                     <Button
                       type="button"
@@ -185,21 +185,21 @@ export function QuestionForm(props: {
                       size="sm"
                       disabled={choices().length <= 2}
                       class="h-8 px-2 text-destructive"
-                      onClick={() => removeChoice(index())}
+                      onClick={() => removeChoice(index)}
                     >
                       <IconTrash class="h-3.5 w-3.5" />
                     </Button>
                   </div>
                   <Input
                     class="h-10"
-                    value={choice}
+                    value={choice()}
                     maxlength={500}
-                    placeholder={t("questions.choicePlaceholder", { index: String.fromCharCode(65 + index()) })}
-                    onInput={(e) => setChoice(index(), e.currentTarget.value)}
+                    placeholder={t("questions.choicePlaceholder", { index: String.fromCharCode(65 + index) })}
+                    onInput={(e) => setChoice(index, e.currentTarget.value)}
                   />
                 </div>
               )}
-            </For>
+            </Index>
           </div>
           <p class="text-xs text-muted-foreground">{t("questions.choicesHint")}</p>
         </div>
