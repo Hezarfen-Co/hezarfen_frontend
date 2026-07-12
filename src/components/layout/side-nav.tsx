@@ -5,6 +5,7 @@ import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import type { MessageKey } from "@/i18n/messages";
+import type { Role } from "@/api/types";
 import {
   IconBook,
   IconCalendar,
@@ -20,7 +21,7 @@ type NavItem = {
   to: string;
   labelKey: MessageKey;
   Icon: Component<{ class?: string }>;
-  adminOnly?: boolean;
+  minRole?: Role;
   exact?: boolean;
 };
 
@@ -31,7 +32,8 @@ const MAIN_ITEMS: NavItem[] = [
   { to: "/marks", labelKey: "nav.marks", Icon: IconChart },
   { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
   { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
-  { to: "/admin/users", labelKey: "nav.users", Icon: IconUsers, adminOnly: true },
+  { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
+  { to: "/admin/users", labelKey: "nav.users", Icon: IconUsers, minRole: "admin" },
 ];
 
 const GUIDE_ITEM: NavItem = {
@@ -79,7 +81,7 @@ function NavLink(props: {
       </span>
       <span
         class={cn(
-          "truncate leading-none",
+          "truncate leading-normal",
           props.collapsed ? "hidden" : "block min-w-0 flex-1 text-left",
         )}
       >
@@ -93,7 +95,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
   const auth = useAuth();
 
   const items = createMemo(() =>
-    MAIN_ITEMS.filter((item) => !item.adminOnly || hasMinRole(auth.user()?.role, "admin")),
+    MAIN_ITEMS.filter((item) => !item.minRole || hasMinRole(auth.user()?.role, item.minRole)),
   );
 
   const t = useT();
@@ -102,9 +104,9 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
     <nav class="flex h-full flex-col" aria-label="Main">
       <div class="flex flex-col gap-1 px-2">
         <For each={items()}>
-          {(item) => (
+          {(item, index) => (
             <>
-              <Show when={item.adminOnly && !props.collapsed}>
+              <Show when={item.minRole && !items()[index() - 1]?.minRole && !props.collapsed}>
                 <div class="flex items-center gap-2 px-2 pb-0.5 pt-3">
                   <span class="h-px flex-1 bg-border" />
                   <span lang="en" class="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">

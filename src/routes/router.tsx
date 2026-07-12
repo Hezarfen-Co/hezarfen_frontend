@@ -36,6 +36,7 @@ const ExamRoomPage = lazyRoute(() => import("@/pages/exam-room-page"));
 const CoursesPage = lazyRoute(() => import("@/pages/courses-page"));
 const CourseDetailPage = lazyRoute(() => import("@/pages/course-detail-page"));
 const MarksPage = lazyRoute(() => import("@/pages/marks-page"));
+const StudentMarksPage = lazyRoute(() => import("@/pages/student-marks-page"));
 const ProfilePage = lazyRoute(() => import("@/pages/profile-page"));
 const LiveMonitorPage = lazyRoute(() => import("@/pages/live-monitor-page"));
 const AdminUsersPage = lazyRoute(() => import("@/pages/admin-users-page"));
@@ -133,6 +134,26 @@ const marksRoute = createRoute({
   component: MarksPage,
 });
 
+const studentMarksRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/student-marks",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (!hasMinRole(user.role, "teacher")) {
+        throw redirect({ to: "/" });
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        throw redirect({ to: "/login" });
+      }
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
+  component: StudentMarksPage,
+});
+
 const liveMonitorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/exams/$id/live",
@@ -185,6 +206,7 @@ const routeTree = rootRoute.addChildren([
   coursesRoute,
   courseDetailRoute,
   marksRoute,
+  studentMarksRoute,
   profileRoute,
   adminUsersRoute,
   guideRoute,

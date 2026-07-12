@@ -10,6 +10,7 @@ export type MessageKey =
   | "nav.courses"
   | "nav.marks"
   | "nav.users"
+  | "nav.studentMarks"
   | "nav.guide"
   | "nav.logout"
   | "nav.admin"
@@ -295,6 +296,7 @@ export type MessageKey =
   | "marks.courseAvg"
   | "marks.empty"
   | "marks.lookup"
+  | "marks.userIdentity"
   | "marks.show"
   | "marks.forUser"
   | "marks.exam"
@@ -361,6 +363,7 @@ const en: Dict = {
   "nav.courses": "Courses",
   "nav.marks": "Report card",
   "nav.users": "Users",
+  "nav.studentMarks": "Student marks",
   "nav.guide": "Guide",
   "nav.admin": "Admin",
   "nav.logout": "Log out",
@@ -660,6 +663,7 @@ const en: Dict = {
   "marks.courseAvg": "Course average",
   "marks.empty": "Not enrolled in any course yet.",
   "marks.lookup": "Look up a student",
+  "marks.userIdentity": "User identity",
   "marks.show": "Show marks",
   "marks.forUser": "Report for {user}",
   "marks.exam": "Exam",
@@ -725,6 +729,7 @@ const tr: Dict = {
   "nav.courses": "Dersler",
   "nav.marks": "Karnem",
   "nav.users": "Kullanıcılar",
+  "nav.studentMarks": "Öğrenci notları",
   "nav.guide": "Rehber",
   "nav.admin": "Yönetim",
   "nav.logout": "Çıkış yap",
@@ -1024,6 +1029,7 @@ const tr: Dict = {
   "marks.courseAvg": "Ders ortalaması",
   "marks.empty": "Henüz hiçbir derse kayıtlı değilsin.",
   "marks.lookup": "Öğrenci ara",
+  "marks.userIdentity": "Kullanıcı Kimliği",
   "marks.show": "Karnesini göster",
   "marks.forUser": "{user} karnesi",
   "marks.exam": "Sınav",
