@@ -28,52 +28,54 @@ export function AttendanceTable(props: {
       <Show
         when={props.rows.length > 0}
         fallback={
-          <p class="rounded-sm bg-muted/40 px-3 py-4 text-sm text-muted-foreground">
+          <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
             {props.emptyLabel ?? t("events.noAttendance")}
           </p>
         }
       >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("events.userId")}</TableHead>
-              <TableHead>{t("events.status")}</TableHead>
-              <TableHead>{t("events.markedBy")}</TableHead>
-              <Show when={props.canRemove}>
-                <TableHead class="w-28" />
-              </Show>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={props.rows}>
-              {(row) => (
-                <TableRow class="h-12">
-                  <TableCell class="font-mono text-xs">{row.user}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" class="capitalize">
-                      {row.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell class="font-mono text-xs">{row.marked_by}</TableCell>
-                  <Show when={props.canRemove && props.onRemove}>
+        <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("events.userId")}</TableHead>
+                <TableHead>{t("events.status")}</TableHead>
+                <TableHead>{t("events.markedBy")}</TableHead>
+                <Show when={props.canRemove}>
+                  <TableHead class="w-28" />
+                </Show>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={props.rows}>
+                {(row) => (
+                  <TableRow class="h-12">
+                    <TableCell class="font-mono text-xs">{row.user}</TableCell>
                     <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        class="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => setTargetUser(row.user)}
-                      >
-                        <IconTrash class="h-4 w-4" />
-                        {t("common.remove")}
-                      </Button>
+                      <Badge variant="secondary" class="capitalize">
+                        {row.status}
+                      </Badge>
                     </TableCell>
-                  </Show>
-                </TableRow>
-              )}
-            </For>
-          </TableBody>
-        </Table>
+                    <TableCell class="font-mono text-xs">{row.marked_by}</TableCell>
+                    <Show when={props.canRemove && props.onRemove}>
+                      <TableCell>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setTargetUser(row.user)}
+                        >
+                          <IconTrash class="h-4 w-4" />
+                          {t("common.remove")}
+                        </Button>
+                      </TableCell>
+                    </Show>
+                  </TableRow>
+                )}
+              </For>
+            </TableBody>
+          </Table>
+        </div>
       </Show>
 
       <ConfirmDialog

@@ -93,20 +93,20 @@ function EventDetailContent() {
               title={ev().title}
               description={`${formatDateTime(ev().starts_at, locale())} → ${formatDateTime(ev().ends_at, locale())}`}
               actions={
-                <div class="flex flex-wrap items-center gap-1 rounded-md border bg-background/70 p-1 shadow-sm">
+                <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
                   <Link to="/events">
-                    <Button variant="ghost" size="sm" class="rounded-sm">
+                    <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
                       <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
                   </Link>
                   <Show when={canManage()}>
-                    <div class="ml-1 flex items-center gap-1 border-l border-border pl-1">
+                    <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        class="rounded-sm"
+                        class="flex-1 rounded-md sm:flex-none"
                         onClick={() => setEditing((v) => !v)}
                       >
                         <IconEdit class="h-4 w-4" />
@@ -116,7 +116,7 @@ function EventDetailContent() {
                         type="button"
                         variant="destructive"
                         size="sm"
-                        class="rounded-sm"
+                        class="flex-1 rounded-md sm:flex-none"
                         disabled={pending()}
                         onClick={() => setDeleteOpen(true)}
                       >
@@ -148,7 +148,7 @@ function EventDetailContent() {
             />
 
             <Show when={editing()}>
-              <section class="surface-card max-w-2xl p-5">
+              <section class="surface-card max-w-3xl p-5">
                 <EventForm
                   initial={ev()}
                   submitLabel={t("common.update")}
@@ -170,12 +170,15 @@ function EventDetailContent() {
 
             <div class="grid gap-4 lg:grid-cols-2">
               <section class="surface-card p-5">
-                <h2 class="font-display text-lg font-semibold">{t("events.markSelf")}</h2>
+                <div>
+                  <h2 class="font-display text-lg font-semibold">{t("events.markSelf")}</h2>
+                  <p class="mt-1 text-sm text-muted-foreground">{t("events.status")}</p>
+                </div>
                 <div class="mt-4 space-y-3">
                   <AttendanceStatusPicker value={status()} onChange={setStatus} label={t("events.status")} />
                   <Button
                     type="button"
-                    class="rounded-sm"
+                    class="w-full rounded-md sm:w-auto"
                     disabled={pending()}
                     onClick={() =>
                       void wrap(async () => {
@@ -191,13 +194,16 @@ function EventDetailContent() {
 
               <Show when={isTeacherPlus()}>
                 <section class="surface-card p-5">
-                  <h2 class="font-display text-lg font-semibold">{t("events.markOther")}</h2>
+                  <div>
+                    <h2 class="font-display text-lg font-semibold">{t("events.markOther")}</h2>
+                    <p class="mt-1 text-sm text-muted-foreground">{t("events.userId")}</p>
+                  </div>
                   <div class="mt-4 grid gap-3">
                     <div class="space-y-1.5">
                       <Label for="other-user">{t("events.userId")}</Label>
                       <Input
                         id="other-user"
-                        class="rounded-sm"
+                        class="h-10 rounded-md"
                         value={otherUserId()}
                         onInput={(e) => setOtherUserId(e.currentTarget.value)}
                       />
@@ -210,7 +216,7 @@ function EventDetailContent() {
                     />
                     <Button
                       type="button"
-                      class="rounded-sm"
+                      class="w-full rounded-md sm:w-auto"
                       disabled={pending()}
                       onClick={() =>
                         void wrap(async () => {
@@ -239,8 +245,11 @@ function EventDetailContent() {
               <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
-            <section class="surface-card p-5">
-              <h2 class="mb-4 font-display text-lg font-semibold">{t("events.attendance")}</h2>
+            <section class="surface-card space-y-4 p-5">
+              <div>
+                <h2 class="font-display text-lg font-semibold">{t("events.attendance")}</h2>
+                <p class="mt-1 text-sm text-muted-foreground">{t("events.markedBy")}</p>
+              </div>
               <Suspense fallback={<PageSpinner />}>
                 <Show when={attendance()}>
                   {(rows) => (

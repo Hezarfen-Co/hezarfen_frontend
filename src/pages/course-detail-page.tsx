@@ -134,20 +134,20 @@ function CourseDetailContent() {
               title={c().title}
               description={c().description || undefined}
               actions={
-                <div class="flex flex-wrap items-center gap-1 rounded-md border bg-background/70 p-1 shadow-sm">
+                <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
                   <Link to="/courses">
-                    <Button variant="ghost" size="sm" class="rounded-sm">
+                    <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
                       <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
                   </Link>
                   <Show when={canManage()}>
-                    <div class="ml-1 flex items-center gap-1 border-l border-border pl-1">
+                    <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        class="rounded-sm"
+                        class="flex-1 rounded-md sm:flex-none"
                         onClick={() => (editing() ? setEditing(false) : startEdit())}
                       >
                         <IconEdit class="h-4 w-4" />
@@ -157,7 +157,7 @@ function CourseDetailContent() {
                         type="button"
                         variant="destructive"
                         size="sm"
-                        class="rounded-sm"
+                        class="flex-1 rounded-md sm:flex-none"
                         onClick={() => setDeleteOpen(true)}
                       >
                         <IconTrash class="h-4 w-4" />
@@ -205,7 +205,7 @@ function CourseDetailContent() {
 
             <Show when={editing()}>
               <form
-                class="surface-card max-w-xl space-y-3 p-5"
+                class="surface-card max-w-2xl space-y-4 p-5"
                 onSubmit={(e) => {
                   e.preventDefault();
                   void wrap(async () => {
@@ -236,9 +236,11 @@ function CourseDetailContent() {
                     onInput={(e) => setDescription(e.currentTarget.value)}
                   />
                 </div>
-                <Button type="submit" disabled={pending()}>
-                  {t("common.update")}
-                </Button>
+                <div class="flex justify-end">
+                  <Button type="submit" class="w-full sm:w-auto" disabled={pending()}>
+                    {t("common.update")}
+                  </Button>
+                </div>
               </form>
             </Show>
 
@@ -247,7 +249,7 @@ function CourseDetailContent() {
             )}
 
             <section class="grid gap-3 sm:grid-cols-3">
-              <div class="surface-card p-4">
+              <div class="surface-card bg-card/80 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {t("courses.exams")}
                 </p>
@@ -256,7 +258,7 @@ function CourseDetailContent() {
               </div>
 
               <Show when={isTeacherPlus()}>
-                <div class="surface-card p-4">
+                <div class="surface-card bg-card/80 p-4">
                   <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {t("courses.roster")}
                   </p>
@@ -265,7 +267,7 @@ function CourseDetailContent() {
                 </div>
               </Show>
 
-              <div class="surface-card p-4">
+              <div class="surface-card bg-card/80 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {t("courses.weight")}
                 </p>
@@ -276,8 +278,13 @@ function CourseDetailContent() {
 
             {/* Course exams */}
             <section class="surface-card space-y-4 p-5">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="font-display text-lg font-semibold">{t("courses.exams")}</h2>
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 class="font-display text-lg font-semibold">{t("courses.exams")}</h2>
+                  <p class="mt-1 text-sm text-muted-foreground">
+                    {examCount()} {t("nav.exams")}
+                  </p>
+                </div>
                 <Show when={canManage()}>
                   <Button
                     type="button"
@@ -292,7 +299,7 @@ function CourseDetailContent() {
               </div>
 
               <Show when={showExamForm() && canManage()}>
-                <div class="rounded-md border p-4">
+                <div class="rounded-lg border bg-background/60 p-4">
                   <ExamForm
                     submitLabel={t("common.create")}
                     onSubmit={async (values) => {
@@ -416,13 +423,13 @@ function CourseDetailContent() {
                       </div>
                     }
                   >
-                    <div class="overflow-hidden rounded-lg border border-border/70">
+                    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
                       <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead>{t("admin.username")}</TableHead>
                             <TableHead>{t("admin.id")}</TableHead>
-                            <TableHead class="w-24" />
+                            <TableHead class="w-16 text-right" />
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -441,7 +448,7 @@ function CourseDetailContent() {
                                       type="button"
                                       variant="ghost"
                                       size="sm"
-                                      class="text-destructive"
+                                      class="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                       onClick={() =>
                                         setRemoveTarget({
                                           userId: row.user.id,

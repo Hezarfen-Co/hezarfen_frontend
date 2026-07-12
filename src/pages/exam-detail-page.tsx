@@ -169,16 +169,16 @@ function ExamDetailContent() {
               title={ex().title}
               description={ex().description || "—"}
               actions={
-                <div class="flex flex-wrap items-center gap-1 rounded-md border bg-background/70 p-1 shadow-sm">
+                <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
                   <Link to="/exams">
-                    <Button variant="ghost" size="sm" class="rounded-sm">
+                    <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
                       <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
                   </Link>
                   <Show when={!isFinished() && !isUpcoming() && (ex().mode === "sync" || ex().mode === "async")}>
                     <Link to="/exam-room/$id" params={{ id: id() }}>
-                      <Button size="sm" class="rounded-sm">
+                      <Button size="sm" class="flex-1 rounded-md sm:flex-none">
                         <IconExam class="h-4 w-4" />
                         {t("attempt.openRoom")}
                       </Button>
@@ -186,19 +186,19 @@ function ExamDetailContent() {
                   </Show>
                   <Show when={isTeacherPlus() && !isUpcoming() && (ex().mode === "sync" || ex().mode === "async")}>
                     <Link to="/exams/$id/live" params={{ id: id() }}>
-                      <Button variant="outline" size="sm" class="rounded-sm">
+                      <Button variant="outline" size="sm" class="flex-1 rounded-md sm:flex-none">
                         <IconEye class="h-4 w-4" />
                         {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                       </Button>
                     </Link>
                   </Show>
                   <Show when={canManage()}>
-                    <div class="ml-1 flex items-center gap-1 border-l border-border pl-1">
+                    <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        class="rounded-sm"
+                        class="flex-1 rounded-md sm:flex-none"
                         onClick={() => setEditing((v) => !v)}
                       >
                         <IconEdit class="h-4 w-4" />
@@ -208,6 +208,7 @@ function ExamDetailContent() {
                         type="button"
                         variant="destructive"
                         size="sm"
+                        class="flex-1 rounded-md sm:flex-none"
                         disabled={pending()}
                         onClick={() => setDeleteOpen(true)}
                       >
@@ -277,22 +278,22 @@ function ExamDetailContent() {
               </section>
             </Show>
 
-            <section class="surface-card p-5">
-              <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.schedule")}</h2>
+            <section class="surface-card space-y-4 p-5">
+              <h2 class="font-display text-lg font-semibold">{t("exams.schedule")}</h2>
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-md border p-3">
+                <div class="rounded-lg border bg-background/60 p-3">
                   <p class="text-xs text-muted-foreground">{t("exams.mode")}</p>
                   <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
                 </div>
-                <div class="rounded-md border p-3">
+                <div class="rounded-lg border bg-background/60 p-3">
                   <p class="text-xs text-muted-foreground">{t("events.starts")}</p>
                   <p class="mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
                 </div>
-                <div class="rounded-md border p-3">
+                <div class="rounded-lg border bg-background/60 p-3">
                   <p class="text-xs text-muted-foreground">{t("events.ends")}</p>
                   <p class="mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
                 </div>
-                <div class="rounded-md border p-3">
+                <div class="rounded-lg border bg-background/60 p-3">
                   <p class="text-xs text-muted-foreground">{t("exams.durationMinutes")}</p>
                   <p class="mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
                 </div>
@@ -313,8 +314,8 @@ function ExamDetailContent() {
             </Show>
 
             <Show when={isTeacherPlus() && sheetUserId()}>
-              <section class="surface-card p-5">
-                <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.answerSheet")} — {sheetUserId()}</h2>
+              <section class="surface-card space-y-4 p-5">
+                <h2 class="font-display text-lg font-semibold">{t("exams.answerSheet")} — {sheetUserId()}</h2>
                 <Suspense fallback={<PageSpinner />}>
                   <AnswerSheetView examId={id()} userId={sheetUserId()!} />
                 </Suspense>
@@ -322,25 +323,25 @@ function ExamDetailContent() {
             </Show>
 
             <Show when={isTeacherPlus()}>
-              <section class="surface-card p-5">
-                <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.statistics")}</h2>
+              <section class="surface-card space-y-4 p-5">
+                <h2 class="font-display text-lg font-semibold">{t("exams.statistics")}</h2>
                 <Suspense fallback={<PageSpinner />}>
                   <Show when={stats()}>
                     {(s) => (
                       <div class="grid gap-3 text-sm sm:grid-cols-4">
-                        <div class="rounded-md border p-3">
+                        <div class="rounded-lg border bg-background/60 p-3">
                           <p class="text-xs text-muted-foreground">{t("exams.graded")}</p>
                           <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().graded}</p>
                         </div>
-                        <div class="rounded-md border p-3">
+                        <div class="rounded-lg border bg-background/60 p-3">
                           <p class="text-xs text-muted-foreground">{t("exams.average")}</p>
                           <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
                         </div>
-                        <div class="rounded-md border p-3">
+                        <div class="rounded-lg border bg-background/60 p-3">
                           <p class="text-xs text-muted-foreground">{t("exams.min")}</p>
                           <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
                         </div>
-                        <div class="rounded-md border p-3">
+                        <div class="rounded-lg border bg-background/60 p-3">
                           <p class="text-xs text-muted-foreground">{t("exams.max")}</p>
                           <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
                         </div>
@@ -353,8 +354,8 @@ function ExamDetailContent() {
               <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} />
 
               <Show when={!isFinished()}>
-                <section class="surface-card p-5">
-                  <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.gradeStudent")}</h2>
+                <section class="surface-card space-y-4 p-5">
+                  <h2 class="font-display text-lg font-semibold">{t("exams.gradeStudent")}</h2>
                   <GradeForm
                     students={gradeStudents()}
                     onSubmit={async (values) => {
@@ -365,68 +366,70 @@ function ExamDetailContent() {
                 </section>
               </Show>
 
-              <section class="surface-card p-5">
-                <h2 class="mb-4 font-display text-lg font-semibold">{t("exams.results")}</h2>
+              <section class="surface-card space-y-4 p-5">
+                <h2 class="font-display text-lg font-semibold">{t("exams.results")}</h2>
                 <Suspense fallback={<PageSpinner />}>
                   <Show
                     when={(results() ?? []).length > 0}
                     fallback={
-                      <p class="rounded-sm bg-muted/40 px-3 py-4 text-sm text-muted-foreground">
+                      <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
                         {t("exams.noResults")}
                       </p>
                     }
                   >
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t("events.userId")}</TableHead>
-                          <TableHead>{t("form.mark")}</TableHead>
-                          <TableHead>{t("exams.gradedBy")}</TableHead>
-                          <TableHead>{t("exams.answerSheet")}</TableHead>
-                          <Show when={!isFinished()}>
-                            <TableHead class="w-24" />
-                          </Show>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <For each={results() ?? []}>
-                          {(row) => (
-                            <TableRow class="h-12">
-                              <TableCell class="font-mono text-xs">{row.user}</TableCell>
-                              <TableCell>
-                                <ExamResultBadge mark={row.mark} />
-                              </TableCell>
-                              <TableCell class="font-mono text-xs">{row.graded_by}</TableCell>
-                              <TableCell>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  class="rounded-sm"
-                                  onClick={() => setSheetUserId(sheetUserId() === row.user ? null : row.user)}
-                                >
-                                  <IconEye class="h-4 w-4" />
-                                </Button>
-                              </TableCell>
-                              <Show when={!isFinished()}>
+                    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>{t("events.userId")}</TableHead>
+                            <TableHead>{t("form.mark")}</TableHead>
+                            <TableHead>{t("exams.gradedBy")}</TableHead>
+                            <TableHead>{t("exams.answerSheet")}</TableHead>
+                            <Show when={!isFinished()}>
+                              <TableHead class="w-24" />
+                            </Show>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <For each={results() ?? []}>
+                            {(row) => (
+                              <TableRow class="h-12">
+                                <TableCell class="font-mono text-xs">{row.user}</TableCell>
+                                <TableCell>
+                                  <ExamResultBadge mark={row.mark} />
+                                </TableCell>
+                                <TableCell class="font-mono text-xs">{row.graded_by}</TableCell>
                                 <TableCell>
                                   <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    class="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                    onClick={() => setRemoveUserId(row.user)}
+                                    class="rounded-md"
+                                    onClick={() => setSheetUserId(sheetUserId() === row.user ? null : row.user)}
                                   >
-                                    <IconTrash class="h-4 w-4" />
-                                    {t("common.remove")}
+                                    <IconEye class="h-4 w-4" />
                                   </Button>
                                 </TableCell>
-                              </Show>
-                            </TableRow>
-                          )}
-                        </For>
-                      </TableBody>
-                    </Table>
+                                <Show when={!isFinished()}>
+                                  <TableCell>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                      onClick={() => setRemoveUserId(row.user)}
+                                    >
+                                      <IconTrash class="h-4 w-4" />
+                                      {t("common.remove")}
+                                    </Button>
+                                  </TableCell>
+                                </Show>
+                              </TableRow>
+                            )}
+                          </For>
+                        </TableBody>
+                      </Table>
+                    </div>
                   </Show>
                 </Suspense>
               </section>
