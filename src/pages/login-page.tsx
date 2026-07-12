@@ -94,8 +94,7 @@ function LoginForm() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword())}
                 class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                tabIndex={-1}
-                aria-label={showPassword() ? "Hide password" : "Show password"}
+                aria-label={showPassword() ? t("auth.hidePassword") : t("auth.showPassword")}
               >
                 <Show when={showPassword()} fallback={<IconEye class="h-4 w-4" />}>
                   <IconEyeOff class="h-4 w-4" />

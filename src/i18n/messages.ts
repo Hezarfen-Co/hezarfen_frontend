@@ -70,12 +70,16 @@ export type MessageKey =
   | "auth.password"
   | "auth.noAccount"
   | "auth.hasAccount"
+  | "auth.confirmPassword"
+  | "auth.passwordMismatch"
   | "auth.loginTitle"
   | "auth.loginSubtitle"
   | "auth.registerTitle"
   | "auth.registerSubtitle"
   | "auth.usernameHint"
   | "auth.passwordHint"
+  | "auth.showPassword"
+  | "auth.hidePassword"
   | "auth.welcomeBack"
   | "auth.createStudent"
   | "dashboard.greeting"
@@ -215,6 +219,7 @@ export type MessageKey =
   | "admin.role"
   | "admin.helpTitle"
   | "admin.helpBody"
+  | "admin.noUsers"
   | "guide.title"
   | "guide.subtitle"
   | "guide.step1.title"
@@ -410,12 +415,16 @@ const en: Dict = {
   "auth.password": "Password",
   "auth.noAccount": "New here?",
   "auth.hasAccount": "Already registered?",
+  "auth.confirmPassword": "Confirm password",
+  "auth.passwordMismatch": "Passwords do not match",
   "auth.loginTitle": "Welcome back",
   "auth.loginSubtitle": "Sign in to continue to your workspace.",
   "auth.registerTitle": "Join Hezarfen",
   "auth.registerSubtitle": "New accounts start as student. Teachers and admins are assigned later.",
   "auth.usernameHint": "3–32 characters",
   "auth.passwordHint": "6–128 characters",
+  "auth.showPassword": "Show password",
+  "auth.hidePassword": "Hide password",
   "auth.welcomeBack": "Good to see you again",
   "auth.createStudent": "Create student account",
   "dashboard.greeting": "Hello, {name}",
@@ -560,6 +569,7 @@ const en: Dict = {
   "admin.helpTitle": "Role hierarchy",
   "admin.helpBody":
     "student < teacher < manager < admin. Higher roles inherit lower permissions. Registration always creates a student. Only admins list users and change roles.",
+  "admin.noUsers": "No users registered yet.",
   "guide.title": "Product guide",
   "guide.subtitle": "Campus flow: courses → exams → report card, plus notes and events.",
   "guide.step1.title": "1. Home overview",
@@ -763,12 +773,16 @@ const tr: Dict = {
   "auth.password": "Şifre",
   "auth.noAccount": "Yeni misin?",
   "auth.hasAccount": "Zaten kayıtlı mısın?",
+  "auth.confirmPassword": "Şifreyi onayla",
+  "auth.passwordMismatch": "Şifreler eşleşmiyor",
   "auth.loginTitle": "Tekrar hoş geldin",
   "auth.loginSubtitle": "Çalışma alanına devam etmek için giriş yap.",
   "auth.registerTitle": "Hezarfen’e katıl",
   "auth.registerSubtitle": "Yeni hesaplar öğrenci olarak başlar. Öğretmen ve admin rolleri sonradan verilir.",
   "auth.usernameHint": "3–32 karakter",
   "auth.passwordHint": "6–128 karakter",
+  "auth.showPassword": "Şifreyi göster",
+  "auth.hidePassword": "Şifreyi gizle",
   "auth.welcomeBack": "Seni yeniden görmek güzel",
   "auth.createStudent": "Öğrenci hesabı oluştur",
   "dashboard.greeting": "Merhaba, {name}",
@@ -913,6 +927,7 @@ const tr: Dict = {
   "admin.helpTitle": "Rol hiyerarşisi",
   "admin.helpBody":
     "öğrenci < öğretmen < yönetici < admin. Üst roller alt yetkileri miras alır. Kayıt her zaman öğrenci oluşturur. Rolleri yalnız admin değiştirir.",
+  "admin.noUsers": "Henüz kayıtlı kullanıcı yok.",
   "guide.title": "Ürün rehberi",
   "guide.subtitle": "Kampüs akışı: ders → sınav → karne; artı notlar ve etkinlikler.",
   "guide.step1.title": "1. Ana sayfa",

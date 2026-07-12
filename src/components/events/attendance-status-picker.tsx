@@ -1,3 +1,4 @@
+import { For } from "solid-js";
 import type { AttendanceStatus } from "@/api/types";
 import type { MessageKey } from "@/i18n/messages";
 import { Label } from "@/components/ui/label";
@@ -27,9 +28,11 @@ export function AttendanceStatusPicker(props: {
         value={props.value}
         onChange={(e) => props.onChange(e.currentTarget.value as AttendanceStatus)}
       >
-        {STATUSES.map((s) => (
-          <option value={s.value}>{t(s.key)}</option>
-        ))}
+        <For each={STATUSES}>
+          {(s) => (
+            <option value={s.value}>{t(s.key)}</option>
+          )}
+        </For>
       </Select>
     </div>
   );

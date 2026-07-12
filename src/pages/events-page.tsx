@@ -2,6 +2,8 @@ import { For, Show, Suspense, createResource, createSignal } from "solid-js";
 import { getEvents } from "@/api/getEvents";
 import { postEvent } from "@/api/postEvent";
 import { formatApiError } from "@/api/client";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/events/event-card";
 import { EventForm } from "@/components/events/event-form";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -37,13 +39,9 @@ function EventsContent() {
         description={t("events.subtitle")}
         actions={
           canCreate() ? (
-            <button
-              type="button"
-              class="rounded-sm bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
-              onClick={() => setShowForm((v) => !v)}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={() => setShowForm((v) => !v)}>
               {showForm() ? t("common.cancel") : t("events.create")}
-            </button>
+            </Button>
           ) : undefined
         }
       />
@@ -82,6 +80,9 @@ function EventsContent() {
       {error() && <p class="text-sm text-destructive">{error()}</p>}
 
       <Suspense fallback={<PageSpinner />}>
+        <Show when={events.error}>
+          <Alert variant="destructive">{formatApiError(events.error)}</Alert>
+        </Show>
         <Show when={events()}>
           {(list) => (
             <Show

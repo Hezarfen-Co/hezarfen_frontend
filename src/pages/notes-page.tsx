@@ -4,6 +4,7 @@ import { getNotes } from "@/api/getNotes";
 import { patchNoteById } from "@/api/patchNoteById";
 import { postNote } from "@/api/postNote";
 import { formatApiError } from "@/api/client";
+import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { NoteForm } from "@/components/notes/note-form";
@@ -65,6 +66,9 @@ function NotesContent() {
 
         <section>
           <Suspense fallback={<PageSpinner />}>
+            <Show when={notes.error}>
+              <Alert variant="destructive">{formatApiError(notes.error)}</Alert>
+            </Show>
             <Show when={notes()}>
               {(list) => (
                 <NoteList

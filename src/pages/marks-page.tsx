@@ -3,6 +3,7 @@ import { Link } from "@tanstack/solid-router";
 import { getMyMarks } from "@/api/getMyMarks";
 import { getUserMarks } from "@/api/getUserMarks";
 import { formatApiError } from "@/api/client";
+import { Alert } from "@/components/ui/alert";
 import type { MarksReport } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -50,6 +51,9 @@ function MarksContent() {
       />
 
       <Suspense fallback={<PageSpinner />}>
+        <Show when={mine.error}>
+          <Alert variant="destructive">{formatApiError(mine.error)}</Alert>
+        </Show>
         <Show when={mine()} fallback={<p class="text-sm text-muted-foreground">{t("marks.empty")}</p>}>
           {(report) => <MarksReportView report={report()} />}
         </Show>

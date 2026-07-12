@@ -54,11 +54,20 @@ function AdminUsersContent() {
         <Suspense fallback={<PageSpinner />}>
           <Show when={users()}>
             {(list) => (
-              <UserTable
-                users={list()}
-                currentUserId={auth.user()!.id}
-                onRoleChange={onRoleChange}
-              />
+              <Show
+                when={list().length > 0}
+                fallback={
+                  <div class="rounded-sm border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
+                    {t("admin.noUsers")}
+                  </div>
+                }
+              >
+                <UserTable
+                  users={list()}
+                  currentUserId={auth.user()!.id}
+                  onRoleChange={onRoleChange}
+                />
+              </Show>
             )}
           </Show>
         </Suspense>

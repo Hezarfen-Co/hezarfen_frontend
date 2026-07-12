@@ -1,5 +1,4 @@
 import { Show, Suspense } from "solid-js";
-import { useNavigate } from "@tanstack/solid-router";
 import { ProfileForm } from "@/components/users/profile-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -18,7 +17,6 @@ export default function ProfilePage() {
 function ProfileContent() {
   const auth = useAuth();
   const t = useT();
-  const navigate = useNavigate();
 
   return (
     <Suspense fallback={<PageSpinner />}>
@@ -39,7 +37,6 @@ function ProfileContent() {
                   user={u()}
                   onSaved={async () => {
                     await auth.refresh();
-                    void navigate({ to: "/" });
                   }}
                 />
               </section>

@@ -4,6 +4,7 @@ import { getCourses } from "@/api/getCourses";
 import { getMyCourses } from "@/api/getMyCourses";
 import { postCourse } from "@/api/postCourse";
 import { formatApiError } from "@/api/client";
+import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,9 @@ function CoursesContent() {
       </Show>
 
       <Suspense fallback={<PageSpinner />}>
+        <Show when={courses.error}>
+          <Alert variant="destructive">{formatApiError(courses.error)}</Alert>
+        </Show>
         <Show
           when={(courses() ?? []).length > 0}
           fallback={

@@ -1,19 +1,19 @@
 import { Link } from "@tanstack/solid-router";
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource } from "solid-js";
 import { getEvents } from "@/api/getEvents";
 import { getExams } from "@/api/getExams";
 import { getMyMarks } from "@/api/getMyMarks";
 import { getNotes } from "@/api/getNotes";
+import { formatApiError } from "@/api/client";
 import type { Event, Exam, Note } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { RoleHomePanel } from "@/components/dashboard/role-home-panel";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   IconCalendar,
-  IconChevronLeft,
-  IconChevronRight,
   IconExam,
   IconNote,
   IconPlus,
@@ -25,8 +25,7 @@ import { examKindLabel } from "@/lib/exam-labels";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
-const PREVIEW_LIMIT = 10;
-const PAGE_SIZE = 5;
+const PREVIEW_LIMIT = 5;
 
 const roundAvg = (n: number) => (Math.round(n * 10) / 10).toString();
 
@@ -48,6 +47,11 @@ function DashboardContent() {
   const [events] = createResource(() => getEvents());
   const [exams] = createResource(() => getExams());
   const [marks] = createResource(() => getMyMarks());
+
+  const resourceError = createMemo(() => {
+    const e = notes.error || events.error || exams.error || marks.error;
+    return e ? formatApiError(e, locale()) : null;
+  });
 
   const noteCount = createMemo(() => notes()?.length ?? 0);
   const eventCount = createMemo(() => events()?.length ?? 0);
@@ -76,6 +80,10 @@ function DashboardContent() {
       />
 
       <RoleHomePanel role={user().role} />
+
+      <Show when={resourceError()}>
+        {(msg) => <Alert variant="destructive">{msg()}</Alert>}
+      </Show>
 
       {/* KPIs below actions */}
       <Suspense fallback={<PageSpinner />}>
@@ -122,10 +130,9 @@ function DashboardContent() {
             </Link>
           </div>
           <Suspense fallback={<PageSpinner />}>
-            <PaginatedList
-              items={previewNotes()}
-              pageSize={PAGE_SIZE}
-              empty={
+            <Show
+              when={previewNotes().length > 0}
+              fallback={
                 <EmptyPanel
                   icon={<IconNote class="h-6 w-6" />}
                   title={t("dashboard.emptyNotesTitle")}
@@ -136,23 +143,21 @@ function DashboardContent() {
                 />
               }
             >
-              {(pageItems) => (
-                <ul class="flex flex-1 flex-col divide-y divide-border/70">
-                  <For each={pageItems()}>
-                    {(note: Note) => (
-                      <li class="flex min-h-[3.5rem] items-start gap-3 py-3 first:pt-0">
-                        <div class="min-w-0 flex-1">
-                          <p class="truncate text-sm font-medium">{note.title}</p>
-                          <p class="truncate text-xs text-muted-foreground">
-                            {note.content || t("notes.noContent")}
-                          </p>
-                        </div>
-                      </li>
-                    )}
-                  </For>
-                </ul>
-              )}
-            </PaginatedList>
+              <ul class="flex flex-1 flex-col divide-y divide-border/70">
+                <For each={previewNotes()}>
+                  {(note: Note) => (
+                    <li class="flex min-h-[3.5rem] items-start gap-3 py-3 first:pt-0">
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-medium">{note.title}</p>
+                        <p class="truncate text-xs text-muted-foreground">
+                          {note.content || t("notes.noContent")}
+                        </p>
+                      </div>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </Show>
           </Suspense>
         </div>
 
@@ -164,10 +169,9 @@ function DashboardContent() {
             </Link>
           </div>
           <Suspense fallback={<PageSpinner />}>
-            <PaginatedList
-              items={previewEvents()}
-              pageSize={PAGE_SIZE}
-              empty={
+            <Show
+              when={previewEvents().length > 0}
+              fallback={
                 <EmptyPanel
                   icon={<IconCalendar class="h-6 w-6" />}
                   title={t("dashboard.emptyEventsTitle")}
@@ -178,32 +182,30 @@ function DashboardContent() {
                 />
               }
             >
-              {(pageItems) => (
-                <ul class="flex flex-1 flex-col gap-2">
-                  <For each={pageItems()}>
-                    {(event: Event) => (
-                      <li>
-                        <Link
-                          to="/events/$id"
-                          params={{ id: event.id }}
-                          class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04]"
-                        >
-                          <div class="min-w-0">
-                            <p class="truncate text-sm font-medium">{event.title}</p>
-                            <p class="text-xs text-muted-foreground">
-                              {formatDateTime(event.starts_at, locale())}
-                            </p>
-                          </div>
-                          <span class="text-primary" aria-hidden>
-                            →
-                          </span>
-                        </Link>
-                      </li>
-                    )}
-                  </For>
-                </ul>
-              )}
-            </PaginatedList>
+              <ul class="flex flex-1 flex-col gap-2">
+                <For each={previewEvents()}>
+                  {(event: Event) => (
+                    <li>
+                      <Link
+                        to="/events/$id"
+                        params={{ id: event.id }}
+                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04]"
+                      >
+                        <div class="min-w-0">
+                          <p class="truncate text-sm font-medium">{event.title}</p>
+                          <p class="text-xs text-muted-foreground">
+                            {formatDateTime(event.starts_at, locale())}
+                          </p>
+                        </div>
+                        <span class="text-primary" aria-hidden>
+                          →
+                        </span>
+                      </Link>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </Show>
           </Suspense>
         </div>
 
@@ -215,10 +217,9 @@ function DashboardContent() {
             </Link>
           </div>
           <Suspense fallback={<PageSpinner />}>
-            <PaginatedList
-              items={previewExams()}
-              pageSize={PAGE_SIZE}
-              empty={
+            <Show
+              when={previewExams().length > 0}
+              fallback={
                 <EmptyPanel
                   icon={<IconExam class="h-6 w-6" />}
                   title={t("dashboard.emptyExamsTitle")}
@@ -229,23 +230,22 @@ function DashboardContent() {
                 />
               }
             >
-              {(pageItems) => (
-                <ul class="flex flex-1 flex-col gap-2">
-                  <For each={pageItems()}>
-                    {(exam: Exam) => (
-                      <li>
-                        <Link
-                          to="/exams/$id"
-                          params={{ id: exam.id }}
-                          class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04]"
-                        >
-                          <div class="min-w-0">
-                            <p class="truncate text-sm font-medium">{exam.title}</p>
-                            <p class="truncate text-xs text-muted-foreground">
-                              {exam.description || "—"}
-                            </p>
-                          </div>
-                          <Badge variant="outline" class="shrink-0 capitalize">
+              <ul class="flex flex-1 flex-col gap-2">
+                <For each={previewExams()}>
+                  {(exam: Exam) => (
+                    <li>
+                      <Link
+                        to="/exams/$id"
+                        params={{ id: exam.id }}
+                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04]"
+                      >
+                        <div class="min-w-0">
+                          <p class="truncate text-sm font-medium">{exam.title}</p>
+                          <p class="truncate text-xs text-muted-foreground">
+                            {exam.description || "—"}
+                          </p>
+                        </div>
+                        <Badge variant="outline" class="shrink-0 capitalize">
                             {examKindLabel(String(exam.kind), t)}
                           </Badge>
                         </Link>
@@ -253,69 +253,12 @@ function DashboardContent() {
                     )}
                   </For>
                 </ul>
-              )}
-            </PaginatedList>
-          </Suspense>
+              </Show>
+            </Suspense>
         </div>
       </section>
 
     </div>
-  );
-}
-
-function PaginatedList<T>(props: {
-  items: T[];
-  empty: any;
-  pageSize: number;
-  children: (pageItems: () => T[]) => any;
-}) {
-  const t = useT();
-  const [page, setPage] = createSignal(0);
-
-  const totalPages = createMemo(() =>
-    Math.max(1, Math.ceil(props.items.length / props.pageSize)),
-  );
-  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
-  const pageItems = createMemo(() => {
-    const start = safePage() * props.pageSize;
-    return props.items.slice(start, start + props.pageSize);
-  });
-
-  return (
-    <Show when={props.items.length > 0} fallback={props.empty}>
-      <div class="flex min-h-0 flex-1 flex-col">
-        <div class="flex-1">{props.children(pageItems)}</div>
-        <Show when={props.items.length > props.pageSize}>
-          <div class="mt-4 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              class="h-8 gap-1"
-              disabled={safePage() <= 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-            >
-              <IconChevronLeft class="h-3.5 w-3.5" />
-              {t("common.prev")}
-            </Button>
-            <span class="text-xs tabular-nums text-muted-foreground">
-              {t("common.pageOf", { page: safePage() + 1, total: totalPages() })}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              class="h-8 gap-1"
-              disabled={safePage() >= totalPages() - 1}
-              onClick={() => setPage((p) => Math.min(totalPages() - 1, p + 1))}
-            >
-              {t("common.next")}
-              <IconChevronRight class="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </Show>
-      </div>
-    </Show>
   );
 }
 

@@ -6,8 +6,10 @@ import { ExamCard } from "@/components/exams/exam-card";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { CollapsibleHelp } from "@/components/ui/collapsible-help";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatApiError } from "@/api/client";
 import { IconChevronRight } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { cn } from "@/lib/cn";
@@ -87,6 +89,9 @@ function ExamsContent() {
       </Show>
 
       <Suspense fallback={<PageSpinner />}>
+        <Show when={exams.error}>
+          <Alert variant="destructive">{formatApiError(exams.error)}</Alert>
+        </Show>
         <Show when={exams()}>
           {(list) => (
             <Show
