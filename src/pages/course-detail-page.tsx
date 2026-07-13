@@ -213,7 +213,7 @@ function CourseDetailContent() {
 
             <Show when={editing()}>
               <form
-                class="surface-card max-w-2xl space-y-4 p-5"
+                class="surface-card w-full space-y-4 p-5"
                 onSubmit={(e) => {
                   e.preventDefault();
                   void wrap(async () => {
@@ -337,7 +337,7 @@ function CourseDetailContent() {
                         <li>
                           <Link
                             to="/exams/$id"
-                            params={{ id: exam.id }}
+                            params={() => ({ id: exam.id })}
                             class="group flex items-start justify-between gap-3 rounded-lg border border-border/70 bg-background/60 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/35 hover:shadow-sm"
                           >
                             <div class="min-w-0 space-y-2">

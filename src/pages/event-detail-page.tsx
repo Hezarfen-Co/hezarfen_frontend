@@ -147,7 +147,7 @@ function EventDetailContent() {
             />
 
             <Show when={editing()}>
-              <section class="surface-card max-w-3xl p-5">
+              <section class="surface-card w-full p-5">
                 <EventForm
                   initial={ev()}
                   submitLabel={t("common.update")}

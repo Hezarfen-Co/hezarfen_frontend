@@ -244,7 +244,7 @@ function DashboardContent() {
                     <li>
                       <Link
                         to="/exams/$id"
-                        params={{ id: exam.id }}
+                        params={() => ({ id: exam.id })}
                         class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04]"
                       >
                         <div class="min-w-0">

@@ -67,7 +67,7 @@ export function MarksReportView(props: { report: MarksReport }) {
                         {(entry) => (
                           <TableRow>
                             <TableCell>
-                              <Link to="/exams/$id" params={{ id: entry.exam }} class="font-medium hover:underline">
+                              <Link to="/exams/$id" params={() => ({ id: entry.exam })} class="font-medium hover:underline">
                                 {entry.title}
                               </Link>
                             </TableCell>

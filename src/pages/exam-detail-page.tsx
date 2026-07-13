@@ -281,7 +281,7 @@ function ExamDetailContent() {
             />
 
             <Show when={editing()}>
-              <section class="surface-card max-w-3xl p-5">
+              <section class="surface-card w-full p-5">
                 <ExamForm
                   initial={ex()}
                   submitLabel={t("common.update")}

@@ -5,8 +5,9 @@ import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useT } from "@/stores/preferences-context";
 
 export default function StudentMarksPage() {
@@ -50,13 +51,12 @@ function StudentMarksContent() {
           }}
         >
           <div class="min-w-0 flex-1 space-y-1.5">
-            <UserSearchSelect
+            <Label for="student-marks-user">{t("marks.userIdentity")}</Label>
+            <Input
               id="student-marks-user"
-              label={t("marks.userIdentity")}
               placeholder={t("marks.userIdentity")}
               value={userId()}
-              allowManualValue
-              onChange={setUserId}
+              onInput={(e) => setUserId(e.currentTarget.value)}
             />
           </div>
           <Button type="submit" class="h-10 w-full sm:w-auto">{t("marks.show")}</Button>
