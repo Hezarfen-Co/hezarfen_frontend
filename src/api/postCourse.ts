@@ -3,7 +3,7 @@ import type { Course } from "./types";
 
 export type PostCourseBody = {
   title: string;
-  description?: string;
+  description?: string | null;
 };
 
 export function postCourse(body: PostCourseBody): Promise<Course> {

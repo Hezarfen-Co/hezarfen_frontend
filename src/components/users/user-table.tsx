@@ -75,7 +75,7 @@ export function UserTable(props: {
 }) {
   const t = useT();
   return (
-    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
+    <div class="overflow-hidden rounded-lg bg-background/40">
       <Table>
         <TableHeader>
           <TableRow>

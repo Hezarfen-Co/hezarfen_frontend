@@ -1,6 +1,6 @@
 import { client } from "@/api/client";
-import type { ProfileUpdate } from "@/api/types";
+import type { ProfileUpdate, User } from "@/api/types";
 
-export async function patchUserProfile(id: string, body: ProfileUpdate): Promise<void> {
-  await client(`/users/${encodeURIComponent(id)}/profile`, { method: "PATCH", body });
+export function patchUserProfile(id: string, body: ProfileUpdate): Promise<User> {
+  return client<User>(`/users/${encodeURIComponent(id)}/profile`, { method: "PATCH", body });
 }

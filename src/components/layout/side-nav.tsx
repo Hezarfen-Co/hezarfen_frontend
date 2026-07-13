@@ -63,18 +63,21 @@ function NavLink(props: {
       title={t(props.item.labelKey)}
       aria-current={active() ? "page" : undefined}
       class={cn(
-        "group relative flex h-10 w-full items-center rounded-lg text-sm font-medium outline-none",
+        "relative flex h-10 w-full items-center rounded-md text-sm font-medium outline-none",
         "transition-all duration-150",
-        props.collapsed ? "justify-center px-0" : "gap-2 px-2",
+        props.collapsed ? "justify-center px-0" : "gap-1.5 px-2",
         active()
-          ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/15"
-          : "text-sidebar-foreground/80 hover:bg-muted/60 hover:text-foreground",
+          ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+          : "text-sidebar-foreground/75 hover:bg-muted/70 hover:text-foreground",
       )}
     >
+      <Show when={active() && !props.collapsed}>
+        <span class="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
+      </Show>
       <span
         class={cn(
           "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors",
-          active() ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground group-hover:bg-background/50 group-hover:text-foreground",
+          active() ? "text-primary" : "text-muted-foreground",
         )}
       >
         <props.item.Icon class="h-4 w-4" />
@@ -102,7 +105,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
 
   return (
     <nav class="flex h-full flex-col" aria-label="Main">
-      <div class="flex flex-col gap-1 px-2">
+      <div class="flex flex-col gap-0.5 px-2">
         <For each={items()}>
           {(item, index) => (
             <>
@@ -130,7 +133,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
         </For>
       </div>
 
-      <div class="mt-auto border-t border-border px-2 py-1.5">
+      <div class="mt-auto border-t border-border px-2 py-1">
         <NavLink item={GUIDE_ITEM} collapsed={props.collapsed} onNavigate={props.onNavigate} />
       </div>
     </nav>

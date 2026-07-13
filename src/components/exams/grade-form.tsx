@@ -1,4 +1,4 @@
-import { For, createSignal } from "solid-js";
+import { For, createMemo, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -24,6 +24,7 @@ export function GradeForm(props: {
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<GradeFormValues | null>(null);
+  const selectedStudentLabel = createMemo(() => props.students.find((student) => student.id === userId())?.label ?? userId());
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -89,7 +90,7 @@ export function GradeForm(props: {
         onOpenChange={setConfirmOpen}
         title={t("confirm.updateTitle")}
         summary={t("confirm.gradeStudent", {
-          user: pendingValues()?.user_id ?? "",
+          user: selectedStudentLabel(),
           mark: pendingValues()?.mark ?? 0,
         })}
         onConfirm={async () => {

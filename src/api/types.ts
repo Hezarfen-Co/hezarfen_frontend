@@ -48,9 +48,9 @@ export type Event = {
 export type Attendance = {
   id: string;
   event: string;
-  user: string;
+  user: PersonRef;
   status: AttendanceStatus;
-  marked_by: string;
+  marked_by: PersonRef;
 };
 
 export type Course = {
@@ -84,9 +84,9 @@ export type Exam = {
 export type ExamResult = {
   id: string;
   exam: string;
-  user: string;
+  user: PersonRef;
   mark: number;
-  graded_by: string;
+  graded_by: PersonRef;
 };
 
 export type ExamQuestion = {
@@ -102,10 +102,10 @@ export type ExamQuestion = {
 export type ExamAttempt = {
   id?: string;
   exam?: string;
-  user?: string;
+  user?: PersonRef;
   status: AttemptStatus;
   deadline: number | null;
-  remaining_ms: number;
+  remaining_ms: number | null;
   mark: number | null;
   answered: number;
   question_count: number;
@@ -170,33 +170,35 @@ export type GradedAnswer = {
 };
 
 export type StudentAnswerSheet = {
-  user: string;
+  user: PersonRef;
   answers: GradedAnswer[];
   auto_score: { earned: number; possible: number };
 };
 
 export type LiveRosterEntry = {
-  user: string;
-  username: string;
-  display_name: string | null;
+  user: PersonRef;
   status: AttemptStatus | "not_started";
   deadline: number | null;
-  remaining_ms: number;
+  remaining_ms: number | null;
   mark: number | null;
   answered: number;
+  started_at?: number | null;
+  finished_at?: number | null;
   last_activity: number | null;
 };
 
 export type LiveMonitor = {
-  exam: string;
+  exam: Exam;
   now: number;
   question_count: number;
   students: LiveRosterEntry[];
   counts: {
+    enrolled?: number;
     not_started: number;
     in_progress: number;
     submitted: number;
     expired: number;
+    graded?: number;
   };
 };
 

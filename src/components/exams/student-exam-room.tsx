@@ -53,10 +53,11 @@ export function StudentExamRoom(props: { exam: Exam; compact?: boolean }) {
 
   createEffect(() => {
     const current = attempt();
-    setRemainingMs(current?.remaining_ms ?? 0);
-    if (!current || current.status !== "in_progress" || current.remaining_ms <= 0) return;
+    const remaining = current?.remaining_ms ?? 0;
+    setRemainingMs(remaining);
+    if (!current || current.status !== "in_progress" || remaining <= 0) return;
     const startedAt = Date.now();
-    const initial = current.remaining_ms;
+    const initial = remaining;
     const timer = window.setInterval(() => {
       setRemainingMs(Math.max(0, initial - (Date.now() - startedAt)));
     }, 1000);

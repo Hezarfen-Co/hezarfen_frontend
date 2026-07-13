@@ -3,7 +3,7 @@ import type { Event } from "./types";
 
 export type PostEventBody = {
   title: string;
-  description?: string;
+  description?: string | null;
   starts_at?: number | null;
   ends_at?: number | null;
 };

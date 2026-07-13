@@ -1,6 +1,6 @@
 import { client } from "@/api/client";
-import type { ProfileUpdate } from "@/api/types";
+import type { ProfileUpdate, User } from "@/api/types";
 
-export async function patchMe(body: ProfileUpdate): Promise<void> {
-  await client("/auth/me", { method: "PATCH", body });
+export function patchMe(body: ProfileUpdate): Promise<User> {
+  return client<User>("/users/me", { method: "PATCH", body });
 }

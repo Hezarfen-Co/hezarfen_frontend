@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { personId, personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
 export function AttendanceTable(props: {
@@ -49,13 +50,13 @@ export function AttendanceTable(props: {
               <For each={props.rows}>
                 {(row) => (
                   <TableRow class="h-12">
-                    <TableCell class="font-mono text-xs">{row.user}</TableCell>
+                    <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" class="capitalize">
                         {row.status}
                       </Badge>
                     </TableCell>
-                    <TableCell class="font-mono text-xs">{row.marked_by}</TableCell>
+                    <TableCell class="text-sm text-muted-foreground">{personLabel(row.marked_by)}</TableCell>
                     <Show when={props.canRemove && props.onRemove}>
                       <TableCell>
                         <Button
@@ -63,7 +64,7 @@ export function AttendanceTable(props: {
                           variant="ghost"
                           size="sm"
                           class="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => setTargetUser(row.user)}
+                          onClick={() => setTargetUser(personId(row.user))}
                         >
                           <IconTrash class="h-4 w-4" />
                           {t("common.remove")}

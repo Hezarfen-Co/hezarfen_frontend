@@ -2,6 +2,7 @@ import { Link } from "@tanstack/solid-router";
 import { For, Show, Suspense, createMemo, createResource } from "solid-js";
 import { getEvents } from "@/api/getEvents";
 import { getExams } from "@/api/getExams";
+import { getMyCourses } from "@/api/getMyCourses";
 import { getMyMarks } from "@/api/getMyMarks";
 import { getNotes } from "@/api/getNotes";
 import { formatApiError } from "@/api/client";
@@ -45,21 +46,32 @@ function DashboardContent() {
   const [notes] = createResource(() => getNotes());
   const [events] = createResource(() => getEvents());
   const [exams] = createResource(() => getExams());
+  const [myCourses] = createResource(
+    () => (user().role === "student" ? true : null),
+    async (enabled) => (enabled ? getMyCourses() : []),
+  );
   const [marks] = createResource(() => getMyMarks());
 
   const resourceError = createMemo(() => {
-    const e = notes.error || events.error || exams.error || marks.error;
+    const e = notes.error || events.error || exams.error || myCourses.error || marks.error;
     return e ? formatApiError(e, locale()) : null;
+  });
+
+  const visibleExams = createMemo(() => {
+    const all = exams() ?? [];
+    if (user().role !== "student") return all;
+    const allowed = new Set((myCourses() ?? []).map((course) => course.id));
+    return all.filter((exam) => allowed.has(exam.course));
   });
 
   const noteCount = createMemo(() => notes()?.length ?? 0);
   const eventCount = createMemo(() => events()?.length ?? 0);
-  const examCount = createMemo(() => exams()?.length ?? 0);
+  const examCount = createMemo(() => visibleExams().length);
   const overallAvg = createMemo(() => marks()?.overall_average ?? null);
 
   const previewNotes = createMemo(() => (notes() ?? []).slice(0, PREVIEW_LIMIT));
   const previewEvents = createMemo(() => (events() ?? []).slice(0, PREVIEW_LIMIT));
-  const previewExams = createMemo(() => (exams() ?? []).slice(0, PREVIEW_LIMIT));
+  const previewExams = createMemo(() => visibleExams().slice(0, PREVIEW_LIMIT));
 
   return (
     <div class="space-y-5">
@@ -118,13 +130,14 @@ function DashboardContent() {
 
       {/* Summaries */}
       <section class="grid items-stretch gap-4 lg:grid-cols-3">
-        <div class="surface-card flex min-h-[18rem] flex-col p-4 sm:p-5">
-          <div class="mb-3 flex items-center justify-between gap-2">
-            <h2 class="font-display text-base font-semibold sm:text-lg">{t("dashboard.recentNotes")}</h2>
+        <div class="surface-card flex min-h-[18rem] flex-col overflow-hidden">
+          <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
+            <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.recentNotes")}</h2>
             <Link to="/notes" class="text-sm font-medium text-primary hover:underline">
               {t("dashboard.viewAll")}
             </Link>
           </div>
+          <div class="flex flex-1 p-4 sm:p-5">
           <Suspense fallback={<PageSpinner />}>
             <Show
               when={previewNotes().length > 0}
@@ -155,15 +168,17 @@ function DashboardContent() {
               </ul>
             </Show>
           </Suspense>
+          </div>
         </div>
 
-        <div class="surface-card flex min-h-[18rem] flex-col p-4 sm:p-5">
-          <div class="mb-3 flex items-center justify-between gap-2">
-            <h2 class="font-display text-base font-semibold sm:text-lg">{t("dashboard.upcomingEvents")}</h2>
+        <div class="surface-card flex min-h-[18rem] flex-col overflow-hidden">
+          <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
+            <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.upcomingEvents")}</h2>
             <Link to="/events" class="text-sm font-medium text-primary hover:underline">
               {t("dashboard.viewAll")}
             </Link>
           </div>
+          <div class="flex flex-1 p-4 sm:p-5">
           <Suspense fallback={<PageSpinner />}>
             <Show
               when={previewEvents().length > 0}
@@ -185,7 +200,7 @@ function DashboardContent() {
                       <Link
                         to="/events/$id"
                         params={{ id: event.id }}
-                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04]"
+                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-primary/[0.05]"
                       >
                         <div class="min-w-0">
                           <p class="truncate text-sm font-medium">{event.title}</p>
@@ -203,15 +218,17 @@ function DashboardContent() {
               </ul>
             </Show>
           </Suspense>
+          </div>
         </div>
 
-        <div class="surface-card flex min-h-[18rem] flex-col p-4 sm:p-5">
-          <div class="mb-3 flex items-center justify-between gap-2">
-            <h2 class="font-display text-base font-semibold sm:text-lg">{t("dashboard.myExams")}</h2>
+        <div class="surface-card flex min-h-[18rem] flex-col overflow-hidden">
+          <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
+            <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.myExams")}</h2>
             <Link to="/exams" class="text-sm font-medium text-primary hover:underline">
               {t("dashboard.viewAll")}
             </Link>
           </div>
+          <div class="flex flex-1 p-4 sm:p-5">
           <Suspense fallback={<PageSpinner />}>
             <Show
               when={previewExams().length > 0}
@@ -232,8 +249,8 @@ function DashboardContent() {
                     <li>
                       <Link
                         to="/exams/$id"
-                        params={{ id: exam.id }}
-                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04]"
+                        params={() => ({ id: exam.id })}
+                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-primary/[0.05]"
                       >
                         <div class="min-w-0">
                           <p class="truncate text-sm font-medium">{exam.title}</p>
@@ -251,6 +268,7 @@ function DashboardContent() {
                 </ul>
               </Show>
             </Suspense>
+          </div>
         </div>
       </section>
 

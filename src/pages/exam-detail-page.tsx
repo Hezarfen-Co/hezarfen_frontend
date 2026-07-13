@@ -22,6 +22,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import {
@@ -36,6 +37,7 @@ import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -142,12 +144,12 @@ function ExamDetailContent() {
   };
   const isScheduled = () => exam()?.mode === "sync" || exam()?.mode === "async";
   const gradeStudents = () => {
-    const graded = new Set((results() ?? []).map((row) => row.user));
+    const graded = new Set((results() ?? []).map((row) => personId(row.user)));
     return (roster() ?? [])
       .filter((row) => !graded.has(row.user.id))
       .map((row) => ({
         id: row.user.id,
-        label: `${row.user.display_name || row.user.username} · ${row.user.id}`,
+        label: personLabelWithId(row.user),
       }));
   };
 
@@ -215,10 +217,10 @@ function ExamDetailContent() {
                         variant="outline"
                         size="sm"
                         class="flex-1 rounded-md sm:flex-none"
-                        onClick={() => setEditing((v) => !v)}
+                        onClick={() => setEditing(true)}
                       >
                         <IconEdit class="h-4 w-4" />
-                        {editing() ? t("common.cancel") : t("common.edit")}
+                        {t("common.edit")}
                       </Button>
                       <Button
                         type="button"
@@ -279,20 +281,23 @@ function ExamDetailContent() {
               }}
             />
 
-            <Show when={editing()}>
-              <section class="surface-card max-w-3xl p-5">
-                <ExamForm
-                  initial={ex()}
-                  submitLabel={t("common.update")}
-                  onCancel={() => setEditing(false)}
-                  onSubmit={async (values) => {
-                    await patchExamById(id(), values);
-                    setEditing(false);
-                    await refetchExam();
-                  }}
-                />
-              </section>
-            </Show>
+            <FormDialog
+              open={editing()}
+              onOpenChange={setEditing}
+              title={t("common.edit")}
+              description={ex().title}
+            >
+              <ExamForm
+                initial={ex()}
+                submitLabel={t("common.update")}
+                onCancel={() => setEditing(false)}
+                onSubmit={async (values) => {
+                  await patchExamById(id(), values);
+                  setEditing(false);
+                  await refetchExam();
+                }}
+              />
+            </FormDialog>
 
             <section class="surface-card space-y-4 p-5">
               <h2 class="font-display text-lg font-semibold">{t("exams.schedule")}</h2>
@@ -410,18 +415,21 @@ function ExamDetailContent() {
                           <For each={results() ?? []}>
                             {(row) => (
                               <TableRow class="h-12">
-                                <TableCell class="font-mono text-xs">{row.user}</TableCell>
+                                <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
                                 <TableCell>
                                   <ExamResultBadge mark={row.mark} />
                                 </TableCell>
-                                <TableCell class="font-mono text-xs">{row.graded_by}</TableCell>
+                                <TableCell class="text-sm text-muted-foreground">{personLabel(row.graded_by)}</TableCell>
                                 <TableCell>
                                   <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
                                     class="rounded-md"
-                                    onClick={() => setSheetUserId(sheetUserId() === row.user ? null : row.user)}
+                                    onClick={() => {
+                                      const rowUserId = personId(row.user);
+                                      setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
+                                    }}
                                   >
                                     <IconEye class="h-4 w-4" />
                                   </Button>
@@ -433,7 +441,7 @@ function ExamDetailContent() {
                                       variant="ghost"
                                       size="sm"
                                       class="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                      onClick={() => setRemoveUserId(row.user)}
+                                      onClick={() => setRemoveUserId(personId(row.user))}
                                     >
                                       <IconTrash class="h-4 w-4" />
                                       {t("common.remove")}
