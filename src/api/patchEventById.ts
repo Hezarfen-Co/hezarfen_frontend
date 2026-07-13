@@ -3,8 +3,8 @@ import type { Event } from "./types";
 
 /** Omitted time fields keep their value; explicit null clears them. */
 export type PatchEventBody = {
-  title?: string;
-  description?: string;
+  title?: string | null;
+  description?: string | null;
   starts_at?: number | null;
   ends_at?: number | null;
 };

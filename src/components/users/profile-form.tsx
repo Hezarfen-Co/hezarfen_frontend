@@ -47,11 +47,11 @@ export function ProfileForm(props: { user: User; onSaved: () => void }) {
     const e = email().trim();
     const p = phone().trim();
     const d = birthDate().trim();
-    if (n !== (props.user.name ?? "")) b.name = n || null;
-    if (s !== (props.user.surname ?? "")) b.surname = s || null;
-    if (e !== (props.user.email ?? "")) b.email = e || null;
-    if (p !== (props.user.phone ?? "")) b.phone = p || null;
-    if (d !== (props.user.birth_date ?? "")) b.birth_date = d || null;
+    if (n !== (props.user.name ?? "")) b.name = n;
+    if (s !== (props.user.surname ?? "")) b.surname = s;
+    if (e !== (props.user.email ?? "")) b.email = e;
+    if (p !== (props.user.phone ?? "")) b.phone = p;
+    if (d !== (props.user.birth_date ?? "")) b.birth_date = d;
     return b;
   };
 

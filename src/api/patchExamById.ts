@@ -2,10 +2,10 @@ import { client } from "./client";
 import type { Exam } from "./types";
 
 export type PatchExamBody = {
-  title?: string;
-  description?: string;
-  kind?: string;
-  weight?: number;
+  title?: string | null;
+  description?: string | null;
+  kind?: string | null;
+  weight?: number | null;
   mode?: string | null;
   starts_at?: number | null;
   ends_at?: number | null;

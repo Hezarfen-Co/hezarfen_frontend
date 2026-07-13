@@ -2,9 +2,9 @@ import { client } from "./client";
 import type { ExamQuestion, QuestionKind } from "./types";
 
 export type PatchExamQuestionBody = {
-  text?: string;
-  kind?: QuestionKind;
-  points?: number;
+  text?: string | null;
+  kind?: QuestionKind | null;
+  points?: number | null;
   choices?: string[] | null;
   correct?: number | null;
 };

@@ -3,7 +3,7 @@ import type { Note } from "./types";
 
 export type PostNoteBody = {
   title: string;
-  content?: string;
+  content?: string | null;
 };
 
 export function postNote(body: PostNoteBody): Promise<Note> {
