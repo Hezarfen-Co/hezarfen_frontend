@@ -2,6 +2,7 @@ import { Link } from "@tanstack/solid-router";
 import { For, Show, Suspense, createMemo, createResource } from "solid-js";
 import { getEvents } from "@/api/getEvents";
 import { getExams } from "@/api/getExams";
+import { getMyCourses } from "@/api/getMyCourses";
 import { getMyMarks } from "@/api/getMyMarks";
 import { getNotes } from "@/api/getNotes";
 import { formatApiError } from "@/api/client";
@@ -45,21 +46,32 @@ function DashboardContent() {
   const [notes] = createResource(() => getNotes());
   const [events] = createResource(() => getEvents());
   const [exams] = createResource(() => getExams());
+  const [myCourses] = createResource(
+    () => (user().role === "student" ? true : null),
+    async (enabled) => (enabled ? getMyCourses() : []),
+  );
   const [marks] = createResource(() => getMyMarks());
 
   const resourceError = createMemo(() => {
-    const e = notes.error || events.error || exams.error || marks.error;
+    const e = notes.error || events.error || exams.error || myCourses.error || marks.error;
     return e ? formatApiError(e, locale()) : null;
+  });
+
+  const visibleExams = createMemo(() => {
+    const all = exams() ?? [];
+    if (user().role !== "student") return all;
+    const allowed = new Set((myCourses() ?? []).map((course) => course.id));
+    return all.filter((exam) => allowed.has(exam.course));
   });
 
   const noteCount = createMemo(() => notes()?.length ?? 0);
   const eventCount = createMemo(() => events()?.length ?? 0);
-  const examCount = createMemo(() => exams()?.length ?? 0);
+  const examCount = createMemo(() => visibleExams().length);
   const overallAvg = createMemo(() => marks()?.overall_average ?? null);
 
   const previewNotes = createMemo(() => (notes() ?? []).slice(0, PREVIEW_LIMIT));
   const previewEvents = createMemo(() => (events() ?? []).slice(0, PREVIEW_LIMIT));
-  const previewExams = createMemo(() => (exams() ?? []).slice(0, PREVIEW_LIMIT));
+  const previewExams = createMemo(() => visibleExams().slice(0, PREVIEW_LIMIT));
 
   return (
     <div class="space-y-5">

@@ -2,6 +2,7 @@ import { For, Show, Suspense, createResource } from "solid-js";
 import { getStudentAnswers } from "@/api/getStudentAnswers";
 import { Badge } from "@/components/ui/badge";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { personLabelWithId } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
 export function AnswerSheetView(props: { examId: string; userId: string }) {
@@ -17,7 +18,7 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
         {(s) => (
           <div class="space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-4 py-3">
-              <p class="text-sm font-medium">{props.userId}</p>
+              <p class="text-sm font-medium">{personLabelWithId(s().user)}</p>
               <Badge variant="secondary">
                 {t("exams.autoScore")}: {s().auto_score.earned}/{s().auto_score.possible}
               </Badge>

@@ -71,6 +71,18 @@ function liveRosterName(entry: LiveRosterEntry, fallback: string): string {
   );
 }
 
+function remainingMinutesLabel(entry: LiveRosterEntry): string {
+  const remaining = entry.remaining_ms ?? 0;
+  if (entry.status !== "in_progress") return "—";
+  if (remaining > 0) return `${Math.ceil(remaining / 60000)}dk`;
+  return "<1dk";
+}
+
+function isLowRemaining(entry: LiveRosterEntry): boolean {
+  const remaining = entry.remaining_ms ?? 0;
+  return entry.status === "in_progress" && remaining <= 5 * 60 * 1000;
+}
+
 function LiveMonitorContent() {
   const params = useParams({ from: "/exams/$id/live" });
   const t = useT();
@@ -106,9 +118,9 @@ function LiveMonitorContent() {
     const e = exam();
     if (!eid || !e) return;
     void fetchSnapshot();
-    if (e.ends_at != null && e.ends_at < Date.now()) return;
+    if (e.ends_at != null && e.ends_at < now()) return;
     const interval = setInterval(() => {
-      if (e.ends_at != null && e.ends_at < Date.now()) {
+      if (e.ends_at != null && e.ends_at < now()) {
         clearInterval(interval);
         void fetchSnapshot();
         return;
@@ -263,12 +275,8 @@ function LiveMonitorContent() {
                                   </div>
                                 </TableCell>
                                 <TableCell class="tabular-nums text-center">
-                                  <span class={entry.status === "in_progress" && entry.remaining_ms <= 5 * 60 * 1000 ? "rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300" : ""}>
-                                    {entry.status === "in_progress" && entry.remaining_ms > 0
-                                      ? `${Math.ceil(entry.remaining_ms / 60000)}dk`
-                                      : entry.status === "in_progress" && entry.remaining_ms <= 0
-                                        ? `<1dk`
-                                        : "—"}
+                                  <span class={isLowRemaining(entry) ? "rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300" : ""}>
+                                    {remainingMinutesLabel(entry)}
                                   </span>
                                 </TableCell>
                                 <TableCell class="text-center text-xs">
