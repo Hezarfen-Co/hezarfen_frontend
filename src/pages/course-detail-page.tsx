@@ -394,7 +394,6 @@ function CourseDetailContent() {
                     <UserSearchSelect
                       id="course-enroll-user"
                       value={enrollUserId()}
-                      role="student"
                       excludeIds={enrolledUserIds()}
                       placeholder={t("form.selectStudent")}
                       onChange={setEnrollUserId}

@@ -1,6 +1,5 @@
 import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 import { getUserSearch } from "@/api/getUserSearch";
-import type { Role } from "@/api/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -12,7 +11,6 @@ export function UserSearchSelect(props: {
   value: string;
   onChange: (value: string) => void;
   label?: string;
-  role?: Role;
   excludeIds?: string[];
   placeholder?: string;
   disabled?: boolean;
@@ -23,11 +21,11 @@ export function UserSearchSelect(props: {
   const search = createMemo(() => {
     const q = query().trim();
     if (q.length < 2) return null;
-    return { q, role: props.role };
+    return q;
   });
   const [users] = createResource(search, async (source) => {
     if (!source) return [];
-    return getUserSearch(source.q, source.role);
+    return getUserSearch(source);
   });
   const options = createMemo(() => {
     const excluded = new Set(props.excludeIds ?? []);

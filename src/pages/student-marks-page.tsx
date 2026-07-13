@@ -53,7 +53,6 @@ function StudentMarksContent() {
             <UserSearchSelect
               id="student-marks-user"
               label={t("marks.userIdentity")}
-              role="student"
               placeholder={t("marks.userIdentity")}
               value={userId()}
               allowManualValue
