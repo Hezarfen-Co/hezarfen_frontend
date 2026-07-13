@@ -17,9 +17,8 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { UserSearchSelect } from "@/components/users/user-search-select";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -199,15 +198,13 @@ function EventDetailContent() {
                     <p class="mt-1 text-sm text-muted-foreground">{t("events.userId")}</p>
                   </div>
                   <div class="mt-4 grid gap-3">
-                    <div class="space-y-1.5">
-                      <Label for="other-user">{t("events.userId")}</Label>
-                      <Input
-                        id="other-user"
-                        class="h-10 rounded-md"
-                        value={otherUserId()}
-                        onInput={(e) => setOtherUserId(e.currentTarget.value)}
-                      />
-                    </div>
+                    <UserSearchSelect
+                      id="other-user"
+                      label={t("events.userId")}
+                      value={otherUserId()}
+                      placeholder={t("form.selectStudent")}
+                      onChange={setOtherUserId}
+                    />
                     <AttendanceStatusPicker
                       id="other-status"
                       value={status()}
