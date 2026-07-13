@@ -8,6 +8,7 @@ import type { ExamQuestion } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { QuestionForm, type QuestionValues } from "@/components/exams/question-form";
 import { IconChevronLeft, IconChevronRight, IconPlus, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -82,7 +83,7 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean }
             size="sm"
             onClick={() => {
               setEditing(null);
-              setShowForm((v) => !v);
+              setShowForm(true);
             }}
           >
             <IconPlus class="h-4 w-4" />
@@ -91,7 +92,17 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean }
         </Show>
       </div>
 
-      <Show when={showForm() || editing()}>
+      <FormDialog
+        open={showForm() || editing() != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditing(null);
+            setShowForm(false);
+          }
+        }}
+        title={editing() ? t("questions.edit") : t("questions.add")}
+        description={t("questions.title")}
+      >
         <QuestionForm
           initial={formInitial()}
           onCancel={() => {
@@ -100,7 +111,7 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean }
           }}
           onSubmit={submit}
         />
-      </Show>
+      </FormDialog>
 
       {error() && <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 

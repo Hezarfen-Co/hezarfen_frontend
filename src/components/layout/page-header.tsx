@@ -4,14 +4,6 @@ import { cn } from "@/lib/cn";
 
 export type PageAccent = "mint" | "sky" | "amber" | "violet" | "rose";
 
-const ACCENT: Record<PageAccent, string> = {
-  mint: "from-emerald-500/10 via-transparent to-transparent",
-  sky: "from-sky-500/10 via-transparent to-transparent",
-  amber: "from-amber-500/10 via-transparent to-transparent",
-  violet: "from-violet-500/10 via-transparent to-transparent",
-  rose: "from-rose-500/10 via-transparent to-transparent",
-};
-
 export function PageHeader(
   props: ParentProps<{
     eyebrow?: string;
@@ -27,16 +19,12 @@ export function PageHeader(
   return (
     <div
       class={cn(
-        "relative overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm",
+        "surface-card relative overflow-hidden text-card-foreground",
         props.class,
       )}
     >
-      <div
-        class={cn(
-          "pointer-events-none absolute inset-0 bg-gradient-to-br",
-          ACCENT[props.accent ?? "mint"],
-        )}
-      />
+      <div class="pointer-events-none absolute inset-0 bg-muted/25" />
+      <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/10" />
       <div
         class={cn(
           "relative flex flex-col sm:flex-row sm:items-center sm:justify-between",

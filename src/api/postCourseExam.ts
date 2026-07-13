@@ -3,7 +3,7 @@ import type { Exam } from "./types";
 
 export type PostCourseExamBody = {
   title: string;
-  description?: string;
+  description?: string | null;
   kind: string;
   weight: number;
   mode?: string | null;

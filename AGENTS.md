@@ -10,8 +10,14 @@ instructions. Always written and read in English.
 - Routing: **TanStack Router** (`@tanstack/solid-router`), hand-written code-based
   route tree. Only add `@tanstack/router-plugin` (file-based routing) if
   explicitly requested later.
-- UI: **shadcn-solid**-style primitives (`src/components/ui/`), built on Kobalte,
-  styled with Tailwind CSS. No other component kit.
+- UI: **shadcn-solid** primitives (`src/components/ui/`) following
+  https://shadcn-solid.com/docs/installation and component docs, styled with
+  Tailwind CSS. Do not import Kobalte primitives directly from pages/domain
+  components. If a component is needed, add or update the matching
+  shadcn-solid-style wrapper under `src/components/ui/` first. Dialogs,
+  alert dialogs, dropdowns, popovers, and comboboxes must use the documented
+  shadcn-solid wrapper API. If shadcn-solid does not provide a suitable
+  component, ask before adding another library or hand-rolling one.
 - Runtime dependencies: `solid-js`, `@tanstack/solid-router`, shadcn-solid/Kobalte
   peer deps, and `clsx` + `tailwind-merge` + `class-variance-authority` (for
   `cn()` and variant helpers, <2KB total). No axios (use `fetch`), no date libs
@@ -21,6 +27,9 @@ instructions. Always written and read in English.
 ## Naming & file structure
 
 - **One component per file.** Never two sibling components in the same file.
+  Exception: shadcn-solid primitive wrapper files under `src/components/ui/`
+  may export the documented compound component API from one file (for example
+  `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`).
 - File name = component name in kebab-case; the exported component is
   PascalCase. Example: `note-card.tsx` → `NoteCard`. Colocated files (types,
   tests) keep the same base name: `note-card.tsx`, `note-card.types.ts`,

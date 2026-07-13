@@ -81,6 +81,9 @@ export function ExamForm(props: {
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
   const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
   const [endsTime, setEndsTime] = createSignal(timeInputFromMs(props.initial?.ends_at));
+  const [durationMinutes, setDurationMinutes] = createSignal(
+    props.initial?.duration_ms != null ? String(Math.round(props.initial.duration_ms / 60_000)) : "",
+  );
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
@@ -122,6 +125,7 @@ export function ExamForm(props: {
         setStartsTime("");
         setEndsDate("");
         setEndsTime("");
+        setDurationMinutes("");
       }
     } catch (err) {
       setError(formatApiError(err));
@@ -134,7 +138,8 @@ export function ExamForm(props: {
     e.preventDefault();
     const starts_at = mode() ? scheduleInputToMs(startsDate(), startsTime()) : null;
     const ends_at = mode() ? scheduleInputToMs(endsDate(), endsTime()) : null;
-    const duration_ms = mode() === "async" && starts_at != null && ends_at != null ? ends_at - starts_at : null;
+    const durationValue = Number(durationMinutes());
+    const duration_ms = mode() === "async" && Number.isFinite(durationValue) ? durationValue * 60_000 : null;
     const v = validate(starts_at, ends_at, duration_ms);
     if (v) {
       setError(v);
@@ -271,6 +276,22 @@ export function ExamForm(props: {
               />
             </div>
           </div>
+        </div>
+      </Show>
+      <Show when={mode() === "async"}>
+        <div class="space-y-1.5">
+          <Label for="exam-duration">{t("exams.durationMinutes")}</Label>
+          <Input
+            id="exam-duration"
+            class="rounded-sm"
+            type="number"
+            min={1}
+            max={1440}
+            step={1}
+            value={durationMinutes()}
+            required
+            onInput={(e) => setDurationMinutes(e.currentTarget.value)}
+          />
         </div>
       </Show>
       {error() && <p class="text-sm text-destructive">{error()}</p>}

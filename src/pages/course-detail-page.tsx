@@ -6,7 +6,6 @@ import { getCourseById } from "@/api/getCourseById";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { getCourseExams } from "@/api/getCourseExams";
 import { getMyCourses } from "@/api/getMyCourses";
-import { getUsers } from "@/api/getUsers";
 import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
 import { postCourseExam } from "@/api/postCourseExam";
@@ -18,11 +17,11 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { Select } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -32,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { examKindLabel } from "@/lib/exam-labels";
@@ -58,10 +58,6 @@ function CourseDetailContent() {
   const [roster, { refetch: refetchRoster }] = createResource(
     () => (isTeacherPlus() ? id() : null),
     async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
-  );
-  const [users] = createResource(
-    () => (hasMinRole(auth.user()?.role, "admin") ? true : null),
-    async (enabled) => (enabled ? getUsers() : []),
   );
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
@@ -103,14 +99,7 @@ function CourseDetailContent() {
   const rosterCount = createMemo(() => roster()?.length ?? 0);
   const totalWeight = createMemo(() => (exams() ?? []).reduce((sum, exam) => sum + exam.weight, 0));
 
-  const enrollableUsers = () => {
-    const enrolled = new Set((roster() ?? []).map((row) => row.user.id));
-    return (users() ?? []).filter((user) => user.role === "student" && !enrolled.has(user.id));
-  };
-  const userOptionLabel = (user: { id: string; username: string; name: string | null; surname: string | null }) => {
-    const fullName = [user.name, user.surname].filter(Boolean).join(" ").trim();
-    return `${fullName || user.username} - ${user.id}`;
-  };
+  const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
 
   const wrap = async (fn: () => Promise<void>) => {
     setError("");
@@ -168,10 +157,10 @@ function CourseDetailContent() {
                         variant="outline"
                         size="sm"
                         class="flex-1 rounded-md sm:flex-none"
-                        onClick={() => (editing() ? setEditing(false) : startEdit())}
+                        onClick={startEdit}
                       >
                         <IconEdit class="h-4 w-4" />
-                        {editing() ? t("common.cancel") : t("common.edit")}
+                        {t("common.edit")}
                       </Button>
                       <Button
                         type="button"
@@ -223,9 +212,14 @@ function CourseDetailContent() {
               }}
             />
 
-            <Show when={editing()}>
+            <FormDialog
+              open={editing()}
+              onOpenChange={setEditing}
+              title={t("common.edit")}
+              description={c().title}
+            >
               <form
-                class="surface-card max-w-2xl space-y-4 p-5"
+                class="space-y-4"
                 onSubmit={(e) => {
                   e.preventDefault();
                   void wrap(async () => {
@@ -262,7 +256,7 @@ function CourseDetailContent() {
                   </Button>
                 </div>
               </form>
-            </Show>
+            </FormDialog>
 
             {error() && (
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
@@ -349,7 +343,7 @@ function CourseDetailContent() {
                         <li>
                           <Link
                             to="/exams/$id"
-                            params={{ id: exam.id }}
+                            params={() => ({ id: exam.id })}
                             class="group flex items-start justify-between gap-3 rounded-lg border border-border/70 bg-background/60 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/35 hover:shadow-sm"
                           >
                             <div class="min-w-0 space-y-2">
@@ -403,31 +397,13 @@ function CourseDetailContent() {
                   }}
                 >
                   <div class="min-w-0">
-                    <Show
-                      when={(users() ?? []).length > 0}
-                      fallback={
-                        <Input
-                          class="h-10"
-                          placeholder={t("events.userId")}
-                          value={enrollUserId()}
-                          onInput={(e) => setEnrollUserId(e.currentTarget.value)}
-                        />
-                      }
-                    >
-                      <Select
-                        class="h-10 rounded-md bg-background text-foreground"
-                        value={enrollUserId()}
-                        disabled={enrollableUsers().length === 0}
-                        onChange={(e) => setEnrollUserId(e.currentTarget.value)}
-                      >
-                        <option value="">
-                          {enrollableUsers().length === 0 ? t("form.noStudents") : t("form.selectStudent")}
-                        </option>
-                        <For each={enrollableUsers()}>
-                          {(user) => <option value={user.id}>{userOptionLabel(user)}</option>}
-                        </For>
-                      </Select>
-                    </Show>
+                    <UserSearchSelect
+                      id="course-enroll-user"
+                      value={enrollUserId()}
+                      excludeIds={enrolledUserIds()}
+                      placeholder={t("form.selectStudent")}
+                      onChange={setEnrollUserId}
+                    />
                   </div>
                   <Button type="submit" class="h-10" disabled={pending()}>
                     {t("courses.enroll")}
