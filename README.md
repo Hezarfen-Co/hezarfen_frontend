@@ -1,37 +1,84 @@
-# hezarfen_frontend
+# Hezarfen Frontend
 
-SolidJS SPA for [hezarfen_backend](../../Rust/hezarfen_backend). Bun for tooling,
-Vite for dev/build, `@solidjs/router` for lazy-loaded routes — no other runtime
-dependencies.
+SolidJS + TypeScript frontend for the Hezarfen REST API.
 
-## Run
+## Stack
 
-```sh
+- **SolidJS** + Vite
+- **TanStack Router** (code-based route tree, lazy pages)
+- **Kobalte + Tailwind CSS** UI primitives (shadcn-solid style)
+- Session cookie auth via Vite dev proxy (same-origin)
+- **bun** package manager
+- i18n with EN/TR locale switching
+
+## Prerequisites
+
+- Node.js 20+ (or bun)
+- Hezarfen backend running at `http://127.0.0.1:8080`
+
+## Setup
+
+```bash
 bun install
-bun run dev        # http://localhost:5173, proxies /api -> http://127.0.0.1:8080
+bun run dev
 ```
 
-Start the backend first (`cargo run` in the backend repo). The dev server
-proxies `/api/*` to it, so the session cookie stays same-origin and CORS never
-enters the picture.
+Open [http://localhost:5173](http://localhost:5173).
 
-## Build
+The Vite server proxies `/api/auth`, `/api/users`, `/api/notes`, `/api/events`, `/api/exams`, `/api/courses`, `/api/marks`, `/api/time`, and `/api/health` to the backend so the HttpOnly session cookie stays same-origin while page URLs like `/notes` remain frontend routes on refresh.
 
-```sh
-bun run check      # typecheck
-bun run build      # dist/
+## Scripts
+
+| Command | Description |
+|---|---|
+| `bun run dev` | Start Vite dev server |
+| `bun run build` | Typecheck + production build |
+| `bun run preview` | Preview production build |
+| `bun run check` | Typecheck only |
+
+## Roles
+
+`student < teacher < manager < admin` — higher roles inherit lower capabilities. Registration always creates a `student`.
+
+## Pages
+
+| Path | Access | Description |
+|---|---|---|
+| `/login`, `/register` | Guests | Authentication |
+| `/` | Authenticated | Dashboard with widgets |
+| `/profile` | Authenticated | Edit personal info (name, email, phone, birth date) |
+| `/notes` | Student+ | Personal notes CRUD |
+| `/events`, `/events/:id` | Student+ | Event list & detail (create/edit: teacher+) |
+| `/exams` | Student+ | Exam list grouped by course (accordion) |
+| `/exams/:id` | Student+ | Exam detail, questions, grading, statistics (teacher+) |
+| `/exams/:id/live` | Teacher+ | Live monitor / final state roster with pagination & sorting |
+| `/exam-room/:id` | Student+ | WebSocket-based real-time exam room (auto-save, timer, expiry) |
+| `/courses` | Student+ | Course list & exam creation (teacher+) |
+| `/guide` | Authenticated | App usage guide |
+| `/admin/users` | Admin | User management |
+
+## Features
+
+- **Exam lifecycle**: create (scheduled/async/unscheduled), questions (multiple-choice / text), real-time WebSocket exam room, auto-submit on expiry, teacher grading
+- **Live monitor**: 2-second polling during active exams, static final state view after exam ends, pagination (10/page), column sorting
+- **Statistics**: graded count, average/min/max marks on exam detail
+- **Answer sheet**: teacher review of student answers with correct/wrong highlighting
+- **Profile editing**: update display name, email, phone, birth date
+- **i18n**: full Turkish / English interface
+
+## Project Structure
+
 ```
-
-Serve `dist/` behind any reverse proxy that maps `/api/*` to the backend
-(strip the `/api` prefix). To point the SPA at an absolute API origin instead,
-set `VITE_API_URL` at build time.
-
-## Shape
-
-- `src/lib/api.ts` — typed client; every endpoint, one `ApiError` shape.
-- `src/lib/auth.tsx` — session context; `/auth/me` fetched once, mutated in place.
-- `src/lib/action.ts` — pending/error wrapper for mutations.
-- `src/pages/*` — one file per route, lazy-loaded.
-
-Mutations update resources from the server's response (`mutate`), never by
-refetching — the UI reacts in the same frame the request resolves.
+src/
+├── api/           # API client, types, endpoint functions
+├── components/    # Reusable UI components
+│   ├── exams/     # Exam card, form, questions panel, answer sheet, WS room
+│   ├── layout/    # Side nav, page header, role guards
+│   ├── ui/        # Design system (Button, Badge, Table, Input, etc.)
+│   └── users/     # Profile form, user table
+├── i18n/          # Message keys + EN/TR dictionaries
+├── lib/           # Utilities (format, cn, roles, exam-labels)
+├── pages/         # Route-level page components
+├── routes/        # TanStack Router tree
+└── stores/        # Auth, preferences (locale, theme) contexts
+```
