@@ -1,6 +1,7 @@
-import { For, Show, Suspense, createEffect, createResource, createSignal, onCleanup } from "solid-js";
+import { For, Show, Suspense, createEffect, createResource, createSignal, onCleanup, untrack } from "solid-js";
 import { Link, useParams } from "@tanstack/solid-router";
 import { getExamLive } from "@/api/getExamLive";
+import { getExamLiveStreamUrl } from "@/api/getExamLiveStreamUrl";
 import { getExamById } from "@/api/getExamById";
 import { formatApiError } from "@/api/client";
 import type { LiveMonitor, LiveRosterEntry } from "@/api/types";
@@ -107,9 +108,19 @@ function LiveMonitorContent() {
     try {
       const data = await getExamLive(id());
       setSnapshot(data);
+      setError("");
     } catch (err) {
       console.error("[live-monitor] fetch error:", err);
       setError(formatApiError(err, locale()));
+    }
+  };
+
+  const applyStreamEvent = (event: MessageEvent) => {
+    try {
+      setSnapshot(JSON.parse(event.data) as LiveMonitor);
+      setError("");
+    } catch (err) {
+      console.error("[live-monitor] stream parse error:", err);
     }
   };
 
@@ -118,16 +129,44 @@ function LiveMonitorContent() {
     const e = exam();
     if (!eid || !e) return;
     void fetchSnapshot();
-    if (e.ends_at != null && e.ends_at < now()) return;
-    const interval = setInterval(() => {
-      if (e.ends_at != null && e.ends_at < now()) {
-        clearInterval(interval);
+    if (e.ends_at != null && e.ends_at < untrack(now)) return;
+
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const startPolling = () => {
+      if (interval) return;
+      interval = setInterval(() => {
+        if (e.ends_at != null && e.ends_at < untrack(now)) {
+          if (interval) clearInterval(interval);
+          interval = null;
+          void fetchSnapshot();
+          return;
+        }
         void fetchSnapshot();
-        return;
+      }, 2000);
+    };
+
+    if (!("EventSource" in window)) {
+      startPolling();
+      onCleanup(() => {
+        if (interval) clearInterval(interval);
+      });
+      return;
+    }
+
+    const source = new EventSource(getExamLiveStreamUrl(eid), { withCredentials: true });
+    source.addEventListener("snapshot", applyStreamEvent);
+    source.onmessage = applyStreamEvent;
+    source.onerror = () => {
+      source.close();
+      startPolling();
+    };
+
+    onCleanup(() => {
+      source.close();
+      if (interval) {
+        clearInterval(interval);
       }
-      void fetchSnapshot();
-    }, 2000);
-    onCleanup(() => clearInterval(interval));
+    });
   });
 
   const toggleSort = (key: SortKey) => {
