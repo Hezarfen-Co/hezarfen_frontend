@@ -55,7 +55,7 @@ export function AppShell(props: ParentProps) {
             <div
               class={cn(
                 "flex h-16 shrink-0 items-center gap-2 border-b border-border/70",
-                collapsed() ? "justify-center px-2" : "px-3",
+                collapsed() ? "justify-center px-2" : "px-2",
               )}
             >
               <Link to="/" class={cn("flex min-w-0 flex-1 items-center gap-2", collapsed() && "hidden")}>
@@ -82,7 +82,7 @@ export function AppShell(props: ParentProps) {
               </Button>
             </div>
 
-            <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-4">
+            <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-4 pb-1">
               <SideNav collapsed={collapsed()} />
             </div>
 
