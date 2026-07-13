@@ -38,34 +38,34 @@
   }
 
   [data-kb-theme="dark"] {
-    --background: 168 28% 7%;
-    --foreground: 150 20% 96%;
-    --card: 168 24% 10%;
-    --card-foreground: 150 20% 96%;
-    --popover: 168 24% 10%;
-    --popover-foreground: 150 20% 96%;
-    --primary: 158 65% 48%;
-    --primary-foreground: 168 40% 8%;
-    --secondary: 168 18% 16%;
-    --secondary-foreground: 150 15% 92%;
-    --muted: 168 16% 14%;
-    --muted-foreground: 160 10% 62%;
-    --accent: 168 22% 16%;
-    --accent-foreground: 158 60% 70%;
-    --destructive: 0 62% 45%;
+    --background: 220 9% 6%;
+    --foreground: 220 12% 92%;
+    --card: 220 8% 9%;
+    --card-foreground: 220 12% 92%;
+    --popover: 220 8% 11%;
+    --popover-foreground: 220 12% 92%;
+    --primary: 220 88% 62%;
+    --primary-foreground: 220 20% 98%;
+    --secondary: 220 7% 15%;
+    --secondary-foreground: 220 10% 88%;
+    --muted: 220 7% 13%;
+    --muted-foreground: 220 7% 62%;
+    --accent: 220 9% 17%;
+    --accent-foreground: 220 15% 96%;
+    --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 98%;
-    --border: 168 14% 18%;
-    --input: 168 14% 18%;
-    --ring: 158 65% 48%;
-    --success: 152 55% 45%;
-    --warning: 38 90% 55%;
+    --border: 220 8% 18%;
+    --input: 220 8% 18%;
+    --ring: 220 88% 62%;
+    --success: 128 48% 55%;
+    --warning: 38 90% 56%;
     --info: 210 80% 60%;
-    --surface-elevated: 168 22% 12%;
-    --sidebar: 168 30% 8%;
-    --sidebar-foreground: 150 15% 90%;
-    --hero-from: 168 30% 12%;
-    --hero-to: 190 25% 12%;
-    --glow: 158 65% 40%;
+    --surface-elevated: 220 8% 12%;
+    --sidebar: 220 10% 4%;
+    --sidebar-foreground: 220 10% 86%;
+    --hero-from: 220 10% 13%;
+    --hero-to: 220 8% 10%;
+    --glow: 220 88% 54%;
   }
 
   * {
@@ -79,8 +79,8 @@
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
     background-image:
-      radial-gradient(ellipse 80% 50% at 10% -10%, hsl(var(--glow) / 0.12), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 0%, hsl(var(--info) / 0.06), transparent);
+      radial-gradient(ellipse 80% 50% at 10% -10%, hsl(var(--glow) / 0.10), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, hsl(var(--info) / 0.05), transparent);
     background-attachment: fixed;
   }
 
@@ -96,6 +96,11 @@
 
   .surface-card {
     @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+
+  [data-kb-theme="dark"] .surface-card {
+    @apply shadow-none;
+    background: linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card) / 0.92));
   }
 
   .hero-panel {
