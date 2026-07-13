@@ -1,5 +1,14 @@
-import { AlertDialog } from "@kobalte/core/alert-dialog";
 import { type JSX, createSignal, Show } from "solid-js";
+import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { IconAlert, IconTrash } from "@/components/ui/icons";
 import { useT } from "@/stores/preferences-context";
@@ -34,71 +43,55 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
 
   return (
     <AlertDialog open={props.open} onOpenChange={props.onOpenChange}>
-      <AlertDialog.Portal>
-        <AlertDialog.Overlay class="fixed inset-0 z-50 bg-black/40 dark:bg-black/60" />
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <AlertDialog.Content
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <span
             class={cn(
-              "w-full max-w-md rounded-sm border border-border bg-popover text-popover-foreground shadow-md outline-none",
-              "animate-fade-up",
+              "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm",
+              destructive() ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary",
             )}
           >
-            <div class="flex gap-3 border-b border-border px-5 py-4">
-              <span
-                class={cn(
-                  "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm",
-                  destructive()
-                    ? "bg-destructive/10 text-destructive"
-                    : "bg-primary/10 text-primary",
-                )}
-              >
-                <Show when={destructive()} fallback={<IconAlert class="h-4 w-4" />}>
-                  <IconTrash class="h-4 w-4" />
-                </Show>
-              </span>
-              <div class="min-w-0 space-y-1">
-                <AlertDialog.Title class="text-base font-semibold leading-none">
-                  {props.title}
-                </AlertDialog.Title>
-                <AlertDialog.Description class="text-sm text-muted-foreground">
-                  {t("confirm.review")}
-                </AlertDialog.Description>
-              </div>
-            </div>
+            <Show when={destructive()} fallback={<IconAlert class="h-4 w-4" />}>
+              <IconTrash class="h-4 w-4" />
+            </Show>
+          </span>
+          <div class="min-w-0 space-y-1">
+            <AlertDialogTitle>{props.title}</AlertDialogTitle>
+            <AlertDialogDescription>{t("confirm.review")}</AlertDialogDescription>
+          </div>
+        </AlertDialogHeader>
 
-            <div class="space-y-2 px-5 py-4">
-              <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("confirm.summary")}
-              </p>
-              <div class="rounded-sm border border-border bg-muted/40 px-3 py-3 text-sm leading-relaxed">
-                {props.summary}
-              </div>
-            </div>
+        <AlertDialogBody>
+          <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("confirm.summary")}
+          </p>
+          <div class="rounded-sm border border-border bg-muted/40 px-3 py-3 text-sm leading-relaxed">
+            {props.summary}
+          </div>
+        </AlertDialogBody>
 
-            <div class="flex items-center justify-end gap-2 border-t border-border px-5 py-3">
-              <AlertDialog.CloseButton
-                class={cn(
-                  "inline-flex h-8 items-center justify-center rounded-sm border border-input bg-background px-3 text-xs font-medium shadow-sm",
-                  "hover:bg-accent hover:text-accent-foreground disabled:opacity-50",
-                )}
-                disabled={pending()}
-              >
-                {props.cancelLabel ?? t("common.cancel")}
-              </AlertDialog.CloseButton>
-              <Button
-                type="button"
-                size="sm"
-                variant={destructive() ? "destructive" : "default"}
-                disabled={pending()}
-                onClick={() => void run()}
-              >
-                {props.confirmLabel ??
-                  (destructive() ? t("confirm.confirmDelete") : t("confirm.confirmUpdate"))}
-              </Button>
-            </div>
-          </AlertDialog.Content>
-        </div>
-      </AlertDialog.Portal>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            class={cn(
+              "inline-flex h-8 items-center justify-center rounded-sm border border-input bg-background px-3 text-xs font-medium shadow-sm",
+              "hover:bg-accent hover:text-accent-foreground disabled:opacity-50",
+            )}
+            disabled={pending()}
+          >
+            {props.cancelLabel ?? t("common.cancel")}
+          </AlertDialogCancel>
+          <Button
+            type="button"
+            size="sm"
+            variant={destructive() ? "destructive" : "default"}
+            disabled={pending()}
+            onClick={() => void run()}
+          >
+            {props.confirmLabel ??
+              (destructive() ? t("confirm.confirmDelete") : t("confirm.confirmUpdate"))}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
     </AlertDialog>
   );
 }

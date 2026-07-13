@@ -4,9 +4,8 @@ import { formatApiError } from "@/api/client";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { UserSearchSelect } from "@/components/users/user-search-select";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useT } from "@/stores/preferences-context";
 
@@ -50,16 +49,17 @@ function StudentMarksContent() {
             setLookupId(id);
           }}
         >
-          <div class="min-w-0 flex-1 space-y-1.5">
-            <Label for="student-marks-user">{t("marks.userIdentity")}</Label>
-            <Input
-              id="student-marks-user"
-              placeholder={t("marks.userIdentity")}
-              value={userId()}
-              onInput={(e) => setUserId(e.currentTarget.value)}
-            />
-          </div>
-          <Button type="submit" class="h-10 w-full sm:w-auto">{t("marks.show")}</Button>
+          <UserSearchSelect
+            id="student-marks-user"
+            label={t("marks.userIdentity")}
+            value={userId()}
+            onChange={setUserId}
+            placeholder={t("common.searchPlaceholder")}
+            selectPlaceholder={t("marks.userIdentity")}
+            emptyMessage={t("admin.noUsers")}
+            allowManualValue
+          />
+          <Button type="submit" class="h-9 w-full sm:w-auto">{t("marks.show")}</Button>
         </form>
 
         <Show when={report.error}>

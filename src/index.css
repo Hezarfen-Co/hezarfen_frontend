@@ -95,12 +95,15 @@
   }
 
   .surface-card {
-    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+    @apply rounded-xl border bg-card text-card-foreground shadow-sm;
   }
 
   [data-kb-theme="dark"] .surface-card {
     @apply shadow-none;
-    background: linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card) / 0.92));
+    border-color: hsl(var(--border) / 0.82);
+    background:
+      linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card) / 0.92)),
+      radial-gradient(circle at 0 0, hsl(var(--primary) / 0.06), transparent 35%);
   }
 
   .hero-panel {
@@ -108,7 +111,13 @@
   }
 
   .stat-tile {
-    @apply surface-card relative overflow-hidden p-5 transition-transform duration-200 hover:-translate-y-0.5;
+    @apply surface-card relative overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25;
+  }
+
+  [data-kb-theme="dark"] .stat-tile {
+    background:
+      linear-gradient(180deg, hsl(var(--surface-elevated) / 0.96), hsl(var(--card) / 0.88)),
+      radial-gradient(circle at 100% 0, hsl(var(--primary) / 0.09), transparent 34%);
   }
 
   .stat-tile::after {

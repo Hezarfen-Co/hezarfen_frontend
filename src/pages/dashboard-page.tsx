@@ -130,13 +130,14 @@ function DashboardContent() {
 
       {/* Summaries */}
       <section class="grid items-stretch gap-4 lg:grid-cols-3">
-        <div class="surface-card flex min-h-[18rem] flex-col p-4 sm:p-5">
-          <div class="mb-3 flex items-center justify-between gap-2">
-            <h2 class="font-display text-base font-semibold sm:text-lg">{t("dashboard.recentNotes")}</h2>
+        <div class="surface-card flex min-h-[18rem] flex-col overflow-hidden">
+          <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
+            <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.recentNotes")}</h2>
             <Link to="/notes" class="text-sm font-medium text-primary hover:underline">
               {t("dashboard.viewAll")}
             </Link>
           </div>
+          <div class="flex flex-1 p-4 sm:p-5">
           <Suspense fallback={<PageSpinner />}>
             <Show
               when={previewNotes().length > 0}
@@ -167,15 +168,17 @@ function DashboardContent() {
               </ul>
             </Show>
           </Suspense>
+          </div>
         </div>
 
-        <div class="surface-card flex min-h-[18rem] flex-col p-4 sm:p-5">
-          <div class="mb-3 flex items-center justify-between gap-2">
-            <h2 class="font-display text-base font-semibold sm:text-lg">{t("dashboard.upcomingEvents")}</h2>
+        <div class="surface-card flex min-h-[18rem] flex-col overflow-hidden">
+          <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
+            <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.upcomingEvents")}</h2>
             <Link to="/events" class="text-sm font-medium text-primary hover:underline">
               {t("dashboard.viewAll")}
             </Link>
           </div>
+          <div class="flex flex-1 p-4 sm:p-5">
           <Suspense fallback={<PageSpinner />}>
             <Show
               when={previewEvents().length > 0}
@@ -197,7 +200,7 @@ function DashboardContent() {
                       <Link
                         to="/events/$id"
                         params={{ id: event.id }}
-                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04]"
+                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-primary/[0.05]"
                       >
                         <div class="min-w-0">
                           <p class="truncate text-sm font-medium">{event.title}</p>
@@ -215,15 +218,17 @@ function DashboardContent() {
               </ul>
             </Show>
           </Suspense>
+          </div>
         </div>
 
-        <div class="surface-card flex min-h-[18rem] flex-col p-4 sm:p-5">
-          <div class="mb-3 flex items-center justify-between gap-2">
-            <h2 class="font-display text-base font-semibold sm:text-lg">{t("dashboard.myExams")}</h2>
+        <div class="surface-card flex min-h-[18rem] flex-col overflow-hidden">
+          <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
+            <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.myExams")}</h2>
             <Link to="/exams" class="text-sm font-medium text-primary hover:underline">
               {t("dashboard.viewAll")}
             </Link>
           </div>
+          <div class="flex flex-1 p-4 sm:p-5">
           <Suspense fallback={<PageSpinner />}>
             <Show
               when={previewExams().length > 0}
@@ -245,7 +250,7 @@ function DashboardContent() {
                       <Link
                         to="/exams/$id"
                         params={() => ({ id: exam.id })}
-                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-primary/[0.04]"
+                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-primary/[0.05]"
                       >
                         <div class="min-w-0">
                           <p class="truncate text-sm font-medium">{exam.title}</p>
@@ -263,6 +268,7 @@ function DashboardContent() {
                 </ul>
               </Show>
             </Suspense>
+          </div>
         </div>
       </section>
 
