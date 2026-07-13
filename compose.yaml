@@ -1,0 +1,24 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/hezarfen-frontend:latest
+    container_name: hezarfen-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      PORT: "5173"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5173/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - hezarfen_backend_default
+
+networks:
+  hezarfen_backend_default:
+    external: true

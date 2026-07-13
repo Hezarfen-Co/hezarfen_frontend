@@ -3,14 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark light" />
-    <meta name="theme-color" content="#0a0d14" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#f4f6fa" media="(prefers-color-scheme: light)" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%237c9aff'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='m22%202-7%2020-4-9-9-4z'/%3E%3Cpath%20d='M22%202%2011%2013'/%3E%3C/svg%3E"
-    />
+    <meta name="color-scheme" content="light dark" />
     <title>Hezarfen</title>
+    <script>
+      (() => {
+        try {
+          const theme = localStorage.getItem("hezarfen.theme");
+          const dark =
+            theme === "dark" ||
+            (theme !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.setAttribute("data-kb-theme", dark ? "dark" : "light");
+          if (dark) document.documentElement.classList.add("dark");
+          const locale = localStorage.getItem("hezarfen.locale");
+          if (locale === "en" || locale === "tr") document.documentElement.lang = locale;
+        } catch {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
