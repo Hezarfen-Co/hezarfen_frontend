@@ -1,9 +1,10 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
 import type { Note } from "@/api/types";
 import { NoteForm } from "@/components/notes/note-form";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { IconTrash } from "@/components/ui/icons";
 import { useT } from "@/stores/preferences-context";
 
@@ -23,8 +24,8 @@ export function NoteCard(props: {
       <div class="flex items-start justify-between gap-3 border-b border-border/60 px-4 py-4">
         <h3 class="line-clamp-2 min-w-0 font-display text-lg font-semibold leading-snug">{props.note.title}</h3>
         <div class="flex shrink-0 gap-1">
-          <Button type="button" variant="ghost" size="sm" onClick={() => setEditing((v) => !v)}>
-            {editing() ? t("common.cancel") : t("common.edit")}
+          <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(true)}>
+            {t("common.edit")}
           </Button>
           <Button
             type="button"
@@ -39,14 +40,18 @@ export function NoteCard(props: {
         </div>
       </div>
       <div class="flex flex-1 flex-col gap-4 p-4">
-        <Show
-          when={editing()}
-          fallback={
-            <p class="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-              {props.note.content || t("notes.noContent")}
-            </p>
-          }
-        >
+        <p class="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+          {props.note.content || t("notes.noContent")}
+        </p>
+        {error() && <p class="text-sm text-destructive">{error()}</p>}
+      </div>
+
+      <FormDialog
+        open={editing()}
+        onOpenChange={setEditing}
+        title={t("common.edit")}
+        description={props.note.title}
+      >
           <NoteForm
             initial={props.note}
             submitLabel={t("common.update")}
@@ -56,9 +61,7 @@ export function NoteCard(props: {
               setEditing(false);
             }}
           />
-        </Show>
-        {error() && <p class="text-sm text-destructive">{error()}</p>}
-      </div>
+      </FormDialog>
 
       <ConfirmDialog
         open={deleteOpen()}

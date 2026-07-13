@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { UserSearchSelect } from "@/components/users/user-search-select";
@@ -106,10 +107,10 @@ function EventDetailContent() {
                         variant="outline"
                         size="sm"
                         class="flex-1 rounded-md sm:flex-none"
-                        onClick={() => setEditing((v) => !v)}
+                        onClick={() => setEditing(true)}
                       >
                         <IconEdit class="h-4 w-4" />
-                        {editing() ? t("common.cancel") : t("common.edit")}
+                        {t("common.edit")}
                       </Button>
                       <Button
                         type="button"
@@ -146,26 +147,29 @@ function EventDetailContent() {
               }}
             />
 
-            <Show when={editing()}>
-              <section class="surface-card w-full p-5">
-                <EventForm
-                  initial={ev()}
-                  submitLabel={t("common.update")}
-                  onCancel={() => setEditing(false)}
-                  onSubmit={async (values) => {
-                    const body: Record<string, unknown> = {
-                      title: values.title,
-                      description: values.description,
-                    };
-                    if (values.starts_at !== undefined) body.starts_at = values.starts_at;
-                    if (values.ends_at !== undefined) body.ends_at = values.ends_at;
-                    await patchEventById(id(), body);
-                    setEditing(false);
-                    await refetchEvent();
-                  }}
-                />
-              </section>
-            </Show>
+            <FormDialog
+              open={editing()}
+              onOpenChange={setEditing}
+              title={t("common.edit")}
+              description={ev().title}
+            >
+              <EventForm
+                initial={ev()}
+                submitLabel={t("common.update")}
+                onCancel={() => setEditing(false)}
+                onSubmit={async (values) => {
+                  const body: Record<string, unknown> = {
+                    title: values.title,
+                    description: values.description,
+                  };
+                  if (values.starts_at !== undefined) body.starts_at = values.starts_at;
+                  if (values.ends_at !== undefined) body.ends_at = values.ends_at;
+                  await patchEventById(id(), body);
+                  setEditing(false);
+                  await refetchEvent();
+                }}
+              />
+            </FormDialog>
 
             <div class="grid gap-4 lg:grid-cols-2">
               <section class="surface-card p-5">

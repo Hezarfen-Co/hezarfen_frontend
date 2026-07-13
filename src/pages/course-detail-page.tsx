@@ -17,6 +17,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -156,10 +157,10 @@ function CourseDetailContent() {
                         variant="outline"
                         size="sm"
                         class="flex-1 rounded-md sm:flex-none"
-                        onClick={() => (editing() ? setEditing(false) : startEdit())}
+                        onClick={startEdit}
                       >
                         <IconEdit class="h-4 w-4" />
-                        {editing() ? t("common.cancel") : t("common.edit")}
+                        {t("common.edit")}
                       </Button>
                       <Button
                         type="button"
@@ -211,9 +212,14 @@ function CourseDetailContent() {
               }}
             />
 
-            <Show when={editing()}>
+            <FormDialog
+              open={editing()}
+              onOpenChange={setEditing}
+              title={t("common.edit")}
+              description={c().title}
+            >
               <form
-                class="surface-card w-full space-y-4 p-5"
+                class="space-y-4"
                 onSubmit={(e) => {
                   e.preventDefault();
                   void wrap(async () => {
@@ -250,7 +256,7 @@ function CourseDetailContent() {
                   </Button>
                 </div>
               </form>
-            </Show>
+            </FormDialog>
 
             {error() && (
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>

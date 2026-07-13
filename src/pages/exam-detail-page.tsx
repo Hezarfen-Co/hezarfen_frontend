@@ -22,6 +22,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import {
@@ -216,10 +217,10 @@ function ExamDetailContent() {
                         variant="outline"
                         size="sm"
                         class="flex-1 rounded-md sm:flex-none"
-                        onClick={() => setEditing((v) => !v)}
+                        onClick={() => setEditing(true)}
                       >
                         <IconEdit class="h-4 w-4" />
-                        {editing() ? t("common.cancel") : t("common.edit")}
+                        {t("common.edit")}
                       </Button>
                       <Button
                         type="button"
@@ -280,20 +281,23 @@ function ExamDetailContent() {
               }}
             />
 
-            <Show when={editing()}>
-              <section class="surface-card w-full p-5">
-                <ExamForm
-                  initial={ex()}
-                  submitLabel={t("common.update")}
-                  onCancel={() => setEditing(false)}
-                  onSubmit={async (values) => {
-                    await patchExamById(id(), values);
-                    setEditing(false);
-                    await refetchExam();
-                  }}
-                />
-              </section>
-            </Show>
+            <FormDialog
+              open={editing()}
+              onOpenChange={setEditing}
+              title={t("common.edit")}
+              description={ex().title}
+            >
+              <ExamForm
+                initial={ex()}
+                submitLabel={t("common.update")}
+                onCancel={() => setEditing(false)}
+                onSubmit={async (values) => {
+                  await patchExamById(id(), values);
+                  setEditing(false);
+                  await refetchExam();
+                }}
+              />
+            </FormDialog>
 
             <section class="surface-card space-y-4 p-5">
               <h2 class="font-display text-lg font-semibold">{t("exams.schedule")}</h2>
