@@ -16,14 +16,15 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 
 type WsState = "connecting" | "connected" | "disconnected";
 type WsMessage =
-  | { type: "state"; status: string; deadline: number | null; remaining_ms: number; now: number; answered: number; question_count: number }
+  | { type: "state"; status: string; deadline: number | null; remaining_ms: number | null; now: number; answered: number; question_count: number }
   | { type: "saved"; question_id: string; updated_at: number }
   | { type: "finished"; finished_at: number }
   | { type: "expired" }
   | { type: "pong" }
   | { type: "error"; message: string };
 
-function formatRemaining(ms: number): string {
+function formatRemaining(ms: number | null): string {
+  if (ms == null) return "—";
   const safe = Math.max(0, ms);
   const totalSeconds = Math.floor(safe / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -41,10 +42,10 @@ export function ExamRoomWS(props: { exam: Exam }) {
   const [roomOpen, setRoomOpen] = createSignal(false);
   const [attempt, setAttempt] = createSignal<ExamAttempt | null>(null);
   const [questions, setQuestions] = createSignal<AttemptQuestion[]>([]);
-  const [remainingMs, setRemainingMs] = createSignal(0);
+  const [remainingMs, setRemainingMs] = createSignal<number | null>(0);
   const [wsState, setWsState] = createSignal<WsState>("disconnected");
-  const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async");
-  const canWrite = createMemo(() => attempt()?.status === "in_progress" && remainingMs() > 0);
+  const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async" || props.exam.mode === "open");
+  const canWrite = createMemo(() => attempt()?.status === "in_progress" && (remainingMs() == null || remainingMs()! > 0));
 
   let ws: WebSocket | null = null;
 
@@ -223,8 +224,8 @@ export function ExamRoomWS(props: { exam: Exam }) {
 
   createEffect(() => {
     const current = attempt();
-    const remaining = current?.remaining_ms ?? 0;
-    if (!current || current.status !== "in_progress" || remaining <= 0) return;
+    const remaining = current?.remaining_ms ?? null;
+    if (!current || current.status !== "in_progress" || remaining == null || remaining <= 0) return;
     const startedAt = Date.now();
     const initial = remaining;
     const timer = window.setInterval(() => {
@@ -240,7 +241,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
           <div>
             <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
             <p class="mt-1 text-sm text-muted-foreground">
-              {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : t("attempt.unscheduled")}
+              {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : props.exam.mode === "open" ? t("exams.mode.open") : t("attempt.unscheduled")}
             </p>
           </div>
           <Show when={scheduled()} fallback={<Badge variant="outline" class="w-fit rounded-full px-3 py-1">{t("attempt.unscheduled")}</Badge>}>
@@ -338,14 +339,14 @@ export function ExamRoomWS(props: { exam: Exam }) {
   );
 }
 
-function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number; wsState: WsState }) {
+function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | null; wsState: WsState }) {
   const t = useT();
   const { locale } = usePreferences();
   const progressPct = () =>
     props.attempt.question_count <= 0
       ? 0
       : Math.round((props.attempt.answered / props.attempt.question_count) * 100);
-  const remainingWarn = () => props.attempt.status === "in_progress" && props.remainingMs <= 5 * 60 * 1000;
+  const remainingWarn = () => props.attempt.status === "in_progress" && props.remainingMs != null && props.remainingMs <= 5 * 60 * 1000;
   const statusLabel = () => {
     if (props.attempt.status === "in_progress") return t("attempt.inProgress");
     if (props.attempt.status === "submitted") return t("attempt.submitted");

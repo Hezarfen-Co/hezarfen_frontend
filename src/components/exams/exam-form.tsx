@@ -1,6 +1,7 @@
-import { createSignal, Show } from "solid-js";
+import { createEffect, createMemo, createResource, createSignal, Show } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { For } from "solid-js";
+import { getSettings } from "@/api/getSettings";
 import type { Exam } from "@/api/types";
 import { EXAM_KINDS, EXAM_MODES } from "@/api/types";
 import { Button } from "@/components/ui/button";
@@ -13,8 +14,6 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { examKindLabel } from "@/lib/exam-labels";
 import { useT } from "@/stores/preferences-context";
-
-const UI_EXAM_KINDS = EXAM_KINDS.filter((kind) => kind !== "homework");
 
 function dateInputFromMs(ms: number | null | undefined): string {
   if (ms == null) return "";
@@ -58,11 +57,12 @@ export type ExamFormValues = {
   title: string;
   description: string;
   kind: string;
-  weight: number;
   mode: string | null;
   starts_at: number | null;
   ends_at: number | null;
   duration_ms: number | null;
+  max_attempts: number;
+  allow_rejoin: boolean;
 };
 
 export function ExamForm(props: {
@@ -74,38 +74,42 @@ export function ExamForm(props: {
   const t = useT();
   const [title, setTitle] = createSignal(props.initial?.title ?? "");
   const [description, setDescription] = createSignal(props.initial?.description ?? "");
-  const [kind, setKind] = createSignal(String(props.initial?.kind && props.initial.kind !== "homework" ? props.initial.kind : "quiz"));
-  const [weight, setWeight] = createSignal(String(props.initial?.weight ?? 1));
+  const [kind, setKind] = createSignal(String(props.initial?.kind ?? "quiz"));
   const [mode, setMode] = createSignal(String(props.initial?.mode ?? ""));
+  const [hasRetakes, setHasRetakes] = createSignal((props.initial?.max_attempts ?? 1) !== 1);
+  const [maxAttempts, setMaxAttempts] = createSignal(String(props.initial?.max_attempts ?? 1));
+  const allowRejoin = () => props.initial?.allow_rejoin ?? true;
   const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
   const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
   const [endsTime, setEndsTime] = createSignal(timeInputFromMs(props.initial?.ends_at));
-  const [durationMinutes, setDurationMinutes] = createSignal(
-    props.initial?.duration_ms != null ? String(Math.round(props.initial.duration_ms / 60_000)) : "",
-  );
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<ExamFormValues | null>(null);
   const isEdit = () => !!props.initial?.id;
+  const [settings] = createResource(() => getSettings());
+  const examKinds = createMemo(() => {
+    const names = settings()?.exam_kinds.map((item) => item.name) ?? EXAM_KINDS;
+    return names.includes(kind()) ? names : [kind(), ...names];
+  });
 
-  const validate = (starts: number | null, ends: number | null, durationMs: number | null): string | null => {
+  createEffect(() => {
+    if (isEdit()) return;
+    const names = settings()?.exam_kinds.map((item) => item.name) ?? [];
+    if (names.length > 0 && !names.includes(kind())) setKind(names[0]);
+  });
+
+  const validate = (starts: number | null, ends: number | null): string | null => {
     const value = title().trim();
     if (!value) return t("form.titleRequired");
     if (value.length > 200) return t("form.titleMax");
     if (description().length > 2000) return t("form.descriptionMax");
-    const w = Number(weight());
-    if (!Number.isInteger(w) || w < 1 || w > 100) return t("form.weightRange");
-    if (mode()) {
+    const attempts = hasRetakes() ? Number(maxAttempts()) : 1;
+    if (!Number.isInteger(attempts) || attempts < 1) return t("exams.maxAttemptsRange");
+    if (mode() === "sync" || mode() === "async") {
       if (starts == null || ends == null) return t("exams.scheduleRequired");
       if (ends <= starts) return t("form.timeOrder");
-      if (mode() === "async") {
-        if (durationMs == null) return t("exams.durationRequired");
-        if (!Number.isFinite(durationMs) || durationMs < 60_000 || durationMs > 86_400_000) {
-          return t("exams.durationRange");
-        }
-      }
     }
     return null;
   };
@@ -118,14 +122,14 @@ export function ExamForm(props: {
       if (!isEdit()) {
         setTitle("");
         setDescription("");
-        setKind("quiz");
-        setWeight("1");
+        setKind(settings()?.exam_kinds[0]?.name ?? "quiz");
         setMode("");
+        setHasRetakes(false);
+        setMaxAttempts("1");
         setStartsDate("");
         setStartsTime("");
         setEndsDate("");
         setEndsTime("");
-        setDurationMinutes("");
       }
     } catch (err) {
       setError(formatApiError(err));
@@ -136,11 +140,11 @@ export function ExamForm(props: {
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
-    const starts_at = mode() ? scheduleInputToMs(startsDate(), startsTime()) : null;
-    const ends_at = mode() ? scheduleInputToMs(endsDate(), endsTime()) : null;
-    const durationValue = Number(durationMinutes());
-    const duration_ms = mode() === "async" && Number.isFinite(durationValue) ? durationValue * 60_000 : null;
-    const v = validate(starts_at, ends_at, duration_ms);
+    const hasWindow = mode() === "sync" || mode() === "async";
+    const starts_at = hasWindow ? scheduleInputToMs(startsDate(), startsTime()) : null;
+    const ends_at = hasWindow ? scheduleInputToMs(endsDate(), endsTime()) : null;
+    const duration_ms = mode() === "async" && starts_at != null && ends_at != null ? ends_at - starts_at : null;
+    const v = validate(starts_at, ends_at);
     if (v) {
       setError(v);
       return;
@@ -149,11 +153,12 @@ export function ExamForm(props: {
       title: title().trim(),
       description: description(),
       kind: kind(),
-      weight: Number(weight()),
       mode: mode() || null,
       starts_at,
       ends_at,
       duration_ms,
+      max_attempts: hasRetakes() ? Number(maxAttempts()) : 1,
+      allow_rejoin: allowRejoin(),
     };
     if (isEdit()) {
       setPendingValues(values);
@@ -188,47 +193,64 @@ export function ExamForm(props: {
           onInput={(e) => setDescription(e.currentTarget.value)}
         />
       </div>
-      <div class="space-y-1.5">
-        <Label for="exam-kind">{t("exams.kind")}</Label>
-        <Select
-          id="exam-kind"
-          class="rounded-sm"
-          value={kind()}
-          onChange={(e) => setKind(e.currentTarget.value)}
-        >
-          <For each={UI_EXAM_KINDS}>{(k) => <option value={k}>{examKindLabel(k, t)}</option>}</For>
-        </Select>
-      </div>
       <div class="grid gap-3 sm:grid-cols-2">
         <div class="space-y-1.5">
-          <Label for="exam-weight">{t("courses.weight")}</Label>
-          <Input
-            id="exam-weight"
+          <Label for="exam-kind">{t("exams.kind")}</Label>
+          <Select
+            id="exam-kind"
             class="rounded-sm"
-            type="number"
-            min={1}
-            max={100}
-            value={weight()}
-            required
-            onInput={(e) => setWeight(e.currentTarget.value)}
-          />
+            value={kind()}
+            onChange={(e) => setKind(e.currentTarget.value)}
+          >
+            <For each={examKinds()}>{(k) => <option value={k}>{examKindLabel(k, t)}</option>}</For>
+          </Select>
         </div>
         <div class="space-y-1.5">
           <Label for="exam-mode">{t("exams.mode")}</Label>
-          <Select
-            id="exam-mode"
-            class="rounded-sm"
-            value={mode()}
-            onChange={(e) => setMode(e.currentTarget.value)}
-          >
+          <Select id="exam-mode" class="rounded-sm" value={mode()} onChange={(e) => setMode(e.currentTarget.value)}>
             <option value="">{t("exams.mode.unscheduled")}</option>
             <For each={EXAM_MODES}>
-              {(m) => <option value={m}>{m === "sync" ? t("exams.mode.sync") : t("exams.mode.async")}</option>}
+              {(m) => (
+                <option value={m}>
+                  {m === "sync" ? t("exams.mode.sync") : m === "async" ? t("exams.mode.async") : t("exams.mode.open")}
+                </option>
+              )}
             </For>
           </Select>
         </div>
       </div>
-      <Show when={mode()}>
+      <div class="grid items-end gap-3 sm:grid-cols-2">
+        <div class="space-y-1.5">
+          <label class="flex h-10 items-center gap-2 rounded-sm border bg-background/60 px-3 text-sm">
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-border"
+              checked={hasRetakes()}
+              onChange={(e) => {
+                setHasRetakes(e.currentTarget.checked);
+                if (e.currentTarget.checked && maxAttempts() === "1") setMaxAttempts("2");
+              }}
+            />
+            <span>{t("exams.retakes")}</span>
+          </label>
+        </div>
+        <Show when={hasRetakes()}>
+          <div class="space-y-1.5">
+            <Label for="exam-max-attempts">{t("exams.maxAttempts")}</Label>
+            <Input
+              id="exam-max-attempts"
+              class="rounded-sm"
+              type="number"
+              min={1}
+              step={1}
+              value={maxAttempts()}
+              required
+              onInput={(e) => setMaxAttempts(e.currentTarget.value)}
+            />
+          </div>
+        </Show>
+      </div>
+      <Show when={mode() === "sync" || mode() === "async"}>
         <div class="grid gap-3 sm:grid-cols-2">
           <div class="space-y-1.5">
             <Label for="exam-starts">{t("events.starts")}</Label>
@@ -276,22 +298,6 @@ export function ExamForm(props: {
               />
             </div>
           </div>
-        </div>
-      </Show>
-      <Show when={mode() === "async"}>
-        <div class="space-y-1.5">
-          <Label for="exam-duration">{t("exams.durationMinutes")}</Label>
-          <Input
-            id="exam-duration"
-            class="rounded-sm"
-            type="number"
-            min={1}
-            max={1440}
-            step={1}
-            value={durationMinutes()}
-            required
-            onInput={(e) => setDurationMinutes(e.currentTarget.value)}
-          />
         </div>
       </Show>
       {error() && <p class="text-sm text-destructive">{error()}</p>}
