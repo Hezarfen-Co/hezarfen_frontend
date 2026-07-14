@@ -58,7 +58,6 @@ export type ExamFormValues = {
   title: string;
   description: string;
   kind: string;
-  weight: number;
   mode: string | null;
   starts_at: number | null;
   ends_at: number | null;
@@ -75,7 +74,6 @@ export function ExamForm(props: {
   const [title, setTitle] = createSignal(props.initial?.title ?? "");
   const [description, setDescription] = createSignal(props.initial?.description ?? "");
   const [kind, setKind] = createSignal(String(props.initial?.kind && props.initial.kind !== "homework" ? props.initial.kind : "quiz"));
-  const [weight, setWeight] = createSignal(String(props.initial?.weight ?? 1));
   const [mode, setMode] = createSignal(String(props.initial?.mode ?? ""));
   const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
@@ -95,8 +93,6 @@ export function ExamForm(props: {
     if (!value) return t("form.titleRequired");
     if (value.length > 200) return t("form.titleMax");
     if (description().length > 2000) return t("form.descriptionMax");
-    const w = Number(weight());
-    if (!Number.isInteger(w) || w < 1 || w > 100) return t("form.weightRange");
     if (mode()) {
       if (starts == null || ends == null) return t("exams.scheduleRequired");
       if (ends <= starts) return t("form.timeOrder");
@@ -119,7 +115,6 @@ export function ExamForm(props: {
         setTitle("");
         setDescription("");
         setKind("quiz");
-        setWeight("1");
         setMode("");
         setStartsDate("");
         setStartsTime("");
@@ -149,7 +144,6 @@ export function ExamForm(props: {
       title: title().trim(),
       description: description(),
       kind: kind(),
-      weight: Number(weight()),
       mode: mode() || null,
       starts_at,
       ends_at,
@@ -199,20 +193,6 @@ export function ExamForm(props: {
           <For each={UI_EXAM_KINDS}>{(k) => <option value={k}>{examKindLabel(k, t)}</option>}</For>
         </Select>
       </div>
-      <div class="grid gap-3 sm:grid-cols-2">
-        <div class="space-y-1.5">
-          <Label for="exam-weight">{t("courses.weight")}</Label>
-          <Input
-            id="exam-weight"
-            class="rounded-sm"
-            type="number"
-            min={1}
-            max={100}
-            value={weight()}
-            required
-            onInput={(e) => setWeight(e.currentTarget.value)}
-          />
-        </div>
         <div class="space-y-1.5">
           <Label for="exam-mode">{t("exams.mode")}</Label>
           <Select
@@ -227,7 +207,6 @@ export function ExamForm(props: {
             </For>
           </Select>
         </div>
-      </div>
       <Show when={mode()}>
         <div class="grid gap-3 sm:grid-cols-2">
           <div class="space-y-1.5">

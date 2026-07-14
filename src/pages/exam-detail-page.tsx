@@ -36,6 +36,7 @@ import {
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
@@ -257,9 +258,9 @@ function ExamDetailContent() {
                 </Badge>
                 <Badge variant="outline" class="rounded-sm capitalize">
                   {examKindLabel(String(ex().kind), t)}
-                </Badge>
-                <Badge variant="outline" class="rounded-sm">
-                  {t("courses.weight")}: {ex().weight}
+                  <Show when={examWeight(ex()) != null}>
+                    {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
+                  </Show>
                 </Badge>
                 <Badge variant="outline" class="rounded-sm">
                   {examModeLabel(ex().mode)}

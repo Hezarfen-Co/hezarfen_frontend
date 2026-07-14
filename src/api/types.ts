@@ -74,7 +74,10 @@ export type Exam = {
   title: string;
   description: string;
   kind: ExamKind | string;
-  weight: number;
+  weight?: number | null;
+  kind_weight?: number | null;
+  type_weight?: number | null;
+  exam_type_weight?: number | null;
   mode: ExamMode | string | null;
   starts_at: number | null;
   ends_at: number | null;
@@ -132,7 +135,10 @@ export type MarkEntry = {
   exam: string;
   title: string;
   kind: string;
-  weight: number;
+  weight?: number | null;
+  kind_weight?: number | null;
+  type_weight?: number | null;
+  exam_type_weight?: number | null;
   mark: number;
   graded_by: string;
 };

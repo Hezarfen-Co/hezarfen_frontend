@@ -5,7 +5,6 @@ export type PatchExamBody = {
   title?: string | null;
   description?: string | null;
   kind?: string | null;
-  weight?: number | null;
   mode?: string | null;
   starts_at?: number | null;
   ends_at?: number | null;

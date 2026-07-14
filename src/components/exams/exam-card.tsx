@@ -4,6 +4,7 @@ import type { Exam } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -75,12 +76,12 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
           <div class="mt-4 flex flex-wrap gap-2">
             <Badge variant="outline" class="rounded-full capitalize">
               {examKindLabel(String(props.exam.kind), t)}
+              <Show when={examWeight(props.exam) != null}>
+                {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
+              </Show>
             </Badge>
             <Badge variant="outline" class="rounded-full">
               {modeLabel()}
-            </Badge>
-            <Badge variant="secondary" class="rounded-full">
-              {t("courses.weight")}: {props.exam.weight}
             </Badge>
           </div>
         </div>
