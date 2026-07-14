@@ -4,6 +4,7 @@ import type { MarksReport } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examWeight } from "@/lib/exam-weight";
 import { useT } from "@/stores/preferences-context";
 
 const round = (n: number) => (Math.round(n * 100) / 100).toString();
@@ -76,7 +77,7 @@ export function MarksReportView(props: { report: MarksReport }) {
                                 {examKindLabel(entry.kind, t)}
                               </Badge>
                             </TableCell>
-                            <TableCell class="tabular-nums">{entry.weight}</TableCell>
+                            <TableCell class="tabular-nums">{examWeight(entry) ?? "—"}</TableCell>
                             <TableCell class="font-semibold tabular-nums">{entry.mark}</TableCell>
                           </TableRow>
                         )}

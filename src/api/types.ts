@@ -1,7 +1,9 @@
 export type Role = "student" | "teacher" | "manager" | "admin";
-export type AttendanceStatus = "present" | "absent" | "late" | "excused";
-export type ExamKind = "homework" | "quiz" | "midterm" | "final" | "project" | "oral";
-export type ExamMode = "sync" | "async";
+export type CoreAttendanceStatus = "present" | "absent" | "late" | "excused";
+export type AttendanceStatus = CoreAttendanceStatus | string;
+export type KnownExamKind = "homework" | "quiz" | "midterm" | "final" | "project" | "oral";
+export type ExamKind = KnownExamKind | string;
+export type ExamMode = "sync" | "async" | "open";
 export type QuestionKind = "choice" | "text";
 export type AttemptStatus = "in_progress" | "submitted" | "expired";
 
@@ -58,6 +60,7 @@ export type Course = {
   creator: string;
   title: string;
   description: string;
+  term_id?: string | null;
 };
 
 export type Enrollment = {
@@ -74,11 +77,16 @@ export type Exam = {
   title: string;
   description: string;
   kind: ExamKind | string;
-  weight: number;
+  weight?: number | null;
+  kind_weight?: number | null;
+  type_weight?: number | null;
+  exam_type_weight?: number | null;
   mode: ExamMode | string | null;
   starts_at: number | null;
   ends_at: number | null;
   duration_ms: number | null;
+  max_attempts?: number | null;
+  allow_rejoin?: boolean | null;
 };
 
 export type ExamResult = {
@@ -104,8 +112,12 @@ export type ExamAttempt = {
   exam?: string;
   user?: PersonRef;
   status: AttemptStatus;
+  attempt?: number;
+  attempts_used?: number;
+  max_attempts?: number;
   deadline: number | null;
   remaining_ms: number | null;
+  left_at?: number | null;
   mark: number | null;
   answered: number;
   question_count: number;
@@ -132,7 +144,10 @@ export type MarkEntry = {
   exam: string;
   title: string;
   kind: string;
-  weight: number;
+  weight?: number | null;
+  kind_weight?: number | null;
+  type_weight?: number | null;
+  exam_type_weight?: number | null;
   mark: number;
   graded_by: string;
 };
@@ -177,9 +192,12 @@ export type StudentAnswerSheet = {
 
 export type LiveRosterEntry = {
   user: PersonRef;
-  status: AttemptStatus | "not_started";
+  status: AttemptStatus | "not_started" | "absent";
+  attempt?: number | null;
+  attempts_used?: number | null;
   deadline: number | null;
   remaining_ms: number | null;
+  left_at?: number | null;
   mark: number | null;
   answered: number;
   started_at?: number | null;
@@ -195,6 +213,7 @@ export type LiveMonitor = {
   counts: {
     enrolled?: number;
     not_started: number;
+    absent?: number;
     in_progress: number;
     submitted: number;
     expired: number;
@@ -202,7 +221,23 @@ export type LiveMonitor = {
   };
 };
 
-export const EXAM_KINDS: ExamKind[] = [
+export type ExamKindSetting = {
+  name: string;
+  weight: number;
+};
+
+export type GradeBand = {
+  min: number;
+  label: string;
+};
+
+export type SchoolSettings = {
+  exam_kinds: ExamKindSetting[];
+  attendance_statuses: string[];
+  grade_bands: GradeBand[];
+};
+
+export const EXAM_KINDS: KnownExamKind[] = [
   "homework",
   "quiz",
   "midterm",
@@ -211,6 +246,6 @@ export const EXAM_KINDS: ExamKind[] = [
   "oral",
 ];
 
-export const EXAM_MODES: ExamMode[] = ["sync", "async"];
+export const EXAM_MODES: ExamMode[] = ["sync", "async", "open"];
 
 export const QUESTION_KINDS: QuestionKind[] = ["choice", "text"];

@@ -168,9 +168,14 @@ export type MessageKey =
   | "exams.mode.unscheduled"
   | "exams.mode.sync"
   | "exams.mode.async"
+  | "exams.mode.open"
   | "exams.durationMinutes"
+  | "exams.durationOptional"
   | "exams.durationRequired"
   | "exams.durationRange"
+  | "exams.maxAttempts"
+  | "exams.maxAttemptsRange"
+  | "exams.retakes"
   | "exams.startTime"
   | "exams.endTime"
   | "exams.scheduleRequired"
@@ -525,9 +530,14 @@ const en: Dict = {
   "exams.mode.unscheduled": "Unscheduled / offline grading",
   "exams.mode.sync": "Sync: one fixed window",
   "exams.mode.async": "Async: personal time budget",
+  "exams.mode.open": "Open: anytime",
   "exams.durationMinutes": "Duration (minutes)",
+  "exams.durationOptional": "Duration (minutes, optional)",
   "exams.durationRequired": "Async exams need a duration",
   "exams.durationRange": "Duration must be from 1 minute to 24 hours",
+  "exams.maxAttempts": "Max attempts",
+  "exams.maxAttemptsRange": "Max attempts must be 1 or higher",
+  "exams.retakes": "Retakes",
   "exams.startTime": "Start time",
   "exams.endTime": "End time",
   "exams.scheduleRequired": "Scheduled exams need start and end times",
@@ -573,7 +583,7 @@ const en: Dict = {
   "attempt.inProgress": "In progress",
   "exams.helpTitle": "About exams",
   "exams.helpBody":
-    "Exams belong to a course. Teachers add them from the course page with a kind and weight (1–100). Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
+    "Exams belong to a course. Teachers add them from the course page with a kind; weighting is defined by the exam kind. Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
   "admin.title": "People & roles",
   "admin.subtitle": "Promote or demote accounts. You can’t change your own role.",
   "admin.username": "Username",
@@ -596,7 +606,7 @@ const en: Dict = {
     "Open an event, pick present/absent/late/excused, save attendance. Teachers can mark others.",
   "guide.step4.title": "4. Courses",
   "guide.step4.body":
-    "Teachers create a course, enroll students, then add weighted exams inside that course.",
+    "Teachers create a course, enroll students, then add exams by kind inside that course.",
   "guide.step5.title": "5. Exams",
   "guide.step5.body":
     "List all exams here. New exams are created from a course page (not from this list).",
@@ -609,10 +619,10 @@ const en: Dict = {
   "guide.tipsTitle": "Tips",
   "courses.helpTitle": "About courses",
   "courses.helpBody":
-    "A course is the classroom container. Teachers enroll students and add weighted exams here. Deleting a course removes its exams, results, and enrollments.",
+    "A course is the classroom container. Teachers enroll students and add exams here; exam kind weights drive averages. Deleting a course removes its exams, results, and enrollments.",
   "marks.helpTitle": "About the report card",
   "marks.helpBody":
-    "Course average = Σ(mark × weight) / Σ(weight) over graded exams. Overall average is the mean of non-null course averages. Ungraded exams are skipped, not zeroed.",
+    "Course average uses the weight defined on each exam kind over graded exams. Overall average is the mean of non-null course averages. Ungraded exams are skipped, not zeroed.",
   "form.title": "Title",
   "form.content": "Content",
   "form.description": "Description",
@@ -892,9 +902,14 @@ const tr: Dict = {
   "exams.mode.unscheduled": "Zamansız / çevrimdışı notlama",
   "exams.mode.sync": "Senkron: tek sabit aralık",
   "exams.mode.async": "Asenkron: kişisel süre",
+  "exams.mode.open": "Açık: her zaman",
   "exams.durationMinutes": "Süre (dakika)",
+  "exams.durationOptional": "Süre (dakika, isteğe bağlı)",
   "exams.durationRequired": "Asenkron sınav için süre gerekli",
   "exams.durationRange": "Süre 1 dakika ile 24 saat arasında olmalı",
+  "exams.maxAttempts": "Deneme hakkı",
+  "exams.maxAttemptsRange": "Deneme hakkı 1 veya daha büyük olmalı",
+  "exams.retakes": "Deneme hakkı",
   "exams.startTime": "Başlangıç saati",
   "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",
@@ -940,7 +955,7 @@ const tr: Dict = {
   "attempt.inProgress": "Devam ediyor",
   "exams.helpTitle": "Sınavlar hakkında",
   "exams.helpBody":
-    "Sınavlar bir derse aittir. Öğretmenler ders sayfasından tür ve ağırlık (1–100) ile ekler. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",
+    "Sınavlar bir derse aittir. Öğretmenler ders sayfasından tür seçerek ekler; ağırlık sınav türünde tanımlıdır. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",
   "admin.title": "Kişiler ve roller",
   "admin.subtitle": "Hesapları yükselt / düşür. Kendi rolünü değiştiremezsin.",
   "admin.username": "Kullanıcı adı",
@@ -963,7 +978,7 @@ const tr: Dict = {
     "Etkinliği aç, var/yok/geç/mazeretli seç, yoklamayı kaydet. Öğretmen başkasını işaretleyebilir.",
   "guide.step4.title": "4. Dersler",
   "guide.step4.body":
-    "Öğretmen ders oluşturur, öğrenci kaydeder, dersin içine ağırlıklı sınav ekler.",
+    "Öğretmen ders oluşturur, öğrenci kaydeder, dersin içine türe göre sınav ekler.",
   "guide.step5.title": "5. Sınavlar",
   "guide.step5.body":
     "Tüm sınavlar burada listelenir. Yeni sınav bu listeden değil, ders sayfasından eklenir.",
@@ -976,10 +991,10 @@ const tr: Dict = {
   "guide.tipsTitle": "İpuçları",
   "courses.helpTitle": "Dersler hakkında",
   "courses.helpBody":
-    "Ders, sınıf kabıdır. Öğretmen öğrenci kaydeder ve buradan ağırlıklı sınav ekler. Dersi silmek sınavları, sonuçları ve kayıtları da siler.",
+    "Ders, sınıf kabıdır. Öğretmen öğrenci kaydeder ve buradan sınav ekler; ortalamalarda sınav türü ağırlığı kullanılır. Dersi silmek sınavları, sonuçları ve kayıtları da siler.",
   "marks.helpTitle": "Karne hakkında",
   "marks.helpBody":
-    "Ders ortalaması = Σ(not × ağırlık) / Σ(ağırlık). Genel ortalama, dolu ders ortalamalarının aritmetik ortalamasıdır. Notlanmamış sınavlar sıfır sayılmaz, atlanır.",
+    "Ders ortalaması, notlanmış sınavlarda sınav türünde tanımlı ağırlıkla hesaplanır. Genel ortalama, dolu ders ortalamalarının aritmetik ortalamasıdır. Notlanmamış sınavlar sıfır sayılmaz, atlanır.",
   "form.title": "Başlık",
   "form.content": "İçerik",
   "form.description": "Açıklama",

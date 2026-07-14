@@ -35,6 +35,7 @@ import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examWeight } from "@/lib/exam-weight";
 import { hasMinRole } from "@/lib/roles";
 
 export default function CourseDetailPage() {
@@ -92,12 +93,13 @@ function CourseDetailContent() {
   const examModeLabel = (mode: string | null) => {
     if (mode === "sync") return t("exams.mode.sync");
     if (mode === "async") return t("exams.mode.async");
+    if (mode === "open") return t("exams.mode.open");
     return t("exams.unscheduled");
   };
 
   const examCount = createMemo(() => exams()?.length ?? 0);
   const rosterCount = createMemo(() => roster()?.length ?? 0);
-  const totalWeight = createMemo(() => (exams() ?? []).reduce((sum, exam) => sum + exam.weight, 0));
+  const examKindCount = createMemo(() => new Set((exams() ?? []).map((exam) => exam.kind)).size);
 
   const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
 
@@ -283,10 +285,10 @@ function CourseDetailContent() {
 
               <div class="surface-card bg-card/80 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t("courses.weight")}
+                  {t("exams.kind")}
                 </p>
-                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{totalWeight()}</p>
-                <p class="mt-1 text-xs text-muted-foreground">{t("marks.subtitle")}</p>
+                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{examKindCount()}</p>
+                <p class="mt-1 text-xs text-muted-foreground">{t("courses.exams")}</p>
               </div>
             </section>
 
@@ -353,17 +355,14 @@ function CourseDetailContent() {
                               <div class="flex flex-wrap items-center gap-2">
                                 <Badge variant="outline" class="rounded-full capitalize">
                                   {examKindLabel(String(exam.kind), t)}
+                                  <Show when={examWeight(exam) != null}>
+                                    {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
+                                  </Show>
                                 </Badge>
                                 <Badge variant="secondary" class="rounded-full">
                                   {examModeLabel(exam.mode)}
                                 </Badge>
                               </div>
-                            </div>
-                            <div class="shrink-0 rounded-lg border bg-card px-3 py-2 text-center shadow-sm">
-                              <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                {t("courses.weight")}
-                              </p>
-                              <p class="font-display text-xl font-semibold tabular-nums">{exam.weight}</p>
                             </div>
                           </Link>
                         </li>

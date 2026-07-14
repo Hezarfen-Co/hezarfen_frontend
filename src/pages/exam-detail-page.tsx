@@ -36,6 +36,7 @@ import {
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
@@ -140,9 +141,11 @@ function ExamDetailContent() {
   const examModeLabel = (mode: string | null) => {
     if (mode === "sync") return t("exams.mode.sync");
     if (mode === "async") return t("exams.mode.async");
+    if (mode === "open") return t("exams.mode.open");
     return t("exams.unscheduled");
   };
-  const isScheduled = () => exam()?.mode === "sync" || exam()?.mode === "async";
+  const isSittable = () => exam()?.mode === "sync" || exam()?.mode === "async" || exam()?.mode === "open";
+  const isScheduled = () => isSittable();
   const gradeStudents = () => {
     const graded = new Set((results() ?? []).map((row) => personId(row.user)));
     return (roster() ?? [])
@@ -194,7 +197,7 @@ function ExamDetailContent() {
                       {t("common.back")}
                     </Button>
                   </Link>
-                  <Show when={!isFinished() && !isUpcoming() && (ex().mode === "sync" || ex().mode === "async")}>
+                  <Show when={!isFinished() && !isUpcoming() && isSittable()}>
                     <Link to="/exam-room/$id" params={{ id: id() }}>
                       <Button size="sm" class="flex-1 rounded-md sm:flex-none">
                         <IconExam class="h-4 w-4" />
@@ -202,7 +205,7 @@ function ExamDetailContent() {
                       </Button>
                     </Link>
                   </Show>
-                  <Show when={isTeacherPlus() && !isUpcoming() && (ex().mode === "sync" || ex().mode === "async")}>
+                  <Show when={isTeacherPlus() && !isUpcoming() && isSittable()}>
                     <Link to="/exams/$id/live" params={{ id: id() }}>
                       <Button variant="outline" size="sm" class="flex-1 rounded-md sm:flex-none">
                         <IconEye class="h-4 w-4" />
@@ -257,9 +260,9 @@ function ExamDetailContent() {
                 </Badge>
                 <Badge variant="outline" class="rounded-sm capitalize">
                   {examKindLabel(String(ex().kind), t)}
-                </Badge>
-                <Badge variant="outline" class="rounded-sm">
-                  {t("courses.weight")}: {ex().weight}
+                  <Show when={examWeight(ex()) != null}>
+                    {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
+                  </Show>
                 </Badge>
                 <Badge variant="outline" class="rounded-sm">
                   {examModeLabel(ex().mode)}

@@ -14,7 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-function formatRemaining(ms: number): string {
+function formatRemaining(ms: number | null): string {
+  if (ms == null) return "—";
   const safe = Math.max(0, ms);
   const totalSeconds = Math.floor(safe / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -46,16 +47,16 @@ export function StudentExamRoom(props: { exam: Exam; compact?: boolean }) {
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [finishOpen, setFinishOpen] = createSignal(false);
-  const [remainingMs, setRemainingMs] = createSignal(0);
+  const [remainingMs, setRemainingMs] = createSignal<number | null>(0);
   const [roomOpen, setRoomOpen] = createSignal(false);
-  const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async");
-  const canWrite = createMemo(() => attempt()?.status === "in_progress" && remainingMs() > 0);
+  const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async" || props.exam.mode === "open");
+  const canWrite = createMemo(() => attempt()?.status === "in_progress" && (remainingMs() == null || remainingMs()! > 0));
 
   createEffect(() => {
     const current = attempt();
-    const remaining = current?.remaining_ms ?? 0;
+    const remaining = current?.remaining_ms ?? null;
     setRemainingMs(remaining);
-    if (!current || current.status !== "in_progress" || remaining <= 0) return;
+    if (!current || current.status !== "in_progress" || remaining == null || remaining <= 0) return;
     const startedAt = Date.now();
     const initial = remaining;
     const timer = window.setInterval(() => {
@@ -118,7 +119,7 @@ export function StudentExamRoom(props: { exam: Exam; compact?: boolean }) {
           <div>
             <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
             <p class="mt-1 text-sm text-muted-foreground">
-              {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : t("attempt.unscheduled")}
+              {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : props.exam.mode === "open" ? t("exams.mode.open") : t("attempt.unscheduled")}
             </p>
           </div>
           <Show when={scheduled()} fallback={<Badge variant="outline">{t("attempt.unscheduled")}</Badge>}>
@@ -200,7 +201,7 @@ export function StudentExamRoom(props: { exam: Exam; compact?: boolean }) {
   );
 }
 
-function AttemptSummary(props: { attempt: ExamAttempt; remainingMs: number }) {
+function AttemptSummary(props: { attempt: ExamAttempt; remainingMs: number | null }) {
   const t = useT();
   const { locale } = usePreferences();
   const statusLabel = () => {
