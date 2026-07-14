@@ -9,6 +9,8 @@ export type PatchExamBody = {
   starts_at?: number | null;
   ends_at?: number | null;
   duration_ms?: number | null;
+  max_attempts?: number | null;
+  allow_rejoin?: boolean | null;
 };
 
 export function patchExamById(id: string, body: PatchExamBody): Promise<Exam> {

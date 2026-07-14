@@ -93,6 +93,7 @@ function CourseDetailContent() {
   const examModeLabel = (mode: string | null) => {
     if (mode === "sync") return t("exams.mode.sync");
     if (mode === "async") return t("exams.mode.async");
+    if (mode === "open") return t("exams.mode.open");
     return t("exams.unscheduled");
   };
 

@@ -168,9 +168,14 @@ export type MessageKey =
   | "exams.mode.unscheduled"
   | "exams.mode.sync"
   | "exams.mode.async"
+  | "exams.mode.open"
   | "exams.durationMinutes"
+  | "exams.durationOptional"
   | "exams.durationRequired"
   | "exams.durationRange"
+  | "exams.maxAttempts"
+  | "exams.maxAttemptsRange"
+  | "exams.retakes"
   | "exams.startTime"
   | "exams.endTime"
   | "exams.scheduleRequired"
@@ -525,9 +530,14 @@ const en: Dict = {
   "exams.mode.unscheduled": "Unscheduled / offline grading",
   "exams.mode.sync": "Sync: one fixed window",
   "exams.mode.async": "Async: personal time budget",
+  "exams.mode.open": "Open: anytime",
   "exams.durationMinutes": "Duration (minutes)",
+  "exams.durationOptional": "Duration (minutes, optional)",
   "exams.durationRequired": "Async exams need a duration",
   "exams.durationRange": "Duration must be from 1 minute to 24 hours",
+  "exams.maxAttempts": "Max attempts",
+  "exams.maxAttemptsRange": "Max attempts must be 1 or higher",
+  "exams.retakes": "Retakes",
   "exams.startTime": "Start time",
   "exams.endTime": "End time",
   "exams.scheduleRequired": "Scheduled exams need start and end times",
@@ -892,9 +902,14 @@ const tr: Dict = {
   "exams.mode.unscheduled": "Zamansız / çevrimdışı notlama",
   "exams.mode.sync": "Senkron: tek sabit aralık",
   "exams.mode.async": "Asenkron: kişisel süre",
+  "exams.mode.open": "Açık: her zaman",
   "exams.durationMinutes": "Süre (dakika)",
+  "exams.durationOptional": "Süre (dakika, isteğe bağlı)",
   "exams.durationRequired": "Asenkron sınav için süre gerekli",
   "exams.durationRange": "Süre 1 dakika ile 24 saat arasında olmalı",
+  "exams.maxAttempts": "Deneme hakkı",
+  "exams.maxAttemptsRange": "Deneme hakkı 1 veya daha büyük olmalı",
+  "exams.retakes": "Deneme hakkı",
   "exams.startTime": "Başlangıç saati",
   "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",

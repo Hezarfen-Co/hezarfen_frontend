@@ -14,11 +14,13 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
   const modeLabel = () => {
     if (props.exam.mode === "sync") return t("exams.mode.sync");
     if (props.exam.mode === "async") return t("exams.mode.async");
+    if (props.exam.mode === "open") return t("exams.mode.open");
     return t("exams.unscheduled");
   };
 
   const status = () => {
-    if (props.exam.mode !== "sync" && props.exam.mode !== "async") return "unscheduled";
+    if (props.exam.mode !== "sync" && props.exam.mode !== "async" && props.exam.mode !== "open") return "unscheduled";
+    if (props.exam.mode === "open") return "active";
     const current = props.now ?? Date.now();
     if (props.exam.ends_at != null && props.exam.ends_at < current) return "finished";
     if (props.exam.starts_at != null && props.exam.starts_at > current) return "upcoming";
