@@ -5,11 +5,11 @@ import type { PersonRef, Role } from "./types";
 export async function getUserSearch(
   query: string,
   signal?: AbortSignal,
-  role?: Role,
+  role?: Role | Role[],
   page?: PageParams,
 ): Promise<Page<PersonRef>> {
   const params = new URLSearchParams({ q: query });
-  if (role) params.set("role", role);
+  if (role) params.set("role", Array.isArray(role) ? role.join(",") : role);
   appendPageParams(params, page);
   const data = await client<unknown>(`/users/search?${params.toString()}`, { signal });
   return normalizePage<PersonRef>(data);
