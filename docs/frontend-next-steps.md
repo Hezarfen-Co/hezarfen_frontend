@@ -65,6 +65,9 @@ Started fixes:
 - Dashboard course scope uses `GET /courses/me` for students and `GET /courses` for teacher+ visible-course scope.
 - Exam detail teacher-only data (results, statistics, roster, answer sheets, live monitor action) is limited to exam creator or manager+ instead of every teacher.
 - Course detail roster and session roll-call actions are limited to course-management rights, matching backend roster/roll-call access expectations.
+- Exams page create action appears only when the teacher/manager has at least one manageable course to receive the new exam.
+- Exam create course picker lists only manageable courses, not every visible course.
+- Exam detail defers teacher-only heavy data: statistics load when opened, questions mount when opened, and results/roster load when the results or grade workflow needs them.
 
 ## Priority 2: Pagination And Request Audit
 

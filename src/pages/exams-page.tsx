@@ -65,7 +65,7 @@ function ExamsContent() {
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
   const [page, setPage] = createSignal(0);
 
-  const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
+  const canCreate = () => hasMinRole(auth.user()?.role, "teacher") && manageableCourses().length > 0;
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const isStudent = () => auth.user()?.role === "student";
   const canEditExam = (exam: Exam) => exam.creator === auth.user()?.id || hasMinRole(auth.user()?.role, "manager");

@@ -77,46 +77,6 @@ function ExamDetailContent() {
     return e.creator === u.id || hasMinRole(u.role, "manager");
   };
 
-  const [ownResult] = createResource(
-    () => (!isTeacherPlus() ? id() : null),
-    async (examId) => {
-      if (!examId) return null;
-      try {
-        return await getExamResult(examId);
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 404) return null;
-        throw err;
-      }
-    },
-  );
-
-  const [results, { refetch: refetchResults }] = createResource(
-    () => (hasCourseManagementRights() ? id() : null),
-    async (examId) => {
-      if (!examId) return [];
-      return getExamResults(examId);
-    },
-  );
-  const [stats] = createResource(
-    () => (hasCourseManagementRights() ? id() : null),
-    async (examId) => {
-      if (!examId) return null;
-      try {
-        return await getExamStatistics(examId);
-      } catch {
-        return null;
-      }
-    },
-  );
-  const [roster] = createResource(
-    () => (hasCourseManagementRights() ? exam()?.course ?? null : null),
-    async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
-  );
-  const [mine] = createResource(
-    () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? getMyCourses() : []),
-  );
-
   const [editing, setEditing] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -132,6 +92,46 @@ function ExamDetailContent() {
     questions: false,
     results: false,
   });
+
+  const [ownResult] = createResource(
+    () => (!isTeacherPlus() ? id() : null),
+    async (examId) => {
+      if (!examId) return null;
+      try {
+        return await getExamResult(examId);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return null;
+        throw err;
+      }
+    },
+  );
+
+  const [results, { refetch: refetchResults }] = createResource(
+    () => (hasCourseManagementRights() && (openSections().results || gradeOpen() || sheetUserId()) ? id() : null),
+    async (examId) => {
+      if (!examId) return [];
+      return getExamResults(examId);
+    },
+  );
+  const [stats] = createResource(
+    () => (hasCourseManagementRights() && openSections().statistics ? id() : null),
+    async (examId) => {
+      if (!examId) return null;
+      try {
+        return await getExamStatistics(examId);
+      } catch {
+        return null;
+      }
+    },
+  );
+  const [roster] = createResource(
+    () => (hasCourseManagementRights() && gradeOpen() ? exam()?.course ?? null : null),
+    async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
+  );
+  const [mine] = createResource(
+    () => (auth.user()?.role === "student" ? true : null),
+    async (enabled) => (enabled ? getMyCourses() : []),
+  );
 
   const examStatus = () => {
     const e = exam();
@@ -420,7 +420,9 @@ function ExamDetailContent() {
                 title={t("questions.title")}
                 description={t("exams.examQuestions")}
               >
-                <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} embedded />
+                <Show when={openSections().questions}>
+                  <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} embedded />
+                </Show>
               </SectionDisclosure>
 
               <SidePanel
