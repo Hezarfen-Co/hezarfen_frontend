@@ -326,6 +326,10 @@ export type MessageKey =
   | "status.absent"
   | "status.late"
   | "status.excused"
+  | "status.presentDetail"
+  | "status.absentDetail"
+  | "status.lateDetail"
+  | "status.excusedDetail"
   | "guide.tip1"
   | "guide.tip2"
   | "guide.tip3"
@@ -807,6 +811,10 @@ const en: Dict = {
   "status.absent": "Absent",
   "status.late": "Late",
   "status.excused": "Excused",
+  "status.presentDetail": "In class",
+  "status.absentDetail": "Not attended",
+  "status.lateDetail": "Joined late",
+  "status.excusedDetail": "Excused absence",
   "guide.tip1": "TR / EN and theme live in the avatar dropdown (submenus with icons).",
   "guide.tip2": "Guide is pinned at the bottom of the sidebar, above @Hezarfen - 2026.",
   "guide.tip3": "“?” help panels start closed — open only when you need them.",
@@ -1287,6 +1295,10 @@ const tr: Dict = {
   "status.absent": "Yok",
   "status.late": "Geç",
   "status.excused": "Mazeretli",
+  "status.presentDetail": "Derste",
+  "status.absentDetail": "Katılmadı",
+  "status.lateDetail": "Geç katıldı",
+  "status.excusedDetail": "Mazeretli yok",
   "guide.tip1": "Dil ve tema avatar menüsünde (ikonlu alt menüler).",
   "guide.tip2": "Rehber, sidebar’ın altında @Hezarfen - 2026’nın hemen üstünde.",
   "guide.tip3": "“?” panelleri kapalı gelir — ihtiyaç olunca aç.",
