@@ -33,7 +33,7 @@ function ExamRoomContent() {
   const [exam] = createResource(id, (examId) => getExamById(examId));
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? getMyCourses() : []),
+    async (enabled) => (enabled ? (await getMyCourses()).items : []),
   );
   const canViewExam = () => {
     const e = exam();

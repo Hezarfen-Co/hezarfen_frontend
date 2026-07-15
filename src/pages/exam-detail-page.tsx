@@ -110,7 +110,7 @@ function ExamDetailContent() {
     () => (hasCourseManagementRights() && (openSections().results || gradeOpen() || sheetUserId()) ? id() : null),
     async (examId) => {
       if (!examId) return [];
-      return getExamResults(examId);
+      return (await getExamResults(examId)).items;
     },
   );
   const [stats] = createResource(
@@ -126,11 +126,11 @@ function ExamDetailContent() {
   );
   const [roster] = createResource(
     () => (hasCourseManagementRights() && gradeOpen() ? exam()?.course ?? null : null),
-    async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
+    async (courseId) => (courseId ? (await getCourseEnrollments(courseId)).items : []),
   );
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? getMyCourses() : []),
+    async (enabled) => (enabled ? (await getMyCourses()).items : []),
   );
 
   const examStatus = () => {

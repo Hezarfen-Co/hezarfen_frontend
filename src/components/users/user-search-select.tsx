@@ -57,7 +57,7 @@ export function UserSearchSelect(props: {
     setLoading(true);
     try {
       const data = await getUserSearch(q, abortController.signal, props.role);
-      setUsers(data);
+      setUsers(data.items);
     } catch {
       if (!abortController?.signal.aborted) setUsers([]);
     } finally {

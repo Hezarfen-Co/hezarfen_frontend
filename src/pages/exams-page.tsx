@@ -24,6 +24,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
 import { formatDateTime } from "@/lib/format";
+import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { hasMinRole } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
@@ -47,15 +48,6 @@ function ExamsContent() {
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
-  const [exams, { refetch: refetchExams }] = createResource(() => getExams());
-  const [courses] = createResource(
-    () => (auth.user()?.role && auth.user()?.role !== "student" ? true : null),
-    async (enabled) => (enabled ? getCourses() : []),
-  );
-  const [mine] = createResource(
-    () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? getMyCourses() : []),
-  );
   const [query, setQuery] = createSignal("");
   const [statusFilter, setStatusFilter] = createSignal<ExamStatus | "all">("all");
   const [courseFilter, setCourseFilter] = createSignal("all");
@@ -65,7 +57,15 @@ function ExamsContent() {
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
   const [page, setPage] = createSignal(0);
 
-  const canCreate = () => hasMinRole(auth.user()?.role, "teacher") && manageableCourses().length > 0;
+  const [courses] = createResource(
+    () => (auth.user()?.role && auth.user()?.role !== "student" ? true : null),
+    async (enabled) => (enabled ? (await getCourses()).items : []),
+  );
+  const [mine] = createResource(
+    () => (auth.user()?.role === "student" ? true : null),
+    async (enabled) => (enabled ? (await getMyCourses()).items : []),
+  );
+
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const isStudent = () => auth.user()?.role === "student";
   const canEditExam = (exam: Exam) => exam.creator === auth.user()?.id || hasMinRole(auth.user()?.role, "manager");
@@ -73,18 +73,9 @@ function ExamsContent() {
   const manageableCourses = createMemo(() =>
     visibleCourses().filter((course) => course.creator === auth.user()?.id || hasMinRole(auth.user()?.role, "manager")),
   );
+  const canCreate = () => hasMinRole(auth.user()?.role, "teacher") && manageableCourses().length > 0;
   const courseById = createMemo(() => new Map(visibleCourses().map((course) => [course.id, course])));
-  const visibleExams = createMemo(() => {
-    const all = exams() ?? [];
-    if (!isStudent()) return all;
-    const allowed = new Set(visibleCourses().map((course) => course.id));
-    return all.filter((exam) => allowed.has(exam.course));
-  });
-
-  createEffect(() => {
-    if (!createOpen() || selectedCourseId()) return;
-    setSelectedCourseId(manageableCourses()[0]?.id ?? "");
-  });
+  const courseTitle = (courseId: string) => courseById().get(courseId)?.title ?? courseId;
 
   const examStatus = (exam: Exam): ExamStatus => {
     if (exam.mode !== "sync" && exam.mode !== "async" && exam.mode !== "open") return "unscheduled";
@@ -94,6 +85,53 @@ function ExamsContent() {
     if (exam.starts_at != null && exam.starts_at > current) return "upcoming";
     return "active";
   };
+
+  const clientFilterActive = () =>
+    query().trim() !== "" || statusFilter() !== "all" || courseFilter() !== "all" || isStudent();
+
+  const filterExams = (items: Exam[]) => {
+    const allowed = isStudent() ? new Set(visibleCourses().map((course) => course.id)) : null;
+    const needle = query().trim().toLocaleLowerCase(locale());
+    return items.filter((exam) => {
+      if (allowed && !allowed.has(exam.course)) return false;
+      if (statusFilter() !== "all" && examStatus(exam) !== statusFilter()) return false;
+      if (courseFilter() !== "all" && exam.course !== courseFilter()) return false;
+      if (!needle) return true;
+      return [exam.title, exam.description, courseTitle(exam.course), examKindLabel(String(exam.kind), t)]
+        .join(" ")
+        .toLocaleLowerCase(locale())
+        .includes(needle);
+    });
+  };
+
+  const [list, { refetch: refetchExams }] = createResource(
+    () => {
+      // Do not track now() here — it ticks every second and would re-fetch forever.
+      if (isStudent() && mine() === undefined) return null;
+      return [
+        page(),
+        clientFilterActive() ? "1" : "0",
+        query(),
+        statusFilter(),
+        courseFilter(),
+        isStudent() ? "s" : "t",
+        (mine() ?? []).map((c) => c.id).join(","),
+      ].join("|");
+    },
+    async () =>
+      loadListPage({
+        page: page(),
+        pageSize: EXAM_PAGE_SIZE,
+        clientMode: clientFilterActive(),
+        fetch: getExams,
+        filter: filterExams,
+      }),
+  );
+
+  createEffect(() => {
+    if (!createOpen() || selectedCourseId()) return;
+    setSelectedCourseId(manageableCourses()[0]?.id ?? "");
+  });
 
   const statusLabel = (status: ExamStatus) => {
     if (status === "unscheduled") return t("exams.unscheduled");
@@ -108,29 +146,10 @@ function ExamsContent() {
     return "border-muted bg-muted/50 text-muted-foreground";
   };
 
-  const courseTitle = (courseId: string) => courseById().get(courseId)?.title ?? courseId;
-  const matchesQuery = (exam: Exam) => {
-    const needle = query().trim().toLocaleLowerCase(locale());
-    if (!needle) return true;
-    return [exam.title, exam.description, courseTitle(exam.course), examKindLabel(String(exam.kind), t)]
-      .join(" ")
-      .toLocaleLowerCase(locale())
-      .includes(needle);
-  };
-  const filteredExams = createMemo(() =>
-    visibleExams().filter((exam) => {
-      if (!matchesQuery(exam)) return false;
-      if (statusFilter() !== "all" && examStatus(exam) !== statusFilter()) return false;
-      if (courseFilter() !== "all" && exam.course !== courseFilter()) return false;
-      return true;
-    }),
-  );
-  const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredExams().length / EXAM_PAGE_SIZE)));
+  const total = () => list()?.total ?? 0;
+  const pageItems = () => list()?.items ?? [];
+  const totalPages = createMemo(() => pagesOf(total(), EXAM_PAGE_SIZE));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
-  const pageItems = createMemo(() => {
-    const start = safePage() * EXAM_PAGE_SIZE;
-    return filteredExams().slice(start, start + EXAM_PAGE_SIZE);
-  });
 
   const createExam = async (values: ExamFormValues) => {
     const courseId = selectedCourseId();
@@ -220,8 +239,8 @@ function ExamsContent() {
         />
 
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
-          <Show when={exams.error}>
-            <Alert variant="destructive">{formatApiError(exams.error)}</Alert>
+          <Show when={list.error}>
+            <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
           <Show when={pageItems().length > 0} fallback={<DataTableEmpty>{t("exams.empty")}</DataTableEmpty>}>
             <DataTableFrame>
@@ -274,11 +293,13 @@ function ExamsContent() {
                                   onSelect: () => void navigate({ to: "/exams/$id", params: { id: exam.id } }),
                                 },
                                 ...(isTeacherPlus() && canEditExam(exam)
-                                  ? [{
-                                      label: t("common.edit"),
-                                      icon: <IconEdit class="h-4 w-4" />,
-                                      onSelect: () => setEditingExam(exam),
-                                    }]
+                                  ? [
+                                      {
+                                        label: t("common.edit"),
+                                        icon: <IconEdit class="h-4 w-4" />,
+                                        onSelect: () => setEditingExam(exam),
+                                      },
+                                    ]
                                   : []),
                               ]}
                             />
@@ -293,14 +314,16 @@ function ExamsContent() {
           </Show>
         </Suspense>
 
-        <Show when={filteredExams().length > EXAM_PAGE_SIZE}>
+        <Show when={total() > EXAM_PAGE_SIZE}>
           <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
         </Show>
       </section>
 
       <SidePanel open={createOpen()} onOpenChange={setCreateOpen} title={t("exams.create")} description={t("exams.subtitle")}>
         <div class="mb-4 space-y-1.5">
-          <label class="text-sm font-medium" for="exam-course">{t("exams.selectCourse")}</label>
+          <label class="text-sm font-medium" for="exam-course">
+            {t("exams.selectCourse")}
+          </label>
           <Select id="exam-course" class="rounded-sm" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
             <option value="">{t("exams.selectCourse")}</option>
             <For each={manageableCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>

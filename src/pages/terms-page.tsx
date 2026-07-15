@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { deleteTermById } from "@/api/deleteTermById";
 import { getTerms } from "@/api/getTerms";
 import { patchTermById } from "@/api/patchTermById";
@@ -16,11 +16,15 @@ import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { formatDateTime } from "@/lib/format";
+import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+const TERM_PAGE_SIZE = 12;
 
 function dateInputFromMs(ms: number): string {
   const date = new Date(ms);
@@ -51,7 +55,21 @@ export default function TermsPage() {
 function TermsContent() {
   const t = useT();
   const { locale } = usePreferences();
-  const [terms, { refetch }] = createResource(() => getTerms());
+  const [page, setPage] = createSignal(0);
+  const [list, { refetch }] = createResource(
+    () => page(),
+    async (currentPage) =>
+      loadListPage({
+        page: currentPage,
+        pageSize: TERM_PAGE_SIZE,
+        clientMode: false,
+        fetch: getTerms,
+      }),
+  );
+  const total = () => list()?.total ?? 0;
+  const terms = () => list()?.items ?? [];
+  const totalPages = createMemo(() => pagesOf(total(), TERM_PAGE_SIZE));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
   const [panelOpen, setPanelOpen] = createSignal(false);
   const [name, setName] = createSignal("");
   const [starts, setStarts] = createSignal("");
@@ -142,10 +160,10 @@ function TermsContent() {
 
       <section class="data-shell space-y-4 p-4">
         <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
-          <Show when={terms.error}>
-            <ErrorAlert message={formatApiError(terms.error)} onRetry={() => void refetch()} />
+          <Show when={list.error}>
+            <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
           </Show>
-          <Show when={(terms() ?? []).length > 0} fallback={<DataTableEmpty>{t("terms.empty")}</DataTableEmpty>}>
+          <Show when={terms().length > 0} fallback={<DataTableEmpty>{t("terms.empty")}</DataTableEmpty>}>
             <DataTableFrame>
               <Table class="data-table min-w-[40rem]">
                 <TableHeader>
@@ -157,7 +175,7 @@ function TermsContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <For each={terms() ?? []}>
+                  <For each={terms()}>
                     {(term) => (
                       <TableRow>
                         <TableCell class="font-medium">{term.name}</TableCell>
@@ -187,6 +205,9 @@ function TermsContent() {
                 </TableBody>
               </Table>
             </DataTableFrame>
+            <Show when={total() > TERM_PAGE_SIZE}>
+              <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+            </Show>
           </Show>
         </Suspense>
       </section>

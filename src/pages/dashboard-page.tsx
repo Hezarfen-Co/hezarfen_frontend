@@ -89,15 +89,22 @@ function DashboardContent() {
 
   const [courses] = createResource(
     () => (role() !== "student" ? true : null),
-    async (enabled) => (enabled ? getCourses() : []),
+    async (enabled) => (enabled ? (await getCourses()).items : []),
   );
   const [myCourses] = createResource(
     () => (role() === "student" ? true : null),
-    async (enabled) => (enabled ? getMyCourses().catch(() => []) : []),
+    async (enabled) => {
+      if (!enabled) return [];
+      try {
+        return (await getMyCourses()).items;
+      } catch {
+        return [];
+      }
+    },
   );
-  const [events] = createResource(() => getEvents());
-  const [exams] = createResource(() => getExams());
-  const [notes] = createResource(() => getNotes());
+  const [events] = createResource(async () => (await getEvents()).items);
+  const [exams] = createResource(async () => (await getExams()).items);
+  const [notes] = createResource(async () => (await getNotes()).items);
   const [marks] = createResource(
     () => (role() === "student" ? true : null),
     async (enabled) => (enabled ? getMyMarks() : null),
@@ -356,12 +363,7 @@ function UpcomingTimeline(props: {
       <Show
         when={props.timeline.length > 0}
         fallback={
-          <div class="flex flex-col items-center gap-2 py-6 text-center">
-            <p class="text-sm text-muted-foreground">{props.t("dashboard.emptyEventsTitle")}</p>
-            <Link to="/events" class="text-sm font-medium text-primary hover:underline">
-              {props.t("dashboard.emptyEventsCta")}
-            </Link>
-          </div>
+          <p class="py-6 text-center text-sm text-muted-foreground">{props.t("dashboard.upcomingEmpty")}</p>
         }
       >
         <div class="space-y-3">

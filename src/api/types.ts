@@ -1,3 +1,5 @@
+export type { Page, PageParams } from "./page";
+
 export type Role = "student" | "teacher" | "manager" | "admin";
 export type CoreAttendanceStatus = "present" | "absent" | "late" | "excused";
 export type AttendanceStatus = CoreAttendanceStatus | string;

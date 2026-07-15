@@ -20,7 +20,7 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
   const t = useT();
   const [questions, { refetch }] = createResource(() => props.examId, async (examId) => {
     try {
-      return await getExamQuestions(examId);
+      return (await getExamQuestions(examId)).items;
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) return [];
       throw err;

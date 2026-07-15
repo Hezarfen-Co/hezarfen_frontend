@@ -65,8 +65,8 @@ function CourseDetailContent() {
   });
 
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
-  const [terms] = createResource(() => getTerms());
-  const [exams, { refetch: refetchExams }] = createResource(id, (courseId) => getCourseExams(courseId));
+  const [terms] = createResource(async () => (await getTerms()).items);
+  const [exams, { refetch: refetchExams }] = createResource(id, async (courseId) => (await getCourseExams(courseId)).items);
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const hasCourseManagementRights = () => {
     const c = course();
@@ -76,11 +76,11 @@ function CourseDetailContent() {
   };
   const [roster, { refetch: refetchRoster }] = createResource(
     () => (hasCourseManagementRights() ? id() : null),
-    async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
+    async (courseId) => (courseId ? (await getCourseEnrollments(courseId)).items : []),
   );
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? getMyCourses() : []),
+    async (enabled) => (enabled ? (await getMyCourses()).items : []),
   );
 
   const [editing, setEditing] = createSignal(false);

@@ -53,7 +53,7 @@ export function CourseSessionsPanel(props: {
   const { locale } = usePreferences();
   const [sessions, { refetch }] = createResource(
     () => (props.active || props.createOpen ? props.courseId : null),
-    async (courseId) => (courseId ? getCourseSessions(courseId) : []),
+    async (courseId) => (courseId ? (await getCourseSessions(courseId)).items : []),
   );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<CourseSession | null>(null);
@@ -240,7 +240,10 @@ export function CourseSessionsPanel(props: {
 
 function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
   const t = useT();
-  const [attendance, { refetch }] = createResource(() => props.sessionId, (sessionId) => getSessionAttendance(sessionId));
+  const [attendance, { refetch }] = createResource(
+    () => props.sessionId,
+    async (sessionId) => (await getSessionAttendance(sessionId)).items,
+  );
   const rows = createMemo(() => new Map((attendance() ?? []).map((row) => [row.user.id, row])));
   const [local, setLocal] = createSignal<Record<string, AttendanceStatus>>({});
   const [error, setError] = createSignal("");

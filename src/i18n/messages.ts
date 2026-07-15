@@ -151,6 +151,7 @@ export type MessageKey =
   | "dashboard.emptyEventsTitle"
   | "dashboard.emptyNotesCta"
   | "dashboard.emptyEventsCta"
+  | "dashboard.upcomingEmpty"
   | "dashboard.viewAll"
   | "dashboard.getStarted"
   | "dashboard.helpTitle"
@@ -635,6 +636,7 @@ const en: Dict = {
   "dashboard.emptyEventsTitle": "No events yet",
   "dashboard.emptyNotesCta": "Write a note",
   "dashboard.emptyEventsCta": "Browse events",
+  "dashboard.upcomingEmpty": "Nothing here.",
   "dashboard.viewAll": "View all",
   "dashboard.getStarted": "Get started",
   "dashboard.helpTitle": "Need a hand?",
@@ -1131,6 +1133,7 @@ const tr: Dict = {
   "dashboard.emptyEventsTitle": "Henüz etkinlik yok",
   "dashboard.emptyNotesCta": "Not yaz",
   "dashboard.emptyEventsCta": "Etkinliklere git",
+  "dashboard.upcomingEmpty": "Burada bir şey yok.",
   "dashboard.viewAll": "Tümünü gör",
   "dashboard.getStarted": "Başla",
   "dashboard.helpTitle": "Yardıma mı ihtiyacın var?",
