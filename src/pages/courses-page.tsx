@@ -40,7 +40,10 @@ function CoursesContent() {
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
-  const [courses, { refetch }] = createResource(() => getCourses());
+  const [courses, { refetch }] = createResource(
+    () => (auth.user()?.role && auth.user()?.role !== "student" ? true : null),
+    async (enabled) => (enabled ? getCourses() : []),
+  );
   const [terms] = createResource(() => getTerms());
   const [users] = createResource(
     () => (hasMinRole(auth.user()?.role, "manager") ? true : null),
@@ -58,6 +61,7 @@ function CoursesContent() {
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [query, setQuery] = createSignal("");
+  const [termFilter, setTermFilter] = createSignal("all");
   const [page, setPage] = createSignal(0);
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
   const isStudent = () => auth.user()?.role === "student";
@@ -69,13 +73,16 @@ function CoursesContent() {
   };
   const filteredCourses = createMemo(() => {
     const needle = query().trim().toLocaleLowerCase();
-    if (!needle) return courseList();
-    return courseList().filter((course) =>
-      [course.title, course.description, course.creator, creatorName(course.creator), termName(course.term_id)]
+    const selectedTerm = termFilter();
+    return courseList().filter((course) => {
+      if (selectedTerm === "unassigned" && course.term_id) return false;
+      if (selectedTerm !== "all" && selectedTerm !== "unassigned" && course.term_id !== selectedTerm) return false;
+      if (!needle) return true;
+      return [course.title, course.description, course.creator, creatorName(course.creator), termName(course.term_id)]
         .join(" ")
         .toLocaleLowerCase()
-        .includes(needle),
-    );
+        .includes(needle);
+    });
   });
   const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredCourses().length / COURSE_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
@@ -180,9 +187,24 @@ function CoursesContent() {
             setPage(0);
           }}
           filters={
-            <Badge variant="outline" class="mono h-9 rounded-sm px-3 uppercase tracking-[0.08em]">
-              {isStudent() ? t("courses.enrolled") : t("common.all")}
-            </Badge>
+            <div class="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" class="mono h-9 rounded-sm px-3 uppercase tracking-[0.08em]">
+                {isStudent() ? t("courses.enrolled") : t("common.all")}
+              </Badge>
+              <Select
+                class="h-9 w-full rounded-sm sm:w-44"
+                value={termFilter()}
+                aria-label={t("terms.term")}
+                onChange={(event) => {
+                  setTermFilter(event.currentTarget.value);
+                  setPage(0);
+                }}
+              >
+                <option value="all">{t("common.all")}</option>
+                <option value="unassigned">{t("terms.unassigned")}</option>
+                <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+              </Select>
+            </div>
           }
         />
 

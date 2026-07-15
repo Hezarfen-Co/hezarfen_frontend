@@ -58,6 +58,7 @@ function StudentMarksContent() {
             selectPlaceholder={t("marks.userIdentity")}
             emptyMessage={t("admin.noUsers")}
             allowManualValue
+            role="student"
           />
           <Button type="submit" class="h-9 w-full rounded-sm sm:w-auto">{t("marks.show")}</Button>
         </form>

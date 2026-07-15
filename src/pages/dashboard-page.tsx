@@ -87,8 +87,14 @@ function DashboardContent() {
   const user = () => auth.user()!;
   const role = () => user().role;
 
-  const [courses] = createResource(() => getCourses());
-  const [myCourses] = createResource(async () => getMyCourses().catch(() => []));
+  const [courses] = createResource(
+    () => (role() !== "student" ? true : null),
+    async (enabled) => (enabled ? getCourses() : []),
+  );
+  const [myCourses] = createResource(
+    () => (role() === "student" ? true : null),
+    async (enabled) => (enabled ? getMyCourses().catch(() => []) : []),
+  );
   const [events] = createResource(() => getEvents());
   const [exams] = createResource(() => getExams());
   const [notes] = createResource(() => getNotes());
@@ -114,16 +120,15 @@ function DashboardContent() {
     subtitle: event.description || t("nav.events"),
   }));
 
+  const hasGlobalDashboardScope = createMemo(() => hasMinRole(role(), "admin"));
+  const scopedCourses = createMemo(() => (role() === "student" ? myCourses() ?? [] : courses() ?? []));
+  const scopedCourseIds = createMemo(() => new Set(scopedCourses().map((course) => course.id)));
+
   const courseMap = createMemo(() => {
     const map = new Map<string, string>();
-    for (const course of courses() ?? []) map.set(course.id, course.title);
-    for (const course of myCourses() ?? []) map.set(course.id, course.title);
+    for (const course of scopedCourses()) map.set(course.id, course.title);
     return map;
   });
-
-  const hasGlobalDashboardScope = createMemo(() => hasMinRole(role(), "admin"));
-  const scopedCourses = createMemo(() => (hasGlobalDashboardScope() ? courses() ?? [] : myCourses() ?? []));
-  const scopedCourseIds = createMemo(() => new Set(scopedCourses().map((course) => course.id)));
 
   const visibleExams = createMemo(() => {
     if (hasGlobalDashboardScope()) return exams() ?? [];
@@ -133,8 +138,8 @@ function DashboardContent() {
   });
 
   const courseCount = createMemo(() => {
-    if (hasGlobalDashboardScope() && courses.loading) return null;
-    if (!hasGlobalDashboardScope() && myCourses.loading) return null;
+    if (role() === "student" && myCourses.loading) return null;
+    if (role() !== "student" && courses.loading) return null;
     return scopedCourses().length;
   });
   const totalExamsCount = createMemo(() => (exams.loading ? null : visibleExams().length));

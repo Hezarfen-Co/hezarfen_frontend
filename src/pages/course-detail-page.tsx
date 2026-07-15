@@ -68,8 +68,14 @@ function CourseDetailContent() {
   const [terms] = createResource(() => getTerms());
   const [exams, { refetch: refetchExams }] = createResource(id, (courseId) => getCourseExams(courseId));
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
+  const hasCourseManagementRights = () => {
+    const c = course();
+    const u = auth.user();
+    if (!c || !u) return false;
+    return c.creator === u.id || hasMinRole(u.role, "manager");
+  };
   const [roster, { refetch: refetchRoster }] = createResource(
-    () => (isTeacherPlus() ? id() : null),
+    () => (hasCourseManagementRights() ? id() : null),
     async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
   );
   const [mine] = createResource(
@@ -92,10 +98,7 @@ function CourseDetailContent() {
   const [removeTarget, setRemoveTarget] = createSignal<{ userId: string; userName: string } | null>(null);
 
   const canManage = () => {
-    const c = course();
-    const u = auth.user();
-    if (!c || !u) return false;
-    return c.creator === u.id || hasMinRole(u.role, "manager");
+    return hasCourseManagementRights();
   };
 
   const canViewCourse = () => {
@@ -317,6 +320,7 @@ function CourseDetailContent() {
                   excludeIds={enrolledUserIds()}
                   placeholder={t("form.selectStudent")}
                   onChange={setEnrollUserId}
+                  role="student"
                 />
                 <div class="flex flex-wrap gap-2">
                   <Button type="submit" class="rounded-sm" disabled={pending()}>
@@ -447,12 +451,13 @@ function CourseDetailContent() {
                 courseId={id()}
                 roster={roster() ?? []}
                 canManage={canManage()}
+                active={openSections().sessions}
                 createOpen={showSessionForm()}
                 onCreateOpenChange={setShowSessionForm}
               />
             </SectionDisclosure>
 
-            <Show when={isTeacherPlus()}>
+            <Show when={hasCourseManagementRights()}>
               <SectionDisclosure
                 open={openSections().roster}
                 onToggle={() => toggleSection("roster")}

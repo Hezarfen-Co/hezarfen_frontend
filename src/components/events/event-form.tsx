@@ -1,5 +1,6 @@
-import { createSignal, Show } from "solid-js";
+import { createResource, createSignal, Show } from "solid-js";
 import { formatApiError } from "@/api/client";
+import { getTime } from "@/api/getTime";
 import type { Event } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -67,6 +68,7 @@ export function EventForm(props: {
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<EventFormValues | null>(null);
+  const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
 
   const resolveTime = (date: string, time: string, touched: boolean): number | null | undefined => {
     if (isEdit && !touched) return undefined;
@@ -86,6 +88,7 @@ export function EventForm(props: {
     if (startsTouched() && (startsDate().trim() || startsTime().trim()) && starts == null) return t("form.timeOrder");
     if (endsTouched() && (endsDate().trim() || endsTime().trim()) && ends == null) return t("form.timeOrder");
     if (s != null && e != null && e < s) return t("form.timeOrder");
+    if ((!isEdit || startsTouched() || endsTouched()) && ((s != null && s < (serverTime()?.now ?? Date.now())) || (e != null && e < (serverTime()?.now ?? Date.now())))) return t("form.timePast");
     return null;
   };
 
@@ -159,12 +162,13 @@ export function EventForm(props: {
           onInput={(e) => setDescription(e.currentTarget.value)}
         />
       </div>
-      <div class="grid gap-3 sm:grid-cols-2">
+      <div class="grid gap-3">
         <div class="space-y-1.5">
           <Label for="event-starts">{t("events.starts")}</Label>
-          <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+          <div class="grid grid-cols-2 gap-2">
             <DatePicker
               id="event-starts"
+              class="h-10"
               placeholder={t("form.datePlaceholder")}
               value={startsDate()}
               onChange={(value) => {
@@ -173,9 +177,13 @@ export function EventForm(props: {
               }}
             />
             <Input
-              class="h-10 rounded-sm font-mono"
+              id="event-starts-time"
+              class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
+              inputMode="numeric"
               placeholder="09:00"
+              pattern="[0-2][0-9]:[0-5][0-9]"
               value={startsTime()}
+              aria-label={t("exams.startTime")}
               onInput={(e) => {
                 setStartsTime(e.currentTarget.value);
                 setStartsTouched(true);
@@ -188,9 +196,10 @@ export function EventForm(props: {
         </div>
         <div class="space-y-1.5">
           <Label for="event-ends">{t("events.ends")}</Label>
-          <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+          <div class="grid grid-cols-2 gap-2">
             <DatePicker
               id="event-ends"
+              class="h-10"
               placeholder={t("form.datePlaceholder")}
               value={endsDate()}
               onChange={(value) => {
@@ -199,9 +208,13 @@ export function EventForm(props: {
               }}
             />
             <Input
-              class="h-10 rounded-sm font-mono"
+              id="event-ends-time"
+              class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
+              inputMode="numeric"
               placeholder="10:00"
+              pattern="[0-2][0-9]:[0-5][0-9]"
               value={endsTime()}
+              aria-label={t("exams.endTime")}
               onInput={(e) => {
                 setEndsTime(e.currentTarget.value);
                 setEndsTouched(true);

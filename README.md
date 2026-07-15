@@ -56,20 +56,20 @@ Dashboard and table summaries must use the same role scope as the related page. 
 | `/login`, `/register` | Guests | Authentication |
 | `/` | Authenticated | Role-scoped, observation-only dashboard |
 | `/profile` | Authenticated | Edit personal info (name, email, phone, birth date) |
-| `/notes` | Student+ | Personal notes CRUD |
-| `/events`, `/events/:id` | Student+ | Event list & detail (create/edit: teacher+) |
+| `/notes` | Student+ | Personal notebook CRUD with paper-style read dialogs |
+| `/events`, `/events/:id` | Student+ | Event list & detail with search, time filters, and lazy attendance roster |
 | `/exams` | Student+ | Exam table with role-scoped course filtering |
 | `/exams/:id` | Student+ | Exam detail, questions, grading, statistics (teacher+) |
 | `/exams/:id/live` | Teacher+ | Live monitor / final state roster with pagination & sorting |
-| `/exam-room/:id` | Student+ | WebSocket-based real-time exam room (auto-save, timer, expiry) |
-| `/courses` | Student+ | Course table; create/edit flows for teacher+ |
+| `/exam-room/:id` | Student+ | WebSocket-based real-time exam room (auto-save, timer, local expiry close) |
+| `/courses` | Student+ | Course table with search and term filters; create/edit flows for teacher+ |
 | `/courses/:id` | Student+ | Course detail, exams, roster, lesson sessions, and roll call tools |
 | `/guide` | Authenticated | App usage guide |
 | `/admin/users` | Admin | User management |
 
 ## Features
 
-- **Exam lifecycle**: create (scheduled/async/unscheduled), questions (multiple-choice / text), real-time WebSocket exam room, auto-submit on expiry, teacher grading
+- **Exam lifecycle**: create (scheduled/async/unscheduled), automatic async duration from start/end, questions (multiple-choice / text), real-time WebSocket exam room, auto-close on expiry, teacher grading
 - **Live monitor**: 2-second polling during active exams, static final state view after exam ends, pagination (10/page), column sorting
 - **Statistics**: graded count, average/min/max marks on exam detail
 - **Answer sheet**: teacher review of student answers with correct/wrong highlighting
@@ -77,6 +77,9 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - **Dense tables**: toolbar search/filter, subtle column separators, narrow centered three-dot row actions
 - **Side panels**: quick create/edit workflows without losing list context
 - **Course sessions**: right-panel session creation and paginated roll call panels
+- **Schedule validation**: event, exam, and lesson-session forms use `GET /time` for server-clock-aware past-date warnings before submit
+- **Notebook**: notes render as paper-style cards, open in a paper-style read dialog, and keep create/edit/delete in dialogs with three-dot card actions
+- **Events and courses**: events keep card rendering with toolbar search and upcoming/past filters; courses use table search plus term/unassigned filters
 - **Attendance UI**: localized status labels with explanatory detail text and semantic colors
 - **Role-scoped dashboard**: read-only summaries and KPIs by current role
 - **i18n**: full Turkish / English interface
@@ -89,11 +92,13 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - Data-heavy views use `DataToolbar`, `DataTableFrame`, `.data-table`, and `TableRowActions`.
 - Large list pages should use server-side pagination/search/filtering when the backend supports it; client-side slicing is only acceptable for small or temporary datasets.
 - Date fields use the shared `DatePicker`; date-time flows pair it with an `HH:mm` input.
+- Start/end date-time rows use equal-width date and time controls.
 - Disclosure sections either defer hidden content for request savings or preserve mounted content when local state should not reset.
+- Event detail attendance roster is teacher-only and lazy-loaded when its disclosure opens.
 
 ## Docs
 
-- `docs/frontend-next-steps.md` — active backlog and role-based UI audit plan.
+- `docs/frontend-next-steps.md` — completed frontend audit summary and backend-dependent follow-ups.
 - `docs/navigation-patterns.md` — interaction, dashboard, role scope, and table action rules.
 - `docs/ui-redesign-tokens.md` — visual density, table, typography, and component conventions.
 - `docs/backend-ui-alignment-plan.md` — completed backend alignment archive.
