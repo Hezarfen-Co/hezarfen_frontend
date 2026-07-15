@@ -21,12 +21,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableFrame } from "@/components/ui/data-table";
-import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
+import { SidePanel } from "@/components/ui/side-panel";
 import {
   Table,
   TableBody,
@@ -76,6 +76,7 @@ function CourseDetailContent() {
   const [description, setDescription] = createSignal("");
   const [termId, setTermId] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
+  const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -217,12 +218,7 @@ function CourseDetailContent() {
               }}
             />
 
-            <FormDialog
-              open={editing()}
-              onOpenChange={setEditing}
-              title={t("common.edit")}
-              description={c().title}
-            >
+            <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().title}>
               <form
                 class="space-y-4"
                 onSubmit={(e) => {
@@ -263,13 +259,64 @@ function CourseDetailContent() {
                     <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
                   </Select>
                 </div>
-                <div class="flex justify-end">
-                  <Button type="submit" class="w-full sm:w-auto" disabled={pending()}>
+                <div class="flex flex-wrap gap-2">
+                  <Button type="submit" class="rounded-sm" disabled={pending()}>
                     {t("common.update")}
+                  </Button>
+                  <Button type="button" variant="outline" class="rounded-sm" onClick={() => setEditing(false)}>
+                    {t("common.cancel")}
                   </Button>
                 </div>
               </form>
-            </FormDialog>
+            </SidePanel>
+
+            <SidePanel open={showExamForm()} onOpenChange={setShowExamForm} title={t("courses.addExam")} description={c().title}>
+              <ExamForm
+                submitLabel={t("common.create")}
+                onCancel={() => setShowExamForm(false)}
+                onSubmit={async (values) => {
+                  await postCourseExam(id(), {
+                    ...values,
+                    description: values.description.trim() || undefined,
+                  });
+                  setShowExamForm(false);
+                  await refetchExams();
+                }}
+              />
+            </SidePanel>
+
+            <SidePanel open={showEnrollPanel()} onOpenChange={setShowEnrollPanel} title={t("courses.enroll")} description={c().title}>
+              <form
+                class="space-y-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void wrap(async () => {
+                    const uid = enrollUserId().trim();
+                    if (!uid) throw new Error(t("events.userId"));
+                    await postCourseEnrollment(id(), uid);
+                    setEnrollUserId("");
+                    setShowEnrollPanel(false);
+                    await refetchRoster();
+                  });
+                }}
+              >
+                <UserSearchSelect
+                  id="course-enroll-user"
+                  value={enrollUserId()}
+                  excludeIds={enrolledUserIds()}
+                  placeholder={t("form.selectStudent")}
+                  onChange={setEnrollUserId}
+                />
+                <div class="flex flex-wrap gap-2">
+                  <Button type="submit" class="rounded-sm" disabled={pending()}>
+                    {t("courses.enroll")}
+                  </Button>
+                  <Button type="button" variant="outline" class="rounded-sm" onClick={() => setShowEnrollPanel(false)}>
+                    {t("common.cancel")}
+                  </Button>
+                </div>
+              </form>
+            </SidePanel>
 
             {error() && (
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
@@ -328,29 +375,13 @@ function CourseDetailContent() {
                       variant="outline"
                       size="sm"
                       class="rounded-sm"
-                      onClick={() => setShowExamForm((v) => !v)}
+                      onClick={() => setShowExamForm(true)}
                   >
                     <IconPlus class="h-4 w-4" />
                     {t("courses.addExam")}
                   </Button>
                 </Show>
               </div>
-
-              <Show when={showExamForm() && canManage()}>
-                <div class="rounded-lg border bg-muted/25 p-4">
-                  <ExamForm
-                    submitLabel={t("common.create")}
-                    onSubmit={async (values) => {
-                      await postCourseExam(id(), {
-                        ...values,
-                        description: values.description.trim() || undefined,
-                      });
-                      setShowExamForm(false);
-                      await refetchExams();
-                    }}
-                  />
-                </div>
-              </Show>
 
               <Suspense fallback={<PageSpinner />}>
                 <Show
@@ -401,36 +432,18 @@ function CourseDetailContent() {
               <section class="data-shell space-y-4 p-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <h2 class="font-display text-lg font-semibold">{t("courses.roster")}</h2>
-                  <Badge variant="secondary" class="mono rounded-sm px-3 py-1">
-                    {rosterCount()}
-                  </Badge>
-                </div>
-                <form
-                  class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void wrap(async () => {
-                      const uid = enrollUserId().trim();
-                      if (!uid) throw new Error(t("events.userId"));
-                      await postCourseEnrollment(id(), uid);
-                      setEnrollUserId("");
-                      await refetchRoster();
-                    });
-                  }}
-                >
-                  <div class="min-w-0">
-                    <UserSearchSelect
-                      id="course-enroll-user"
-                      value={enrollUserId()}
-                      excludeIds={enrolledUserIds()}
-                      placeholder={t("form.selectStudent")}
-                      onChange={setEnrollUserId}
-                    />
+                  <div class="flex items-center gap-2">
+                    <Badge variant="secondary" class="mono rounded-sm px-3 py-1">
+                      {rosterCount()}
+                    </Badge>
+                    <Show when={canManage()}>
+                      <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowEnrollPanel(true)}>
+                        <IconPlus class="h-4 w-4" />
+                        {t("courses.enroll")}
+                      </Button>
+                    </Show>
                   </div>
-                  <Button type="submit" class="h-10 rounded-sm" disabled={pending()}>
-                    {t("courses.enroll")}
-                  </Button>
-                </form>
+                </div>
 
                 <Suspense fallback={<PageSpinner />}>
                   <Show
