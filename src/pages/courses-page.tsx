@@ -78,22 +78,29 @@ function CoursesContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader
-        accent="violet"
-        eyebrow={t("nav.courses")}
-        title={t("courses.title")}
-        description={t("courses.subtitle")}
-        actions={
-          canCreate() ? (
-            <Button type="button" onClick={() => setShowForm((v) => !v)}>
-              {showForm() ? t("common.cancel") : t("courses.create")}
-            </Button>
-          ) : undefined
-        }
-      />
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+          <span>{t("nav.group.classes")}</span>
+          <span>/</span>
+          <span>{t("nav.courses")}</span>
+        </div>
+        <PageHeader
+          accent="violet"
+          eyebrow={t("nav.courses")}
+          title={t("courses.title")}
+          description={t("courses.subtitle")}
+          actions={
+            canCreate() ? (
+              <Button type="button" size="sm" class="rounded-sm" onClick={() => setShowForm((v) => !v)}>
+                {showForm() ? t("common.cancel") : t("courses.create")}
+              </Button>
+            ) : undefined
+          }
+        />
+      </div>
 
       <Show when={canCreate() && showForm()}>
-        <form class="surface-card max-w-xl space-y-3 p-5" onSubmit={onCreate}>
+        <form class="data-shell max-w-xl space-y-3 p-4" onSubmit={onCreate}>
           <div class="space-y-1.5">
             <Label for="course-title">{t("form.title")}</Label>
             <Input
@@ -141,15 +148,24 @@ function CoursesContent() {
           }
         >
           <div class="space-y-4">
-            <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 class="font-display text-lg font-semibold">{t("courses.title")}</h2>
+                <p class="mt-1 text-sm text-muted-foreground">{courseList().length} {t("nav.courses")}</p>
+              </div>
+              <Badge variant="outline" class="mono rounded-sm uppercase tracking-[0.08em]">
+                {isStudent() ? t("courses.enrolled") : t("common.all")}
+              </Badge>
+            </div>
+            <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <For each={pageItems()}>
                 {(course) => (
                   <li>
                     <Link to="/courses/$id" params={{ id: course.id }} class="group block h-full">
-                      <article class="surface-card flex h-full min-h-44 flex-col overflow-hidden transition-all group-hover:-translate-y-0.5 group-hover:border-primary/30 group-hover:shadow-sm">
-                        <div class="border-b border-border/50 bg-gradient-to-br from-violet-500/10 via-transparent to-transparent p-4">
+                      <article class="data-shell flex h-full min-h-40 flex-col overflow-hidden transition-colors group-hover:border-primary/35">
+                        <div class="border-b border-border bg-muted/35 p-3">
                           <div class="flex items-start justify-between gap-2">
-                            <h3 class="line-clamp-2 font-display text-lg font-semibold leading-snug group-hover:text-primary">
+                            <h3 class="line-clamp-2 font-display text-base font-semibold leading-snug group-hover:text-primary">
                               {course.title}
                             </h3>
                             <Show when={enrolled().has(course.id)}>
@@ -157,19 +173,19 @@ function CoursesContent() {
                             </Show>
                           </div>
                         </div>
-                        <div class="flex flex-1 flex-col p-4">
+                        <div class="flex flex-1 flex-col p-3">
                           <Show when={course.term_id}>
                             {(tid) => (
-                              <Badge variant="outline" class="mb-3 w-fit rounded-full">
+                              <Badge variant="outline" class="mb-3 w-fit rounded-sm mono text-[11px]">
                                 {terms()?.find((term) => term.id === tid())?.name ?? t("terms.term")}
                               </Badge>
                             )}
                           </Show>
-                          <p class="line-clamp-3 flex-1 text-sm text-muted-foreground">
+                          <p class="line-clamp-3 flex-1 text-[13px] text-muted-foreground">
                             {course.description || "—"}
                           </p>
-                          <p class="mt-4 truncate text-xs text-muted-foreground">
-                            {t("common.creator")}: <span class="font-mono text-foreground">{course.creator}</span>
+                          <p class="mono mt-4 truncate text-xs text-muted-foreground">
+                            {t("common.creator")}: <span class="text-foreground">{course.creator}</span>
                           </p>
                         </div>
                       </article>

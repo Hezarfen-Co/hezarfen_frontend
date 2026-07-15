@@ -144,46 +144,43 @@ function CourseDetailContent() {
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
-            <PageHeader
-              accent="violet"
-              eyebrow={t("courses.title")}
-              title={c().title}
-              description={c().description || undefined}
-              actions={
-                <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
-                  <Link to="/courses">
-                    <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
-                      <IconChevronLeft class="h-4 w-4" />
-                      {t("common.back")}
-                    </Button>
-                  </Link>
-                  <Show when={canManage()}>
-                    <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
-                        onClick={startEdit}
-                      >
-                        <IconEdit class="h-4 w-4" />
-                        {t("common.edit")}
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                <span>{t("nav.group.classes")}</span>
+                <span>/</span>
+                <Link to="/courses" class="hover:text-foreground">{t("courses.title")}</Link>
+                <span>/</span>
+                <span class="truncate">{c().title}</span>
+              </div>
+              <PageHeader
+                accent="violet"
+                eyebrow={t("courses.title")}
+                title={c().title}
+                description={c().description || undefined}
+                actions={
+                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-card p-1 shadow-sm sm:w-auto">
+                    <Link to="/courses">
+                      <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
+                        <IconChevronLeft class="h-4 w-4" />
+                        {t("common.back")}
                       </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
-                        onClick={() => setDeleteOpen(true)}
-                      >
-                        <IconTrash class="h-4 w-4" />
-                        {t("courses.delete")}
-                      </Button>
-                    </div>
-                  </Show>
-                </div>
-              }
-            />
+                    </Link>
+                    <Show when={canManage()}>
+                      <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
+                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={startEdit}>
+                          <IconEdit class="h-4 w-4" />
+                          {t("common.edit")}
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setDeleteOpen(true)}>
+                          <IconTrash class="h-4 w-4" />
+                          {t("courses.delete")}
+                        </Button>
+                      </div>
+                    </Show>
+                  </div>
+                }
+              />
+            </div>
 
             <ConfirmDialog
               open={deleteOpen()}
@@ -278,37 +275,37 @@ function CourseDetailContent() {
             )}
 
             <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div class="surface-card bg-card/80 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div class="data-shell p-4">
+                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                   {t("courses.exams")}
                 </p>
-                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{examCount()}</p>
+                <p class="mono mt-2 text-3xl font-semibold tabular-nums">{examCount()}</p>
                 <p class="mt-1 text-xs text-muted-foreground">{t("nav.exams")}</p>
               </div>
 
               <Show when={isTeacherPlus()}>
-                <div class="surface-card bg-card/80 p-4">
-                  <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <div class="data-shell p-4">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                     {t("courses.roster")}
                   </p>
-                  <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{rosterCount()}</p>
+                  <p class="mono mt-2 text-3xl font-semibold tabular-nums">{rosterCount()}</p>
                   <p class="mt-1 text-xs text-muted-foreground">{t("courses.enroll")}</p>
                 </div>
               </Show>
 
-              <div class="surface-card bg-card/80 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div class="data-shell p-4">
+                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                   {t("exams.kind")}
                 </p>
-                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{examKindCount()}</p>
+                <p class="mono mt-2 text-3xl font-semibold tabular-nums">{examKindCount()}</p>
                 <p class="mt-1 text-xs text-muted-foreground">{t("courses.exams")}</p>
               </div>
 
-              <div class="surface-card bg-card/80 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div class="data-shell p-4">
+                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                   {t("terms.term")}
                 </p>
-                <p class="mt-2 truncate font-display text-xl font-semibold">
+                <p class="mono mt-2 truncate text-xl font-semibold">
                   {terms()?.find((term) => term.id === c().term_id)?.name ?? t("terms.unassigned")}
                 </p>
                 <p class="mt-1 text-xs text-muted-foreground">{t("terms.title")}</p>
@@ -316,7 +313,7 @@ function CourseDetailContent() {
             </section>
 
             {/* Course exams */}
-            <section class="surface-card space-y-4 p-5">
+            <section class="data-shell space-y-4 p-4">
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 class="font-display text-lg font-semibold">{t("courses.exams")}</h2>
@@ -325,11 +322,12 @@ function CourseDetailContent() {
                   </p>
                 </div>
                 <Show when={canManage()}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowExamForm((v) => !v)}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      class="rounded-sm"
+                      onClick={() => setShowExamForm((v) => !v)}
                   >
                     <IconPlus class="h-4 w-4" />
                     {t("courses.addExam")}
@@ -338,7 +336,7 @@ function CourseDetailContent() {
               </div>
 
               <Show when={showExamForm() && canManage()}>
-                <div class="rounded-lg border bg-background/60 p-4">
+                <div class="rounded-lg border bg-muted/25 p-4">
                   <ExamForm
                     submitLabel={t("common.create")}
                     onSubmit={async (values) => {
@@ -368,20 +366,20 @@ function CourseDetailContent() {
                         <li>
                           <ExamLink
                             examId={exam.id}
-                            class="group flex items-start justify-between gap-3 rounded-lg border border-border/70 bg-background/60 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/35 hover:shadow-sm"
+                            class="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/35 hover:bg-muted/40"
                           >
                             <div class="min-w-0 space-y-2">
                               <div>
                                 <p class="truncate font-medium group-hover:text-primary">{exam.title}</p>
                               </div>
                               <div class="flex flex-wrap items-center gap-2">
-                                <Badge variant="outline" class="rounded-full capitalize">
+                                <Badge variant="outline" class="rounded-sm capitalize">
                                   {examKindLabel(String(exam.kind), t)}
                                   <Show when={examWeight(exam) != null}>
                                     {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
                                   </Show>
                                 </Badge>
-                                <Badge variant="secondary" class="rounded-full">
+                                <Badge variant="secondary" class="rounded-sm">
                                   {examModeLabel(exam.mode)}
                                 </Badge>
                               </div>
@@ -399,10 +397,10 @@ function CourseDetailContent() {
 
             {/* Roster */}
             <Show when={isTeacherPlus()}>
-              <section class="surface-card space-y-4 p-5">
+              <section class="data-shell space-y-4 p-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <h2 class="font-display text-lg font-semibold">{t("courses.roster")}</h2>
-                  <Badge variant="secondary" class="rounded-full px-3 py-1">
+                  <Badge variant="secondary" class="mono rounded-sm px-3 py-1">
                     {rosterCount()}
                   </Badge>
                 </div>
@@ -428,7 +426,7 @@ function CourseDetailContent() {
                       onChange={setEnrollUserId}
                     />
                   </div>
-                  <Button type="submit" class="h-10" disabled={pending()}>
+                  <Button type="submit" class="h-10 rounded-sm" disabled={pending()}>
                     {t("courses.enroll")}
                   </Button>
                 </form>
@@ -442,8 +440,8 @@ function CourseDetailContent() {
                       </div>
                     }
                   >
-                    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-                      <Table>
+                    <div class="data-table-wrap">
+                      <Table class="data-table">
                         <TableHeader>
                           <TableRow>
                             <TableHead>{t("admin.username")}</TableHead>
@@ -458,7 +456,7 @@ function CourseDetailContent() {
                                 <TableCell class="font-medium">
                                   {row.user.display_name || row.user.username}
                                 </TableCell>
-                                <TableCell class="font-mono text-xs text-muted-foreground">
+                                <TableCell class="mono text-xs text-muted-foreground">
                                   {row.user.id}
                                 </TableCell>
                                 <TableCell class="text-right">
@@ -467,7 +465,7 @@ function CourseDetailContent() {
                                       type="button"
                                       variant="ghost"
                                       size="sm"
-                                      class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                      class="h-7 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
                                       onClick={() =>
                                         setRemoveTarget({
                                           userId: row.user.id,
