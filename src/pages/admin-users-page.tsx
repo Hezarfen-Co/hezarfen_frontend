@@ -1,4 +1,5 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { getUserById } from "@/api/getUserById";
 import { getUsers } from "@/api/getUsers";
 import { patchUserRole } from "@/api/patchUserRole";
 import { formatApiError } from "@/api/client";
@@ -43,9 +44,8 @@ function AdminUsersContent() {
     }),
     async (key) => {
       if (key.selected) {
-        const all = await getUsers();
-        const match = all.items.filter((user) => user.id === key.selected);
-        return { items: match, total: match.length };
+        const user = await getUserById(key.selected);
+        return { items: [user], total: 1 };
       }
       return loadListPage({
         page: key.page,
