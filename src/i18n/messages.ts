@@ -233,6 +233,8 @@ export type MessageKey =
   | "exams.maxAttempts"
   | "exams.maxAttemptsRange"
   | "exams.retakes"
+  | "exams.allowRejoin"
+  | "exams.allowRejoinHelp"
   | "exams.startTime"
   | "exams.endTime"
   | "exams.scheduleRequired"
@@ -731,6 +733,8 @@ const en: Dict = {
   "exams.maxAttempts": "Max attempts",
   "exams.maxAttemptsRange": "Max attempts must be 1 or higher",
   "exams.retakes": "Retakes",
+  "exams.allowRejoin": "Allow rejoin",
+  "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
   "exams.startTime": "Start time",
   "exams.endTime": "End time",
   "exams.scheduleRequired": "Scheduled exams need start and end times",
@@ -1239,6 +1243,8 @@ const tr: Dict = {
   "exams.maxAttempts": "Deneme hakkı",
   "exams.maxAttemptsRange": "Deneme hakkı 1 veya daha büyük olmalı",
   "exams.retakes": "Deneme hakkı",
+  "exams.allowRejoin": "Yeniden girişe izin ver",
+  "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
   "exams.startTime": "Başlangıç saati",
   "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",

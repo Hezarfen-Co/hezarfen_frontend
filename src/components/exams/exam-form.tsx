@@ -78,7 +78,7 @@ export function ExamForm(props: {
   const [mode, setMode] = createSignal(String(props.initial?.mode ?? ""));
   const [hasRetakes, setHasRetakes] = createSignal((props.initial?.max_attempts ?? 1) !== 1);
   const [maxAttempts, setMaxAttempts] = createSignal(String(props.initial?.max_attempts ?? 1));
-  const allowRejoin = () => props.initial?.allow_rejoin ?? true;
+  const [allowRejoin, setAllowRejoin] = createSignal(props.initial?.allow_rejoin ?? true);
   const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
   const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
@@ -132,6 +132,7 @@ export function ExamForm(props: {
         setMode("");
         setHasRetakes(false);
         setMaxAttempts("1");
+        setAllowRejoin(true);
         setStartsDate("");
         setStartsTime("");
         setEndsDate("");
@@ -165,7 +166,7 @@ export function ExamForm(props: {
       duration_ms,
       max_attempts: hasRetakes() ? Number(maxAttempts()) : 1,
       allow_rejoin: allowRejoin(),
-    };
+    } satisfies ExamFormValues;
     if (isEdit()) {
       setPendingValues(values);
       setConfirmOpen(true);
@@ -255,6 +256,18 @@ export function ExamForm(props: {
             />
           </div>
         </Show>
+      </div>
+      <div class="space-y-1.5">
+        <label class="flex h-10 items-center gap-2 rounded-sm border bg-background/60 px-3 text-sm">
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded border-border"
+            checked={allowRejoin()}
+            onChange={(e) => setAllowRejoin(e.currentTarget.checked)}
+          />
+          <span>{t("exams.allowRejoin")}</span>
+        </label>
+        <p class="text-xs text-muted-foreground">{t("exams.allowRejoinHelp")}</p>
       </div>
       <Show when={mode() === "sync" || mode() === "async"}>
         <div class="grid gap-3">

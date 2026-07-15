@@ -119,6 +119,16 @@ const examDetailRoute = createRoute({
 const examRoomRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/exam-room/$id",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (user.role !== "student") throw redirect({ to: "/" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw redirect({ to: "/login" });
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: ExamRoomPage,
 });
 
@@ -241,18 +251,48 @@ const staffWorkRoute = createRoute({
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/management/settings",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (!hasMinRole(user.role, "manager")) throw redirect({ to: "/" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw redirect({ to: "/login" });
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: SettingsPage,
 });
 
 const termsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/management/terms",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (!hasMinRole(user.role, "manager")) throw redirect({ to: "/" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw redirect({ to: "/login" });
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: TermsPage,
 });
 
 const liveMonitorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/exams/$id/live",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (!hasMinRole(user.role, "teacher")) throw redirect({ to: "/" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw redirect({ to: "/login" });
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: LiveMonitorPage,
 });
 

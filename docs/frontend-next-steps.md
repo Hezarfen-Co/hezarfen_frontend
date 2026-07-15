@@ -68,12 +68,12 @@ validation, and list filtering cleanup.
 
 ### Incomplete Product Features
 
-| Feature | API | UI | Notes |
-|---|---|---|---|
-| `allow_rejoin` | Type + body exist | No toggle; form always sends `true` | Deferred |
-| Exam weight badge | BE exam DTO has no weight | Badge never shows; needs weight derived from settings kind map | Needs BE or FE-side resolution |
-| Router `beforeLoad` | — | Still missing on live monitor, settings, terms | Consistency |
-| Exam room CTA | — | Visible to manager/admin on detail page; page itself blocks | Minor |
+| Feature | Status |
+|---|---|
+| `allow_rejoin` toggle | Done — exam form checkbox + help text |
+| Exam weight badge | Done — resolved from `GET /settings` exam_kinds by kind name |
+| Router `beforeLoad` | Done — live (teacher+), settings/terms (manager+), exam-room (student) |
+| Exam room CTA | Done — student-only on exam detail |
 
 ### Backend-Dependent Follow-Up
 

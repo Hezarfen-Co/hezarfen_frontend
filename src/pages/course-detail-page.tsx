@@ -6,6 +6,7 @@ import { getCourseById } from "@/api/getCourseById";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { getCourseExams } from "@/api/getCourseExams";
 import { getMyCourses } from "@/api/getMyCourses";
+import { getSettings } from "@/api/getSettings";
 import { getTerms } from "@/api/getTerms";
 import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
@@ -66,6 +67,7 @@ function CourseDetailContent() {
 
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
   const [terms] = createResource(async () => (await getTerms()).items);
+  const [settings] = createResource(() => getSettings());
   const [exams, { refetch: refetchExams }] = createResource(id, async (courseId) => (await getCourseExams(courseId)).items);
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const hasCourseManagementRights = () => {
@@ -414,7 +416,7 @@ function CourseDetailContent() {
                               <div class="flex flex-wrap items-center gap-2">
                                 <Badge variant="outline" class="rounded-sm capitalize">
                                   {examKindLabel(String(exam.kind), t)}
-                                  <Show when={examWeight(exam) != null}>
+                                  <Show when={examWeight(exam, settings()?.exam_kinds) != null}>
                                     {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
                                   </Show>
                                 </Badge>

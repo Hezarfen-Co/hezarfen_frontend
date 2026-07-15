@@ -8,6 +8,7 @@ import { getExamResults } from "@/api/getExamResults";
 import { getExamStatistics } from "@/api/getExamStatistics";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { getMyCourses } from "@/api/getMyCourses";
+import { getSettings } from "@/api/getSettings";
 import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
@@ -68,7 +69,9 @@ function ExamDetailContent() {
   });
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
+  const [settings] = createResource(() => getSettings());
   const isTeacherPlus = createMemo(() => hasMinRole(auth.user()?.role, "teacher"));
+  const isStudent = createMemo(() => auth.user()?.role === "student");
 
   const hasCourseManagementRights = () => {
     const e = exam();
@@ -226,7 +229,7 @@ function ExamDetailContent() {
                       {t("common.back")}
                     </Button>
                   </Link>
-                  <Show when={!isTeacherPlus() && !isFinished() && !isUpcoming() && isSittable()}>
+                  <Show when={isStudent() && !isFinished() && !isUpcoming() && isSittable()}>
                     <Link to="/exam-room/$id" params={{ id: id() }}>
                       <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
                         <IconExam class="h-4 w-4" />
@@ -289,7 +292,7 @@ function ExamDetailContent() {
                 </Badge>
                 <Badge variant="outline" class="rounded-sm capitalize">
                   {examKindLabel(String(ex().kind), t)}
-                  <Show when={examWeight(ex()) != null}>
+                  <Show when={examWeight(ex(), settings()?.exam_kinds) != null}>
                     {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
                   </Show>
                 </Badge>
