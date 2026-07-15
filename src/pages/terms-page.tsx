@@ -103,11 +103,18 @@ function TermsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader accent="violet" eyebrow={t("nav.admin")} title={t("terms.title")} description={t("terms.subtitle")} />
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+          <span>{t("nav.admin")}</span>
+          <span>/</span>
+          <span>{t("terms.title")}</span>
+        </div>
+        <PageHeader accent="violet" eyebrow={t("nav.admin")} title={t("terms.title")} description={t("terms.subtitle")} />
+      </div>
 
       {error() && <Alert variant="destructive">{error()}</Alert>}
 
-      <section class="surface-card space-y-4 p-5">
+      <section class="data-shell space-y-4 p-4">
         <h2 class="font-display text-lg font-semibold">{editing() ? t("terms.edit") : t("terms.create")}</h2>
         <form class="grid gap-3 md:grid-cols-[minmax(0,1fr)_11rem_11rem_auto]" onSubmit={save}>
           <div class="space-y-1.5">
@@ -123,12 +130,12 @@ function TermsContent() {
             <DatePicker id="term-ends" placeholder={t("form.datePlaceholder")} required value={ends()} onChange={setEnds} />
           </div>
           <div class="flex items-end gap-2">
-            <Button type="submit" disabled={pending()}>
+            <Button type="submit" class="rounded-sm" disabled={pending()}>
               <IconSave class="h-4 w-4" />
               {editing() ? t("common.update") : t("common.create")}
             </Button>
             <Show when={editing()}>
-              <Button type="button" variant="outline" onClick={resetForm}>{t("common.cancel")}</Button>
+              <Button type="button" variant="outline" class="rounded-sm" onClick={resetForm}>{t("common.cancel")}</Button>
             </Show>
           </div>
         </form>
@@ -145,19 +152,19 @@ function TermsContent() {
           <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <For each={terms() ?? []}>
               {(term) => (
-                <article class="surface-card space-y-3 p-4">
+                <article class="data-shell space-y-3 p-4">
                   <div>
                     <h3 class="font-display text-lg font-semibold">{term.name}</h3>
-                    <p class="mt-1 text-sm text-muted-foreground">
+                    <p class="mono mt-1 text-sm text-muted-foreground">
                       {formatDateTime(term.starts_at, locale())} - {formatDateTime(term.ends_at, locale())}
                     </p>
                   </div>
                   <div class="flex gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => startEdit(term)}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => startEdit(term)}>
                       <IconEdit class="h-4 w-4" />
                       {t("common.edit")}
                     </Button>
-                    <Button type="button" variant="ghost" size="sm" class="text-destructive hover:text-destructive" onClick={() => setDeleteTarget(term)}>
+                    <Button type="button" variant="ghost" size="sm" class="rounded-sm text-destructive hover:text-destructive" onClick={() => setDeleteTarget(term)}>
                       <IconTrash class="h-4 w-4" />
                       {t("common.delete")}
                     </Button>

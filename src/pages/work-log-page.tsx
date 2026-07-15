@@ -48,28 +48,35 @@ function WorkLogContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader accent="amber" eyebrow={t("nav.work")} title={t("work.title")} description={t("work.subtitle")} />
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+          <span>{t("nav.admin")}</span>
+          <span>/</span>
+          <span>{t("nav.work")}</span>
+        </div>
+        <PageHeader accent="amber" eyebrow={t("nav.work")} title={t("work.title")} description={t("work.subtitle")} />
+      </div>
 
       {error() && <Alert variant="destructive">{error()}</Alert>}
 
-      <section class="surface-card overflow-hidden p-6">
+      <section class="data-shell overflow-hidden p-4">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 class="font-display text-2xl font-semibold">{openEntry() ? t("work.checkedIn") : t("work.notCheckedIn")}</h2>
+            <h2 class="font-display text-xl font-semibold">{openEntry() ? t("work.checkedIn") : t("work.notCheckedIn")}</h2>
             <p class="mt-1 text-sm text-muted-foreground">
               <Show when={openEntry()} fallback={t("work.ready")}>{(entry) => t("work.since", { time: formatDateTime(entry().check_in, locale()) })}</Show>
             </p>
           </div>
-          <Button type="button" size="lg" variant={openEntry() ? "destructive" : "default"} disabled={pending()} onClick={() => void toggle()}>
+          <Button type="button" size="lg" class="rounded-sm" variant={openEntry() ? "destructive" : "default"} disabled={pending()} onClick={() => void toggle()}>
             {openEntry() ? t("work.checkOut") : t("work.checkIn")}
           </Button>
         </div>
       </section>
 
-      <section class="surface-card space-y-4 p-5">
+      <section class="data-shell space-y-4 p-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="font-display text-lg font-semibold">{t("work.entries")}</h2>
-          <Badge variant="secondary" class="rounded-full px-3 py-1">{entries()?.length ?? 0}</Badge>
+          <Badge variant="secondary" class="mono rounded-sm px-3 py-1">{entries()?.length ?? 0}</Badge>
         </div>
         <Suspense fallback={<PageSpinner />}>
           <Show when={entries.error}>
@@ -79,8 +86,8 @@ function WorkLogContent() {
             when={(entries() ?? []).length > 0}
             fallback={<div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("work.empty")}</div>}
           >
-            <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-              <Table>
+            <div class="data-table-wrap">
+              <Table class="data-table">
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("work.checkIn")}</TableHead>
@@ -93,11 +100,11 @@ function WorkLogContent() {
                   <For each={entries() ?? []}>
                     {(entry) => (
                       <TableRow>
-                        <TableCell>{formatDateTime(entry.check_in, locale())}</TableCell>
-                        <TableCell>{formatDateTime(entry.check_out, locale())}</TableCell>
-                        <TableCell>{formatDurationMinutes(entry.duration_ms, locale())}</TableCell>
+                        <TableCell class="mono">{formatDateTime(entry.check_in, locale())}</TableCell>
+                        <TableCell class="mono">{formatDateTime(entry.check_out, locale())}</TableCell>
+                        <TableCell class="mono">{formatDurationMinutes(entry.duration_ms, locale())}</TableCell>
                         <TableCell>
-                          <Badge variant={entry.check_out == null ? "default" : "secondary"} class="rounded-full">
+                          <Badge variant={entry.check_out == null ? "default" : "secondary"} class="rounded-sm">
                             {entry.check_out == null ? t("work.open") : t("work.closed")}
                           </Badge>
                         </TableCell>

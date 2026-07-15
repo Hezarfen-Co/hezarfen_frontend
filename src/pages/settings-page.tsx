@@ -72,7 +72,14 @@ function SettingsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader accent="violet" eyebrow={t("nav.admin")} title={t("settings.title")} description={t("settings.subtitle")} />
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+          <span>{t("nav.admin")}</span>
+          <span>/</span>
+          <span>{t("settings.title")}</span>
+        </div>
+        <PageHeader accent="violet" eyebrow={t("nav.admin")} title={t("settings.title")} description={t("settings.subtitle")} />
+      </div>
 
       {error() && <Alert variant="destructive">{error()}</Alert>}
       {saved() && <p class="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">{t("settings.saved")}</p>}
@@ -83,7 +90,7 @@ function SettingsContent() {
         </Show>
         <Show when={settings()}>
           <div class="grid gap-5 xl:grid-cols-3">
-            <section class="surface-card space-y-4 p-5">
+            <section class="data-shell space-y-4 p-4">
               <div>
                 <h2 class="font-display text-lg font-semibold">{t("settings.examKinds")}</h2>
                 <p class="mt-1 text-sm text-muted-foreground">{t("settings.examKindsHelp")}</p>
@@ -105,20 +112,20 @@ function SettingsContent() {
                         value={item.weight}
                         onInput={(e) => setExamKinds((rows) => rows.map((row, i) => (i === index() ? { ...row, weight: Number(e.currentTarget.value) } : row)))}
                       />
-                      <Button type="button" variant="ghost" size="icon" onClick={() => setExamKinds((rows) => rows.filter((_, i) => i !== index()))}>
+                      <Button type="button" variant="ghost" size="icon" class="rounded-sm" onClick={() => setExamKinds((rows) => rows.filter((_, i) => i !== index()))}>
                         <IconTrash class="h-4 w-4" />
                       </Button>
                     </div>
                   )}
                 </For>
               </div>
-              <Button type="button" variant="outline" onClick={() => setExamKinds((rows) => [...rows, { name: "", weight: 1 }])}>
+              <Button type="button" variant="outline" class="rounded-sm" onClick={() => setExamKinds((rows) => [...rows, { name: "", weight: 1 }])}>
                 <IconPlus class="h-4 w-4" />
                 {t("settings.addRow")}
               </Button>
             </section>
 
-            <section class="surface-card space-y-4 p-5">
+            <section class="data-shell space-y-4 p-4">
               <div>
                 <h2 class="font-display text-lg font-semibold">{t("settings.attendanceStatuses")}</h2>
                 <p class="mt-1 text-sm text-muted-foreground">{t("settings.attendanceHelp")}</p>
@@ -145,6 +152,7 @@ function SettingsContent() {
                         type="button"
                         variant="ghost"
                         size="icon"
+                        class="rounded-sm"
                         disabled={CORE_ATTENDANCE.has(status)}
                         onClick={() => setAttendanceStatuses((rows) => rows.filter((_, i) => i !== index()))}
                       >
@@ -154,13 +162,13 @@ function SettingsContent() {
                   )}
                 </For>
               </div>
-              <Button type="button" variant="outline" onClick={() => setAttendanceStatuses((rows) => [...rows, ""])}>
+              <Button type="button" variant="outline" class="rounded-sm" onClick={() => setAttendanceStatuses((rows) => [...rows, ""])}>
                 <IconPlus class="h-4 w-4" />
                 {t("settings.addRow")}
               </Button>
             </section>
 
-            <section class="surface-card space-y-4 p-5">
+            <section class="data-shell space-y-4 p-4">
               <div>
                 <h2 class="font-display text-lg font-semibold">{t("settings.gradeBands")}</h2>
                 <p class="mt-1 text-sm text-muted-foreground">{t("settings.gradeBandsHelp")}</p>
@@ -182,14 +190,14 @@ function SettingsContent() {
                         value={band.label}
                         onInput={(e) => setGradeBands((rows) => rows.map((row, i) => (i === index() ? { ...row, label: e.currentTarget.value } : row)))}
                       />
-                      <Button type="button" variant="ghost" size="icon" onClick={() => setGradeBands((rows) => rows.filter((_, i) => i !== index()))}>
+                      <Button type="button" variant="ghost" size="icon" class="rounded-sm" onClick={() => setGradeBands((rows) => rows.filter((_, i) => i !== index()))}>
                         <IconTrash class="h-4 w-4" />
                       </Button>
                     </div>
                   )}
                 </For>
               </div>
-              <Button type="button" variant="outline" onClick={() => setGradeBands((rows) => [...rows, { min: 0, label: "" }])}>
+              <Button type="button" variant="outline" class="rounded-sm" onClick={() => setGradeBands((rows) => [...rows, { min: 0, label: "" }])}>
                 <IconPlus class="h-4 w-4" />
                 {t("settings.addRow")}
               </Button>
@@ -197,7 +205,7 @@ function SettingsContent() {
           </div>
 
           <div class="flex justify-end">
-            <Button type="button" disabled={pending()} onClick={() => void save()}>
+            <Button type="button" class="rounded-sm" disabled={pending()} onClick={() => void save()}>
               <IconSave class="h-4 w-4" />
               {t("common.save")}
             </Button>
