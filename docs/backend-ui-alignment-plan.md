@@ -32,13 +32,13 @@ This plan covers the remaining backend features that need simple, low-complexity
 
 - Commit 1 complete in UI: live monitor shows absent count/status, attempt usage, and left timestamp; exam room summary shows attempt usage and left timestamp.
 - Commit 2 complete in UI: report card types accept grade-band fields and marks show `mark / grade` when backend sends labels.
-- Commits 3-7 remain.
+- Commit 3 complete in UI: manager settings page edits exam kinds, attendance statuses, and grade bands through `PATCH /settings`.
+- Commits 4-7 remain.
 
 ## Remaining Commit Order
 
 | Commit | Scope | Priority |
 | --- | --- | --- |
-| 3 | Settings management page | High |
 | 4 | Terms API + course term select | Medium |
 | 5 | Course sessions + roll call | Medium |
 | 6 | Attendance report page | Medium |

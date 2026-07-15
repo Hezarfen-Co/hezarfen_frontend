@@ -13,6 +13,7 @@ import {
   IconExam,
   IconGuide,
   IconHome,
+  IconEdit,
   IconNote,
   IconUsers,
 } from "@/components/ui/icons";
@@ -33,6 +34,7 @@ const MAIN_ITEMS: NavItem[] = [
   { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
   { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
   { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
+  { to: "/management/settings", labelKey: "nav.settings", Icon: IconEdit, minRole: "manager" },
   { to: "/admin/users", labelKey: "nav.users", Icon: IconUsers, minRole: "admin" },
 ];
 

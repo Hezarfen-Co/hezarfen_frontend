@@ -11,6 +11,7 @@ export type MessageKey =
   | "nav.marks"
   | "nav.users"
   | "nav.studentMarks"
+  | "nav.settings"
   | "nav.guide"
   | "nav.logout"
   | "nav.admin"
@@ -359,7 +360,22 @@ export type MessageKey =
   | "ws.ping"
   | "course.removeStudent"
   | "course.removeStudentConfirm"
-  | "events.userIdRequired";
+  | "events.userIdRequired"
+  | "settings.title"
+  | "settings.subtitle"
+  | "settings.saved"
+  | "settings.examKinds"
+  | "settings.examKindsHelp"
+  | "settings.attendanceStatuses"
+  | "settings.attendanceHelp"
+  | "settings.gradeBands"
+  | "settings.gradeBandsHelp"
+  | "settings.name"
+  | "settings.weight"
+  | "settings.status"
+  | "settings.min"
+  | "settings.label"
+  | "settings.addRow";
 
 type Dict = Record<MessageKey, string>;
 
@@ -374,6 +390,7 @@ const en: Dict = {
   "nav.marks": "Report card",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
+  "nav.settings": "Settings",
   "nav.guide": "Guide",
   "nav.admin": "Admin",
   "nav.logout": "Log out",
@@ -737,6 +754,21 @@ const en: Dict = {
   "course.removeStudent": "Remove student",
   "course.removeStudentConfirm": "Are you sure you want to remove",
   "events.userIdRequired": "Please select a student first.",
+  "settings.title": "School settings",
+  "settings.subtitle": "Manage exam kinds, attendance statuses, and grade bands.",
+  "settings.saved": "Settings saved.",
+  "settings.examKinds": "Exam kinds",
+  "settings.examKindsHelp": "Kinds and weights used in course averages.",
+  "settings.attendanceStatuses": "Attendance statuses",
+  "settings.attendanceHelp": "Core statuses stay locked; add custom statuses as needed.",
+  "settings.gradeBands": "Grade bands",
+  "settings.gradeBandsHelp": "Optional labels for mark ranges. Include a 0 band when using labels.",
+  "settings.name": "Name",
+  "settings.weight": "Weight",
+  "settings.status": "Status",
+  "settings.min": "Minimum",
+  "settings.label": "Label",
+  "settings.addRow": "Add row",
 };
 
 const tr: Dict = {
@@ -750,6 +782,7 @@ const tr: Dict = {
   "nav.marks": "Karnem",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
+  "nav.settings": "Ayarlar",
   "nav.guide": "Rehber",
   "nav.admin": "Yönetim",
   "nav.logout": "Çıkış yap",
@@ -1113,6 +1146,21 @@ const tr: Dict = {
   "course.removeStudent": "Öğrenciyi çıkar",
   "course.removeStudentConfirm": "Bu öğrenciyi çıkarmak istediğine emin misin?",
   "events.userIdRequired": "Önce bir öğrenci seçmelisin.",
+  "settings.title": "Okul ayarları",
+  "settings.subtitle": "Sınav türleri, yoklama durumları ve not bantlarını yönet.",
+  "settings.saved": "Ayarlar kaydedildi.",
+  "settings.examKinds": "Sınav türleri",
+  "settings.examKindsHelp": "Ders ortalamalarında kullanılan tür ve ağırlıklar.",
+  "settings.attendanceStatuses": "Yoklama durumları",
+  "settings.attendanceHelp": "Temel durumlar kilitli kalır; gerekirse özel durum ekle.",
+  "settings.gradeBands": "Not bantları",
+  "settings.gradeBandsHelp": "Not aralıkları için isteğe bağlı etiketler. Etiket kullanırken 0 bandı ekle.",
+  "settings.name": "Ad",
+  "settings.weight": "Ağırlık",
+  "settings.status": "Durum",
+  "settings.min": "Alt sınır",
+  "settings.label": "Etiket",
+  "settings.addRow": "Satır ekle",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };
