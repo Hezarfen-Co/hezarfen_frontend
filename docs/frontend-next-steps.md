@@ -65,6 +65,7 @@ validation, and list filtering cleanup.
 | Session edit | `patchSessionById` + edit SidePanel in course sessions |
 | Manager work log | `/management/staff-work` + get/patch/delete work APIs |
 | Work route guard | `beforeLoad` teacher+ on `/work` |
+| BE student-only gates (enroll/sit/grade/roll call) | Localized error strings for the new 400/403 messages; student-marks lookup picker filters `role=student`; exam-detail own-result gates on `isStudent()` |
 
 ### Incomplete Product Features
 

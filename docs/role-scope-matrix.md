@@ -103,7 +103,8 @@
 | `RouteGuard exactRole` | `/marks` | Student-only page (FE presentation; BE allows the own-data read) |
 | `RouteGuard minRole` | Management pages | Teacher+ or manager+ |
 | `beforeLoad` redirect (router) | Route definition | Redirects before page JS loads |
-| `!isTeacherPlus()` | In-page logic | Exam room CTA, event self-mark |
+| `isStudent()` | In-page logic | Exam room CTA, own-result section on exam detail |
+| `UserSearchSelect role="student"` | Enroll picker, student-marks lookup | Offers only students — matches the BE student-only walls |
 | `canManage()` / `hasCourseManagementRights()` | Detail pages | Course action visibility |
 | `canCreate` | List pages | Create button visibility |
 | Nav `exactRole` | Sidebar items | Student-only nav links |
