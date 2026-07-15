@@ -1,9 +1,12 @@
 import { client } from "./client";
+import { normalizePage, pageQuery, type Page, type PageParams } from "./page";
 import type { Enrollment } from "./types";
 
-export function getCourseEnrollments(
+export async function getCourseEnrollments(
   courseId: string,
+  params?: PageParams,
   signal?: AbortSignal,
-): Promise<Enrollment[]> {
-  return client<Enrollment[]>(`/courses/${courseId}/enrollments`, { signal });
+): Promise<Page<Enrollment>> {
+  const data = await client<unknown>(`/courses/${courseId}/enrollments${pageQuery(params)}`, { signal });
+  return normalizePage<Enrollment>(data);
 }

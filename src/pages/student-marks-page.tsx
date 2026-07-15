@@ -1,12 +1,15 @@
 import { Show, Suspense, createResource, createSignal } from "solid-js";
 import { getUserMarks } from "@/api/getUserMarks";
 import { formatApiError } from "@/api/client";
+import type { PersonRef } from "@/api/types";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
 export default function StudentMarksPage() {
@@ -20,8 +23,10 @@ export default function StudentMarksPage() {
 function StudentMarksContent() {
   const t = useT();
   const [userId, setUserId] = createSignal("");
+  const [selectedUser, setSelectedUser] = createSignal<PersonRef | null>(null);
   const [lookupId, setLookupId] = createSignal<string | null>(null);
-  const [report] = createResource(lookupId, async (id) => {
+  const [lookupLabel, setLookupLabel] = createSignal("");
+  const [report, { refetch }] = createResource(lookupId, async (id) => {
     if (!id) return null;
     return getUserMarks(id);
   });
@@ -47,6 +52,7 @@ function StudentMarksContent() {
             const id = userId().trim();
             if (!id) return;
             setLookupId(id);
+            setLookupLabel(personLabel(selectedUser()) === "—" ? id : personLabel(selectedUser()));
           }}
         >
           <UserSearchSelect
@@ -54,19 +60,18 @@ function StudentMarksContent() {
             label={t("marks.userIdentity")}
             value={userId()}
             onChange={setUserId}
+            onSelectUser={setSelectedUser}
             placeholder={t("common.searchPlaceholder")}
             selectPlaceholder={t("marks.userIdentity")}
-            emptyMessage={t("admin.noUsers")}
+            emptyMessage={t("form.noStudents")}
             allowManualValue
             role="student"
           />
-          <Button type="submit" class="h-9 w-full rounded-sm sm:w-auto">{t("marks.show")}</Button>
+          <Button type="submit" class="h-9 w-full rounded-lg sm:w-auto">{t("marks.show")}</Button>
         </form>
 
         <Show when={report.error}>
-          <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {formatApiError(report.error)}
-          </p>
+          <ErrorAlert message={formatApiError(report.error)} onRetry={() => void refetch()} />
         </Show>
       </section>
 
@@ -75,7 +80,7 @@ function StudentMarksContent() {
           {(r) => (
             <div class="space-y-4">
               <p class="data-shell px-4 py-3 text-sm text-muted-foreground">
-                {t("marks.forUser", { user: lookupId() ?? "" })}
+                {t("marks.forUser", { user: lookupLabel() || lookupId() || "" })}
               </p>
               <MarksReportView report={r()} />
             </div>

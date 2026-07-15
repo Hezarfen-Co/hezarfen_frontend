@@ -10,7 +10,7 @@ import { useT } from "@/stores/preferences-context";
 
 export default function MarksPage() {
   return (
-    <RouteGuard>
+    <RouteGuard exactRole="student">
       <MarksContent />
     </RouteGuard>
   );

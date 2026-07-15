@@ -10,7 +10,7 @@ import { useT } from "@/stores/preferences-context";
 
 export default function AttendancePage() {
   return (
-    <RouteGuard>
+    <RouteGuard exactRole="student">
       <AttendanceContent />
     </RouteGuard>
   );

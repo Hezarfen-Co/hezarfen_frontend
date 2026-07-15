@@ -1,3 +1,5 @@
+export type { Page, PageParams } from "./page";
+
 export type Role = "student" | "teacher" | "manager" | "admin";
 export type CoreAttendanceStatus = "present" | "absent" | "late" | "excused";
 export type AttendanceStatus = CoreAttendanceStatus | string;
@@ -60,7 +62,8 @@ export type Course = {
   creator: string;
   title: string;
   description: string;
-  term_id?: string | null;
+  /** Academic term id from API (`CourseResponse.term`). */
+  term?: string | null;
 };
 
 export type Term = {

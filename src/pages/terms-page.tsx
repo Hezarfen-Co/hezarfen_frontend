@@ -1,5 +1,4 @@
-import { For, Show, Suspense, createSignal } from "solid-js";
-import { createResource } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { deleteTermById } from "@/api/deleteTermById";
 import { getTerms } from "@/api/getTerms";
 import { patchTermById } from "@/api/patchTermById";
@@ -11,13 +10,21 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableEmpty, DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
-import { IconEdit, IconTrash } from "@/components/ui/icons";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { SidePanel } from "@/components/ui/side-panel";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { formatDateTime } from "@/lib/format";
+import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+const TERM_PAGE_SIZE = 12;
 
 function dateInputFromMs(ms: number): string {
   const date = new Date(ms);
@@ -48,7 +55,22 @@ export default function TermsPage() {
 function TermsContent() {
   const t = useT();
   const { locale } = usePreferences();
-  const [terms, { refetch }] = createResource(() => getTerms());
+  const [page, setPage] = createSignal(0);
+  const [list, { refetch }] = createResource(
+    () => page(),
+    async (currentPage) =>
+      loadListPage({
+        page: currentPage,
+        pageSize: TERM_PAGE_SIZE,
+        clientMode: false,
+        fetch: getTerms,
+      }),
+  );
+  const total = () => list()?.total ?? 0;
+  const terms = () => list()?.items ?? [];
+  const totalPages = createMemo(() => pagesOf(total(), TERM_PAGE_SIZE));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+  const [panelOpen, setPanelOpen] = createSignal(false);
   const [name, setName] = createSignal("");
   const [starts, setStarts] = createSignal("");
   const [ends, setEnds] = createSignal("");
@@ -62,6 +84,12 @@ function TermsContent() {
     setStarts("");
     setEnds("");
     setEditing(null);
+    setError("");
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setPanelOpen(true);
   };
 
   const startEdit = (term: Term) => {
@@ -69,6 +97,8 @@ function TermsContent() {
     setStarts(dateInputFromMs(term.starts_at));
     setEnds(dateInputFromMs(term.ends_at));
     setEditing(term);
+    setError("");
+    setPanelOpen(true);
   };
 
   const save = async (e: SubmitEvent) => {
@@ -93,6 +123,7 @@ function TermsContent() {
         await postTerm({ name: name().trim(), starts_at, ends_at });
       }
       resetForm();
+      setPanelOpen(false);
       await refetch();
     } catch (err) {
       setError(formatApiError(err));
@@ -109,73 +140,113 @@ function TermsContent() {
           <span>/</span>
           <span>{t("terms.title")}</span>
         </div>
-        <PageHeader accent="violet" eyebrow={t("nav.admin")} title={t("terms.title")} description={t("terms.subtitle")} />
+        <PageHeader
+          accent="violet"
+          eyebrow={t("nav.admin")}
+          title={t("terms.title")}
+          description={t("terms.subtitle")}
+          actions={
+            <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
+              <IconPlus class="h-4 w-4" />
+              {t("terms.create")}
+            </Button>
+          }
+        />
       </div>
 
-      {error() && <Alert variant="destructive">{error()}</Alert>}
+      <Show when={error() && !panelOpen()}>
+        <Alert variant="destructive">{error()}</Alert>
+      </Show>
 
       <section class="data-shell space-y-4 p-4">
-        <h2 class="font-display text-lg font-semibold">{editing() ? t("terms.edit") : t("terms.create")}</h2>
-        <form class="space-y-5" onSubmit={save}>
-          <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_12rem_12rem]">
-            <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
-              <Label for="term-name">{t("settings.name")}</Label>
-              <Input id="term-name" class="rounded-lg bg-background/80" required maxlength={100} value={name()} onInput={(e) => setName(e.currentTarget.value)} />
-            </div>
-            <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
-              <Label for="term-starts">{t("events.starts")}</Label>
-              <DatePicker id="term-starts" placeholder={t("form.datePlaceholder")} required value={starts()} onChange={setStarts} />
-            </div>
-            <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
-              <Label for="term-ends">{t("events.ends")}</Label>
-              <DatePicker id="term-ends" placeholder={t("form.datePlaceholder")} required value={ends()} onChange={setEnds} />
-            </div>
-          </div>
-          <div class="flex flex-wrap items-center justify-end gap-2 border-t border-border/80 pt-4">
-            <Show when={editing()}>
-              <Button type="button" variant="outline" class="rounded-lg" onClick={resetForm}>{t("common.cancel")}</Button>
+        <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
+          <Show when={list.error}>
+            <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
+          </Show>
+          <Show when={terms().length > 0} fallback={<DataTableEmpty>{t("terms.empty")}</DataTableEmpty>}>
+            <DataTableFrame>
+              <Table class="data-table min-w-[40rem]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("settings.name")}</TableHead>
+                    <TableHead>{t("events.starts")}</TableHead>
+                    <TableHead>{t("events.ends")}</TableHead>
+                    <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <For each={terms()}>
+                    {(term) => (
+                      <TableRow>
+                        <TableCell class="font-medium">{term.name}</TableCell>
+                        <TableCell class="mono text-sm">{formatDateTime(term.starts_at, locale())}</TableCell>
+                        <TableCell class="mono text-sm">{formatDateTime(term.ends_at, locale())}</TableCell>
+                        <TableCell>
+                          <TableRowActions
+                            label={t("common.actions")}
+                            actions={[
+                              {
+                                label: t("common.edit"),
+                                icon: <IconEdit class="h-4 w-4" />,
+                                onSelect: () => startEdit(term),
+                              },
+                              {
+                                label: t("common.delete"),
+                                icon: <IconTrash class="h-4 w-4" />,
+                                destructive: true,
+                                onSelect: () => setDeleteTarget(term),
+                              },
+                            ]}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </For>
+                </TableBody>
+              </Table>
+            </DataTableFrame>
+            <Show when={total() > TERM_PAGE_SIZE}>
+              <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
             </Show>
-            <Button type="submit" class="rounded-lg" disabled={pending()}>
+          </Show>
+        </Suspense>
+      </section>
+
+      <SidePanel
+        open={panelOpen()}
+        onOpenChange={(open) => {
+          setPanelOpen(open);
+          if (!open) resetForm();
+        }}
+        title={editing() ? t("terms.edit") : t("terms.create")}
+        description={t("terms.subtitle")}
+      >
+        <form class="space-y-4" onSubmit={save}>
+          <Show when={error()}>
+            <Alert variant="destructive">{error()}</Alert>
+          </Show>
+          <div class="space-y-1.5">
+            <Label for="term-name">{t("settings.name")}</Label>
+            <Input id="term-name" class="rounded-lg" required maxlength={100} value={name()} onInput={(e) => setName(e.currentTarget.value)} />
+          </div>
+          <div class="space-y-1.5">
+            <Label for="term-starts">{t("events.starts")}</Label>
+            <DatePicker id="term-starts" placeholder={t("form.datePlaceholder")} required value={starts()} onChange={setStarts} />
+          </div>
+          <div class="space-y-1.5">
+            <Label for="term-ends">{t("events.ends")}</Label>
+            <DatePicker id="term-ends" placeholder={t("form.datePlaceholder")} required value={ends()} onChange={setEnds} />
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setPanelOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>
               {editing() ? t("common.update") : t("common.create")}
             </Button>
           </div>
         </form>
-      </section>
-
-      <Suspense fallback={<PageSpinner />}>
-        <Show when={terms.error}>
-          <Alert variant="destructive">{formatApiError(terms.error)}</Alert>
-        </Show>
-        <Show
-          when={(terms() ?? []).length > 0}
-          fallback={<div class="rounded-md border border-dashed px-6 py-16 text-center text-sm text-muted-foreground">{t("terms.empty")}</div>}
-        >
-          <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <For each={terms() ?? []}>
-              {(term) => (
-                <article class="data-shell space-y-3 p-4">
-                  <div>
-                    <h3 class="font-display text-lg font-semibold">{term.name}</h3>
-                    <p class="mono mt-1 text-sm text-muted-foreground">
-                      {formatDateTime(term.starts_at, locale())} - {formatDateTime(term.ends_at, locale())}
-                    </p>
-                  </div>
-                  <div class="flex gap-2">
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => startEdit(term)}>
-                      <IconEdit class="h-4 w-4" />
-                      {t("common.edit")}
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={() => setDeleteTarget(term)}>
-                      <IconTrash class="h-4 w-4" />
-                      {t("common.delete")}
-                    </Button>
-                  </div>
-                </article>
-              )}
-            </For>
-          </section>
-        </Show>
-      </Suspense>
+      </SidePanel>
 
       <ConfirmDialog
         open={deleteTarget() != null}

@@ -59,7 +59,7 @@ function EventDetailContent() {
   const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
   const [attendance, { refetch: refetchAttendance }] = createResource(
     () => (isTeacherPlus() && attendanceOpen() ? id() : null),
-    async (eventId) => (eventId ? getEventAttendance(eventId) : []),
+    async (eventId) => (eventId ? (await getEventAttendance(eventId)).items : []),
   );
 
   const canManage = () => {
