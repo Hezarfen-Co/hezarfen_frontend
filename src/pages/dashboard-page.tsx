@@ -1,30 +1,74 @@
+import { For, Show, Suspense, createMemo, createResource, type JSX } from "solid-js";
 import { Link } from "@tanstack/solid-router";
-import { For, Show, Suspense, createMemo, createResource } from "solid-js";
+import { formatApiError } from "@/api/client";
+import { getCourses } from "@/api/getCourses";
 import { getEvents } from "@/api/getEvents";
 import { getExams } from "@/api/getExams";
 import { getMyCourses } from "@/api/getMyCourses";
 import { getMyMarks } from "@/api/getMyMarks";
 import { getNotes } from "@/api/getNotes";
-import { formatApiError } from "@/api/client";
-import type { Event, Exam, Note } from "@/api/types";
-import { ExamLink } from "@/components/exams/exam-link";
-import { RouteGuard } from "@/components/layout/route-guard";
+import type { Role } from "@/api/types";
 import { PageHeader } from "@/components/layout/page-header";
+import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
+  IconBook,
   IconCalendar,
+  IconChart,
+  IconClipboardCheck,
   IconExam,
   IconNote,
+  IconReportAnalytics,
+  IconSchool,
+  IconSettings,
+  IconUsers,
 } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { useAuth } from "@/stores/auth-context";
-import { usePreferences, useT } from "@/stores/preferences-context";
+import type { Locale, MessageKey } from "@/i18n/messages";
+import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
 import { formatDateTime } from "@/lib/format";
-import { cn } from "@/lib/cn";
+import { hasMinRole } from "@/lib/roles";
+import { useAuth } from "@/stores/auth-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 const PREVIEW_LIMIT = 5;
+
+interface PortalCard {
+  icon: JSX.Element;
+  titleKey: MessageKey;
+  to: string;
+  descKey: MessageKey;
+  stat: () => string | number;
+  statSuffix?: MessageKey;
+  accent: string;
+  minRole?: Role;
+}
+
+interface TimelineItem {
+  id: string;
+  type: "event" | "exam";
+  title: string;
+  at: number | null;
+  subtitle: string;
+}
+
+const ROLE_KEY: Record<Role, MessageKey> = {
+  student: "role.student",
+  teacher: "role.teacher",
+  manager: "role.manager",
+  admin: "role.admin",
+};
+
+const ROLE_BADGE_TONE: Record<Role, string> = {
+  student: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+  teacher: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+  manager: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  admin: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
+};
+
+const CHART_TONES = ["bg-violet-500", "bg-amber-500", "bg-sky-500", "bg-emerald-500", "bg-rose-500"];
 
 const roundAvg = (n: number) => (Math.round(n * 10) / 10).toString();
 
@@ -41,281 +85,378 @@ function DashboardContent() {
   const t = useT();
   const { locale } = usePreferences();
   const user = () => auth.user()!;
+  const role = () => user().role;
 
-  const [notes] = createResource(() => getNotes());
+  const [courses] = createResource(() => getCourses());
+  const [myCourses] = createResource(async () => getMyCourses().catch(() => []));
   const [events] = createResource(() => getEvents());
   const [exams] = createResource(() => getExams());
-  const [myCourses] = createResource(
-    () => (user().role === "student" ? true : null),
-    async (enabled) => (enabled ? getMyCourses() : []),
+  const [notes] = createResource(() => getNotes());
+  const [marks] = createResource(
+    () => (role() === "student" ? true : null),
+    async (enabled) => (enabled ? getMyMarks() : null),
   );
-  const [marks] = createResource(() => getMyMarks());
 
   const resourceError = createMemo(() => {
-    const e = notes.error || events.error || exams.error || myCourses.error || marks.error;
+    const e = courses.error || myCourses.error || events.error || exams.error || notes.error || marks.error;
     return e ? formatApiError(e, locale()) : null;
   });
 
-  const visibleExams = createMemo(() => {
-    const all = exams() ?? [];
-    if (user().role !== "student") return all;
-    const allowed = new Set((myCourses() ?? []).map((course) => course.id));
-    return all.filter((exam) => allowed.has(exam.course));
+  const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
+
+  const now = () => Date.now();
+
+  const eventItems = () => (events() ?? []).map((event) => ({
+    id: event.id,
+    type: "event" as const,
+    title: event.title,
+    at: event.starts_at,
+    subtitle: event.description || t("nav.events"),
+  }));
+
+  const courseMap = createMemo(() => {
+    const map = new Map<string, string>();
+    for (const course of courses() ?? []) map.set(course.id, course.title);
+    for (const course of myCourses() ?? []) map.set(course.id, course.title);
+    return map;
   });
 
-  const noteCount = createMemo(() => notes()?.length ?? 0);
-  const eventCount = createMemo(() => events()?.length ?? 0);
-  const examCount = createMemo(() => visibleExams().length);
+  const hasGlobalDashboardScope = createMemo(() => hasMinRole(role(), "admin"));
+  const scopedCourses = createMemo(() => (hasGlobalDashboardScope() ? courses() ?? [] : myCourses() ?? []));
+  const scopedCourseIds = createMemo(() => new Set(scopedCourses().map((course) => course.id)));
+
+  const visibleExams = createMemo(() => {
+    if (hasGlobalDashboardScope()) return exams() ?? [];
+    const allowed = scopedCourseIds();
+    if (allowed.size === 0) return [];
+    return (exams() ?? []).filter((exam) => allowed.has(exam.course));
+  });
+
+  const courseCount = createMemo(() => {
+    if (hasGlobalDashboardScope() && courses.loading) return null;
+    if (!hasGlobalDashboardScope() && myCourses.loading) return null;
+    return scopedCourses().length;
+  });
+  const totalExamsCount = createMemo(() => (exams.loading ? null : visibleExams().length));
+  const totalEventsCount = createMemo(() => (events.loading ? null : events()?.length ?? 0));
+  const totalNotesCount = createMemo(() => (notes.loading ? null : notes()?.length ?? 0));
+  const displayCount = (count: number | null) => count ?? "...";
+
   const overallAvg = createMemo(() => marks()?.overall_average ?? null);
 
-  const previewNotes = createMemo(() => (notes() ?? []).slice(0, PREVIEW_LIMIT));
-  const previewEvents = createMemo(() => (events() ?? []).slice(0, PREVIEW_LIMIT));
-  const previewExams = createMemo(() => visibleExams().slice(0, PREVIEW_LIMIT));
+  const timeline = createMemo<TimelineItem[]>(() => {
+    const examItems: TimelineItem[] = visibleExams().map((exam) => ({
+      id: exam.id,
+      type: "exam" as const,
+      title: exam.title,
+      at: exam.starts_at,
+      subtitle: courseMap().get(exam.course) ?? examKindLabel(String(exam.kind), t),
+    }));
+    const allItems = [...eventItems(), ...examItems];
+    const upcomingItems = allItems
+      .filter((item) => item.at != null && item.at >= now())
+      .sort((a, b) => (a.at ?? 0) - (b.at ?? 0));
+    const fallbackItems = allItems
+      .sort((a, b) => (b.at ?? 0) - (a.at ?? 0));
+    return (upcomingItems.length > 0 ? upcomingItems : fallbackItems).slice(0, PREVIEW_LIMIT);
+  });
+
+  const chartData = createMemo(() => [
+    { label: t("dashboard.stats.courses"), value: courseCount() ?? 0 },
+    { label: t("dashboard.stats.exams"), value: totalExamsCount() ?? 0 },
+    { label: t("dashboard.stats.events"), value: totalEventsCount() ?? 0 },
+  ]);
+
+  const maxChartValue = createMemo(() =>
+    Math.max(1, ...chartData().map((d) => d.value)),
+  );
+
+  const cards = createMemo(() => {
+    const roleVal = role();
+    const list: PortalCard[] = [];
+
+    if (roleVal === "student") {
+      list.push(
+        {
+          icon: <IconSchool class="h-5 w-5" />,
+          titleKey: "nav.courses",
+          to: "/courses",
+          descKey: "dashboard.portal.coursesDesc",
+          stat: () => displayCount(courseCount()),
+          statSuffix: "dashboard.records",
+          accent: "violet",
+        },
+        {
+          icon: <IconExam class="h-5 w-5" />,
+          titleKey: "nav.exams",
+          to: "/exams",
+          descKey: "dashboard.portal.examsDesc",
+          stat: () => displayCount(totalExamsCount()),
+          statSuffix: "dashboard.records",
+          accent: "amber",
+        },
+        {
+          icon: <IconCalendar class="h-5 w-5" />,
+          titleKey: "nav.events",
+          to: "/events",
+          descKey: "dashboard.portal.eventsDesc",
+          stat: () => displayCount(totalEventsCount()),
+          statSuffix: "dashboard.records",
+          accent: "sky",
+        },
+        {
+          icon: <IconReportAnalytics class="h-5 w-5" />,
+          titleKey: "nav.marks",
+          to: "/marks",
+          descKey: "dashboard.portal.marksDesc",
+          stat: () => (overallAvg() == null ? "--" : roundAvg(overallAvg()!)),
+          accent: "mint",
+        },
+        {
+          icon: <IconNote class="h-5 w-5" />,
+          titleKey: "nav.notes",
+          to: "/notes",
+          descKey: "dashboard.portal.notesDesc",
+          stat: () => displayCount(totalNotesCount()),
+          statSuffix: "dashboard.records",
+          accent: "rose",
+        },
+      );
+    }
+
+    if (roleVal === "teacher") {
+      list.push(
+        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: () => displayCount(courseCount()), statSuffix: "dashboard.records", accent: "violet" },
+        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: () => displayCount(totalExamsCount()), statSuffix: "dashboard.records", accent: "amber" },
+        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: () => displayCount(totalEventsCount()), statSuffix: "dashboard.records", accent: "sky", minRole: "teacher" },
+        { icon: <IconChart class="h-5 w-5" />, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", stat: () => "", accent: "mint", minRole: "teacher" },
+        { icon: <IconClipboardCheck class="h-5 w-5" />, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", stat: () => "", accent: "rose", minRole: "teacher" },
+        { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: () => displayCount(totalNotesCount()), statSuffix: "dashboard.records", accent: "sky" },
+        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", stat: () => "", accent: "amber", minRole: "teacher" },
+      );
+    }
+
+    if (hasMinRole(roleVal, "manager")) {
+      list.unshift(
+        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: () => displayCount(courseCount()), statSuffix: "dashboard.records", accent: "violet" },
+        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: () => displayCount(totalExamsCount()), statSuffix: "dashboard.records", accent: "amber" },
+        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: () => displayCount(totalEventsCount()), statSuffix: "dashboard.records", accent: "sky" },
+        { icon: <IconSettings class="h-5 w-5" />, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", stat: () => "", accent: "mint", minRole: "manager" },
+        { icon: <IconBook class="h-5 w-5" />, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", stat: () => "", accent: "rose", minRole: "manager" },
+      );
+      if (roleVal === "admin") {
+        list.push(
+          { icon: <IconUsers class="h-5 w-5" />, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", stat: () => "", accent: "rose", minRole: "admin" },
+        );
+      }
+    }
+
+    return list;
+  });
 
   return (
     <div class="space-y-5">
-      <PageHeader
-        compact
-        accent="mint"
-        title={t("dashboard.greeting", { name: user().username })}
-        description={t("dashboard.subtitle")}
-      />
+      <PageHeader compact accent="mint" title={t("dashboard.greeting", { name: fullName() })}>
+        <div class="flex items-center gap-2">
+          <Badge variant="outline" class="rounded-sm bg-background/60 text-xs font-medium">
+            {t(ROLE_KEY[role()])}
+          </Badge>
+          <span class="text-xs text-muted-foreground">
+            {formatDateTime(Date.now(), locale()).split(",")[0]}
+          </span>
+        </div>
+      </PageHeader>
 
       <Show when={resourceError()}>
         {(msg) => <Alert variant="destructive">{msg()}</Alert>}
       </Show>
 
-      {/* KPIs below actions */}
       <Suspense fallback={<PageSpinner />}>
-        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <StatTile
-            label={t("dashboard.stats.notes")}
-            value={String(noteCount())}
-            hint={t("nav.notes")}
-            tone="mint"
-            to="/notes"
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <For each={cards()}>{(card) => <PortalCard card={card} />}</For>
+        </div>
+
+        <div class="grid gap-4 lg:grid-cols-2">
+          <UpcomingTimeline timeline={timeline()} locale={locale()} t={t} />
+          <ActivityChart
+            label={t("dashboard.activityGraph")}
+            items={chartData()}
+            maxValue={maxChartValue()}
           />
-          <StatTile
-            label={t("dashboard.stats.events")}
-            value={String(eventCount())}
-            hint={t("nav.events")}
-            tone="sky"
-            to="/events"
-          />
-          <StatTile
-            label={t("dashboard.stats.exams")}
-            value={String(examCount())}
-            hint={t("nav.exams")}
-            tone="amber"
-            to="/exams"
-          />
-          <StatTile
-            label={t("dashboard.stats.average")}
-            value={overallAvg() == null ? "—" : roundAvg(overallAvg()!)}
-            hint={t("dashboard.stats.averageHint")}
-            tone="violet"
-            to="/marks"
-            suffix={overallAvg() == null ? undefined : "/100"}
-          />
-        </section>
+        </div>
       </Suspense>
-
-      {/* Summaries */}
-      <section class="grid items-stretch gap-4 lg:grid-cols-3">
-        <div class="data-shell flex min-h-[18rem] flex-col overflow-hidden">
-          <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
-            <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.recentNotes")}</h2>
-          </div>
-          <div class="flex flex-1 p-4 sm:p-5">
-          <Suspense fallback={<PageSpinner />}>
-            <Show
-              when={previewNotes().length > 0}
-              fallback={
-                <EmptyPanel
-                  icon={<IconNote class="h-6 w-6" />}
-                  title={t("dashboard.emptyNotesTitle")}
-                  description={t("dashboard.noNotes")}
-                  tone="amber"
-                />
-              }
-            >
-              <ul class="flex flex-1 flex-col divide-y divide-border/70">
-                <For each={previewNotes()}>
-                  {(note: Note) => (
-                    <li class="flex min-h-[3.5rem] items-start gap-3 py-3 first:pt-0">
-                      <div class="min-w-0 flex-1">
-                        <p class="truncate text-sm font-medium">{note.title}</p>
-                        <p class="truncate text-xs text-muted-foreground">
-                          {note.content || t("notes.noContent")}
-                        </p>
-                      </div>
-                    </li>
-                  )}
-                </For>
-              </ul>
-            </Show>
-          </Suspense>
-          </div>
-        </div>
-
-        <div class="data-shell flex min-h-[18rem] flex-col overflow-hidden">
-          <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
-            <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.upcomingEvents")}</h2>
-          </div>
-          <div class="flex flex-1 p-4 sm:p-5">
-          <Suspense fallback={<PageSpinner />}>
-            <Show
-              when={previewEvents().length > 0}
-              fallback={
-                <EmptyPanel
-                  icon={<IconCalendar class="h-6 w-6" />}
-                  title={t("dashboard.emptyEventsTitle")}
-                  description={t("dashboard.noEvents")}
-                  tone="sky"
-                />
-              }
-            >
-              <ul class="flex flex-1 flex-col gap-2">
-                <For each={previewEvents()}>
-                  {(event: Event) => (
-                    <li>
-                      <Link
-                        to="/events/$id"
-                        params={{ id: event.id }}
-                         class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-muted/45"
-                      >
-                        <div class="min-w-0">
-                          <p class="truncate text-sm font-medium">{event.title}</p>
-                          <p class="text-xs text-muted-foreground">
-                            {formatDateTime(event.starts_at, locale())}
-                          </p>
-                        </div>
-                        <span class="text-primary" aria-hidden>
-                          →
-                        </span>
-                      </Link>
-                    </li>
-                  )}
-                </For>
-              </ul>
-            </Show>
-          </Suspense>
-          </div>
-        </div>
-
-        <div class="data-shell flex min-h-[18rem] flex-col overflow-hidden">
-          <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
-            <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.myExams")}</h2>
-          </div>
-          <div class="flex flex-1 p-4 sm:p-5">
-          <Suspense fallback={<PageSpinner />}>
-            <Show
-              when={previewExams().length > 0}
-              fallback={
-                <EmptyPanel
-                  icon={<IconExam class="h-6 w-6" />}
-                  title={t("dashboard.emptyExamsTitle")}
-                  description={t("exams.empty")}
-                  tone="rose"
-                />
-              }
-            >
-              <ul class="flex flex-1 flex-col gap-2">
-                <For each={previewExams()}>
-                  {(exam: Exam) => (
-                    <li>
-                      <ExamLink
-                        examId={exam.id}
-                         class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-muted/45"
-                      >
-                        <div class="min-w-0">
-                          <p class="truncate text-sm font-medium">{exam.title}</p>
-                          <p class="truncate text-xs text-muted-foreground">
-                            {exam.description || "—"}
-                          </p>
-                        </div>
-                        <Badge variant="outline" class="shrink-0 rounded-sm capitalize">
-                            {examKindLabel(String(exam.kind), t)}
-                          </Badge>
-                        </ExamLink>
-                      </li>
-                    )}
-                  </For>
-                </ul>
-              </Show>
-            </Suspense>
-          </div>
-        </div>
-      </section>
-
     </div>
   );
 }
 
-function StatTile(props: {
-  label: string;
-  value: string;
-  hint: string;
-  tone: "mint" | "sky" | "amber" | "violet";
-  to?: string;
-  suffix?: string;
-}) {
-  const tones = {
-    mint: "text-emerald-700 dark:text-emerald-300",
-    sky: "text-sky-700 dark:text-sky-300",
-    amber: "text-amber-700 dark:text-amber-300",
-    violet: "text-violet-700 dark:text-violet-300",
+function PortalCard(props: { card: PortalCard }) {
+  const t = useT();
+  const { icon, titleKey, to, descKey, stat, statSuffix, accent, minRole } = props.card;
+  const statValue = stat();
+
+  const iconAccentMap: Record<string, string> = {
+    violet: "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+    amber: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    sky: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    mint: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    rose: "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300",
   };
 
-  const inner = (
-    <div class="data-shell h-full min-h-[5.5rem] p-4 transition-colors duration-150 hover:border-primary/35">
-      <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{props.label}</p>
-      <p class={cn("mono mt-1.5 text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl", tones[props.tone])}>
-        {props.value}
-        <Show when={props.suffix}>
-          <span class="text-sm font-medium text-muted-foreground"> {props.suffix}</span>
-        </Show>
-      </p>
-      <p class="mt-1 text-xs text-muted-foreground">{props.hint}</p>
-    </div>
-  );
-
-  if (props.to) {
-    return (
-      <Link to={props.to} class="block h-full">
-        {inner}
-      </Link>
-    );
-  }
-  return inner;
-}
-
-function EmptyPanel(props: {
-  icon: any;
-  title: string;
-  description: string;
-  tone: "amber" | "sky" | "rose";
-}) {
-  const tones = {
-    amber: "from-amber-500/10 via-transparent to-transparent text-amber-700 dark:text-amber-300",
-    sky: "from-sky-500/10 via-transparent to-transparent text-sky-700 dark:text-sky-300",
-    rose: "from-rose-500/10 via-transparent to-transparent text-rose-700 dark:text-rose-300",
+  const dotMap: Record<string, string> = {
+    violet: "bg-violet-500",
+    amber: "bg-amber-500",
+    sky: "bg-sky-500",
+    mint: "bg-emerald-500",
+    rose: "bg-rose-500",
   };
 
   return (
-    <div
+    <Link
+      to={to}
       class={cn(
-        "flex flex-1 flex-col items-center justify-center rounded-md border border-dashed border-border/80 bg-gradient-to-b px-4 py-8 text-center",
-        tones[props.tone],
+        "group relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
       )}
     >
-      <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-md border border-border/70 bg-card text-current shadow-sm">
-        {props.icon}
+      <div
+        class={cn(
+          "pointer-events-none absolute inset-x-0 top-0 h-0.5 transition-colors duration-200",
+          dotMap[accent],
+        )}
+      />
+      <div class="flex items-start justify-between">
+        <div
+          class={cn(
+            "flex h-10 w-10 items-center justify-center rounded-lg border",
+            iconAccentMap[accent],
+          )}
+        >
+          {icon}
+        </div>
+        <svg
+          class="h-4 w-4 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 12l4-4-4-4" />
+        </svg>
       </div>
-      <p class="font-display text-base font-semibold text-foreground">{props.title}</p>
-      <p class="mt-1 max-w-[16rem] text-xs leading-relaxed text-muted-foreground">
-        {props.description}
-      </p>
+      <div class="mt-4 space-y-1">
+        <div class="flex items-center gap-2">
+          <h3 class="font-display text-sm font-semibold">{t(titleKey)}</h3>
+          <Show when={minRole && minRole !== "student"}>
+            <span
+              class={cn(
+                "rounded px-1.5 py-0.5 text-[10px] font-medium uppercase leading-none",
+                ROLE_BADGE_TONE[minRole!],
+              )}
+            >
+              {t(ROLE_KEY[minRole!])}
+            </span>
+          </Show>
+        </div>
+        <Show when={statValue !== ""}>
+          <p class="flex items-baseline gap-1 font-display text-2xl font-bold tracking-tight">
+            <span>{statValue}</span>
+            <Show when={statSuffix}>
+              {(suffix) => <span class="text-xs font-medium text-muted-foreground">{t(suffix())}</span>}
+            </Show>
+          </p>
+        </Show>
+        <p class="text-xs leading-relaxed text-muted-foreground">{t(descKey)}</p>
+      </div>
+    </Link>
+  );
+}
+
+function UpcomingTimeline(props: {
+  timeline: TimelineItem[];
+  locale: Locale;
+  t: (key: MessageKey, params?: Record<string, string | number>) => string;
+}) {
+  return (
+    <div class="rounded-xl border border-border/60 bg-card p-5 shadow-xs">
+      <div class="mb-4 flex items-center gap-2">
+        <IconCalendar class="h-4 w-4 text-muted-foreground" />
+        <h2 class="font-display text-sm font-semibold">{props.t("dashboard.upcoming")}</h2>
+      </div>
+      <Show
+        when={props.timeline.length > 0}
+        fallback={
+          <p class="py-6 text-center text-sm text-muted-foreground">{props.t("dashboard.noEvents")}</p>
+        }
+      >
+        <div class="space-y-3">
+          <For each={props.timeline}>
+            {(item) => (
+              <Link
+                to={item.type === "event" ? "/events/$id" : "/exams/$id"}
+                params={{ id: item.id }}
+                class="flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm transition-colors hover:border-border/60 hover:bg-muted/25"
+              >
+                <div
+                  class={cn(
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                    item.type === "exam"
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      : "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+                  )}
+                >
+                  {item.type === "exam"
+                    ? <IconExam class="h-3.5 w-3.5" />
+                    : <IconCalendar class="h-3.5 w-3.5" />}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="truncate font-medium">{item.title}</p>
+                  <p class="truncate text-xs text-muted-foreground">{item.subtitle}</p>
+                </div>
+                <span class="shrink-0 whitespace-nowrap text-xs tabular-nums text-muted-foreground">
+                  {item.at == null ? props.t("exams.unscheduled") : formatDateTime(item.at, props.locale)}
+                </span>
+              </Link>
+            )}
+          </For>
+        </div>
+      </Show>
+    </div>
+  );
+}
+
+function ActivityChart(props: {
+  label: string;
+  items: { label: string; value: number }[];
+  maxValue: number;
+}) {
+  return (
+    <div class="rounded-xl border border-border/60 bg-card p-5 shadow-xs">
+      <div class="mb-4 flex items-center gap-2">
+        <IconChart class="h-4 w-4 text-muted-foreground" />
+        <h2 class="font-display text-sm font-semibold">{props.label}</h2>
+      </div>
+      <div class="space-y-3">
+        <For each={props.items}>
+          {(item, i) => (
+            <div class="space-y-1">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-muted-foreground">{item.label}</span>
+                <span class="font-semibold tabular-nums">{item.value}</span>
+              </div>
+              <div class="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  class={cn(
+                    "h-full rounded-full transition-all duration-500",
+                    CHART_TONES[i() % CHART_TONES.length],
+                  )}
+                  style={{ width: `${(item.value / props.maxValue) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </For>
+      </div>
     </div>
   );
 }

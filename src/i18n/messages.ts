@@ -117,9 +117,28 @@ export type MessageKey =
   | "dashboard.stats.notes"
   | "dashboard.stats.events"
   | "dashboard.stats.exams"
+  | "dashboard.stats.courses"
   | "dashboard.stats.role"
   | "dashboard.stats.average"
   | "dashboard.stats.averageHint"
+  | "dashboard.commandCenter"
+  | "dashboard.observationOnly"
+  | "dashboard.today"
+  | "dashboard.reportCard"
+  | "dashboard.ready"
+  | "dashboard.attention"
+  | "dashboard.timeline"
+  | "dashboard.activeNow"
+  | "dashboard.upcoming"
+  | "dashboard.nextEvent"
+  | "dashboard.courseLoad"
+  | "dashboard.latestWindow"
+  | "dashboard.noAttention"
+  | "dashboard.allClear"
+  | "dashboard.roleLinks"
+  | "dashboard.activityGraph"
+  | "dashboard.activityGraphDesc"
+  | "dashboard.records"
   | "dashboard.myExams"
   | "dashboard.emptyExamsTitle"
   | "dashboard.emptyExamsCta"
@@ -136,6 +155,18 @@ export type MessageKey =
   | "dashboard.helpTitle"
   | "dashboard.helpBody"
   | "dashboard.continueGuide"
+  | "dashboard.portal.sections"
+  | "dashboard.portal.coursesDesc"
+  | "dashboard.portal.examsDesc"
+  | "dashboard.portal.eventsDesc"
+  | "dashboard.portal.marksDesc"
+  | "dashboard.portal.notesDesc"
+  | "dashboard.portal.usersDesc"
+  | "dashboard.portal.attendanceDesc"
+  | "dashboard.portal.workDesc"
+  | "dashboard.portal.studentMarksDesc"
+  | "dashboard.portal.settingsDesc"
+  | "dashboard.portal.termsDesc"
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
@@ -553,9 +584,28 @@ const en: Dict = {
   "dashboard.stats.notes": "Notes",
   "dashboard.stats.events": "Events",
   "dashboard.stats.exams": "Exams",
+  "dashboard.stats.courses": "Courses",
   "dashboard.stats.role": "Your role",
   "dashboard.stats.average": "Average",
   "dashboard.stats.averageHint": "Overall report card",
+  "dashboard.commandCenter": "Command center",
+  "dashboard.observationOnly": "A live read-only map of your school day.",
+  "dashboard.today": "Today",
+  "dashboard.reportCard": "Report card",
+  "dashboard.ready": "Ready",
+  "dashboard.attention": "Needs attention",
+  "dashboard.timeline": "Upcoming timeline",
+  "dashboard.activeNow": "Active now",
+  "dashboard.upcoming": "Upcoming",
+  "dashboard.nextEvent": "Next event",
+  "dashboard.courseLoad": "Course load",
+  "dashboard.latestWindow": "Latest window",
+  "dashboard.noAttention": "Nothing urgent",
+  "dashboard.allClear": "No active exam or near event needs action right now.",
+  "dashboard.roleLinks": "Workspace overview",
+  "dashboard.activityGraph": "Activity graph",
+  "dashboard.activityGraphDesc": "Events, exams, and courses at a glance.",
+  "dashboard.records": "records",
   "dashboard.myExams": "My exams",
   "dashboard.emptyExamsTitle": "No exams yet",
   "dashboard.emptyExamsCta": "Browse exams",
@@ -573,6 +623,18 @@ const en: Dict = {
   "dashboard.helpBody":
     "Home shows live counts and shortcuts for notes, events, courses, exams, and your report card. Open Guide (bottom of the sidebar) for the full walkthrough.",
   "dashboard.continueGuide": "Open the guide",
+  "dashboard.portal.sections": "Sections",
+  "dashboard.portal.coursesDesc": "Browse courses and class materials.",
+  "dashboard.portal.examsDesc": "Upcoming exams, deadlines, and results.",
+  "dashboard.portal.eventsDesc": "Sessions, meetups, and attendance.",
+  "dashboard.portal.marksDesc": "Your grades and overall report card.",
+  "dashboard.portal.notesDesc": "Private scratchpad for quick ideas.",
+  "dashboard.portal.usersDesc": "Manage user accounts and roles.",
+  "dashboard.portal.attendanceDesc": "Mark and review attendance records.",
+  "dashboard.portal.workDesc": "Track your work hours and shifts.",
+  "dashboard.portal.studentMarksDesc": "View and grade student results.",
+  "dashboard.portal.settingsDesc": "System preferences and configuration.",
+  "dashboard.portal.termsDesc": "Manage academic terms and periods.",
   "notes.title": "Notebook",
   "notes.subtitle": "Private scratchpad for class ideas and reminders.",
   "notes.new": "New note",
@@ -1002,9 +1064,28 @@ const tr: Dict = {
   "dashboard.stats.notes": "Notlar",
   "dashboard.stats.events": "Etkinlikler",
   "dashboard.stats.exams": "Sınavlar",
+  "dashboard.stats.courses": "Dersler",
   "dashboard.stats.role": "Rolün",
   "dashboard.stats.average": "Ortalama",
   "dashboard.stats.averageHint": "Genel karne",
+  "dashboard.commandCenter": "Komuta merkezi",
+  "dashboard.observationOnly": "Okul gününün canlı ve salt okunur haritası.",
+  "dashboard.today": "Bugün",
+  "dashboard.reportCard": "Karne",
+  "dashboard.ready": "Hazır",
+  "dashboard.attention": "Dikkat isteyenler",
+  "dashboard.timeline": "Yaklaşan akış",
+  "dashboard.activeNow": "Şu an aktif",
+  "dashboard.upcoming": "Yaklaşan",
+  "dashboard.nextEvent": "Sıradaki etkinlik",
+  "dashboard.courseLoad": "Ders yükü",
+  "dashboard.latestWindow": "Güncel pencere",
+  "dashboard.noAttention": "Acil bir şey yok",
+  "dashboard.allClear": "Şu an işlem isteyen aktif sınav veya yakın etkinlik yok.",
+  "dashboard.roleLinks": "Çalışma alanı özeti",
+  "dashboard.activityGraph": "Aktivite grafiği",
+  "dashboard.activityGraphDesc": "Etkinlik, sınav ve ders yoğunluğu tek bakışta.",
+  "dashboard.records": "kayıt",
   "dashboard.myExams": "Sınavlarım",
   "dashboard.emptyExamsTitle": "Henüz sınav yok",
   "dashboard.emptyExamsCta": "Sınavlara git",
@@ -1022,6 +1103,18 @@ const tr: Dict = {
   "dashboard.helpBody":
     "Ana sayfa not, etkinlik, ders, sınav ve karne kısayollarını gösterir. Tam tur için sidebar’ın altındaki Rehber’i aç.",
   "dashboard.continueGuide": "Rehberi aç",
+  "dashboard.portal.sections": "Bölümler",
+  "dashboard.portal.coursesDesc": "Dersleri ve ders materyallerini görüntüle.",
+  "dashboard.portal.examsDesc": "Sınavlar, son teslim tarihleri ve sonuçlar.",
+  "dashboard.portal.eventsDesc": "Oturumlar, etkinlikler ve yoklama.",
+  "dashboard.portal.marksDesc": "Notların ve genel karnen.",
+  "dashboard.portal.notesDesc": "Hızlı fikirler için özel not defteri.",
+  "dashboard.portal.usersDesc": "Kullanıcı hesaplarını ve rollerini yönet.",
+  "dashboard.portal.attendanceDesc": "Yoklama kayıtlarını işaretle ve incele.",
+  "dashboard.portal.workDesc": "Çalışma saatlerini ve mesainizi takip edin.",
+  "dashboard.portal.studentMarksDesc": "Öğrenci sonuçlarını görüntüle ve notlandır.",
+  "dashboard.portal.settingsDesc": "Sistem tercihleri ve yapılandırma.",
+  "dashboard.portal.termsDesc": "Akademik dönemleri ve periyotları yönet.",
   "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleri ve hatırlatmalar için özel defter.",
   "notes.new": "Yeni not",
