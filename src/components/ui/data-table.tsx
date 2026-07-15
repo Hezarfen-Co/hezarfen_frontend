@@ -8,7 +8,7 @@ export function DataTableFrame(props: ParentProps<{ class?: string }>) {
 
 export function DataTableEmpty(props: ParentProps<{ class?: string }>) {
   return (
-    <div class={cn("rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground", props.class)}>
+    <div class={cn("rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-10 text-center text-sm leading-6 text-muted-foreground", props.class)}>
       {props.children}
     </div>
   );

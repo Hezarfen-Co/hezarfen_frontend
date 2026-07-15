@@ -47,8 +47,8 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
         <AlertDialogHeader>
           <span
             class={cn(
-              "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm",
-              destructive() ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary",
+              "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border",
+              destructive() ? "border-destructive/20 bg-destructive/10 text-destructive" : "border-primary/20 bg-primary/10 text-primary",
             )}
           >
             <Show when={destructive()} fallback={<IconAlert class="h-4 w-4" />}>
@@ -65,7 +65,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
           <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {t("confirm.summary")}
           </p>
-          <div class="rounded-sm border border-border bg-muted/40 px-3 py-3 text-sm leading-relaxed">
+          <div class="rounded-md border border-border bg-muted/40 px-3 py-3 text-sm leading-relaxed">
             {props.summary}
           </div>
         </AlertDialogBody>
