@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
-import { hasExactRole, hasMinRole } from "@/lib/roles";
+import { hasExactRole, hasMinRole, roleInRange } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import type { MessageKey } from "@/i18n/messages";
 import type { Role } from "@/api/types";
@@ -34,6 +34,8 @@ type NavItem = {
   labelKey: MessageKey;
   Icon: Component<{ class?: string }>;
   minRole?: Role;
+  /** Inclusive upper bound (e.g. hide from admin with maxRole: "manager"). */
+  maxRole?: Role;
   /** When set, only this exact role sees the item. */
   exactRole?: Role;
   exact?: boolean;
@@ -83,7 +85,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
-      { to: "/work", labelKey: "nav.work", Icon: IconReportAnalytics, minRole: "teacher" },
+      { to: "/work", labelKey: "nav.work", Icon: IconReportAnalytics, minRole: "teacher", maxRole: "manager" },
       { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconReportAnalytics, minRole: "manager" },
     ],
   },
@@ -161,7 +163,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
   const itemVisible = (item: NavItem) => {
     const role = auth.user()?.role;
     if (item.exactRole) return hasExactRole(role, item.exactRole);
-    if (item.minRole) return hasMinRole(role, item.minRole);
+    if (item.minRole || item.maxRole) return roleInRange(role, item.minRole, item.maxRole);
     return true;
   };
 

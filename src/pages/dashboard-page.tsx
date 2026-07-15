@@ -206,11 +206,18 @@ function DashboardContent() {
         { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
         { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, statSuffix: "dashboard.records", accent: "sky" },
         { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc, statSuffix: "dashboard.records", accent: "sky" },
-        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", stat: "", accent: "amber", minRole: "teacher" },
         { icon: <IconChart class="h-5 w-5" />, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", stat: "", accent: "mint", minRole: "teacher" },
         { icon: <IconClipboardCheck class="h-5 w-5" />, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", stat: "", accent: "rose", minRole: "teacher" },
         { icon: <IconSettings class="h-5 w-5" />, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", stat: "", accent: "mint", minRole: "manager" },
         { icon: <IconBook class="h-5 w-5" />, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", stat: "", accent: "rose", minRole: "manager" },
+      );
+      if (roleVal === "manager") {
+        list.push(
+          { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", stat: "", accent: "amber", minRole: "teacher" },
+        );
+      }
+      list.push(
+        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", stat: "", accent: "amber", minRole: "manager" },
       );
       if (roleVal === "admin") {
         list.push(

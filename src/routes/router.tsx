@@ -7,7 +7,7 @@ import {
   redirect,
 } from "@tanstack/solid-router";
 import { getMe } from "@/api/getMe";
-import { hasMinRole } from "@/lib/roles";
+import { hasMinRole, roleInRange } from "@/lib/roles";
 import { ApiError } from "@/api/client";
 import { Suspense, lazy, type Component } from "solid-js";
 import { AppShell } from "@/components/layout/app-shell";
@@ -222,7 +222,7 @@ const workRoute = createRoute({
   beforeLoad: async () => {
     try {
       const user = await getMe();
-      if (!hasMinRole(user.role, "teacher")) throw redirect({ to: "/" });
+      if (!roleInRange(user.role, "teacher", "manager")) throw redirect({ to: "/" });
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) throw redirect({ to: "/login" });
       if (isRedirect(err)) throw err;

@@ -166,14 +166,15 @@ function StaffWorkContent() {
         >
           <UserSearchSelect
             id="staff-work-user"
-            label={t("marks.userIdentity")}
+            label={t("work.teacherIdentity")}
             value={userId()}
             onChange={setUserId}
             onSelectUser={setSelectedUser}
             placeholder={t("common.searchPlaceholder")}
-            selectPlaceholder={t("marks.userIdentity")}
-            emptyMessage={t("admin.noUsers")}
+            selectPlaceholder={t("work.teacherIdentity")}
+            emptyMessage={t("work.noTeachers")}
             allowManualValue
+            role={["teacher", "manager", "admin"]}
           />
           <Button type="submit" class="h-9 w-full rounded-lg sm:w-auto">
             {t("work.show")}

@@ -20,7 +20,7 @@ export function UserSearchSelect(props: {
   emptyMessage?: string;
   disabled?: boolean;
   allowManualValue?: boolean;
-  role?: Role;
+  role?: Role | Role[];
 }) {
   let inputRef: HTMLInputElement | undefined;
   const t = useT();
