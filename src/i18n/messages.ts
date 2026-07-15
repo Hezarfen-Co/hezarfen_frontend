@@ -443,6 +443,7 @@ export type MessageKey =
   | "sessions.untitled"
   | "sessions.teacher"
   | "sessions.rollCall"
+  | "sessions.emptyRoster"
   | "sessions.startRequired"
   | "sessions.endInvalid"
   | "attendance.title"
@@ -928,6 +929,7 @@ const en: Dict = {
   "sessions.untitled": "Untitled lesson",
   "sessions.teacher": "Teacher",
   "sessions.rollCall": "Roll call",
+  "sessions.emptyRoster": "No enrolled students yet.",
   "sessions.startRequired": "Session start date and time are required.",
   "sessions.endInvalid": "Enter both end date and end time, or leave both empty.",
   "attendance.title": "Attendance report",
@@ -1412,6 +1414,7 @@ const tr: Dict = {
   "sessions.untitled": "Konu girilmemiş ders",
   "sessions.teacher": "Öğretmen",
   "sessions.rollCall": "Yoklama",
+  "sessions.emptyRoster": "Henüz kayıtlı öğrenci yok.",
   "sessions.startRequired": "Oturum başlangıç tarihi ve saati gerekli.",
   "sessions.endInvalid": "Bitiş için tarih ve saati birlikte gir ya da ikisini de boş bırak.",
   "attendance.title": "Yoklama raporu",

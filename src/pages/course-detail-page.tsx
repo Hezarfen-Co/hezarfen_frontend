@@ -82,6 +82,7 @@ function CourseDetailContent() {
   const [description, setDescription] = createSignal("");
   const [termId, setTermId] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
+  const [showSessionForm, setShowSessionForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
   const [openSections, setOpenSections] = createSignal({ exams: true, sessions: false, roster: false });
   const [enrollUserId, setEnrollUserId] = createSignal("");
@@ -375,10 +376,10 @@ function CourseDetailContent() {
               onToggle={() => toggleSection("exams")}
               title={t("courses.exams")}
               description={`${examCount()} ${t("nav.exams")}`}
-              meta={<Badge variant="secondary" class="mono rounded-sm px-3 py-1">{examCount()}</Badge>}
+              meta={<Badge variant="secondary" class="rounded-lg px-3 py-1"><span class="mono tabular-nums">{examCount()}</span><span class="ml-1">{t("nav.exams")}</span></Badge>}
               actions={
                 <Show when={canManage()}>
-                  <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowExamForm(true)}>
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
                     <IconPlus class="h-4 w-4" />
                     {t("courses.addExam")}
                   </Button>
@@ -432,8 +433,23 @@ function CourseDetailContent() {
               onToggle={() => toggleSection("sessions")}
               title={t("sessions.title")}
               description={t("sessions.subtitle")}
+              meta={<Badge variant="secondary" class="rounded-lg px-3 py-1">{t("sessions.title")}</Badge>}
+              actions={
+                <Show when={canManage()}>
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSessionForm(true)}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("sessions.add")}
+                  </Button>
+                </Show>
+              }
             >
-              <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} />
+              <CourseSessionsPanel
+                courseId={id()}
+                roster={roster() ?? []}
+                canManage={canManage()}
+                createOpen={showSessionForm()}
+                onCreateOpenChange={setShowSessionForm}
+              />
             </SectionDisclosure>
 
             <Show when={isTeacherPlus()}>
@@ -442,10 +458,10 @@ function CourseDetailContent() {
                 onToggle={() => toggleSection("roster")}
                 title={t("courses.roster")}
                 description={t("courses.enroll")}
-                meta={<Badge variant="secondary" class="mono rounded-sm px-3 py-1">{rosterCount()}</Badge>}
+                meta={<Badge variant="secondary" class="rounded-lg px-3 py-1"><span class="mono tabular-nums">{rosterCount()}</span><span class="ml-1">{t("courses.roster")}</span></Badge>}
                 actions={
                   <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowEnrollPanel(true)}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
                       <IconPlus class="h-4 w-4" />
                       {t("courses.enroll")}
                     </Button>

@@ -26,7 +26,7 @@ export function SectionDisclosure(props: ParentProps<{
             {props.description && <span class="mt-1 block truncate text-sm text-muted-foreground">{props.description}</span>}
           </span>
         </button>
-        <div class="flex items-center gap-2 [&>button]:h-8 [&>button]:min-w-32 [&>button]:justify-center [&>div]:h-8 [&>div]:min-w-8 [&>div]:justify-center">
+        <div class="flex items-center gap-2 [&>button]:h-8 [&>button]:min-w-36 [&>button]:justify-center [&>div]:h-8 [&>div]:justify-center">
           {props.meta}
           {props.actions}
         </div>
