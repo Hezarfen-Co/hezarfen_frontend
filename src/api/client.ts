@@ -21,6 +21,38 @@ type RequestOptions = {
 const API_PREFIX = "/api";
 
 const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
+  "request failed": {
+    en: "Request failed.",
+    tr: "İşlem tamamlanamadı.",
+  },
+  "unauthorized": {
+    en: "Sign in to continue.",
+    tr: "Devam etmek için giriş yap.",
+  },
+  "forbidden": {
+    en: "You do not have permission for this action.",
+    tr: "Bu işlem için yetkin yok.",
+  },
+  "not found": {
+    en: "The requested record was not found.",
+    tr: "İstenen kayıt bulunamadı.",
+  },
+  "invalid credentials": {
+    en: "Username or password is incorrect.",
+    tr: "Kullanıcı adı veya şifre hatalı.",
+  },
+  "username already exists": {
+    en: "This username is already in use.",
+    tr: "Bu kullanıcı adı zaten kullanılıyor.",
+  },
+  "course not found": {
+    en: "Course not found.",
+    tr: "Ders bulunamadı.",
+  },
+  "exam not found": {
+    en: "Exam not found.",
+    tr: "Sınav bulunamadı.",
+  },
   "not enrolled in this exam's course": {
     en: "You are not enrolled in this exam's course.",
     tr: "Bu sınavın dersine kayıtlı değilsin.",
@@ -42,6 +74,17 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     tr: "Bu oturum kapalı. Cevaplar salt okunur.",
   },
 };
+
+function currentLocale(): Locale {
+  if (typeof window === "undefined") return "en";
+  try {
+    const saved = window.localStorage.getItem("hezarfen.locale");
+    if (saved === "en" || saved === "tr") return saved;
+    return window.navigator.language.toLowerCase().startsWith("tr") ? "tr" : "en";
+  } catch {
+    return "en";
+  }
+}
 
 function normalizeApiMessage(message: string): string {
   return message
@@ -93,7 +136,9 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
     const message =
       data && typeof data === "object" && "error" in data && typeof (data as { error: unknown }).error === "string"
         ? (data as { error: string }).error
-        : res.statusText || "Request failed";
+        : data && typeof data === "object" && "message" in data && typeof (data as { message: unknown }).message === "string"
+          ? (data as { message: string }).message
+          : res.statusText || "Request failed";
 
     let retryAfter: number | null = null;
     if (res.status === 429) {
@@ -110,15 +155,23 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
   return data as T;
 }
 
-export function formatApiErrorMessage(message: string, locale: Locale = "en"): string {
-  return API_ERROR_MESSAGES[normalizeApiMessage(message)]?.[locale] ?? sentenceCase(message);
+export function formatApiErrorMessage(message: string, locale: Locale = currentLocale()): string {
+  const normalized = normalizeApiMessage(message);
+  const known = API_ERROR_MESSAGES[normalized]?.[locale];
+  if (known) return known;
+  if (locale === "tr") return "İşlem tamamlanamadı. Lütfen tekrar dene.";
+  return sentenceCase(message);
 }
 
-export function formatApiError(err: unknown, locale: Locale = "en"): string {
+export function formatApiError(err: unknown, locale: Locale = currentLocale()): string {
   if (err instanceof ApiError) {
     if (err.status === 429 && err.retryAfter != null) {
       return locale === "tr" ? `${err.retryAfter} sn sonra tekrar dene.` : `Try again in ${err.retryAfter}s.`;
     }
+    if (err.status === 401) return API_ERROR_MESSAGES.unauthorized[locale];
+    if (err.status === 403) return API_ERROR_MESSAGES.forbidden[locale];
+    if (err.status === 404) return API_ERROR_MESSAGES["not found"][locale];
+    if (err.status >= 500) return locale === "tr" ? "Sunucuda bir sorun oluştu. Lütfen tekrar dene." : "Server error. Please try again.";
     return formatApiErrorMessage(err.message, locale);
   }
   if (err instanceof Error) return formatApiErrorMessage(err.message, locale);

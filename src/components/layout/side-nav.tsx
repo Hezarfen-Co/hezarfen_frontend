@@ -1,5 +1,11 @@
 import { Link, useRouterState } from "@tanstack/solid-router";
-import { For, Show, createMemo, type Component } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, type Component } from "solid-js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
@@ -10,10 +16,16 @@ import {
   IconBook,
   IconCalendar,
   IconChart,
-  IconExam,
-  IconGuide,
+  IconChevronRight,
+  IconClipboardCheck,
+  IconEdit,
   IconHome,
   IconNote,
+  IconPencilQuestion,
+  IconReportAnalytics,
+  IconSchool,
+  IconSettings,
+  IconUserCog,
   IconUsers,
 } from "@/components/ui/icons";
 
@@ -25,21 +37,79 @@ type NavItem = {
   exact?: boolean;
 };
 
-const MAIN_ITEMS: NavItem[] = [
-  { to: "/", labelKey: "nav.home", Icon: IconHome, exact: true },
-  { to: "/courses", labelKey: "nav.courses", Icon: IconBook },
-  { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
-  { to: "/marks", labelKey: "nav.marks", Icon: IconChart },
-  { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
-  { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
-  { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
-  { to: "/admin/users", labelKey: "nav.users", Icon: IconUsers, minRole: "admin" },
+type NavGroup = {
+  id: string;
+  labelKey: MessageKey;
+  Icon: Component<{ class?: string }>;
+  minRole?: Role;
+  items: NavItem[];
+};
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    id: "students",
+    labelKey: "nav.group.students",
+    Icon: IconUsers,
+    items: [
+      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck },
+    ],
+  },
+  {
+    id: "classes",
+    labelKey: "nav.group.classes",
+    Icon: IconSchool,
+    items: [
+      { to: "/courses", labelKey: "nav.courses", Icon: IconBook },
+      { to: "/exams", labelKey: "nav.exams", Icon: IconPencilQuestion },
+      { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
+    ],
+  },
+  {
+    id: "grades",
+    labelKey: "nav.group.grades",
+    Icon: IconNote,
+    items: [
+      { to: "/marks", labelKey: "nav.marks", Icon: IconChart },
+      { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
+    ],
+  },
+  {
+    id: "reports",
+    labelKey: "nav.group.reports",
+    Icon: IconReportAnalytics,
+    minRole: "teacher",
+    items: [
+      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
+      { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
+      { to: "/work", labelKey: "nav.work", Icon: IconReportAnalytics, minRole: "teacher" },
+    ],
+  },
+  {
+    id: "settings",
+    labelKey: "nav.group.settings",
+    Icon: IconSettings,
+    minRole: "manager",
+    items: [
+      { to: "/management/settings", labelKey: "nav.settings", Icon: IconSettings, minRole: "manager" },
+      { to: "/management/terms", labelKey: "nav.terms", Icon: IconEdit, minRole: "manager" },
+    ],
+  },
+  {
+    id: "admin",
+    labelKey: "nav.admin",
+    Icon: IconUserCog,
+    minRole: "admin",
+    items: [
+      { to: "/admin/users", labelKey: "nav.users", Icon: IconUsers, minRole: "admin" },
+    ],
+  },
 ];
 
-const GUIDE_ITEM: NavItem = {
-  to: "/guide",
-  labelKey: "nav.guide",
-  Icon: IconGuide,
+const HOME_ITEM: NavItem = {
+  to: "/",
+  labelKey: "nav.home",
+  Icon: IconHome,
+  exact: true,
 };
 
 function pathActive(pathname: string, to: string, exact?: boolean) {
@@ -51,6 +121,7 @@ function NavLink(props: {
   item: NavItem;
   collapsed?: boolean;
   onNavigate?: () => void;
+  standalone?: boolean;
 }) {
   const t = useT();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -63,78 +134,144 @@ function NavLink(props: {
       title={t(props.item.labelKey)}
       aria-current={active() ? "page" : undefined}
       class={cn(
-        "relative flex h-10 w-full items-center rounded-md text-sm font-medium outline-none",
-        "transition-all duration-150",
-        props.collapsed ? "justify-center px-0" : "gap-1.5 px-2",
+        "relative flex h-8 w-full items-center rounded-sm outline-none transition-colors duration-150",
+        props.standalone ? "text-[11px] font-semibold uppercase tracking-[0.08em]" : "text-[13px] font-medium",
+        props.collapsed ? "justify-center px-0" : props.standalone ? "gap-2 px-2" : "gap-2 pl-7 pr-2",
         active()
-          ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
-          : "text-sidebar-foreground/75 hover:bg-muted/70 hover:text-foreground",
+          ? "bg-primary/10 text-foreground"
+          : "text-sidebar-foreground/75 hover:bg-muted hover:text-foreground",
       )}
     >
       <Show when={active() && !props.collapsed}>
         <span class="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
       </Show>
-      <span
-        class={cn(
-          "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors",
-          active() ? "text-primary" : "text-muted-foreground",
-        )}
-      >
-        <props.item.Icon class="h-4 w-4" />
-      </span>
-      <span
-        class={cn(
-          "truncate leading-normal",
-          props.collapsed ? "hidden" : "block min-w-0 flex-1 text-left",
-        )}
-      >
-        {t(props.item.labelKey)}
-      </span>
+      <props.item.Icon class={cn("h-3.5 w-3.5 shrink-0", active() ? "text-primary" : "text-muted-foreground")} />
+      <span class={cn("truncate", props.collapsed ? "hidden" : "block min-w-0 flex-1 text-left")}>{t(props.item.labelKey)}</span>
     </Link>
   );
 }
 
 export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean }) {
   const auth = useAuth();
-
-  const items = createMemo(() =>
-    MAIN_ITEMS.filter((item) => !item.minRole || hasMinRole(auth.user()?.role, item.minRole)),
-  );
-
   const t = useT();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const visibleGroups = createMemo(() =>
+    NAV_GROUPS
+      .filter((group) => !group.minRole || hasMinRole(auth.user()?.role, group.minRole))
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => !item.minRole || hasMinRole(auth.user()?.role, item.minRole)),
+      }))
+      .filter((group) => group.items.length > 0),
+  );
+  const activeGroupId = createMemo(() => visibleGroups().find((group) => group.items.some((item) => pathActive(pathname(), item.to, item.exact)))?.id ?? visibleGroups()[0]?.id ?? "");
+  const [openGroup, setOpenGroup] = createSignal(activeGroupId());
+
+  createEffect(() => {
+    const active = activeGroupId();
+    if (active) setOpenGroup(active);
+  });
 
   return (
     <nav class="flex h-full flex-col" aria-label="Main">
-      <div class="flex flex-col gap-0.5 px-2">
-        <For each={items()}>
-          {(item, index) => (
-            <>
-              <Show when={item.minRole && !items()[index() - 1]?.minRole}>
-                <Show
-                  when={!props.collapsed}
-                  fallback={
-                    <div class="px-3 pb-1 pt-4">
-                      <span class="block h-px bg-border/80" />
+      <div class="flex flex-col gap-1 px-2">
+        <NavLink item={HOME_ITEM} collapsed={props.collapsed} onNavigate={props.onNavigate} standalone />
+        <For each={visibleGroups()}>
+          {(group, index) => {
+            const open = () => openGroup() === group.id;
+            const showManagementDivider = () => !!group.minRole && !visibleGroups()[index() - 1]?.minRole;
+            return (
+              <>
+                <Show when={showManagementDivider()}>
+                  <Show
+                    when={!props.collapsed}
+                    fallback={
+                      <div class="px-2 py-2">
+                        <span class="block h-px bg-border" />
+                      </div>
+                    }
+                  >
+                    <div class="flex items-center gap-2 px-2 pb-1 pt-3">
+                      <span class="h-px flex-1 bg-border" />
+                      <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        {t("nav.admin")}
+                      </span>
+                      <span class="h-px flex-1 bg-border" />
                     </div>
-                  }
-                >
-                  <div class="flex items-center gap-2 px-2 pb-1 pt-4">
-                    <span class="h-px flex-1 bg-border/70" />
-                    <span lang="en" class="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-                      {t("nav.admin")}
-                    </span>
-                    <span class="h-px flex-1 bg-border/70" />
-                  </div>
+                  </Show>
                 </Show>
-              </Show>
-              <NavLink item={item} collapsed={props.collapsed} onNavigate={props.onNavigate} />
-            </>
-          )}
+                <section>
+                  <Show
+                    when={props.collapsed}
+                    fallback={
+                      <>
+                        <button
+                          type="button"
+                          class={cn(
+                            "flex h-8 w-full items-center gap-2 rounded-sm px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground",
+                            open() && "text-foreground",
+                          )}
+                          title={t(group.labelKey)}
+                          aria-expanded={open()}
+                          onClick={() => setOpenGroup(open() ? "" : group.id)}
+                        >
+                          <group.Icon class="h-3.5 w-3.5" />
+                          <span class="min-w-0 flex-1 truncate text-left">{t(group.labelKey)}</span>
+                          <IconChevronRight class={cn("h-3.5 w-3.5 transition-transform duration-150", open() && "rotate-90")} />
+                        </button>
+                        <Show when={open()}>
+                          <div class="mt-1 grid gap-0.5 overflow-hidden transition-all duration-150">
+                            <For each={group.items}>
+                              {(item) => <NavLink item={item} onNavigate={props.onNavigate} />}
+                            </For>
+                          </div>
+                        </Show>
+                      </>
+                    }
+                  >
+                    <DropdownMenu placement="right-start" gutter={8}>
+                      <DropdownMenuTrigger
+                        class={cn(
+                          "relative flex h-8 w-full items-center justify-center rounded-sm px-0 text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[expanded]:bg-muted data-[expanded]:text-foreground",
+                          open() && "text-foreground",
+                        )}
+                        title={t(group.labelKey)}
+                        aria-label={t(group.labelKey)}
+                      >
+                        <group.Icon class="h-3.5 w-3.5" />
+                        <IconChevronRight class="absolute right-1 h-3 w-3 opacity-55" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent class="w-56 rounded-lg border-border/80 bg-popover p-1 shadow-soft">
+                        <p class="px-2 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                          {t(group.labelKey)}
+                        </p>
+                        <For each={group.items}>
+                          {(item) => {
+                            const itemActive = () => pathActive(pathname(), item.to, item.exact);
+                            return (
+                              <DropdownMenuItem
+                                class={cn("rounded-md p-0", itemActive() && "bg-primary/10 text-foreground")}
+                              >
+                                <Link
+                                  to={item.to}
+                                  onClick={() => props.onNavigate?.()}
+                                  class="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 outline-none"
+                                >
+                                  <item.Icon class={cn("h-4 w-4 shrink-0", itemActive() ? "text-primary" : "text-muted-foreground")} />
+                                  <span class="min-w-0 flex-1 truncate">{t(item.labelKey)}</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            );
+                          }}
+                        </For>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </Show>
+                </section>
+              </>
+            );
+          }}
         </For>
-      </div>
-
-      <div class="mt-auto border-t border-border px-2 py-1">
-        <NavLink item={GUIDE_ITEM} collapsed={props.collapsed} onNavigate={props.onNavigate} />
       </div>
     </nav>
   );

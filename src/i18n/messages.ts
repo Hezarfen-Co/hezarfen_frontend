@@ -9,8 +9,13 @@ export type MessageKey =
   | "nav.exams"
   | "nav.courses"
   | "nav.marks"
+  | "nav.attendance"
+  | "nav.work"
   | "nav.users"
   | "nav.studentMarks"
+  | "nav.studentAttendance"
+  | "nav.settings"
+  | "nav.terms"
   | "nav.guide"
   | "nav.logout"
   | "nav.admin"
@@ -20,6 +25,11 @@ export type MessageKey =
   | "nav.expand"
   | "nav.account"
   | "nav.preferences"
+  | "nav.group.students"
+  | "nav.group.classes"
+  | "nav.group.grades"
+  | "nav.group.reports"
+  | "nav.group.settings"
   | "common.loading"
   | "common.cancel"
   | "common.save"
@@ -29,6 +39,10 @@ export type MessageKey =
   | "common.update"
   | "common.remove"
   | "common.back"
+  | "common.view"
+  | "common.actions"
+  | "common.moreFilters"
+  | "common.lessFilters"
   | "common.search"
   | "common.or"
   | "common.tryAgain"
@@ -103,9 +117,28 @@ export type MessageKey =
   | "dashboard.stats.notes"
   | "dashboard.stats.events"
   | "dashboard.stats.exams"
+  | "dashboard.stats.courses"
   | "dashboard.stats.role"
   | "dashboard.stats.average"
   | "dashboard.stats.averageHint"
+  | "dashboard.commandCenter"
+  | "dashboard.observationOnly"
+  | "dashboard.today"
+  | "dashboard.reportCard"
+  | "dashboard.ready"
+  | "dashboard.attention"
+  | "dashboard.timeline"
+  | "dashboard.activeNow"
+  | "dashboard.upcoming"
+  | "dashboard.nextEvent"
+  | "dashboard.courseLoad"
+  | "dashboard.latestWindow"
+  | "dashboard.noAttention"
+  | "dashboard.allClear"
+  | "dashboard.roleLinks"
+  | "dashboard.activityGraph"
+  | "dashboard.activityGraphDesc"
+  | "dashboard.records"
   | "dashboard.myExams"
   | "dashboard.emptyExamsTitle"
   | "dashboard.emptyExamsCta"
@@ -122,6 +155,18 @@ export type MessageKey =
   | "dashboard.helpTitle"
   | "dashboard.helpBody"
   | "dashboard.continueGuide"
+  | "dashboard.portal.sections"
+  | "dashboard.portal.coursesDesc"
+  | "dashboard.portal.examsDesc"
+  | "dashboard.portal.eventsDesc"
+  | "dashboard.portal.marksDesc"
+  | "dashboard.portal.notesDesc"
+  | "dashboard.portal.usersDesc"
+  | "dashboard.portal.attendanceDesc"
+  | "dashboard.portal.workDesc"
+  | "dashboard.portal.studentMarksDesc"
+  | "dashboard.portal.settingsDesc"
+  | "dashboard.portal.termsDesc"
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
@@ -148,6 +193,8 @@ export type MessageKey =
   | "exams.title"
   | "exams.subtitle"
   | "exams.create"
+  | "exams.searchPlaceholder"
+  | "exams.selectCourse"
   | "exams.empty"
   | "exams.kind"
   | "exams.kind.homework"
@@ -206,6 +253,8 @@ export type MessageKey =
   | "attempt.finish"
   | "attempt.status"
   | "attempt.remaining"
+  | "attempt.attempt"
+  | "attempt.left"
   | "attempt.progress"
   | "attempt.deadline"
   | "attempt.notStarted"
@@ -219,6 +268,7 @@ export type MessageKey =
   | "attempt.expired"
   | "attempt.closed"
   | "attempt.inProgress"
+  | "attempt.absent"
   | "exams.helpTitle"
   | "exams.helpBody"
   | "admin.title"
@@ -226,6 +276,7 @@ export type MessageKey =
   | "admin.username"
   | "admin.id"
   | "admin.role"
+  | "admin.directory"
   | "admin.helpTitle"
   | "admin.helpBody"
   | "admin.noUsers"
@@ -266,6 +317,7 @@ export type MessageKey =
   | "form.contentMax"
   | "form.descriptionMax"
   | "form.timeOrder"
+  | "form.timePast"
   | "form.weightRange"
   | "form.markRange"
   | "events.markedBy"
@@ -355,7 +407,63 @@ export type MessageKey =
   | "ws.ping"
   | "course.removeStudent"
   | "course.removeStudentConfirm"
-  | "events.userIdRequired";
+  | "events.userIdRequired"
+  | "settings.title"
+  | "settings.subtitle"
+  | "settings.saved"
+  | "settings.examKinds"
+  | "settings.examKindsHelp"
+  | "settings.attendanceStatuses"
+  | "settings.attendanceHelp"
+  | "settings.gradeBands"
+  | "settings.gradeBandsHelp"
+  | "settings.name"
+  | "settings.weight"
+  | "settings.status"
+  | "settings.min"
+  | "settings.label"
+  | "settings.addRow"
+  | "terms.title"
+  | "terms.subtitle"
+  | "terms.create"
+  | "terms.edit"
+  | "terms.empty"
+  | "terms.term"
+  | "terms.unassigned"
+  | "terms.dateRequired"
+  | "sessions.title"
+  | "sessions.subtitle"
+  | "sessions.topic"
+  | "sessions.add"
+  | "sessions.empty"
+  | "sessions.untitled"
+  | "sessions.teacher"
+  | "sessions.rollCall"
+  | "sessions.startRequired"
+  | "sessions.endInvalid"
+  | "attendance.title"
+  | "attendance.subtitle"
+  | "attendance.events"
+  | "attendance.sessions"
+  | "attendance.rate"
+  | "attendance.courseBreakdown"
+  | "attendance.emptyCourses"
+  | "attendance.lookup"
+  | "attendance.show"
+  | "attendance.forUser"
+  | "work.title"
+  | "work.subtitle"
+  | "work.checkIn"
+  | "work.checkOut"
+  | "work.checkedIn"
+  | "work.notCheckedIn"
+  | "work.ready"
+  | "work.since"
+  | "work.entries"
+  | "work.empty"
+  | "work.duration"
+  | "work.open"
+  | "work.closed";
 
 type Dict = Record<MessageKey, string>;
 
@@ -363,13 +471,18 @@ const en: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Your campus workspace — notes, events, exams in one calm place.",
   "nav.home": "Home",
-  "nav.notes": "Notes",
+  "nav.notes": "Notebook",
   "nav.events": "Events",
   "nav.exams": "Exams",
   "nav.courses": "Courses",
   "nav.marks": "Report card",
+  "nav.attendance": "Attendance",
+  "nav.work": "Work log",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
+  "nav.studentAttendance": "Student attendance",
+  "nav.settings": "Settings",
+  "nav.terms": "Terms",
   "nav.guide": "Guide",
   "nav.admin": "Admin",
   "nav.logout": "Log out",
@@ -379,6 +492,11 @@ const en: Dict = {
   "nav.expand": "Expand sidebar",
   "nav.account": "Account",
   "nav.preferences": "Preferences",
+  "nav.group.students": "Students",
+  "nav.group.classes": "Classes",
+  "nav.group.grades": "My space",
+  "nav.group.reports": "Reports",
+  "nav.group.settings": "Settings",
   "common.loading": "Loading…",
   "common.cancel": "Cancel",
   "common.save": "Save",
@@ -388,6 +506,10 @@ const en: Dict = {
   "common.update": "Update",
   "common.remove": "Remove",
   "common.back": "Back",
+  "common.view": "View",
+  "common.actions": "Actions",
+  "common.moreFilters": "More filters",
+  "common.lessFilters": "Less filters",
   "common.search": "Search",
   "common.or": "or",
   "common.tryAgain": "Try again",
@@ -462,9 +584,28 @@ const en: Dict = {
   "dashboard.stats.notes": "Notes",
   "dashboard.stats.events": "Events",
   "dashboard.stats.exams": "Exams",
+  "dashboard.stats.courses": "Courses",
   "dashboard.stats.role": "Your role",
   "dashboard.stats.average": "Average",
   "dashboard.stats.averageHint": "Overall report card",
+  "dashboard.commandCenter": "Command center",
+  "dashboard.observationOnly": "A live read-only map of your school day.",
+  "dashboard.today": "Today",
+  "dashboard.reportCard": "Report card",
+  "dashboard.ready": "Ready",
+  "dashboard.attention": "Needs attention",
+  "dashboard.timeline": "Upcoming timeline",
+  "dashboard.activeNow": "Active now",
+  "dashboard.upcoming": "Upcoming",
+  "dashboard.nextEvent": "Next event",
+  "dashboard.courseLoad": "Course load",
+  "dashboard.latestWindow": "Latest window",
+  "dashboard.noAttention": "Nothing urgent",
+  "dashboard.allClear": "No active exam or near event needs action right now.",
+  "dashboard.roleLinks": "Workspace overview",
+  "dashboard.activityGraph": "Activity graph",
+  "dashboard.activityGraphDesc": "Events, exams, and courses at a glance.",
+  "dashboard.records": "records",
   "dashboard.myExams": "My exams",
   "dashboard.emptyExamsTitle": "No exams yet",
   "dashboard.emptyExamsCta": "Browse exams",
@@ -482,7 +623,19 @@ const en: Dict = {
   "dashboard.helpBody":
     "Home shows live counts and shortcuts for notes, events, courses, exams, and your report card. Open Guide (bottom of the sidebar) for the full walkthrough.",
   "dashboard.continueGuide": "Open the guide",
-  "notes.title": "Notes",
+  "dashboard.portal.sections": "Sections",
+  "dashboard.portal.coursesDesc": "Browse courses and class materials.",
+  "dashboard.portal.examsDesc": "Upcoming exams, deadlines, and results.",
+  "dashboard.portal.eventsDesc": "Sessions, meetups, and attendance.",
+  "dashboard.portal.marksDesc": "Your grades and overall report card.",
+  "dashboard.portal.notesDesc": "Private scratchpad for quick ideas.",
+  "dashboard.portal.usersDesc": "Manage user accounts and roles.",
+  "dashboard.portal.attendanceDesc": "Mark and review attendance records.",
+  "dashboard.portal.workDesc": "Track your work hours and shifts.",
+  "dashboard.portal.studentMarksDesc": "View and grade student results.",
+  "dashboard.portal.settingsDesc": "System preferences and configuration.",
+  "dashboard.portal.termsDesc": "Manage academic terms and periods.",
+  "notes.title": "Notebook",
   "notes.subtitle": "Private scratchpad for class ideas and reminders.",
   "notes.new": "New note",
   "notes.empty": "Nothing here yet. Write your first note.",
@@ -510,6 +663,8 @@ const en: Dict = {
   "exams.title": "Exams",
   "exams.subtitle": "All exams across courses — create them under a course.",
   "exams.create": "Create exam",
+  "exams.searchPlaceholder": "Search exams…",
+  "exams.selectCourse": "Select course",
   "exams.empty": "No exams published yet.",
   "exams.kind": "Kind",
   "exams.kind.homework": "Homework",
@@ -568,6 +723,8 @@ const en: Dict = {
   "attempt.finish": "Finish exam",
   "attempt.status": "Status",
   "attempt.remaining": "Remaining",
+  "attempt.attempt": "Attempt",
+  "attempt.left": "Left",
   "attempt.progress": "Progress",
   "attempt.deadline": "Deadline",
   "attempt.notStarted": "Start the scheduled exam to see questions.",
@@ -581,6 +738,7 @@ const en: Dict = {
   "attempt.expired": "Expired",
   "attempt.closed": "This attempt is closed. Answers are read-only.",
   "attempt.inProgress": "In progress",
+  "attempt.absent": "No-show",
   "exams.helpTitle": "About exams",
   "exams.helpBody":
     "Exams belong to a course. Teachers add them from the course page with a kind; weighting is defined by the exam kind. Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
@@ -589,6 +747,7 @@ const en: Dict = {
   "admin.username": "Username",
   "admin.id": "Id",
   "admin.role": "Role",
+  "admin.directory": "Directory",
   "admin.helpTitle": "Role hierarchy",
   "admin.helpBody":
     "student < teacher < manager < admin. Higher roles inherit lower permissions. Registration always creates a student. Only admins list users and change roles.",
@@ -639,6 +798,7 @@ const en: Dict = {
   "form.contentMax": "Content must be at most 10 000 characters",
   "form.descriptionMax": "Description must be at most 2 000 characters",
   "form.timeOrder": "End time must be on or after start time",
+  "form.timePast": "Start and end times must be in the future",
   "form.weightRange": "Weight must be an integer from 1 to 100",
   "form.markRange": "Mark must be an integer from 0 to 100",
   "events.markedBy": "Marked by",
@@ -657,7 +817,7 @@ const en: Dict = {
   "role.student": "Student",
   "role.teacher": "Teacher",
   "role.manager": "Manager",
-  "role.admin": "Admin",
+  "role.admin": "ADMIN",
   "courses.title": "Courses",
   "courses.subtitle": "Classes, enrollment, and course exams live here.",
   "courses.create": "New course",
@@ -729,19 +889,80 @@ const en: Dict = {
   "course.removeStudent": "Remove student",
   "course.removeStudentConfirm": "Are you sure you want to remove",
   "events.userIdRequired": "Please select a student first.",
+  "settings.title": "School settings",
+  "settings.subtitle": "Manage exam kinds, attendance statuses, and grade bands.",
+  "settings.saved": "Settings saved.",
+  "settings.examKinds": "Exam kinds",
+  "settings.examKindsHelp": "Kinds and weights used in course averages.",
+  "settings.attendanceStatuses": "Attendance statuses",
+  "settings.attendanceHelp": "Core statuses stay locked; add custom statuses as needed.",
+  "settings.gradeBands": "Grade bands",
+  "settings.gradeBandsHelp": "Optional labels for mark ranges. Include a 0 band when using labels.",
+  "settings.name": "Name",
+  "settings.weight": "Weight",
+  "settings.status": "Status",
+  "settings.min": "Minimum",
+  "settings.label": "Label",
+  "settings.addRow": "Add row",
+  "terms.title": "Academic terms",
+  "terms.subtitle": "Manage calendar terms and assign courses to them.",
+  "terms.create": "Create term",
+  "terms.edit": "Edit term",
+  "terms.empty": "No terms yet.",
+  "terms.term": "Term",
+  "terms.unassigned": "Unassigned",
+  "terms.dateRequired": "Start and end dates are required.",
+  "sessions.title": "Lesson sessions",
+  "sessions.subtitle": "Create lessons and take course roll call.",
+  "sessions.topic": "Topic",
+  "sessions.add": "Add session",
+  "sessions.empty": "No lesson sessions yet.",
+  "sessions.untitled": "Untitled lesson",
+  "sessions.teacher": "Teacher",
+  "sessions.rollCall": "Roll call",
+  "sessions.startRequired": "Session start date and time are required.",
+  "sessions.endInvalid": "Enter both end date and end time, or leave both empty.",
+  "attendance.title": "Attendance report",
+  "attendance.subtitle": "Event attendance and lesson roll-call rates.",
+  "attendance.events": "Events",
+  "attendance.sessions": "Lesson sessions",
+  "attendance.rate": "Rate",
+  "attendance.courseBreakdown": "Course breakdown",
+  "attendance.emptyCourses": "No lesson attendance rows yet.",
+  "attendance.lookup": "Look up a student's attendance report.",
+  "attendance.show": "Show attendance",
+  "attendance.forUser": "Attendance for {user}",
+  "work.title": "Work log",
+  "work.subtitle": "Check in and out with server-stamped work entries.",
+  "work.checkIn": "Check in",
+  "work.checkOut": "Check out",
+  "work.checkedIn": "Checked in",
+  "work.notCheckedIn": "Not checked in",
+  "work.ready": "Ready to start a work stint.",
+  "work.since": "Since {time}",
+  "work.entries": "Recent entries",
+  "work.empty": "No work entries yet.",
+  "work.duration": "Duration",
+  "work.open": "Open",
+  "work.closed": "Closed",
 };
 
 const tr: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Kampüs çalışma alanın — notlar, etkinlikler ve sınavlar tek yerde.",
   "nav.home": "Ana sayfa",
-  "nav.notes": "Notlar",
+  "nav.notes": "Defter",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
   "nav.courses": "Dersler",
   "nav.marks": "Karnem",
+  "nav.attendance": "Yoklama",
+  "nav.work": "Mesai",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
+  "nav.studentAttendance": "Öğrenci yoklaması",
+  "nav.settings": "Ayarlar",
+  "nav.terms": "Dönemler",
   "nav.guide": "Rehber",
   "nav.admin": "Yönetim",
   "nav.logout": "Çıkış yap",
@@ -751,6 +972,11 @@ const tr: Dict = {
   "nav.expand": "Kenar çubuğunu genişlet",
   "nav.account": "Hesap",
   "nav.preferences": "Tercihler",
+  "nav.group.students": "Öğrenciler",
+  "nav.group.classes": "Sınıflar",
+  "nav.group.grades": "Benim Alanım",
+  "nav.group.reports": "Raporlar",
+  "nav.group.settings": "Ayarlar",
   "common.loading": "Yükleniyor…",
   "common.cancel": "Vazgeç",
   "common.save": "Kaydet",
@@ -760,6 +986,10 @@ const tr: Dict = {
   "common.update": "Güncelle",
   "common.remove": "Kaldır",
   "common.back": "Geri",
+  "common.view": "Görüntüle",
+  "common.actions": "İşlem",
+  "common.moreFilters": "Daha fazla filtre",
+  "common.lessFilters": "Daha az filtre",
   "common.search": "Ara",
   "common.or": "veya",
   "common.tryAgain": "Tekrar dene",
@@ -834,9 +1064,28 @@ const tr: Dict = {
   "dashboard.stats.notes": "Notlar",
   "dashboard.stats.events": "Etkinlikler",
   "dashboard.stats.exams": "Sınavlar",
+  "dashboard.stats.courses": "Dersler",
   "dashboard.stats.role": "Rolün",
   "dashboard.stats.average": "Ortalama",
   "dashboard.stats.averageHint": "Genel karne",
+  "dashboard.commandCenter": "Komuta merkezi",
+  "dashboard.observationOnly": "Okul gününün canlı ve salt okunur haritası.",
+  "dashboard.today": "Bugün",
+  "dashboard.reportCard": "Karne",
+  "dashboard.ready": "Hazır",
+  "dashboard.attention": "Dikkat isteyenler",
+  "dashboard.timeline": "Yaklaşan akış",
+  "dashboard.activeNow": "Şu an aktif",
+  "dashboard.upcoming": "Yaklaşan",
+  "dashboard.nextEvent": "Sıradaki etkinlik",
+  "dashboard.courseLoad": "Ders yükü",
+  "dashboard.latestWindow": "Güncel pencere",
+  "dashboard.noAttention": "Acil bir şey yok",
+  "dashboard.allClear": "Şu an işlem isteyen aktif sınav veya yakın etkinlik yok.",
+  "dashboard.roleLinks": "Çalışma alanı özeti",
+  "dashboard.activityGraph": "Aktivite grafiği",
+  "dashboard.activityGraphDesc": "Etkinlik, sınav ve ders yoğunluğu tek bakışta.",
+  "dashboard.records": "kayıt",
   "dashboard.myExams": "Sınavlarım",
   "dashboard.emptyExamsTitle": "Henüz sınav yok",
   "dashboard.emptyExamsCta": "Sınavlara git",
@@ -854,7 +1103,19 @@ const tr: Dict = {
   "dashboard.helpBody":
     "Ana sayfa not, etkinlik, ders, sınav ve karne kısayollarını gösterir. Tam tur için sidebar’ın altındaki Rehber’i aç.",
   "dashboard.continueGuide": "Rehberi aç",
-  "notes.title": "Notlar",
+  "dashboard.portal.sections": "Bölümler",
+  "dashboard.portal.coursesDesc": "Dersleri ve ders materyallerini görüntüle.",
+  "dashboard.portal.examsDesc": "Sınavlar, son teslim tarihleri ve sonuçlar.",
+  "dashboard.portal.eventsDesc": "Oturumlar, etkinlikler ve yoklama.",
+  "dashboard.portal.marksDesc": "Notların ve genel karnen.",
+  "dashboard.portal.notesDesc": "Hızlı fikirler için özel not defteri.",
+  "dashboard.portal.usersDesc": "Kullanıcı hesaplarını ve rollerini yönet.",
+  "dashboard.portal.attendanceDesc": "Yoklama kayıtlarını işaretle ve incele.",
+  "dashboard.portal.workDesc": "Çalışma saatlerini ve mesainizi takip edin.",
+  "dashboard.portal.studentMarksDesc": "Öğrenci sonuçlarını görüntüle ve notlandır.",
+  "dashboard.portal.settingsDesc": "Sistem tercihleri ve yapılandırma.",
+  "dashboard.portal.termsDesc": "Akademik dönemleri ve periyotları yönet.",
+  "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleri ve hatırlatmalar için özel defter.",
   "notes.new": "Yeni not",
   "notes.empty": "Henüz bir şey yok. İlk notunu yaz.",
@@ -882,6 +1143,8 @@ const tr: Dict = {
   "exams.title": "Sınavlar",
   "exams.subtitle": "Tüm derslerin sınavları — yeni sınav ders içinden eklenir.",
   "exams.create": "Sınav oluştur",
+  "exams.searchPlaceholder": "Sınav ara…",
+  "exams.selectCourse": "Ders seç",
   "exams.empty": "Henüz yayınlanmış sınav yok.",
   "exams.kind": "Tür",
   "exams.kind.homework": "Ödev",
@@ -940,6 +1203,8 @@ const tr: Dict = {
   "attempt.finish": "Sınavı bitir",
   "attempt.status": "Durum",
   "attempt.remaining": "Kalan süre",
+  "attempt.attempt": "Deneme",
+  "attempt.left": "Çıkış",
   "attempt.progress": "İlerleme",
   "attempt.deadline": "Bitiş zamanı",
   "attempt.notStarted": "Soruları görmek için zamanlı sınavı başlat.",
@@ -953,6 +1218,7 @@ const tr: Dict = {
   "attempt.expired": "Süresi doldu",
   "attempt.closed": "Bu oturum kapalı. Cevaplar salt okunur.",
   "attempt.inProgress": "Devam ediyor",
+  "attempt.absent": "Katılmadı",
   "exams.helpTitle": "Sınavlar hakkında",
   "exams.helpBody":
     "Sınavlar bir derse aittir. Öğretmenler ders sayfasından tür seçerek ekler; ağırlık sınav türünde tanımlıdır. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",
@@ -961,6 +1227,7 @@ const tr: Dict = {
   "admin.username": "Kullanıcı adı",
   "admin.id": "Id",
   "admin.role": "Rol",
+  "admin.directory": "Kayıt listesi",
   "admin.helpTitle": "Rol hiyerarşisi",
   "admin.helpBody":
     "öğrenci < öğretmen < yönetici < admin. Üst roller alt yetkileri miras alır. Kayıt her zaman öğrenci oluşturur. Rolleri yalnız admin değiştirir.",
@@ -1011,6 +1278,7 @@ const tr: Dict = {
   "form.contentMax": "İçerik en fazla 10 000 karakter olmalı",
   "form.descriptionMax": "Açıklama en fazla 2 000 karakter olmalı",
   "form.timeOrder": "Bitiş, başlangıçtan önce olamaz",
+  "form.timePast": "Başlangıç ve bitiş gelecekte olmalı",
   "form.weightRange": "Ağırlık 1–100 arası tam sayı olmalı",
   "form.markRange": "Not 0–100 arası tam sayı olmalı",
   "events.markedBy": "İşaretleyen",
@@ -1029,7 +1297,7 @@ const tr: Dict = {
   "role.student": "Öğrenci",
   "role.teacher": "Öğretmen",
   "role.manager": "Yönetici",
-  "role.admin": "Admin",
+  "role.admin": "ADMIN",
   "courses.title": "Dersler",
   "courses.subtitle": "Sınıflar, kayıt ve ders sınavları burada.",
   "courses.create": "Yeni ders",
@@ -1101,6 +1369,62 @@ const tr: Dict = {
   "course.removeStudent": "Öğrenciyi çıkar",
   "course.removeStudentConfirm": "Bu öğrenciyi çıkarmak istediğine emin misin?",
   "events.userIdRequired": "Önce bir öğrenci seçmelisin.",
+  "settings.title": "Okul ayarları",
+  "settings.subtitle": "Sınav türleri, yoklama durumları ve not bantlarını yönet.",
+  "settings.saved": "Ayarlar kaydedildi.",
+  "settings.examKinds": "Sınav türleri",
+  "settings.examKindsHelp": "Ders ortalamalarında kullanılan tür ve ağırlıklar.",
+  "settings.attendanceStatuses": "Yoklama durumları",
+  "settings.attendanceHelp": "Temel durumlar kilitli kalır; gerekirse özel durum ekle.",
+  "settings.gradeBands": "Not bantları",
+  "settings.gradeBandsHelp": "Not aralıkları için isteğe bağlı etiketler. Etiket kullanırken 0 bandı ekle.",
+  "settings.name": "Ad",
+  "settings.weight": "Ağırlık",
+  "settings.status": "Durum",
+  "settings.min": "Alt sınır",
+  "settings.label": "Etiket",
+  "settings.addRow": "Satır ekle",
+  "terms.title": "Akademik dönemler",
+  "terms.subtitle": "Takvim dönemlerini yönet ve dersleri dönemlere bağla.",
+  "terms.create": "Dönem oluştur",
+  "terms.edit": "Dönemi düzenle",
+  "terms.empty": "Henüz dönem yok.",
+  "terms.term": "Dönem",
+  "terms.unassigned": "Atanmamış",
+  "terms.dateRequired": "Başlangıç ve bitiş tarihi gerekli.",
+  "sessions.title": "Ders oturumları",
+  "sessions.subtitle": "Ders oluştur ve ders yoklaması al.",
+  "sessions.topic": "Konu",
+  "sessions.add": "Oturum ekle",
+  "sessions.empty": "Henüz ders oturumu yok.",
+  "sessions.untitled": "Konu girilmemiş ders",
+  "sessions.teacher": "Öğretmen",
+  "sessions.rollCall": "Yoklama",
+  "sessions.startRequired": "Oturum başlangıç tarihi ve saati gerekli.",
+  "sessions.endInvalid": "Bitiş için tarih ve saati birlikte gir ya da ikisini de boş bırak.",
+  "attendance.title": "Yoklama raporu",
+  "attendance.subtitle": "Etkinlik yoklaması ve ders oturumu devam oranları.",
+  "attendance.events": "Etkinlikler",
+  "attendance.sessions": "Ders oturumları",
+  "attendance.rate": "Oran",
+  "attendance.courseBreakdown": "Ders dökümü",
+  "attendance.emptyCourses": "Henüz ders yoklaması yok.",
+  "attendance.lookup": "Bir öğrencinin yoklama raporunu aç.",
+  "attendance.show": "Yoklamayı göster",
+  "attendance.forUser": "{user} yoklaması",
+  "work.title": "Mesai kaydı",
+  "work.subtitle": "Sunucu saatli giriş ve çıkış kayıtları.",
+  "work.checkIn": "Giriş yap",
+  "work.checkOut": "Çıkış yap",
+  "work.checkedIn": "Giriş yapılmış",
+  "work.notCheckedIn": "Giriş yapılmadı",
+  "work.ready": "Mesai kaydı başlatmaya hazır.",
+  "work.since": "Başlangıç: {time}",
+  "work.entries": "Son kayıtlar",
+  "work.empty": "Henüz mesai kaydı yok.",
+  "work.duration": "Süre",
+  "work.open": "Açık",
+  "work.closed": "Kapalı",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

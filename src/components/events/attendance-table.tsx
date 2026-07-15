@@ -1,8 +1,9 @@
 import { For, Show, createSignal } from "solid-js";
 import type { Attendance } from "@/api/types";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { IconTrash } from "@/components/ui/icons";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import {
   Table,
   TableBody,
@@ -34,41 +35,42 @@ export function AttendanceTable(props: {
           </p>
         }
       >
-        <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-          <Table>
+        <DataTableFrame>
+          <Table class="data-table">
             <TableHeader>
               <TableRow>
                 <TableHead>{t("events.userId")}</TableHead>
                 <TableHead>{t("events.status")}</TableHead>
                 <TableHead>{t("events.markedBy")}</TableHead>
                 <Show when={props.canRemove}>
-                  <TableHead class="w-28" />
+                  <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
                 </Show>
               </TableRow>
             </TableHeader>
             <TableBody>
               <For each={props.rows}>
                 {(row) => (
-                  <TableRow class="h-12">
+                  <TableRow>
                     <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" class="capitalize">
+                      <Badge variant="secondary" class="rounded-sm capitalize">
                         {row.status}
                       </Badge>
                     </TableCell>
                     <TableCell class="text-sm text-muted-foreground">{personLabel(row.marked_by)}</TableCell>
                     <Show when={props.canRemove && props.onRemove}>
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          class="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => setTargetUser(personId(row.user))}
-                        >
-                          <IconTrash class="h-4 w-4" />
-                          {t("common.remove")}
-                        </Button>
+                      <TableCell class="px-1 text-center">
+                        <TableRowActions
+                          label={t("common.actions")}
+                          actions={[
+                            {
+                              label: t("common.remove"),
+                              icon: <IconTrash class="h-4 w-4" />,
+                              destructive: true,
+                              onSelect: () => setTargetUser(personId(row.user)),
+                            },
+                          ]}
+                        />
                       </TableCell>
                     </Show>
                   </TableRow>
@@ -76,7 +78,7 @@ export function AttendanceTable(props: {
               </For>
             </TableBody>
           </Table>
-        </div>
+        </DataTableFrame>
       </Show>
 
       <ConfirmDialog

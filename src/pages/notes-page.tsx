@@ -41,18 +41,23 @@ function NotesContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader
-        accent="amber"
-        eyebrow={t("nav.notes")}
-        title={t("notes.title")}
-        description={t("notes.subtitle")}
-        actions={
-          <Button type="button" size="sm" class="rounded-md" onClick={() => setCreateOpen(true)}>
-            <IconPlus class="h-4 w-4" />
-            {t("notes.new")}
-          </Button>
-        }
-      />
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+          <span>{t("nav.notes")}</span>
+        </div>
+        <PageHeader
+          accent="amber"
+          eyebrow={t("nav.notes")}
+          title={t("notes.title")}
+          description={t("notes.subtitle")}
+          actions={
+            <Button type="button" size="sm" class="rounded-sm" onClick={() => setCreateOpen(true)}>
+              <IconPlus class="h-4 w-4" />
+              {t("notes.new")}
+            </Button>
+          }
+        />
+      </div>
 
       <FormDialog
         open={createOpen()}

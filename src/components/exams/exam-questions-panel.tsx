@@ -16,7 +16,7 @@ import { useT } from "@/stores/preferences-context";
 
 const QUESTION_PAGE_SIZE = 5;
 
-export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean }) {
+export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; embedded?: boolean }) {
   const t = useT();
   const [questions, { refetch }] = createResource(() => props.examId, async (examId) => {
     try {
@@ -73,9 +73,11 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean }
   };
 
   return (
-    <section class="surface-card space-y-4 p-5">
+    <div class={props.embedded ? "space-y-4" : "surface-card space-y-4 p-5"}>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="font-display text-lg font-semibold">{t("questions.title")}</h2>
+        <Show when={!props.embedded}>
+          <h2 class="font-display text-lg font-semibold">{t("questions.title")}</h2>
+        </Show>
         <Show when={!props.readOnly}>
           <Button
             type="button"
@@ -227,6 +229,6 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean }
           }
         }}
       />
-    </section>
+    </div>
   );
 }

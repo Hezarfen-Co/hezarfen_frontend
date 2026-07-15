@@ -35,13 +35,13 @@ function StudentMarksContent() {
         description={t("marks.lookup")}
       />
 
-      <section class="surface-card space-y-4 p-5">
+      <section class="data-shell space-y-4 p-4">
         <div>
           <h2 class="font-display text-lg font-semibold">{t("nav.studentMarks")}</h2>
           <p class="mt-1 text-sm text-muted-foreground">{t("marks.lookup")}</p>
         </div>
         <form
-          class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+          class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
           onSubmit={(e) => {
             e.preventDefault();
             const id = userId().trim();
@@ -59,7 +59,7 @@ function StudentMarksContent() {
             emptyMessage={t("admin.noUsers")}
             allowManualValue
           />
-          <Button type="submit" class="h-9 w-full sm:w-auto">{t("marks.show")}</Button>
+          <Button type="submit" class="h-9 w-full rounded-sm sm:w-auto">{t("marks.show")}</Button>
         </form>
 
         <Show when={report.error}>
@@ -73,7 +73,7 @@ function StudentMarksContent() {
         <Show when={report()}>
           {(r) => (
             <div class="space-y-4">
-              <p class="rounded-lg border bg-background/60 px-4 py-3 text-sm text-muted-foreground">
+              <p class="data-shell px-4 py-3 text-sm text-muted-foreground">
                 {t("marks.forUser", { user: lookupId() ?? "" })}
               </p>
               <MarksReportView report={r()} />

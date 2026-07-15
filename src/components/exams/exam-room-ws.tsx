@@ -358,11 +358,21 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | n
     if (props.wsState === "connected") return t("ws.connected");
     return t("ws.disconnected");
   };
+  const attemptLabel = () => {
+    if (props.attempt.attempts_used != null && props.attempt.max_attempts != null) return `${props.attempt.attempts_used} / ${props.attempt.max_attempts}`;
+    if (props.attempt.attempt != null) return String(props.attempt.attempt);
+    if (props.attempt.attempts_used != null) return String(props.attempt.attempts_used);
+    return "—";
+  };
   return (
     <div class="grid auto-rows-fr gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
       <div class="h-full rounded-lg border bg-background/60 p-3">
         <p class="text-xs text-muted-foreground">{t("attempt.status")}</p>
         <p class="mt-1 font-medium">{statusLabel()}</p>
+      </div>
+      <div class="h-full rounded-lg border bg-background/60 p-3">
+        <p class="text-xs text-muted-foreground">{t("attempt.attempt")}</p>
+        <p class="mt-1 font-medium tabular-nums">{attemptLabel()}</p>
       </div>
       <div class={remainingWarn() ? "h-full rounded-lg border border-amber-500/40 bg-amber-500/10 p-3" : "h-full rounded-lg border bg-background/60 p-3"}>
         <p class="text-xs text-muted-foreground">{t("attempt.remaining")}</p>
@@ -394,6 +404,12 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | n
         <div class="h-full rounded-lg border bg-background/60 p-3">
           <p class="text-xs text-muted-foreground">{t("attempt.mark")}</p>
           <p class="mt-1 font-medium">{props.attempt.mark}</p>
+        </div>
+      </Show>
+      <Show when={props.attempt.left_at != null}>
+        <div class="h-full rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+          <p class="text-xs text-muted-foreground">{t("attempt.left")}</p>
+          <p class="mt-1 font-medium">{formatDateTime(props.attempt.left_at, locale())}</p>
         </div>
       </Show>
     </div>

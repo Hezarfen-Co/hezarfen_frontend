@@ -1,27 +1,33 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
-import { Link, useNavigate, useParams } from "@tanstack/solid-router";
+import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import { deleteCourseById } from "@/api/deleteCourseById";
 import { deleteCourseEnrollmentByUserId } from "@/api/deleteCourseEnrollmentByUserId";
 import { getCourseById } from "@/api/getCourseById";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { getCourseExams } from "@/api/getCourseExams";
 import { getMyCourses } from "@/api/getMyCourses";
+import { getTerms } from "@/api/getTerms";
 import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
 import { postCourseExam } from "@/api/postCourseExam";
-import { ApiError, formatApiError } from "@/api/client";
+import { formatApiError } from "@/api/client";
+import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm } from "@/components/exams/exam-form";
+import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { FormDialog } from "@/components/ui/form-dialog";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { Select } from "@/components/ui/select";
+import { SectionDisclosure } from "@/components/ui/section-disclosure";
+import { SidePanel } from "@/components/ui/side-panel";
 import {
   Table,
   TableBody,
@@ -30,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useAuth } from "@/stores/auth-context";
@@ -47,13 +54,18 @@ export default function CourseDetailPage() {
 }
 
 function CourseDetailContent() {
+  const location = useLocation();
   const params = useParams({ from: "/courses/$id" });
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
-  const id = () => params().id;
+  const id = createMemo(() => {
+    location();
+    return params().id;
+  });
 
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
+  const [terms] = createResource(() => getTerms());
   const [exams, { refetch: refetchExams }] = createResource(id, (courseId) => getCourseExams(courseId));
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const [roster, { refetch: refetchRoster }] = createResource(
@@ -68,7 +80,10 @@ function CourseDetailContent() {
   const [editing, setEditing] = createSignal(false);
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
+  const [termId, setTermId] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
+  const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
+  const [openSections, setOpenSections] = createSignal({ exams: true, sessions: false, roster: false });
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -102,6 +117,9 @@ function CourseDetailContent() {
   const examKindCount = createMemo(() => new Set((exams() ?? []).map((exam) => exam.kind)).size);
 
   const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
+  const toggleSection = (section: "exams" | "sessions" | "roster") => {
+    setOpenSections((current) => ({ ...current, [section]: !current[section] }));
+  };
 
   const wrap = async (fn: () => Promise<void>) => {
     setError("");
@@ -120,18 +138,17 @@ function CourseDetailContent() {
     if (!c) return;
     setTitle(c.title);
     setDescription(c.description);
+    setTermId(c.term_id ?? "");
     setEditing(true);
   };
 
   return (
     <Suspense fallback={<PageSpinner />}>
       <Show
-        when={course()}
+        when={course()?.id === id() ? course() : undefined}
         fallback={
-          <Show when={course.error}>
-            <Alert variant="destructive">
-              {course.error instanceof ApiError ? course.error.message : t("common.notFound")}
-            </Alert>
+          <Show when={course.error} fallback={<PageSpinner />}>
+            <Alert variant="destructive">{formatApiError(course.error)}</Alert>
           </Show>
         }
       >
@@ -139,46 +156,43 @@ function CourseDetailContent() {
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
-            <PageHeader
-              accent="violet"
-              eyebrow={t("courses.title")}
-              title={c().title}
-              description={c().description || undefined}
-              actions={
-                <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
-                  <Link to="/courses">
-                    <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
-                      <IconChevronLeft class="h-4 w-4" />
-                      {t("common.back")}
-                    </Button>
-                  </Link>
-                  <Show when={canManage()}>
-                    <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
-                        onClick={startEdit}
-                      >
-                        <IconEdit class="h-4 w-4" />
-                        {t("common.edit")}
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                <span>{t("nav.group.classes")}</span>
+                <span>/</span>
+                <Link to="/courses" class="hover:text-foreground">{t("courses.title")}</Link>
+                <span>/</span>
+                <span class="truncate">{c().title}</span>
+              </div>
+              <PageHeader
+                accent="violet"
+                eyebrow={t("courses.title")}
+                title={c().title}
+                description={c().description || undefined}
+                actions={
+                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-card p-1 shadow-sm sm:w-auto">
+                    <Link to="/courses">
+                      <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
+                        <IconChevronLeft class="h-4 w-4" />
+                        {t("common.back")}
                       </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
-                        onClick={() => setDeleteOpen(true)}
-                      >
-                        <IconTrash class="h-4 w-4" />
-                        {t("courses.delete")}
-                      </Button>
-                    </div>
-                  </Show>
-                </div>
-              }
-            />
+                    </Link>
+                    <Show when={canManage()}>
+                      <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
+                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={startEdit}>
+                          <IconEdit class="h-4 w-4" />
+                          {t("common.edit")}
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setDeleteOpen(true)}>
+                          <IconTrash class="h-4 w-4" />
+                          {t("courses.delete")}
+                        </Button>
+                      </div>
+                    </Show>
+                  </div>
+                }
+              />
+            </div>
 
             <ConfirmDialog
               open={deleteOpen()}
@@ -214,12 +228,7 @@ function CourseDetailContent() {
               }}
             />
 
-            <FormDialog
-              open={editing()}
-              onOpenChange={setEditing}
-              title={t("common.edit")}
-              description={c().title}
-            >
+            <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().title}>
               <form
                 class="space-y-4"
                 onSubmit={(e) => {
@@ -228,6 +237,7 @@ function CourseDetailContent() {
                     await patchCourseById(id(), {
                       title: title().trim(),
                       description: description(),
+                      term_id: termId() || null,
                     });
                     setEditing(false);
                     await refetchCourse();
@@ -252,84 +262,129 @@ function CourseDetailContent() {
                     onInput={(e) => setDescription(e.currentTarget.value)}
                   />
                 </div>
-                <div class="flex justify-end">
-                  <Button type="submit" class="w-full sm:w-auto" disabled={pending()}>
+                <div class="space-y-1.5">
+                  <Label for="edit-course-term">{t("terms.term")}</Label>
+                  <Select id="edit-course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
+                    <option value="">{t("terms.unassigned")}</option>
+                    <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+                  </Select>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <Button type="submit" class="rounded-sm" disabled={pending()}>
                     {t("common.update")}
+                  </Button>
+                  <Button type="button" variant="outline" class="rounded-sm" onClick={() => setEditing(false)}>
+                    {t("common.cancel")}
                   </Button>
                 </div>
               </form>
-            </FormDialog>
+            </SidePanel>
+
+            <SidePanel open={showExamForm()} onOpenChange={setShowExamForm} title={t("courses.addExam")} description={c().title}>
+              <ExamForm
+                submitLabel={t("common.create")}
+                onCancel={() => setShowExamForm(false)}
+                onSubmit={async (values) => {
+                  await postCourseExam(id(), {
+                    ...values,
+                    description: values.description.trim() || undefined,
+                  });
+                  setShowExamForm(false);
+                  await refetchExams();
+                }}
+              />
+            </SidePanel>
+
+            <SidePanel open={showEnrollPanel()} onOpenChange={setShowEnrollPanel} title={t("courses.enroll")} description={c().title}>
+              <form
+                class="space-y-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void wrap(async () => {
+                    const uid = enrollUserId().trim();
+                    if (!uid) throw new Error(t("events.userId"));
+                    await postCourseEnrollment(id(), uid);
+                    setEnrollUserId("");
+                    setShowEnrollPanel(false);
+                    await refetchRoster();
+                  });
+                }}
+              >
+                <UserSearchSelect
+                  id="course-enroll-user"
+                  value={enrollUserId()}
+                  excludeIds={enrolledUserIds()}
+                  placeholder={t("form.selectStudent")}
+                  onChange={setEnrollUserId}
+                />
+                <div class="flex flex-wrap gap-2">
+                  <Button type="submit" class="rounded-sm" disabled={pending()}>
+                    {t("courses.enroll")}
+                  </Button>
+                  <Button type="button" variant="outline" class="rounded-sm" onClick={() => setShowEnrollPanel(false)}>
+                    {t("common.cancel")}
+                  </Button>
+                </div>
+              </form>
+            </SidePanel>
 
             {error() && (
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
-            <section class="grid gap-3 sm:grid-cols-3">
-              <div class="surface-card bg-card/80 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div class="data-shell p-4">
+                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                   {t("courses.exams")}
                 </p>
-                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{examCount()}</p>
+                <p class="mono mt-2 text-3xl font-semibold tabular-nums">{examCount()}</p>
                 <p class="mt-1 text-xs text-muted-foreground">{t("nav.exams")}</p>
               </div>
 
               <Show when={isTeacherPlus()}>
-                <div class="surface-card bg-card/80 p-4">
-                  <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <div class="data-shell p-4">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                     {t("courses.roster")}
                   </p>
-                  <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{rosterCount()}</p>
+                  <p class="mono mt-2 text-3xl font-semibold tabular-nums">{rosterCount()}</p>
                   <p class="mt-1 text-xs text-muted-foreground">{t("courses.enroll")}</p>
                 </div>
               </Show>
 
-              <div class="surface-card bg-card/80 p-4">
-                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div class="data-shell p-4">
+                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                   {t("exams.kind")}
                 </p>
-                <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{examKindCount()}</p>
+                <p class="mono mt-2 text-3xl font-semibold tabular-nums">{examKindCount()}</p>
                 <p class="mt-1 text-xs text-muted-foreground">{t("courses.exams")}</p>
+              </div>
+
+              <div class="data-shell p-4">
+                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  {t("terms.term")}
+                </p>
+                <p class="mono mt-2 truncate text-xl font-semibold">
+                  {terms()?.find((term) => term.id === c().term_id)?.name ?? t("terms.unassigned")}
+                </p>
+                <p class="mt-1 text-xs text-muted-foreground">{t("terms.title")}</p>
               </div>
             </section>
 
-            {/* Course exams */}
-            <section class="surface-card space-y-4 p-5">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 class="font-display text-lg font-semibold">{t("courses.exams")}</h2>
-                  <p class="mt-1 text-sm text-muted-foreground">
-                    {examCount()} {t("nav.exams")}
-                  </p>
-                </div>
+            <SectionDisclosure
+              open={openSections().exams}
+              onToggle={() => toggleSection("exams")}
+              title={t("courses.exams")}
+              description={`${examCount()} ${t("nav.exams")}`}
+              meta={<Badge variant="secondary" class="mono rounded-sm px-3 py-1">{examCount()}</Badge>}
+              actions={
                 <Show when={canManage()}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowExamForm((v) => !v)}
-                  >
+                  <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowExamForm(true)}>
                     <IconPlus class="h-4 w-4" />
                     {t("courses.addExam")}
                   </Button>
                 </Show>
-              </div>
-
-              <Show when={showExamForm() && canManage()}>
-                <div class="rounded-lg border bg-background/60 p-4">
-                  <ExamForm
-                    submitLabel={t("common.create")}
-                    onSubmit={async (values) => {
-                      await postCourseExam(id(), {
-                        ...values,
-                        description: values.description.trim() || undefined,
-                      });
-                      setShowExamForm(false);
-                      await refetchExams();
-                    }}
-                  />
-                </div>
-              </Show>
-
+              }
+            >
               <Suspense fallback={<PageSpinner />}>
                 <Show
                   when={(exams() ?? []).length > 0}
@@ -343,72 +398,60 @@ function CourseDetailContent() {
                     <For each={exams() ?? []}>
                       {(exam) => (
                         <li>
-                          <Link
-                            to="/exams/$id"
-                            params={() => ({ id: exam.id })}
-                            class="group flex items-start justify-between gap-3 rounded-lg border border-border/70 bg-background/60 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/35 hover:shadow-sm"
+                          <ExamLink
+                            examId={exam.id}
+                            class="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/35 hover:bg-muted/40"
                           >
                             <div class="min-w-0 space-y-2">
                               <div>
                                 <p class="truncate font-medium group-hover:text-primary">{exam.title}</p>
                               </div>
                               <div class="flex flex-wrap items-center gap-2">
-                                <Badge variant="outline" class="rounded-full capitalize">
+                                <Badge variant="outline" class="rounded-sm capitalize">
                                   {examKindLabel(String(exam.kind), t)}
                                   <Show when={examWeight(exam) != null}>
                                     {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
                                   </Show>
                                 </Badge>
-                                <Badge variant="secondary" class="rounded-full">
+                                <Badge variant="secondary" class="rounded-sm">
                                   {examModeLabel(exam.mode)}
                                 </Badge>
                               </div>
                             </div>
-                          </Link>
+                          </ExamLink>
                         </li>
                       )}
                     </For>
                   </ul>
                 </Show>
               </Suspense>
-            </section>
+            </SectionDisclosure>
 
-            {/* Roster */}
+            <SectionDisclosure
+              open={openSections().sessions}
+              onToggle={() => toggleSection("sessions")}
+              title={t("sessions.title")}
+              description={t("sessions.subtitle")}
+            >
+              <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} />
+            </SectionDisclosure>
+
             <Show when={isTeacherPlus()}>
-              <section class="surface-card space-y-4 p-5">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <h2 class="font-display text-lg font-semibold">{t("courses.roster")}</h2>
-                  <Badge variant="secondary" class="rounded-full px-3 py-1">
-                    {rosterCount()}
-                  </Badge>
-                </div>
-                <form
-                  class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void wrap(async () => {
-                      const uid = enrollUserId().trim();
-                      if (!uid) throw new Error(t("events.userId"));
-                      await postCourseEnrollment(id(), uid);
-                      setEnrollUserId("");
-                      await refetchRoster();
-                    });
-                  }}
-                >
-                  <div class="min-w-0">
-                    <UserSearchSelect
-                      id="course-enroll-user"
-                      value={enrollUserId()}
-                      excludeIds={enrolledUserIds()}
-                      placeholder={t("form.selectStudent")}
-                      onChange={setEnrollUserId}
-                    />
-                  </div>
-                  <Button type="submit" class="h-10" disabled={pending()}>
-                    {t("courses.enroll")}
-                  </Button>
-                </form>
-
+              <SectionDisclosure
+                open={openSections().roster}
+                onToggle={() => toggleSection("roster")}
+                title={t("courses.roster")}
+                description={t("courses.enroll")}
+                meta={<Badge variant="secondary" class="mono rounded-sm px-3 py-1">{rosterCount()}</Badge>}
+                actions={
+                  <Show when={canManage()}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowEnrollPanel(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("courses.enroll")}
+                    </Button>
+                  </Show>
+                }
+              >
                 <Suspense fallback={<PageSpinner />}>
                   <Show
                     when={(roster() ?? []).length > 0}
@@ -418,13 +461,13 @@ function CourseDetailContent() {
                       </div>
                     }
                   >
-                    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-                      <Table>
+                    <DataTableFrame>
+                      <Table class="data-table">
                         <TableHeader>
                           <TableRow>
                             <TableHead>{t("admin.username")}</TableHead>
                             <TableHead>{t("admin.id")}</TableHead>
-                            <TableHead class="w-16 text-right" />
+                            <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -434,25 +477,26 @@ function CourseDetailContent() {
                                 <TableCell class="font-medium">
                                   {row.user.display_name || row.user.username}
                                 </TableCell>
-                                <TableCell class="font-mono text-xs text-muted-foreground">
+                                <TableCell class="mono text-xs text-muted-foreground">
                                   {row.user.id}
                                 </TableCell>
-                                <TableCell class="text-right">
+                                <TableCell class="px-1 text-center">
                                   <Show when={canManage()}>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      class="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                      onClick={() =>
-                                        setRemoveTarget({
-                                          userId: row.user.id,
-                                          userName: row.user.display_name || row.user.username,
-                                        })
-                                      }
-                                    >
-                                      <IconTrash class="h-4 w-4" />
-                                    </Button>
+                                    <TableRowActions
+                                      label={t("common.actions")}
+                                      actions={[
+                                        {
+                                          label: t("common.remove"),
+                                          icon: <IconTrash class="h-4 w-4" />,
+                                          destructive: true,
+                                          onSelect: () =>
+                                            setRemoveTarget({
+                                              userId: row.user.id,
+                                              userName: row.user.display_name || row.user.username,
+                                            }),
+                                        },
+                                      ]}
+                                    />
                                   </Show>
                                 </TableCell>
                               </TableRow>
@@ -460,10 +504,10 @@ function CourseDetailContent() {
                           </For>
                         </TableBody>
                       </Table>
-                    </div>
+                    </DataTableFrame>
                   </Show>
                 </Suspense>
-              </section>
+              </SectionDisclosure>
             </Show>
           </div>
             </Show>

@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from "@tanstack/solid-router";
+import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { deleteExamById } from "@/api/deleteExamById";
 import { deleteExamResultByUserId } from "@/api/deleteExamResultByUserId";
@@ -22,9 +22,11 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { FormDialog } from "@/components/ui/form-dialog";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { SectionDisclosure } from "@/components/ui/section-disclosure";
+import { SidePanel } from "@/components/ui/side-panel";
 import {
   Table,
   TableBody,
@@ -33,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
@@ -52,13 +55,17 @@ export default function ExamDetailPage() {
 }
 
 function ExamDetailContent() {
+  const location = useLocation();
   const params = useParams({ from: "/exams/$id" });
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
-  const id = () => params().id;
+  const id = createMemo(() => {
+    location();
+    return params().id;
+  });
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
   const isTeacherPlus = createMemo(() => hasMinRole(auth.user()?.role, "teacher"));
@@ -109,6 +116,15 @@ function ExamDetailContent() {
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
   const [sheetUserId, setSheetUserId] = createSignal<string | null>(null);
+  const [openSections, setOpenSections] = createSignal({
+    schedule: true,
+    ownResult: false,
+    answerSheet: false,
+    statistics: false,
+    questions: false,
+    grade: false,
+    results: false,
+  });
 
   const examStatus = () => {
     const e = exam();
@@ -167,16 +183,17 @@ function ExamDetailContent() {
       setPending(false);
     }
   };
+  const toggleSection = (section: "schedule" | "ownResult" | "answerSheet" | "statistics" | "questions" | "grade" | "results") => {
+    setOpenSections((current) => ({ ...current, [section]: !current[section] }));
+  };
 
   return (
     <Suspense fallback={<PageSpinner />}>
       <Show
-        when={exam()}
+        when={exam()?.id === id() ? exam() : undefined}
         fallback={
-          <Show when={exam.error}>
-            <Alert variant="destructive">
-              {exam.error instanceof ApiError ? exam.error.message : t("common.notFound")}
-            </Alert>
+          <Show when={exam.error} fallback={<PageSpinner />}>
+            <Alert variant="destructive">{formatApiError(exam.error)}</Alert>
           </Show>
         }
       >
@@ -184,22 +201,30 @@ function ExamDetailContent() {
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
-            <PageHeader
-              accent="rose"
-              eyebrow={t("exams.title")}
-              title={ex().title}
-              description={ex().description || "—"}
-              actions={
-                <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                <span>{t("nav.group.classes")}</span>
+                <span>/</span>
+                <Link to="/exams" class="hover:text-foreground">{t("exams.title")}</Link>
+                <span>/</span>
+                <span class="truncate">{ex().title}</span>
+              </div>
+              <PageHeader
+                accent="rose"
+                eyebrow={t("exams.title")}
+                title={ex().title}
+                description={ex().description || "—"}
+                actions={
+                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-card p-1 shadow-sm sm:w-auto">
                   <Link to="/exams">
-                    <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
+                    <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
                       <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
                   </Link>
                   <Show when={!isFinished() && !isUpcoming() && isSittable()}>
                     <Link to="/exam-room/$id" params={{ id: id() }}>
-                      <Button size="sm" class="flex-1 rounded-md sm:flex-none">
+                      <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
                         <IconExam class="h-4 w-4" />
                         {t("attempt.openRoom")}
                       </Button>
@@ -207,7 +232,7 @@ function ExamDetailContent() {
                   </Show>
                   <Show when={isTeacherPlus() && !isUpcoming() && isSittable()}>
                     <Link to="/exams/$id/live" params={{ id: id() }}>
-                      <Button variant="outline" size="sm" class="flex-1 rounded-md sm:flex-none">
+                      <Button variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none">
                         <IconEye class="h-4 w-4" />
                         {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                       </Button>
@@ -219,7 +244,7 @@ function ExamDetailContent() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
+                        class="flex-1 rounded-sm sm:flex-none"
                         onClick={() => setEditing(true)}
                       >
                         <IconEdit class="h-4 w-4" />
@@ -229,7 +254,7 @@ function ExamDetailContent() {
                         type="button"
                         variant="destructive"
                         size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
+                        class="flex-1 rounded-sm sm:flex-none"
                         disabled={pending()}
                         onClick={() => setDeleteOpen(true)}
                       >
@@ -239,8 +264,8 @@ function ExamDetailContent() {
                     </div>
                   </Show>
                 </div>
-              }
-            >
+                }
+              >
               <div class="flex flex-wrap items-center gap-2 pt-1">
                 <Badge variant="outline" class={cn(
                   "rounded-sm capitalize",
@@ -268,7 +293,8 @@ function ExamDetailContent() {
                   {examModeLabel(ex().mode)}
                 </Badge>
               </div>
-            </PageHeader>
+              </PageHeader>
+            </div>
 
             <ConfirmDialog
               open={deleteOpen()}
@@ -284,7 +310,7 @@ function ExamDetailContent() {
               }}
             />
 
-            <FormDialog
+            <SidePanel
               open={editing()}
               onOpenChange={setEditing}
               title={t("common.edit")}
@@ -300,86 +326,95 @@ function ExamDetailContent() {
                   await refetchExam();
                 }}
               />
-            </FormDialog>
+            </SidePanel>
 
-            <section class="surface-card space-y-4 p-5">
-              <h2 class="font-display text-lg font-semibold">{t("exams.schedule")}</h2>
+            <SectionDisclosure
+              open={openSections().schedule}
+              onToggle={() => toggleSection("schedule")}
+              title={t("exams.schedule")}
+              description={examModeLabel(ex().mode)}
+            >
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-lg border bg-background/60 p-3">
-                  <p class="text-xs text-muted-foreground">{t("exams.mode")}</p>
+                <div class="rounded-lg border bg-muted/25 p-3">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
                   <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
                 </div>
-                <div class="rounded-lg border bg-background/60 p-3">
-                  <p class="text-xs text-muted-foreground">{t("events.starts")}</p>
-                  <p class="mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
+                <div class="rounded-lg border bg-muted/25 p-3">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</p>
+                  <p class="mono mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
                 </div>
-                <div class="rounded-lg border bg-background/60 p-3">
-                  <p class="text-xs text-muted-foreground">{t("events.ends")}</p>
-                  <p class="mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
+                <div class="rounded-lg border bg-muted/25 p-3">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.ends")}</p>
+                  <p class="mono mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
                 </div>
-                <div class="rounded-lg border bg-background/60 p-3">
-                  <p class="text-xs text-muted-foreground">{t("exams.durationMinutes")}</p>
-                  <p class="mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
+                <div class="rounded-lg border bg-muted/25 p-3">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.durationMinutes")}</p>
+                  <p class="mono mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
                 </div>
               </div>
-            </section>
+            </SectionDisclosure>
 
             <Show when={!isTeacherPlus() && !isScheduled()}>
-              <section class="surface-card p-6">
-                <h2 class="font-display text-lg font-semibold">{t("exams.yourResult")}</h2>
-                <div class="mt-4">
-                  <Suspense fallback={<PageSpinner />}>
-                    <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
-                      {(r) => <ExamResultBadge mark={r().mark} />}
-                    </Show>
-                  </Suspense>
-                </div>
-              </section>
+              <SectionDisclosure open={openSections().ownResult} onToggle={() => toggleSection("ownResult")} title={t("exams.yourResult")}>
+                <Suspense fallback={<PageSpinner />}>
+                  <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
+                    {(r) => <ExamResultBadge mark={r().mark} />}
+                  </Show>
+                </Suspense>
+              </SectionDisclosure>
             </Show>
 
             <Show when={isTeacherPlus() && sheetUserId()}>
-              <section class="surface-card space-y-4 p-5">
-                <h2 class="font-display text-lg font-semibold">{t("exams.answerSheet")} — {sheetUserId()}</h2>
+              <SectionDisclosure
+                open={openSections().answerSheet}
+                onToggle={() => toggleSection("answerSheet")}
+                title={t("exams.answerSheet")}
+                description={sheetUserId() ?? undefined}
+              >
                 <Suspense fallback={<PageSpinner />}>
                   <AnswerSheetView examId={id()} userId={sheetUserId()!} />
                 </Suspense>
-              </section>
+              </SectionDisclosure>
             </Show>
 
             <Show when={isTeacherPlus()}>
-              <section class="surface-card space-y-4 p-5">
-                <h2 class="font-display text-lg font-semibold">{t("exams.statistics")}</h2>
+              <SectionDisclosure open={openSections().statistics} onToggle={() => toggleSection("statistics")} title={t("exams.statistics")}>
                 <Suspense fallback={<PageSpinner />}>
                   <Show when={stats()}>
                     {(s) => (
                       <div class="grid gap-3 text-sm sm:grid-cols-4">
-                        <div class="rounded-lg border bg-background/60 p-3">
-                          <p class="text-xs text-muted-foreground">{t("exams.graded")}</p>
-                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().graded}</p>
+                        <div class="rounded-lg border bg-muted/25 p-3">
+                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.graded")}</p>
+                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().graded}</p>
                         </div>
-                        <div class="rounded-lg border bg-background/60 p-3">
-                          <p class="text-xs text-muted-foreground">{t("exams.average")}</p>
-                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
+                        <div class="rounded-lg border bg-muted/25 p-3">
+                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.average")}</p>
+                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
                         </div>
-                        <div class="rounded-lg border bg-background/60 p-3">
-                          <p class="text-xs text-muted-foreground">{t("exams.min")}</p>
-                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
+                        <div class="rounded-lg border bg-muted/25 p-3">
+                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.min")}</p>
+                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
                         </div>
-                        <div class="rounded-lg border bg-background/60 p-3">
-                          <p class="text-xs text-muted-foreground">{t("exams.max")}</p>
-                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
+                        <div class="rounded-lg border bg-muted/25 p-3">
+                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.max")}</p>
+                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
                         </div>
                       </div>
                     )}
                   </Show>
                 </Suspense>
-              </section>
+              </SectionDisclosure>
 
-              <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} />
+              <SectionDisclosure
+                open={openSections().questions}
+                onToggle={() => toggleSection("questions")}
+                title={t("questions.title")}
+              >
+                <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} embedded />
+              </SectionDisclosure>
 
               <Show when={!isFinished()}>
-                <section class="surface-card space-y-4 p-5">
-                  <h2 class="font-display text-lg font-semibold">{t("exams.gradeStudent")}</h2>
+                <SectionDisclosure open={openSections().grade} onToggle={() => toggleSection("grade")} title={t("exams.gradeStudent")}>
                   <GradeForm
                     students={gradeStudents()}
                     onSubmit={async (values) => {
@@ -387,11 +422,16 @@ function ExamDetailContent() {
                       await refetchResults();
                     }}
                   />
-                </section>
+                </SectionDisclosure>
               </Show>
 
-              <section class="surface-card space-y-4 p-5">
-                <h2 class="font-display text-lg font-semibold">{t("exams.results")}</h2>
+              <SectionDisclosure
+                open={openSections().results}
+                onToggle={() => toggleSection("results")}
+                title={t("exams.results")}
+                description={`${(results() ?? []).length}`}
+                meta={<Badge variant="secondary" class="mono rounded-sm px-3 py-1">{(results() ?? []).length}</Badge>}
+              >
                 <Suspense fallback={<PageSpinner />}>
                   <Show
                     when={(results() ?? []).length > 0}
@@ -401,65 +441,57 @@ function ExamDetailContent() {
                       </p>
                     }
                   >
-                    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-                      <Table>
+                    <DataTableFrame>
+                      <Table class="data-table">
                         <TableHeader>
                           <TableRow>
                             <TableHead>{t("events.userId")}</TableHead>
                             <TableHead>{t("form.mark")}</TableHead>
                             <TableHead>{t("exams.gradedBy")}</TableHead>
-                            <TableHead>{t("exams.answerSheet")}</TableHead>
-                            <Show when={!isFinished()}>
-                              <TableHead class="w-24" />
-                            </Show>
+                            <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           <For each={results() ?? []}>
                             {(row) => (
-                              <TableRow class="h-12">
+                              <TableRow>
                                 <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
                                 <TableCell>
                                   <ExamResultBadge mark={row.mark} />
                                 </TableCell>
                                 <TableCell class="text-sm text-muted-foreground">{personLabel(row.graded_by)}</TableCell>
-                                <TableCell>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="rounded-md"
-                                    onClick={() => {
-                                      const rowUserId = personId(row.user);
-                                      setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
-                                    }}
-                                  >
-                                    <IconEye class="h-4 w-4" />
-                                  </Button>
+                                <TableCell class="px-1 text-center">
+                                  <TableRowActions
+                                    label={t("common.actions")}
+                                    actions={[
+                                      {
+                                        label: t("exams.answerSheet"),
+                                        icon: <IconEye class="h-4 w-4" />,
+                                        onSelect: () => {
+                                          const rowUserId = personId(row.user);
+                                          setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
+                                        },
+                                      },
+                                      ...(!isFinished()
+                                        ? [{
+                                            label: t("common.remove"),
+                                            icon: <IconTrash class="h-4 w-4" />,
+                                            destructive: true,
+                                            onSelect: () => setRemoveUserId(personId(row.user)),
+                                          }]
+                                        : []),
+                                    ]}
+                                  />
                                 </TableCell>
-                                <Show when={!isFinished()}>
-                                  <TableCell>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      class="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                      onClick={() => setRemoveUserId(personId(row.user))}
-                                    >
-                                      <IconTrash class="h-4 w-4" />
-                                      {t("common.remove")}
-                                    </Button>
-                                  </TableCell>
-                                </Show>
                               </TableRow>
                             )}
                           </For>
                         </TableBody>
                       </Table>
-                    </div>
+                    </DataTableFrame>
                   </Show>
                 </Suspense>
-              </section>
+              </SectionDisclosure>
             </Show>
 
             {error() && (

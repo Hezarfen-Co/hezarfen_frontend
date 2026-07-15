@@ -3,12 +3,43 @@ import { formatApiError } from "@/api/client";
 import type { Event } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 import { IconSave } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { localInputToMs, msToLocalInput } from "@/lib/format";
 import { useT } from "@/stores/preferences-context";
+
+function dateInputFromMs(ms: number | null | undefined): string {
+  if (ms == null) return "";
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+function timeInputFromMs(ms: number | null | undefined): string {
+  if (ms == null) return "";
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function dateTimeInputToMs(date: string, time: string): number | null {
+  if (!date.trim() && !time.trim()) return null;
+  const dateMatch = date.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const timeMatch = time.trim().match(/^(\d{2}):(\d{2})$/);
+  if (!dateMatch || !timeMatch) return null;
+  const [, dayRaw, monthRaw, yearRaw] = dateMatch;
+  const [, hourRaw, minuteRaw] = timeMatch;
+  const day = Number(dayRaw);
+  const month = Number(monthRaw);
+  const year = Number(yearRaw);
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  const d = new Date(year, month - 1, day, hour, minute, 0, 0);
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day || d.getHours() !== hour || d.getMinutes() !== minute) return null;
+  return d.getTime();
+}
 
 export type EventFormValues = {
   title: string;
@@ -27,8 +58,10 @@ export function EventForm(props: {
   const isEdit = !!props.initial?.id;
   const [title, setTitle] = createSignal(props.initial?.title ?? "");
   const [description, setDescription] = createSignal(props.initial?.description ?? "");
-  const [startsLocal, setStartsLocal] = createSignal(msToLocalInput(props.initial?.starts_at));
-  const [endsLocal, setEndsLocal] = createSignal(msToLocalInput(props.initial?.ends_at));
+  const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
+  const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
+  const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
+  const [endsTime, setEndsTime] = createSignal(timeInputFromMs(props.initial?.ends_at));
   const [startsTouched, setStartsTouched] = createSignal(false);
   const [endsTouched, setEndsTouched] = createSignal(false);
   const [error, setError] = createSignal("");
@@ -36,9 +69,9 @@ export function EventForm(props: {
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<EventFormValues | null>(null);
 
-  const resolveTime = (local: string, touched: boolean): number | null | undefined => {
+  const resolveTime = (date: string, time: string, touched: boolean): number | null | undefined => {
     if (isEdit && !touched) return undefined;
-    return localInputToMs(local);
+    return dateTimeInputToMs(date, time);
   };
 
   const validate = (
@@ -51,6 +84,8 @@ export function EventForm(props: {
     if (description().length > 2000) return t("form.descriptionMax");
     const s = starts === undefined ? props.initial?.starts_at ?? null : starts;
     const e = ends === undefined ? props.initial?.ends_at ?? null : ends;
+    if (startsTouched() && (startsDate().trim() || startsTime().trim()) && starts == null) return t("form.timeOrder");
+    if (endsTouched() && (endsDate().trim() || endsTime().trim()) && ends == null) return t("form.timeOrder");
     if (s != null && e != null && e < s) return t("form.timeOrder");
     return null;
   };
@@ -63,8 +98,10 @@ export function EventForm(props: {
       if (!isEdit) {
         setTitle("");
         setDescription("");
-        setStartsLocal("");
-        setEndsLocal("");
+        setStartsDate("");
+        setStartsTime("");
+        setEndsDate("");
+        setEndsTime("");
         setStartsTouched(false);
         setEndsTouched(false);
       }
@@ -77,8 +114,8 @@ export function EventForm(props: {
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
-    const starts_at = resolveTime(startsLocal(), startsTouched());
-    const ends_at = resolveTime(endsLocal(), endsTouched());
+    const starts_at = resolveTime(startsDate(), startsTime(), startsTouched());
+    const ends_at = resolveTime(endsDate(), endsTime(), endsTouched());
     const v = validate(starts_at, ends_at);
     if (v) {
       setError(v);
@@ -126,33 +163,53 @@ export function EventForm(props: {
       <div class="grid gap-3 sm:grid-cols-2">
         <div class="space-y-1.5">
           <Label for="event-starts">{t("events.starts")}</Label>
-          <Input
-            id="event-starts"
-            class="h-10 rounded-sm"
-            type="datetime-local"
-            value={startsLocal()}
-            onInput={(e) => {
-              setStartsLocal(e.currentTarget.value);
-              setStartsTouched(true);
-            }}
-          />
-          <Show when={isEdit && startsTouched() && !startsLocal()}>
+          <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+            <DatePicker
+              id="event-starts"
+              placeholder={t("form.datePlaceholder")}
+              value={startsDate()}
+              onChange={(value) => {
+                setStartsDate(value);
+                setStartsTouched(true);
+              }}
+            />
+            <Input
+              class="h-10 rounded-sm font-mono"
+              placeholder="09:00"
+              value={startsTime()}
+              onInput={(e) => {
+                setStartsTime(e.currentTarget.value);
+                setStartsTouched(true);
+              }}
+            />
+          </div>
+          <Show when={isEdit && startsTouched() && !startsDate() && !startsTime()}>
             <p class="text-xs text-muted-foreground">{t("events.clearStart")}</p>
           </Show>
         </div>
         <div class="space-y-1.5">
           <Label for="event-ends">{t("events.ends")}</Label>
-          <Input
-            id="event-ends"
-            class="h-10 rounded-sm"
-            type="datetime-local"
-            value={endsLocal()}
-            onInput={(e) => {
-              setEndsLocal(e.currentTarget.value);
-              setEndsTouched(true);
-            }}
-          />
-          <Show when={isEdit && endsTouched() && !endsLocal()}>
+          <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+            <DatePicker
+              id="event-ends"
+              placeholder={t("form.datePlaceholder")}
+              value={endsDate()}
+              onChange={(value) => {
+                setEndsDate(value);
+                setEndsTouched(true);
+              }}
+            />
+            <Input
+              class="h-10 rounded-sm font-mono"
+              placeholder="10:00"
+              value={endsTime()}
+              onInput={(e) => {
+                setEndsTime(e.currentTarget.value);
+                setEndsTouched(true);
+              }}
+            />
+          </div>
+          <Show when={isEdit && endsTouched() && !endsDate() && !endsTime()}>
             <p class="text-xs text-muted-foreground">{t("events.clearEnd")}</p>
           </Show>
         </div>

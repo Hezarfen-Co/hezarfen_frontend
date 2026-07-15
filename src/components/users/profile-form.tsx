@@ -3,6 +3,7 @@ import { patchMe } from "@/api/patchMe";
 import type { ProfileUpdate, User } from "@/api/types";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/stores/preferences-context";
@@ -20,20 +21,35 @@ function isFutureDate(iso: string) {
   return d.getTime() > tomorrow.getTime();
 }
 
+function dateInputFromIso(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return "";
+  const [, year, month, day] = match;
+  return `${day}/${month}/${year}`;
+}
+
+function isoFromDateInput(value: string): string {
+  const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return value.trim();
+  const [, day, month, year] = match;
+  return `${year}-${month}-${day}`;
+}
+
 export function ProfileForm(props: { user: User; onSaved: () => void }) {
   const t = useT();
   const [name, setName] = createSignal(props.user.name ?? "");
   const [surname, setSurname] = createSignal(props.user.surname ?? "");
   const [email, setEmail] = createSignal(props.user.email ?? "");
   const [phone, setPhone] = createSignal(props.user.phone ?? "");
-  const [birthDate, setBirthDate] = createSignal(props.user.birth_date ?? "");
+  const [birthDate, setBirthDate] = createSignal(dateInputFromIso(props.user.birth_date));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
 
   const validate = (): string | null => {
     const e = email().trim();
     const p = phone().trim();
-    const b = birthDate().trim();
+    const b = isoFromDateInput(birthDate());
     if (e && !EMAIL_RE.test(e)) return t("profile.emailInvalid");
     if (p && !PHONE_RE.test(p)) return t("profile.phoneInvalid");
     if (b && (!DATE_RE.test(b) || isFutureDate(b))) return t("profile.dateInvalid");
@@ -46,7 +62,7 @@ export function ProfileForm(props: { user: User; onSaved: () => void }) {
     const s = surname().trim();
     const e = email().trim();
     const p = phone().trim();
-    const d = birthDate().trim();
+    const d = isoFromDateInput(birthDate());
     if (n !== (props.user.name ?? "")) b.name = n;
     if (s !== (props.user.surname ?? "")) b.surname = s;
     if (e !== (props.user.email ?? "")) b.email = e;
@@ -95,7 +111,7 @@ export function ProfileForm(props: { user: User; onSaved: () => void }) {
       </div>
       <div class="space-y-1.5">
         <Label for="pf-birth">{t("profile.birthDate")}</Label>
-        <Input id="pf-birth" class="h-10" type="date" value={birthDate()} onInput={(e) => setBirthDate(e.currentTarget.value)} />
+        <DatePicker id="pf-birth" class="h-10" placeholder={t("form.datePlaceholder")} value={birthDate()} onChange={setBirthDate} />
       </div>
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
       <div class="flex justify-end">

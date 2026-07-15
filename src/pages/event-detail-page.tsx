@@ -1,12 +1,12 @@
-import { Link, useNavigate, useParams } from "@tanstack/solid-router";
-import { Show, Suspense, createResource, createSignal } from "solid-js";
+import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { deleteEventAttendanceByUserId } from "@/api/deleteEventAttendanceByUserId";
 import { deleteEventById } from "@/api/deleteEventById";
 import { getEventAttendance } from "@/api/getEventAttendance";
 import { getEventById } from "@/api/getEventById";
 import { patchEventById } from "@/api/patchEventById";
 import { postEventAttendance } from "@/api/postEventAttendance";
-import { formatApiError, ApiError } from "@/api/client";
+import { formatApiError } from "@/api/client";
 import type { AttendanceStatus } from "@/api/types";
 import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
 import { AttendanceTable } from "@/components/events/attendance-table";
@@ -16,9 +16,9 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { SidePanel } from "@/components/ui/side-panel";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -34,12 +34,16 @@ export default function EventDetailPage() {
 }
 
 function EventDetailContent() {
+  const location = useLocation();
   const params = useParams({ from: "/events/$id" });
   const auth = useAuth();
   const navigate = useNavigate();
-  const t = useT();
   const { locale } = usePreferences();
-  const id = () => params().id;
+  const t = useT();
+  const id = createMemo(() => {
+    location();
+    return params().id;
+  });
 
   const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
   const [attendance, { refetch: refetchAttendance }] = createResource(id, (eventId) =>
@@ -76,26 +80,32 @@ function EventDetailContent() {
   return (
     <Suspense fallback={<PageSpinner />}>
       <Show
-        when={event()}
+        when={event()?.id === id() ? event() : undefined}
         fallback={
-          <Show when={event.error}>
-            <Alert variant="destructive">
-              {event.error instanceof ApiError ? event.error.message : t("common.notFound")}
-            </Alert>
+          <Show when={event.error} fallback={<PageSpinner />}>
+            <Alert variant="destructive">{formatApiError(event.error)}</Alert>
           </Show>
         }
       >
         {(ev) => (
           <div class="space-y-6">
-            <PageHeader
-              accent="sky"
-              eyebrow={t("events.title")}
-              title={ev().title}
-              description={`${formatDateTime(ev().starts_at, locale())} → ${formatDateTime(ev().ends_at, locale())}`}
-              actions={
-                <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                <span>{t("nav.group.classes")}</span>
+                <span>/</span>
+                <Link to="/events" class="hover:text-foreground">{t("events.title")}</Link>
+                <span>/</span>
+                <span class="truncate">{ev().title}</span>
+              </div>
+              <PageHeader
+                accent="sky"
+                eyebrow={t("events.title")}
+                title={ev().title}
+                description={`${formatDateTime(ev().starts_at, locale())} → ${formatDateTime(ev().ends_at, locale())}`}
+                actions={
+                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-card p-1 shadow-sm sm:w-auto">
                   <Link to="/events">
-                    <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
+                    <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
                       <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
@@ -106,7 +116,7 @@ function EventDetailContent() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
+                        class="flex-1 rounded-sm sm:flex-none"
                         onClick={() => setEditing(true)}
                       >
                         <IconEdit class="h-4 w-4" />
@@ -116,7 +126,7 @@ function EventDetailContent() {
                         type="button"
                         variant="destructive"
                         size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
+                        class="flex-1 rounded-sm sm:flex-none"
                         disabled={pending()}
                         onClick={() => setDeleteOpen(true)}
                       >
@@ -126,12 +136,13 @@ function EventDetailContent() {
                     </div>
                   </Show>
                 </div>
-              }
-            >
+                }
+              >
               <p class="mt-3 max-w-2xl whitespace-pre-wrap text-sm text-muted-foreground">
                 {ev().description || "—"}
               </p>
-            </PageHeader>
+              </PageHeader>
+            </div>
 
             <ConfirmDialog
               open={deleteOpen()}
@@ -147,7 +158,7 @@ function EventDetailContent() {
               }}
             />
 
-            <FormDialog
+            <SidePanel
               open={editing()}
               onOpenChange={setEditing}
               title={t("common.edit")}
@@ -169,10 +180,10 @@ function EventDetailContent() {
                   await refetchEvent();
                 }}
               />
-            </FormDialog>
+            </SidePanel>
 
             <div class="grid gap-4 lg:grid-cols-2">
-              <section class="surface-card p-5">
+              <section class="data-shell p-4">
                 <div>
                   <h2 class="font-display text-lg font-semibold">{t("events.markSelf")}</h2>
                   <p class="mt-1 text-sm text-muted-foreground">{t("events.status")}</p>
@@ -181,7 +192,7 @@ function EventDetailContent() {
                   <AttendanceStatusPicker value={status()} onChange={setStatus} label={t("events.status")} />
                   <Button
                     type="button"
-                    class="w-full rounded-md sm:w-auto"
+                    class="w-full rounded-sm sm:w-auto"
                     disabled={pending()}
                     onClick={() =>
                       void wrap(async () => {
@@ -196,7 +207,7 @@ function EventDetailContent() {
               </section>
 
               <Show when={isTeacherPlus()}>
-                <section class="surface-card p-5">
+                <section class="data-shell p-4">
                   <div>
                     <h2 class="font-display text-lg font-semibold">{t("events.markOther")}</h2>
                     <p class="mt-1 text-sm text-muted-foreground">{t("events.userId")}</p>
@@ -217,7 +228,7 @@ function EventDetailContent() {
                     />
                     <Button
                       type="button"
-                      class="w-full rounded-md sm:w-auto"
+                      class="w-full rounded-sm sm:w-auto"
                       disabled={pending()}
                       onClick={() =>
                         void wrap(async () => {
@@ -246,7 +257,7 @@ function EventDetailContent() {
               <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
-            <section class="surface-card space-y-4 p-5">
+            <section class="data-shell space-y-4 p-4">
               <div>
                 <h2 class="font-display text-lg font-semibold">{t("events.attendance")}</h2>
                 <p class="mt-1 text-sm text-muted-foreground">{t("events.markedBy")}</p>

@@ -8,8 +8,10 @@ import { EventCard } from "@/components/events/event-card";
 import { EventForm } from "@/components/events/event-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { IconPlus } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { SidePanel } from "@/components/ui/side-panel";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
@@ -42,25 +44,32 @@ function EventsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader
-        accent="sky"
-        eyebrow={t("nav.events")}
-        title={t("events.title")}
-        description={t("events.subtitle")}
-        actions={
-          canCreate() ? (
-            <Button type="button" variant="outline" size="sm" onClick={() => setShowForm((v) => !v)}>
-              {showForm() ? t("common.cancel") : t("events.create")}
-            </Button>
-          ) : undefined
-        }
-      />
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+          <span>{t("nav.group.classes")}</span>
+          <span>/</span>
+          <span>{t("nav.events")}</span>
+        </div>
+        <PageHeader
+          accent="sky"
+          eyebrow={t("nav.events")}
+          title={t("events.title")}
+          description={t("events.subtitle")}
+          actions={
+            canCreate() ? (
+              <Button type="button" size="sm" class="rounded-sm" onClick={() => setShowForm(true)}>
+                <IconPlus class="h-4 w-4" />
+                {t("events.create")}
+              </Button>
+            ) : undefined
+          }
+        />
+      </div>
 
-      <Show when={canCreate() && showForm()}>
-        <section class="surface-card max-w-2xl p-5 animate-fade-up">
-          <h2 class="mb-4 font-display text-lg font-semibold">{t("events.create")}</h2>
+      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("events.create")} description={t("events.subtitle")}>
           <EventForm
             submitLabel={t("common.create")}
+            onCancel={() => setShowForm(false)}
             onSubmit={async (values) => {
               setError("");
               try {
@@ -82,8 +91,7 @@ function EventsContent() {
               }
             }}
           />
-        </section>
-      </Show>
+      </SidePanel>
 
       {error() && <p class="text-sm text-destructive">{error()}</p>}
 
@@ -101,8 +109,14 @@ function EventsContent() {
                 </div>
               }
             >
-              <div class="space-y-4">
-                <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 class="font-display text-lg font-semibold">{t("events.title")}</h2>
+                    <p class="mt-1 text-sm text-muted-foreground">{eventList().length} {t("nav.events")}</p>
+                  </div>
+                </div>
+                <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   <For each={pageItems()}>
                     {(event) => (
                       <li class="animate-fade-up">
