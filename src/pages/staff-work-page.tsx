@@ -1,33 +1,36 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 import { deleteWorkEntryById } from "@/api/deleteWorkEntryById";
+import { getUserSearch } from "@/api/getUserSearch";
 import { getUserWorkLog } from "@/api/getUserWorkLog";
 import { patchWorkEntryById } from "@/api/patchWorkEntryById";
-import { formatApiError } from "@/api/client";
+import { ApiError, formatApiError } from "@/api/client";
+import type { Page } from "@/api/page";
 import type { PersonRef, WorkEntry } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
-import { UserSearchSelect } from "@/components/users/user-search-select";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTableFrame } from "@/components/ui/data-table";
+import { DataTableEmpty, DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataToolbar } from "@/components/ui/data-toolbar";
 import { DatePicker } from "@/components/ui/date-picker";
-import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { createDebounced } from "@/lib/debounced";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
+const PEOPLE_PAGE_SIZE = 12;
 const WORK_PAGE_SIZE = 15;
+const MIN_QUERY = 2;
 
 function msToDateInput(ms: number): string {
   const d = new Date(ms);
@@ -57,6 +60,9 @@ function dateInputToMs(date: string, time: string): number | null {
   return d.getTime();
 }
 
+const emptyPeople: Page<PersonRef> = { items: [], total: 0, limit: null, offset: 0 };
+const emptyEntries = { items: [] as WorkEntry[], total: 0 };
+
 export default function StaffWorkPage() {
   return (
     <RouteGuard minRole="manager">
@@ -68,11 +74,11 @@ export default function StaffWorkPage() {
 function StaffWorkContent() {
   const t = useT();
   const { locale } = usePreferences();
-  const [userId, setUserId] = createSignal("");
-  const [selectedUser, setSelectedUser] = createSignal<PersonRef | null>(null);
-  const [lookupId, setLookupId] = createSignal<string | null>(null);
-  const [lookupLabel, setLookupLabel] = createSignal("");
+  const [query, setQuery] = createSignal("");
+  const debouncedQuery = createDebounced(query, 300);
   const [page, setPage] = createSignal(0);
+  const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
+  const [entryPage, setEntryPage] = createSignal(0);
   const [error, setError] = createSignal("");
   const [editTarget, setEditTarget] = createSignal<WorkEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<WorkEntry | null>(null);
@@ -82,24 +88,70 @@ function StaffWorkContent() {
   const [checkOutTime, setCheckOutTime] = createSignal("");
   const [pending, setPending] = createSignal(false);
 
-  const [list, { refetch }] = createResource(
-    () => (lookupId() ? `${lookupId()}|${page()}` : null),
+  const searchKey = createMemo(() => {
+    const q = debouncedQuery().trim();
+    if (q.length < MIN_QUERY) return null;
+    return `${q}|${page()}`;
+  });
+
+  // initialValue prevents Suspense remount of the page (which steals input focus).
+  const [people] = createResource(
+    searchKey,
     async (key) => {
-      if (!key) return { items: [] as WorkEntry[], total: 0 };
-      const id = key.split("|")[0]!;
-      return loadListPage({
-        page: page(),
-        pageSize: WORK_PAGE_SIZE,
-        clientMode: false,
-        fetch: (params) => getUserWorkLog(id, params),
-      });
+      try {
+        const q = key.split("|")[0]!;
+        return await getUserSearch(q, undefined, "teacher", {
+          limit: PEOPLE_PAGE_SIZE,
+          offset: page() * PEOPLE_PAGE_SIZE,
+        });
+      } catch (err) {
+        setError(formatApiError(err));
+        return emptyPeople;
+      }
     },
+    { initialValue: emptyPeople },
   );
 
-  const total = () => list()?.total ?? 0;
-  const pageItems = () => list()?.items ?? [];
-  const totalPages = createMemo(() => pagesOf(total(), WORK_PAGE_SIZE));
-  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+  const [entries, { refetch: refetchEntries }] = createResource(
+    () => {
+      const user = viewUser();
+      if (!user) return null;
+      return `${user.id}|${entryPage()}`;
+    },
+    async (key) => {
+      try {
+        const id = key.split("|")[0]!;
+        return await loadListPage({
+          page: entryPage(),
+          pageSize: WORK_PAGE_SIZE,
+          clientMode: false,
+          fetch: (params) => getUserWorkLog(id, params),
+        });
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          setError(t("work.userNotFound"));
+          return emptyEntries;
+        }
+        setError(formatApiError(err));
+        return emptyEntries;
+      }
+    },
+    { initialValue: emptyEntries },
+  );
+
+  const peopleTotal = () => people().total;
+  const peopleRows = () => people().items;
+  const peoplePages = createMemo(() => pagesOf(peopleTotal(), PEOPLE_PAGE_SIZE));
+  const safePeoplePage = createMemo(() => Math.min(page(), peoplePages() - 1));
+
+  const entryTotal = () => entries().total;
+  const entryRows = () => entries().items;
+  const entryPages = createMemo(() => pagesOf(entryTotal(), WORK_PAGE_SIZE));
+  const safeEntryPage = createMemo(() => Math.min(entryPage(), entryPages() - 1));
+
+  const canSearch = () => debouncedQuery().trim().length >= MIN_QUERY;
+  const hasPeople = () => peopleRows().length > 0;
+  const peopleLoading = () => canSearch() && people.loading;
 
   const startEdit = (entry: WorkEntry) => {
     if (entry.check_out == null) {
@@ -133,7 +185,7 @@ function StaffWorkContent() {
     try {
       await patchWorkEntryById(entry.id, { check_in, check_out });
       setEditTarget(null);
-      await refetch();
+      await refetchEntries();
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -153,56 +205,102 @@ function StaffWorkContent() {
       </div>
 
       <section class="data-shell space-y-4 p-4">
-        <form
-          class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const id = userId().trim();
-            if (!id) return;
-            setLookupId(id);
-            setLookupLabel(personLabel(selectedUser()) === "—" ? id : personLabel(selectedUser()));
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="font-display text-lg font-semibold">{t("work.teacherIdentity")}</h2>
+            <p class="mt-1 text-sm text-muted-foreground">
+              {canSearch() ? `${peopleRows().length} / ${peopleTotal()}` : t("lookup.searchHint")}
+            </p>
+          </div>
+        </div>
+
+        <DataToolbar
+          searchValue={query()}
+          searchPlaceholder={t("common.searchPlaceholder")}
+          onSearchInput={(value) => {
+            setError("");
+            setQuery(value);
             setPage(0);
           }}
-        >
-          <UserSearchSelect
-            id="staff-work-user"
-            label={t("marks.userIdentity")}
-            value={userId()}
-            onChange={setUserId}
-            onSelectUser={setSelectedUser}
-            placeholder={t("common.searchPlaceholder")}
-            selectPlaceholder={t("marks.userIdentity")}
-            emptyMessage={t("admin.noUsers")}
-            allowManualValue
-          />
-          <Button type="submit" class="h-9 w-full rounded-lg sm:w-auto">
-            {t("work.show")}
-          </Button>
-        </form>
-        <Show when={error() && !editTarget()}>
+        />
+
+        <Show when={error() && !viewUser() && !editTarget()}>
           <Alert variant="destructive">{error()}</Alert>
+        </Show>
+
+        <Show when={canSearch()} fallback={<DataTableEmpty>{t("lookup.searchHint")}</DataTableEmpty>}>
+          <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+            <Show when={hasPeople()} fallback={<DataTableEmpty>{t("work.noTeachers")}</DataTableEmpty>}>
+              <DataTableFrame>
+                <Table class="data-table min-w-[36rem]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("admin.username")}</TableHead>
+                      <TableHead>{t("profile.name")}</TableHead>
+                      <TableHead>{t("admin.id")}</TableHead>
+                      <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <For each={peopleRows()}>
+                      {(user) => (
+                        <TableRow>
+                          <TableCell class="font-medium">{user.username}</TableCell>
+                          <TableCell class="text-muted-foreground">{user.display_name || "—"}</TableCell>
+                          <TableCell class="mono text-xs text-muted-foreground">{user.id}</TableCell>
+                          <TableCell>
+                            <TableRowActions
+                              label={t("common.actions")}
+                              actions={[
+                                {
+                                  label: t("common.view"),
+                                  icon: <IconEye class="h-4 w-4" />,
+                                  onSelect: () => {
+                                    setError("");
+                                    setEntryPage(0);
+                                    setViewUser(user);
+                                  },
+                                },
+                              ]}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </For>
+                  </TableBody>
+                </Table>
+              </DataTableFrame>
+              <Show when={peopleTotal() > PEOPLE_PAGE_SIZE}>
+                <PaginationControls page={safePeoplePage()} totalPages={peoplePages()} onPageChange={setPage} />
+              </Show>
+            </Show>
+          </Show>
         </Show>
       </section>
 
-      <Show when={lookupId()}>
-        <section class="data-shell space-y-4 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 class="font-display text-lg font-semibold">{t("work.entries")}</h2>
-              <p class="mt-1 text-sm text-muted-foreground">{t("work.forUser", { user: lookupLabel() || lookupId() || "" })}</p>
-            </div>
-            <Badge variant="secondary" class="mono rounded-sm px-3 py-1">
-              {total()}
-            </Badge>
-          </div>
-          <Suspense fallback={<PageSpinner />}>
-            <Show when={list.error}>
-              <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
-            </Show>
-            <Show
-              when={pageItems().length > 0}
-              fallback={<div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("work.empty")}</div>}
-            >
+      <SidePanel
+        size="wide"
+        open={viewUser() != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewUser(null);
+            setError("");
+          }
+        }}
+        title={t("work.forUser", { user: personLabel(viewUser()) })}
+        description={t("work.entries")}
+      >
+        <Show when={error() && !editTarget()}>
+          <Alert variant="destructive" class="mb-3">
+            {error()}
+          </Alert>
+        </Show>
+        <Show when={!entries.loading} fallback={<DataTableSkeleton columns={5} rows={4} />}>
+          <Show
+            when={entryRows().length > 0}
+            fallback={<div class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">{t("work.empty")}</div>}
+          >
+            <div class="space-y-3">
               <DataTableFrame>
                 <Table class="data-table">
                   <TableHeader>
@@ -215,12 +313,12 @@ function StaffWorkContent() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <For each={pageItems()}>
+                    <For each={entryRows()}>
                       {(entry) => (
                         <TableRow>
-                          <TableCell class="mono">{formatDateTime(entry.check_in, locale())}</TableCell>
-                          <TableCell class="mono">{formatDateTime(entry.check_out, locale())}</TableCell>
-                          <TableCell class="mono">{formatDurationMinutes(entry.duration_ms, locale())}</TableCell>
+                          <TableCell class="mono text-xs">{formatDateTime(entry.check_in, locale())}</TableCell>
+                          <TableCell class="mono text-xs">{formatDateTime(entry.check_out, locale())}</TableCell>
+                          <TableCell class="mono text-xs">{formatDurationMinutes(entry.duration_ms, locale())}</TableCell>
                           <TableCell>
                             <Badge variant={entry.check_out == null ? "default" : "secondary"} class="rounded-sm">
                               {entry.check_out == null ? t("work.open") : t("work.closed")}
@@ -251,13 +349,13 @@ function StaffWorkContent() {
                   </TableBody>
                 </Table>
               </DataTableFrame>
-              <Show when={total() > WORK_PAGE_SIZE}>
-                <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+              <Show when={entryTotal() > WORK_PAGE_SIZE}>
+                <PaginationControls page={safeEntryPage()} totalPages={entryPages()} onPageChange={setEntryPage} />
               </Show>
-            </Show>
-          </Suspense>
-        </section>
-      </Show>
+            </div>
+          </Show>
+        </Show>
+      </SidePanel>
 
       <SidePanel
         open={editTarget() != null}
@@ -292,7 +390,7 @@ function StaffWorkContent() {
             <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setEditTarget(null)}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>
+            <Button type="submit" class="h-10 rounded-lg" disabled={pending() || !checkInDate().trim() || !checkInTime().trim() || !checkOutDate().trim() || !checkOutTime().trim()}>
               {t("common.update")}
             </Button>
           </div>
@@ -312,7 +410,7 @@ function StaffWorkContent() {
           if (!entry) return;
           try {
             await deleteWorkEntryById(entry.id);
-            await refetch();
+            await refetchEntries();
           } catch (err) {
             setError(formatApiError(err));
           } finally {
