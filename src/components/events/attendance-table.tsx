@@ -34,8 +34,8 @@ export function AttendanceTable(props: {
           </p>
         }
       >
-        <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-          <Table>
+        <div class="data-table-wrap">
+          <Table class="data-table">
             <TableHeader>
               <TableRow>
                 <TableHead>{t("events.userId")}</TableHead>
@@ -49,10 +49,10 @@ export function AttendanceTable(props: {
             <TableBody>
               <For each={props.rows}>
                 {(row) => (
-                  <TableRow class="h-12">
+                  <TableRow>
                     <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" class="capitalize">
+                      <Badge variant="secondary" class="rounded-sm capitalize">
                         {row.status}
                       </Badge>
                     </TableCell>
@@ -63,7 +63,7 @@ export function AttendanceTable(props: {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          class="h-7 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => setTargetUser(personId(row.user))}
                         >
                           <IconTrash class="h-4 w-4" />

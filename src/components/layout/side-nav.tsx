@@ -65,7 +65,6 @@ const NAV_GROUPS: NavGroup[] = [
     Icon: IconChart,
     items: [
       { to: "/marks", labelKey: "nav.marks", Icon: IconChart },
-      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
     ],
   },
   {
@@ -74,6 +73,7 @@ const NAV_GROUPS: NavGroup[] = [
     Icon: IconNote,
     minRole: "teacher",
     items: [
+      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconCalendar, minRole: "teacher" },
       { to: "/work", labelKey: "nav.work", Icon: IconChart, minRole: "teacher" },
     ],

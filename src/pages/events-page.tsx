@@ -42,22 +42,29 @@ function EventsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader
-        accent="sky"
-        eyebrow={t("nav.events")}
-        title={t("events.title")}
-        description={t("events.subtitle")}
-        actions={
-          canCreate() ? (
-            <Button type="button" variant="outline" size="sm" onClick={() => setShowForm((v) => !v)}>
-              {showForm() ? t("common.cancel") : t("events.create")}
-            </Button>
-          ) : undefined
-        }
-      />
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+          <span>{t("nav.group.classes")}</span>
+          <span>/</span>
+          <span>{t("nav.events")}</span>
+        </div>
+        <PageHeader
+          accent="sky"
+          eyebrow={t("nav.events")}
+          title={t("events.title")}
+          description={t("events.subtitle")}
+          actions={
+            canCreate() ? (
+              <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowForm((v) => !v)}>
+                {showForm() ? t("common.cancel") : t("events.create")}
+              </Button>
+            ) : undefined
+          }
+        />
+      </div>
 
       <Show when={canCreate() && showForm()}>
-        <section class="surface-card max-w-2xl p-5 animate-fade-up">
+        <section class="data-shell max-w-2xl p-4 animate-fade-up">
           <h2 class="mb-4 font-display text-lg font-semibold">{t("events.create")}</h2>
           <EventForm
             submitLabel={t("common.create")}
@@ -101,8 +108,14 @@ function EventsContent() {
                 </div>
               }
             >
-              <div class="space-y-4">
-                <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 class="font-display text-lg font-semibold">{t("events.title")}</h2>
+                    <p class="mt-1 text-sm text-muted-foreground">{eventList().length} {t("nav.events")}</p>
+                  </div>
+                </div>
+                <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   <For each={pageItems()}>
                     {(event) => (
                       <li class="animate-fade-up">
