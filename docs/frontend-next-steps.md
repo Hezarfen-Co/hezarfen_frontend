@@ -50,10 +50,6 @@ validation, and list filtering cleanup.
 - `/exams/:id/live`: client-paginated roster over snapshot/SSE (not the list envelope).
 - `/attendance` and marks reports: not paged; aggregate report shapes.
 
-## Backend-Dependent Follow-Up
-
-- Server-side search/filter params are still absent; hybrid full-fetch remains for client filters until the API adds them.
-
 ## Active Backlog
 
 ### Recently fixed (this batch)
@@ -65,6 +61,7 @@ validation, and list filtering cleanup.
 | Session edit | `patchSessionById` + edit SidePanel in course sessions |
 | Manager work log | `/management/staff-work` + get/patch/delete work APIs |
 | Work route guard | `beforeLoad` teacher+ on `/work` |
+| BE student-only gates (enroll/sit/grade/roll call) | Localized error strings for the new 400/403 messages; student-marks lookup picker filters `role=student`; exam-detail own-result gates on `isStudent()` |
 
 ### Incomplete Product Features
 
@@ -74,10 +71,6 @@ validation, and list filtering cleanup.
 | Exam weight badge | Done — resolved from `GET /settings` exam_kinds by kind name |
 | Router `beforeLoad` | Done — live (teacher+), settings/terms (manager+), exam-room (student) |
 | Exam room CTA | Done — student-only on exam detail |
-
-### Backend-Dependent Follow-Up
-
-- Server-side search/filter params are still absent; hybrid full-fetch remains for client filters until the API adds them.
 
 ## UX polish batch (completed)
 

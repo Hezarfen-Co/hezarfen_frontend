@@ -73,6 +73,22 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     en: "This attempt is closed. Answers are read-only.",
     tr: "Bu oturum kapalı. Cevaplar salt okunur.",
   },
+  "only students can sit exams": {
+    en: "Only students can take exams.",
+    tr: "Sınava yalnızca öğrenciler girebilir.",
+  },
+  "user_id: only students can be enrolled in a course": {
+    en: "Only students can be enrolled in a course.",
+    tr: "Derse yalnızca öğrenciler kaydedilebilir.",
+  },
+  "user_id: only students can be graded": {
+    en: "Only students can be graded.",
+    tr: "Yalnızca öğrencilere not verilebilir.",
+  },
+  "user_id: only students can be marked present in a lesson": {
+    en: "Only students can be marked on a lesson roll call.",
+    tr: "Ders yoklamasında yalnızca öğrenciler işaretlenebilir.",
+  },
 };
 
 function currentLocale(): Locale {

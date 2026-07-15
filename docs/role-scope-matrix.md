@@ -16,8 +16,8 @@
 | Live monitor `/exams/:id/live` | ❌ | ✅ | ✅ | ✅ |
 | Events `/events` | ✅ | ✅ | ✅ | ✅ |
 | Event detail `/events/:id` | ✅ | ✅ | ✅ | ✅ |
-| **Report card `/marks`** | ✅ | ❌ | ❌ | ❌ |
-| **My attendance `/attendance`** | ✅ | ❌ | ❌ | ❌ |
+| **Report card `/marks`** | ✅ | ❌ (FE) | ❌ (FE) | ❌ (FE) |
+| My attendance `/attendance` | ✅ | ✅ | ✅ | ✅ |
 | Student marks lookup `/management/student-marks` | ❌ | ✅ | ✅ | ✅ |
 | Student attendance lookup `/management/student-attendance` | ❌ | ✅ | ✅ | ✅ |
 | Work log `/work` | ❌ | ✅ | ✅ | ✅ |
@@ -33,7 +33,7 @@
 | **classes** — Courses / Exams / Events | ✅ | ✅ | ✅ | ✅ |
 | **grades** — Report card (`/marks`) | ✅ | ❌ | ❌ | ❌ |
 | **grades** — Notes | ✅ | ✅ | ✅ | ✅ |
-| **students** — My attendance (`/attendance`) | ✅ | ❌ | ❌ | ❌ |
+| **students** — My attendance (`/attendance`) | ✅ | ✅ | ✅ | ✅ |
 | **reports** — Student marks / attendance / work | ❌ | ✅ | ✅ | ✅ |
 | **reports** — Staff work log | ❌ | ❌ | ✅ | ✅ |
 | **settings** — Settings / Terms | ❌ | ❌ | ✅ | ✅ |
@@ -63,7 +63,7 @@
 | Mark own attendance on events | ✅ | ✅ | ✅ | ✅ |
 | Mark other users' event attendance | ❌ | ✅ | ✅ | ✅ |
 | Create / edit / delete events | ❌ | ✅ (creator or manager+) | ✅ | ✅ |
-| Enroll / unenroll students | ❌ | ✅ (course creator) | ✅ | ✅ |
+| Enroll students / unenroll any enrollment | ❌ | ✅ (course creator) | ✅ | ✅ |
 | Edit / delete courses | ❌ | ✅ (course creator) | ✅ | ✅ |
 | Create / edit / delete course sessions | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Take session roll call | ❌ | ✅ (session teacher or course manager) | ✅ | ✅ |
@@ -72,7 +72,7 @@
 | Edit / delete exams | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Grade students | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Read exam results / statistics | ❌ | ✅ (course manager) | ✅ | ✅ |
-| Read own exam result | ✅ | ❌ | ❌ | ❌ |
+| Read own exam result | ✅ | ❌ (FE) | ❌ (FE) | ❌ (FE) |
 | Write exam questions | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Read answer sheets | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Watch live monitor | ❌ | ✅ (course manager) | ✅ | ✅ |
@@ -86,10 +86,12 @@
 
 ## Architectural Rules
 
-- **Hierarchical roles:** `student < teacher < manager < admin`. A higher role satisfies any lower requirement.
+- **Hierarchical roles:** `student < teacher < manager < admin`. A higher role satisfies any lower requirement. The only exception is `exactRole` page guards (below), which are presentation filters — backend authorization never breaks the hierarchy.
 - **Course management rights:** course creator or `manager+`. Required for enrollment, session CRUD, exam CRUD, grading, roster read.
 - **Ownership edits:** event/note edit/delete respects creator id. Manager+ overrides creator gate.
-- **Student-only pages:** `/marks` (personal report card) and `/attendance` (personal attendance) are guarded by `RouteGuard exactRole="student"` and router `beforeLoad` redirect.
+- **Student-only actions (BE-enforced):** enrolling, sitting exams (including the exam-room WebSocket — the role is re-checked on every answer save, so a mid-exam promotion closes the sheet), being graded, and being marked on lesson roll call all require the target's live role to be `student`. Unenroll, result removal, and roll-call removal stay role-free on the target, so stale rows left behind by a promotion remain removable.
+- **Student-only pages (FE-only):** `/marks` (personal report card) is hidden from staff by `RouteGuard exactRole="student"` + router `beforeLoad` redirect as presentation, not security — the backend serves `GET /marks/me` and `GET /exams/{id}/result` to any authenticated user; a staff member's report is just permanently empty (staff cannot be enrolled or graded). Do not "fix" the backend to 403 these: a student promoted to staff must keep read access to their own history.
+- **My attendance:** `/attendance` renders for every role. Staff have real rows behind it — their own event attendance and their manager-marked session-presence records — so it is not an empty page for them.
 - **Management pages:** all `/management/*` routes require at least `teacher` (marks/attendance lookup) or `manager` (settings/terms/staff-work). Guarded by both `RouteGuard` and `beforeLoad`.
 - **Data scope:** students see only enrolled/related data; teachers see managed course scope; manager+ sees all.
 
@@ -98,10 +100,11 @@
 | Guard mechanism | Where | Purpose |
 |---|---|---|
 | `RouteGuard` (client component) | Page component root | Blocks render; shows fallback |
-| `RouteGuard exactRole` | `/marks`, `/attendance` | Student-only pages |
+| `RouteGuard exactRole` | `/marks` | Student-only page (FE presentation; BE allows the own-data read) |
 | `RouteGuard minRole` | Management pages | Teacher+ or manager+ |
 | `beforeLoad` redirect (router) | Route definition | Redirects before page JS loads |
-| `!isTeacherPlus()` | In-page logic | Exam room CTA, event self-mark |
+| `isStudent()` | In-page logic | Exam room CTA, own-result section on exam detail |
+| `UserSearchSelect role="student"` | Enroll picker, student-marks lookup | Offers only students — matches the BE student-only walls |
 | `canManage()` / `hasCourseManagementRights()` | Detail pages | Course action visibility |
 | `canCreate` | List pages | Create button visibility |
 | Nav `exactRole` | Sidebar items | Student-only nav links |
@@ -111,6 +114,5 @@
 
 - ✅ = access granted
 - ❌ = access denied
-- FE = frontend only change
-- BE = backend change required
+- ❌ (FE) = hidden by the frontend only — the backend permits the underlying own-data read; never treat as a security boundary
 - (badge) = visual indicator showing minimum role requirement on dashboard cards

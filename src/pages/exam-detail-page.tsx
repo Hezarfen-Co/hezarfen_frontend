@@ -70,7 +70,6 @@ function ExamDetailContent() {
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
   const [settings] = createResource(() => getSettings());
-  const isTeacherPlus = createMemo(() => hasMinRole(auth.user()?.role, "teacher"));
   const isStudent = createMemo(() => auth.user()?.role === "student");
 
   const hasCourseManagementRights = () => {
@@ -97,7 +96,7 @@ function ExamDetailContent() {
   });
 
   const [ownResult] = createResource(
-    () => (!isTeacherPlus() ? id() : null),
+    () => (isStudent() ? id() : null),
     async (examId) => {
       if (!examId) return null;
       try {
@@ -361,7 +360,7 @@ function ExamDetailContent() {
               </div>
             </SectionDisclosure>
 
-            <Show when={!isTeacherPlus() && !isScheduled()}>
+            <Show when={isStudent() && !isScheduled()}>
               <SectionDisclosure
                 open={openSections().ownResult}
                 onToggle={() => toggleSection("ownResult")}

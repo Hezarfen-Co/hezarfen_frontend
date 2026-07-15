@@ -2,14 +2,14 @@ import type { ComponentProps, ParentProps } from "solid-js";
 import { splitProps } from "solid-js";
 import { cn } from "@/lib/cn";
 
+// No scroll wrapper here: every Table sits inside DataTableFrame, which is the
+// single overflow container — a second one nests scrollbars inside the border.
 export function Table(props: ParentProps<ComponentProps<"table">>) {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
-    <div class="relative w-full overflow-auto rounded-lg border border-border/70">
-      <table class={cn("w-full caption-bottom text-sm", local.class)} {...rest}>
-        {local.children}
-      </table>
-    </div>
+    <table class={cn("w-full caption-bottom text-sm", local.class)} {...rest}>
+      {local.children}
+    </table>
   );
 }
 
