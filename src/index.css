@@ -125,11 +125,11 @@
   }
 
   .data-shell {
-    @apply rounded-xl border border-border bg-card;
+    @apply rounded-xl border border-border bg-card shadow-sm;
   }
 
   .data-table-wrap {
-    @apply max-h-[62vh] overflow-auto rounded-xl border border-border bg-card;
+    @apply max-h-[62vh] overflow-auto rounded-lg border border-border bg-card;
   }
 
   .data-table {
@@ -137,19 +137,19 @@
   }
 
   .data-table thead {
-    @apply sticky top-0 z-10 border-b border-border bg-muted text-muted-foreground;
+    @apply sticky top-0 z-10 border-b border-border bg-muted/95 text-muted-foreground backdrop-blur;
   }
 
   .data-table th {
-    @apply h-9 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/60 px-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] last:border-r-0;
+    @apply h-8 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/60 px-3 text-left text-[10px] font-semibold uppercase tracking-[0.11em] last:border-r-0;
   }
 
   .data-table td {
-    @apply h-9 whitespace-nowrap border-r border-border/50 px-3 py-1.5 align-middle last:border-r-0;
+    @apply h-10 whitespace-nowrap border-r border-border/40 px-3 py-1.5 align-middle last:border-r-0;
   }
 
   .data-table tbody tr {
-    @apply border-b border-border/80 hover:bg-muted/60;
+    @apply border-b border-border/70 transition-colors hover:bg-muted/60;
   }
 
   .data-table tbody tr:nth-child(even) {
