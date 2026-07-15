@@ -70,6 +70,9 @@ function ExamsContent() {
   const isStudent = () => auth.user()?.role === "student";
   const canEditExam = (exam: Exam) => exam.creator === auth.user()?.id || hasMinRole(auth.user()?.role, "manager");
   const visibleCourses = createMemo(() => (isStudent() ? mine() : courses()) ?? []);
+  const manageableCourses = createMemo(() =>
+    visibleCourses().filter((course) => course.creator === auth.user()?.id || hasMinRole(auth.user()?.role, "manager")),
+  );
   const courseById = createMemo(() => new Map(visibleCourses().map((course) => [course.id, course])));
   const visibleExams = createMemo(() => {
     const all = exams() ?? [];
@@ -80,7 +83,7 @@ function ExamsContent() {
 
   createEffect(() => {
     if (!createOpen() || selectedCourseId()) return;
-    setSelectedCourseId(visibleCourses()[0]?.id ?? "");
+    setSelectedCourseId(manageableCourses()[0]?.id ?? "");
   });
 
   const examStatus = (exam: Exam): ExamStatus => {
@@ -300,7 +303,7 @@ function ExamsContent() {
           <label class="text-sm font-medium" for="exam-course">{t("exams.selectCourse")}</label>
           <Select id="exam-course" class="rounded-sm" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
             <option value="">{t("exams.selectCourse")}</option>
-            <For each={visibleCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>
+            <For each={manageableCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>
           </Select>
         </div>
         <ExamForm submitLabel={t("common.create")} onCancel={() => setCreateOpen(false)} onSubmit={createExam} />

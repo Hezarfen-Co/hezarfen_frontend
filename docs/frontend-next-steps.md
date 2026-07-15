@@ -63,6 +63,8 @@ Started fixes:
 - Exams page no longer calls `GET /courses` for students; course filters use enrolled courses from `GET /courses/me`.
 - Exams table edit action is limited to exam creator or manager+, matching course-management rights.
 - Dashboard course scope uses `GET /courses/me` for students and `GET /courses` for teacher+ visible-course scope.
+- Exam detail teacher-only data (results, statistics, roster, answer sheets, live monitor action) is limited to exam creator or manager+ instead of every teacher.
+- Course detail roster and session roll-call actions are limited to course-management rights, matching backend roster/roll-call access expectations.
 
 ## Priority 2: Pagination And Request Audit
 

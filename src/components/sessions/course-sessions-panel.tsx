@@ -127,10 +127,10 @@ export function CourseSessionsPanel(props: {
                       <p class="mt-1 text-xs text-muted-foreground">{t("sessions.teacher")}: {personLabel(session.teacher)}</p>
                     </div>
                     <div class="flex gap-2">
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setSelectedSession(session)}>
-                        {t("sessions.rollCall")}
-                      </Button>
                       <Show when={props.canManage}>
+                        <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setSelectedSession(session)}>
+                          {t("sessions.rollCall")}
+                        </Button>
                         <Button type="button" variant="ghost" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={async () => { await deleteSessionById(session.id); await refetch(); }}>
                           <IconTrash class="h-4 w-4" />
                         </Button>

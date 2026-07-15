@@ -70,6 +70,13 @@ function ExamDetailContent() {
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
   const isTeacherPlus = createMemo(() => hasMinRole(auth.user()?.role, "teacher"));
 
+  const hasCourseManagementRights = () => {
+    const e = exam();
+    const u = auth.user();
+    if (!e || !u) return false;
+    return e.creator === u.id || hasMinRole(u.role, "manager");
+  };
+
   const [ownResult] = createResource(
     () => (!isTeacherPlus() ? id() : null),
     async (examId) => {
@@ -84,14 +91,14 @@ function ExamDetailContent() {
   );
 
   const [results, { refetch: refetchResults }] = createResource(
-    () => (isTeacherPlus() ? id() : null),
+    () => (hasCourseManagementRights() ? id() : null),
     async (examId) => {
       if (!examId) return [];
       return getExamResults(examId);
     },
   );
   const [stats] = createResource(
-    () => (isTeacherPlus() ? id() : null),
+    () => (hasCourseManagementRights() ? id() : null),
     async (examId) => {
       if (!examId) return null;
       try {
@@ -102,7 +109,7 @@ function ExamDetailContent() {
     },
   );
   const [roster] = createResource(
-    () => (isTeacherPlus() ? exam()?.course ?? null : null),
+    () => (hasCourseManagementRights() ? exam()?.course ?? null : null),
     async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
   );
   const [mine] = createResource(
@@ -138,11 +145,8 @@ function ExamDetailContent() {
   const isUpcoming = () => examStatus().upcoming;
 
   const canManage = () => {
-    const e = exam();
-    const u = auth.user();
-    if (!e || !u) return false;
     if (isFinished()) return false;
-    return e.creator === u.id || hasMinRole(u.role, "manager");
+    return hasCourseManagementRights();
   };
 
   const canViewExam = () => {
@@ -230,7 +234,7 @@ function ExamDetailContent() {
                       </Button>
                     </Link>
                   </Show>
-                  <Show when={isTeacherPlus() && !isUpcoming() && isSittable()}>
+                  <Show when={hasCourseManagementRights() && !isUpcoming() && isSittable()}>
                     <Link to="/exams/$id/live" params={{ id: id() }}>
                       <Button variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none">
                         <IconEye class="h-4 w-4" />
@@ -369,7 +373,7 @@ function ExamDetailContent() {
               </SectionDisclosure>
             </Show>
 
-            <Show when={isTeacherPlus() && sheetUserId()}>
+            <Show when={hasCourseManagementRights() && sheetUserId()}>
               <SectionDisclosure
                 open={openSections().answerSheet}
                 onToggle={() => toggleSection("answerSheet")}
@@ -382,7 +386,7 @@ function ExamDetailContent() {
               </SectionDisclosure>
             </Show>
 
-            <Show when={isTeacherPlus()}>
+            <Show when={hasCourseManagementRights()}>
               <SectionDisclosure open={openSections().statistics} onToggle={() => toggleSection("statistics")} title={t("exams.statistics")} description={t("exams.examStatistics")}>
                 <Suspense fallback={<PageSpinner />}>
                   <Show when={stats()}>
@@ -439,7 +443,7 @@ function ExamDetailContent() {
                 title={t("exams.results")}
                 description={`${(results() ?? []).length} ${t("exams.studentResults")}`}
                 actions={
-                  <Show when={isTeacherPlus()}>
+                  <Show when={hasCourseManagementRights()}>
                     <div class="flex items-center gap-2">
                       <Show when={!isFinished()}>
                         <span class="text-xs text-muted-foreground">{t("exams.gradeAfterExam")}</span>
