@@ -76,9 +76,9 @@ function EventDetailContent() {
   return (
     <Suspense fallback={<PageSpinner />}>
       <Show
-        when={event()}
+        when={event()?.id === id() ? event() : undefined}
         fallback={
-          <Show when={event.error}>
+          <Show when={event.error} fallback={<PageSpinner />}>
             <Alert variant="destructive">{formatApiError(event.error)}</Alert>
           </Show>
         }

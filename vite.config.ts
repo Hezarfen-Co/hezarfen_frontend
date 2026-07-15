@@ -11,9 +11,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  optimizeDeps: {
-    exclude: ["@tabler/icons-solidjs"],
-  },
   server: {
     proxy: {
       "/api": {

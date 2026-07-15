@@ -1,4 +1,5 @@
 import { client } from "./client";
+import { setCachedSettings } from "./getSettings";
 import type { ExamKindSetting, GradeBand, SchoolSettings } from "./types";
 
 export type PatchSettingsBody = {
@@ -8,5 +9,8 @@ export type PatchSettingsBody = {
 };
 
 export function patchSettings(body: PatchSettingsBody): Promise<SchoolSettings> {
-  return client<SchoolSettings>("/settings", { method: "PATCH", body });
+  return client<SchoolSettings>("/settings", { method: "PATCH", body }).then((settings) => {
+    setCachedSettings(settings);
+    return settings;
+  });
 }

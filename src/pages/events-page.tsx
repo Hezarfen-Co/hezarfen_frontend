@@ -8,6 +8,7 @@ import { EventCard } from "@/components/events/event-card";
 import { EventForm } from "@/components/events/event-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { IconPlus } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -56,7 +57,8 @@ function EventsContent() {
           description={t("events.subtitle")}
           actions={
             canCreate() ? (
-              <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowForm(true)}>
+              <Button type="button" size="sm" class="rounded-sm" onClick={() => setShowForm(true)}>
+                <IconPlus class="h-4 w-4" />
                 {t("events.create")}
               </Button>
             ) : undefined

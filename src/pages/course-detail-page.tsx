@@ -140,9 +140,9 @@ function CourseDetailContent() {
   return (
     <Suspense fallback={<PageSpinner />}>
       <Show
-        when={course()}
+        when={course()?.id === id() ? course() : undefined}
         fallback={
-          <Show when={course.error}>
+          <Show when={course.error} fallback={<PageSpinner />}>
             <Alert variant="destructive">{formatApiError(course.error)}</Alert>
           </Show>
         }
