@@ -279,7 +279,7 @@ function PortalCard(props: { card: PortalCard }) {
     <Link
       to={to}
       class={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        "group relative flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
       )}
     >
       <div
@@ -288,48 +288,37 @@ function PortalCard(props: { card: PortalCard }) {
           dotMap[accent],
         )}
       />
-      <div class="flex items-start justify-between">
+      <div class="flex items-center gap-2.5">
         <div
           class={cn(
-            "flex h-10 w-10 items-center justify-center rounded-lg border",
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
             iconAccentMap[accent],
           )}
         >
           {icon}
         </div>
-        <svg
-          class="h-4 w-4 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5"
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M5 12l4-4-4-4" />
-        </svg>
+        <h3 class="truncate font-display text-sm font-semibold">{t(titleKey)}</h3>
+        <Show when={minRole && minRole !== "student"}>
+          <span
+            class={cn(
+              "ml-auto rounded px-1 py-0.5 text-[9px] font-medium uppercase leading-none",
+              ROLE_BADGE_TONE[minRole!],
+            )}
+          >
+            {t(ROLE_KEY[minRole!])}
+          </span>
+        </Show>
       </div>
-      <div class="mt-4 flex flex-1 flex-col">
-        <div class="flex items-center gap-2">
-          <h3 class="font-display text-sm font-semibold">{t(titleKey)}</h3>
-          <Show when={minRole && minRole !== "student"}>
-            <span
-              class={cn(
-                "rounded px-1.5 py-0.5 text-[10px] font-medium uppercase leading-none",
-                ROLE_BADGE_TONE[minRole!],
-              )}
-            >
-              {t(ROLE_KEY[minRole!])}
-            </span>
-          </Show>
-        </div>
-        <div class="flex min-h-[2rem] items-baseline gap-1 font-display text-2xl font-bold tracking-tight">
-          <span class={cn(statValue === "" && "invisible")}>{statValue || "—"}</span>
-          <Show when={statSuffix}>
-            {(suffix) => <span class="text-xs font-medium text-muted-foreground">{t(suffix())}</span>}
-          </Show>
-        </div>
-        <p class="mt-auto text-xs leading-relaxed text-muted-foreground">{t(descKey)}</p>
+      <div class="mt-1 flex flex-1 flex-col justify-center">
+        <Show when={statValue !== ""}>
+          <div class="flex items-baseline gap-1 font-display text-xl font-bold tracking-tight">
+            <span>{statValue}</span>
+            <Show when={statSuffix}>
+              {(suffix) => <span class="text-xs font-medium text-muted-foreground">{t(suffix())}</span>}
+            </Show>
+          </div>
+        </Show>
+        <p class="text-xs leading-relaxed text-muted-foreground">{t(descKey)}</p>
       </div>
     </Link>
   );
@@ -358,11 +347,11 @@ function UpcomingTimeline(props: {
               <Link
                 to={item.type === "event" ? "/events/$id" : "/exams/$id"}
                 params={{ id: item.id }}
-                class="flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm transition-colors hover:border-border/60 hover:bg-muted/25"
+                class="grid grid-cols-[28px_1fr] items-center gap-x-3 gap-y-0.5 rounded-lg border border-transparent px-3 py-2 text-sm transition-colors hover:border-border/60 hover:bg-muted/25"
               >
                 <div
                   class={cn(
-                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+                    "row-span-2 flex h-7 w-7 items-center justify-center rounded-md",
                     item.type === "exam"
                       ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                       : "bg-sky-500/10 text-sky-600 dark:text-sky-400",
@@ -372,13 +361,15 @@ function UpcomingTimeline(props: {
                     ? <IconExam class="h-3.5 w-3.5" />
                     : <IconCalendar class="h-3.5 w-3.5" />}
                 </div>
-                <div class="min-w-0 flex-1">
-                  <p class="truncate font-medium">{item.title}</p>
-                  <p class="truncate text-xs text-muted-foreground">{item.subtitle}</p>
-                </div>
-                <span class="shrink-0 whitespace-nowrap text-xs tabular-nums text-muted-foreground">
-                  {item.at == null ? props.t("exams.unscheduled") : formatDateTime(item.at, props.locale)}
-                </span>
+                <p class="truncate font-medium">{item.title}</p>
+                <p class="truncate text-xs text-muted-foreground">
+                  <Show when={item.at != null} fallback={props.t("exams.unscheduled")}>
+                    {formatDateTime(item.at!, props.locale)}
+                  </Show>
+                  <Show when={item.subtitle}>
+                    {" · "}{item.subtitle}
+                  </Show>
+                </p>
               </Link>
             )}
           </For>

@@ -199,6 +199,16 @@ export function IconMenu(props: IconProps) {
   );
 }
 
+export function IconDotsVertical(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="5" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" />
+    </Svg>
+  );
+}
+
 export function IconPanelLeft(props: IconProps) {
   return (
     <Svg {...props}>

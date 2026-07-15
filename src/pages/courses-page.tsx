@@ -1,8 +1,9 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
-import { Link } from "@tanstack/solid-router";
+import { useNavigate } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
 import { getMyCourses } from "@/api/getMyCourses";
 import { getTerms } from "@/api/getTerms";
+import { getUsers } from "@/api/getUsers";
 import { postCourse } from "@/api/postCourse";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
@@ -18,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { useAuth } from "@/stores/auth-context";
@@ -36,9 +38,14 @@ export default function CoursesPage() {
 
 function CoursesContent() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const t = useT();
   const [courses, { refetch }] = createResource(() => getCourses());
   const [terms] = createResource(() => getTerms());
+  const [users] = createResource(
+    () => (hasMinRole(auth.user()?.role, "manager") ? true : null),
+    async (enabled) => (enabled ? getUsers().catch(() => []) : []),
+  );
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
     async (enabled) => (enabled ? getMyCourses() : []),
@@ -56,11 +63,15 @@ function CoursesContent() {
   const isStudent = () => auth.user()?.role === "student";
   const courseList = createMemo(() => (isStudent() ? mine() : courses()) ?? []);
   const termName = (termId: string | null | undefined) => terms()?.find((term) => term.id === termId)?.name ?? t("terms.unassigned");
+  const creatorName = (creatorId: string) => {
+    if (creatorId === auth.user()?.id) return auth.user()?.username ?? creatorId;
+    return users()?.find((user) => user.id === creatorId)?.username ?? creatorId;
+  };
   const filteredCourses = createMemo(() => {
     const needle = query().trim().toLocaleLowerCase();
     if (!needle) return courseList();
     return courseList().filter((course) =>
-      [course.title, course.description, course.creator, termName(course.term_id)]
+      [course.title, course.description, course.creator, creatorName(course.creator), termName(course.term_id)]
         .join(" ")
         .toLocaleLowerCase()
         .includes(needle),
@@ -193,11 +204,11 @@ function CoursesContent() {
             <DataTableFrame>
               <Table class="data-table table-fixed min-w-[56rem]">
                 <colgroup>
-                  <col class="w-[30%]" />
                   <col class="w-[28%]" />
-                  <col class="w-[16rem]" />
-                  <col class="w-[10rem]" />
-                  <col class="w-[8rem]" />
+                  <col class="w-[30%]" />
+                  <col class="w-[14rem]" />
+                  <col class="w-[11rem]" />
+                  <col class="w-[3.5rem]" />
                 </colgroup>
                 <TableHeader>
                   <TableRow>
@@ -205,7 +216,7 @@ function CoursesContent() {
                     <TableHead>{t("form.description")}</TableHead>
                     <TableHead>{t("terms.term")}</TableHead>
                     <TableHead>{t("common.creator")}</TableHead>
-                    <TableHead class="text-right">{t("common.actions")}</TableHead>
+                    <TableHead class="text-center">{t("common.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -226,14 +237,18 @@ function CoursesContent() {
                             <span class="truncate">{termName(course.term_id)}</span>
                           </Badge>
                         </TableCell>
-                        <TableCell class="mono truncate text-xs text-muted-foreground">{course.creator}</TableCell>
-                        <TableCell class="text-right">
-                          <Link to="/courses/$id" params={{ id: course.id }}>
-                            <Button type="button" variant="ghost" size="sm" class="h-7 rounded-sm px-2">
-                              <IconEye class="h-4 w-4" />
-                              {t("common.view")}
-                            </Button>
-                          </Link>
+                        <TableCell class="truncate text-muted-foreground">{creatorName(course.creator)}</TableCell>
+                        <TableCell class="px-1 text-center">
+                          <TableRowActions
+                            label={t("common.actions")}
+                            actions={[
+                              {
+                                label: t("common.view"),
+                                icon: <IconEye class="h-4 w-4" />,
+                                onSelect: () => void navigate({ to: "/courses/$id", params: { id: course.id } }),
+                              },
+                            ]}
+                          />
                         </TableCell>
                       </TableRow>
                     )}

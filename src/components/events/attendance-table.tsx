@@ -1,9 +1,9 @@
 import { For, Show, createSignal } from "solid-js";
 import type { Attendance } from "@/api/types";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableFrame } from "@/components/ui/data-table";
 import { IconTrash } from "@/components/ui/icons";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import {
   Table,
   TableBody,
@@ -43,7 +43,7 @@ export function AttendanceTable(props: {
                 <TableHead>{t("events.status")}</TableHead>
                 <TableHead>{t("events.markedBy")}</TableHead>
                 <Show when={props.canRemove}>
-                  <TableHead class="w-28" />
+                  <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
                 </Show>
               </TableRow>
             </TableHeader>
@@ -59,17 +59,18 @@ export function AttendanceTable(props: {
                     </TableCell>
                     <TableCell class="text-sm text-muted-foreground">{personLabel(row.marked_by)}</TableCell>
                     <Show when={props.canRemove && props.onRemove}>
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          class="h-7 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => setTargetUser(personId(row.user))}
-                        >
-                          <IconTrash class="h-4 w-4" />
-                          {t("common.remove")}
-                        </Button>
+                      <TableCell class="px-1 text-center">
+                        <TableRowActions
+                          label={t("common.actions")}
+                          actions={[
+                            {
+                              label: t("common.remove"),
+                              icon: <IconTrash class="h-4 w-4" />,
+                              destructive: true,
+                              onSelect: () => setTargetUser(personId(row.user)),
+                            },
+                          ]}
+                        />
                       </TableCell>
                     </Show>
                   </TableRow>

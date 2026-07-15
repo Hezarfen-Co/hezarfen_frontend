@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useAuth } from "@/stores/auth-context";
@@ -466,7 +467,7 @@ function CourseDetailContent() {
                           <TableRow>
                             <TableHead>{t("admin.username")}</TableHead>
                             <TableHead>{t("admin.id")}</TableHead>
-                            <TableHead class="w-16 text-right" />
+                            <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -479,22 +480,23 @@ function CourseDetailContent() {
                                 <TableCell class="mono text-xs text-muted-foreground">
                                   {row.user.id}
                                 </TableCell>
-                                <TableCell class="text-right">
+                                <TableCell class="px-1 text-center">
                                   <Show when={canManage()}>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      class="h-7 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                      onClick={() =>
-                                        setRemoveTarget({
-                                          userId: row.user.id,
-                                          userName: row.user.display_name || row.user.username,
-                                        })
-                                      }
-                                    >
-                                      <IconTrash class="h-4 w-4" />
-                                    </Button>
+                                    <TableRowActions
+                                      label={t("common.actions")}
+                                      actions={[
+                                        {
+                                          label: t("common.remove"),
+                                          icon: <IconTrash class="h-4 w-4" />,
+                                          destructive: true,
+                                          onSelect: () =>
+                                            setRemoveTarget({
+                                              userId: row.user.id,
+                                              userName: row.user.display_name || row.user.username,
+                                            }),
+                                        },
+                                      ]}
+                                    />
                                   </Show>
                                 </TableCell>
                               </TableRow>

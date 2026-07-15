@@ -35,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
@@ -447,10 +448,7 @@ function ExamDetailContent() {
                             <TableHead>{t("events.userId")}</TableHead>
                             <TableHead>{t("form.mark")}</TableHead>
                             <TableHead>{t("exams.gradedBy")}</TableHead>
-                            <TableHead>{t("exams.answerSheet")}</TableHead>
-                            <Show when={!isFinished()}>
-                              <TableHead class="w-24" />
-                            </Show>
+                            <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -462,34 +460,29 @@ function ExamDetailContent() {
                                   <ExamResultBadge mark={row.mark} />
                                 </TableCell>
                                 <TableCell class="text-sm text-muted-foreground">{personLabel(row.graded_by)}</TableCell>
-                                <TableCell>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="h-7 rounded-sm"
-                                    onClick={() => {
-                                      const rowUserId = personId(row.user);
-                                      setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
-                                    }}
-                                  >
-                                    <IconEye class="h-4 w-4" />
-                                  </Button>
+                                <TableCell class="px-1 text-center">
+                                  <TableRowActions
+                                    label={t("common.actions")}
+                                    actions={[
+                                      {
+                                        label: t("exams.answerSheet"),
+                                        icon: <IconEye class="h-4 w-4" />,
+                                        onSelect: () => {
+                                          const rowUserId = personId(row.user);
+                                          setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
+                                        },
+                                      },
+                                      ...(!isFinished()
+                                        ? [{
+                                            label: t("common.remove"),
+                                            icon: <IconTrash class="h-4 w-4" />,
+                                            destructive: true,
+                                            onSelect: () => setRemoveUserId(personId(row.user)),
+                                          }]
+                                        : []),
+                                    ]}
+                                  />
                                 </TableCell>
-                                <Show when={!isFinished()}>
-                                  <TableCell>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      class="h-7 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                      onClick={() => setRemoveUserId(personId(row.user))}
-                                    >
-                                      <IconTrash class="h-4 w-4" />
-                                      {t("common.remove")}
-                                    </Button>
-                                  </TableCell>
-                                </Show>
                               </TableRow>
                             )}
                           </For>

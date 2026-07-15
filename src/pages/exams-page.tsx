@@ -1,5 +1,5 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
-import { Link } from "@tanstack/solid-router";
+import { useNavigate } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
 import { getExams } from "@/api/getExams";
 import { getMyCourses } from "@/api/getMyCourses";
@@ -20,6 +20,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
 import { formatDateTime } from "@/lib/format";
@@ -42,6 +43,7 @@ export default function ExamsPage() {
 
 function ExamsContent() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
@@ -218,21 +220,21 @@ function ExamsContent() {
             <DataTableFrame>
               <Table class="data-table table-fixed min-w-[64rem]">
                 <colgroup>
-                  <col class="w-[26%]" />
-                  <col class="w-[17%]" />
-                  <col class="w-[12rem]" />
-                  <col class="w-[9rem]" />
-                  <col class="w-[10rem]" />
-                  <col class="w-[12rem]" />
+                  <col class="w-[28%]" />
+                  <col class="w-[22%]" />
+                  <col class="w-[18%]" />
+                  <col class="w-[14%]" />
+                  <col class="w-[10%]" />
+                  <col class="w-[8%]" />
                 </colgroup>
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("exams.title")}</TableHead>
                     <TableHead>{t("nav.courses")}</TableHead>
-                    <TableHead class="text-right">{t("events.starts")}</TableHead>
+                    <TableHead>{t("events.starts")}</TableHead>
                     <TableHead class="text-center">{t("attempt.status")}</TableHead>
                     <TableHead>{t("exams.kind")}</TableHead>
-                    <TableHead class="w-44 text-right">{t("common.actions")}</TableHead>
+                    <TableHead class="text-center">{t("common.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -248,28 +250,31 @@ function ExamsContent() {
                             </div>
                           </TableCell>
                           <TableCell class="truncate text-muted-foreground">{courseTitle(exam.course)}</TableCell>
-                          <TableCell class="mono whitespace-nowrap text-right text-muted-foreground">{formatDateTime(exam.starts_at, locale())}</TableCell>
+                          <TableCell class="mono whitespace-nowrap text-muted-foreground">{formatDateTime(exam.starts_at, locale())}</TableCell>
                           <TableCell class="text-center">
                             <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", statusTone(status()))}>
                               {statusLabel(status())}
                             </Badge>
                           </TableCell>
                           <TableCell class="truncate text-muted-foreground">{examKindLabel(String(exam.kind), t)}</TableCell>
-                          <TableCell>
-                            <div class="flex justify-end gap-1">
-                              <Link to="/exams/$id" params={{ id: exam.id }}>
-                                <Button type="button" variant="ghost" size="sm" class="h-7 rounded-sm px-2">
-                                  <IconEye class="h-4 w-4" />
-                                  {t("common.view")}
-                                </Button>
-                              </Link>
-                              <Show when={isTeacherPlus()}>
-                                <Button type="button" variant="ghost" size="sm" class="h-7 rounded-sm px-2" onClick={() => setEditingExam(exam)}>
-                                  <IconEdit class="h-4 w-4" />
-                                  {t("common.edit")}
-                                </Button>
-                              </Show>
-                            </div>
+                          <TableCell class="text-center">
+                            <TableRowActions
+                              label={t("common.actions")}
+                              actions={[
+                                {
+                                  label: t("common.view"),
+                                  icon: <IconEye class="h-4 w-4" />,
+                                  onSelect: () => void navigate({ to: "/exams/$id", params: { id: exam.id } }),
+                                },
+                                ...(isTeacherPlus()
+                                  ? [{
+                                      label: t("common.edit"),
+                                      icon: <IconEdit class="h-4 w-4" />,
+                                      onSelect: () => setEditingExam(exam),
+                                    }]
+                                  : []),
+                              ]}
+                            />
                           </TableCell>
                         </TableRow>
                       );
