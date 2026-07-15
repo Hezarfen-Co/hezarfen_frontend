@@ -42,12 +42,16 @@ export function CourseSessionsPanel(props: {
   courseId: string;
   roster: Enrollment[];
   canManage: boolean;
+  active: boolean;
   createOpen: boolean;
   onCreateOpenChange: (open: boolean) => void;
 }) {
   const t = useT();
   const { locale } = usePreferences();
-  const [sessions, { refetch }] = createResource(() => props.courseId, (courseId) => getCourseSessions(courseId));
+  const [sessions, { refetch }] = createResource(
+    () => (props.active || props.createOpen ? props.courseId : null),
+    async (courseId) => (courseId ? getCourseSessions(courseId) : []),
+  );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
   const [topic, setTopic] = createSignal("");
   const [startsDate, setStartsDate] = createSignal("");

@@ -53,6 +53,11 @@ Audit checklist:
 - Tables show user-facing labels, not raw ids, whenever lookup data is available.
 - Empty states explain real absence of data, not loading or scope mismatch.
 
+Started fixes:
+
+- Event detail attendance roster is gated to teacher+ so students do not trigger `GET /events/{id}/attendance`.
+- Course detail session list fetch is gated by the sessions disclosure or session-create panel state to avoid a hidden sessions request on initial detail load.
+
 ## Priority 2: Pagination And Request Audit
 
 Audit list pages for pagination behavior and request shape.

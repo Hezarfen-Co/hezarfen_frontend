@@ -46,8 +46,9 @@ function EventDetailContent() {
   });
 
   const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
-  const [attendance, { refetch: refetchAttendance }] = createResource(id, (eventId) =>
-    getEventAttendance(eventId),
+  const [attendance, { refetch: refetchAttendance }] = createResource(
+    () => (hasMinRole(auth.user()?.role, "teacher") ? id() : null),
+    async (eventId) => (eventId ? getEventAttendance(eventId) : []),
   );
 
   const [status, setStatus] = createSignal<AttendanceStatus>("present");
@@ -197,7 +198,7 @@ function EventDetailContent() {
                     onClick={() =>
                       void wrap(async () => {
                         await postEventAttendance(id(), { status: status() });
-                        await refetchAttendance();
+                        if (isTeacherPlus()) await refetchAttendance();
                       })
                     }
                   >
@@ -257,29 +258,31 @@ function EventDetailContent() {
               <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
-            <section class="data-shell space-y-4 p-4">
-              <div>
-                <h2 class="font-display text-lg font-semibold">{t("events.attendance")}</h2>
-                <p class="mt-1 text-sm text-muted-foreground">{t("events.markedBy")}</p>
-              </div>
-              <Suspense fallback={<PageSpinner />}>
-                <Show when={attendance()}>
-                  {(rows) => (
-                    <AttendanceTable
-                      rows={rows()}
-                      emptyLabel={t("events.noAttendance")}
-                      canRemove={isTeacherPlus()}
-                      onRemove={async (userId) => {
-                        await wrap(async () => {
-                          await deleteEventAttendanceByUserId(id(), userId);
-                          await refetchAttendance();
-                        });
-                      }}
-                    />
-                  )}
-                </Show>
-              </Suspense>
-            </section>
+            <Show when={isTeacherPlus()}>
+              <section class="data-shell space-y-4 p-4">
+                <div>
+                  <h2 class="font-display text-lg font-semibold">{t("events.attendance")}</h2>
+                  <p class="mt-1 text-sm text-muted-foreground">{t("events.markedBy")}</p>
+                </div>
+                <Suspense fallback={<PageSpinner />}>
+                  <Show when={attendance()}>
+                    {(rows) => (
+                      <AttendanceTable
+                        rows={rows()}
+                        emptyLabel={t("events.noAttendance")}
+                        canRemove={isTeacherPlus()}
+                        onRemove={async (userId) => {
+                          await wrap(async () => {
+                            await deleteEventAttendanceByUserId(id(), userId);
+                            await refetchAttendance();
+                          });
+                        }}
+                      />
+                    )}
+                  </Show>
+                </Suspense>
+              </section>
+            </Show>
           </div>
         )}
       </Show>

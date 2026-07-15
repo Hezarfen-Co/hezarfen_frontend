@@ -447,6 +447,7 @@ function CourseDetailContent() {
                 courseId={id()}
                 roster={roster() ?? []}
                 canManage={canManage()}
+                active={openSections().sessions}
                 createOpen={showSessionForm()}
                 onCreateOpenChange={setShowSessionForm}
               />
