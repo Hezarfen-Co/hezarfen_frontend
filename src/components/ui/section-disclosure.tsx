@@ -41,7 +41,7 @@ export function SectionDisclosure(props: ParentProps<{
       >
         <div class="min-h-0 overflow-hidden">
           <div class={cn("space-y-4 p-4 transition-opacity duration-150 motion-reduce:transition-none", props.open ? "opacity-100" : "opacity-0")}>
-            {props.open ? props.children : null}
+            {props.children}
           </div>
         </div>
       </div>

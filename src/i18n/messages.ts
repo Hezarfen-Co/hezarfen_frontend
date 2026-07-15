@@ -206,9 +206,14 @@ export type MessageKey =
   | "exams.yourResult"
   | "exams.notGraded"
   | "exams.gradeStudent"
+  | "exams.gradeAfterExam"
   | "exams.results"
   | "exams.noResults"
+  | "exams.details"
   | "exams.schedule"
+  | "exams.examStatistics"
+  | "exams.examQuestions"
+  | "exams.studentResults"
   | "exams.window"
   | "exams.unscheduled"
   | "exams.mode"
@@ -681,9 +686,14 @@ const en: Dict = {
   "exams.yourResult": "Your result",
   "exams.notGraded": "Not graded yet",
   "exams.gradeStudent": "Grade a student",
+  "exams.gradeAfterExam": "Available after the exam ends",
   "exams.results": "Results table",
   "exams.noResults": "No results yet.",
+  "exams.details": "Exam Details",
   "exams.schedule": "Schedule",
+  "exams.examStatistics": "Exam Statistics",
+  "exams.examQuestions": "Exam Questions",
+  "exams.studentResults": "Student Grades",
   "exams.window": "Window",
   "exams.unscheduled": "Unscheduled",
   "exams.mode": "Mode",
@@ -1166,9 +1176,14 @@ const tr: Dict = {
   "exams.yourResult": "Sonucun",
   "exams.notGraded": "Henüz notlanmadı",
   "exams.gradeStudent": "Öğrenci notla",
+  "exams.gradeAfterExam": "Sınav bitince kullanılabilir",
   "exams.results": "Sonuç tablosu",
   "exams.noResults": "Henüz sonuç yok.",
+  "exams.details": "Sınav Detayları",
   "exams.schedule": "Zamanlama",
+  "exams.examStatistics": "Sınav İstatistikleri",
+  "exams.examQuestions": "Sınav Soruları",
+  "exams.studentResults": "Öğrenci Notları",
   "exams.window": "Aralık",
   "exams.unscheduled": "Zamansız",
   "exams.mode": "Mod",

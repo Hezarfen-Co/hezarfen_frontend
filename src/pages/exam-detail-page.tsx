@@ -116,13 +116,13 @@ function ExamDetailContent() {
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
   const [sheetUserId, setSheetUserId] = createSignal<string | null>(null);
+  const [gradeOpen, setGradeOpen] = createSignal(false);
   const [openSections, setOpenSections] = createSignal({
     schedule: true,
     ownResult: false,
     answerSheet: false,
     statistics: false,
     questions: false,
-    grade: false,
     results: false,
   });
 
@@ -183,7 +183,7 @@ function ExamDetailContent() {
       setPending(false);
     }
   };
-  const toggleSection = (section: "schedule" | "ownResult" | "answerSheet" | "statistics" | "questions" | "grade" | "results") => {
+  const toggleSection = (section: "schedule" | "ownResult" | "answerSheet" | "statistics" | "questions" | "results") => {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
 
@@ -332,7 +332,7 @@ function ExamDetailContent() {
               open={openSections().schedule}
               onToggle={() => toggleSection("schedule")}
               title={t("exams.schedule")}
-              description={examModeLabel(ex().mode)}
+              description={t("exams.details")}
             >
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div class="rounded-lg border bg-muted/25 p-3">
@@ -355,7 +355,12 @@ function ExamDetailContent() {
             </SectionDisclosure>
 
             <Show when={!isTeacherPlus() && !isScheduled()}>
-              <SectionDisclosure open={openSections().ownResult} onToggle={() => toggleSection("ownResult")} title={t("exams.yourResult")}>
+              <SectionDisclosure
+                open={openSections().ownResult}
+                onToggle={() => toggleSection("ownResult")}
+                title={t("exams.yourResult")}
+                description={ownResult() ? `${t("form.mark")}: ${ownResult()!.mark}` : t("exams.notGraded")}
+              >
                 <Suspense fallback={<PageSpinner />}>
                   <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
                     {(r) => <ExamResultBadge mark={r().mark} />}
@@ -378,7 +383,7 @@ function ExamDetailContent() {
             </Show>
 
             <Show when={isTeacherPlus()}>
-              <SectionDisclosure open={openSections().statistics} onToggle={() => toggleSection("statistics")} title={t("exams.statistics")}>
+              <SectionDisclosure open={openSections().statistics} onToggle={() => toggleSection("statistics")} title={t("exams.statistics")} description={t("exams.examStatistics")}>
                 <Suspense fallback={<PageSpinner />}>
                   <Show when={stats()}>
                     {(s) => (
@@ -409,28 +414,43 @@ function ExamDetailContent() {
                 open={openSections().questions}
                 onToggle={() => toggleSection("questions")}
                 title={t("questions.title")}
+                description={t("exams.examQuestions")}
               >
                 <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} embedded />
               </SectionDisclosure>
 
-              <Show when={!isFinished()}>
-                <SectionDisclosure open={openSections().grade} onToggle={() => toggleSection("grade")} title={t("exams.gradeStudent")}>
-                  <GradeForm
-                    students={gradeStudents()}
-                    onSubmit={async (values) => {
-                      await postExamResult(id(), values);
-                      await refetchResults();
-                    }}
-                  />
-                </SectionDisclosure>
-              </Show>
+              <SidePanel
+                open={gradeOpen()}
+                onOpenChange={setGradeOpen}
+                title={t("exams.gradeStudent")}
+              >
+                <GradeForm
+                  students={gradeStudents()}
+                  onSubmit={async (values) => {
+                    await postExamResult(id(), values);
+                    await refetchResults();
+                  }}
+                />
+              </SidePanel>
 
               <SectionDisclosure
                 open={openSections().results}
                 onToggle={() => toggleSection("results")}
                 title={t("exams.results")}
-                description={`${(results() ?? []).length}`}
-                meta={<Badge variant="secondary" class="mono rounded-sm px-3 py-1">{(results() ?? []).length}</Badge>}
+                description={`${(results() ?? []).length} ${t("exams.studentResults")}`}
+                actions={
+                  <Show when={isTeacherPlus()}>
+                    <div class="flex items-center gap-2">
+                      <Show when={!isFinished()}>
+                        <span class="text-xs text-muted-foreground">{t("exams.gradeAfterExam")}</span>
+                      </Show>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={!isFinished()} onClick={() => setGradeOpen(true)}>
+                        <IconEdit class="h-4 w-4" />
+                        {t("exams.gradeStudent")}
+                      </Button>
+                    </div>
+                  </Show>
+                }
               >
                 <Suspense fallback={<PageSpinner />}>
                   <Show

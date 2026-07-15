@@ -237,15 +237,19 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
           {(row) => {
             const saved = () => rows().get(row.user.id) as SessionAttendance | undefined;
             return (
-              <div class="grid gap-3 rounded-xl border border-border/80 bg-card p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_13rem_auto] sm:items-end">
+              <div class="space-y-2 rounded-lg border border-border/50 bg-card px-4 py-3">
                 <div class="min-w-0">
                   <p class="truncate font-medium">{personLabel(row.user)}</p>
-                  <p class="mono mt-1 truncate text-xs text-muted-foreground">{row.user.id}</p>
+                  <p class="mono truncate text-xs text-muted-foreground">{row.user.id}</p>
                 </div>
-                <AttendanceStatusPicker id={`session-${props.sessionId}-${row.user.id}`} value={statusFor(row.user.id)} onChange={(status) => setLocal((current) => ({ ...current, [row.user.id]: status }))} />
-                <Button type="button" class="rounded-lg" variant={saved() ? "outline" : "default"} onClick={() => void save(row.user.id)}>
-                  {saved() ? t("common.update") : t("common.save")}
-                </Button>
+                <div class="flex items-center gap-2">
+                  <div class="min-w-0 flex-1">
+                    <AttendanceStatusPicker hideLabel hideDetail id={`session-${props.sessionId}-${row.user.id}`} value={statusFor(row.user.id)} onChange={(status) => setLocal((current) => ({ ...current, [row.user.id]: status }))} />
+                  </div>
+                  <Button type="button" class="h-10 w-24 shrink-0 rounded-lg" variant={saved() ? "outline" : "default"} onClick={() => void save(row.user.id)}>
+                    {saved() ? t("common.update") : t("common.save")}
+                  </Button>
+                </div>
               </div>
             );
           }}
