@@ -1,7 +1,8 @@
 import { client } from "./client";
-import type { PersonRef } from "./types";
+import type { PersonRef, Role } from "./types";
 
-export function getUserSearch(query: string, signal?: AbortSignal): Promise<PersonRef[]> {
+export function getUserSearch(query: string, signal?: AbortSignal, role?: Role): Promise<PersonRef[]> {
   const params = new URLSearchParams({ q: query });
+  if (role) params.set("role", role);
   return client<PersonRef[]>(`/users/search?${params.toString()}`, { signal });
 }

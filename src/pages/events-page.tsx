@@ -8,12 +8,15 @@ import { EventCard } from "@/components/events/event-card";
 import { EventForm } from "@/components/events/event-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { DataToolbar } from "@/components/ui/data-toolbar";
 import { IconPlus } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { useAuth } from "@/stores/auth-context";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
+import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 
 const EVENT_PAGE_SIZE = 9;
@@ -28,18 +31,35 @@ export default function EventsPage() {
 
 function EventsContent() {
   const auth = useAuth();
+  const { locale } = usePreferences();
   const t = useT();
   const [events, { refetch }] = createResource(() => getEvents());
   const [error, setError] = createSignal("");
   const [showForm, setShowForm] = createSignal(false);
+  const [query, setQuery] = createSignal("");
+  const [timeFilter, setTimeFilter] = createSignal("all");
   const [page, setPage] = createSignal(0);
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
   const eventList = createMemo(() => events() ?? []);
-  const totalPages = createMemo(() => Math.max(1, Math.ceil(eventList().length / EVENT_PAGE_SIZE)));
+  const filteredEvents = createMemo(() => {
+    const needle = query().trim().toLocaleLowerCase();
+    const scope = timeFilter();
+    const now = Date.now();
+    return eventList().filter((event) => {
+      if (scope === "upcoming" && event.ends_at != null && event.ends_at < now) return false;
+      if (scope === "past" && (event.ends_at == null || event.ends_at >= now)) return false;
+      if (!needle) return true;
+      return [event.title, event.description, formatDateTime(event.starts_at, locale()), formatDateTime(event.ends_at, locale())]
+        .join(" ")
+        .toLocaleLowerCase()
+        .includes(needle);
+    });
+  });
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredEvents().length / EVENT_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
   const pageItems = createMemo(() => {
     const start = safePage() * EVENT_PAGE_SIZE;
-    return eventList().slice(start, start + EVENT_PAGE_SIZE);
+    return filteredEvents().slice(start, start + EVENT_PAGE_SIZE);
   });
 
   return (
@@ -95,25 +115,49 @@ function EventsContent() {
 
       {error() && <p class="text-sm text-destructive">{error()}</p>}
 
-      <Suspense fallback={<PageSpinner />}>
-        <Show when={events.error}>
-          <Alert variant="destructive">{formatApiError(events.error)}</Alert>
-        </Show>
-        <Show when={events()}>
-          {(list) => (
+      <section class="data-shell space-y-4 p-4">
+        <DataToolbar
+          searchValue={query()}
+          searchPlaceholder={t("common.searchPlaceholder")}
+          onSearchInput={(value) => {
+            setQuery(value);
+            setPage(0);
+          }}
+          filters={
+            <Select
+              class="h-9 w-full rounded-sm sm:w-44"
+              value={timeFilter()}
+              aria-label={t("events.title")}
+              onChange={(event) => {
+                setTimeFilter(event.currentTarget.value);
+                setPage(0);
+              }}
+            >
+              <option value="all">{t("common.all")}</option>
+              <option value="upcoming">{t("events.upcoming")}</option>
+              <option value="past">{t("events.past")}</option>
+            </Select>
+          }
+        />
+
+        <Suspense fallback={<PageSpinner />}>
+          <Show when={events.error}>
+            <Alert variant="destructive">{formatApiError(events.error)}</Alert>
+          </Show>
+          <Show when={events() !== undefined}>
             <Show
-              when={list().length > 0}
+              when={filteredEvents().length > 0}
               fallback={
                 <div class="rounded-sm border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
                   {t("events.empty")}
                 </div>
               }
             >
-                <div class="space-y-4">
+              <div class="space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 class="font-display text-lg font-semibold">{t("events.title")}</h2>
-                    <p class="mt-1 text-sm text-muted-foreground">{eventList().length} {t("nav.events")}</p>
+                    <p class="mt-1 text-sm text-muted-foreground">{filteredEvents().length} / {eventList().length} {t("nav.events")}</p>
                   </div>
                 </div>
                 <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -125,14 +169,14 @@ function EventsContent() {
                     )}
                   </For>
                 </ul>
-                <Show when={eventList().length > EVENT_PAGE_SIZE}>
+                <Show when={filteredEvents().length > EVENT_PAGE_SIZE}>
                   <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
                 </Show>
               </div>
             </Show>
-          )}
-        </Show>
-      </Suspense>
+          </Show>
+        </Suspense>
+      </section>
     </div>
   );
 }

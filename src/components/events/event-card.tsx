@@ -18,7 +18,7 @@ export function EventCard(props: { event: Event }) {
           </p>
         </div>
         <div class="border-t border-border bg-muted/25 px-3 py-3">
-          <dl class="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+          <dl class="grid gap-2 text-xs text-muted-foreground">
             <div>
               <dt class="font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</dt>
               <dd class="mono mt-1 text-foreground">{formatDateTime(props.event.starts_at, locale())}</dd>

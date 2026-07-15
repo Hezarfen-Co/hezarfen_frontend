@@ -229,7 +229,13 @@ export function ExamRoomWS(props: { exam: Exam }) {
     const startedAt = Date.now();
     const initial = remaining;
     const timer = window.setInterval(() => {
-      setRemainingMs(Math.max(0, initial - (Date.now() - startedAt)));
+      const next = Math.max(0, initial - (Date.now() - startedAt));
+      setRemainingMs(next);
+      if (next <= 0) {
+        setAttempt((prev) => (prev && prev.status === "in_progress" ? { ...prev, status: "expired" as any, remaining_ms: 0 } : prev));
+        setFinishOpen(false);
+        window.clearInterval(timer);
+      }
     }, 1000);
     onCleanup(() => window.clearInterval(timer));
   });

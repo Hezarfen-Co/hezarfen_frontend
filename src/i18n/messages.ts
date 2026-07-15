@@ -190,6 +190,8 @@ export type MessageKey =
   | "events.helpBody"
   | "events.clearStart"
   | "events.clearEnd"
+  | "events.upcoming"
+  | "events.past"
   | "exams.title"
   | "exams.subtitle"
   | "exams.create"
@@ -670,6 +672,8 @@ const en: Dict = {
     "Students mark themselves present / absent / late / excused with the big status buttons, then save attendance. Teachers create events and can mark others by user id. Managers can edit any event.",
   "events.clearStart": "Will clear start time",
   "events.clearEnd": "Will clear end time",
+  "events.upcoming": "Upcoming",
+  "events.past": "Past",
   "exams.title": "Exams",
   "exams.subtitle": "All exams across courses — create them under a course.",
   "exams.create": "Create exam",
@@ -1160,6 +1164,8 @@ const tr: Dict = {
     "Öğrenciler büyük durum butonlarıyla var/yok/geç/mazeretli seçip yoklamayı kaydeder. Öğretmenler etkinlik oluşturur ve başkasını işaretleyebilir. Yöneticiler her etkinliği düzenleyebilir.",
   "events.clearStart": "Başlangıç saati temizlenecek",
   "events.clearEnd": "Bitiş saati temizlenecek",
+  "events.upcoming": "Yaklaşan",
+  "events.past": "Geçmiş",
   "exams.title": "Sınavlar",
   "exams.subtitle": "Tüm derslerin sınavları — yeni sınav ders içinden eklenir.",
   "exams.create": "Sınav oluştur",

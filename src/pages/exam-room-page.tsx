@@ -39,7 +39,7 @@ function ExamRoomContent() {
     const e = exam();
     const u = auth.user();
     if (!e || !u) return false;
-    if (u.role !== "student") return true;
+    if (u.role !== "student") return false;
     return (mine() ?? []).some((course) => course.id === e.course);
   };
   const accessReady = () => auth.user()?.role !== "student" || mine() !== undefined;
