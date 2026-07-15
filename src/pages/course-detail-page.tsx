@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
+import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
 import {
   Table,
@@ -77,6 +78,7 @@ function CourseDetailContent() {
   const [termId, setTermId] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
+  const [openSections, setOpenSections] = createSignal({ exams: true, sessions: false, roster: false });
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -110,6 +112,9 @@ function CourseDetailContent() {
   const examKindCount = createMemo(() => new Set((exams() ?? []).map((exam) => exam.kind)).size);
 
   const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
+  const toggleSection = (section: "exams" | "sessions" | "roster") => {
+    setOpenSections((current) => ({ ...current, [section]: !current[section] }));
+  };
 
   const wrap = async (fn: () => Promise<void>) => {
     setError("");
@@ -360,29 +365,21 @@ function CourseDetailContent() {
               </div>
             </section>
 
-            {/* Course exams */}
-            <section class="data-shell space-y-4 p-4">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 class="font-display text-lg font-semibold">{t("courses.exams")}</h2>
-                  <p class="mt-1 text-sm text-muted-foreground">
-                    {examCount()} {t("nav.exams")}
-                  </p>
-                </div>
+            <SectionDisclosure
+              open={openSections().exams}
+              onToggle={() => toggleSection("exams")}
+              title={t("courses.exams")}
+              description={`${examCount()} ${t("nav.exams")}`}
+              meta={<Badge variant="secondary" class="mono rounded-sm px-3 py-1">{examCount()}</Badge>}
+              actions={
                 <Show when={canManage()}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      class="rounded-sm"
-                      onClick={() => setShowExamForm(true)}
-                  >
+                  <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowExamForm(true)}>
                     <IconPlus class="h-4 w-4" />
                     {t("courses.addExam")}
                   </Button>
                 </Show>
-              </div>
-
+              }
+            >
               <Suspense fallback={<PageSpinner />}>
                 <Show
                   when={(exams() ?? []).length > 0}
@@ -423,28 +420,33 @@ function CourseDetailContent() {
                   </ul>
                 </Show>
               </Suspense>
-            </section>
+            </SectionDisclosure>
 
-            <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} />
+            <SectionDisclosure
+              open={openSections().sessions}
+              onToggle={() => toggleSection("sessions")}
+              title={t("sessions.title")}
+              description={t("sessions.subtitle")}
+            >
+              <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} />
+            </SectionDisclosure>
 
-            {/* Roster */}
             <Show when={isTeacherPlus()}>
-              <section class="data-shell space-y-4 p-4">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <h2 class="font-display text-lg font-semibold">{t("courses.roster")}</h2>
-                  <div class="flex items-center gap-2">
-                    <Badge variant="secondary" class="mono rounded-sm px-3 py-1">
-                      {rosterCount()}
-                    </Badge>
-                    <Show when={canManage()}>
-                      <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowEnrollPanel(true)}>
-                        <IconPlus class="h-4 w-4" />
-                        {t("courses.enroll")}
-                      </Button>
-                    </Show>
-                  </div>
-                </div>
-
+              <SectionDisclosure
+                open={openSections().roster}
+                onToggle={() => toggleSection("roster")}
+                title={t("courses.roster")}
+                description={t("courses.enroll")}
+                meta={<Badge variant="secondary" class="mono rounded-sm px-3 py-1">{rosterCount()}</Badge>}
+                actions={
+                  <Show when={canManage()}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowEnrollPanel(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("courses.enroll")}
+                    </Button>
+                  </Show>
+                }
+              >
                 <Suspense fallback={<PageSpinner />}>
                   <Show
                     when={(roster() ?? []).length > 0}
@@ -499,7 +501,7 @@ function CourseDetailContent() {
                     </DataTableFrame>
                   </Show>
                 </Suspense>
-              </section>
+              </SectionDisclosure>
             </Show>
           </div>
             </Show>

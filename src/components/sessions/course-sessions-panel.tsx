@@ -8,7 +8,6 @@ import { formatApiError } from "@/api/client";
 import type { AttendanceStatus, Enrollment, SessionAttendance } from "@/api/types";
 import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { IconPlus, IconTrash } from "@/components/ui/icons";
@@ -82,15 +81,7 @@ export function CourseSessionsPanel(props: { courseId: string; roster: Enrollmen
   };
 
   return (
-    <section class="surface-card space-y-4 p-5">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 class="font-display text-lg font-semibold">{t("sessions.title")}</h2>
-          <p class="mt-1 text-sm text-muted-foreground">{t("sessions.subtitle")}</p>
-        </div>
-        <Badge variant="secondary" class="rounded-full px-3 py-1">{sessions()?.length ?? 0}</Badge>
-      </div>
-
+    <div class="space-y-4">
       {error() && <Alert variant="destructive">{error()}</Alert>}
 
       <Show when={props.canManage}>
@@ -159,7 +150,7 @@ export function CourseSessionsPanel(props: { courseId: string; roster: Enrollmen
           </div>
         </Show>
       </Suspense>
-    </section>
+    </div>
   );
 }
 
