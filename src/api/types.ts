@@ -77,6 +77,24 @@ export type Enrollment = {
   enrolled_by: PersonRef;
 };
 
+export type CourseSession = {
+  id: string;
+  course: string;
+  teacher: PersonRef;
+  topic: string;
+  starts_at: number;
+  ends_at: number | null;
+};
+
+export type SessionAttendance = {
+  id: string;
+  session: string;
+  course: string;
+  user: PersonRef;
+  status: AttendanceStatus;
+  marked_by: PersonRef;
+};
+
 export type Exam = {
   id: string;
   creator: string;

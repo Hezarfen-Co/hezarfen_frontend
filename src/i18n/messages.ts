@@ -384,7 +384,17 @@ export type MessageKey =
   | "terms.empty"
   | "terms.term"
   | "terms.unassigned"
-  | "terms.dateRequired";
+  | "terms.dateRequired"
+  | "sessions.title"
+  | "sessions.subtitle"
+  | "sessions.topic"
+  | "sessions.add"
+  | "sessions.empty"
+  | "sessions.untitled"
+  | "sessions.teacher"
+  | "sessions.rollCall"
+  | "sessions.startRequired"
+  | "sessions.endInvalid";
 
 type Dict = Record<MessageKey, string>;
 
@@ -787,6 +797,16 @@ const en: Dict = {
   "terms.term": "Term",
   "terms.unassigned": "Unassigned",
   "terms.dateRequired": "Start and end dates are required.",
+  "sessions.title": "Lesson sessions",
+  "sessions.subtitle": "Create lessons and take course roll call.",
+  "sessions.topic": "Topic",
+  "sessions.add": "Add session",
+  "sessions.empty": "No lesson sessions yet.",
+  "sessions.untitled": "Untitled lesson",
+  "sessions.teacher": "Teacher",
+  "sessions.rollCall": "Roll call",
+  "sessions.startRequired": "Session start date and time are required.",
+  "sessions.endInvalid": "Enter both end date and end time, or leave both empty.",
 };
 
 const tr: Dict = {
@@ -1188,6 +1208,16 @@ const tr: Dict = {
   "terms.term": "Dönem",
   "terms.unassigned": "Atanmamış",
   "terms.dateRequired": "Başlangıç ve bitiş tarihi gerekli.",
+  "sessions.title": "Ders oturumları",
+  "sessions.subtitle": "Ders oluştur ve ders yoklaması al.",
+  "sessions.topic": "Konu",
+  "sessions.add": "Oturum ekle",
+  "sessions.empty": "Henüz ders oturumu yok.",
+  "sessions.untitled": "Konu girilmemiş ders",
+  "sessions.teacher": "Öğretmen",
+  "sessions.rollCall": "Yoklama",
+  "sessions.startRequired": "Oturum başlangıç tarihi ve saati gerekli.",
+  "sessions.endInvalid": "Bitiş için tarih ve saati birlikte gir ya da ikisini de boş bırak.",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

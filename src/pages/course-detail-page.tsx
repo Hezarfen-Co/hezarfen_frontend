@@ -13,6 +13,7 @@ import { postCourseExam } from "@/api/postCourseExam";
 import { formatApiError } from "@/api/client";
 import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm } from "@/components/exams/exam-form";
+import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -393,6 +394,8 @@ function CourseDetailContent() {
                 </Show>
               </Suspense>
             </section>
+
+            <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} />
 
             {/* Roster */}
             <Show when={isTeacherPlus()}>
