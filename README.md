@@ -84,6 +84,7 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - Short create/edit/filter work uses `SidePanel`.
 - Destructive actions use confirm dialogs.
 - Data-heavy views use `DataToolbar`, `DataTableFrame`, `.data-table`, and `TableRowActions`.
+- Large list pages should use server-side pagination/search/filtering when the backend supports it; client-side slicing is only acceptable for small or temporary datasets.
 - Date fields use the shared `DatePicker`; date-time flows pair it with an `HH:mm` input.
 - Closed disclosure sections should not mount or fetch hidden content.
 

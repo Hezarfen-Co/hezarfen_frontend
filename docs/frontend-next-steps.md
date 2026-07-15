@@ -44,13 +44,43 @@ Audit checklist:
 
 ## Priority 2: README Update
 
+## Priority 2: Pagination And Request Audit
+
+Audit list pages for pagination behavior and request shape.
+
+- Identify which pages use client-side pagination after fetching full lists.
+- Identify which backend endpoints support server-side pagination, filtering, or search.
+- Verify frontend requests use backend pagination where available.
+- For pages that must stay client-side for now, document the reason and expected data size.
+- Check that table pagination, search, filters, and sorting are consistent with the request model.
+- Avoid claiming a page is paginated if it only slices already-fetched full data.
+
+Pages to check:
+
+- Courses list.
+- Exams list.
+- Admin users directory.
+- Live monitor roster.
+- Work log.
+- Terms/settings lists if they grow beyond small configuration data.
+- Detail sub-tables such as enrollments, results, attendance, sessions, and questions.
+
+Acceptance criteria:
+
+- Every list page is classified as server-paginated, client-paginated, or intentionally unpaginated.
+- Request URLs and API helpers match the chosen pagination model.
+- Large or growing datasets do not fetch all records unless explicitly accepted.
+- UI pagination controls do not hide excessive network payloads.
+
+## Priority 3: README Update
+
 - Update stack, scripts, and local setup notes.
 - Document role hierarchy and UI scope rules.
 - Document dashboard behavior and table action standards.
 - Link the active docs under `docs/`.
 - Keep build verification as `bun run build`.
 
-## Priority 3: Docs Cleanup
+## Priority 4: Docs Cleanup
 
 - Keep `docs/navigation-patterns.md` as the active interaction rulebook.
 - Keep `docs/ui-redesign-tokens.md` as the visual system reference.
@@ -96,11 +126,13 @@ Audit checklist:
 - `/events/:id`: consider lazy-loading attendance if the route feels heavy.
 - Dashboard should avoid broad role-specific requests unless that role actually needs global scope.
 - Settings-dependent controls should share the cached settings request.
+- Paginated tables should prefer server-side pagination when backend support exists.
 
 ## Acceptance Checklist
 
 - `bun run build` passes.
 - Role-based UI audit is complete for sidebar, routes, dashboard, and actions.
+- Pagination and request audit is complete for list pages and large detail tables.
 - README is current with stack, scripts, roles, UI patterns, and docs links.
 - Docs reflect active rules and do not contradict current implementation.
 - No native `date` or `datetime-local` inputs remain where the shared `DatePicker` should be used.

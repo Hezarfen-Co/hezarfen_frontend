@@ -17,6 +17,13 @@ Role scope rules:
 
 Admin pages are action-oriented. Lists should use shared toolbar and table primitives, compact rows, sticky headers, fixed status/action columns, and pagination.
 
+Pagination and request rules:
+
+- Do not treat client-side slicing as complete pagination for large datasets.
+- If the backend endpoint supports pagination, filtering, search, or sorting, the API helper and page should use those request parameters.
+- If a page intentionally fetches the full list and paginates in memory, document that the expected dataset is small or temporary.
+- Search/filter/sort UI should match the request model: server-side controls for server-paginated lists, client-side controls only for accepted small lists.
+
 Table action rules:
 
 - Row actions use `TableRowActions` with a centered three-dot trigger.
