@@ -40,7 +40,7 @@ interface PortalCard {
   titleKey: MessageKey;
   to: string;
   descKey: MessageKey;
-  stat: () => string | number;
+  stat: string | number;
   statSuffix?: MessageKey;
   accent: string;
   minRole?: Role;
@@ -140,7 +140,7 @@ function DashboardContent() {
   const totalExamsCount = createMemo(() => (exams.loading ? null : visibleExams().length));
   const totalEventsCount = createMemo(() => (events.loading ? null : events()?.length ?? 0));
   const totalNotesCount = createMemo(() => (notes.loading ? null : notes()?.length ?? 0));
-  const displayCount = (count: number | null) => count ?? "...";
+  const displayCount = (count: number | null) => String(count ?? 0);
 
   const overallAvg = createMemo(() => marks()?.overall_average ?? null);
 
@@ -171,88 +171,54 @@ function DashboardContent() {
     Math.max(1, ...chartData().map((d) => d.value)),
   );
 
-  const cards = createMemo(() => {
+  const cards = () => {
     const roleVal = role();
+    const cc = displayCount(courseCount());
+    const ec = displayCount(totalExamsCount());
+    const evc = displayCount(totalEventsCount());
+    const nc = displayCount(totalNotesCount());
+    const avg = overallAvg() == null ? "0" : roundAvg(overallAvg()!);
     const list: PortalCard[] = [];
 
     if (roleVal === "student") {
       list.push(
-        {
-          icon: <IconSchool class="h-5 w-5" />,
-          titleKey: "nav.courses",
-          to: "/courses",
-          descKey: "dashboard.portal.coursesDesc",
-          stat: () => displayCount(courseCount()),
-          statSuffix: "dashboard.records",
-          accent: "violet",
-        },
-        {
-          icon: <IconExam class="h-5 w-5" />,
-          titleKey: "nav.exams",
-          to: "/exams",
-          descKey: "dashboard.portal.examsDesc",
-          stat: () => displayCount(totalExamsCount()),
-          statSuffix: "dashboard.records",
-          accent: "amber",
-        },
-        {
-          icon: <IconCalendar class="h-5 w-5" />,
-          titleKey: "nav.events",
-          to: "/events",
-          descKey: "dashboard.portal.eventsDesc",
-          stat: () => displayCount(totalEventsCount()),
-          statSuffix: "dashboard.records",
-          accent: "sky",
-        },
-        {
-          icon: <IconReportAnalytics class="h-5 w-5" />,
-          titleKey: "nav.marks",
-          to: "/marks",
-          descKey: "dashboard.portal.marksDesc",
-          stat: () => (overallAvg() == null ? "--" : roundAvg(overallAvg()!)),
-          accent: "mint",
-        },
-        {
-          icon: <IconNote class="h-5 w-5" />,
-          titleKey: "nav.notes",
-          to: "/notes",
-          descKey: "dashboard.portal.notesDesc",
-          stat: () => displayCount(totalNotesCount()),
-          statSuffix: "dashboard.records",
-          accent: "rose",
-        },
+        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc, statSuffix: "dashboard.records", accent: "violet" },
+        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
+        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, statSuffix: "dashboard.records", accent: "sky" },
+        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avg, accent: "mint" },
+        { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc, statSuffix: "dashboard.records", accent: "rose" },
       );
     }
 
     if (roleVal === "teacher") {
       list.push(
-        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: () => displayCount(courseCount()), statSuffix: "dashboard.records", accent: "violet" },
-        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: () => displayCount(totalExamsCount()), statSuffix: "dashboard.records", accent: "amber" },
-        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: () => displayCount(totalEventsCount()), statSuffix: "dashboard.records", accent: "sky", minRole: "teacher" },
-        { icon: <IconChart class="h-5 w-5" />, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", stat: () => "", accent: "mint", minRole: "teacher" },
-        { icon: <IconClipboardCheck class="h-5 w-5" />, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", stat: () => "", accent: "rose", minRole: "teacher" },
-        { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: () => displayCount(totalNotesCount()), statSuffix: "dashboard.records", accent: "sky" },
-        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", stat: () => "", accent: "amber", minRole: "teacher" },
+        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc, statSuffix: "dashboard.records", accent: "violet" },
+        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
+        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, statSuffix: "dashboard.records", accent: "sky", minRole: "teacher" },
+        { icon: <IconChart class="h-5 w-5" />, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", stat: "", accent: "mint", minRole: "teacher" },
+        { icon: <IconClipboardCheck class="h-5 w-5" />, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", stat: "", accent: "rose", minRole: "teacher" },
+        { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc, statSuffix: "dashboard.records", accent: "sky" },
+        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", stat: "", accent: "amber", minRole: "teacher" },
       );
     }
 
     if (hasMinRole(roleVal, "manager")) {
       list.unshift(
-        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: () => displayCount(courseCount()), statSuffix: "dashboard.records", accent: "violet" },
-        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: () => displayCount(totalExamsCount()), statSuffix: "dashboard.records", accent: "amber" },
-        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: () => displayCount(totalEventsCount()), statSuffix: "dashboard.records", accent: "sky" },
-        { icon: <IconSettings class="h-5 w-5" />, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", stat: () => "", accent: "mint", minRole: "manager" },
-        { icon: <IconBook class="h-5 w-5" />, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", stat: () => "", accent: "rose", minRole: "manager" },
+        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc, statSuffix: "dashboard.records", accent: "violet" },
+        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
+        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, statSuffix: "dashboard.records", accent: "sky" },
+        { icon: <IconSettings class="h-5 w-5" />, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", stat: "", accent: "mint", minRole: "manager" },
+        { icon: <IconBook class="h-5 w-5" />, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", stat: "", accent: "rose", minRole: "manager" },
       );
       if (roleVal === "admin") {
         list.push(
-          { icon: <IconUsers class="h-5 w-5" />, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", stat: () => "", accent: "rose", minRole: "admin" },
+          { icon: <IconUsers class="h-5 w-5" />, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", stat: "", accent: "rose", minRole: "admin" },
         );
       }
     }
 
     return list;
-  });
+  };
 
   return (
     <div class="space-y-5">
@@ -272,11 +238,11 @@ function DashboardContent() {
       </Show>
 
       <Suspense fallback={<PageSpinner />}>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr">
           <For each={cards()}>{(card) => <PortalCard card={card} />}</For>
         </div>
 
-        <div class="grid gap-4 lg:grid-cols-2">
+        <div class="grid gap-4 lg:grid-cols-2 auto-rows-fr">
           <UpcomingTimeline timeline={timeline()} locale={locale()} t={t} />
           <ActivityChart
             label={t("dashboard.activityGraph")}
@@ -291,8 +257,7 @@ function DashboardContent() {
 
 function PortalCard(props: { card: PortalCard }) {
   const t = useT();
-  const { icon, titleKey, to, descKey, stat, statSuffix, accent, minRole } = props.card;
-  const statValue = stat();
+  const { icon, titleKey, to, descKey, stat: statValue, statSuffix, accent, minRole } = props.card;
 
   const iconAccentMap: Record<string, string> = {
     violet: "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300",
@@ -314,7 +279,7 @@ function PortalCard(props: { card: PortalCard }) {
     <Link
       to={to}
       class={cn(
-        "group relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        "group relative flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
       )}
     >
       <div
@@ -344,7 +309,7 @@ function PortalCard(props: { card: PortalCard }) {
           <path d="M5 12l4-4-4-4" />
         </svg>
       </div>
-      <div class="mt-4 space-y-1">
+      <div class="mt-4 flex flex-1 flex-col">
         <div class="flex items-center gap-2">
           <h3 class="font-display text-sm font-semibold">{t(titleKey)}</h3>
           <Show when={minRole && minRole !== "student"}>
@@ -358,15 +323,13 @@ function PortalCard(props: { card: PortalCard }) {
             </span>
           </Show>
         </div>
-        <Show when={statValue !== ""}>
-          <p class="flex items-baseline gap-1 font-display text-2xl font-bold tracking-tight">
-            <span>{statValue}</span>
-            <Show when={statSuffix}>
-              {(suffix) => <span class="text-xs font-medium text-muted-foreground">{t(suffix())}</span>}
-            </Show>
-          </p>
-        </Show>
-        <p class="text-xs leading-relaxed text-muted-foreground">{t(descKey)}</p>
+        <div class="flex min-h-[2rem] items-baseline gap-1 font-display text-2xl font-bold tracking-tight">
+          <span class={cn(statValue === "" && "invisible")}>{statValue || "—"}</span>
+          <Show when={statSuffix}>
+            {(suffix) => <span class="text-xs font-medium text-muted-foreground">{t(suffix())}</span>}
+          </Show>
+        </div>
+        <p class="mt-auto text-xs leading-relaxed text-muted-foreground">{t(descKey)}</p>
       </div>
     </Link>
   );
@@ -378,7 +341,7 @@ function UpcomingTimeline(props: {
   t: (key: MessageKey, params?: Record<string, string | number>) => string;
 }) {
   return (
-    <div class="rounded-xl border border-border/60 bg-card p-5 shadow-xs">
+    <div class="flex flex-col rounded-xl border border-border/60 bg-card p-5 shadow-xs">
       <div class="mb-4 flex items-center gap-2">
         <IconCalendar class="h-4 w-4 text-muted-foreground" />
         <h2 class="font-display text-sm font-semibold">{props.t("dashboard.upcoming")}</h2>
@@ -431,7 +394,7 @@ function ActivityChart(props: {
   maxValue: number;
 }) {
   return (
-    <div class="rounded-xl border border-border/60 bg-card p-5 shadow-xs">
+    <div class="flex flex-col rounded-xl border border-border/60 bg-card p-5 shadow-xs">
       <div class="mb-4 flex items-center gap-2">
         <IconChart class="h-4 w-4 text-muted-foreground" />
         <h2 class="font-display text-sm font-semibold">{props.label}</h2>
