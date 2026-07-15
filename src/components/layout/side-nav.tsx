@@ -62,9 +62,10 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "grades",
     labelKey: "nav.group.grades",
-    Icon: IconChart,
+    Icon: IconNote,
     items: [
       { to: "/marks", labelKey: "nav.marks", Icon: IconChart },
+      { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
     ],
   },
   {

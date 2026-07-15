@@ -83,7 +83,7 @@ function DashboardContent() {
         description={t("dashboard.subtitle")}
         actions={
           <Link to="/guide">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" class="rounded-sm">
               {t("dashboard.continueGuide")}
             </Button>
           </Link>
@@ -131,7 +131,7 @@ function DashboardContent() {
 
       {/* Summaries */}
       <section class="grid items-stretch gap-4 lg:grid-cols-3">
-        <div class="surface-card flex min-h-[18rem] flex-col overflow-hidden">
+        <div class="data-shell flex min-h-[18rem] flex-col overflow-hidden">
           <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
             <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.recentNotes")}</h2>
             <Link to="/notes" class="text-sm font-medium text-primary hover:underline">
@@ -172,7 +172,7 @@ function DashboardContent() {
           </div>
         </div>
 
-        <div class="surface-card flex min-h-[18rem] flex-col overflow-hidden">
+        <div class="data-shell flex min-h-[18rem] flex-col overflow-hidden">
           <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
             <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.upcomingEvents")}</h2>
             <Link to="/events" class="text-sm font-medium text-primary hover:underline">
@@ -201,7 +201,7 @@ function DashboardContent() {
                       <Link
                         to="/events/$id"
                         params={{ id: event.id }}
-                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-primary/[0.05]"
+                         class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-muted/45"
                       >
                         <div class="min-w-0">
                           <p class="truncate text-sm font-medium">{event.title}</p>
@@ -222,7 +222,7 @@ function DashboardContent() {
           </div>
         </div>
 
-        <div class="surface-card flex min-h-[18rem] flex-col overflow-hidden">
+        <div class="data-shell flex min-h-[18rem] flex-col overflow-hidden">
           <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
             <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.myExams")}</h2>
             <Link to="/exams" class="text-sm font-medium text-primary hover:underline">
@@ -250,7 +250,7 @@ function DashboardContent() {
                     <li>
                       <ExamLink
                         examId={exam.id}
-                        class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-primary/[0.05]"
+                         class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-muted/45"
                       >
                         <div class="min-w-0">
                           <p class="truncate text-sm font-medium">{exam.title}</p>
@@ -258,7 +258,7 @@ function DashboardContent() {
                             {exam.description || "—"}
                           </p>
                         </div>
-                        <Badge variant="outline" class="shrink-0 capitalize">
+                        <Badge variant="outline" class="shrink-0 rounded-sm capitalize">
                             {examKindLabel(String(exam.kind), t)}
                           </Badge>
                         </ExamLink>
@@ -292,9 +292,9 @@ function StatTile(props: {
   };
 
   const inner = (
-    <div class="stat-tile h-full min-h-[5.5rem] p-4">
+    <div class="data-shell h-full min-h-[5.5rem] p-4 transition-colors duration-150 hover:border-primary/35">
       <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{props.label}</p>
-      <p class={cn("mt-1.5 font-display text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl", tones[props.tone])}>
+      <p class={cn("mono mt-1.5 text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl", tones[props.tone])}>
         {props.value}
         <Show when={props.suffix}>
           <span class="text-sm font-medium text-muted-foreground"> {props.suffix}</span>

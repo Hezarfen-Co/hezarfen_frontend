@@ -70,7 +70,7 @@ function AdminUsersContent() {
             <h2 class="font-display text-lg font-semibold">{t("nav.users")}</h2>
             <p class="mt-1 text-sm text-muted-foreground">{visibleUsers().length} / {users()?.length ?? 0}</p>
           </div>
-          <Badge variant="outline" class="mono rounded-sm uppercase tracking-[0.08em]">Directory</Badge>
+          <Badge variant="outline" class="mono rounded-sm uppercase tracking-[0.08em]">{t("admin.directory")}</Badge>
         </div>
         <UserSearchSelect
           id="admin-user-search"

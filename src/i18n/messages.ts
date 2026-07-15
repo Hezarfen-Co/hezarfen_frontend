@@ -239,6 +239,7 @@ export type MessageKey =
   | "admin.username"
   | "admin.id"
   | "admin.role"
+  | "admin.directory"
   | "admin.helpTitle"
   | "admin.helpBody"
   | "admin.noUsers"
@@ -433,7 +434,7 @@ const en: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Your campus workspace — notes, events, exams in one calm place.",
   "nav.home": "Home",
-  "nav.notes": "Notes",
+  "nav.notes": "Notebook",
   "nav.events": "Events",
   "nav.exams": "Exams",
   "nav.courses": "Courses",
@@ -456,7 +457,7 @@ const en: Dict = {
   "nav.preferences": "Preferences",
   "nav.group.students": "Students",
   "nav.group.classes": "Classes",
-  "nav.group.grades": "Grades",
+  "nav.group.grades": "My space",
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
   "common.loading": "Loading…",
@@ -562,7 +563,7 @@ const en: Dict = {
   "dashboard.helpBody":
     "Home shows live counts and shortcuts for notes, events, courses, exams, and your report card. Open Guide (bottom of the sidebar) for the full walkthrough.",
   "dashboard.continueGuide": "Open the guide",
-  "notes.title": "Notes",
+  "notes.title": "Notebook",
   "notes.subtitle": "Private scratchpad for class ideas and reminders.",
   "notes.new": "New note",
   "notes.empty": "Nothing here yet. Write your first note.",
@@ -672,6 +673,7 @@ const en: Dict = {
   "admin.username": "Username",
   "admin.id": "Id",
   "admin.role": "Role",
+  "admin.directory": "Directory",
   "admin.helpTitle": "Role hierarchy",
   "admin.helpBody":
     "student < teacher < manager < admin. Higher roles inherit lower permissions. Registration always creates a student. Only admins list users and change roles.",
@@ -875,7 +877,7 @@ const tr: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Kampüs çalışma alanın — notlar, etkinlikler ve sınavlar tek yerde.",
   "nav.home": "Ana sayfa",
-  "nav.notes": "Notlar",
+  "nav.notes": "Defter",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
   "nav.courses": "Dersler",
@@ -898,7 +900,7 @@ const tr: Dict = {
   "nav.preferences": "Tercihler",
   "nav.group.students": "Öğrenciler",
   "nav.group.classes": "Sınıflar",
-  "nav.group.grades": "Notlar",
+  "nav.group.grades": "Benim Alanım",
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
   "common.loading": "Yükleniyor…",
@@ -1004,7 +1006,7 @@ const tr: Dict = {
   "dashboard.helpBody":
     "Ana sayfa not, etkinlik, ders, sınav ve karne kısayollarını gösterir. Tam tur için sidebar’ın altındaki Rehber’i aç.",
   "dashboard.continueGuide": "Rehberi aç",
-  "notes.title": "Notlar",
+  "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleri ve hatırlatmalar için özel defter.",
   "notes.new": "Yeni not",
   "notes.empty": "Henüz bir şey yok. İlk notunu yaz.",
@@ -1114,6 +1116,7 @@ const tr: Dict = {
   "admin.username": "Kullanıcı adı",
   "admin.id": "Id",
   "admin.role": "Rol",
+  "admin.directory": "Kayıt listesi",
   "admin.helpTitle": "Rol hiyerarşisi",
   "admin.helpBody":
     "öğrenci < öğretmen < yönetici < admin. Üst roller alt yetkileri miras alır. Kayıt her zaman öğrenci oluşturur. Rolleri yalnız admin değiştirir.",
