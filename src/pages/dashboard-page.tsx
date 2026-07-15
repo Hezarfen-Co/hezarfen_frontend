@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createResource, type JSX } from "solid-js";
+import { For, Show, createMemo, createResource, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { formatApiError } from "@/api/client";
 import { getCourses } from "@/api/getCourses";
@@ -7,11 +7,10 @@ import { getExams } from "@/api/getExams";
 import { getMyCourses } from "@/api/getMyCourses";
 import { getMyMarks } from "@/api/getMyMarks";
 import { getNotes } from "@/api/getNotes";
-import type { Role } from "@/api/types";
-import { PageHeader } from "@/components/layout/page-header";
+import type { Exam, Event, Role } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { DataTableEmpty } from "@/components/ui/data-table";
 import {
   IconBook,
   IconCalendar,
@@ -25,7 +24,7 @@ import {
   IconUsers,
 } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import type { Locale, MessageKey } from "@/i18n/messages";
+import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
 import { formatDateTime } from "@/lib/format";
@@ -33,26 +32,30 @@ import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const PREVIEW_LIMIT = 5;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const ATTENTION_LIMIT = 8;
+const UPCOMING_LIMIT = 6;
 
-interface PortalCard {
-  icon: JSX.Element;
-  titleKey: MessageKey;
-  to: string;
-  descKey: MessageKey;
-  stat: string | number;
-  statSuffix?: MessageKey;
-  accent: string;
-  minRole?: Role;
-}
+type AttentionKind = "active" | "soon" | "today";
 
-interface TimelineItem {
+type AttentionItem = {
   id: string;
-  type: "event" | "exam";
+  kind: "exam" | "event";
   title: string;
   at: number | null;
   subtitle: string;
-}
+  status: AttentionKind;
+  to: "/exams/$id" | "/events/$id";
+};
+
+type PortalCardDef = {
+  titleKey: MessageKey;
+  to: string;
+  descKey: MessageKey;
+  Icon: Component<{ class?: string }>;
+  stat?: string;
+  minRole?: Role;
+};
 
 const ROLE_KEY: Record<Role, MessageKey> = {
   student: "role.student",
@@ -61,16 +64,31 @@ const ROLE_KEY: Record<Role, MessageKey> = {
   admin: "role.admin",
 };
 
-const ROLE_BADGE_TONE: Record<Role, string> = {
-  student: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
-  teacher: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
-  manager: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-  admin: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
-};
+function examWindow(exam: Exam, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
+  if (exam.mode === "open") return "active";
+  if (exam.mode !== "sync" && exam.mode !== "async") return "unscheduled";
+  if (exam.ends_at != null && exam.ends_at < now) return "past";
+  if (exam.starts_at != null && exam.starts_at > now) {
+    const delta = exam.starts_at - now;
+    if (delta <= 24 * 60 * 60 * 1000) return "today";
+    if (delta <= WEEK_MS) return "soon";
+    return "upcoming";
+  }
+  return "active";
+}
 
-const CHART_TONES = ["bg-violet-500", "bg-amber-500", "bg-sky-500", "bg-emerald-500", "bg-rose-500"];
-
-const roundAvg = (n: number) => (Math.round(n * 10) / 10).toString();
+function eventWindow(event: Event, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
+  if (event.starts_at == null) return "unscheduled";
+  if (event.ends_at != null && event.ends_at < now) return "past";
+  if (event.starts_at > now) {
+    const delta = event.starts_at - now;
+    if (delta <= 24 * 60 * 60 * 1000) return "today";
+    if (delta <= WEEK_MS) return "soon";
+    return "upcoming";
+  }
+  if (event.ends_at == null || event.ends_at >= now) return "active";
+  return "past";
+}
 
 export default function DashboardPage() {
   return (
@@ -86,10 +104,12 @@ function DashboardContent() {
   const { locale } = usePreferences();
   const user = () => auth.user()!;
   const role = () => user().role;
+  const now = () => Date.now();
 
   const [courses] = createResource(
     () => (role() !== "student" ? true : null),
     async (enabled) => (enabled ? (await getCourses()).items : []),
+    { initialValue: [] },
   );
   const [myCourses] = createResource(
     () => (role() === "student" ? true : null),
@@ -101,10 +121,11 @@ function DashboardContent() {
         return [];
       }
     },
+    { initialValue: [] },
   );
-  const [events] = createResource(async () => (await getEvents()).items);
-  const [exams] = createResource(async () => (await getExams()).items);
-  const [notes] = createResource(async () => (await getNotes()).items);
+  const [events] = createResource(async () => (await getEvents()).items, { initialValue: [] });
+  const [exams] = createResource(async () => (await getExams()).items, { initialValue: [] });
+  const [notes] = createResource(async () => (await getNotes()).items, { initialValue: [] });
   const [marks] = createResource(
     () => (role() === "student" ? true : null),
     async (enabled) => (enabled ? getMyMarks() : null),
@@ -115,21 +136,16 @@ function DashboardContent() {
     return e ? formatApiError(e, locale()) : null;
   });
 
+  const loading = () =>
+    (role() === "student" ? myCourses.loading : courses.loading) ||
+    events.loading ||
+    exams.loading ||
+    notes.loading;
+
   const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
-
-  const now = () => Date.now();
-
-  const eventItems = () => (events() ?? []).map((event) => ({
-    id: event.id,
-    type: "event" as const,
-    title: event.title,
-    at: event.starts_at,
-    subtitle: event.description || t("nav.events"),
-  }));
-
-  const hasGlobalDashboardScope = createMemo(() => hasMinRole(role(), "admin"));
-  const scopedCourses = createMemo(() => (role() === "student" ? myCourses() ?? [] : courses() ?? []));
-  const scopedCourseIds = createMemo(() => new Set(scopedCourses().map((course) => course.id)));
+  const hasGlobalScope = createMemo(() => hasMinRole(role(), "admin"));
+  const scopedCourses = createMemo(() => (role() === "student" ? myCourses() : courses()));
+  const scopedCourseIds = createMemo(() => new Set(scopedCourses().map((c) => c.id)));
 
   const courseMap = createMemo(() => {
     const map = new Map<string, string>();
@@ -138,311 +154,355 @@ function DashboardContent() {
   });
 
   const visibleExams = createMemo(() => {
-    if (hasGlobalDashboardScope()) return exams() ?? [];
+    const all = exams();
+    if (hasGlobalScope()) return all;
     const allowed = scopedCourseIds();
-    if (allowed.size === 0) return [];
-    return (exams() ?? []).filter((exam) => allowed.has(exam.course));
+    if (role() === "student" || role() === "teacher") {
+      if (allowed.size === 0) return [];
+      return all.filter((exam) => allowed.has(exam.course));
+    }
+    return all;
   });
 
-  const courseCount = createMemo(() => {
-    if (role() === "student" && myCourses.loading) return null;
-    if (role() !== "student" && courses.loading) return null;
-    return scopedCourses().length;
-  });
-  const totalExamsCount = createMemo(() => (exams.loading ? null : visibleExams().length));
-  const totalEventsCount = createMemo(() => (events.loading ? null : events()?.length ?? 0));
-  const totalNotesCount = createMemo(() => (notes.loading ? null : notes()?.length ?? 0));
-  const displayCount = (count: number | null) => String(count ?? 0);
-
+  const courseCount = createMemo(() => scopedCourses().length);
+  const examCount = createMemo(() => visibleExams().length);
+  const eventCount = createMemo(() => events().length);
+  const noteCount = createMemo(() => notes().length);
   const overallAvg = createMemo(() => marks()?.overall_average ?? null);
-
-  const timeline = createMemo<TimelineItem[]>(() => {
-    const examItems: TimelineItem[] = visibleExams().map((exam) => ({
-      id: exam.id,
-      type: "exam" as const,
-      title: exam.title,
-      at: exam.starts_at,
-      subtitle: courseMap().get(exam.course) ?? examKindLabel(String(exam.kind), t),
-    }));
-    const allItems = [...eventItems(), ...examItems];
-    const upcomingItems = allItems
-      .filter((item) => item.at != null && item.at >= now())
-      .sort((a, b) => (a.at ?? 0) - (b.at ?? 0));
-    const fallbackItems = allItems
-      .sort((a, b) => (b.at ?? 0) - (a.at ?? 0));
-    return (upcomingItems.length > 0 ? upcomingItems : fallbackItems).slice(0, PREVIEW_LIMIT);
-  });
-
-  const chartData = createMemo(() => [
-    { label: t("dashboard.stats.courses"), value: courseCount() ?? 0 },
-    { label: t("dashboard.stats.exams"), value: totalExamsCount() ?? 0 },
-    { label: t("dashboard.stats.events"), value: totalEventsCount() ?? 0 },
-  ]);
-
-  const maxChartValue = createMemo(() =>
-    Math.max(1, ...chartData().map((d) => d.value)),
+  const avgLabel = createMemo(() =>
+    overallAvg() == null ? "—" : (Math.round(overallAvg()! * 10) / 10).toString(),
   );
 
-  const cards = () => {
-    const roleVal = role();
-    const cc = displayCount(courseCount());
-    const ec = displayCount(totalExamsCount());
-    const evc = displayCount(totalEventsCount());
-    const nc = displayCount(totalNotesCount());
-    const avg = overallAvg() == null ? "0" : roundAvg(overallAvg()!);
-    const list: PortalCard[] = [];
+  const portalCards = createMemo<PortalCardDef[]>(() => {
+    const r = role();
+    const cc = String(courseCount());
+    const ec = String(examCount());
+    const evc = String(eventCount());
+    const nc = String(noteCount());
+    const list: PortalCardDef[] = [];
 
-    if (roleVal === "student") {
+    if (r === "student") {
       list.push(
-        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc, statSuffix: "dashboard.records", accent: "violet" },
-        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
-        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, statSuffix: "dashboard.records", accent: "sky" },
-        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avg, accent: "mint" },
-        { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc, statSuffix: "dashboard.records", accent: "rose" },
+        { Icon: IconSchool, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
+        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
+        { Icon: IconReportAnalytics, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avgLabel() },
+        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       );
-    } else if (hasMinRole(roleVal, "manager")) {
-      list.push(
-        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc, statSuffix: "dashboard.records", accent: "violet" },
-        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
-        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, statSuffix: "dashboard.records", accent: "sky" },
-        { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc, statSuffix: "dashboard.records", accent: "sky" },
-        { icon: <IconChart class="h-5 w-5" />, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", stat: "", accent: "mint", minRole: "teacher" },
-        { icon: <IconClipboardCheck class="h-5 w-5" />, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", stat: "", accent: "rose", minRole: "teacher" },
-        { icon: <IconSettings class="h-5 w-5" />, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", stat: "", accent: "mint", minRole: "manager" },
-        { icon: <IconBook class="h-5 w-5" />, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", stat: "", accent: "rose", minRole: "manager" },
-      );
-      if (roleVal === "manager") {
-        list.push(
-          { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", stat: "", accent: "amber", minRole: "teacher" },
-        );
-      }
-      list.push(
-        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", stat: "", accent: "amber", minRole: "manager" },
-      );
-      if (roleVal === "admin") {
-        list.push(
-          { icon: <IconUsers class="h-5 w-5" />, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", stat: "", accent: "rose", minRole: "admin" },
-        );
-      }
-    } else if (roleVal === "teacher") {
-      list.push(
-        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc, statSuffix: "dashboard.records", accent: "violet" },
-        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
-        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, statSuffix: "dashboard.records", accent: "sky", minRole: "teacher" },
-        { icon: <IconChart class="h-5 w-5" />, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", stat: "", accent: "mint", minRole: "teacher" },
-        { icon: <IconClipboardCheck class="h-5 w-5" />, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", stat: "", accent: "rose", minRole: "teacher" },
-        { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc, statSuffix: "dashboard.records", accent: "sky" },
-        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", stat: "", accent: "amber", minRole: "teacher" },
-      );
+      return list;
     }
 
+    if (r === "teacher") {
+      list.push(
+        { Icon: IconSchool, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
+        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, minRole: "teacher" },
+        { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
+        { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
+        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
+        { Icon: IconReportAnalytics, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" },
+      );
+      return list;
+    }
+
+    // manager + admin
+    list.push(
+      { Icon: IconSchool, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+      { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
+      { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
+      { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
+      { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
+      { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
+      { Icon: IconSettings, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", minRole: "manager" },
+      { Icon: IconBook, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
+    );
+    if (r === "manager") {
+      list.push({ Icon: IconReportAnalytics, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" });
+    }
+    list.push({ Icon: IconReportAnalytics, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", minRole: "manager" });
+    if (r === "admin") {
+      list.push({ Icon: IconUsers, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", minRole: "admin" });
+    }
     return list;
-  };
+  });
+
+  const attention = createMemo<AttentionItem[]>(() => {
+    const n = now();
+    const items: AttentionItem[] = [];
+
+    for (const exam of visibleExams()) {
+      const status = examWindow(exam, n);
+      if (status === "active" || status === "today" || status === "soon") {
+        items.push({
+          id: exam.id,
+          kind: "exam",
+          title: exam.title,
+          at: exam.starts_at,
+          subtitle: courseMap().get(exam.course) ?? examKindLabel(String(exam.kind), t),
+          status,
+          to: "/exams/$id",
+        });
+      }
+    }
+
+    for (const event of events()) {
+      const status = eventWindow(event, n);
+      if (status === "active" || status === "today" || status === "soon") {
+        items.push({
+          id: event.id,
+          kind: "event",
+          title: event.title,
+          at: event.starts_at,
+          subtitle: event.description || t("nav.events"),
+          status,
+          to: "/events/$id",
+        });
+      }
+    }
+
+    const rank: Record<AttentionKind, number> = { active: 0, today: 1, soon: 2 };
+    return items
+      .sort((a, b) => {
+        const r = rank[a.status] - rank[b.status];
+        if (r !== 0) return r;
+        return (a.at ?? Number.MAX_SAFE_INTEGER) - (b.at ?? Number.MAX_SAFE_INTEGER);
+      })
+      .slice(0, ATTENTION_LIMIT);
+  });
+
+  const upcoming = createMemo(() => {
+    const n = now();
+    const items: { id: string; kind: "exam" | "event"; title: string; at: number; subtitle: string }[] = [];
+
+    for (const exam of visibleExams()) {
+      if (exam.starts_at != null && exam.starts_at > n && exam.starts_at <= n + WEEK_MS) {
+        const w = examWindow(exam, n);
+        if (w === "upcoming" || w === "soon" || w === "today") {
+          items.push({
+            id: exam.id,
+            kind: "exam",
+            title: exam.title,
+            at: exam.starts_at,
+            subtitle: courseMap().get(exam.course) ?? examKindLabel(String(exam.kind), t),
+          });
+        }
+      }
+    }
+
+    for (const event of events()) {
+      if (event.starts_at != null && event.starts_at > n && event.starts_at <= n + WEEK_MS) {
+        items.push({
+          id: event.id,
+          kind: "event",
+          title: event.title,
+          at: event.starts_at,
+          subtitle: event.description || t("nav.events"),
+        });
+      }
+    }
+
+    return items.sort((a, b) => a.at - b.at).slice(0, UPCOMING_LIMIT);
+  });
 
   return (
     <div class="space-y-5">
-      <PageHeader compact accent="mint" title={t("dashboard.greeting", { name: fullName() })}>
-        <div class="flex items-center gap-2">
-          <Badge variant="outline" class="rounded-sm bg-background/60 text-xs font-medium">
-            {t(ROLE_KEY[role()])}
-          </Badge>
-          <span class="text-xs text-muted-foreground">
-            {formatDateTime(Date.now(), locale()).split(",")[0]}
-          </span>
+      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+        <div class="min-w-0 space-y-1">
+          <p class="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("dashboard.today")}</p>
+          <h1 class="truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">
+            {t("dashboard.greeting", { name: fullName() })}
+          </h1>
+          <p class="text-sm text-muted-foreground">{t("dashboard.observationOnly")}</p>
         </div>
-      </PageHeader>
+        <div class="flex items-center gap-2 text-xs text-muted-foreground">
+          <span class="rounded-sm border border-border bg-card px-2 py-1 font-medium text-foreground">
+            {t(ROLE_KEY[role()])}
+          </span>
+          <span class="mono">{formatDateTime(Date.now(), locale()).split(",")[0]}</span>
+        </div>
+      </header>
 
       <Show when={resourceError()}>
         {(msg) => <Alert variant="destructive">{msg()}</Alert>}
       </Show>
 
-      <Suspense fallback={<PageSpinner />}>
-        <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr">
-          <For each={cards()}>{(card) => <PortalCard card={card} />}</For>
-        </div>
-
-        <div class="grid gap-4 lg:grid-cols-2 auto-rows-fr">
-          <UpcomingTimeline timeline={timeline()} locale={locale()} t={t} />
-          <ActivityChart
-            label={t("dashboard.activityGraph")}
-            items={chartData()}
-            maxValue={maxChartValue()}
-          />
-        </div>
-
-        <div class="rounded-xl border border-border/60 bg-card p-4 shadow-xs sm:flex sm:items-center sm:justify-between sm:gap-4">
-          <div>
-            <h2 class="font-display text-sm font-semibold">{t("dashboard.helpTitle")}</h2>
-            <p class="mt-1 text-xs text-muted-foreground">{t("dashboard.helpBody")}</p>
+      <Show when={!loading()} fallback={<PageSpinner />}>
+        <section class="space-y-3" aria-labelledby="dash-sections">
+          <h2 id="dash-sections" class="text-sm font-semibold tracking-tight">
+            {t("dashboard.roleLinks")}
+          </h2>
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
+            <For each={portalCards()}>{(card) => <PortalCard card={card} />}</For>
           </div>
-          <Link
-            to="/guide"
-            class="mt-3 inline-flex h-7 items-center justify-center rounded-md border border-border bg-background px-2.5 text-xs font-medium transition-colors hover:bg-muted sm:mt-0"
-          >
-            {t("dashboard.continueGuide")}
-          </Link>
-        </div>
-      </Suspense>
-    </div>
-  );
-}
+        </section>
 
-function PortalCard(props: { card: PortalCard }) {
-  const t = useT();
-  const { icon, titleKey, to, descKey, stat: statValue, statSuffix, accent, minRole } = props.card;
+        <div class="grid gap-5 lg:grid-cols-2">
+          <section class="space-y-3" aria-labelledby="dash-attention">
+            <div class="flex items-baseline justify-between gap-2">
+              <h2 id="dash-attention" class="text-sm font-semibold tracking-tight">
+                {t("dashboard.attention")}
+              </h2>
+              <Show when={attention().length === 0}>
+                <span class="text-xs text-muted-foreground">{t("dashboard.allClear")}</span>
+              </Show>
+            </div>
 
-  const iconAccentMap: Record<string, string> = {
-    violet: "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300",
-    amber: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-    sky: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
-    mint: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-    rose: "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300",
-  };
-
-  const dotMap: Record<string, string> = {
-    violet: "bg-violet-500",
-    amber: "bg-amber-500",
-    sky: "bg-sky-500",
-    mint: "bg-emerald-500",
-    rose: "bg-rose-500",
-  };
-
-  return (
-    <Link
-      to={to}
-      class={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
-      )}
-    >
-      <div
-        class={cn(
-          "pointer-events-none absolute inset-x-0 top-0 h-0.5 transition-colors duration-200",
-          dotMap[accent],
-        )}
-      />
-      <div class="flex items-center gap-2.5">
-        <div
-          class={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
-            iconAccentMap[accent],
-          )}
-        >
-          {icon}
-        </div>
-        <h3 class="truncate font-display text-sm font-semibold">{t(titleKey)}</h3>
-        <Show when={minRole && minRole !== "student"}>
-          <span
-            class={cn(
-              "ml-auto rounded px-1 py-0.5 text-[9px] font-medium uppercase leading-none",
-              ROLE_BADGE_TONE[minRole!],
-            )}
-          >
-            {t(ROLE_KEY[minRole!])}
-          </span>
-        </Show>
-      </div>
-      <div class="mt-1 flex flex-1 flex-col justify-center">
-        <Show when={statValue !== ""}>
-          <div class="flex items-baseline gap-1 font-display text-xl font-bold tracking-tight">
-            <span>{statValue}</span>
-            <Show when={statSuffix}>
-              {(suffix) => <span class="text-xs font-medium text-muted-foreground">{t(suffix())}</span>}
-            </Show>
-          </div>
-        </Show>
-        <p class="text-xs leading-relaxed text-muted-foreground">{t(descKey)}</p>
-      </div>
-    </Link>
-  );
-}
-
-function UpcomingTimeline(props: {
-  timeline: TimelineItem[];
-  locale: Locale;
-  t: (key: MessageKey, params?: Record<string, string | number>) => string;
-}) {
-  return (
-    <div class="flex flex-col rounded-xl border border-border/60 bg-card p-5 shadow-xs">
-      <div class="mb-4 flex items-center gap-2">
-        <IconCalendar class="h-4 w-4 text-muted-foreground" />
-        <h2 class="font-display text-sm font-semibold">{props.t("dashboard.upcoming")}</h2>
-      </div>
-      <Show
-        when={props.timeline.length > 0}
-        fallback={
-          <p class="py-6 text-center text-sm text-muted-foreground">{props.t("dashboard.upcomingEmpty")}</p>
-        }
-      >
-        <div class="space-y-3">
-          <For each={props.timeline}>
-            {(item) => (
-              <Link
-                to={item.type === "event" ? "/events/$id" : "/exams/$id"}
-                params={{ id: item.id }}
-                class="grid grid-cols-[28px_1fr] items-center gap-x-3 gap-y-0.5 rounded-lg border border-transparent px-3 py-2 text-sm transition-colors hover:border-border/60 hover:bg-muted/25"
-              >
-                <div
-                  class={cn(
-                    "row-span-2 flex h-7 w-7 items-center justify-center rounded-md",
-                    item.type === "exam"
-                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                      : "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-                  )}
-                >
-                  {item.type === "exam"
-                    ? <IconExam class="h-3.5 w-3.5" />
-                    : <IconCalendar class="h-3.5 w-3.5" />}
+            <Show
+              when={attention().length > 0}
+              fallback={
+                <div class="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+                  {t("dashboard.noAttention")}
                 </div>
-                <p class="truncate font-medium">{item.title}</p>
-                <p class="truncate text-xs text-muted-foreground">
-                  <Show when={item.at != null} fallback={props.t("exams.unscheduled")}>
-                    {formatDateTime(item.at!, props.locale)}
-                  </Show>
-                  <Show when={item.subtitle}>
-                    {" · "}{item.subtitle}
-                  </Show>
-                </p>
-              </Link>
-            )}
-          </For>
+              }
+            >
+              <ul class="divide-y divide-border rounded-lg border border-border bg-card">
+                <For each={attention()}>
+                  {(item) => (
+                    <li>
+                      <Link
+                        to={item.to}
+                        params={{ id: item.id }}
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 sm:px-4 sm:py-3"
+                      >
+                        <StatusDot status={item.status} />
+                        <div class="min-w-0 flex-1">
+                          <p class="truncate font-medium text-foreground">{item.title}</p>
+                          <p class="truncate text-xs text-muted-foreground">
+                            {item.kind === "exam" ? t("nav.exams") : t("nav.events")}
+                            <Show when={item.subtitle}>
+                              {" · "}
+                              {item.subtitle}
+                            </Show>
+                          </p>
+                        </div>
+                        <div class="shrink-0 text-right">
+                          <StatusLabel status={item.status} t={t} />
+                          <p class="mono mt-0.5 text-[11px] text-muted-foreground">
+                            <Show when={item.at != null} fallback="—">
+                              {formatDateTime(item.at!, locale())}
+                            </Show>
+                          </p>
+                        </div>
+                      </Link>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </Show>
+          </section>
+
+          <section class="space-y-3" aria-labelledby="dash-upcoming">
+            <h2 id="dash-upcoming" class="text-sm font-semibold tracking-tight">
+              {t("dashboard.upcoming")}
+            </h2>
+            <Show
+              when={upcoming().length > 0}
+              fallback={<DataTableEmpty class="py-8">{t("dashboard.upcomingEmpty")}</DataTableEmpty>}
+            >
+              <ul class="divide-y divide-border rounded-lg border border-border bg-card">
+                <For each={upcoming()}>
+                  {(item) => (
+                    <li>
+                      <Link
+                        to={item.kind === "exam" ? "/exams/$id" : "/events/$id"}
+                        params={{ id: item.id }}
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 sm:px-4 sm:py-3"
+                      >
+                        <span class="mono w-24 shrink-0 text-[11px] text-muted-foreground sm:w-28 sm:text-xs">
+                          {formatDateTime(item.at, locale())}
+                        </span>
+                        <div class="min-w-0 flex-1">
+                          <p class="truncate font-medium">{item.title}</p>
+                          <p class="truncate text-xs text-muted-foreground">
+                            {item.kind === "exam" ? t("nav.exams") : t("nav.events")}
+                            <Show when={item.subtitle}>
+                              {" · "}
+                              {item.subtitle}
+                            </Show>
+                          </p>
+                        </div>
+                      </Link>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </Show>
+          </section>
         </div>
       </Show>
     </div>
   );
 }
 
-function ActivityChart(props: {
-  label: string;
-  items: { label: string; value: number }[];
-  maxValue: number;
-}) {
+function PortalCard(props: { card: PortalCardDef }) {
+  const t = useT();
+  const Icon = props.card.Icon;
+  const hasStat = () => props.card.stat != null && props.card.stat !== "";
+
   return (
-    <div class="flex flex-col rounded-xl border border-border/60 bg-card p-5 shadow-xs">
-      <div class="mb-4 flex items-center gap-2">
-        <IconChart class="h-4 w-4 text-muted-foreground" />
-        <h2 class="font-display text-sm font-semibold">{props.label}</h2>
+    <Link
+      to={props.card.to}
+      class="flex min-h-[4.5rem] items-center gap-3 rounded-lg border border-border bg-card px-3 py-3 transition-colors hover:bg-muted/40 sm:min-h-[5rem] sm:gap-3.5 sm:px-4"
+    >
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-foreground">
+        <Icon class="h-4 w-4" />
+      </span>
+      <div class="min-w-0 flex-1">
+        <div class="flex min-w-0 items-center gap-2">
+          <h3 class="truncate text-sm font-semibold tracking-tight">{t(props.card.titleKey)}</h3>
+          <Show when={hasStat()}>
+            <span class="hidden text-border sm:inline" aria-hidden="true">
+              |
+            </span>
+            <span class="mono shrink-0 text-sm font-semibold tabular-nums tracking-tight text-foreground sm:text-base">
+              {props.card.stat}
+            </span>
+          </Show>
+          <Show when={props.card.minRole && props.card.minRole !== "student"}>
+            <span class="ml-auto hidden shrink-0 rounded-sm border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:inline">
+              {t(ROLE_KEY[props.card.minRole!])}
+            </span>
+          </Show>
+        </div>
+        <p class="mt-0.5 line-clamp-1 text-xs text-muted-foreground sm:line-clamp-2">{t(props.card.descKey)}</p>
       </div>
-      <div class="space-y-3">
-        <For each={props.items}>
-          {(item, i) => (
-            <div class="space-y-1">
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-muted-foreground">{item.label}</span>
-                <span class="font-semibold tabular-nums">{item.value}</span>
-              </div>
-              <div class="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  class={cn(
-                    "h-full rounded-full transition-all duration-500",
-                    CHART_TONES[i() % CHART_TONES.length],
-                  )}
-                  style={{ width: `${(item.value / props.maxValue) * 100}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </For>
-      </div>
-    </div>
+    </Link>
+  );
+}
+
+function StatusDot(props: { status: AttentionKind }) {
+  return (
+    <span
+      class={cn(
+        "mt-0.5 h-2 w-2 shrink-0 rounded-full",
+        props.status === "active" && "bg-emerald-600",
+        props.status === "today" && "bg-amber-600",
+        props.status === "soon" && "bg-muted-foreground",
+      )}
+      aria-hidden="true"
+    />
+  );
+}
+
+function StatusLabel(props: {
+  status: AttentionKind;
+  t: (key: MessageKey) => string;
+}) {
+  const label = () => {
+    if (props.status === "active") return props.t("dashboard.activeNow");
+    if (props.status === "today") return props.t("dashboard.today");
+    return props.t("dashboard.soon");
+  };
+  return (
+    <span
+      class={cn(
+        "inline-flex rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        props.status === "active" && "border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-300",
+        props.status === "today" && "border-amber-600/30 bg-amber-600/10 text-amber-800 dark:text-amber-300",
+        props.status === "soon" && "border-border bg-muted text-muted-foreground",
+      )}
+    >
+      {label()}
+    </span>
   );
 }
