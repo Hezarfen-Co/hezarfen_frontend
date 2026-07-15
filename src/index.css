@@ -15,8 +15,8 @@
     --ui-text-1: 180 11% 7%;
     --ui-text-2: 180 6% 31%;
     --ui-text-3: 180 4% 49%;
-    --ui-accent: 217 91% 60%;
-    --ui-accent-muted: 214 95% 93%;
+    --ui-accent: 204 86% 48%;
+    --ui-accent-muted: 204 88% 91%;
     --ui-success: 142 72% 29%;
     --ui-success-muted: 138 76% 97%;
     --ui-warning: 32 95% 44%;
@@ -45,13 +45,13 @@
     --muted: var(--ui-surface-2);
     --muted-foreground: var(--ui-text-2);
     --accent: var(--ui-accent-muted);
-    --accent-foreground: 217 91% 28%;
+    --accent-foreground: 204 86% 25%;
     --destructive: var(--ui-danger);
     --destructive-foreground: 0 0% 100%;
     --border: var(--ui-border-1);
     --input: var(--ui-border-1);
     --ring: var(--ui-accent);
-    --radius: 0.625rem;
+    --radius: 0.75rem;
     --success: var(--ui-success);
     --warning: var(--ui-warning);
     --info: var(--ui-info);
@@ -70,8 +70,8 @@
     --ui-text-1: 180 14% 94%;
     --ui-text-2: 180 8% 67%;
     --ui-text-3: 190 6% 48%;
-    --ui-accent: 213 94% 68%;
-    --ui-accent-muted: 213 47% 17%;
+    --ui-accent: 199 92% 62%;
+    --ui-accent-muted: 199 48% 16%;
     --ui-success: 142 69% 58%;
     --ui-success-muted: 142 39% 10%;
     --ui-warning: 38 92% 50%;
@@ -81,7 +81,7 @@
     --ui-info: 199 89% 63%;
     --ui-info-muted: 200 50% 13%;
     --primary-foreground: 210 20% 98%;
-    --accent-foreground: 213 94% 86%;
+    --accent-foreground: 199 92% 84%;
     --destructive-foreground: 0 0% 100%;
   }
 
@@ -125,11 +125,11 @@
   }
 
   .data-shell {
-    @apply rounded-lg border border-border bg-card;
+    @apply rounded-xl border border-border bg-card;
   }
 
   .data-table-wrap {
-    @apply max-h-[62vh] overflow-auto rounded-lg border border-border bg-card;
+    @apply max-h-[62vh] overflow-auto rounded-xl border border-border bg-card;
   }
 
   .data-table {
@@ -154,6 +154,37 @@
 
   .data-table tbody tr:nth-child(even) {
     background-color: hsl(var(--muted) / 0.28);
+  }
+
+  .side-panel-body form {
+    @apply space-y-5 pb-5;
+  }
+
+  .side-panel-body form > .space-y-3,
+  .side-panel-body form > .space-y-4,
+  .side-panel-body form > .space-y-1\.5,
+  .side-panel-body form > .grid {
+    @apply rounded-xl border border-border/80 bg-card p-4 shadow-sm;
+  }
+
+  .side-panel-body label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground;
+  }
+
+  .side-panel-body input,
+  .side-panel-body textarea,
+  .side-panel-body select {
+    @apply rounded-lg bg-background/80;
+  }
+
+  .side-panel-body form > .flex:last-child,
+  .side-panel-body form > .flex.flex-wrap:last-child {
+    @apply sticky bottom-0 -mx-6 justify-end border-t border-border/80 bg-background/95 px-6 py-3 shadow-[0_-16px_32px_hsl(var(--background)/0.9)];
+  }
+
+  .side-panel-body form > .flex:last-child button,
+  .side-panel-body form > .flex.flex-wrap:last-child button {
+    @apply rounded-lg;
   }
 
   .num,
