@@ -49,6 +49,7 @@ export function DatePicker(props: {
 }) {
   let root: HTMLDivElement | undefined;
   const [open, setOpen] = createSignal(false);
+  const [position, setPosition] = createSignal({ left: 0, top: 0, width: 288 });
   const selected = createMemo(() => parseDate(props.value));
   const [month, setMonth] = createSignal(selected() ?? new Date());
   const days = createMemo(() => monthDays(month()));
@@ -63,11 +64,33 @@ export function DatePicker(props: {
 
   createEffect(() => {
     if (!open()) return;
+    const updatePosition = () => {
+      if (!root) return;
+      const rect = root.getBoundingClientRect();
+      const panelWidth = Math.min(288, Math.max(240, window.innerWidth - 24));
+      const left = Math.min(Math.max(12, rect.left), window.innerWidth - panelWidth - 12);
+      const estimatedHeight = 300;
+      const viewportPadding = 12;
+      const availableBelow = window.innerHeight - rect.bottom - viewportPadding;
+      const availableAbove = rect.top - viewportPadding;
+      const opensAbove = availableBelow < estimatedHeight && availableAbove > availableBelow;
+      const rawTop = opensAbove ? rect.top - estimatedHeight - 8 : rect.bottom + 8;
+      const maxTop = Math.max(viewportPadding, window.innerHeight - estimatedHeight - viewportPadding);
+      const top = Math.min(Math.max(viewportPadding, rawTop), maxTop);
+      setPosition({ left, top, width: panelWidth });
+    };
+    updatePosition();
     const closeOnOutside = (event: MouseEvent) => {
       if (root && !root.contains(event.target as Node)) setOpen(false);
     };
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
     document.addEventListener("mousedown", closeOnOutside);
-    onCleanup(() => document.removeEventListener("mousedown", closeOnOutside));
+    onCleanup(() => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      document.removeEventListener("mousedown", closeOnOutside);
+    });
   });
 
   const moveMonth = (delta: number) => {
@@ -97,13 +120,16 @@ export function DatePicker(props: {
         <IconCalendar class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       </div>
       <Show when={open()}>
-        <div class="absolute z-50 mt-2 w-72 rounded-md border bg-popover p-3 text-popover-foreground shadow-lg">
+        <div
+          class="fixed z-[80] rounded-xl border border-border/80 bg-popover p-2.5 text-popover-foreground shadow-xl"
+          style={{ left: `${position().left}px`, top: `${position().top}px`, width: `${position().width}px` }}
+        >
           <div class="mb-3 flex items-center justify-between gap-2">
-            <Button type="button" variant="ghost" size="sm" class="h-8 w-8 p-0" onClick={() => moveMonth(-1)}>
+            <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={() => moveMonth(-1)}>
               <IconChevronLeft class="h-4 w-4" />
             </Button>
-            <p class="text-sm font-medium capitalize">{monthLabel()}</p>
-            <Button type="button" variant="ghost" size="sm" class="h-8 w-8 p-0" onClick={() => moveMonth(1)}>
+            <p class="min-w-0 truncate px-2 text-sm font-semibold capitalize">{monthLabel()}</p>
+            <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={() => moveMonth(1)}>
               <IconChevronRight class="h-4 w-4" />
             </Button>
           </div>
@@ -116,7 +142,7 @@ export function DatePicker(props: {
             <span>Cmt</span>
             <span>Paz</span>
           </div>
-          <div class="mt-1 grid grid-cols-7 gap-1">
+          <div class="mt-1 grid grid-cols-7 gap-0.5">
             <For each={days()}>
               {(date) => (
                 <Show when={date} fallback={<span class="h-8" />}>
@@ -125,7 +151,7 @@ export function DatePicker(props: {
                       type="button"
                       variant={sameDay(selected(), day()) ? "default" : "ghost"}
                       size="sm"
-                      class="h-8 rounded-sm p-0 text-xs"
+                      class="h-8 rounded-lg p-0 text-xs"
                       onClick={() => pick(day())}
                     >
                       {day().getDate()}

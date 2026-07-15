@@ -7,7 +7,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { IconPlus, IconSave, IconTrash } from "@/components/ui/icons";
+import { IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useT } from "@/stores/preferences-context";
@@ -101,25 +101,27 @@ function SettingsContent() {
                     <div class="grid grid-cols-[minmax(0,1fr)_5rem_2.25rem] gap-2">
                       <Input
                         aria-label={t("settings.name")}
+                        class="rounded-lg bg-background/80"
                         value={item.name}
                         onInput={(e) => setExamKinds((rows) => rows.map((row, i) => (i === index() ? { ...row, name: e.currentTarget.value } : row)))}
                       />
                       <Input
                         aria-label={t("settings.weight")}
+                        class="rounded-lg bg-background/80"
                         type="number"
                         min={1}
                         max={100}
                         value={item.weight}
                         onInput={(e) => setExamKinds((rows) => rows.map((row, i) => (i === index() ? { ...row, weight: Number(e.currentTarget.value) } : row)))}
                       />
-                      <Button type="button" variant="ghost" size="icon" class="rounded-sm" onClick={() => setExamKinds((rows) => rows.filter((_, i) => i !== index()))}>
+                      <Button type="button" variant="ghost" size="icon" class="rounded-lg" onClick={() => setExamKinds((rows) => rows.filter((_, i) => i !== index()))}>
                         <IconTrash class="h-4 w-4" />
                       </Button>
                     </div>
                   )}
                 </For>
               </div>
-              <Button type="button" variant="outline" class="rounded-sm" onClick={() => setExamKinds((rows) => [...rows, { name: "", weight: 1 }])}>
+              <Button type="button" variant="outline" class="rounded-lg" onClick={() => setExamKinds((rows) => [...rows, { name: "", weight: 1 }])}>
                 <IconPlus class="h-4 w-4" />
                 {t("settings.addRow")}
               </Button>
@@ -139,12 +141,13 @@ function SettingsContent() {
                         fallback={
                           <Input
                             aria-label={t("settings.status")}
+                            class="rounded-lg bg-background/80"
                             value={status}
                             onInput={(e) => setAttendanceStatuses((rows) => rows.map((row, i) => (i === index() ? e.currentTarget.value : row)))}
                           />
                         }
                       >
-                        <div class="flex h-9 items-center rounded-sm border border-input bg-muted/40 px-3 text-sm text-muted-foreground">
+                        <div class="flex h-9 items-center rounded-lg border border-input bg-muted/40 px-3 text-sm text-muted-foreground">
                           {t(CORE_ATTENDANCE_LABELS[status as keyof typeof CORE_ATTENDANCE_LABELS])}
                         </div>
                       </Show>
@@ -152,7 +155,7 @@ function SettingsContent() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        class="rounded-sm"
+                        class="rounded-lg"
                         disabled={CORE_ATTENDANCE.has(status)}
                         onClick={() => setAttendanceStatuses((rows) => rows.filter((_, i) => i !== index()))}
                       >
@@ -162,7 +165,7 @@ function SettingsContent() {
                   )}
                 </For>
               </div>
-              <Button type="button" variant="outline" class="rounded-sm" onClick={() => setAttendanceStatuses((rows) => [...rows, ""])}>
+              <Button type="button" variant="outline" class="rounded-lg" onClick={() => setAttendanceStatuses((rows) => [...rows, ""])}>
                 <IconPlus class="h-4 w-4" />
                 {t("settings.addRow")}
               </Button>
@@ -179,6 +182,7 @@ function SettingsContent() {
                     <div class="grid grid-cols-[5rem_minmax(0,1fr)_2.25rem] gap-2">
                       <Input
                         aria-label={t("settings.min")}
+                        class="rounded-lg bg-background/80"
                         type="number"
                         min={0}
                         max={100}
@@ -187,17 +191,18 @@ function SettingsContent() {
                       />
                       <Input
                         aria-label={t("settings.label")}
+                        class="rounded-lg bg-background/80"
                         value={band.label}
                         onInput={(e) => setGradeBands((rows) => rows.map((row, i) => (i === index() ? { ...row, label: e.currentTarget.value } : row)))}
                       />
-                      <Button type="button" variant="ghost" size="icon" class="rounded-sm" onClick={() => setGradeBands((rows) => rows.filter((_, i) => i !== index()))}>
+                      <Button type="button" variant="ghost" size="icon" class="rounded-lg" onClick={() => setGradeBands((rows) => rows.filter((_, i) => i !== index()))}>
                         <IconTrash class="h-4 w-4" />
                       </Button>
                     </div>
                   )}
                 </For>
               </div>
-              <Button type="button" variant="outline" class="rounded-sm" onClick={() => setGradeBands((rows) => [...rows, { min: 0, label: "" }])}>
+              <Button type="button" variant="outline" class="rounded-lg" onClick={() => setGradeBands((rows) => [...rows, { min: 0, label: "" }])}>
                 <IconPlus class="h-4 w-4" />
                 {t("settings.addRow")}
               </Button>
@@ -205,8 +210,7 @@ function SettingsContent() {
           </div>
 
           <div class="flex justify-end">
-            <Button type="button" class="rounded-sm" disabled={pending()} onClick={() => void save()}>
-              <IconSave class="h-4 w-4" />
+            <Button type="button" class="rounded-lg" disabled={pending()} onClick={() => void save()}>
               {t("common.save")}
             </Button>
           </div>

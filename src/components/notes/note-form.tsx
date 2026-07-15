@@ -3,7 +3,6 @@ import { formatApiError } from "@/api/client";
 import type { Note } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconSave } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -71,40 +70,39 @@ export function NoteForm(props: {
 
   return (
     <>
-      <form class="space-y-3" onSubmit={handleSubmit}>
-        <div class="space-y-1.5">
+      <form class="space-y-5" onSubmit={handleSubmit}>
+        <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
           <Label for="note-title">{t("form.title")}</Label>
           <Input
             id="note-title"
-            class="h-10 rounded-sm"
+            class="h-10 rounded-lg bg-background/80"
             value={title()}
             maxlength={200}
             required
             onInput={(e) => setTitle(e.currentTarget.value)}
           />
         </div>
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
           <Label for="note-content">{t("form.content")}</Label>
           <Textarea
             id="note-content"
-            class="min-h-28 rounded-sm"
+            class="min-h-32 rounded-lg bg-background/80"
             value={content()}
             maxlength={10000}
             rows={4}
             onInput={(e) => setContent(e.currentTarget.value)}
           />
         </div>
-        {error() && <p class="text-sm text-destructive">{error()}</p>}
-        <div class="flex flex-wrap items-center gap-2">
-          <Button type="submit" class="h-10" disabled={pending()}>
-            <IconSave />
-            {props.submitLabel ?? t("common.save")}
-          </Button>
+        {error() && <p class="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+        <div class="flex flex-wrap items-center justify-end gap-2 border-t border-border/80 pt-4">
           {props.onCancel && (
-            <Button type="button" variant="outline" class="h-10" onClick={props.onCancel}>
+            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={props.onCancel}>
               {t("common.cancel")}
             </Button>
           )}
+          <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>
+            {props.submitLabel ?? t("common.save")}
+          </Button>
         </div>
       </form>
 

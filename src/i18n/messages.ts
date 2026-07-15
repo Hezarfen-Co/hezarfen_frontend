@@ -206,9 +206,14 @@ export type MessageKey =
   | "exams.yourResult"
   | "exams.notGraded"
   | "exams.gradeStudent"
+  | "exams.gradeAfterExam"
   | "exams.results"
   | "exams.noResults"
+  | "exams.details"
   | "exams.schedule"
+  | "exams.examStatistics"
+  | "exams.examQuestions"
+  | "exams.studentResults"
   | "exams.window"
   | "exams.unscheduled"
   | "exams.mode"
@@ -326,6 +331,10 @@ export type MessageKey =
   | "status.absent"
   | "status.late"
   | "status.excused"
+  | "status.presentDetail"
+  | "status.absentDetail"
+  | "status.lateDetail"
+  | "status.excusedDetail"
   | "guide.tip1"
   | "guide.tip2"
   | "guide.tip3"
@@ -439,6 +448,7 @@ export type MessageKey =
   | "sessions.untitled"
   | "sessions.teacher"
   | "sessions.rollCall"
+  | "sessions.emptyRoster"
   | "sessions.startRequired"
   | "sessions.endInvalid"
   | "attendance.title"
@@ -676,9 +686,14 @@ const en: Dict = {
   "exams.yourResult": "Your result",
   "exams.notGraded": "Not graded yet",
   "exams.gradeStudent": "Grade a student",
+  "exams.gradeAfterExam": "Available after the exam ends",
   "exams.results": "Results table",
   "exams.noResults": "No results yet.",
+  "exams.details": "Exam Details",
   "exams.schedule": "Schedule",
+  "exams.examStatistics": "Exam Statistics",
+  "exams.examQuestions": "Exam Questions",
+  "exams.studentResults": "Student Grades",
   "exams.window": "Window",
   "exams.unscheduled": "Unscheduled",
   "exams.mode": "Mode",
@@ -807,6 +822,10 @@ const en: Dict = {
   "status.absent": "Absent",
   "status.late": "Late",
   "status.excused": "Excused",
+  "status.presentDetail": "In class",
+  "status.absentDetail": "Not attended",
+  "status.lateDetail": "Joined late",
+  "status.excusedDetail": "Excused absence",
   "guide.tip1": "TR / EN and theme live in the avatar dropdown (submenus with icons).",
   "guide.tip2": "Guide is pinned at the bottom of the sidebar, above @Hezarfen - 2026.",
   "guide.tip3": "“?” help panels start closed — open only when you need them.",
@@ -920,6 +939,7 @@ const en: Dict = {
   "sessions.untitled": "Untitled lesson",
   "sessions.teacher": "Teacher",
   "sessions.rollCall": "Roll call",
+  "sessions.emptyRoster": "No enrolled students yet.",
   "sessions.startRequired": "Session start date and time are required.",
   "sessions.endInvalid": "Enter both end date and end time, or leave both empty.",
   "attendance.title": "Attendance report",
@@ -1156,9 +1176,14 @@ const tr: Dict = {
   "exams.yourResult": "Sonucun",
   "exams.notGraded": "Henüz notlanmadı",
   "exams.gradeStudent": "Öğrenci notla",
+  "exams.gradeAfterExam": "Sınav bitince kullanılabilir",
   "exams.results": "Sonuç tablosu",
   "exams.noResults": "Henüz sonuç yok.",
+  "exams.details": "Sınav Detayları",
   "exams.schedule": "Zamanlama",
+  "exams.examStatistics": "Sınav İstatistikleri",
+  "exams.examQuestions": "Sınav Soruları",
+  "exams.studentResults": "Öğrenci Notları",
   "exams.window": "Aralık",
   "exams.unscheduled": "Zamansız",
   "exams.mode": "Mod",
@@ -1287,6 +1312,10 @@ const tr: Dict = {
   "status.absent": "Yok",
   "status.late": "Geç",
   "status.excused": "Mazeretli",
+  "status.presentDetail": "Derste",
+  "status.absentDetail": "Katılmadı",
+  "status.lateDetail": "Geç katıldı",
+  "status.excusedDetail": "Mazeretli yok",
   "guide.tip1": "Dil ve tema avatar menüsünde (ikonlu alt menüler).",
   "guide.tip2": "Rehber, sidebar’ın altında @Hezarfen - 2026’nın hemen üstünde.",
   "guide.tip3": "“?” panelleri kapalı gelir — ihtiyaç olunca aç.",
@@ -1400,6 +1429,7 @@ const tr: Dict = {
   "sessions.untitled": "Konu girilmemiş ders",
   "sessions.teacher": "Öğretmen",
   "sessions.rollCall": "Yoklama",
+  "sessions.emptyRoster": "Henüz kayıtlı öğrenci yok.",
   "sessions.startRequired": "Oturum başlangıç tarihi ve saati gerekli.",
   "sessions.endInvalid": "Bitiş için tarih ve saati birlikte gir ya da ikisini de boş bırak.",
   "attendance.title": "Yoklama raporu",

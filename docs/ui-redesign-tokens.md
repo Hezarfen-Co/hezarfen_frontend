@@ -18,7 +18,7 @@ Light palette is defined in `src/index.css` as `--ui-*` variables:
 - `--ui-text-1`: `#101414`
 - `--ui-text-2`: `#4b5555`
 - `--ui-text-3`: `#788181`
-- `--ui-accent`: `#2563eb`
+- `--ui-accent`: ice-blue / teal-blue (`204 86% 48%` in HSL tokens)
 - semantic colors: success, warning, danger, info, each with muted pair
 
 Dark palette mirrors same token names with dark surfaces and brighter semantic
@@ -60,7 +60,7 @@ Density defaults:
 - sidebar group/header row: 32px
 - table header/cell row: 36px
 - card padding: 16px
-- radius: 6px
+- radius: 12px base token (`0.75rem`), with `rounded-lg`/`rounded-xl` used for modern form and card surfaces
 - table numerals/IDs use tabular mono
 - table action column: narrow, centered, three-dot trigger
 - table column separators: subtle border between cells, no heavy gridlines
@@ -85,10 +85,12 @@ Implemented:
 - Row-level table actions should use `TableRowActions`; avoid inline action button clusters in table rows.
 - Quick create/edit flows should use `SidePanel`; destructive actions stay in confirm dialogs.
 - Durable resources keep full detail pages with breadcrumbs.
-- Large detail sections can use `SectionDisclosure`, but closed sections must not mount children or fetch data.
+- Large detail sections can use `SectionDisclosure`; choose deferred mounting for request savings or mounted content for state preservation.
 - Product date inputs should use the shared `DatePicker`; date-time flows should pair it with a compact `HH:mm` input.
 - Sidebar icons are local SVG wrappers to keep development builds small and avoid large icon package module graphs.
 - User-facing tables should prefer usernames/display names over raw ids; show raw ids only as fallback or in explicit id columns.
+- Header actions use compact icon + label buttons with equal min-width; related sections should use matching badge labels and button sizing.
+- Attendance status UI uses shared metadata: localized label, short detail text, and semantic color classes.
 
 Static wireframe:
 
