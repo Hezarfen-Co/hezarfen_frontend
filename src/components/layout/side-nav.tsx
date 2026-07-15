@@ -140,7 +140,7 @@ function NavLink(props: {
       title={t(props.item.labelKey)}
       aria-current={active() ? "page" : undefined}
       class={cn(
-        "relative flex h-8 w-full items-center rounded-sm outline-none transition-colors duration-150",
+        "relative flex h-8 w-full items-center rounded-md outline-none transition-colors duration-150",
         props.standalone ? "text-[11px] font-semibold uppercase tracking-[0.08em]" : "text-[13px] font-medium",
         props.collapsed ? "justify-center px-0" : props.standalone ? "gap-2 px-2" : "gap-2 pl-7 pr-2",
         active()
@@ -152,7 +152,7 @@ function NavLink(props: {
         <span class="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
       </Show>
       <props.item.Icon class={cn("h-3.5 w-3.5 shrink-0", active() ? "text-primary" : "text-muted-foreground")} />
-      <span class={cn("truncate", props.collapsed ? "hidden" : "block min-w-0 flex-1 text-left")}>{t(props.item.labelKey)}</span>
+      <span class={cn("truncate", props.collapsed ? "sr-only" : "block min-w-0 flex-1 text-left")}>{t(props.item.labelKey)}</span>
     </Link>
   );
 }
@@ -234,7 +234,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                         <button
                           type="button"
                           class={cn(
-                            "flex h-8 w-full items-center gap-2 rounded-sm px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground",
+                            "flex h-8 w-full items-center gap-2 rounded-md px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground",
                             (open() || groupActive()) && "text-foreground",
                           )}
                           title={t(group.labelKey)}
@@ -258,8 +258,8 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                     <DropdownMenu placement="right-start" gutter={8}>
                       <DropdownMenuTrigger
                         class={cn(
-                          "relative flex h-8 w-full items-center justify-center rounded-sm px-0 text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[expanded]:bg-muted data-[expanded]:text-foreground",
-                          groupActive() && "text-foreground",
+                          "relative flex h-8 w-full items-center justify-center rounded-md px-0 text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[expanded]:bg-muted data-[expanded]:text-foreground",
+                          groupActive() && "bg-primary/10 text-foreground",
                         )}
                         title={t(group.labelKey)}
                         aria-label={t(group.labelKey)}
