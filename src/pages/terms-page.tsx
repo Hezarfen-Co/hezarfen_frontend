@@ -12,7 +12,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
-import { IconEdit, IconSave, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -116,27 +116,28 @@ function TermsContent() {
 
       <section class="data-shell space-y-4 p-4">
         <h2 class="font-display text-lg font-semibold">{editing() ? t("terms.edit") : t("terms.create")}</h2>
-        <form class="grid gap-3 md:grid-cols-[minmax(0,1fr)_11rem_11rem_auto]" onSubmit={save}>
-          <div class="space-y-1.5">
-            <Label for="term-name">{t("settings.name")}</Label>
-            <Input id="term-name" required maxlength={100} value={name()} onInput={(e) => setName(e.currentTarget.value)} />
+        <form class="space-y-5" onSubmit={save}>
+          <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_12rem_12rem]">
+            <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+              <Label for="term-name">{t("settings.name")}</Label>
+              <Input id="term-name" class="rounded-lg bg-background/80" required maxlength={100} value={name()} onInput={(e) => setName(e.currentTarget.value)} />
+            </div>
+            <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+              <Label for="term-starts">{t("events.starts")}</Label>
+              <DatePicker id="term-starts" placeholder={t("form.datePlaceholder")} required value={starts()} onChange={setStarts} />
+            </div>
+            <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+              <Label for="term-ends">{t("events.ends")}</Label>
+              <DatePicker id="term-ends" placeholder={t("form.datePlaceholder")} required value={ends()} onChange={setEnds} />
+            </div>
           </div>
-          <div class="space-y-1.5">
-            <Label for="term-starts">{t("events.starts")}</Label>
-            <DatePicker id="term-starts" placeholder={t("form.datePlaceholder")} required value={starts()} onChange={setStarts} />
-          </div>
-          <div class="space-y-1.5">
-            <Label for="term-ends">{t("events.ends")}</Label>
-            <DatePicker id="term-ends" placeholder={t("form.datePlaceholder")} required value={ends()} onChange={setEnds} />
-          </div>
-          <div class="flex items-end gap-2">
-            <Button type="submit" class="rounded-sm" disabled={pending()}>
-              <IconSave class="h-4 w-4" />
+          <div class="flex flex-wrap items-center justify-end gap-2 border-t border-border/80 pt-4">
+            <Show when={editing()}>
+              <Button type="button" variant="outline" class="rounded-lg" onClick={resetForm}>{t("common.cancel")}</Button>
+            </Show>
+            <Button type="submit" class="rounded-lg" disabled={pending()}>
               {editing() ? t("common.update") : t("common.create")}
             </Button>
-            <Show when={editing()}>
-              <Button type="button" variant="outline" class="rounded-sm" onClick={resetForm}>{t("common.cancel")}</Button>
-            </Show>
           </div>
         </form>
       </section>
@@ -160,11 +161,11 @@ function TermsContent() {
                     </p>
                   </div>
                   <div class="flex gap-2">
-                    <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => startEdit(term)}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => startEdit(term)}>
                       <IconEdit class="h-4 w-4" />
                       {t("common.edit")}
                     </Button>
-                    <Button type="button" variant="ghost" size="sm" class="rounded-sm text-destructive hover:text-destructive" onClick={() => setDeleteTarget(term)}>
+                    <Button type="button" variant="ghost" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={() => setDeleteTarget(term)}>
                       <IconTrash class="h-4 w-4" />
                       {t("common.delete")}
                     </Button>

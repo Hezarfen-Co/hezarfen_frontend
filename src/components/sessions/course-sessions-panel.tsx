@@ -1,19 +1,21 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import { deleteSessionById } from "@/api/deleteSessionById";
 import { getCourseSessions } from "@/api/getCourseSessions";
 import { getSessionAttendance } from "@/api/getSessionAttendance";
 import { postCourseSession } from "@/api/postCourseSession";
 import { postSessionAttendance } from "@/api/postSessionAttendance";
 import { formatApiError } from "@/api/client";
-import type { AttendanceStatus, Enrollment, SessionAttendance } from "@/api/types";
+import type { AttendanceStatus, CourseSession, Enrollment, SessionAttendance } from "@/api/types";
 import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { SidePanel } from "@/components/ui/side-panel";
 import { formatDateTime } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -34,11 +36,19 @@ function dateInputToMs(date: string, time: string): number | null {
   return d.getTime();
 }
 
-export function CourseSessionsPanel(props: { courseId: string; roster: Enrollment[]; canManage: boolean }) {
+const ROLL_CALL_PAGE_SIZE = 8;
+
+export function CourseSessionsPanel(props: {
+  courseId: string;
+  roster: Enrollment[];
+  canManage: boolean;
+  createOpen: boolean;
+  onCreateOpenChange: (open: boolean) => void;
+}) {
   const t = useT();
   const { locale } = usePreferences();
   const [sessions, { refetch }] = createResource(() => props.courseId, (courseId) => getCourseSessions(courseId));
-  const [openSessionId, setOpenSessionId] = createSignal<string | null>(null);
+  const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
   const [topic, setTopic] = createSignal("");
   const [startsDate, setStartsDate] = createSignal("");
   const [startsTime, setStartsTime] = createSignal("");
@@ -46,6 +56,15 @@ export function CourseSessionsPanel(props: { courseId: string; roster: Enrollmen
   const [endsTime, setEndsTime] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+
+  const resetCreateForm = () => {
+    setTopic("");
+    setStartsDate("");
+    setStartsTime("");
+    setEndsDate("");
+    setEndsTime("");
+    setError("");
+  };
 
   const createSession = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -66,12 +85,14 @@ export function CourseSessionsPanel(props: { courseId: string; roster: Enrollmen
     }
     setPending(true);
     try {
-      await postCourseSession(props.courseId, { topic: topic().trim() || null, starts_at, ends_at });
-      setTopic("");
-      setStartsDate("");
-      setStartsTime("");
-      setEndsDate("");
-      setEndsTime("");
+      const body = {
+        starts_at,
+        ...(topic().trim() ? { topic: topic().trim() } : {}),
+        ...(ends_at != null ? { ends_at } : {}),
+      };
+      await postCourseSession(props.courseId, body);
+      resetCreateForm();
+      props.onCreateOpenChange(false);
       await refetch();
     } catch (err) {
       setError(formatApiError(err));
@@ -84,35 +105,6 @@ export function CourseSessionsPanel(props: { courseId: string; roster: Enrollmen
     <div class="space-y-4">
       {error() && <Alert variant="destructive">{error()}</Alert>}
 
-      <Show when={props.canManage}>
-        <form class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]" onSubmit={createSession}>
-          <div class="space-y-1.5">
-            <Label for="session-topic">{t("sessions.topic")}</Label>
-            <Input id="session-topic" value={topic()} maxlength={200} onInput={(e) => setTopic(e.currentTarget.value)} />
-          </div>
-          <div class="space-y-1.5">
-            <Label for="session-starts">{t("events.starts")}</Label>
-            <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
-              <DatePicker id="session-starts" placeholder={t("form.datePlaceholder")} value={startsDate()} required onChange={setStartsDate} />
-              <Input class="font-mono" placeholder="09:00" value={startsTime()} required onInput={(e) => setStartsTime(e.currentTarget.value)} />
-            </div>
-          </div>
-          <div class="space-y-1.5">
-            <Label for="session-ends">{t("events.ends")}</Label>
-            <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
-              <DatePicker id="session-ends" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
-              <Input class="font-mono" placeholder="10:00" value={endsTime()} onInput={(e) => setEndsTime(e.currentTarget.value)} />
-            </div>
-          </div>
-          <div class="flex items-end">
-            <Button type="submit" disabled={pending()}>
-              <IconPlus class="h-4 w-4" />
-              {t("sessions.add")}
-            </Button>
-          </div>
-        </form>
-      </Show>
-
       <Suspense fallback={<PageSpinner />}>
         <Show when={sessions.error}>
           <Alert variant="destructive">{formatApiError(sessions.error)}</Alert>
@@ -121,7 +113,7 @@ export function CourseSessionsPanel(props: { courseId: string; roster: Enrollmen
           <div class="space-y-3">
             <For each={sessions() ?? []}>
               {(session) => (
-                <article class="rounded-lg border bg-background/60 p-4">
+                <article class="rounded-xl border border-border/80 bg-card p-4 shadow-sm">
                   <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h3 class="font-medium">{session.topic || t("sessions.untitled")}</h3>
@@ -131,25 +123,76 @@ export function CourseSessionsPanel(props: { courseId: string; roster: Enrollmen
                       <p class="mt-1 text-xs text-muted-foreground">{t("sessions.teacher")}: {personLabel(session.teacher)}</p>
                     </div>
                     <div class="flex gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => setOpenSessionId(openSessionId() === session.id ? null : session.id)}>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setSelectedSession(session)}>
                         {t("sessions.rollCall")}
                       </Button>
                       <Show when={props.canManage}>
-                        <Button type="button" variant="ghost" size="sm" class="text-destructive hover:text-destructive" onClick={async () => { await deleteSessionById(session.id); await refetch(); }}>
+                        <Button type="button" variant="ghost" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={async () => { await deleteSessionById(session.id); await refetch(); }}>
                           <IconTrash class="h-4 w-4" />
                         </Button>
                       </Show>
                     </div>
                   </div>
-                  <Show when={openSessionId() === session.id}>
-                    <RollCall sessionId={session.id} roster={props.roster} />
-                  </Show>
                 </article>
               )}
             </For>
           </div>
         </Show>
       </Suspense>
+
+      <SidePanel
+        open={props.createOpen}
+        onOpenChange={(open) => {
+          props.onCreateOpenChange(open);
+          if (!open) resetCreateForm();
+        }}
+        title={t("sessions.add")}
+        description={t("sessions.subtitle")}
+      >
+        <form onSubmit={createSession}>
+          <div class="space-y-1.5">
+            <Label for="session-topic">{t("sessions.topic")}</Label>
+            <Input id="session-topic" value={topic()} maxlength={200} onInput={(e) => setTopic(e.currentTarget.value)} />
+          </div>
+          <div class="grid gap-3">
+            <div class="space-y-1.5">
+              <Label for="session-starts">{t("events.starts")}</Label>
+              <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+                <DatePicker id="session-starts" placeholder={t("form.datePlaceholder")} value={startsDate()} required onChange={setStartsDate} />
+                <Input class="font-mono placeholder:text-muted-foreground/35" placeholder="09:00" value={startsTime()} required onInput={(e) => setStartsTime(e.currentTarget.value)} />
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              <Label for="session-ends">{t("events.ends")}</Label>
+              <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+                <DatePicker id="session-ends" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
+                <Input class="font-mono placeholder:text-muted-foreground/35" placeholder="10:00" value={endsTime()} onInput={(e) => setEndsTime(e.currentTarget.value)} />
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => props.onCreateOpenChange(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>
+              {t("sessions.add")}
+            </Button>
+          </div>
+        </form>
+      </SidePanel>
+
+      <SidePanel
+        open={selectedSession() != null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedSession(null);
+        }}
+        title={t("sessions.rollCall")}
+        description={selectedSession() ? `${selectedSession()!.topic || t("sessions.untitled")} · ${formatDateTime(selectedSession()!.starts_at, locale())}` : undefined}
+      >
+        <Show when={selectedSession()}>
+          {(session) => <RollCall sessionId={session().id} roster={props.roster} />}
+        </Show>
+      </SidePanel>
     </div>
   );
 }
@@ -160,6 +203,17 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
   const rows = createMemo(() => new Map((attendance() ?? []).map((row) => [row.user.id, row])));
   const [local, setLocal] = createSignal<Record<string, AttendanceStatus>>({});
   const [error, setError] = createSignal("");
+  const [page, setPage] = createSignal(0);
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(props.roster.length / ROLL_CALL_PAGE_SIZE)));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+  const visibleRoster = createMemo(() => {
+    const start = safePage() * ROLL_CALL_PAGE_SIZE;
+    return props.roster.slice(start, start + ROLL_CALL_PAGE_SIZE);
+  });
+
+  createEffect(() => {
+    if (page() >= totalPages()) setPage(totalPages() - 1);
+  });
 
   const statusFor = (userId: string) => local()[userId] ?? rows().get(userId)?.status ?? "present";
   const save = async (userId: string) => {
@@ -173,25 +227,37 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
   };
 
   return (
-    <div class="mt-4 space-y-3 border-t pt-4">
+    <div class="space-y-3">
       {error() && <Alert variant="destructive">{error()}</Alert>}
-      <For each={props.roster}>
-        {(row) => {
-          const saved = () => rows().get(row.user.id) as SessionAttendance | undefined;
-          return (
-            <div class="grid gap-2 rounded-md border bg-muted/15 p-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
-              <div>
-                <p class="font-medium">{personLabel(row.user)}</p>
-                <p class="font-mono text-xs text-muted-foreground">{row.user.id}</p>
+      <Show
+        when={props.roster.length > 0}
+        fallback={<p class="rounded-xl border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("sessions.emptyRoster")}</p>}
+      >
+        <For each={visibleRoster()}>
+          {(row) => {
+            const saved = () => rows().get(row.user.id) as SessionAttendance | undefined;
+            return (
+              <div class="space-y-2 rounded-lg border border-border/50 bg-card px-4 py-3">
+                <div class="min-w-0">
+                  <p class="truncate font-medium">{personLabel(row.user)}</p>
+                  <p class="mono truncate text-xs text-muted-foreground">{row.user.id}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="min-w-0 flex-1">
+                    <AttendanceStatusPicker hideLabel hideDetail id={`session-${props.sessionId}-${row.user.id}`} value={statusFor(row.user.id)} onChange={(status) => setLocal((current) => ({ ...current, [row.user.id]: status }))} />
+                  </div>
+                  <Button type="button" class="h-10 w-24 shrink-0 rounded-lg" variant={saved() ? "outline" : "default"} onClick={() => void save(row.user.id)}>
+                    {saved() ? t("common.update") : t("common.save")}
+                  </Button>
+                </div>
               </div>
-              <AttendanceStatusPicker id={`session-${props.sessionId}-${row.user.id}`} value={statusFor(row.user.id)} onChange={(status) => setLocal((current) => ({ ...current, [row.user.id]: status }))} />
-              <Button type="button" variant={saved() ? "outline" : "default"} onClick={() => void save(row.user.id)}>
-                {saved() ? t("common.update") : t("common.save")}
-              </Button>
-            </div>
-          );
-        }}
-      </For>
+            );
+          }}
+        </For>
+      </Show>
+      <Show when={totalPages() > 1}>
+        <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+      </Show>
     </div>
   );
 }

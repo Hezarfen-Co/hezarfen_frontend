@@ -7,7 +7,6 @@ import { EXAM_KINDS, EXAM_MODES } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
-import { IconSave } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -264,7 +263,7 @@ export function ExamForm(props: {
         </Show>
       </div>
       <Show when={mode() === "sync" || mode() === "async"}>
-        <div class="grid gap-3 sm:grid-cols-2">
+        <div class="grid gap-3">
           <div class="space-y-1.5">
             <Label for="exam-starts">{t("events.starts")}</Label>
             <div class="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
@@ -332,7 +331,6 @@ export function ExamForm(props: {
       {error() && <p class="text-sm text-destructive">{error()}</p>}
       <div class="flex flex-wrap items-center gap-2">
         <Button type="submit" disabled={pending()}>
-          <IconSave />
           {props.submitLabel ?? t("common.save")}
         </Button>
         {props.onCancel && (

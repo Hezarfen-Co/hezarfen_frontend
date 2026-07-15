@@ -65,6 +65,20 @@ Solid components run **once**, there is no re-render:
   fallback), `refetch()` after mutations.
 - One `<Suspense>` boundary per page, no spinner-cascades, fixed-height list rows.
 
+## Project docs and current UI rules
+
+- Treat these docs as active project context before changing related areas:
+  - `docs/frontend-next-steps.md` — active backlog, role/pagination/request audit notes.
+  - `docs/navigation-patterns.md` — interaction rules, role scope, side-panel/full-page decisions.
+  - `docs/ui-redesign-tokens.md` — visual density, radius, table, side-panel, and status UI conventions.
+  - `docs/backend-ui-alignment-plan.md` — completed backend-alignment archive; do not treat it as active work unless backend scope changes.
+- Durable resources use full detail pages. Short create/edit/filter work uses `SidePanel`. Destructive actions use confirm dialogs.
+- Header create actions use compact icon+label buttons with consistent size and current radius.
+- Disclosure sections may either defer mounting for request savings or keep content mounted for state preservation; choose deliberately and avoid hidden heavy requests unless needed.
+- Date/time product forms use shared `DatePicker` plus a separate `HH:mm` input. Backend schedule fields are UTC unix-millisecond values and the backend rejects newly set past event/exam/session schedules with `400`; use `GET /time` for server-clock-aware checks when accuracy matters.
+- Lesson session roll call is teacher/manager workflow only. Students never self-mark lesson sessions; the session teacher or course manager marks enrolled students, and the session teacher's own presence row is manager-only per backend rules.
+- Attendance status UI uses shared localized metadata: label, short detail text, and semantic colors.
+
 ## Containers
 
 - We use **Podman**, not Docker. Never suggest, generate, or run `docker` /

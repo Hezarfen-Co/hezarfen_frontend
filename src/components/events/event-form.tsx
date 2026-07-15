@@ -4,7 +4,6 @@ import type { Event } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
-import { IconSave } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -217,7 +216,6 @@ export function EventForm(props: {
       {error() && <p class="text-sm text-destructive">{error()}</p>}
       <div class="flex flex-wrap items-center gap-2">
         <Button type="submit" class="h-10" disabled={pending()}>
-          <IconSave />
           {props.submitLabel ?? t("common.save")}
         </Button>
         {props.onCancel && (

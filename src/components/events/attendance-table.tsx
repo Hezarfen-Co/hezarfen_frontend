@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { getAttendanceStatusMeta } from "@/lib/attendance-status";
+import { cn } from "@/lib/cn";
 import { personId, personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
@@ -49,32 +51,38 @@ export function AttendanceTable(props: {
             </TableHeader>
             <TableBody>
               <For each={props.rows}>
-                {(row) => (
-                  <TableRow>
-                    <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" class="rounded-sm capitalize">
-                        {row.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell class="text-sm text-muted-foreground">{personLabel(row.marked_by)}</TableCell>
-                    <Show when={props.canRemove && props.onRemove}>
-                      <TableCell class="px-1 text-center">
-                        <TableRowActions
-                          label={t("common.actions")}
-                          actions={[
-                            {
-                              label: t("common.remove"),
-                              icon: <IconTrash class="h-4 w-4" />,
-                              destructive: true,
-                              onSelect: () => setTargetUser(personId(row.user)),
-                            },
-                          ]}
-                        />
+                {(row) => {
+                  const meta = getAttendanceStatusMeta(row.status);
+                  return (
+                    <TableRow>
+                      <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" class={cn("gap-1 rounded-full border px-2.5 py-1 normal-case", meta?.class)}>
+                          <span>{meta ? t(meta.key) : row.status}</span>
+                          <Show when={meta}>
+                            {(known) => <span class="font-normal opacity-75">· {t(known().detailKey)}</span>}
+                          </Show>
+                        </Badge>
                       </TableCell>
-                    </Show>
-                  </TableRow>
-                )}
+                      <TableCell class="text-sm text-muted-foreground">{personLabel(row.marked_by)}</TableCell>
+                      <Show when={props.canRemove && props.onRemove}>
+                        <TableCell class="px-1 text-center">
+                          <TableRowActions
+                            label={t("common.actions")}
+                            actions={[
+                              {
+                                label: t("common.remove"),
+                                icon: <IconTrash class="h-4 w-4" />,
+                                destructive: true,
+                                onSelect: () => setTargetUser(personId(row.user)),
+                              },
+                            ]}
+                          />
+                        </TableCell>
+                      </Show>
+                    </TableRow>
+                  );
+                }}
               </For>
             </TableBody>
           </Table>
