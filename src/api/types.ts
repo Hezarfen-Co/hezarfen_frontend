@@ -207,6 +207,14 @@ export type AttendanceReport = {
   courses: CourseAttendance[];
 };
 
+export type WorkEntry = {
+  id: string;
+  user: string;
+  check_in: number;
+  check_out: number | null;
+  duration_ms: number | null;
+};
+
 export type MarksReport = {
   user: string;
   courses: CourseMarks[];

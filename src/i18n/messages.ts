@@ -10,6 +10,7 @@ export type MessageKey =
   | "nav.courses"
   | "nav.marks"
   | "nav.attendance"
+  | "nav.work"
   | "nav.users"
   | "nav.studentMarks"
   | "nav.studentAttendance"
@@ -406,7 +407,20 @@ export type MessageKey =
   | "attendance.emptyCourses"
   | "attendance.lookup"
   | "attendance.show"
-  | "attendance.forUser";
+  | "attendance.forUser"
+  | "work.title"
+  | "work.subtitle"
+  | "work.checkIn"
+  | "work.checkOut"
+  | "work.checkedIn"
+  | "work.notCheckedIn"
+  | "work.ready"
+  | "work.since"
+  | "work.entries"
+  | "work.empty"
+  | "work.duration"
+  | "work.open"
+  | "work.closed";
 
 type Dict = Record<MessageKey, string>;
 
@@ -420,6 +434,7 @@ const en: Dict = {
   "nav.courses": "Courses",
   "nav.marks": "Report card",
   "nav.attendance": "Attendance",
+  "nav.work": "Work log",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
@@ -831,6 +846,19 @@ const en: Dict = {
   "attendance.lookup": "Look up a student's attendance report.",
   "attendance.show": "Show attendance",
   "attendance.forUser": "Attendance for {user}",
+  "work.title": "Work log",
+  "work.subtitle": "Check in and out with server-stamped work entries.",
+  "work.checkIn": "Check in",
+  "work.checkOut": "Check out",
+  "work.checkedIn": "Checked in",
+  "work.notCheckedIn": "Not checked in",
+  "work.ready": "Ready to start a work stint.",
+  "work.since": "Since {time}",
+  "work.entries": "Recent entries",
+  "work.empty": "No work entries yet.",
+  "work.duration": "Duration",
+  "work.open": "Open",
+  "work.closed": "Closed",
 };
 
 const tr: Dict = {
@@ -843,6 +871,7 @@ const tr: Dict = {
   "nav.courses": "Dersler",
   "nav.marks": "Karnem",
   "nav.attendance": "Yoklama",
+  "nav.work": "Mesai",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
   "nav.studentAttendance": "Öğrenci yoklaması",
@@ -1254,6 +1283,19 @@ const tr: Dict = {
   "attendance.lookup": "Bir öğrencinin yoklama raporunu aç.",
   "attendance.show": "Yoklamayı göster",
   "attendance.forUser": "{user} yoklaması",
+  "work.title": "Mesai kaydı",
+  "work.subtitle": "Sunucu saatli giriş ve çıkış kayıtları.",
+  "work.checkIn": "Giriş yap",
+  "work.checkOut": "Çıkış yap",
+  "work.checkedIn": "Giriş yapılmış",
+  "work.notCheckedIn": "Giriş yapılmadı",
+  "work.ready": "Mesai kaydı başlatmaya hazır.",
+  "work.since": "Başlangıç: {time}",
+  "work.entries": "Son kayıtlar",
+  "work.empty": "Henüz mesai kaydı yok.",
+  "work.duration": "Süre",
+  "work.open": "Açık",
+  "work.closed": "Kapalı",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };
