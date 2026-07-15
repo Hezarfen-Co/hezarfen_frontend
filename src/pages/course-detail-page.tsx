@@ -20,6 +20,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
@@ -440,7 +441,7 @@ function CourseDetailContent() {
                       </div>
                     }
                   >
-                    <div class="data-table-wrap">
+                    <DataTableFrame>
                       <Table class="data-table">
                         <TableHeader>
                           <TableRow>
@@ -482,7 +483,7 @@ function CourseDetailContent() {
                           </For>
                         </TableBody>
                       </Table>
-                    </div>
+                    </DataTableFrame>
                   </Show>
                 </Suspense>
               </section>

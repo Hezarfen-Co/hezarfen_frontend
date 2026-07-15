@@ -2,6 +2,7 @@ import { For, Show, createSignal } from "solid-js";
 import type { Attendance } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { IconTrash } from "@/components/ui/icons";
 import {
   Table,
@@ -34,7 +35,7 @@ export function AttendanceTable(props: {
           </p>
         }
       >
-        <div class="data-table-wrap">
+        <DataTableFrame>
           <Table class="data-table">
             <TableHeader>
               <TableRow>
@@ -76,7 +77,7 @@ export function AttendanceTable(props: {
               </For>
             </TableBody>
           </Table>
-        </div>
+        </DataTableFrame>
       </Show>
 
       <ConfirmDialog

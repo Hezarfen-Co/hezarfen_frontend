@@ -7,8 +7,9 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { UserTable } from "@/components/users/user-table";
-import { PageSpinner } from "@/components/ui/page-spinner";
 import { Badge } from "@/components/ui/badge";
+import { DataTableEmpty, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataToolbar } from "@/components/ui/data-toolbar";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import type { MessageKey } from "@/i18n/messages";
@@ -72,24 +73,25 @@ function AdminUsersContent() {
           </div>
           <Badge variant="outline" class="mono rounded-sm uppercase tracking-[0.08em]">{t("admin.directory")}</Badge>
         </div>
-        <UserSearchSelect
-          id="admin-user-search"
-          label={t("common.search")}
-          value={selectedUserId()}
-          onChange={setSelectedUserId}
-          placeholder={t("common.searchPlaceholder")}
-          selectPlaceholder={t("admin.username")}
-          emptyMessage={t("admin.noUsers")}
+        <DataToolbar
+          filters={
+            <div class="min-w-0 flex-1 sm:max-w-sm">
+              <UserSearchSelect
+                id="admin-user-search"
+                value={selectedUserId()}
+                onChange={setSelectedUserId}
+                placeholder={t("common.searchPlaceholder")}
+                selectPlaceholder={t("admin.username")}
+                emptyMessage={t("admin.noUsers")}
+              />
+            </div>
+          }
         />
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={users()}>
             <Show
               when={visibleUsers().length > 0}
-              fallback={
-                <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                  {t("admin.noUsers")}
-                </div>
-              }
+              fallback={<DataTableEmpty>{t("admin.noUsers")}</DataTableEmpty>}
             >
               <UserTable
                 users={visibleUsers()}

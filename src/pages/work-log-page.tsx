@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
@@ -86,7 +87,7 @@ function WorkLogContent() {
             when={(entries() ?? []).length > 0}
             fallback={<div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("work.empty")}</div>}
           >
-            <div class="data-table-wrap">
+            <DataTableFrame>
               <Table class="data-table">
                 <TableHeader>
                   <TableRow>
@@ -113,7 +114,7 @@ function WorkLogContent() {
                   </For>
                 </TableBody>
               </Table>
-            </div>
+            </DataTableFrame>
           </Show>
         </Suspense>
       </section>

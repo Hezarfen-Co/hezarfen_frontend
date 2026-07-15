@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -288,8 +289,8 @@ function LiveMonitorContent() {
                       </p>
                     }
                   >
-                    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-                      <Table>
+                    <DataTableFrame>
+                      <Table class="data-table">
                         <TableHeader>
                           <TableRow>
                             <SortHead label={t("admin.username")} sortKey="username" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-left" />
@@ -347,7 +348,7 @@ function LiveMonitorContent() {
                           </For>
                         </TableBody>
                       </Table>
-                    </div>
+                    </DataTableFrame>
 
                     <Show when={sorted.length > PAGE_SIZE}>
                       <div class="mt-4 flex flex-col items-stretch gap-2 border-t border-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between">

@@ -2,6 +2,7 @@ import { For, Show } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import type { AttendanceCounts, AttendanceReport } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
+import { DataTableEmpty, DataTableFrame } from "@/components/ui/data-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useT } from "@/stores/preferences-context";
 
@@ -17,10 +18,10 @@ function customEntries(counts: AttendanceCounts) {
 function CountsCard(props: { title: string; counts: AttendanceCounts }) {
   const t = useT();
   return (
-    <article class="surface-card space-y-3 p-5">
+    <article class="data-shell space-y-3 p-4">
       <div class="flex items-center justify-between gap-3">
         <h3 class="font-display text-lg font-semibold">{props.title}</h3>
-        <Badge variant="secondary" class="rounded-full px-3 py-1">{percent(props.counts.rate)}</Badge>
+        <Badge variant="secondary" class="mono rounded-sm px-3 py-1">{percent(props.counts.rate)}</Badge>
       </div>
       <dl class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
         <Stat label={t("status.present")} value={props.counts.present} />
@@ -32,7 +33,7 @@ function CountsCard(props: { title: string; counts: AttendanceCounts }) {
       </dl>
       <Show when={customEntries(props.counts).length > 0}>
         <div class="flex flex-wrap gap-2 pt-1">
-          <For each={customEntries(props.counts)}>{([label, count]) => <Badge variant="outline" class="rounded-full">{label}: {count}</Badge>}</For>
+          <For each={customEntries(props.counts)}>{([label, count]) => <Badge variant="outline" class="rounded-sm">{label}: {count}</Badge>}</For>
         </div>
       </Show>
     </article>
@@ -43,7 +44,7 @@ function Stat(props: { label: string; value: string | number }) {
   return (
     <div class="rounded-md border bg-background/60 p-3">
       <dt class="text-xs text-muted-foreground">{props.label}</dt>
-      <dd class="mt-1 font-display text-xl font-semibold tabular-nums">{props.value}</dd>
+      <dd class="mono mt-1 text-xl font-semibold tabular-nums">{props.value}</dd>
     </div>
   );
 }
@@ -57,23 +58,32 @@ export function AttendanceReportView(props: { report: AttendanceReport }) {
         <CountsCard title={t("attendance.sessions")} counts={props.report.sessions} />
       </div>
 
-      <section class="surface-card space-y-4 p-5">
+      <section class="data-shell space-y-4 p-4">
         <h3 class="font-display text-lg font-semibold">{t("attendance.courseBreakdown")}</h3>
         <Show
           when={props.report.courses.length > 0}
-          fallback={<div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("attendance.emptyCourses")}</div>}
+          fallback={<DataTableEmpty>{t("attendance.emptyCourses")}</DataTableEmpty>}
         >
-          <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-            <Table>
+          <DataTableFrame>
+            <Table class="data-table table-fixed min-w-[48rem]">
+              <colgroup>
+                <col class="w-[30%]" />
+                <col class="w-[7rem]" />
+                <col class="w-[7rem]" />
+                <col class="w-[7rem]" />
+                <col class="w-[7rem]" />
+                <col class="w-[7rem]" />
+                <col class="w-[7rem]" />
+              </colgroup>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("nav.courses")}</TableHead>
-                  <TableHead>{t("status.present")}</TableHead>
-                  <TableHead>{t("status.absent")}</TableHead>
-                  <TableHead>{t("status.late")}</TableHead>
-                  <TableHead>{t("status.excused")}</TableHead>
-                  <TableHead>{t("common.all")}</TableHead>
-                  <TableHead>{t("attendance.rate")}</TableHead>
+                  <TableHead class="text-right">{t("status.present")}</TableHead>
+                  <TableHead class="text-right">{t("status.absent")}</TableHead>
+                  <TableHead class="text-right">{t("status.late")}</TableHead>
+                  <TableHead class="text-right">{t("status.excused")}</TableHead>
+                  <TableHead class="text-right">{t("common.all")}</TableHead>
+                  <TableHead class="text-right">{t("attendance.rate")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -83,18 +93,18 @@ export function AttendanceReportView(props: { report: AttendanceReport }) {
                       <TableCell class="font-medium">
                         <Link to="/courses/$id" params={{ id: block.course.id }} class="hover:underline">{block.course.title}</Link>
                       </TableCell>
-                      <TableCell>{block.counts.present}</TableCell>
-                      <TableCell>{block.counts.absent}</TableCell>
-                      <TableCell>{block.counts.late}</TableCell>
-                      <TableCell>{block.counts.excused}</TableCell>
-                      <TableCell>{block.counts.total}</TableCell>
-                      <TableCell class="font-semibold tabular-nums">{percent(block.counts.rate)}</TableCell>
+                      <TableCell class="mono text-right">{block.counts.present}</TableCell>
+                      <TableCell class="mono text-right">{block.counts.absent}</TableCell>
+                      <TableCell class="mono text-right">{block.counts.late}</TableCell>
+                      <TableCell class="mono text-right">{block.counts.excused}</TableCell>
+                      <TableCell class="mono text-right">{block.counts.total}</TableCell>
+                      <TableCell class="mono text-right font-semibold">{percent(block.counts.rate)}</TableCell>
                     </TableRow>
                   )}
                 </For>
               </TableBody>
             </Table>
-          </div>
+          </DataTableFrame>
         </Show>
       </section>
     </div>

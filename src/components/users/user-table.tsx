@@ -13,6 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { IconCheck } from "@/components/ui/icons";
 import { ROLES } from "@/lib/roles";
 import { cn } from "@/lib/cn";
@@ -42,15 +43,15 @@ function UserRoleRow(props: {
 
   return (
     <TableRow>
-      <TableCell class="font-medium">{props.user.username}</TableCell>
-      <TableCell>{displayName(props.user)}</TableCell>
-      <TableCell class="text-muted-foreground">{props.user.email || "—"}</TableCell>
-      <TableCell>
+      <TableCell class="truncate font-medium">{props.user.username}</TableCell>
+      <TableCell class="truncate">{displayName(props.user)}</TableCell>
+      <TableCell class="truncate text-muted-foreground">{props.user.email || "—"}</TableCell>
+      <TableCell class="text-center">
         <Badge variant="outline" class={cn("mono uppercase tracking-[0.08em]", roleTone(props.user.role))}>
           {t(`role.${props.user.role}` as MessageKey)}
         </Badge>
       </TableCell>
-      <TableCell class="mono text-xs text-muted-foreground">{props.user.id}</TableCell>
+      <TableCell class="mono truncate text-xs text-muted-foreground">{props.user.id}</TableCell>
       <TableCell class="w-52">
         <Select
           class="h-8 rounded-sm text-xs"
@@ -95,14 +96,22 @@ export function UserTable(props: {
 }) {
   const t = useT();
   return (
-    <div class="data-table-wrap">
-      <Table class="data-table">
+    <DataTableFrame>
+      <Table class="data-table table-fixed min-w-[58rem]">
+        <colgroup>
+          <col class="w-[15%]" />
+          <col class="w-[18%]" />
+          <col class="w-[22%]" />
+          <col class="w-[9rem]" />
+          <col class="w-[18%]" />
+          <col class="w-[13rem]" />
+        </colgroup>
         <TableHeader>
           <TableRow>
             <TableHead>{t("admin.username")}</TableHead>
             <TableHead>{t("profile.name")}</TableHead>
             <TableHead>{t("profile.email")}</TableHead>
-            <TableHead>{t("admin.role")}</TableHead>
+            <TableHead class="text-center">{t("admin.role")}</TableHead>
             <TableHead>{t("admin.id")}</TableHead>
             <TableHead class="w-52">{t("common.update")}</TableHead>
           </TableRow>
@@ -119,6 +128,6 @@ export function UserTable(props: {
           </For>
         </TableBody>
       </Table>
-    </div>
+    </DataTableFrame>
   );
 }

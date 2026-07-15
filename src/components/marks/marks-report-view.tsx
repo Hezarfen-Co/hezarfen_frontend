@@ -2,6 +2,7 @@ import { For, Show } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import type { MarksReport } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
+import { DataTableEmpty, DataTableFrame } from "@/components/ui/data-table";
 import { ExamLink } from "@/components/exams/exam-link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { examKindLabel } from "@/lib/exam-labels";
@@ -21,13 +22,11 @@ export function MarksReportView(props: { report: MarksReport }) {
     <Show
       when={props.report.courses.length > 0}
       fallback={
-        <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-          {t("marks.empty")}
-        </div>
+          <DataTableEmpty>{t("marks.empty")}</DataTableEmpty>
       }
     >
       <div class="space-y-4">
-        <div class="surface-card flex flex-wrap items-center justify-between gap-3 p-5">
+        <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-4">
           <span class="text-sm font-medium text-muted-foreground">{t("marks.overall")}</span>
           <p class="font-display text-3xl font-semibold tabular-nums">
             {markWithGrade(props.report.overall_average, props.report.overall_grade)}
@@ -39,14 +38,14 @@ export function MarksReportView(props: { report: MarksReport }) {
 
         <For each={props.report.courses}>
           {(block) => (
-            <article class="surface-card space-y-4 p-5">
+            <article class="data-shell space-y-4 p-4">
               <header class="flex flex-wrap items-center justify-between gap-2">
                 <h3 class="font-display text-lg font-semibold">
                   <Link to="/courses/$id" params={{ id: block.course.id }} class="hover:text-primary hover:underline">
                     {block.course.title}
                   </Link>
                 </h3>
-                <Badge variant="secondary" class="rounded-full px-3 py-1" title={t("marks.courseAvg")}>
+                <Badge variant="secondary" class="mono rounded-sm px-3 py-1" title={t("marks.courseAvg")}>
                   {markWithGrade(block.average, block.average_grade)}
                 </Badge>
               </header>
@@ -54,19 +53,23 @@ export function MarksReportView(props: { report: MarksReport }) {
               <Show
                 when={block.results.length > 0}
                 fallback={
-                  <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                    {t("exams.noResults")}
-                  </p>
+                  <DataTableEmpty>{t("exams.noResults")}</DataTableEmpty>
                 }
               >
-                <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-                  <Table>
+                <DataTableFrame>
+                  <Table class="data-table table-fixed min-w-[42rem]">
+                    <colgroup>
+                      <col class="w-[42%]" />
+                      <col class="w-[18%]" />
+                      <col class="w-[8rem]" />
+                      <col class="w-[10rem]" />
+                    </colgroup>
                     <TableHeader>
                       <TableRow>
                         <TableHead>{t("marks.exam")}</TableHead>
                         <TableHead>{t("exams.kind")}</TableHead>
-                        <TableHead>{t("marks.weight")}</TableHead>
-                        <TableHead>{t("marks.mark")}</TableHead>
+                        <TableHead class="text-right">{t("marks.weight")}</TableHead>
+                        <TableHead class="text-right">{t("marks.mark")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -79,18 +82,18 @@ export function MarksReportView(props: { report: MarksReport }) {
                               </ExamLink>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline" class="rounded-full capitalize">
+                              <Badge variant="outline" class="rounded-sm capitalize">
                                 {examKindLabel(entry.kind, t)}
                               </Badge>
                             </TableCell>
-                            <TableCell class="tabular-nums">{examWeight(entry) ?? "—"}</TableCell>
-                            <TableCell class="font-semibold tabular-nums">{markWithGrade(entry.mark, entry.grade)}</TableCell>
+                            <TableCell class="mono text-right">{examWeight(entry) ?? "—"}</TableCell>
+                            <TableCell class="mono text-right font-semibold">{markWithGrade(entry.mark, entry.grade)}</TableCell>
                           </TableRow>
                         )}
                       </For>
                     </TableBody>
                   </Table>
-                </div>
+                </DataTableFrame>
               </Show>
             </article>
           )}

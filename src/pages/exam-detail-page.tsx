@@ -22,6 +22,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -408,7 +409,7 @@ function ExamDetailContent() {
                       </p>
                     }
                   >
-                    <div class="data-table-wrap">
+                    <DataTableFrame>
                       <Table class="data-table">
                         <TableHeader>
                           <TableRow>
@@ -463,7 +464,7 @@ function ExamDetailContent() {
                           </For>
                         </TableBody>
                       </Table>
-                    </div>
+                    </DataTableFrame>
                   </Show>
                 </Suspense>
               </section>
