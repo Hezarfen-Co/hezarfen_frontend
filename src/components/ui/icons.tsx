@@ -199,6 +199,15 @@ export function IconMenu(props: IconProps) {
   );
 }
 
+export function IconPanelLeft(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="M9 3v18" />
+    </Svg>
+  );
+}
+
 export function IconBook(props: IconProps) {
   return (
     <Svg {...props}>

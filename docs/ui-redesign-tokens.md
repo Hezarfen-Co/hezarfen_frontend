@@ -1,0 +1,95 @@
+# UI Redesign Tokens
+
+## Direction
+
+Dense school admin UI: Fintables-style tables, Cloudflare-style grouped sidebar,
+neutral surfaces, subtle borders, one blue accent.
+
+## Color
+
+Light palette is defined in `src/index.css` as `--ui-*` variables:
+
+- `--ui-bg`: `#f7f8f8`
+- `--ui-surface-1`: `#ffffff`
+- `--ui-surface-2`: `#f1f3f3`
+- `--ui-surface-3`: `#e7eaea`
+- `--ui-border-1`: `#d9dddd`
+- `--ui-border-2`: `#c7cccc`
+- `--ui-text-1`: `#101414`
+- `--ui-text-2`: `#4b5555`
+- `--ui-text-3`: `#788181`
+- `--ui-accent`: `#2563eb`
+- semantic colors: success, warning, danger, info, each with muted pair
+
+Dark palette mirrors same token names with dark surfaces and brighter semantic
+foregrounds.
+
+Existing shadcn tokens (`--background`, `--card`, `--primary`, etc.) are mapped
+to these `--ui-*` variables so existing components keep working.
+
+## Typography
+
+- UI face: `DM Sans`
+- Data face: `.mono` / `.num`, using `ui-monospace, SFMono-Regular, Menlo,
+  Monaco, Consolas`
+- Display serif removed from data/admin pages; `.font-display` now maps to UI
+  face for tighter dashboard hierarchy.
+
+Scale target:
+
+- `xs`: 12/16, labels and metadata
+- `sm`: 13/18, nav and table cells
+- `base`: 14/20, body
+- `lg`: 18/24, section/page titles
+- `xl`: 22/28, key page title only
+
+## Spacing
+
+CSS variables:
+
+- `--space-1`: 4px
+- `--space-2`: 8px
+- `--space-3`: 12px
+- `--space-4`: 16px
+- `--space-5`: 20px
+- `--space-6`: 24px
+- `--space-8`: 32px
+
+Density defaults:
+
+- sidebar group/header row: 32px
+- table header/cell row: 36px
+- card padding: 16px
+- radius: 6px
+- table numerals/IDs use tabular mono
+
+## Proof Of Concept
+
+Reference page: `src/pages/admin-users-page.tsx`.
+
+Implemented:
+
+- grouped accordion sidebar with active category auto-open
+- compact stat row on top of users page
+- dense sticky data table styling via `.data-table`
+- role pills with semantic tints
+- mono IDs and tabular metrics
+- neutral surfaces, subtle borders, no gradients or decorative cards
+
+Static wireframe:
+
+```text
+Students / Users
+People & roles
+
+[ Total ] [ Students ] [ Teachers ] [ Managers ] [ Admins ]
+
+Directory                                     [ Search... ]
+┌──────────┬────────────┬──────────────┬─────────┬──────────────┬────────┐
+│ Username │ Name       │ Email        │ Role    │ ID           │ Update │
+├──────────┼────────────┼──────────────┼─────────┼──────────────┼────────┤
+│ ali      │ Ali Demir  │ ali@...      │ Student │ 01J...       │ select │
+│ ayse     │ Ayse Kaya  │ —            │ Student │ 01J...       │ select │
+│ mehmet   │ Mehmet Ar  │ mehmet@...   │ Teacher │ 01J...       │ select │
+└──────────┴────────────┴──────────────┴─────────┴──────────────┴────────┘
+```

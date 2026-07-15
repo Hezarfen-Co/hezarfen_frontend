@@ -5,7 +5,7 @@ import { NavBar } from "@/components/layout/nav-bar";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconChevronLeft, IconChevronRight, IconMenu } from "@/components/ui/icons";
+import { IconMenu, IconPanelLeft } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -76,9 +76,7 @@ export function AppShell(props: ParentProps) {
                 title={collapsed() ? t("nav.expand") : t("nav.collapse")}
                 onClick={() => prefs.toggleSidebar()}
               >
-                <Show when={collapsed()} fallback={<IconChevronLeft class="h-4 w-4 shrink-0" />}>
-                  <IconChevronRight class="h-4 w-4 shrink-0" />
-                </Show>
+                <IconPanelLeft class="h-4 w-4 shrink-0" />
               </Button>
             </div>
 

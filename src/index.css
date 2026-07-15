@@ -6,66 +6,83 @@
 
 @layer base {
   :root {
-    --background: 150 20% 98%;
-    --foreground: 168 35% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 168 35% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 168 35% 10%;
-    --primary: 163 72% 28%;
-    --primary-foreground: 150 40% 98%;
-    --secondary: 156 25% 94%;
-    --secondary-foreground: 168 35% 14%;
-    --muted: 150 16% 94%;
-    --muted-foreground: 168 10% 40%;
-    --accent: 168 45% 92%;
-    --accent-foreground: 163 72% 18%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 160 14% 88%;
-    --input: 160 14% 88%;
-    --ring: 163 72% 28%;
-    --radius: 0.875rem;
-    --success: 152 60% 36%;
-    --warning: 38 92% 50%;
-    --info: 210 80% 48%;
-    --surface-elevated: 0 0% 100%;
-    --sidebar: 160 25% 97%;
-    --sidebar-foreground: 168 20% 20%;
-    --hero-from: 163 55% 92%;
-    --hero-to: 190 50% 94%;
-    --glow: 163 72% 40%;
+    --ui-bg: 180 7% 97%;
+    --ui-surface-1: 0 0% 100%;
+    --ui-surface-2: 180 8% 95%;
+    --ui-surface-3: 180 7% 91%;
+    --ui-border-1: 180 7% 86%;
+    --ui-border-2: 180 6% 79%;
+    --ui-text-1: 180 11% 7%;
+    --ui-text-2: 180 6% 31%;
+    --ui-text-3: 180 4% 49%;
+    --ui-accent: 217 91% 60%;
+    --ui-accent-muted: 214 95% 93%;
+    --ui-success: 142 72% 29%;
+    --ui-success-muted: 138 76% 97%;
+    --ui-warning: 32 95% 44%;
+    --ui-warning-muted: 48 96% 89%;
+    --ui-danger: 0 74% 42%;
+    --ui-danger-muted: 0 93% 94%;
+    --ui-info: 200 98% 33%;
+    --ui-info-muted: 204 94% 94%;
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --background: var(--ui-bg);
+    --foreground: var(--ui-text-1);
+    --card: var(--ui-surface-1);
+    --card-foreground: var(--ui-text-1);
+    --popover: var(--ui-surface-1);
+    --popover-foreground: var(--ui-text-1);
+    --primary: var(--ui-accent);
+    --primary-foreground: 0 0% 100%;
+    --secondary: var(--ui-surface-2);
+    --secondary-foreground: var(--ui-text-1);
+    --muted: var(--ui-surface-2);
+    --muted-foreground: var(--ui-text-2);
+    --accent: var(--ui-accent-muted);
+    --accent-foreground: 217 91% 28%;
+    --destructive: var(--ui-danger);
+    --destructive-foreground: 0 0% 100%;
+    --border: var(--ui-border-1);
+    --input: var(--ui-border-1);
+    --ring: var(--ui-accent);
+    --radius: 0.625rem;
+    --success: var(--ui-success);
+    --warning: var(--ui-warning);
+    --info: var(--ui-info);
+    --surface-elevated: var(--ui-surface-1);
+    --sidebar: var(--ui-surface-1);
+    --sidebar-foreground: var(--ui-text-2);
   }
 
   [data-kb-theme="dark"] {
-    --background: 220 9% 6%;
-    --foreground: 220 12% 92%;
-    --card: 220 8% 9%;
-    --card-foreground: 220 12% 92%;
-    --popover: 220 8% 11%;
-    --popover-foreground: 220 12% 92%;
-    --primary: 220 88% 62%;
-    --primary-foreground: 220 20% 98%;
-    --secondary: 220 7% 15%;
-    --secondary-foreground: 220 10% 88%;
-    --muted: 220 7% 13%;
-    --muted-foreground: 220 7% 62%;
-    --accent: 220 9% 17%;
-    --accent-foreground: 220 15% 96%;
-    --destructive: 0 70% 58%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 8% 18%;
-    --input: 220 8% 18%;
-    --ring: 220 88% 62%;
-    --success: 128 48% 55%;
-    --warning: 38 90% 56%;
-    --info: 210 80% 60%;
-    --surface-elevated: 220 8% 12%;
-    --sidebar: 220 10% 4%;
-    --sidebar-foreground: 220 10% 86%;
-    --hero-from: 220 10% 13%;
-    --hero-to: 220 8% 10%;
-    --glow: 220 88% 54%;
+    --ui-bg: 210 12% 5%;
+    --ui-surface-1: 200 10% 8%;
+    --ui-surface-2: 200 10% 11%;
+    --ui-surface-3: 200 10% 16%;
+    --ui-border-1: 200 10% 18%;
+    --ui-border-2: 200 10% 24%;
+    --ui-text-1: 180 14% 94%;
+    --ui-text-2: 180 8% 67%;
+    --ui-text-3: 190 6% 48%;
+    --ui-accent: 213 94% 68%;
+    --ui-accent-muted: 213 47% 17%;
+    --ui-success: 142 69% 58%;
+    --ui-success-muted: 142 39% 10%;
+    --ui-warning: 38 92% 50%;
+    --ui-warning-muted: 35 64% 13%;
+    --ui-danger: 0 91% 71%;
+    --ui-danger-muted: 0 50% 14%;
+    --ui-info: 199 89% 63%;
+    --ui-info-muted: 200 50% 13%;
+    --primary-foreground: 210 20% 98%;
+    --accent-foreground: 213 94% 86%;
+    --destructive-foreground: 0 0% 100%;
   }
 
   * {
@@ -78,10 +95,6 @@
 
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
-    background-image:
-      radial-gradient(ellipse 80% 50% at 10% -10%, hsl(var(--glow) / 0.10), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 0%, hsl(var(--info) / 0.05), transparent);
-    background-attachment: fixed;
   }
 
   ::selection {
@@ -91,47 +104,61 @@
 
 @layer components {
   .font-display {
-    font-family: "Fraunces", Georgia, serif;
+    font-family: "DM Sans", system-ui, sans-serif;
   }
 
   .surface-card {
-    @apply rounded-xl border bg-card text-card-foreground shadow-sm;
+    @apply rounded-md border bg-card text-card-foreground shadow-none;
   }
 
   [data-kb-theme="dark"] .surface-card {
     @apply shadow-none;
-    border-color: hsl(var(--border) / 0.82);
-    background:
-      linear-gradient(180deg, hsl(var(--card) / 0.98), hsl(var(--card) / 0.92)),
-      radial-gradient(circle at 0 0, hsl(var(--primary) / 0.06), transparent 35%);
-  }
-
-  .hero-panel {
-    background: linear-gradient(135deg, hsl(var(--hero-from)), hsl(var(--hero-to)));
+    border-color: hsl(var(--border));
   }
 
   .stat-tile {
-    @apply surface-card relative overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25;
-  }
-
-  [data-kb-theme="dark"] .stat-tile {
-    background:
-      linear-gradient(180deg, hsl(var(--surface-elevated) / 0.96), hsl(var(--card) / 0.88)),
-      radial-gradient(circle at 100% 0, hsl(var(--primary) / 0.09), transparent 34%);
-  }
-
-  .stat-tile::after {
-    content: "";
-    position: absolute;
-    inset: auto -20% -40% auto;
-    width: 8rem;
-    height: 8rem;
-    border-radius: var(--radius);
-    background: hsl(var(--primary) / 0.08);
-    pointer-events: none;
+    @apply surface-card relative overflow-hidden p-4 transition-colors duration-150 hover:border-primary/35;
   }
 
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  .data-shell {
+    @apply rounded-lg border border-border bg-card;
+  }
+
+  .data-table-wrap {
+    @apply max-h-[62vh] overflow-auto rounded-lg border border-border bg-card;
+  }
+
+  .data-table {
+    @apply w-full caption-bottom text-[13px];
+  }
+
+  .data-table thead {
+    @apply sticky top-0 z-10 border-b border-border bg-muted text-muted-foreground;
+  }
+
+  .data-table th {
+    @apply h-9 whitespace-nowrap px-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em];
+  }
+
+  .data-table td {
+    @apply h-9 whitespace-nowrap px-3 py-1.5 align-middle;
+  }
+
+  .data-table tbody tr {
+    @apply border-b border-border/80 hover:bg-muted/60;
+  }
+
+  .data-table tbody tr:nth-child(even) {
+    background-color: hsl(var(--muted) / 0.28);
+  }
+
+  .num,
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
   }
 }

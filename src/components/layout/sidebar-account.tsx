@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconChevronRight, IconGlobe, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
+import { IconChevronRight, IconGlobe, IconGuide, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -36,26 +36,34 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
       {(u) => {
         const name = () => displayName(u());
         return (
-          <div class={cn("shrink-0 border-t border-border/80 p-2 pb-1.5", props.collapsed && "px-2")}>
+          <div class={cn("shrink-0 border-t border-border/80 p-2", props.collapsed && "px-2 py-2") }>
             <DropdownMenu placement="right-end" gutter={8}>
               <DropdownMenuTrigger
                 class={cn(
-                  "flex w-full items-center rounded-md text-left outline-none transition-colors",
-                  "hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring data-[expanded]:bg-muted/70",
-                  props.collapsed ? "h-9 justify-center px-0" : "gap-1.5 px-2",
-                  props.collapsed ? "" : "h-10",
+                  "flex w-full items-center text-left outline-none transition-colors",
+                  "focus-visible:ring-2 focus-visible:ring-ring",
+                  props.collapsed
+                    ? "h-9 justify-center rounded-lg px-0 hover:bg-muted/70 data-[expanded]:bg-muted/70"
+                    : "h-12 gap-2 rounded-lg border border-border/80 bg-card/70 px-2 shadow-sm hover:bg-muted/50 data-[expanded]:bg-muted/50",
                 )}
                 aria-label={t("nav.account")}
               >
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+                <span
+                  class={cn(
+                    "flex shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground shadow-sm ring-1 ring-border/70",
+                    props.collapsed ? "h-8 w-8" : "h-8 w-8",
+                  )}
+                >
                   {initials(name())}
                 </span>
                 <Show when={!props.collapsed}>
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate text-sm font-semibold">{name()}</span>
-                    <span class="block text-[10px] text-muted-foreground">{t(`role.${u().role}` as MessageKey)}</span>
+                    <span class="block truncate text-[13px] font-semibold leading-4">{name()}</span>
+                    <span class="block truncate text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                      {t(`role.${u().role}` as MessageKey)}
+                    </span>
                   </span>
-                  <IconChevronRight class="h-4 w-4 shrink-0 text-muted-foreground transition-transform data-[expanded]:rotate-90" />
+                  <IconChevronRight class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 </Show>
               </DropdownMenuTrigger>
 
@@ -76,6 +84,11 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                   <IconGlobe class="h-4 w-4 shrink-0" />
                   <span class="min-w-0 flex-1">{t("lang.label")}</span>
                   <span class="text-xs text-muted-foreground">{prefs.locale() === "tr" ? "TR" : "EN"}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem class="rounded-md" onSelect={() => void navigate({ to: "/guide" })}>
+                  <IconGuide class="h-4 w-4 shrink-0" />
+                  <span>{t("nav.guide")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem destructive class="rounded-md" onSelect={() => void props.onLogout()}>

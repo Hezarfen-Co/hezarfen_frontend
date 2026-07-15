@@ -25,6 +25,11 @@ export type MessageKey =
   | "nav.expand"
   | "nav.account"
   | "nav.preferences"
+  | "nav.group.students"
+  | "nav.group.classes"
+  | "nav.group.grades"
+  | "nav.group.reports"
+  | "nav.group.settings"
   | "common.loading"
   | "common.cancel"
   | "common.save"
@@ -449,6 +454,11 @@ const en: Dict = {
   "nav.expand": "Expand sidebar",
   "nav.account": "Account",
   "nav.preferences": "Preferences",
+  "nav.group.students": "Students",
+  "nav.group.classes": "Classes",
+  "nav.group.grades": "Grades",
+  "nav.group.reports": "Reports",
+  "nav.group.settings": "Settings",
   "common.loading": "Loading…",
   "common.cancel": "Cancel",
   "common.save": "Save",
@@ -731,7 +741,7 @@ const en: Dict = {
   "role.student": "Student",
   "role.teacher": "Teacher",
   "role.manager": "Manager",
-  "role.admin": "Admin",
+  "role.admin": "ADMIN",
   "courses.title": "Courses",
   "courses.subtitle": "Classes, enrollment, and course exams live here.",
   "courses.create": "New course",
@@ -886,6 +896,11 @@ const tr: Dict = {
   "nav.expand": "Kenar çubuğunu genişlet",
   "nav.account": "Hesap",
   "nav.preferences": "Tercihler",
+  "nav.group.students": "Öğrenciler",
+  "nav.group.classes": "Sınıflar",
+  "nav.group.grades": "Notlar",
+  "nav.group.reports": "Raporlar",
+  "nav.group.settings": "Ayarlar",
   "common.loading": "Yükleniyor…",
   "common.cancel": "Vazgeç",
   "common.save": "Kaydet",
@@ -1168,7 +1183,7 @@ const tr: Dict = {
   "role.student": "Öğrenci",
   "role.teacher": "Öğretmen",
   "role.manager": "Yönetici",
-  "role.admin": "Admin",
+  "role.admin": "ADMIN",
   "courses.title": "Dersler",
   "courses.subtitle": "Sınıflar, kayıt ve ders sınavları burada.",
   "courses.create": "Yeni ders",
