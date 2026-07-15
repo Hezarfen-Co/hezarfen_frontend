@@ -1,6 +1,7 @@
 import { DropdownMenu as DropdownMenuPrimitive } from "@kobalte/core/dropdown-menu";
 import type { ComponentProps, ParentProps, ValidComponent } from "solid-js";
 import { splitProps } from "solid-js";
+import { IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
 export const DropdownMenu = DropdownMenuPrimitive;
@@ -112,16 +113,7 @@ export function DropdownMenuSubTrigger<T extends ValidComponent = "div">(
       {...rest}
     >
       {local.children}
-      <svg
-        viewBox="0 0 24 24"
-        class="ml-1 h-4 w-4 shrink-0 opacity-50"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        aria-hidden
-      >
-        <path d="m9 18 6-6-6-6" />
-      </svg>
+      <IconChevronRight class="ml-1 h-4 w-4 shrink-0 opacity-50" />
     </DropdownMenuPrimitive.SubTrigger>
   );
 }

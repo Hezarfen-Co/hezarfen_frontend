@@ -12,7 +12,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconEdit, IconGlobe, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
+import { IconChevronDown, IconEdit, IconGlobe, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -96,16 +96,7 @@ export function UserMenu() {
               <span class="truncate font-semibold">{displayName(u())}</span>
               <span class="truncate text-[11px] font-medium text-muted-foreground">{t(`role.${u().role}` as MessageKey)}</span>
             </span>
-            <svg
-              viewBox="0 0 24 24"
-              class="h-4 w-4 shrink-0 opacity-50"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
+            <IconChevronDown class="h-4 w-4 shrink-0 opacity-50" />
           </DropdownMenuTrigger>
 
           <DropdownMenuContent class="w-[min(20rem,calc(100vw-1.5rem))]">

@@ -24,6 +24,7 @@ validation, and list filtering cleanup.
 - Start/end date-time rows use equal-width date and time controls.
 - Async exam duration is derived from start/end time instead of a separate duration input.
 - Exam room locally closes in-progress attempts when the countdown reaches zero, while the backend remains authoritative for final status.
+- Current design refresh is complete: icon system, shell/nav, dashboard, lists, detail pages, and forms/feedback all use shared primitives and token-derived radius/border/focus patterns.
 
 ## Role Audit Result
 
@@ -74,6 +75,11 @@ validation, and list filtering cleanup.
 
 ## UX polish batch (completed)
 
+- Icon system: local Lucide-geometry SVGs only; semantic nav/dashboard/search/menu icons are wired through `src/components/ui/icons.tsx`.
+- Shell/nav: sidebar, mobile tab bar, drawer close, account menu, and active states share the same compact token rhythm.
+- Lists: `DataToolbar`, `.data-table`, sticky headers, row hover, and row action triggers are aligned across list pages.
+- Detail pages: course, exam, and event detail routes share breadcrumb, header action group, and metric-card utilities.
+- Forms/feedback: inputs, selects, textareas, destructive alerts, empty states, and confirm summaries share the same form surface rhythm.
 - Session delete uses ConfirmDialog; exam room guards stale id on route change.
 - Mobile bottom tab bar (home/courses/exams/notes/menu); exam-room hides tab chrome.
 - Shared ErrorAlert with try-again; lookup pages show person labels; profile shows localized role.

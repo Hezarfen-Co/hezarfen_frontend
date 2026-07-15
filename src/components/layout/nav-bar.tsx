@@ -5,7 +5,7 @@ import { SideNav } from "@/components/layout/side-nav";
 import { UserMenu } from "@/components/layout/user-menu";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
-import { IconMenu } from "@/components/ui/icons";
+import { IconMenu, IconX } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
@@ -32,7 +32,7 @@ export function NavBar() {
           </Show>
 
           <Link to="/" class="flex min-w-0 items-center gap-2.5">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-primary text-sm font-bold text-primary-foreground">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
               H
             </span>
             <span class="truncate font-display text-base font-semibold tracking-tight sm:text-lg">
@@ -60,18 +60,25 @@ export function NavBar() {
             aria-label={t("nav.close")}
             onClick={() => setMobileOpen(false)}
           />
-          <aside class="absolute inset-y-0 left-0 flex w-56 flex-col border-r border-border bg-sidebar shadow-soft">
-            <div class="flex h-14 shrink-0 items-center justify-between border-b border-border px-3">
-              <span class="font-display font-semibold">{t("app.name")}</span>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setMobileOpen(false)}>
-                {t("nav.close")}
+          <aside class="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-sidebar shadow-soft">
+            <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
+              <span class="flex min-w-0 items-center gap-2">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">H</span>
+                <span class="truncate font-display text-base font-semibold">{t("app.name")}</span>
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                class="h-8 w-8 shrink-0 px-0"
+                aria-label={t("nav.close")}
+                onClick={() => setMobileOpen(false)}
+              >
+                <IconX class="h-4 w-4" />
               </Button>
             </div>
-            <div class="flex min-h-0 flex-1 flex-col overflow-y-auto py-2">
+            <div class="flex min-h-0 flex-1 flex-col overflow-y-auto py-3">
               <SideNav onNavigate={() => setMobileOpen(false)} />
-            </div>
-            <div class="flex shrink-0 items-center justify-center border-t border-border px-3 py-3">
-              <p class="text-center text-[11px] text-muted-foreground">{t("app.workspace")}</p>
             </div>
           </aside>
         </div>
