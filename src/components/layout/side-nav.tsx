@@ -13,16 +13,22 @@ import { cn } from "@/lib/cn";
 import type { MessageKey } from "@/i18n/messages";
 import type { Role } from "@/api/types";
 import {
-  IconBook,
-  IconCalendar,
-  IconChart,
   IconChevronRight,
-  IconEdit,
-  IconExam,
-  IconHome,
-  IconNote,
-  IconUsers,
-} from "@/components/ui/icons";
+  IconCalendarCheck,
+  IconCalendarCog,
+  IconCalendarEvent,
+  IconChartBar,
+  IconChecklist,
+  IconClipboardCheck,
+  IconHome2,
+  IconNotebook,
+  IconPencilQuestion,
+  IconReportAnalytics,
+  IconSchool,
+  IconSettings,
+  IconUserCog,
+  IconUsersGroup,
+} from "@tabler/icons-solidjs";
 
 type NavItem = {
   to: string;
@@ -44,58 +50,58 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "students",
     labelKey: "nav.group.students",
-    Icon: IconUsers,
+    Icon: IconUsersGroup,
     items: [
-      { to: "/attendance", labelKey: "nav.attendance", Icon: IconCalendar },
+      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck },
     ],
   },
   {
     id: "classes",
     labelKey: "nav.group.classes",
-    Icon: IconBook,
+    Icon: IconSchool,
     items: [
-      { to: "/courses", labelKey: "nav.courses", Icon: IconBook },
-      { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
-      { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
+      { to: "/courses", labelKey: "nav.courses", Icon: IconNotebook },
+      { to: "/exams", labelKey: "nav.exams", Icon: IconPencilQuestion },
+      { to: "/events", labelKey: "nav.events", Icon: IconCalendarEvent },
     ],
   },
   {
     id: "grades",
     labelKey: "nav.group.grades",
-    Icon: IconNote,
+    Icon: IconChecklist,
     items: [
-      { to: "/marks", labelKey: "nav.marks", Icon: IconChart },
-      { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
+      { to: "/marks", labelKey: "nav.marks", Icon: IconChartBar },
+      { to: "/notes", labelKey: "nav.notes", Icon: IconNotebook },
     ],
   },
   {
     id: "reports",
     labelKey: "nav.group.reports",
-    Icon: IconNote,
+    Icon: IconReportAnalytics,
     minRole: "teacher",
     items: [
-      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
-      { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconCalendar, minRole: "teacher" },
-      { to: "/work", labelKey: "nav.work", Icon: IconChart, minRole: "teacher" },
+      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChartBar, minRole: "teacher" },
+      { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconCalendarCheck, minRole: "teacher" },
+      { to: "/work", labelKey: "nav.work", Icon: IconChecklist, minRole: "teacher" },
     ],
   },
   {
     id: "settings",
     labelKey: "nav.group.settings",
-    Icon: IconEdit,
+    Icon: IconSettings,
     minRole: "manager",
     items: [
-      { to: "/management/settings", labelKey: "nav.settings", Icon: IconEdit, minRole: "manager" },
-      { to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendar, minRole: "manager" },
+      { to: "/management/settings", labelKey: "nav.settings", Icon: IconSettings, minRole: "manager" },
+      { to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendarCog, minRole: "manager" },
     ],
   },
   {
     id: "admin",
     labelKey: "nav.admin",
-    Icon: IconUsers,
+    Icon: IconUserCog,
     minRole: "admin",
     items: [
-      { to: "/admin/users", labelKey: "nav.users", Icon: IconUsers, minRole: "admin" },
+      { to: "/admin/users", labelKey: "nav.users", Icon: IconUsersGroup, minRole: "admin" },
     ],
   },
 ];
@@ -103,7 +109,7 @@ const NAV_GROUPS: NavGroup[] = [
 const HOME_ITEM: NavItem = {
   to: "/",
   labelKey: "nav.home",
-  Icon: IconHome,
+  Icon: IconHome2,
   exact: true,
 };
 
