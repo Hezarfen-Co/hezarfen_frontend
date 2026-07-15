@@ -19,7 +19,7 @@ import { createNow } from "@/lib/create-now";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
-type SortKey = "username" | "status" | "progress" | "remaining" | "activity" | "mark";
+type SortKey = "username" | "status" | "attempt" | "progress" | "remaining" | "left" | "mark";
 
 const PAGE_SIZE = 10;
 
@@ -36,6 +36,7 @@ const STATUS_KEY: Record<string, MessageKey> = {
   in_progress: "attempt.inProgress",
   submitted: "attempt.submitted",
   expired: "attempt.expired",
+  absent: "attempt.absent",
 };
 
 function labelFromStatus(status: string, t: (key: MessageKey) => string): string {
@@ -73,8 +74,9 @@ function liveRosterName(entry: LiveRosterEntry, fallback: string): string {
 }
 
 function remainingMinutesLabel(entry: LiveRosterEntry): string {
-  const remaining = entry.remaining_ms ?? 0;
+  const remaining = entry.remaining_ms;
   if (entry.status !== "in_progress") return "—";
+  if (remaining == null) return "—";
   if (remaining > 0) return `${Math.ceil(remaining / 60000)}dk`;
   return "<1dk";
 }
@@ -82,6 +84,13 @@ function remainingMinutesLabel(entry: LiveRosterEntry): string {
 function isLowRemaining(entry: LiveRosterEntry): boolean {
   const remaining = entry.remaining_ms ?? 0;
   return entry.status === "in_progress" && remaining <= 5 * 60 * 1000;
+}
+
+function attemptLabel(entry: LiveRosterEntry): string {
+  if (entry.attempts_used != null && entry.max_attempts != null) return `${entry.attempts_used} / ${entry.max_attempts}`;
+  if (entry.attempt != null) return String(entry.attempt);
+  if (entry.attempts_used != null) return String(entry.attempts_used);
+  return "—";
 }
 
 function LiveMonitorContent() {
@@ -185,9 +194,10 @@ function LiveMonitorContent() {
       const k = sortKey();
       if (k === "username") return liveRosterName(a, "").localeCompare(liveRosterName(b, ""));
       if (k === "status") return labelFromStatus(a.status, t).localeCompare(labelFromStatus(b.status, t));
+      if (k === "attempt") return (a.attempts_used ?? a.attempt ?? 0) - (b.attempts_used ?? b.attempt ?? 0);
       if (k === "progress") return (a.answered ?? 0) - (b.answered ?? 0);
       if (k === "remaining") return (a.remaining_ms ?? 0) - (b.remaining_ms ?? 0);
-      if (k === "activity") return (a.last_activity ?? 0) - (b.last_activity ?? 0);
+      if (k === "left") return (a.left_at ?? 0) - (b.left_at ?? 0);
       if (k === "mark") return (a.mark ?? -1) - (b.mark ?? -1);
       return 0;
     })();
@@ -237,7 +247,7 @@ function LiveMonitorContent() {
 
             return (
               <>
-                <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                   <div class="surface-card bg-card/80 p-4">
                     <p class="text-xs text-muted-foreground">{t("exams.notStarted")}</p>
                     <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.not_started}</p>
@@ -253,6 +263,10 @@ function LiveMonitorContent() {
                   <div class="surface-card bg-card/80 p-4">
                     <p class="text-xs text-muted-foreground">{t("attempt.expired")}</p>
                     <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.expired}</p>
+                  </div>
+                  <div class="surface-card bg-card/80 p-4">
+                    <p class="text-xs text-muted-foreground">{t("attempt.absent")}</p>
+                    <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.absent ?? 0}</p>
                   </div>
                 </section>
 
@@ -280,9 +294,10 @@ function LiveMonitorContent() {
                           <TableRow>
                             <SortHead label={t("admin.username")} sortKey="username" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-left" />
                             <SortHead label={t("attempt.status")} sortKey="status" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
+                            <SortHead label={t("attempt.attempt")} sortKey="attempt" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
                             <SortHead label={t("attempt.progress")} sortKey="progress" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
                             <SortHead label={t("attempt.remaining")} sortKey="remaining" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                            <SortHead label={t("exams.lastActivity")} sortKey="activity" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
+                            <SortHead label={t("attempt.left")} sortKey="left" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
                             <SortHead label={t("marks.mark")} sortKey="mark" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
                           </TableRow>
                         </TableHeader>
@@ -305,6 +320,9 @@ function LiveMonitorContent() {
                                     {labelFromStatus(entry.status, t)}
                                   </Badge>
                                 </TableCell>
+                                <TableCell class="text-center tabular-nums">
+                                  {attemptLabel(entry)}
+                                </TableCell>
                                 <TableCell class="min-w-32 tabular-nums">
                                   <div class="flex items-center justify-center gap-2">
                                     <span>{entry.answered}/{m.question_count}</span>
@@ -319,7 +337,7 @@ function LiveMonitorContent() {
                                   </span>
                                 </TableCell>
                                 <TableCell class="text-center text-xs">
-                                  {entry.last_activity ? formatDateTime(entry.last_activity, locale()) : "—"}
+                                  {entry.left_at ? formatDateTime(entry.left_at, locale()) : "—"}
                                 </TableCell>
                                 <TableCell class="text-center font-semibold tabular-nums">
                                   {entry.mark != null ? entry.mark : "—"}

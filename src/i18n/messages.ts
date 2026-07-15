@@ -206,6 +206,8 @@ export type MessageKey =
   | "attempt.finish"
   | "attempt.status"
   | "attempt.remaining"
+  | "attempt.attempt"
+  | "attempt.left"
   | "attempt.progress"
   | "attempt.deadline"
   | "attempt.notStarted"
@@ -219,6 +221,7 @@ export type MessageKey =
   | "attempt.expired"
   | "attempt.closed"
   | "attempt.inProgress"
+  | "attempt.absent"
   | "exams.helpTitle"
   | "exams.helpBody"
   | "admin.title"
@@ -266,6 +269,7 @@ export type MessageKey =
   | "form.contentMax"
   | "form.descriptionMax"
   | "form.timeOrder"
+  | "form.timePast"
   | "form.weightRange"
   | "form.markRange"
   | "events.markedBy"
@@ -568,6 +572,8 @@ const en: Dict = {
   "attempt.finish": "Finish exam",
   "attempt.status": "Status",
   "attempt.remaining": "Remaining",
+  "attempt.attempt": "Attempt",
+  "attempt.left": "Left",
   "attempt.progress": "Progress",
   "attempt.deadline": "Deadline",
   "attempt.notStarted": "Start the scheduled exam to see questions.",
@@ -581,6 +587,7 @@ const en: Dict = {
   "attempt.expired": "Expired",
   "attempt.closed": "This attempt is closed. Answers are read-only.",
   "attempt.inProgress": "In progress",
+  "attempt.absent": "No-show",
   "exams.helpTitle": "About exams",
   "exams.helpBody":
     "Exams belong to a course. Teachers add them from the course page with a kind; weighting is defined by the exam kind. Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
@@ -639,6 +646,7 @@ const en: Dict = {
   "form.contentMax": "Content must be at most 10 000 characters",
   "form.descriptionMax": "Description must be at most 2 000 characters",
   "form.timeOrder": "End time must be on or after start time",
+  "form.timePast": "Start and end times must be in the future",
   "form.weightRange": "Weight must be an integer from 1 to 100",
   "form.markRange": "Mark must be an integer from 0 to 100",
   "events.markedBy": "Marked by",
@@ -940,6 +948,8 @@ const tr: Dict = {
   "attempt.finish": "Sınavı bitir",
   "attempt.status": "Durum",
   "attempt.remaining": "Kalan süre",
+  "attempt.attempt": "Deneme",
+  "attempt.left": "Çıkış",
   "attempt.progress": "İlerleme",
   "attempt.deadline": "Bitiş zamanı",
   "attempt.notStarted": "Soruları görmek için zamanlı sınavı başlat.",
@@ -953,6 +963,7 @@ const tr: Dict = {
   "attempt.expired": "Süresi doldu",
   "attempt.closed": "Bu oturum kapalı. Cevaplar salt okunur.",
   "attempt.inProgress": "Devam ediyor",
+  "attempt.absent": "Katılmadı",
   "exams.helpTitle": "Sınavlar hakkında",
   "exams.helpBody":
     "Sınavlar bir derse aittir. Öğretmenler ders sayfasından tür seçerek ekler; ağırlık sınav türünde tanımlıdır. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",
@@ -1011,6 +1022,7 @@ const tr: Dict = {
   "form.contentMax": "İçerik en fazla 10 000 karakter olmalı",
   "form.descriptionMax": "Açıklama en fazla 2 000 karakter olmalı",
   "form.timeOrder": "Bitiş, başlangıçtan önce olamaz",
+  "form.timePast": "Başlangıç ve bitiş gelecekte olmalı",
   "form.weightRange": "Ağırlık 1–100 arası tam sayı olmalı",
   "form.markRange": "Not 0–100 arası tam sayı olmalı",
   "events.markedBy": "İşaretleyen",

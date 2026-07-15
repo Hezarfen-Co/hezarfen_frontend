@@ -149,6 +149,7 @@ export type MarkEntry = {
   type_weight?: number | null;
   exam_type_weight?: number | null;
   mark: number;
+  grade?: string | null;
   graded_by: string;
 };
 
@@ -156,12 +157,14 @@ export type CourseMarks = {
   course: Course;
   results: MarkEntry[];
   average: number | null;
+  average_grade?: string | null;
 };
 
 export type MarksReport = {
   user: string;
   courses: CourseMarks[];
   overall_average: number | null;
+  overall_grade?: string | null;
 };
 
 export type ExamStatistics = {
@@ -195,6 +198,7 @@ export type LiveRosterEntry = {
   status: AttemptStatus | "not_started" | "absent";
   attempt?: number | null;
   attempts_used?: number | null;
+  max_attempts?: number | null;
   deadline: number | null;
   remaining_ms: number | null;
   left_at?: number | null;

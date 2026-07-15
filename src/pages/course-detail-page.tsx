@@ -10,6 +10,7 @@ import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
 import { postCourseExam } from "@/api/postCourseExam";
 import { formatApiError } from "@/api/client";
+import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm } from "@/components/exams/exam-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -341,9 +342,8 @@ function CourseDetailContent() {
                     <For each={exams() ?? []}>
                       {(exam) => (
                         <li>
-                          <Link
-                            to="/exams/$id"
-                            params={{ id: exam.id }}
+                          <ExamLink
+                            examId={exam.id}
                             class="group flex items-start justify-between gap-3 rounded-lg border border-border/70 bg-background/60 px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/35 hover:shadow-sm"
                           >
                             <div class="min-w-0 space-y-2">
@@ -362,7 +362,7 @@ function CourseDetailContent() {
                                 </Badge>
                               </div>
                             </div>
-                          </Link>
+                          </ExamLink>
                         </li>
                       )}
                     </For>

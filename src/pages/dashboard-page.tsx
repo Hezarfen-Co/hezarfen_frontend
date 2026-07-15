@@ -7,6 +7,7 @@ import { getMyMarks } from "@/api/getMyMarks";
 import { getNotes } from "@/api/getNotes";
 import { formatApiError } from "@/api/client";
 import type { Event, Exam, Note } from "@/api/types";
+import { ExamLink } from "@/components/exams/exam-link";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -247,9 +248,8 @@ function DashboardContent() {
                 <For each={previewExams()}>
                   {(exam: Exam) => (
                     <li>
-                      <Link
-                        to="/exams/$id"
-                        params={{ id: exam.id }}
+                      <ExamLink
+                        examId={exam.id}
                         class="flex min-h-[3.5rem] items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/25 px-3 py-2.5 transition-colors hover:border-primary/35 hover:bg-primary/[0.05]"
                       >
                         <div class="min-w-0">
@@ -261,7 +261,7 @@ function DashboardContent() {
                         <Badge variant="outline" class="shrink-0 capitalize">
                             {examKindLabel(String(exam.kind), t)}
                           </Badge>
-                        </Link>
+                        </ExamLink>
                       </li>
                     )}
                   </For>

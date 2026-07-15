@@ -2,12 +2,18 @@ import { For, Show } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import type { MarksReport } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
+import { ExamLink } from "@/components/exams/exam-link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
 import { useT } from "@/stores/preferences-context";
 
 const round = (n: number) => (Math.round(n * 100) / 100).toString();
+
+function markWithGrade(mark: number | null, grade?: string | null) {
+  if (mark == null) return grade ?? "—";
+  return grade ? `${round(mark)} / ${grade}` : round(mark);
+}
 
 export function MarksReportView(props: { report: MarksReport }) {
   const t = useT();
@@ -24,7 +30,7 @@ export function MarksReportView(props: { report: MarksReport }) {
         <div class="surface-card flex flex-wrap items-center justify-between gap-3 p-5">
           <span class="text-sm font-medium text-muted-foreground">{t("marks.overall")}</span>
           <p class="font-display text-3xl font-semibold tabular-nums">
-            {props.report.overall_average == null ? "—" : round(props.report.overall_average)}
+            {markWithGrade(props.report.overall_average, props.report.overall_grade)}
             <Show when={props.report.overall_average != null}>
               <span class="text-base font-medium text-muted-foreground"> / 100</span>
             </Show>
@@ -41,7 +47,7 @@ export function MarksReportView(props: { report: MarksReport }) {
                   </Link>
                 </h3>
                 <Badge variant="secondary" class="rounded-full px-3 py-1" title={t("marks.courseAvg")}>
-                  {block.average == null ? "—" : round(block.average)}
+                  {markWithGrade(block.average, block.average_grade)}
                 </Badge>
               </header>
 
@@ -68,9 +74,9 @@ export function MarksReportView(props: { report: MarksReport }) {
                         {(entry) => (
                           <TableRow>
                             <TableCell>
-                              <Link to="/exams/$id" params={{ id: entry.exam }} class="font-medium hover:underline">
+                              <ExamLink examId={entry.exam} class="font-medium hover:underline">
                                 {entry.title}
-                              </Link>
+                              </ExamLink>
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline" class="rounded-full capitalize">
@@ -78,7 +84,7 @@ export function MarksReportView(props: { report: MarksReport }) {
                               </Badge>
                             </TableCell>
                             <TableCell class="tabular-nums">{examWeight(entry) ?? "—"}</TableCell>
-                            <TableCell class="font-semibold tabular-nums">{entry.mark}</TableCell>
+                            <TableCell class="font-semibold tabular-nums">{markWithGrade(entry.mark, entry.grade)}</TableCell>
                           </TableRow>
                         )}
                       </For>

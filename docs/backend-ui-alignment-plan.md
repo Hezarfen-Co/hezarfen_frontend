@@ -28,12 +28,16 @@ This plan covers the remaining backend features that need simple, low-complexity
 - Run `bun run build` before every commit.
 - Commit messages must follow repository rules and require explicit user approval.
 
+## Status
+
+- Commit 1 complete in UI: live monitor shows absent count/status, attempt usage, and left timestamp; exam room summary shows attempt usage and left timestamp.
+- Commit 2 complete in UI: report card types accept grade-band fields and marks show `mark / grade` when backend sends labels.
+- Commits 3-7 remain.
+
 ## Remaining Commit Order
 
 | Commit | Scope | Priority |
 | --- | --- | --- |
-| 1 | Live monitor + exam room attempt fields | High |
-| 2 | Marks grade-band labels | High |
 | 3 | Settings management page | High |
 | 4 | Terms API + course term select | Medium |
 | 5 | Course sessions + roll call | Medium |
@@ -51,6 +55,7 @@ Expose backend attempt, no-show, and room-left fields without making the UI comp
 - `LiveRosterEntry.status`: includes `absent`.
 - `LiveRosterEntry.attempt`.
 - `LiveRosterEntry.attempts_used`.
+- `LiveRosterEntry.max_attempts`.
 - `LiveRosterEntry.left_at`.
 - `LiveMonitor.counts.absent`.
 - `ExamAttempt.attempt`.
