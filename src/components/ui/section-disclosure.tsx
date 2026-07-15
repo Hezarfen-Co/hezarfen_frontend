@@ -37,6 +37,7 @@ export function SectionDisclosure(props: ParentProps<{
           props.open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
         aria-hidden={!props.open}
+        inert={!props.open ? true : undefined}
       >
         <div class="min-h-0 overflow-hidden">
           <div class={cn("space-y-4 p-4 transition-opacity duration-150 motion-reduce:transition-none", props.open ? "opacity-100" : "opacity-0")}>

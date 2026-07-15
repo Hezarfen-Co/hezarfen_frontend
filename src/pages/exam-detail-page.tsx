@@ -26,6 +26,7 @@ import { DataTableFrame } from "@/components/ui/data-table";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import {
   Table,
   TableBody,
@@ -110,6 +111,15 @@ function ExamDetailContent() {
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
   const [sheetUserId, setSheetUserId] = createSignal<string | null>(null);
+  const [openSections, setOpenSections] = createSignal({
+    schedule: true,
+    ownResult: false,
+    answerSheet: false,
+    statistics: false,
+    questions: false,
+    grade: false,
+    results: false,
+  });
 
   const examStatus = () => {
     const e = exam();
@@ -167,6 +177,9 @@ function ExamDetailContent() {
     } finally {
       setPending(false);
     }
+  };
+  const toggleSection = (section: "schedule" | "ownResult" | "answerSheet" | "statistics" | "questions" | "grade" | "results") => {
+    setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
 
   return (
@@ -310,8 +323,12 @@ function ExamDetailContent() {
               />
             </FormDialog>
 
-            <section class="data-shell space-y-4 p-4">
-              <h2 class="font-display text-lg font-semibold">{t("exams.schedule")}</h2>
+            <SectionDisclosure
+              open={openSections().schedule}
+              onToggle={() => toggleSection("schedule")}
+              title={t("exams.schedule")}
+              description={examModeLabel(ex().mode)}
+            >
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div class="rounded-lg border bg-muted/25 p-3">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
@@ -330,33 +347,33 @@ function ExamDetailContent() {
                   <p class="mono mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
                 </div>
               </div>
-            </section>
+            </SectionDisclosure>
 
             <Show when={!isTeacherPlus() && !isScheduled()}>
-              <section class="data-shell p-4">
-                <h2 class="font-display text-lg font-semibold">{t("exams.yourResult")}</h2>
-                <div class="mt-4">
-                  <Suspense fallback={<PageSpinner />}>
-                    <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
-                      {(r) => <ExamResultBadge mark={r().mark} />}
-                    </Show>
-                  </Suspense>
-                </div>
-              </section>
+              <SectionDisclosure open={openSections().ownResult} onToggle={() => toggleSection("ownResult")} title={t("exams.yourResult")}>
+                <Suspense fallback={<PageSpinner />}>
+                  <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
+                    {(r) => <ExamResultBadge mark={r().mark} />}
+                  </Show>
+                </Suspense>
+              </SectionDisclosure>
             </Show>
 
             <Show when={isTeacherPlus() && sheetUserId()}>
-              <section class="data-shell space-y-4 p-4">
-                <h2 class="font-display text-lg font-semibold">{t("exams.answerSheet")} — {sheetUserId()}</h2>
+              <SectionDisclosure
+                open={openSections().answerSheet}
+                onToggle={() => toggleSection("answerSheet")}
+                title={t("exams.answerSheet")}
+                description={sheetUserId() ?? undefined}
+              >
                 <Suspense fallback={<PageSpinner />}>
                   <AnswerSheetView examId={id()} userId={sheetUserId()!} />
                 </Suspense>
-              </section>
+              </SectionDisclosure>
             </Show>
 
             <Show when={isTeacherPlus()}>
-              <section class="data-shell space-y-4 p-4">
-                <h2 class="font-display text-lg font-semibold">{t("exams.statistics")}</h2>
+              <SectionDisclosure open={openSections().statistics} onToggle={() => toggleSection("statistics")} title={t("exams.statistics")}>
                 <Suspense fallback={<PageSpinner />}>
                   <Show when={stats()}>
                     {(s) => (
@@ -381,13 +398,18 @@ function ExamDetailContent() {
                     )}
                   </Show>
                 </Suspense>
-              </section>
+              </SectionDisclosure>
 
-              <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} />
+              <SectionDisclosure
+                open={openSections().questions}
+                onToggle={() => toggleSection("questions")}
+                title={t("questions.title")}
+              >
+                <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} embedded />
+              </SectionDisclosure>
 
               <Show when={!isFinished()}>
-                <section class="data-shell space-y-4 p-4">
-                  <h2 class="font-display text-lg font-semibold">{t("exams.gradeStudent")}</h2>
+                <SectionDisclosure open={openSections().grade} onToggle={() => toggleSection("grade")} title={t("exams.gradeStudent")}>
                   <GradeForm
                     students={gradeStudents()}
                     onSubmit={async (values) => {
@@ -395,11 +417,16 @@ function ExamDetailContent() {
                       await refetchResults();
                     }}
                   />
-                </section>
+                </SectionDisclosure>
               </Show>
 
-              <section class="data-shell space-y-4 p-4">
-                <h2 class="font-display text-lg font-semibold">{t("exams.results")}</h2>
+              <SectionDisclosure
+                open={openSections().results}
+                onToggle={() => toggleSection("results")}
+                title={t("exams.results")}
+                description={`${(results() ?? []).length}`}
+                meta={<Badge variant="secondary" class="mono rounded-sm px-3 py-1">{(results() ?? []).length}</Badge>}
+              >
                 <Suspense fallback={<PageSpinner />}>
                   <Show
                     when={(results() ?? []).length > 0}
@@ -467,7 +494,7 @@ function ExamDetailContent() {
                     </DataTableFrame>
                   </Show>
                 </Suspense>
-              </section>
+              </SectionDisclosure>
             </Show>
 
             {error() && (
