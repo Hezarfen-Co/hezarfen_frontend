@@ -1,5 +1,5 @@
-import { For, Show, Suspense, createEffect, createResource, createSignal, onCleanup, untrack } from "solid-js";
-import { Link, useParams } from "@tanstack/solid-router";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup, untrack } from "solid-js";
+import { Link, useLocation, useParams } from "@tanstack/solid-router";
 import { getExamLive } from "@/api/getExamLive";
 import { getExamLiveStreamUrl } from "@/api/getExamLiveStreamUrl";
 import { getExamById } from "@/api/getExamById";
@@ -95,11 +95,15 @@ function attemptLabel(entry: LiveRosterEntry): string {
 }
 
 function LiveMonitorContent() {
+  const location = useLocation();
   const params = useParams({ from: "/exams/$id/live" });
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
-  const id = () => params().id;
+  const id = createMemo(() => {
+    location();
+    return params().id;
+  });
 
   const [exam] = createResource(id, (eid) => getExamById(eid));
   const [snapshot, setSnapshot] = createSignal<LiveMonitor | null>(null);

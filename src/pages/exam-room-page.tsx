@@ -1,5 +1,5 @@
-import { Link, useParams } from "@tanstack/solid-router";
-import { Show, Suspense, createResource } from "solid-js";
+import { Link, useLocation, useParams } from "@tanstack/solid-router";
+import { Show, Suspense, createMemo, createResource } from "solid-js";
 import { getExamById } from "@/api/getExamById";
 import { getMyCourses } from "@/api/getMyCourses";
 import { formatApiError } from "@/api/client";
@@ -22,10 +22,14 @@ export default function ExamRoomPage() {
 }
 
 function ExamRoomContent() {
+  const location = useLocation();
   const params = useParams({ from: "/exam-room/$id" });
   const auth = useAuth();
   const t = useT();
-  const id = () => params().id;
+  const id = createMemo(() => {
+    location();
+    return params().id;
+  });
   const [exam] = createResource(id, (examId) => getExamById(examId));
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),

@@ -1,5 +1,5 @@
-import { Link, useNavigate, useParams } from "@tanstack/solid-router";
-import { Show, Suspense, createResource, createSignal } from "solid-js";
+import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { deleteEventAttendanceByUserId } from "@/api/deleteEventAttendanceByUserId";
 import { deleteEventById } from "@/api/deleteEventById";
 import { getEventAttendance } from "@/api/getEventAttendance";
@@ -34,12 +34,16 @@ export default function EventDetailPage() {
 }
 
 function EventDetailContent() {
+  const location = useLocation();
   const params = useParams({ from: "/events/$id" });
   const auth = useAuth();
   const navigate = useNavigate();
-  const t = useT();
   const { locale } = usePreferences();
-  const id = () => params().id;
+  const t = useT();
+  const id = createMemo(() => {
+    location();
+    return params().id;
+  });
 
   const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
   const [attendance, { refetch: refetchAttendance }] = createResource(id, (eventId) =>

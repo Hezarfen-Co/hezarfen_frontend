@@ -1,5 +1,5 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
-import { Link, useNavigate, useParams } from "@tanstack/solid-router";
+import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import { deleteCourseById } from "@/api/deleteCourseById";
 import { deleteCourseEnrollmentByUserId } from "@/api/deleteCourseEnrollmentByUserId";
 import { getCourseById } from "@/api/getCourseById";
@@ -53,11 +53,15 @@ export default function CourseDetailPage() {
 }
 
 function CourseDetailContent() {
+  const location = useLocation();
   const params = useParams({ from: "/courses/$id" });
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
-  const id = () => params().id;
+  const id = createMemo(() => {
+    location();
+    return params().id;
+  });
 
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
   const [terms] = createResource(() => getTerms());
