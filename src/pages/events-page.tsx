@@ -109,12 +109,12 @@ function EventsContent() {
               const body: {
                 title: string;
                 description?: string;
-                starts_at?: number | null;
-                ends_at?: number | null;
+                starts_at?: number;
+                ends_at?: number;
               } = { title: values.title };
               if (values.description) body.description = values.description;
-              if (values.starts_at !== undefined) body.starts_at = values.starts_at;
-              if (values.ends_at !== undefined) body.ends_at = values.ends_at;
+              if (values.starts_at != null) body.starts_at = values.starts_at;
+              if (values.ends_at != null) body.ends_at = values.ends_at;
               await postEvent(body);
               setShowForm(false);
               await refetch();
