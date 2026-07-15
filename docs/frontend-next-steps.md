@@ -68,6 +68,7 @@ Started fixes:
 - Exams page create action appears only when the teacher/manager has at least one manageable course to receive the new exam.
 - Exam create course picker lists only manageable courses, not every visible course.
 - Exam detail defers teacher-only heavy data: statistics load when opened, questions mount when opened, and results/roster load when the results or grade workflow needs them.
+- Event detail defers the teacher-only attendance roster until the attendance disclosure is opened.
 
 ## Priority 2: Pagination And Request Audit
 
@@ -113,6 +114,7 @@ Current classification:
 - `/courses/:id` exams: unpaginated `GET /courses/{id}/exams`; course-scoped and accepted short-term.
 - `/courses/:id` sessions: unpaginated `GET /courses/{id}/sessions`, deferred until sessions section or create panel is opened. Course-scoped and accepted short-term.
 - `/courses/:id` roster: unpaginated `GET /courses/{id}/enrollments`, course-management only. Accepted for normal class sizes.
+- `/events/:id` attendance: unpaginated `GET /events/{id}/attendance`, teacher+ only and deferred until the attendance disclosure opens. Accepted for event-scale rosters.
 - `/exams/:id` results: unpaginated `GET /exams/{id}/results`, deferred until results/grade/answer-sheet workflow needs it. Accepted for normal class sizes.
 - `/exams/:id` questions: unpaginated `GET /exams/{id}/questions`, deferred until questions section is opened. Accepted for exam-scale data.
 - `/exams/:id/live`: client-paginated/sorted live roster over backend snapshot/SSE. Accepted because monitor snapshot is role-gated and exam-scoped.
@@ -145,12 +147,6 @@ Known follow-ups:
 - This is acceptable while the question form stays small.
 - Revisit as a `SidePanel` if question authoring grows or needs more vertical space.
 
-### Event Detail Optimization
-
-- Event detail still fetches attendance on initial page load.
-- Consider wrapping attendance in `SectionDisclosure` so the attendance list fetches only when opened.
-- Keep self-attendance visible if it remains a primary action.
-
 ### Schedule Validation
 
 - Lesson session creation currently validates date shape and end-after-start in the client; backend still enforces not-in-the-past with server time.
@@ -174,7 +170,7 @@ Known follow-ups:
 - `/courses`: max 2-4 initial API calls depending on role and lookup needs.
 - `/courses/:id`: course detail may keep opened section state mounted; avoid fetching large hidden data unless the section is opened or needed for header metadata.
 - `/exams/:id`: exam detail may keep disclosure content mounted to preserve local state; defer heavy section data where practical.
-- `/events/:id`: consider lazy-loading attendance if the route feels heavy.
+- `/events/:id`: teacher-only attendance is lazy-loaded behind the attendance disclosure; keep self-attendance visible as a primary action.
 - Dashboard should avoid broad role-specific requests unless that role actually needs global scope.
 - Settings-dependent controls should share the cached settings request.
 - Paginated tables should prefer server-side pagination when backend support exists.

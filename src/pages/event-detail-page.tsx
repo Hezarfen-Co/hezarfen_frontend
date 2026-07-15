@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { formatDateTime } from "@/lib/format";
@@ -45,18 +46,21 @@ function EventDetailContent() {
     return params().id;
   });
 
-  const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
-  const [attendance, { refetch: refetchAttendance }] = createResource(
-    () => (hasMinRole(auth.user()?.role, "teacher") ? id() : null),
-    async (eventId) => (eventId ? getEventAttendance(eventId) : []),
-  );
-
   const [status, setStatus] = createSignal<AttendanceStatus>("present");
   const [otherUserId, setOtherUserId] = createSignal("");
   const [editing, setEditing] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
+  const [attendanceOpen, setAttendanceOpen] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+
+  const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
+
+  const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
+  const [attendance, { refetch: refetchAttendance }] = createResource(
+    () => (isTeacherPlus() && attendanceOpen() ? id() : null),
+    async (eventId) => (eventId ? getEventAttendance(eventId) : []),
+  );
 
   const canManage = () => {
     const e = event();
@@ -64,8 +68,6 @@ function EventDetailContent() {
     if (!e || !u) return false;
     return e.creator === u.id || hasMinRole(u.role, "manager");
   };
-  const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
-
   const wrap = async (fn: () => Promise<void>) => {
     setError("");
     setPending(true);
@@ -198,7 +200,7 @@ function EventDetailContent() {
                     onClick={() =>
                       void wrap(async () => {
                         await postEventAttendance(id(), { status: status() });
-                        if (isTeacherPlus()) await refetchAttendance();
+                        if (attendanceOpen()) await refetchAttendance();
                       })
                     }
                   >
@@ -243,7 +245,7 @@ function EventDetailContent() {
                             user_id: uid,
                           });
                           setOtherUserId("");
-                          await refetchAttendance();
+                          if (attendanceOpen()) await refetchAttendance();
                         })
                       }
                     >
@@ -259,11 +261,12 @@ function EventDetailContent() {
             )}
 
             <Show when={isTeacherPlus()}>
-              <section class="data-shell space-y-4 p-4">
-                <div>
-                  <h2 class="font-display text-lg font-semibold">{t("events.attendance")}</h2>
-                  <p class="mt-1 text-sm text-muted-foreground">{t("events.markedBy")}</p>
-                </div>
+              <SectionDisclosure
+                open={attendanceOpen()}
+                onToggle={() => setAttendanceOpen((open) => !open)}
+                title={t("events.attendance")}
+                description={t("events.markedBy")}
+              >
                 <Suspense fallback={<PageSpinner />}>
                   <Show when={attendance()}>
                     {(rows) => (
@@ -281,7 +284,7 @@ function EventDetailContent() {
                     )}
                   </Show>
                 </Suspense>
-              </section>
+              </SectionDisclosure>
             </Show>
           </div>
         )}
