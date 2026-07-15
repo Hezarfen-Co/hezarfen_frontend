@@ -208,10 +208,10 @@ function ExamDetailContent() {
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
             <div class="space-y-2">
-              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              <div class="detail-breadcrumb">
                 <span>{t("nav.group.classes")}</span>
                 <span>/</span>
-                <Link to="/exams" class="hover:text-foreground">{t("exams.title")}</Link>
+                <Link to="/exams">{t("exams.title")}</Link>
                 <span>/</span>
                 <span class="truncate">{ex().title}</span>
               </div>
@@ -221,7 +221,7 @@ function ExamDetailContent() {
                 title={ex().title}
                 description={ex().description || "—"}
                 actions={
-                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-card p-1 shadow-sm sm:w-auto">
+                  <div class="detail-action-group">
                   <Link to="/exams">
                     <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
                       <IconChevronLeft class="h-4 w-4" />
@@ -245,7 +245,7 @@ function ExamDetailContent() {
                     </Link>
                   </Show>
                   <Show when={canManage()}>
-                    <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
+                    <div class="detail-action-divider">
                       <Button
                         type="button"
                         variant="outline"
@@ -341,19 +341,19 @@ function ExamDetailContent() {
               description={t("exams.details")}
             >
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-lg border bg-muted/25 p-3">
+                <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
                   <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
                 </div>
-                <div class="rounded-lg border bg-muted/25 p-3">
+                <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</p>
                   <p class="mono mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
                 </div>
-                <div class="rounded-lg border bg-muted/25 p-3">
+                <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.ends")}</p>
                   <p class="mono mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
                 </div>
-                <div class="rounded-lg border bg-muted/25 p-3">
+                <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.durationMinutes")}</p>
                   <p class="mono mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
                 </div>
@@ -394,19 +394,19 @@ function ExamDetailContent() {
                   <Show when={stats()}>
                     {(s) => (
                       <div class="grid gap-3 text-sm sm:grid-cols-4">
-                        <div class="rounded-lg border bg-muted/25 p-3">
+                        <div class="detail-metric-card">
                           <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.graded")}</p>
                           <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().graded}</p>
                         </div>
-                        <div class="rounded-lg border bg-muted/25 p-3">
+                        <div class="detail-metric-card">
                           <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.average")}</p>
                           <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
                         </div>
-                        <div class="rounded-lg border bg-muted/25 p-3">
+                        <div class="detail-metric-card">
                           <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.min")}</p>
                           <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
                         </div>
-                        <div class="rounded-lg border bg-muted/25 p-3">
+                        <div class="detail-metric-card">
                           <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.max")}</p>
                           <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
                         </div>

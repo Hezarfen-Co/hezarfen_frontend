@@ -156,6 +156,26 @@
     background-color: hsl(var(--muted) / 0.28);
   }
 
+  .detail-breadcrumb {
+    @apply flex flex-wrap items-center gap-1 text-xs text-muted-foreground;
+  }
+
+  .detail-breadcrumb a {
+    @apply transition-colors hover:text-foreground;
+  }
+
+  .detail-action-group {
+    @apply flex w-full flex-wrap items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-sm sm:w-auto;
+  }
+
+  .detail-action-divider {
+    @apply flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0;
+  }
+
+  .detail-metric-card {
+    @apply rounded-lg border border-border bg-muted/25 p-3;
+  }
+
   .side-panel-body form {
     @apply space-y-5 pb-5;
   }

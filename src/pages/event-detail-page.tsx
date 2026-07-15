@@ -93,10 +93,10 @@ function EventDetailContent() {
         {(ev) => (
           <div class="space-y-6">
             <div class="space-y-2">
-              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              <div class="detail-breadcrumb">
                 <span>{t("nav.group.classes")}</span>
                 <span>/</span>
-                <Link to="/events" class="hover:text-foreground">{t("events.title")}</Link>
+                <Link to="/events">{t("events.title")}</Link>
                 <span>/</span>
                 <span class="truncate">{ev().title}</span>
               </div>
@@ -106,7 +106,7 @@ function EventDetailContent() {
                 title={ev().title}
                 description={`${formatDateTime(ev().starts_at, locale())} → ${formatDateTime(ev().ends_at, locale())}`}
                 actions={
-                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-card p-1 shadow-sm sm:w-auto">
+                  <div class="detail-action-group">
                   <Link to="/events">
                     <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
                       <IconChevronLeft class="h-4 w-4" />
@@ -114,7 +114,7 @@ function EventDetailContent() {
                     </Button>
                   </Link>
                   <Show when={canManage()}>
-                    <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
+                    <div class="detail-action-divider">
                       <Button
                         type="button"
                         variant="outline"

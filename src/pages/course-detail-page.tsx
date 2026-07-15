@@ -163,10 +163,10 @@ function CourseDetailContent() {
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
             <div class="space-y-2">
-              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              <div class="detail-breadcrumb">
                 <span>{t("nav.group.classes")}</span>
                 <span>/</span>
-                <Link to="/courses" class="hover:text-foreground">{t("courses.title")}</Link>
+                <Link to="/courses">{t("courses.title")}</Link>
                 <span>/</span>
                 <span class="truncate">{c().title}</span>
               </div>
@@ -176,7 +176,7 @@ function CourseDetailContent() {
                 title={c().title}
                 description={c().description || undefined}
                 actions={
-                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-card p-1 shadow-sm sm:w-auto">
+                  <div class="detail-action-group">
                     <Link to="/courses">
                       <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
@@ -184,7 +184,7 @@ function CourseDetailContent() {
                       </Button>
                     </Link>
                     <Show when={canManage()}>
-                      <div class="flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0">
+                      <div class="detail-action-divider">
                         <Button type="button" variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={startEdit}>
                           <IconEdit class="h-4 w-4" />
                           {t("common.edit")}
@@ -340,7 +340,7 @@ function CourseDetailContent() {
             )}
 
             <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div class="data-shell p-4">
+              <div class="detail-metric-card">
                 <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                   {t("courses.exams")}
                 </p>
@@ -349,7 +349,7 @@ function CourseDetailContent() {
               </div>
 
               <Show when={isTeacherPlus()}>
-                <div class="data-shell p-4">
+                <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                     {t("courses.roster")}
                   </p>
@@ -358,7 +358,7 @@ function CourseDetailContent() {
                 </div>
               </Show>
 
-              <div class="data-shell p-4">
+              <div class="detail-metric-card">
                 <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                   {t("exams.kind")}
                 </p>
@@ -366,7 +366,7 @@ function CourseDetailContent() {
                 <p class="mt-1 text-xs text-muted-foreground">{t("courses.exams")}</p>
               </div>
 
-              <div class="data-shell p-4">
+              <div class="detail-metric-card">
                 <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                   {t("terms.term")}
                 </p>
