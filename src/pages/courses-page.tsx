@@ -2,6 +2,7 @@ import { For, Show, Suspense, createMemo, createResource, createSignal } from "s
 import { Link } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
 import { getMyCourses } from "@/api/getMyCourses";
+import { getTerms } from "@/api/getTerms";
 import { postCourse } from "@/api/postCourse";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
@@ -11,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -32,11 +34,13 @@ function CoursesContent() {
   const auth = useAuth();
   const t = useT();
   const [courses, { refetch }] = createResource(() => getCourses());
+  const [terms] = createResource(() => getTerms());
   const [mine] = createResource(() => getMyCourses());
   const enrolled = () => new Set((mine() ?? []).map((c) => c.id));
   const [showForm, setShowForm] = createSignal(false);
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
+  const [termId, setTermId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [page, setPage] = createSignal(0);
@@ -58,9 +62,11 @@ function CoursesContent() {
       await postCourse({
         title: title().trim(),
         description: description().trim() || undefined,
+        term_id: termId() || null,
       });
       setTitle("");
       setDescription("");
+      setTermId("");
       setShowForm(false);
       await refetch();
     } catch (err) {
@@ -108,6 +114,13 @@ function CoursesContent() {
               onInput={(e) => setDescription(e.currentTarget.value)}
             />
           </div>
+          <div class="space-y-1.5">
+            <Label for="course-term">{t("terms.term")}</Label>
+            <Select id="course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
+              <option value="">{t("terms.unassigned")}</option>
+              <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+            </Select>
+          </div>
           {error() && <p class="text-sm text-destructive">{error()}</p>}
           <Button type="submit" disabled={pending()}>
             {t("common.create")}
@@ -145,6 +158,13 @@ function CoursesContent() {
                           </div>
                         </div>
                         <div class="flex flex-1 flex-col p-4">
+                          <Show when={course.term_id}>
+                            {(tid) => (
+                              <Badge variant="outline" class="mb-3 w-fit rounded-full">
+                                {terms()?.find((term) => term.id === tid())?.name ?? t("terms.term")}
+                              </Badge>
+                            )}
+                          </Show>
                           <p class="line-clamp-3 flex-1 text-sm text-muted-foreground">
                             {course.description || "—"}
                           </p>

@@ -35,6 +35,7 @@ const MAIN_ITEMS: NavItem[] = [
   { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
   { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
   { to: "/management/settings", labelKey: "nav.settings", Icon: IconEdit, minRole: "manager" },
+  { to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendar, minRole: "manager" },
   { to: "/admin/users", labelKey: "nav.users", Icon: IconUsers, minRole: "admin" },
 ];
 

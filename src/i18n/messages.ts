@@ -12,6 +12,7 @@ export type MessageKey =
   | "nav.users"
   | "nav.studentMarks"
   | "nav.settings"
+  | "nav.terms"
   | "nav.guide"
   | "nav.logout"
   | "nav.admin"
@@ -375,7 +376,15 @@ export type MessageKey =
   | "settings.status"
   | "settings.min"
   | "settings.label"
-  | "settings.addRow";
+  | "settings.addRow"
+  | "terms.title"
+  | "terms.subtitle"
+  | "terms.create"
+  | "terms.edit"
+  | "terms.empty"
+  | "terms.term"
+  | "terms.unassigned"
+  | "terms.dateRequired";
 
 type Dict = Record<MessageKey, string>;
 
@@ -391,6 +400,7 @@ const en: Dict = {
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
   "nav.settings": "Settings",
+  "nav.terms": "Terms",
   "nav.guide": "Guide",
   "nav.admin": "Admin",
   "nav.logout": "Log out",
@@ -769,6 +779,14 @@ const en: Dict = {
   "settings.min": "Minimum",
   "settings.label": "Label",
   "settings.addRow": "Add row",
+  "terms.title": "Academic terms",
+  "terms.subtitle": "Manage calendar terms and assign courses to them.",
+  "terms.create": "Create term",
+  "terms.edit": "Edit term",
+  "terms.empty": "No terms yet.",
+  "terms.term": "Term",
+  "terms.unassigned": "Unassigned",
+  "terms.dateRequired": "Start and end dates are required.",
 };
 
 const tr: Dict = {
@@ -783,6 +801,7 @@ const tr: Dict = {
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
   "nav.settings": "Ayarlar",
+  "nav.terms": "Dönemler",
   "nav.guide": "Rehber",
   "nav.admin": "Yönetim",
   "nav.logout": "Çıkış yap",
@@ -1161,6 +1180,14 @@ const tr: Dict = {
   "settings.min": "Alt sınır",
   "settings.label": "Etiket",
   "settings.addRow": "Satır ekle",
+  "terms.title": "Akademik dönemler",
+  "terms.subtitle": "Takvim dönemlerini yönet ve dersleri dönemlere bağla.",
+  "terms.create": "Dönem oluştur",
+  "terms.edit": "Dönemi düzenle",
+  "terms.empty": "Henüz dönem yok.",
+  "terms.term": "Dönem",
+  "terms.unassigned": "Atanmamış",
+  "terms.dateRequired": "Başlangıç ve bitiş tarihi gerekli.",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

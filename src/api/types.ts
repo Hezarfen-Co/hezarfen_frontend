@@ -63,6 +63,13 @@ export type Course = {
   term_id?: string | null;
 };
 
+export type Term = {
+  id: string;
+  name: string;
+  starts_at: number;
+  ends_at: number;
+};
+
 export type Enrollment = {
   id: string;
   course: string;

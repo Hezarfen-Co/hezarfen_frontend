@@ -6,6 +6,7 @@ import { getCourseById } from "@/api/getCourseById";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { getCourseExams } from "@/api/getCourseExams";
 import { getMyCourses } from "@/api/getMyCourses";
+import { getTerms } from "@/api/getTerms";
 import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
 import { postCourseExam } from "@/api/postCourseExam";
@@ -23,6 +24,7 @@ import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { Select } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -55,6 +57,7 @@ function CourseDetailContent() {
   const id = () => params().id;
 
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
+  const [terms] = createResource(() => getTerms());
   const [exams, { refetch: refetchExams }] = createResource(id, (courseId) => getCourseExams(courseId));
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const [roster, { refetch: refetchRoster }] = createResource(
@@ -69,6 +72,7 @@ function CourseDetailContent() {
   const [editing, setEditing] = createSignal(false);
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
+  const [termId, setTermId] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
@@ -121,6 +125,7 @@ function CourseDetailContent() {
     if (!c) return;
     setTitle(c.title);
     setDescription(c.description);
+    setTermId(c.term_id ?? "");
     setEditing(true);
   };
 
@@ -227,6 +232,7 @@ function CourseDetailContent() {
                     await patchCourseById(id(), {
                       title: title().trim(),
                       description: description(),
+                      term_id: termId() || null,
                     });
                     setEditing(false);
                     await refetchCourse();
@@ -251,6 +257,13 @@ function CourseDetailContent() {
                     onInput={(e) => setDescription(e.currentTarget.value)}
                   />
                 </div>
+                <div class="space-y-1.5">
+                  <Label for="edit-course-term">{t("terms.term")}</Label>
+                  <Select id="edit-course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
+                    <option value="">{t("terms.unassigned")}</option>
+                    <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+                  </Select>
+                </div>
                 <div class="flex justify-end">
                   <Button type="submit" class="w-full sm:w-auto" disabled={pending()}>
                     {t("common.update")}
@@ -263,7 +276,7 @@ function CourseDetailContent() {
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
-            <section class="grid gap-3 sm:grid-cols-3">
+            <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div class="surface-card bg-card/80 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {t("courses.exams")}
@@ -288,6 +301,16 @@ function CourseDetailContent() {
                 </p>
                 <p class="mt-2 font-display text-3xl font-semibold tabular-nums">{examKindCount()}</p>
                 <p class="mt-1 text-xs text-muted-foreground">{t("courses.exams")}</p>
+              </div>
+
+              <div class="surface-card bg-card/80 p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t("terms.term")}
+                </p>
+                <p class="mt-2 truncate font-display text-xl font-semibold">
+                  {terms()?.find((term) => term.id === c().term_id)?.name ?? t("terms.unassigned")}
+                </p>
+                <p class="mt-1 text-xs text-muted-foreground">{t("terms.title")}</p>
               </div>
             </section>
 

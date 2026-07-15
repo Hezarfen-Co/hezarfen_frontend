@@ -4,6 +4,7 @@ import type { Course } from "./types";
 export type PatchCourseBody = {
   title?: string | null;
   description?: string | null;
+  term_id?: string | null;
 };
 
 export function patchCourseById(id: string, body: PatchCourseBody): Promise<Course> {

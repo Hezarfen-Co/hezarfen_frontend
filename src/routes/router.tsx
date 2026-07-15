@@ -41,6 +41,7 @@ const ProfilePage = lazyRoute(() => import("@/pages/profile-page"));
 const LiveMonitorPage = lazyRoute(() => import("@/pages/live-monitor-page"));
 const AdminUsersPage = lazyRoute(() => import("@/pages/admin-users-page"));
 const SettingsPage = lazyRoute(() => import("@/pages/settings-page"));
+const TermsPage = lazyRoute(() => import("@/pages/terms-page"));
 const GuidePage = lazyRoute(() => import("@/pages/guide-page"));
 
 function RootComponent() {
@@ -161,6 +162,12 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 });
 
+const termsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/terms",
+  component: TermsPage,
+});
+
 const liveMonitorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/exams/$id/live",
@@ -215,6 +222,7 @@ const routeTree = rootRoute.addChildren([
   marksRoute,
   studentMarksRoute,
   settingsRoute,
+  termsRoute,
   profileRoute,
   adminUsersRoute,
   guideRoute,
