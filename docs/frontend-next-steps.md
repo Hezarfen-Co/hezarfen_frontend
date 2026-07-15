@@ -56,22 +56,15 @@ validation, and list filtering cleanup.
 
 ## Active Backlog
 
-### Known Bugs / Contract Mismatches (P0)
+### Recently fixed (this batch)
 
-| # | Issue | Impact | Side |
-|---|-------|--------|------|
-| 1 | Course term read mismatch: BE `CourseResponse.term`, FE reads `term_id` | Term column/filter always shows "unassigned"; write body `term_id` is correct | FE type fix |
-| 2 | `/marks` and `/attendance` open to all roles (nav + route) | Teachers see "Report card" / "My attendance" — product error; dashboard already correct | FE guard |
-| 3 | No student-only guard (`RouteGuard` only has `minRole`) | Staff can reach personal student pages via direct URL | FE infrastructure |
-
-### Missing BE Endpoints (no FE helper/UI)
-
-| Endpoint | Purpose | Priority |
-|---|---|---|
-| `PATCH /sessions/{id}` | Edit course session | High |
-| `GET /work/{user}` | Manager read another user's work log | High |
-| `PATCH /work/entries/{id}` | Manager correct a closed stint | High |
-| `DELETE /work/entries/{id}` | Manager delete a work entry | High |
+| Item | Fix |
+|---|---|
+| Course term read | FE reads `Course.term` (write still `term_id`) |
+| Student-only pages | `RouteGuard exactRole="student"` + nav `exactRole` + `beforeLoad` on `/marks`, `/attendance` |
+| Session edit | `patchSessionById` + edit SidePanel in course sessions |
+| Manager work log | `/management/staff-work` + get/patch/delete work APIs |
+| Work route guard | `beforeLoad` teacher+ on `/work` |
 
 ### Incomplete Product Features
 
@@ -79,7 +72,7 @@ validation, and list filtering cleanup.
 |---|---|---|---|
 | `allow_rejoin` | Type + body exist | No toggle; form always sends `true` | Deferred |
 | Exam weight badge | BE exam DTO has no weight | Badge never shows; needs weight derived from settings kind map | Needs BE or FE-side resolution |
-| Router `beforeLoad` | — | Missing on `/work`, `/live`, settings, terms; only client-side `RouteGuard` exists | Consistency |
+| Router `beforeLoad` | — | Still missing on live monitor, settings, terms | Consistency |
 | Exam room CTA | — | Visible to manager/admin on detail page; page itself blocks | Minor |
 
 ### Backend-Dependent Follow-Up

@@ -62,7 +62,8 @@ export type Course = {
   creator: string;
   title: string;
   description: string;
-  term_id?: string | null;
+  /** Academic term id from API (`CourseResponse.term`). */
+  term?: string | null;
 };
 
 export type Term = {

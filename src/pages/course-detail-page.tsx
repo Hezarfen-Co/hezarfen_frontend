@@ -142,7 +142,7 @@ function CourseDetailContent() {
     if (!c) return;
     setTitle(c.title);
     setDescription(c.description);
-    setTermId(c.term_id ?? "");
+    setTermId(c.term ?? "");
     setEditing(true);
   };
 
@@ -369,7 +369,7 @@ function CourseDetailContent() {
                   {t("terms.term")}
                 </p>
                 <p class="mono mt-2 truncate text-xl font-semibold">
-                  {terms()?.find((term) => term.id === c().term_id)?.name ?? t("terms.unassigned")}
+                  {terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}
                 </p>
                 <p class="mt-1 text-xs text-muted-foreground">{t("terms.title")}</p>
               </div>

@@ -11,6 +11,7 @@ export type MessageKey =
   | "nav.marks"
   | "nav.attendance"
   | "nav.work"
+  | "nav.staffWork"
   | "nav.users"
   | "nav.studentMarks"
   | "nav.studentAttendance"
@@ -451,6 +452,7 @@ export type MessageKey =
   | "sessions.subtitle"
   | "sessions.topic"
   | "sessions.add"
+  | "sessions.edit"
   | "sessions.empty"
   | "sessions.untitled"
   | "sessions.teacher"
@@ -481,7 +483,16 @@ export type MessageKey =
   | "work.duration"
   | "work.open"
   | "work.closed"
-  | "work.status";
+  | "work.status"
+  | "work.staffTitle"
+  | "work.staffSubtitle"
+  | "work.show"
+  | "work.forUser"
+  | "work.correct"
+  | "work.correctHelp"
+  | "work.cannotEditOpen"
+  | "work.timesRequired"
+  | "work.deleteSummary";
 
 type Dict = Record<MessageKey, string>;
 
@@ -496,6 +507,7 @@ const en: Dict = {
   "nav.marks": "Report card",
   "nav.attendance": "Attendance",
   "nav.work": "Work log",
+  "nav.staffWork": "Staff work",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
@@ -949,6 +961,7 @@ const en: Dict = {
   "sessions.subtitle": "Create lessons and take course roll call.",
   "sessions.topic": "Topic",
   "sessions.add": "Add session",
+  "sessions.edit": "Edit session",
   "sessions.empty": "No lesson sessions yet.",
   "sessions.untitled": "Untitled lesson",
   "sessions.teacher": "Teacher",
@@ -980,6 +993,15 @@ const en: Dict = {
   "work.open": "Open",
   "work.closed": "Closed",
   "work.status": "Status",
+  "work.staffTitle": "Staff work logs",
+  "work.staffSubtitle": "Look up a staff member, correct closed stints, or delete entries.",
+  "work.show": "Show log",
+  "work.forUser": "Log for {user}",
+  "work.correct": "Correct entry",
+  "work.correctHelp": "Only closed stints can be corrected.",
+  "work.cannotEditOpen": "Open stints cannot be corrected. Check out or delete them first.",
+  "work.timesRequired": "Enter check-in and check-out date and time.",
+  "work.deleteSummary": "Delete work entry from {time}?",
 };
 
 const tr: Dict = {
@@ -993,6 +1015,7 @@ const tr: Dict = {
   "nav.marks": "Karnem",
   "nav.attendance": "Yoklama",
   "nav.work": "Mesai",
+  "nav.staffWork": "Personel mesai",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
   "nav.studentAttendance": "Öğrenci yoklaması",
@@ -1446,6 +1469,7 @@ const tr: Dict = {
   "sessions.subtitle": "Ders oluştur ve ders yoklaması al.",
   "sessions.topic": "Konu",
   "sessions.add": "Oturum ekle",
+  "sessions.edit": "Oturumu düzenle",
   "sessions.empty": "Henüz ders oturumu yok.",
   "sessions.untitled": "Konu girilmemiş ders",
   "sessions.teacher": "Öğretmen",
@@ -1477,6 +1501,15 @@ const tr: Dict = {
   "work.open": "Açık",
   "work.closed": "Kapalı",
   "work.status": "Durum",
+  "work.staffTitle": "Personel mesai kayıtları",
+  "work.staffSubtitle": "Personel ara, kapalı mesaileri düzelt veya kayıt sil.",
+  "work.show": "Kaydı göster",
+  "work.forUser": "{user} için kayıtlar",
+  "work.correct": "Kaydı düzelt",
+  "work.correctHelp": "Yalnızca kapalı mesailer düzeltilebilir.",
+  "work.cannotEditOpen": "Açık mesai düzeltilemez. Önce çıkış yapın veya silin.",
+  "work.timesRequired": "Giriş ve çıkış tarih/saatini girin.",
+  "work.deleteSummary": "{time} mesai kaydı silinsin mi?",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

@@ -3,6 +3,7 @@ import { deleteSessionById } from "@/api/deleteSessionById";
 import { getCourseSessions } from "@/api/getCourseSessions";
 import { getSessionAttendance } from "@/api/getSessionAttendance";
 import { getTime } from "@/api/getTime";
+import { patchSessionById } from "@/api/patchSessionById";
 import { postCourseSession } from "@/api/postCourseSession";
 import { postSessionAttendance } from "@/api/postSessionAttendance";
 import { formatApiError } from "@/api/client";
@@ -13,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -39,6 +40,18 @@ function dateInputToMs(date: string, time: string): number | null {
   return d.getTime();
 }
 
+function msToDateInput(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+function msToTimeInput(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 const ROLL_CALL_PAGE_SIZE = 8;
 
 export function CourseSessionsPanel(props: {
@@ -56,6 +69,7 @@ export function CourseSessionsPanel(props: {
     async (courseId) => (courseId ? (await getCourseSessions(courseId)).items : []),
   );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
+  const [editingSession, setEditingSession] = createSignal<CourseSession | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<CourseSession | null>(null);
   const [topic, setTopic] = createSignal("");
   const [startsDate, setStartsDate] = createSignal("");
@@ -66,45 +80,80 @@ export function CourseSessionsPanel(props: {
   const [pending, setPending] = createSignal(false);
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
 
-  const resetCreateForm = () => {
+  const resetForm = () => {
     setTopic("");
     setStartsDate("");
     setStartsTime("");
     setEndsDate("");
     setEndsTime("");
     setError("");
+    setEditingSession(null);
   };
 
-  const createSession = async (e: SubmitEvent) => {
-    e.preventDefault();
+  const startEdit = (session: CourseSession) => {
+    setEditingSession(session);
+    setTopic(session.topic || "");
+    setStartsDate(msToDateInput(session.starts_at));
+    setStartsTime(msToTimeInput(session.starts_at));
+    setEndsDate(session.ends_at != null ? msToDateInput(session.ends_at) : "");
+    setEndsTime(session.ends_at != null ? msToTimeInput(session.ends_at) : "");
     setError("");
+    props.onCreateOpenChange(false);
+  };
+
+  const parseSchedule = () => {
     const starts_at = dateInputToMs(startsDate(), startsTime());
     const ends_at = endsDate().trim() || endsTime().trim() ? dateInputToMs(endsDate(), endsTime()) : null;
     if (starts_at == null) {
       setError(t("sessions.startRequired"));
-      return;
+      return null;
     }
     if ((endsDate().trim() || endsTime().trim()) && ends_at == null) {
       setError(t("sessions.endInvalid"));
-      return;
+      return null;
     }
     if (ends_at != null && ends_at < starts_at) {
       setError(t("form.timeOrder"));
-      return;
+      return null;
     }
-    if (starts_at < (serverTime()?.now ?? Date.now()) || (ends_at != null && ends_at < (serverTime()?.now ?? Date.now()))) {
+    return { starts_at, ends_at };
+  };
+
+  const saveSession = async (e: SubmitEvent) => {
+    e.preventDefault();
+    setError("");
+    const schedule = parseSchedule();
+    if (!schedule) return;
+    const { starts_at, ends_at } = schedule;
+    const current = editingSession();
+    const now = serverTime()?.now ?? Date.now();
+    // Only newly set times must not be past (backend rule).
+    if (!current || starts_at !== current.starts_at) {
+      if (starts_at < now) {
+        setError(t("form.timePast"));
+        return;
+      }
+    }
+    if (ends_at != null && (!current || ends_at !== current.ends_at) && ends_at < now) {
       setError(t("form.timePast"));
       return;
     }
     setPending(true);
     try {
-      const body = {
-        starts_at,
-        ...(topic().trim() ? { topic: topic().trim() } : {}),
-        ...(ends_at != null ? { ends_at } : {}),
-      };
-      await postCourseSession(props.courseId, body);
-      resetCreateForm();
+      if (current) {
+        await patchSessionById(current.id, {
+          topic: topic().trim() || "",
+          starts_at,
+          ends_at,
+        });
+      } else {
+        await postCourseSession(props.courseId, {
+          starts_at,
+          ...(topic().trim() ? { topic: topic().trim() } : {}),
+          ...(ends_at != null ? { ends_at } : {}),
+        });
+      }
+      resetForm();
       props.onCreateOpenChange(false);
       await refetch();
     } catch (err) {
@@ -113,6 +162,8 @@ export function CourseSessionsPanel(props: {
       setPending(false);
     }
   };
+
+  const panelOpen = () => props.createOpen || editingSession() != null;
 
   return (
     <div class="space-y-4">
@@ -144,6 +195,16 @@ export function CourseSessionsPanel(props: {
                           type="button"
                           variant="ghost"
                           size="sm"
+                          class="rounded-lg"
+                          aria-label={t("common.edit")}
+                          onClick={() => startEdit(session)}
+                        >
+                          <IconEdit class="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
                           class="rounded-lg text-destructive hover:text-destructive"
                           aria-label={t("common.delete")}
                           onClick={() => setDeleteTarget(session)}
@@ -161,15 +222,19 @@ export function CourseSessionsPanel(props: {
       </Suspense>
 
       <SidePanel
-        open={props.createOpen}
+        open={panelOpen()}
         onOpenChange={(open) => {
-          props.onCreateOpenChange(open);
-          if (!open) resetCreateForm();
+          if (!open) {
+            props.onCreateOpenChange(false);
+            resetForm();
+          } else if (!editingSession()) {
+            props.onCreateOpenChange(true);
+          }
         }}
-        title={t("sessions.add")}
+        title={editingSession() ? t("sessions.edit") : t("sessions.add")}
         description={t("sessions.subtitle")}
       >
-        <form onSubmit={createSession}>
+        <form class="space-y-4" onSubmit={saveSession}>
           <div class="space-y-1.5">
             <Label for="session-topic">{t("sessions.topic")}</Label>
             <Input id="session-topic" value={topic()} maxlength={200} onInput={(e) => setTopic(e.currentTarget.value)} />
@@ -191,11 +256,19 @@ export function CourseSessionsPanel(props: {
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => props.onCreateOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              class="h-10 rounded-lg"
+              onClick={() => {
+                props.onCreateOpenChange(false);
+                resetForm();
+              }}
+            >
               {t("common.cancel")}
             </Button>
             <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>
-              {t("sessions.add")}
+              {editingSession() ? t("common.update") : t("sessions.add")}
             </Button>
           </div>
         </form>

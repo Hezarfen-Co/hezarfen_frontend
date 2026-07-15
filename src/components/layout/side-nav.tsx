@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
-import { hasMinRole } from "@/lib/roles";
+import { hasExactRole, hasMinRole } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import type { MessageKey } from "@/i18n/messages";
 import type { Role } from "@/api/types";
@@ -34,6 +34,8 @@ type NavItem = {
   labelKey: MessageKey;
   Icon: Component<{ class?: string }>;
   minRole?: Role;
+  /** When set, only this exact role sees the item. */
+  exactRole?: Role;
   exact?: boolean;
 };
 
@@ -51,7 +53,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.students",
     Icon: IconUsers,
     items: [
-      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck },
+      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
     ],
   },
   {
@@ -69,7 +71,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.grades",
     Icon: IconNote,
     items: [
-      { to: "/marks", labelKey: "nav.marks", Icon: IconChart },
+      { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
       { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
     ],
   },
@@ -82,6 +84,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
       { to: "/work", labelKey: "nav.work", Icon: IconReportAnalytics, minRole: "teacher" },
+      { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconReportAnalytics, minRole: "manager" },
     ],
   },
   {
@@ -155,12 +158,19 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
   const auth = useAuth();
   const t = useT();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const itemVisible = (item: NavItem) => {
+    const role = auth.user()?.role;
+    if (item.exactRole) return hasExactRole(role, item.exactRole);
+    if (item.minRole) return hasMinRole(role, item.minRole);
+    return true;
+  };
+
   const visibleGroups = createMemo(() =>
     NAV_GROUPS
       .filter((group) => !group.minRole || hasMinRole(auth.user()?.role, group.minRole))
       .map((group) => ({
         ...group,
-        items: group.items.filter((item) => !item.minRole || hasMinRole(auth.user()?.role, item.minRole)),
+        items: group.items.filter(itemVisible),
       }))
       .filter((group) => group.items.length > 0),
   );

@@ -72,10 +72,10 @@ function CoursesContent() {
     const needle = query().trim().toLocaleLowerCase();
     const selectedTerm = termFilter();
     return items.filter((course) => {
-      if (selectedTerm === "unassigned" && course.term_id) return false;
-      if (selectedTerm !== "all" && selectedTerm !== "unassigned" && course.term_id !== selectedTerm) return false;
+      if (selectedTerm === "unassigned" && course.term) return false;
+      if (selectedTerm !== "all" && selectedTerm !== "unassigned" && course.term !== selectedTerm) return false;
       if (!needle) return true;
-      return [course.title, course.description, course.creator, creatorName(course.creator), termName(course.term_id)]
+      return [course.title, course.description, course.creator, creatorName(course.creator), termName(course.term)]
         .join(" ")
         .toLocaleLowerCase()
         .includes(needle);
@@ -259,7 +259,7 @@ function CoursesContent() {
                           <TableCell class="truncate text-muted-foreground">{course.description || "—"}</TableCell>
                           <TableCell>
                             <Badge variant="outline" class="mono max-w-full rounded-sm text-[11px]">
-                              <span class="truncate">{termName(course.term_id)}</span>
+                              <span class="truncate">{termName(course.term)}</span>
                             </Badge>
                           </TableCell>
                           <TableCell class="truncate text-muted-foreground">{creatorName(course.creator)}</TableCell>

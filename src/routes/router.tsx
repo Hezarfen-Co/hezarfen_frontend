@@ -40,6 +40,7 @@ const StudentMarksPage = lazyRoute(() => import("@/pages/student-marks-page"));
 const AttendancePage = lazyRoute(() => import("@/pages/attendance-page"));
 const StudentAttendancePage = lazyRoute(() => import("@/pages/student-attendance-page"));
 const WorkLogPage = lazyRoute(() => import("@/pages/work-log-page"));
+const StaffWorkPage = lazyRoute(() => import("@/pages/staff-work-page"));
 const ProfilePage = lazyRoute(() => import("@/pages/profile-page"));
 const LiveMonitorPage = lazyRoute(() => import("@/pages/live-monitor-page"));
 const AdminUsersPage = lazyRoute(() => import("@/pages/admin-users-page"));
@@ -136,6 +137,16 @@ const courseDetailRoute = createRoute({
 const marksRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/marks",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (user.role !== "student") throw redirect({ to: "/" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw redirect({ to: "/login" });
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: MarksPage,
 });
 
@@ -162,6 +173,16 @@ const studentMarksRoute = createRoute({
 const attendanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/attendance",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (user.role !== "student") throw redirect({ to: "/" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw redirect({ to: "/login" });
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: AttendancePage,
 });
 
@@ -188,7 +209,33 @@ const studentAttendanceRoute = createRoute({
 const workRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/work",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (!hasMinRole(user.role, "teacher")) throw redirect({ to: "/" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw redirect({ to: "/login" });
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: WorkLogPage,
+});
+
+const staffWorkRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/staff-work",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (!hasMinRole(user.role, "manager")) throw redirect({ to: "/" });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) throw redirect({ to: "/login" });
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
+  component: StaffWorkPage,
 });
 
 const settingsRoute = createRoute({
@@ -259,6 +306,7 @@ const routeTree = rootRoute.addChildren([
   attendanceRoute,
   studentAttendanceRoute,
   workRoute,
+  staffWorkRoute,
   settingsRoute,
   termsRoute,
   profileRoute,
