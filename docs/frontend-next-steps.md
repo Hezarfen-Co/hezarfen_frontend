@@ -1,20 +1,63 @@
 # Frontend Next Steps
 
-This document tracks the remaining frontend work after the backend contract alignment,
-dense table redesign, side-panel rollout, collapsible detail sections, and request-load
+This document tracks the active frontend backlog after backend alignment, dense
+tables, side panels, collapsible detail sections, dashboard work, and table action
 cleanup.
 
 ## Current State
 
-- Backend alignment work is complete for settings, terms, course sessions, attendance reports, work logs, exam attempts, and grade bands.
-- Navigation rules are documented in `docs/navigation-patterns.md`.
-- Shared UI primitives now cover dense tables, data toolbars, side panels, confirm dialogs, date picking, and animated disclosures.
-- Course detail and exam detail use animated disclosures for large sections.
+- Backend alignment is complete for settings, terms, course sessions, attendance reports, work logs, exam attempts, and grade bands.
+- Shared UI primitives cover dense tables, data toolbars, row action menus, side panels, confirm dialogs, date picking, and animated disclosures.
+- Dashboard is role-aware and read-only. Admin sees global course/exam scope; other roles use own/enrolled/related scope where the backend supports it.
+- Table actions use a narrow centered three-dot menu through `TableRowActions`.
+- Dense tables have subtle column separators, fixed action columns, and stable date/number alignment.
+- Course creator display uses a username/display label when available; raw ids are fallback only.
 - Closed disclosure sections do not mount their content, so hidden panels do not fetch data.
 - Settings requests are cached and refreshed after settings patches.
-- The Tabler icon dependency was removed after it caused excessive Vite module requests; sidebar icons now use local SVG wrappers.
+- Sidebar icons use local SVG wrappers to avoid large icon package module graphs.
 
-## Remaining Work
+## Priority 1: Role-Based UI Audit
+
+Audit every route and major page for role-specific UI behavior.
+
+- Student:
+  - sees enrolled courses, related exams, own marks, own attendance, and personal notes.
+  - must not see teacher/manager/admin create, edit, delete, settings, or user-management controls.
+- Teacher:
+  - sees course/exam/event authoring controls where allowed.
+  - sees grading, live monitor, attendance/session tools, and work log where allowed.
+- Manager:
+  - sees management pages such as settings, terms, reports, and broader course/event/exam management.
+  - should not rely on student enrollment scope unless the feature is explicitly personal.
+- Admin:
+  - sees global management scope: all courses, exams, users, settings, terms, and admin-only pages.
+  - dashboard KPIs and timelines should use global data where available.
+
+Audit checklist:
+
+- Sidebar items match role capability.
+- Route guards match backend permission expectations.
+- Header actions and row actions hide unavailable create/edit/delete operations.
+- Dashboard scope matches the current role.
+- Tables show user-facing labels, not raw ids, whenever lookup data is available.
+- Empty states explain real absence of data, not loading or scope mismatch.
+
+## Priority 2: README Update
+
+- Update stack, scripts, and local setup notes.
+- Document role hierarchy and UI scope rules.
+- Document dashboard behavior and table action standards.
+- Link the active docs under `docs/`.
+- Keep build verification as `bun run build`.
+
+## Priority 3: Docs Cleanup
+
+- Keep `docs/navigation-patterns.md` as the active interaction rulebook.
+- Keep `docs/ui-redesign-tokens.md` as the visual system reference.
+- Keep `docs/backend-ui-alignment-plan.md` as a completed archive unless backend scope changes.
+- Update docs whenever a rule changes; completed implementation plans must not look like active work.
+
+## Remaining UX Work
 
 ### Notes UX
 
@@ -45,77 +88,23 @@ cleanup.
 - Decide how far to extend the table/toolbar pattern to `events-page`, `notes-page`, `terms-page`, and `settings-page`.
 - Preserve non-table layouts only where cards communicate the domain better than rows.
 
-## Dashboard Redesign Plan
-
-The homepage should become a richer, more useful dashboard while staying observation-only.
-It must not contain create, edit, delete, or mutation actions.
-
-### Goals
-
-- Provide a high-signal overview of the school workspace.
-- Make the first screen useful for students, teachers, managers, and admins.
-- Keep all cards as links or read-only summaries.
-- Reduce unnecessary initial API calls by fetching role-specific data only.
-
-### Role-Aware Sections
-
-- Student:
-  - today and upcoming events
-  - active/upcoming exams
-  - report-card snapshot
-  - enrolled courses
-  - recent notebook items
-- Teacher:
-  - courses taught
-  - exams needing questions, monitoring, or grading
-  - recent attendance/session activity
-  - upcoming events
-- Manager:
-  - term status
-  - active courses/events/exams
-  - settings/terms health links
-- Admin:
-  - user role directory summary
-  - management links as read-only status cards
-
-### Layout Direction
-
-- Use a larger hero/status strip at the top with user context and date.
-- Use a dense KPI row below it.
-- Add a “Needs attention” panel for items requiring review.
-- Add an “Upcoming timeline” panel for events/exams/sessions.
-- Add compact linked lists for courses, exams, notes, and attendance summaries.
-- Keep one page-level suspense boundary where practical and avoid spinner cascades.
-
-### Request Budget
-
-- Dashboard should not blindly fetch notes, events, exams, courses, and marks for every role.
-- Target initial request counts:
-  - Student: at most 3-4 requests.
-  - Teacher: at most 3-4 requests.
-  - Manager/admin: at most 2-4 requests.
-- If backend later adds a `/dashboard` endpoint, prefer it over multiple list fetches.
-
 ## Request Budget Targets
 
-- `/courses`: max 2-3 initial API calls.
+- `/courses`: max 2-4 initial API calls depending on role and lookup needs.
 - `/courses/:id`: initial detail data only; closed sections should make zero extra requests.
 - `/exams/:id`: initial exam data only plus role-required summary data; closed sections should make zero extra requests.
 - `/events/:id`: consider lazy-loading attendance if the route feels heavy.
+- Dashboard should avoid broad role-specific requests unless that role actually needs global scope.
 - Settings-dependent controls should share the cached settings request.
-
-## Docs Cleanup
-
-- Keep `docs/navigation-patterns.md` as the active interaction rulebook.
-- Keep `docs/ui-redesign-tokens.md` as the visual system reference.
-- Keep `docs/backend-ui-alignment-plan.md` as a completed archive unless backend scope changes.
-- Update docs when a rule changes; do not let completed implementation plans look like active work.
 
 ## Acceptance Checklist
 
 - `bun run build` passes.
+- Role-based UI audit is complete for sidebar, routes, dashboard, and actions.
+- README is current with stack, scripts, roles, UI patterns, and docs links.
+- Docs reflect active rules and do not contradict current implementation.
 - No native `date` or `datetime-local` inputs remain where the shared `DatePicker` should be used.
 - Closed disclosure sections do not trigger network requests.
-- Dashboard remains observation-only.
-- Header create buttons use a consistent icon + label style.
+- Dashboard remains observation-only and role-scoped.
+- Table action columns use centered three-dot menus.
 - Detail routes do not show stale resource content after navigating between ids.

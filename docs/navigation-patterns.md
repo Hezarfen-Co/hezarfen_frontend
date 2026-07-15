@@ -5,9 +5,25 @@ Use one of two patterns for every new interaction:
 - Full page: resources with a durable detail view, such as a course, exam, event, user, exam room, or live monitor. Full pages must include breadcrumbs when nested.
 - Side panel: short contained work that should return the user to the same list context, such as create, quick edit, and filters.
 
-Dashboard pages are observation-only. They may link to resource pages, but they must not contain create, edit, delete, or other mutation actions. A richer dashboard is allowed and encouraged, but every card or CTA must remain read-only navigation.
+Dashboard pages are observation-only. They must not contain create, edit, delete, or other mutation actions. A richer dashboard is allowed, but every section must remain informational and role-scoped.
+
+Role scope rules:
+
+- Admin sees global management data where the backend allows it.
+- Manager sees management-level data and controls, but not admin-only user administration unless explicitly allowed.
+- Teacher sees teaching, grading, session, attendance, event, and work-log controls where allowed.
+- Student sees own/enrolled/related data only.
+- If lookup data is available, show usernames or display names instead of raw ids. Raw ids are fallback only.
 
 Admin pages are action-oriented. Lists should use shared toolbar and table primitives, compact rows, sticky headers, fixed status/action columns, and pagination.
+
+Table action rules:
+
+- Row actions use `TableRowActions` with a centered three-dot trigger.
+- Action columns stay narrow and fixed (`3.5rem` on main tables, about `w-14` on compact detail tables).
+- Destructive row actions stay in the menu but still open a confirm dialog before mutation.
+- Date and numeric columns use stable alignment and tabular/mono text where useful.
+- Dense tables use subtle column separators so column boundaries stay visible.
 
 Delete or destructive confirmation stays in a confirm dialog, not a side panel.
 

@@ -62,6 +62,8 @@ Density defaults:
 - card padding: 16px
 - radius: 6px
 - table numerals/IDs use tabular mono
+- table action column: narrow, centered, three-dot trigger
+- table column separators: subtle border between cells, no heavy gridlines
 
 ## Proof Of Concept
 
@@ -72,6 +74,7 @@ Implemented:
 - grouped accordion sidebar with active category auto-open
 - compact stat row on top of users page
 - dense sticky data table styling via `.data-table`
+- centered row action dropdowns via `TableRowActions`
 - role pills with semantic tints
 - mono IDs and tabular metrics
 - neutral surfaces, subtle borders, no gradients or decorative cards
@@ -79,11 +82,13 @@ Implemented:
 ## Current Implementation Notes
 
 - Data-heavy admin and management views should prefer `DataToolbar`, `DataTableFrame`, and `.data-table`.
+- Row-level table actions should use `TableRowActions`; avoid inline action button clusters in table rows.
 - Quick create/edit flows should use `SidePanel`; destructive actions stay in confirm dialogs.
 - Durable resources keep full detail pages with breadcrumbs.
 - Large detail sections can use `SectionDisclosure`, but closed sections must not mount children or fetch data.
 - Product date inputs should use the shared `DatePicker`; date-time flows should pair it with a compact `HH:mm` input.
 - Sidebar icons are local SVG wrappers to keep development builds small and avoid large icon package module graphs.
+- User-facing tables should prefer usernames/display names over raw ids; show raw ids only as fallback or in explicit id columns.
 
 Static wireframe:
 
