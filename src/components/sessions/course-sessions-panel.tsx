@@ -10,7 +10,9 @@ import type { AttendanceStatus, CourseSession, Enrollment, SessionAttendance } f
 import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +56,7 @@ export function CourseSessionsPanel(props: {
     async (courseId) => (courseId ? getCourseSessions(courseId) : []),
   );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
+  const [deleteTarget, setDeleteTarget] = createSignal<CourseSession | null>(null);
   const [topic, setTopic] = createSignal("");
   const [startsDate, setStartsDate] = createSignal("");
   const [startsTime, setStartsTime] = createSignal("");
@@ -117,7 +120,7 @@ export function CourseSessionsPanel(props: {
 
       <Suspense fallback={<PageSpinner />}>
         <Show when={sessions.error}>
-          <Alert variant="destructive">{formatApiError(sessions.error)}</Alert>
+          <ErrorAlert message={formatApiError(sessions.error)} onRetry={() => void refetch()} />
         </Show>
         <Show when={(sessions() ?? []).length > 0} fallback={<div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("sessions.empty")}</div>}>
           <div class="space-y-3">
@@ -137,7 +140,14 @@ export function CourseSessionsPanel(props: {
                         <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setSelectedSession(session)}>
                           {t("sessions.rollCall")}
                         </Button>
-                        <Button type="button" variant="ghost" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={async () => { await deleteSessionById(session.id); await refetch(); }}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          class="rounded-lg text-destructive hover:text-destructive"
+                          aria-label={t("common.delete")}
+                          onClick={() => setDeleteTarget(session)}
+                        >
                           <IconTrash class="h-4 w-4" />
                         </Button>
                       </Show>
@@ -203,6 +213,27 @@ export function CourseSessionsPanel(props: {
           {(session) => <RollCall sessionId={session().id} roster={props.roster} />}
         </Show>
       </SidePanel>
+
+      <ConfirmDialog
+        open={deleteTarget() != null}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title={t("confirm.deleteTitle")}
+        variant="destructive"
+        summary={t("confirm.deleteSession", { title: deleteTarget()?.topic || t("sessions.untitled") })}
+        onConfirm={async () => {
+          const session = deleteTarget();
+          if (!session) return;
+          try {
+            await deleteSessionById(session.id);
+            if (selectedSession()?.id === session.id) setSelectedSession(null);
+            await refetch();
+          } catch (err) {
+            setError(formatApiError(err));
+          } finally {
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </div>
   );
 }

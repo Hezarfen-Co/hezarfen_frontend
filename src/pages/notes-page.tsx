@@ -51,7 +51,7 @@ function NotesContent() {
           title={t("notes.title")}
           description={t("notes.subtitle")}
           actions={
-            <Button type="button" size="sm" class="rounded-sm" onClick={() => setCreateOpen(true)}>
+            <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
               <IconPlus class="h-4 w-4" />
               {t("notes.new")}
             </Button>

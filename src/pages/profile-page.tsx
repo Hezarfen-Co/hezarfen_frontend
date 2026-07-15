@@ -1,10 +1,19 @@
 import { Show, Suspense } from "solid-js";
+import type { Role } from "@/api/types";
 import { ProfileForm } from "@/components/users/profile-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import type { MessageKey } from "@/i18n/messages";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+
+const ROLE_KEY: Record<Role, MessageKey> = {
+  student: "role.student",
+  teacher: "role.teacher",
+  manager: "role.manager",
+  admin: "role.admin",
+};
 
 export default function ProfilePage() {
   return (
@@ -27,7 +36,7 @@ function ProfileContent() {
               accent="mint"
               eyebrow={t("nav.account")}
               title={u().username}
-              description={`${u().role} · ${u().id}`}
+              description={t(ROLE_KEY[u().role])}
             />
 
             <div class="grid gap-6 lg:grid-cols-2">

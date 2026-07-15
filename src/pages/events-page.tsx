@@ -77,7 +77,7 @@ function EventsContent() {
           description={t("events.subtitle")}
           actions={
             canCreate() ? (
-              <Button type="button" size="sm" class="rounded-sm" onClick={() => setShowForm(true)}>
+              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowForm(true)}>
                 <IconPlus class="h-4 w-4" />
                 {t("events.create")}
               </Button>
@@ -160,7 +160,7 @@ function EventsContent() {
                     <p class="mt-1 text-sm text-muted-foreground">{filteredEvents().length} / {eventList().length} {t("nav.events")}</p>
                   </div>
                 </div>
-                <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <ul class="grid grid-cols-2 gap-3 xl:grid-cols-3">
                   <For each={pageItems()}>
                     {(event) => (
                       <li class="animate-fade-up">

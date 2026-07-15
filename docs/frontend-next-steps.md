@@ -62,4 +62,15 @@ validation, and list filtering cleanup.
 
 ## Active Backlog
 
-- No active frontend backlog items remain in this audit batch.
+- Backend server-side pagination/search/filter params still pending (see Backend-Dependent Follow-Up).
+- Deferred product features (not started): exam `allow_rejoin` UI, manager work-log corrections, session edit (`PATCH`).
+
+## UX polish batch (completed)
+
+- Session delete uses ConfirmDialog; exam room guards stale id on route change.
+- Mobile bottom tab bar (home/courses/exams/notes/menu); exam-room hides tab chrome.
+- Shared ErrorAlert with try-again; lookup pages show person labels; profile shows localized role.
+- Manager/admin dashboard portal includes daily tools + management cards; compact guide CTA on dashboard (guide stays in account menu).
+- Terms page: SidePanel create/edit + dense table row actions; header create buttons use shared min-width/radius.
+- Settings: dirty-state save gate and auto-clearing success message.
+- Nested breadcrumbs on exam room and live monitor.

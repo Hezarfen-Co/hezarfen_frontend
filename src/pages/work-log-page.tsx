@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableFrame } from "@/components/ui/data-table";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
@@ -81,7 +82,7 @@ function WorkLogContent() {
         </div>
         <Suspense fallback={<PageSpinner />}>
           <Show when={entries.error}>
-            <Alert variant="destructive">{formatApiError(entries.error)}</Alert>
+            <ErrorAlert message={formatApiError(entries.error)} onRetry={() => void refetch()} />
           </Show>
           <Show
             when={(entries() ?? []).length > 0}
@@ -94,7 +95,7 @@ function WorkLogContent() {
                     <TableHead>{t("work.checkIn")}</TableHead>
                     <TableHead>{t("work.checkOut")}</TableHead>
                     <TableHead>{t("work.duration")}</TableHead>
-                    <TableHead>{t("attempt.status")}</TableHead>
+                    <TableHead>{t("work.status")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

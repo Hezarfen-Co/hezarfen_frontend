@@ -164,6 +164,14 @@ function ExamsContent() {
           eyebrow={t("nav.exams")}
           title={t("exams.title")}
           description={t("exams.subtitle")}
+          actions={
+            canCreate() ? (
+              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+                <IconPlus class="h-4 w-4" />
+                {t("exams.create")}
+              </Button>
+            ) : undefined
+          }
         />
       </div>
 
@@ -208,14 +216,6 @@ function ExamsContent() {
                 {showMoreFilters() ? t("common.lessFilters") : t("common.moreFilters")}
               </Button>
             </>
-          }
-          actions={
-            <Show when={canCreate()}>
-              <Button type="button" size="sm" class="h-9 rounded-sm" onClick={() => setCreateOpen(true)}>
-                <IconPlus class="h-4 w-4" />
-                {t("exams.create")}
-              </Button>
-            </Show>
           }
         />
 

@@ -62,6 +62,7 @@ export type MessageKey =
   | "confirm.deleteEvent"
   | "confirm.updateEvent"
   | "confirm.deleteExam"
+  | "confirm.deleteSession"
   | "confirm.updateExam"
   | "confirm.removeAttendance"
   | "confirm.removeResult"
@@ -434,6 +435,9 @@ export type MessageKey =
   | "settings.min"
   | "settings.label"
   | "settings.addRow"
+  | "settings.locked"
+  | "settings.unsaved"
+  | "settings.empty"
   | "terms.title"
   | "terms.subtitle"
   | "terms.create"
@@ -475,7 +479,8 @@ export type MessageKey =
   | "work.empty"
   | "work.duration"
   | "work.open"
-  | "work.closed";
+  | "work.closed"
+  | "work.status";
 
 type Dict = Record<MessageKey, string>;
 
@@ -541,6 +546,7 @@ const en: Dict = {
   "confirm.deleteEvent": "Delete event “{title}”?",
   "confirm.updateEvent": "Update event “{title}”?",
   "confirm.deleteExam": "Delete exam “{title}”?",
+  "confirm.deleteSession": "Delete session “{title}”?",
   "confirm.updateExam": "Update exam “{title}”?",
   "confirm.removeAttendance": "Remove attendance for user {user}?",
   "confirm.removeResult": "Remove grade for user {user}?",
@@ -631,10 +637,9 @@ const en: Dict = {
   "dashboard.emptyEventsCta": "Browse events",
   "dashboard.viewAll": "View all",
   "dashboard.getStarted": "Get started",
-  "dashboard.helpTitle": "How this home works",
-  "dashboard.helpBody":
-    "Home shows live counts and shortcuts for notes, events, courses, exams, and your report card. Open Guide (bottom of the sidebar) for the full walkthrough.",
-  "dashboard.continueGuide": "Open the guide",
+  "dashboard.helpTitle": "Need a hand?",
+  "dashboard.helpBody": "Stuck on a page or looking for the next step? Open the short app guide.",
+  "dashboard.continueGuide": "Guide",
   "dashboard.portal.sections": "Sections",
   "dashboard.portal.coursesDesc": "Browse courses and class materials.",
   "dashboard.portal.examsDesc": "Upcoming exams, deadlines, and results.",
@@ -831,7 +836,7 @@ const en: Dict = {
   "status.lateDetail": "Joined late",
   "status.excusedDetail": "Excused absence",
   "guide.tip1": "TR / EN and theme live in the avatar dropdown (submenus with icons).",
-  "guide.tip2": "Guide is pinned at the bottom of the sidebar, above @Hezarfen - 2026.",
+  "guide.tip2": "Open the guide from your account menu or the home dashboard when you need a refresher.",
   "guide.tip3": "“?” help panels start closed — open only when you need them.",
   "guide.tip4": "Create exams under a course; read averages on the report card.",
   "auth.featureModules": "Courses · Exams · Report card",
@@ -927,6 +932,9 @@ const en: Dict = {
   "settings.min": "Minimum",
   "settings.label": "Label",
   "settings.addRow": "Add row",
+  "settings.locked": "Locked",
+  "settings.unsaved": "Unsaved changes",
+  "settings.empty": "No rows yet.",
   "terms.title": "Academic terms",
   "terms.subtitle": "Manage calendar terms and assign courses to them.",
   "terms.create": "Create term",
@@ -969,6 +977,7 @@ const en: Dict = {
   "work.duration": "Duration",
   "work.open": "Open",
   "work.closed": "Closed",
+  "work.status": "Status",
 };
 
 const tr: Dict = {
@@ -1033,6 +1042,7 @@ const tr: Dict = {
   "confirm.deleteEvent": "“{title}” etkinliği silinsin mi?",
   "confirm.updateEvent": "“{title}” etkinliği güncellensin mi?",
   "confirm.deleteExam": "“{title}” sınavı silinsin mi?",
+  "confirm.deleteSession": "“{title}” oturumu silinsin mi?",
   "confirm.updateExam": "“{title}” sınavı güncellensin mi?",
   "confirm.removeAttendance": "{user} kullanıcısının yoklaması kaldırılsın mı?",
   "confirm.removeResult": "{user} kullanıcısının notu kaldırılsın mı?",
@@ -1123,10 +1133,9 @@ const tr: Dict = {
   "dashboard.emptyEventsCta": "Etkinliklere git",
   "dashboard.viewAll": "Tümünü gör",
   "dashboard.getStarted": "Başla",
-  "dashboard.helpTitle": "Ana sayfa nasıl çalışır?",
-  "dashboard.helpBody":
-    "Ana sayfa not, etkinlik, ders, sınav ve karne kısayollarını gösterir. Tam tur için sidebar’ın altındaki Rehber’i aç.",
-  "dashboard.continueGuide": "Rehberi aç",
+  "dashboard.helpTitle": "Yardıma mı ihtiyacın var?",
+  "dashboard.helpBody": "Bir sayfada takıldın veya sonraki adımı mı arıyorsun? Kısa uygulama rehberini aç.",
+  "dashboard.continueGuide": "Rehber",
   "dashboard.portal.sections": "Bölümler",
   "dashboard.portal.coursesDesc": "Dersleri ve ders materyallerini görüntüle.",
   "dashboard.portal.examsDesc": "Sınavlar, son teslim tarihleri ve sonuçlar.",
@@ -1323,7 +1332,7 @@ const tr: Dict = {
   "status.lateDetail": "Geç katıldı",
   "status.excusedDetail": "Mazeretli yok",
   "guide.tip1": "Dil ve tema avatar menüsünde (ikonlu alt menüler).",
-  "guide.tip2": "Rehber, sidebar’ın altında @Hezarfen - 2026’nın hemen üstünde.",
+  "guide.tip2": "İhtiyacın olduğunda rehberi hesap menüsünden veya ana sayfadaki kısayoldan aç.",
   "guide.tip3": "“?” panelleri kapalı gelir — ihtiyaç olunca aç.",
   "guide.tip4": "Sınavı dersin içinde oluştur; ortalamayı Karnem’de oku.",
   "auth.featureModules": "Dersler · Sınavlar · Karne",
@@ -1419,6 +1428,9 @@ const tr: Dict = {
   "settings.min": "Alt sınır",
   "settings.label": "Etiket",
   "settings.addRow": "Satır ekle",
+  "settings.locked": "Kilitli",
+  "settings.unsaved": "Kaydedilmemiş değişiklikler",
+  "settings.empty": "Henüz satır yok.",
   "terms.title": "Akademik dönemler",
   "terms.subtitle": "Takvim dönemlerini yönet ve dersleri dönemlere bağla.",
   "terms.create": "Dönem oluştur",
@@ -1461,6 +1473,7 @@ const tr: Dict = {
   "work.duration": "Süre",
   "work.open": "Açık",
   "work.closed": "Kapalı",
+  "work.status": "Durum",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

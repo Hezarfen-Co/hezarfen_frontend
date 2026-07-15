@@ -193,9 +193,24 @@ function DashboardContent() {
         { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avg, accent: "mint" },
         { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc, statSuffix: "dashboard.records", accent: "rose" },
       );
-    }
-
-    if (roleVal === "teacher") {
+    } else if (hasMinRole(roleVal, "manager")) {
+      list.push(
+        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc, statSuffix: "dashboard.records", accent: "violet" },
+        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
+        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, statSuffix: "dashboard.records", accent: "sky" },
+        { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc, statSuffix: "dashboard.records", accent: "sky" },
+        { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", stat: "", accent: "amber", minRole: "teacher" },
+        { icon: <IconChart class="h-5 w-5" />, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", stat: "", accent: "mint", minRole: "teacher" },
+        { icon: <IconClipboardCheck class="h-5 w-5" />, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", stat: "", accent: "rose", minRole: "teacher" },
+        { icon: <IconSettings class="h-5 w-5" />, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", stat: "", accent: "mint", minRole: "manager" },
+        { icon: <IconBook class="h-5 w-5" />, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", stat: "", accent: "rose", minRole: "manager" },
+      );
+      if (roleVal === "admin") {
+        list.push(
+          { icon: <IconUsers class="h-5 w-5" />, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", stat: "", accent: "rose", minRole: "admin" },
+        );
+      }
+    } else if (roleVal === "teacher") {
       list.push(
         { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc, statSuffix: "dashboard.records", accent: "violet" },
         { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
@@ -205,21 +220,6 @@ function DashboardContent() {
         { icon: <IconNote class="h-5 w-5" />, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc, statSuffix: "dashboard.records", accent: "sky" },
         { icon: <IconReportAnalytics class="h-5 w-5" />, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", stat: "", accent: "amber", minRole: "teacher" },
       );
-    }
-
-    if (hasMinRole(roleVal, "manager")) {
-      list.unshift(
-        { icon: <IconSchool class="h-5 w-5" />, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc, statSuffix: "dashboard.records", accent: "violet" },
-        { icon: <IconExam class="h-5 w-5" />, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec, statSuffix: "dashboard.records", accent: "amber" },
-        { icon: <IconCalendar class="h-5 w-5" />, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, statSuffix: "dashboard.records", accent: "sky" },
-        { icon: <IconSettings class="h-5 w-5" />, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", stat: "", accent: "mint", minRole: "manager" },
-        { icon: <IconBook class="h-5 w-5" />, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", stat: "", accent: "rose", minRole: "manager" },
-      );
-      if (roleVal === "admin") {
-        list.push(
-          { icon: <IconUsers class="h-5 w-5" />, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", stat: "", accent: "rose", minRole: "admin" },
-        );
-      }
     }
 
     return list;
@@ -243,7 +243,7 @@ function DashboardContent() {
       </Show>
 
       <Suspense fallback={<PageSpinner />}>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr">
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr">
           <For each={cards()}>{(card) => <PortalCard card={card} />}</For>
         </div>
 
@@ -254,6 +254,19 @@ function DashboardContent() {
             items={chartData()}
             maxValue={maxChartValue()}
           />
+        </div>
+
+        <div class="rounded-xl border border-border/60 bg-card p-4 shadow-xs sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <div>
+            <h2 class="font-display text-sm font-semibold">{t("dashboard.helpTitle")}</h2>
+            <p class="mt-1 text-xs text-muted-foreground">{t("dashboard.helpBody")}</p>
+          </div>
+          <Link
+            to="/guide"
+            class="mt-3 inline-flex h-7 items-center justify-center rounded-md border border-border bg-background px-2.5 text-xs font-medium transition-colors hover:bg-muted sm:mt-0"
+          >
+            {t("dashboard.continueGuide")}
+          </Link>
         </div>
       </Suspense>
     </div>
@@ -343,7 +356,12 @@ function UpcomingTimeline(props: {
       <Show
         when={props.timeline.length > 0}
         fallback={
-          <p class="py-6 text-center text-sm text-muted-foreground">{props.t("dashboard.noEvents")}</p>
+          <div class="flex flex-col items-center gap-2 py-6 text-center">
+            <p class="text-sm text-muted-foreground">{props.t("dashboard.emptyEventsTitle")}</p>
+            <Link to="/events" class="text-sm font-medium text-primary hover:underline">
+              {props.t("dashboard.emptyEventsCta")}
+            </Link>
+          </div>
         }
       >
         <div class="space-y-3">

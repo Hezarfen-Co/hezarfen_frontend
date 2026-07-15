@@ -128,7 +128,7 @@ function CoursesContent() {
           description={t("courses.subtitle")}
           actions={
             canCreate() ? (
-              <Button type="button" size="sm" class="rounded-sm" onClick={() => setShowForm(true)}>
+              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowForm(true)}>
                 <IconPlus class="h-4 w-4" />
                 {t("courses.create")}
               </Button>
