@@ -35,13 +35,13 @@ This plan covers the remaining backend features that need simple, low-complexity
 - Commit 3 complete in UI: manager settings page edits exam kinds, attendance statuses, and grade bands through `PATCH /settings`.
 - Commit 4 complete in UI: manager terms page edits terms, and course create/edit can assign an optional term.
 - Commit 5 complete in UI: course detail lists lesson sessions, creates sessions, and marks roll call for enrolled students.
-- Commits 6-7 remain.
+- Commit 6 complete in UI: attendance report pages show event/session totals, rates, and course breakdowns.
+- Commit 7 remains.
 
 ## Remaining Commit Order
 
 | Commit | Scope | Priority |
 | --- | --- | --- |
-| 6 | Attendance report page | Medium |
 | 7 | Work log page | Medium |
 
 ## Commit 1: Live Monitor And Exam Room Attempt Fields

@@ -9,8 +9,10 @@ export type MessageKey =
   | "nav.exams"
   | "nav.courses"
   | "nav.marks"
+  | "nav.attendance"
   | "nav.users"
   | "nav.studentMarks"
+  | "nav.studentAttendance"
   | "nav.settings"
   | "nav.terms"
   | "nav.guide"
@@ -394,7 +396,17 @@ export type MessageKey =
   | "sessions.teacher"
   | "sessions.rollCall"
   | "sessions.startRequired"
-  | "sessions.endInvalid";
+  | "sessions.endInvalid"
+  | "attendance.title"
+  | "attendance.subtitle"
+  | "attendance.events"
+  | "attendance.sessions"
+  | "attendance.rate"
+  | "attendance.courseBreakdown"
+  | "attendance.emptyCourses"
+  | "attendance.lookup"
+  | "attendance.show"
+  | "attendance.forUser";
 
 type Dict = Record<MessageKey, string>;
 
@@ -407,8 +419,10 @@ const en: Dict = {
   "nav.exams": "Exams",
   "nav.courses": "Courses",
   "nav.marks": "Report card",
+  "nav.attendance": "Attendance",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
+  "nav.studentAttendance": "Student attendance",
   "nav.settings": "Settings",
   "nav.terms": "Terms",
   "nav.guide": "Guide",
@@ -807,6 +821,16 @@ const en: Dict = {
   "sessions.rollCall": "Roll call",
   "sessions.startRequired": "Session start date and time are required.",
   "sessions.endInvalid": "Enter both end date and end time, or leave both empty.",
+  "attendance.title": "Attendance report",
+  "attendance.subtitle": "Event attendance and lesson roll-call rates.",
+  "attendance.events": "Events",
+  "attendance.sessions": "Lesson sessions",
+  "attendance.rate": "Rate",
+  "attendance.courseBreakdown": "Course breakdown",
+  "attendance.emptyCourses": "No lesson attendance rows yet.",
+  "attendance.lookup": "Look up a student's attendance report.",
+  "attendance.show": "Show attendance",
+  "attendance.forUser": "Attendance for {user}",
 };
 
 const tr: Dict = {
@@ -818,8 +842,10 @@ const tr: Dict = {
   "nav.exams": "Sınavlar",
   "nav.courses": "Dersler",
   "nav.marks": "Karnem",
+  "nav.attendance": "Yoklama",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
+  "nav.studentAttendance": "Öğrenci yoklaması",
   "nav.settings": "Ayarlar",
   "nav.terms": "Dönemler",
   "nav.guide": "Rehber",
@@ -1218,6 +1244,16 @@ const tr: Dict = {
   "sessions.rollCall": "Yoklama",
   "sessions.startRequired": "Oturum başlangıç tarihi ve saati gerekli.",
   "sessions.endInvalid": "Bitiş için tarih ve saati birlikte gir ya da ikisini de boş bırak.",
+  "attendance.title": "Yoklama raporu",
+  "attendance.subtitle": "Etkinlik yoklaması ve ders oturumu devam oranları.",
+  "attendance.events": "Etkinlikler",
+  "attendance.sessions": "Ders oturumları",
+  "attendance.rate": "Oran",
+  "attendance.courseBreakdown": "Ders dökümü",
+  "attendance.emptyCourses": "Henüz ders yoklaması yok.",
+  "attendance.lookup": "Bir öğrencinin yoklama raporunu aç.",
+  "attendance.show": "Yoklamayı göster",
+  "attendance.forUser": "{user} yoklaması",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

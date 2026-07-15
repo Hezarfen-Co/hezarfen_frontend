@@ -185,6 +185,28 @@ export type CourseMarks = {
   average_grade?: string | null;
 };
 
+export type AttendanceCounts = {
+  present: number;
+  absent: number;
+  late: number;
+  excused: number;
+  custom: Record<string, number>;
+  total: number;
+  rate: number | null;
+};
+
+export type CourseAttendance = {
+  course: Course;
+  counts: AttendanceCounts;
+};
+
+export type AttendanceReport = {
+  user: string;
+  events: AttendanceCounts;
+  sessions: AttendanceCounts;
+  courses: CourseAttendance[];
+};
+
 export type MarksReport = {
   user: string;
   courses: CourseMarks[];
