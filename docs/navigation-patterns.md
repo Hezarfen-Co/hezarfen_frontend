@@ -15,6 +15,12 @@ Role scope rules:
 - Student sees own/enrolled/related data only.
 - If lookup data is available, show usernames or display names instead of raw ids. Raw ids are fallback only.
 
+Lesson session rules:
+
+- Students can see sessions only through visible/enrolled courses.
+- Lesson roll call is never student self-service; it belongs in teacher/manager workflows.
+- The session teacher or course manager can mark enrolled students; the teacher's own presence row is manager-only per backend rules.
+
 Admin pages are action-oriented. Lists should use shared toolbar and table primitives, compact rows, sticky headers, fixed status/action columns, and pagination.
 
 Pagination and request rules:
@@ -34,11 +40,13 @@ Table action rules:
 
 Delete or destructive confirmation stays in a confirm dialog, not a side panel.
 
-Header create actions should use a consistent compact button shape: icon plus label, `size="sm"`, and `rounded-sm`.
+Header create actions should use a consistent compact button shape: icon plus label, `size="sm"`, equal min-width, and the current app radius (`rounded-lg` in course detail headers).
 
 Date picking should use the shared `DatePicker` plus a separate `HH:mm` input when time is needed. Avoid native `date` and `datetime-local` controls in product forms.
 
-Animated disclosure sections must not mount their children while closed. Closed sections should not start API requests.
+Schedule validation should remember that event, exam, and lesson session times are UTC unix-millisecond values and the backend rejects newly set past schedule values with `400`. Use `GET /time` for server-clock-aware checks when accuracy matters.
+
+Animated disclosure sections may either defer mounting for request savings or keep content mounted for state preservation. Choose deliberately per section and avoid hidden heavy requests unless preserving state is required.
 
 Detail routes must avoid showing stale resource data after navigating between ids. If a resource id does not match the current route param, show a loading state instead of old content.
 

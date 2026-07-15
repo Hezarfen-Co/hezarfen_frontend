@@ -63,6 +63,7 @@ Dashboard and table summaries must use the same role scope as the related page. 
 | `/exams/:id/live` | Teacher+ | Live monitor / final state roster with pagination & sorting |
 | `/exam-room/:id` | Student+ | WebSocket-based real-time exam room (auto-save, timer, expiry) |
 | `/courses` | Student+ | Course table; create/edit flows for teacher+ |
+| `/courses/:id` | Student+ | Course detail, exams, roster, lesson sessions, and roll call tools |
 | `/guide` | Authenticated | App usage guide |
 | `/admin/users` | Admin | User management |
 
@@ -75,6 +76,8 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - **Profile editing**: update display name, email, phone, birth date
 - **Dense tables**: toolbar search/filter, subtle column separators, narrow centered three-dot row actions
 - **Side panels**: quick create/edit workflows without losing list context
+- **Course sessions**: right-panel session creation and paginated roll call panels
+- **Attendance UI**: localized status labels with explanatory detail text and semantic colors
 - **Role-scoped dashboard**: read-only summaries and KPIs by current role
 - **i18n**: full Turkish / English interface
 
@@ -86,7 +89,7 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - Data-heavy views use `DataToolbar`, `DataTableFrame`, `.data-table`, and `TableRowActions`.
 - Large list pages should use server-side pagination/search/filtering when the backend supports it; client-side slicing is only acceptable for small or temporary datasets.
 - Date fields use the shared `DatePicker`; date-time flows pair it with an `HH:mm` input.
-- Closed disclosure sections should not mount or fetch hidden content.
+- Disclosure sections either defer hidden content for request savings or preserve mounted content when local state should not reset.
 
 ## Docs
 
