@@ -103,6 +103,26 @@ Acceptance criteria:
 - Large or growing datasets do not fetch all records unless explicitly accepted.
 - UI pagination controls do not hide excessive network payloads.
 
+Current classification:
+
+- `/courses`: client-paginated after `GET /courses` for teacher+ and `GET /courses/me` for students. Backend README does not document pagination params. Accepted temporarily; watch growth.
+- `/exams`: client-paginated after `GET /exams`. Student filter uses `GET /courses/me` for course labels/filtering; teacher+ uses `GET /courses`. Backend README does not document pagination params. Accepted temporarily; watch growth.
+- `/events`: client-paginated after `GET /events`. Backend README does not document pagination params. Accepted temporarily for event volume.
+- `/admin/users`: unpaginated `GET /users` plus client filtering/search UI. Admin-only; backend README does not document pagination params. Needs revisit if user count grows.
+- `/work`: unpaginated `GET /work/me`, newest first. Personal staff log; acceptable short-term but should paginate if long-lived use grows.
+- `/courses/:id` exams: unpaginated `GET /courses/{id}/exams`; course-scoped and accepted short-term.
+- `/courses/:id` sessions: unpaginated `GET /courses/{id}/sessions`, deferred until sessions section or create panel is opened. Course-scoped and accepted short-term.
+- `/courses/:id` roster: unpaginated `GET /courses/{id}/enrollments`, course-management only. Accepted for normal class sizes.
+- `/exams/:id` results: unpaginated `GET /exams/{id}/results`, deferred until results/grade/answer-sheet workflow needs it. Accepted for normal class sizes.
+- `/exams/:id` questions: unpaginated `GET /exams/{id}/questions`, deferred until questions section is opened. Accepted for exam-scale data.
+- `/exams/:id/live`: client-paginated/sorted live roster over backend snapshot/SSE. Accepted because monitor snapshot is role-gated and exam-scoped.
+- `/attendance` and `/management/student-attendance`: unpaginated report payloads; backend returns aggregate report shape, not a raw row list.
+
+Known follow-ups:
+
+- Ask backend for server-side pagination/search params before claiming true pagination on courses, exams, events, users, work log, or large detail tables.
+- If backend adds pagination, update `src/api/*` helpers first and then move toolbar/search/filter state into request params.
+
 ## Priority 3: Docs Cleanup
 
 - Keep `docs/navigation-patterns.md` as the active interaction rulebook.

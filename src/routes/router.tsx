@@ -168,6 +168,20 @@ const attendanceRoute = createRoute({
 const studentAttendanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/management/student-attendance",
+  beforeLoad: async () => {
+    try {
+      const user = await getMe();
+      if (!hasMinRole(user.role, "teacher")) {
+        throw redirect({ to: "/" });
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        throw redirect({ to: "/login" });
+      }
+      if (isRedirect(err)) throw err;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: StudentAttendancePage,
 });
 
