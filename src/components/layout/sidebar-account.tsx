@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconChevronRight, IconGlobe, IconGuide, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
+import { IconChevronRight, IconEdit, IconGlobe, IconGuide, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -68,30 +68,29 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
               </DropdownMenuTrigger>
 
               <DropdownMenuContent class="w-52 rounded-lg border-border/80 bg-popover p-1 shadow-soft">
-                <DropdownMenuItem class="rounded-md" onSelect={() => void navigate({ to: "/profile" })}>
-                  <IconChevronRight class="h-4 w-4 shrink-0" />
+                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => void navigate({ to: "/profile" })}>
+                  <IconEdit class="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span>{t("profile.edit")}</span>
                 </DropdownMenuItem>
-                <p class="px-2 text-center text-[10px] tracking-[0.2em] text-muted-foreground/40 select-none">······</p>
-                <DropdownMenuItem class="rounded-md" onSelect={() => prefs.toggleTheme()}>
-                  <Show when={prefs.theme() === "dark"} fallback={<IconSun class="h-4 w-4 shrink-0" />}>
-                    <IconMoon class="h-4 w-4 shrink-0" />
+                <DropdownMenuSeparator />
+                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => prefs.toggleTheme()}>
+                  <Show when={prefs.theme() === "dark"} fallback={<IconSun class="h-4 w-4 shrink-0 text-muted-foreground" />}>
+                    <IconMoon class="h-4 w-4 shrink-0 text-muted-foreground" />
                   </Show>
                   <span class="min-w-0 flex-1">{t("theme.toggle")}</span>
                   <span class="text-xs text-muted-foreground">{prefs.theme() === "dark" ? t("theme.dark") : t("theme.light")}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem class="rounded-md" onSelect={() => prefs.setLocale(prefs.locale() === "tr" ? "en" : "tr")}>
-                  <IconGlobe class="h-4 w-4 shrink-0" />
+                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => prefs.setLocale(prefs.locale() === "tr" ? "en" : "tr")}>
+                  <IconGlobe class="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span class="min-w-0 flex-1">{t("lang.label")}</span>
                   <span class="text-xs text-muted-foreground">{prefs.locale() === "tr" ? "TR" : "EN"}</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem class="rounded-md" onSelect={() => void navigate({ to: "/guide" })}>
-                  <IconGuide class="h-4 w-4 shrink-0" />
+                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => void navigate({ to: "/guide" })}>
+                  <IconGuide class="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span>{t("nav.guide")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem destructive class="rounded-md" onSelect={() => void props.onLogout()}>
+                <DropdownMenuItem destructive class="rounded-md gap-2" onSelect={() => void props.onLogout()}>
                   <IconLogout class="h-4 w-4 shrink-0" />
                   <span>{t("nav.logout")}</span>
                 </DropdownMenuItem>

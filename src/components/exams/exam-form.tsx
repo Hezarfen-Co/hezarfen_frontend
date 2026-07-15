@@ -75,7 +75,7 @@ export function ExamForm(props: {
   const [title, setTitle] = createSignal(props.initial?.title ?? "");
   const [description, setDescription] = createSignal(props.initial?.description ?? "");
   const [kind, setKind] = createSignal(String(props.initial?.kind ?? "quiz"));
-  const [mode, setMode] = createSignal(String(props.initial?.mode ?? ""));
+  const [mode, setMode] = createSignal(props.initial?.mode && props.initial.mode !== "" ? props.initial.mode : "open");
   const [hasRetakes, setHasRetakes] = createSignal((props.initial?.max_attempts ?? 1) !== 1);
   const [maxAttempts, setMaxAttempts] = createSignal(String(props.initial?.max_attempts ?? 1));
   const [allowRejoin, setAllowRejoin] = createSignal(props.initial?.allow_rejoin ?? true);
@@ -129,7 +129,7 @@ export function ExamForm(props: {
         setTitle("");
         setDescription("");
         setKind(settings()?.exam_kinds[0]?.name ?? "quiz");
-        setMode("");
+        setMode("open");
         setHasRetakes(false);
         setMaxAttempts("1");
         setAllowRejoin(true);
@@ -160,7 +160,7 @@ export function ExamForm(props: {
       title: title().trim(),
       description: description(),
       kind: kind(),
-      mode: mode() || null,
+      mode: mode(),
       starts_at,
       ends_at,
       duration_ms,
@@ -215,7 +215,6 @@ export function ExamForm(props: {
         <div class="space-y-1.5">
           <Label for="exam-mode">{t("exams.mode")}</Label>
           <Select id="exam-mode" class="rounded-sm" value={mode()} onChange={(e) => setMode(e.currentTarget.value)}>
-            <option value="">{t("exams.mode.unscheduled")}</option>
             <For each={EXAM_MODES}>
               {(m) => (
                 <option value={m}>

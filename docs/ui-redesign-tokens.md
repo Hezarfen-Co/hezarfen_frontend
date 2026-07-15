@@ -62,7 +62,7 @@ Density defaults:
 - sidebar group/header row: 32px
 - table header/cell row: 36px
 - card padding: 16px
-- radius: 12px base token (`0.75rem`), with `rounded-lg`/`rounded-xl` used for modern form and card surfaces
+- radius: 12px base token (`0.75rem`), with token-derived `rounded-md`/`rounded-lg`/`rounded-xl` used by form, feedback, card, and panel surfaces
 - table numerals/IDs use tabular mono
 - table action column: narrow, centered, three-dot trigger
 - table column separators: subtle border between cells, no heavy gridlines
@@ -128,11 +128,13 @@ Reference implementation: `src/pages/dashboard-page.tsx`.
 - Row-level table actions should use `TableRowActions`; avoid inline action button clusters in table rows.
 - Quick create/edit flows should use `SidePanel`; destructive actions stay in confirm dialogs.
 - Durable resources keep full detail pages with breadcrumbs.
+- Detail routes should use `.detail-breadcrumb`, `.detail-action-group`, `.detail-action-divider`, and `.detail-metric-card` before adding page-local header/card styling.
 - Large detail sections can use `SectionDisclosure`; choose deferred mounting for request savings or mounted content for state preservation.
 - Product date inputs should use the shared `DatePicker`; date-time flows should pair it with a compact `HH:mm` input.
-- Sidebar icons are local SVG wrappers to keep development builds small and avoid large icon package module graphs.
+- Icons are local Lucide-geometry SVG wrappers in `src/components/ui/icons.tsx` (24 grid, stroke 2, round caps/joins, `rx=2` on rounded rects). No icon package — keeps dev builds small. Prefer adding a path there over ad-hoc inline SVGs.
 - User-facing tables should prefer usernames/display names over raw ids; show raw ids only as fallback or in explicit id columns.
 - Header actions use compact icon + label buttons with equal min-width; related sections should use matching badge labels and button sizing.
+- Form and feedback surfaces should use shared `Input`, `Select`, `Textarea`, `Alert`, `DataTableEmpty`, and `ConfirmDialog` primitives; avoid page-local destructive/empty-state boxes unless the primitive cannot express the state.
 - Attendance status UI uses shared metadata: localized label, short detail text, and semantic color classes.
 - Homepage/dashboard follows the **Dashboard (homepage)** section above; keep list pages dense-table oriented, not dashboard-card oriented.
 

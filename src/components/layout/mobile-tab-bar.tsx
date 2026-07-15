@@ -45,7 +45,7 @@ export function MobileTabBar(props: { onMenu: () => void }) {
       <ul class="mx-auto grid h-14 max-w-[1200px] grid-cols-5">
         <For each={TABS}>
           {(tab) => {
-            const active = () => tab.action === "menu" ? false : pathActive(pathname(), tab.to, tab.exact);
+            const active = () => (tab.action === "menu" ? false : pathActive(pathname(), tab.to, tab.exact));
             return (
               <li class="min-w-0">
                 <Show
@@ -55,21 +55,34 @@ export function MobileTabBar(props: { onMenu: () => void }) {
                       to={tab.to}
                       aria-current={active() ? "page" : undefined}
                       class={cn(
-                        "flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium transition-colors",
-                        active() ? "text-primary" : "text-muted-foreground",
+                        "relative flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium transition-colors",
+                        active() ? "text-primary" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      <tab.Icon class={cn("h-5 w-5", active() ? "text-primary" : "text-muted-foreground")} />
+                      <Show when={active()}>
+                        <span class="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" />
+                      </Show>
+                      <span
+                        class={cn(
+                          "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
+                          active() && "bg-primary/10",
+                        )}
+                      >
+                        <tab.Icon class="h-4 w-4" />
+                      </span>
                       <span class="truncate">{t(tab.labelKey)}</span>
                     </Link>
                   }
                 >
                   <button
                     type="button"
-                    class="flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium text-muted-foreground transition-colors"
+                    aria-label={t(tab.labelKey)}
+                    class="flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
                     onClick={() => props.onMenu()}
                   >
-                    <tab.Icon class="h-5 w-5" />
+                    <span class="flex h-7 w-7 items-center justify-center rounded-lg">
+                      <tab.Icon class="h-4 w-4" />
+                    </span>
                     <span class="truncate">{t(tab.labelKey)}</span>
                   </button>
                 </Show>

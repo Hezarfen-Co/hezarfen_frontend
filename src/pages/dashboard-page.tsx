@@ -10,16 +10,15 @@ import { getNotes } from "@/api/getNotes";
 import type { Exam, Event, Role } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
-import { DataTableEmpty } from "@/components/ui/data-table";
 import {
   IconBook,
+  IconBriefcase,
   IconCalendar,
+  IconCalendarDays,
   IconChart,
   IconClipboardCheck,
   IconExam,
   IconNote,
-  IconReportAnalytics,
-  IconSchool,
   IconSettings,
   IconUsers,
 } from "@/components/ui/icons";
@@ -183,10 +182,10 @@ function DashboardContent() {
 
     if (r === "student") {
       list.push(
-        { Icon: IconSchool, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
         { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
         { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
-        { Icon: IconReportAnalytics, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avgLabel() },
+        { Icon: IconChart, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avgLabel() },
         { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       );
       return list;
@@ -194,32 +193,32 @@ function DashboardContent() {
 
     if (r === "teacher") {
       list.push(
-        { Icon: IconSchool, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
         { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
         { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, minRole: "teacher" },
         { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
         { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
         { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
-        { Icon: IconReportAnalytics, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" },
+        { Icon: IconBriefcase, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" },
       );
       return list;
     }
 
     // manager + admin
     list.push(
-      { Icon: IconSchool, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+      { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
       { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
       { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
       { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
       { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
       { Icon: IconSettings, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", minRole: "manager" },
-      { Icon: IconBook, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
+      { Icon: IconCalendarDays, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
     );
     if (r === "manager") {
-      list.push({ Icon: IconReportAnalytics, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" });
+      list.push({ Icon: IconBriefcase, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" });
     }
-    list.push({ Icon: IconReportAnalytics, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", minRole: "manager" });
+    list.push({ Icon: IconBriefcase, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", minRole: "manager" });
     if (r === "admin") {
       list.push({ Icon: IconUsers, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", minRole: "admin" });
     }
@@ -306,19 +305,19 @@ function DashboardContent() {
 
   return (
     <div class="space-y-5">
-      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-border/80 pb-4">
         <div class="min-w-0 space-y-1">
-          <p class="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("dashboard.today")}</p>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t("dashboard.today")}</p>
           <h1 class="truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">
             {t("dashboard.greeting", { name: fullName() })}
           </h1>
           <p class="text-sm text-muted-foreground">{t("dashboard.observationOnly")}</p>
         </div>
-        <div class="flex items-center gap-2 text-xs text-muted-foreground">
-          <span class="rounded-sm border border-border bg-card px-2 py-1 font-medium text-foreground">
+        <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span class="rounded-md border border-border bg-card px-2 py-1 font-medium text-foreground">
             {t(ROLE_KEY[role()])}
           </span>
-          <span class="mono">{formatDateTime(Date.now(), locale()).split(",")[0]}</span>
+          <span class="mono tabular-nums">{formatDateTime(Date.now(), locale()).split(",")[0]}</span>
         </div>
       </header>
 
@@ -327,17 +326,17 @@ function DashboardContent() {
       </Show>
 
       <Show when={!loading()} fallback={<PageSpinner />}>
-        <section class="space-y-3" aria-labelledby="dash-sections">
-          <h2 id="dash-sections" class="text-sm font-semibold tracking-tight">
+        <section class="space-y-2.5" aria-labelledby="dash-sections">
+          <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
             {t("dashboard.roleLinks")}
           </h2>
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5 lg:grid-cols-3 xl:grid-cols-4">
             <For each={portalCards()}>{(card) => <PortalCard card={card} />}</For>
           </div>
         </section>
 
         <div class="grid gap-5 lg:grid-cols-2">
-          <section class="space-y-3" aria-labelledby="dash-attention">
+          <section class="space-y-2.5" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight">
                 {t("dashboard.attention")}
@@ -349,20 +348,16 @@ function DashboardContent() {
 
             <Show
               when={attention().length > 0}
-              fallback={
-                <div class="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-                  {t("dashboard.noAttention")}
-                </div>
-              }
+              fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
-              <ul class="divide-y divide-border rounded-lg border border-border bg-card">
+              <ul class="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
                 <For each={attention()}>
                   {(item) => (
                     <li>
                       <Link
                         to={item.to}
                         params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 sm:px-4 sm:py-3"
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-muted/50 sm:px-4 sm:py-3"
                       >
                         <StatusDot status={item.status} />
                         <div class="min-w-0 flex-1">
@@ -377,7 +372,7 @@ function DashboardContent() {
                         </div>
                         <div class="shrink-0 text-right">
                           <StatusLabel status={item.status} t={t} />
-                          <p class="mono mt-0.5 text-[11px] text-muted-foreground">
+                          <p class="mono mt-0.5 text-[11px] tabular-nums text-muted-foreground">
                             <Show when={item.at != null} fallback="—">
                               {formatDateTime(item.at!, locale())}
                             </Show>
@@ -391,28 +386,28 @@ function DashboardContent() {
             </Show>
           </section>
 
-          <section class="space-y-3" aria-labelledby="dash-upcoming">
+          <section class="space-y-2.5" aria-labelledby="dash-upcoming">
             <h2 id="dash-upcoming" class="text-sm font-semibold tracking-tight">
               {t("dashboard.upcoming")}
             </h2>
             <Show
               when={upcoming().length > 0}
-              fallback={<DataTableEmpty class="py-8">{t("dashboard.upcomingEmpty")}</DataTableEmpty>}
+              fallback={<DashEmpty>{t("dashboard.upcomingEmpty")}</DashEmpty>}
             >
-              <ul class="divide-y divide-border rounded-lg border border-border bg-card">
+              <ul class="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
                 <For each={upcoming()}>
                   {(item) => (
                     <li>
                       <Link
                         to={item.kind === "exam" ? "/exams/$id" : "/events/$id"}
                         params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 sm:px-4 sm:py-3"
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-muted/50 sm:px-4 sm:py-3"
                       >
-                        <span class="mono w-24 shrink-0 text-[11px] text-muted-foreground sm:w-28 sm:text-xs">
+                        <span class="mono w-24 shrink-0 text-[11px] tabular-nums text-muted-foreground sm:w-28 sm:text-xs">
                           {formatDateTime(item.at, locale())}
                         </span>
                         <div class="min-w-0 flex-1">
-                          <p class="truncate font-medium">{item.title}</p>
+                          <p class="truncate font-medium text-foreground">{item.title}</p>
                           <p class="truncate text-xs text-muted-foreground">
                             {item.kind === "exam" ? t("nav.exams") : t("nav.events")}
                             <Show when={item.subtitle}>
@@ -434,6 +429,14 @@ function DashboardContent() {
   );
 }
 
+function DashEmpty(props: { children: string }) {
+  return (
+    <div class="rounded-lg border border-dashed border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+      {props.children}
+    </div>
+  );
+}
+
 function PortalCard(props: { card: PortalCardDef }) {
   const t = useT();
   const Icon = props.card.Icon;
@@ -444,14 +447,14 @@ function PortalCard(props: { card: PortalCardDef }) {
       to={props.card.to}
       class="flex min-h-[4.5rem] items-center gap-3 rounded-lg border border-border bg-card px-3 py-3 transition-colors hover:bg-muted/40 sm:min-h-[5rem] sm:gap-3.5 sm:px-4"
     >
-      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-foreground">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground">
         <Icon class="h-4 w-4" />
       </span>
       <div class="min-w-0 flex-1">
         <div class="flex min-w-0 items-center gap-2">
-          <h3 class="truncate text-sm font-semibold tracking-tight">{t(props.card.titleKey)}</h3>
+          <h3 class="truncate text-sm font-semibold tracking-tight text-foreground">{t(props.card.titleKey)}</h3>
           <Show when={hasStat()}>
-            <span class="hidden text-border sm:inline" aria-hidden="true">
+            <span class="hidden text-muted-foreground/50 sm:inline" aria-hidden="true">
               |
             </span>
             <span class="mono shrink-0 text-sm font-semibold tabular-nums tracking-tight text-foreground sm:text-base">
@@ -459,12 +462,12 @@ function PortalCard(props: { card: PortalCardDef }) {
             </span>
           </Show>
           <Show when={props.card.minRole && props.card.minRole !== "student"}>
-            <span class="ml-auto hidden shrink-0 rounded-sm border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:inline">
+            <span class="ml-auto hidden shrink-0 rounded-md border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:inline">
               {t(ROLE_KEY[props.card.minRole!])}
             </span>
           </Show>
         </div>
-        <p class="mt-0.5 line-clamp-1 text-xs text-muted-foreground sm:line-clamp-2">{t(props.card.descKey)}</p>
+        <p class="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{t(props.card.descKey)}</p>
       </div>
     </Link>
   );
@@ -475,8 +478,8 @@ function StatusDot(props: { status: AttentionKind }) {
     <span
       class={cn(
         "mt-0.5 h-2 w-2 shrink-0 rounded-full",
-        props.status === "active" && "bg-emerald-600",
-        props.status === "today" && "bg-amber-600",
+        props.status === "active" && "bg-success",
+        props.status === "today" && "bg-warning",
         props.status === "soon" && "bg-muted-foreground",
       )}
       aria-hidden="true"
@@ -496,9 +499,9 @@ function StatusLabel(props: {
   return (
     <span
       class={cn(
-        "inline-flex rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-        props.status === "active" && "border-emerald-600/30 bg-emerald-600/10 text-emerald-700 dark:text-emerald-300",
-        props.status === "today" && "border-amber-600/30 bg-amber-600/10 text-amber-800 dark:text-amber-300",
+        "inline-flex rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        props.status === "active" && "border-success/30 bg-success/10 text-success",
+        props.status === "today" && "border-warning/30 bg-warning/10 text-warning",
         props.status === "soon" && "border-border bg-muted text-muted-foreground",
       )}
     >

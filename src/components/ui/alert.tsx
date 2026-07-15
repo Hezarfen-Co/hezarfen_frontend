@@ -8,9 +8,9 @@ export function Alert(props: ParentProps<ComponentProps<"div"> & { variant?: "de
     <div
       role="alert"
       class={cn(
-        "relative w-full rounded-sm border px-4 py-3 text-sm",
+        "relative w-full rounded-md border px-4 py-3 text-sm shadow-sm",
         local.variant === "destructive"
-          ? "border-destructive/50 text-destructive"
+          ? "border-destructive/30 bg-destructive/10 text-destructive"
           : "bg-background text-foreground",
         local.class,
       )}
