@@ -16,9 +16,9 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { SidePanel } from "@/components/ui/side-panel";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -154,7 +154,7 @@ function EventDetailContent() {
               }}
             />
 
-            <FormDialog
+            <SidePanel
               open={editing()}
               onOpenChange={setEditing}
               title={t("common.edit")}
@@ -176,7 +176,7 @@ function EventDetailContent() {
                   await refetchEvent();
                 }}
               />
-            </FormDialog>
+            </SidePanel>
 
             <div class="grid gap-4 lg:grid-cols-2">
               <section class="data-shell p-4">

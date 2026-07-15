@@ -23,10 +23,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableFrame } from "@/components/ui/data-table";
-import { FormDialog } from "@/components/ui/form-dialog";
 import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SectionDisclosure } from "@/components/ui/section-disclosure";
+import { SidePanel } from "@/components/ui/side-panel";
 import {
   Table,
   TableBody,
@@ -305,7 +305,7 @@ function ExamDetailContent() {
               }}
             />
 
-            <FormDialog
+            <SidePanel
               open={editing()}
               onOpenChange={setEditing}
               title={t("common.edit")}
@@ -321,7 +321,7 @@ function ExamDetailContent() {
                   await refetchExam();
                 }}
               />
-            </FormDialog>
+            </SidePanel>
 
             <SectionDisclosure
               open={openSections().schedule}
