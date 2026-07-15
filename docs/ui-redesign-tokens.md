@@ -2,8 +2,10 @@
 
 ## Direction
 
-Dense school admin UI: Fintables-style tables, Cloudflare-style grouped sidebar,
-neutral surfaces, subtle borders, one blue accent.
+Dense school admin UI: Fintables-style tables, Cloudflare-style grouped sidebar
+and status boards, neutral surfaces, subtle borders, one blue accent for
+interactive chrome only. Dashboard and overview surfaces stay grayscale; color
+is reserved for semantic status (success / warning / danger / info).
 
 ## Color
 
@@ -79,6 +81,47 @@ Implemented:
 - mono IDs and tabular metrics
 - neutral surfaces, subtle borders, no gradients or decorative cards
 
+## Dashboard (homepage)
+
+Reference implementation: `src/pages/dashboard-page.tsx`.
+
+### Intent
+
+- Observation / navigation board, not a mutation surface.
+- Cloudflare-style density: quiet borders, flat cards, mono counts, no vanity decoration.
+
+### Structure
+
+1. Header — greeting, neutral role chip, date.
+2. Workspace portal cards — role-scoped section links.
+3. Needs attention + Upcoming — two columns from `lg`, stacked on small screens.
+
+### Portal card anatomy
+
+```text
+┌──────────────────────────────────────────────┐
+│ [icon]  Courses  |  12                       │
+│         Browse courses and class materials.  │
+└──────────────────────────────────────────────┘
+```
+
+- Horizontal row: left icon box (muted border, no tinted fill), middle title + one-line description, count on the **same line as the title**.
+- Desktop title/count separator: literal `|` in muted border color (`Title | 12`). Count uses `.mono` / tabular nums.
+- No colored top bars, no per-card accent tints, no large stacked KPI under the description.
+- Do not add a second KPI strip that repeats the same course/exam/event counts.
+- Grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`, compact padding (`px-3 py-3` / `sm:px-4`), min height ~4.5–5rem.
+- Optional min-role badge is neutral (border + muted), hidden on the smallest width if it crowds the row.
+
+### Attention / upcoming lists
+
+- Divided list inside one bordered card; row is a full-width link.
+- Status uses semantic color only (dot + small badge): active (emerald), today (amber), soon (muted).
+- Empty states are plain text — never “create exam/event” CTAs.
+
+### Out of scope for dashboard
+
+- Activity bar charts, multi-color portal accents, guide/marketing footers, create shortcuts, redundant summary KPI tiles under the portal grid.
+
 ## Current Implementation Notes
 
 - Data-heavy admin and management views should prefer `DataToolbar`, `DataTableFrame`, and `.data-table`.
@@ -91,6 +134,7 @@ Implemented:
 - User-facing tables should prefer usernames/display names over raw ids; show raw ids only as fallback or in explicit id columns.
 - Header actions use compact icon + label buttons with equal min-width; related sections should use matching badge labels and button sizing.
 - Attendance status UI uses shared metadata: localized label, short detail text, and semantic color classes.
+- Homepage/dashboard follows the **Dashboard (homepage)** section above; keep list pages dense-table oriented, not dashboard-card oriented.
 
 Static wireframe:
 

@@ -153,6 +153,7 @@ export type MessageKey =
   | "dashboard.emptyNotesCta"
   | "dashboard.emptyEventsCta"
   | "dashboard.upcomingEmpty"
+  | "dashboard.soon"
   | "dashboard.viewAll"
   | "dashboard.getStarted"
   | "dashboard.helpTitle"
@@ -626,7 +627,7 @@ const en: Dict = {
   "dashboard.stats.average": "Average",
   "dashboard.stats.averageHint": "Overall report card",
   "dashboard.commandCenter": "Command center",
-  "dashboard.observationOnly": "A live read-only map of your school day.",
+  "dashboard.observationOnly": "Read-only overview of what needs attention.",
   "dashboard.today": "Today",
   "dashboard.reportCard": "Report card",
   "dashboard.ready": "Ready",
@@ -637,8 +638,8 @@ const en: Dict = {
   "dashboard.nextEvent": "Next event",
   "dashboard.courseLoad": "Course load",
   "dashboard.latestWindow": "Latest window",
-  "dashboard.noAttention": "Nothing urgent",
-  "dashboard.allClear": "No active exam or near event needs action right now.",
+  "dashboard.noAttention": "Nothing needs attention right now.",
+  "dashboard.allClear": "All clear",
   "dashboard.roleLinks": "Workspace overview",
   "dashboard.activityGraph": "Activity graph",
   "dashboard.activityGraphDesc": "Events, exams, and courses at a glance.",
@@ -655,6 +656,7 @@ const en: Dict = {
   "dashboard.emptyNotesCta": "Write a note",
   "dashboard.emptyEventsCta": "Browse events",
   "dashboard.upcomingEmpty": "Nothing here.",
+  "dashboard.soon": "Soon",
   "dashboard.viewAll": "View all",
   "dashboard.getStarted": "Get started",
   "dashboard.helpTitle": "Need a hand?",
@@ -1140,7 +1142,7 @@ const tr: Dict = {
   "dashboard.stats.average": "Ortalama",
   "dashboard.stats.averageHint": "Genel karne",
   "dashboard.commandCenter": "Komuta merkezi",
-  "dashboard.observationOnly": "Okul gününün canlı ve salt okunur haritası.",
+  "dashboard.observationOnly": "Dikkat isteyenlerin salt okunur özeti.",
   "dashboard.today": "Bugün",
   "dashboard.reportCard": "Karne",
   "dashboard.ready": "Hazır",
@@ -1151,8 +1153,8 @@ const tr: Dict = {
   "dashboard.nextEvent": "Sıradaki etkinlik",
   "dashboard.courseLoad": "Ders yükü",
   "dashboard.latestWindow": "Güncel pencere",
-  "dashboard.noAttention": "Acil bir şey yok",
-  "dashboard.allClear": "Şu an işlem isteyen aktif sınav veya yakın etkinlik yok.",
+  "dashboard.noAttention": "Şu an dikkat isteyen bir şey yok.",
+  "dashboard.allClear": "Temiz",
   "dashboard.roleLinks": "Çalışma alanı özeti",
   "dashboard.activityGraph": "Aktivite grafiği",
   "dashboard.activityGraphDesc": "Etkinlik, sınav ve ders yoğunluğu tek bakışta.",
@@ -1169,6 +1171,7 @@ const tr: Dict = {
   "dashboard.emptyNotesCta": "Not yaz",
   "dashboard.emptyEventsCta": "Etkinliklere git",
   "dashboard.upcomingEmpty": "Burada bir şey yok.",
+  "dashboard.soon": "Yakında",
   "dashboard.viewAll": "Tümünü gör",
   "dashboard.getStarted": "Başla",
   "dashboard.helpTitle": "Yardıma mı ihtiyacın var?",

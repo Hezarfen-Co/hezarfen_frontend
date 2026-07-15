@@ -115,4 +115,4 @@
 - ✅ = access granted
 - ❌ = access denied
 - ❌ (FE) = hidden by the frontend only — the backend permits the underlying own-data read; never treat as a security boundary
-- (badge) = visual indicator showing minimum role requirement on dashboard cards
+- (badge) = optional neutral min-role chip on dashboard portal cards (muted border; not a colored accent)
