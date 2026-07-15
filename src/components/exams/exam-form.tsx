@@ -28,11 +28,6 @@ function timeInputFromMs(ms: number | null | undefined): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function durationMinutesFromMs(ms: number | null | undefined): string {
-  if (ms == null) return "";
-  return String(Math.round(ms / 60000));
-}
-
 function scheduleInputToMs(date: string, time: string): number | null {
   const dateMatch = date.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   const timeMatch = time.trim().match(/^(\d{2}):(\d{2})$/);
@@ -87,7 +82,6 @@ export function ExamForm(props: {
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
   const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
   const [endsTime, setEndsTime] = createSignal(timeInputFromMs(props.initial?.ends_at));
-  const [durationMinutes, setDurationMinutes] = createSignal(durationMinutesFromMs(props.initial?.duration_ms));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
@@ -140,7 +134,6 @@ export function ExamForm(props: {
         setStartsTime("");
         setEndsDate("");
         setEndsTime("");
-        setDurationMinutes("");
       }
     } catch (err) {
       setError(formatApiError(err));
@@ -154,8 +147,7 @@ export function ExamForm(props: {
     const hasWindow = mode() === "sync" || mode() === "async";
     const starts_at = hasWindow ? scheduleInputToMs(startsDate(), startsTime()) : null;
     const ends_at = hasWindow ? scheduleInputToMs(endsDate(), endsTime()) : null;
-    const durationValue = Number(durationMinutes());
-    const duration_ms = mode() === "async" && Number.isFinite(durationValue) ? durationValue * 60000 : null;
+    const duration_ms = mode() === "async" && starts_at != null && ends_at != null ? ends_at - starts_at : null;
     const v = validate(starts_at, ends_at, duration_ms);
     if (v) {
       setError(v);
@@ -251,7 +243,7 @@ export function ExamForm(props: {
             <Label for="exam-max-attempts">{t("exams.maxAttempts")}</Label>
             <Input
               id="exam-max-attempts"
-              class="rounded-sm"
+              class="h-10 rounded-sm bg-background/60"
               type="number"
               min={1}
               step={1}
@@ -266,9 +258,10 @@ export function ExamForm(props: {
         <div class="grid gap-3">
           <div class="space-y-1.5">
             <Label for="exam-starts">{t("events.starts")}</Label>
-            <div class="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
+            <div class="grid grid-cols-2 gap-2">
               <DatePicker
                 id="exam-starts"
+                class="h-10"
                 placeholder={t("form.datePlaceholder")}
                 value={startsDate()}
                 required
@@ -276,7 +269,7 @@ export function ExamForm(props: {
               />
               <Input
                 id="exam-starts-time"
-                class="rounded-sm font-mono placeholder:text-muted-foreground/45"
+                class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
                 inputMode="numeric"
                 placeholder="14:30"
                 pattern="[0-2][0-9]:[0-5][0-9]"
@@ -289,9 +282,10 @@ export function ExamForm(props: {
           </div>
           <div class="space-y-1.5">
             <Label for="exam-ends">{t("events.ends")}</Label>
-            <div class="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
+            <div class="grid grid-cols-2 gap-2">
               <DatePicker
                 id="exam-ends"
+                class="h-10"
                 placeholder={t("form.datePlaceholder")}
                 value={endsDate()}
                 required
@@ -299,7 +293,7 @@ export function ExamForm(props: {
               />
               <Input
                 id="exam-ends-time"
-                class="rounded-sm font-mono placeholder:text-muted-foreground/45"
+                class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
                 inputMode="numeric"
                 placeholder="15:30"
                 pattern="[0-2][0-9]:[0-5][0-9]"
@@ -310,22 +304,6 @@ export function ExamForm(props: {
               />
             </div>
           </div>
-        </div>
-      </Show>
-      <Show when={mode() === "async"}>
-        <div class="space-y-1.5">
-          <Label for="exam-duration-minutes">{t("exams.durationMinutes")}</Label>
-          <Input
-            id="exam-duration-minutes"
-            class="rounded-sm"
-            type="number"
-            min={1}
-            max={1440}
-            step={1}
-            value={durationMinutes()}
-            required
-            onInput={(e) => setDurationMinutes(e.currentTarget.value)}
-          />
         </div>
       </Show>
       {error() && <p class="text-sm text-destructive">{error()}</p>}

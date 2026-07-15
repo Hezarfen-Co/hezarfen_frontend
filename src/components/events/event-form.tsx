@@ -159,12 +159,13 @@ export function EventForm(props: {
           onInput={(e) => setDescription(e.currentTarget.value)}
         />
       </div>
-      <div class="grid gap-3 sm:grid-cols-2">
+      <div class="grid gap-3">
         <div class="space-y-1.5">
           <Label for="event-starts">{t("events.starts")}</Label>
-          <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+          <div class="grid grid-cols-2 gap-2">
             <DatePicker
               id="event-starts"
+              class="h-10"
               placeholder={t("form.datePlaceholder")}
               value={startsDate()}
               onChange={(value) => {
@@ -173,9 +174,13 @@ export function EventForm(props: {
               }}
             />
             <Input
-              class="h-10 rounded-sm font-mono"
+              id="event-starts-time"
+              class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
+              inputMode="numeric"
               placeholder="09:00"
+              pattern="[0-2][0-9]:[0-5][0-9]"
               value={startsTime()}
+              aria-label={t("exams.startTime")}
               onInput={(e) => {
                 setStartsTime(e.currentTarget.value);
                 setStartsTouched(true);
@@ -188,9 +193,10 @@ export function EventForm(props: {
         </div>
         <div class="space-y-1.5">
           <Label for="event-ends">{t("events.ends")}</Label>
-          <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
+          <div class="grid grid-cols-2 gap-2">
             <DatePicker
               id="event-ends"
+              class="h-10"
               placeholder={t("form.datePlaceholder")}
               value={endsDate()}
               onChange={(value) => {
@@ -199,9 +205,13 @@ export function EventForm(props: {
               }}
             />
             <Input
-              class="h-10 rounded-sm font-mono"
+              id="event-ends-time"
+              class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
+              inputMode="numeric"
               placeholder="10:00"
+              pattern="[0-2][0-9]:[0-5][0-9]"
               value={endsTime()}
+              aria-label={t("exams.endTime")}
               onInput={(e) => {
                 setEndsTime(e.currentTarget.value);
                 setEndsTouched(true);
