@@ -1,5 +1,6 @@
 import { Collapsible } from "@kobalte/core/collapsible";
 import type { ParentProps } from "solid-js";
+import { IconChevronDown, IconGuide } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
 /** shadcn-style collapsible help — always starts closed. */
@@ -18,20 +19,11 @@ export function CollapsibleHelp(
           "ui-expanded:border-b ui-expanded:border-border",
         )}
       >
-        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-muted text-xs font-semibold text-muted-foreground">
-          ?
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-muted text-muted-foreground">
+          <IconGuide class="h-3.5 w-3.5" />
         </span>
         <span class="flex-1">{props.title}</span>
-        <svg
-          viewBox="0 0 24 24"
-          class="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[expanded]/help:rotate-180"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden
-        >
-          <path d="m6 9 6 6 6-6" />
-        </svg>
+        <IconChevronDown class="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[expanded]/help:rotate-180" />
       </Collapsible.Trigger>
       <Collapsible.Content>
         <div class="border-t border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">

@@ -14,14 +14,15 @@ import type { MessageKey } from "@/i18n/messages";
 import type { Role } from "@/api/types";
 import {
   IconBook,
+  IconBriefcase,
   IconCalendar,
+  IconCalendarDays,
   IconChart,
   IconChevronRight,
   IconClipboardCheck,
-  IconEdit,
+  IconExam,
   IconHome,
   IconNote,
-  IconPencilQuestion,
   IconReportAnalytics,
   IconSchool,
   IconSettings,
@@ -64,14 +65,14 @@ const NAV_GROUPS: NavGroup[] = [
     Icon: IconSchool,
     items: [
       { to: "/courses", labelKey: "nav.courses", Icon: IconBook },
-      { to: "/exams", labelKey: "nav.exams", Icon: IconPencilQuestion },
+      { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
     ],
   },
   {
     id: "grades",
     labelKey: "nav.group.grades",
-    Icon: IconNote,
+    Icon: IconChart,
     items: [
       { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
       { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
@@ -85,8 +86,8 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
-      { to: "/work", labelKey: "nav.work", Icon: IconReportAnalytics, minRole: "teacher", maxRole: "manager" },
-      { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconReportAnalytics, minRole: "manager" },
+      { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
+      { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
     ],
   },
   {
@@ -96,7 +97,7 @@ const NAV_GROUPS: NavGroup[] = [
     minRole: "manager",
     items: [
       { to: "/management/settings", labelKey: "nav.settings", Icon: IconSettings, minRole: "manager" },
-      { to: "/management/terms", labelKey: "nav.terms", Icon: IconEdit, minRole: "manager" },
+      { to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendarDays, minRole: "manager" },
     ],
   },
   {

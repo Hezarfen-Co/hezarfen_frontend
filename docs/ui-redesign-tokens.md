@@ -130,7 +130,7 @@ Reference implementation: `src/pages/dashboard-page.tsx`.
 - Durable resources keep full detail pages with breadcrumbs.
 - Large detail sections can use `SectionDisclosure`; choose deferred mounting for request savings or mounted content for state preservation.
 - Product date inputs should use the shared `DatePicker`; date-time flows should pair it with a compact `HH:mm` input.
-- Sidebar icons are local SVG wrappers to keep development builds small and avoid large icon package module graphs.
+- Icons are local Lucide-geometry SVG wrappers in `src/components/ui/icons.tsx` (24 grid, stroke 2, round caps/joins, `rx=2` on rounded rects). No icon package — keeps dev builds small. Prefer adding a path there over ad-hoc inline SVGs.
 - User-facing tables should prefer usernames/display names over raw ids; show raw ids only as fallback or in explicit id columns.
 - Header actions use compact icon + label buttons with equal min-width; related sections should use matching badge labels and button sizing.
 - Attendance status UI uses shared metadata: localized label, short detail text, and semantic color classes.
