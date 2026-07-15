@@ -37,9 +37,14 @@ const CoursesPage = lazyRoute(() => import("@/pages/courses-page"));
 const CourseDetailPage = lazyRoute(() => import("@/pages/course-detail-page"));
 const MarksPage = lazyRoute(() => import("@/pages/marks-page"));
 const StudentMarksPage = lazyRoute(() => import("@/pages/student-marks-page"));
+const AttendancePage = lazyRoute(() => import("@/pages/attendance-page"));
+const StudentAttendancePage = lazyRoute(() => import("@/pages/student-attendance-page"));
+const WorkLogPage = lazyRoute(() => import("@/pages/work-log-page"));
 const ProfilePage = lazyRoute(() => import("@/pages/profile-page"));
 const LiveMonitorPage = lazyRoute(() => import("@/pages/live-monitor-page"));
 const AdminUsersPage = lazyRoute(() => import("@/pages/admin-users-page"));
+const SettingsPage = lazyRoute(() => import("@/pages/settings-page"));
+const TermsPage = lazyRoute(() => import("@/pages/terms-page"));
 const GuidePage = lazyRoute(() => import("@/pages/guide-page"));
 
 function RootComponent() {
@@ -154,6 +159,36 @@ const studentMarksRoute = createRoute({
   component: StudentMarksPage,
 });
 
+const attendanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/attendance",
+  component: AttendancePage,
+});
+
+const studentAttendanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/student-attendance",
+  component: StudentAttendancePage,
+});
+
+const workRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/work",
+  component: WorkLogPage,
+});
+
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/settings",
+  component: SettingsPage,
+});
+
+const termsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/terms",
+  component: TermsPage,
+});
+
 const liveMonitorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/exams/$id/live",
@@ -207,6 +242,11 @@ const routeTree = rootRoute.addChildren([
   courseDetailRoute,
   marksRoute,
   studentMarksRoute,
+  attendanceRoute,
+  studentAttendanceRoute,
+  workRoute,
+  settingsRoute,
+  termsRoute,
   profileRoute,
   adminUsersRoute,
   guideRoute,

@@ -19,19 +19,18 @@ export function NoteCard(props: {
   const [deleteOpen, setDeleteOpen] = createSignal(false);
 
   return (
-    <article class="surface-card relative flex h-full min-h-48 flex-col overflow-hidden transition-all hover:border-amber-500/30 hover:shadow-sm">
-      <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500/70 via-orange-400/50 to-transparent" />
-      <div class="flex items-start justify-between gap-3 border-b border-border/60 px-4 py-4">
-        <h3 class="line-clamp-2 min-w-0 font-display text-lg font-semibold leading-snug">{props.note.title}</h3>
+    <article class="data-shell flex h-full min-h-40 flex-col overflow-hidden transition-colors hover:border-primary/35">
+      <div class="flex items-start justify-between gap-3 border-b border-border bg-muted/25 px-3 py-3">
+        <h3 class="line-clamp-2 min-w-0 font-display text-base font-semibold leading-snug">{props.note.title}</h3>
         <div class="flex shrink-0 gap-1">
-          <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(true)}>
+          <Button type="button" variant="ghost" size="sm" class="h-7 rounded-sm px-2" onClick={() => setEditing(true)}>
             {t("common.edit")}
           </Button>
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            class="h-7 rounded-sm px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => setDeleteOpen(true)}
           >
             <IconTrash class="h-4 w-4" />
@@ -39,8 +38,8 @@ export function NoteCard(props: {
           </Button>
         </div>
       </div>
-      <div class="flex flex-1 flex-col gap-4 p-4">
-        <p class="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+      <div class="flex flex-1 flex-col gap-4 p-3">
+        <p class="whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">
           {props.note.content || t("notes.noContent")}
         </p>
         {error() && <p class="text-sm text-destructive">{error()}</p>}

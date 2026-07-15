@@ -29,6 +29,11 @@ function timeInputFromMs(ms: number | null | undefined): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function durationMinutesFromMs(ms: number | null | undefined): string {
+  if (ms == null) return "";
+  return String(Math.round(ms / 60000));
+}
+
 function scheduleInputToMs(date: string, time: string): number | null {
   const dateMatch = date.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   const timeMatch = time.trim().match(/^(\d{2}):(\d{2})$/);
@@ -83,6 +88,7 @@ export function ExamForm(props: {
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
   const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
   const [endsTime, setEndsTime] = createSignal(timeInputFromMs(props.initial?.ends_at));
+  const [durationMinutes, setDurationMinutes] = createSignal(durationMinutesFromMs(props.initial?.duration_ms));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
@@ -100,7 +106,7 @@ export function ExamForm(props: {
     if (names.length > 0 && !names.includes(kind())) setKind(names[0]);
   });
 
-  const validate = (starts: number | null, ends: number | null): string | null => {
+  const validate = (starts: number | null, ends: number | null, duration: number | null): string | null => {
     const value = title().trim();
     if (!value) return t("form.titleRequired");
     if (value.length > 200) return t("form.titleMax");
@@ -110,6 +116,11 @@ export function ExamForm(props: {
     if (mode() === "sync" || mode() === "async") {
       if (starts == null || ends == null) return t("exams.scheduleRequired");
       if (ends <= starts) return t("form.timeOrder");
+      if (!isEdit() && (starts < Date.now() || ends < Date.now())) return t("form.timePast");
+    }
+    if (mode() === "async") {
+      if (duration == null) return t("exams.durationRequired");
+      if (duration < 60000 || duration > 86400000) return t("exams.durationRange");
     }
     return null;
   };
@@ -130,6 +141,7 @@ export function ExamForm(props: {
         setStartsTime("");
         setEndsDate("");
         setEndsTime("");
+        setDurationMinutes("");
       }
     } catch (err) {
       setError(formatApiError(err));
@@ -143,8 +155,9 @@ export function ExamForm(props: {
     const hasWindow = mode() === "sync" || mode() === "async";
     const starts_at = hasWindow ? scheduleInputToMs(startsDate(), startsTime()) : null;
     const ends_at = hasWindow ? scheduleInputToMs(endsDate(), endsTime()) : null;
-    const duration_ms = mode() === "async" && starts_at != null && ends_at != null ? ends_at - starts_at : null;
-    const v = validate(starts_at, ends_at);
+    const durationValue = Number(durationMinutes());
+    const duration_ms = mode() === "async" && Number.isFinite(durationValue) ? durationValue * 60000 : null;
+    const v = validate(starts_at, ends_at, duration_ms);
     if (v) {
       setError(v);
       return;
@@ -298,6 +311,22 @@ export function ExamForm(props: {
               />
             </div>
           </div>
+        </div>
+      </Show>
+      <Show when={mode() === "async"}>
+        <div class="space-y-1.5">
+          <Label for="exam-duration-minutes">{t("exams.durationMinutes")}</Label>
+          <Input
+            id="exam-duration-minutes"
+            class="rounded-sm"
+            type="number"
+            min={1}
+            max={1440}
+            step={1}
+            value={durationMinutes()}
+            required
+            onInput={(e) => setDurationMinutes(e.currentTarget.value)}
+          />
         </div>
       </Show>
       {error() && <p class="text-sm text-destructive">{error()}</p>}

@@ -63,11 +63,36 @@ export type Course = {
   term_id?: string | null;
 };
 
+export type Term = {
+  id: string;
+  name: string;
+  starts_at: number;
+  ends_at: number;
+};
+
 export type Enrollment = {
   id: string;
   course: string;
   user: PersonRef;
   enrolled_by: PersonRef;
+};
+
+export type CourseSession = {
+  id: string;
+  course: string;
+  teacher: PersonRef;
+  topic: string;
+  starts_at: number;
+  ends_at: number | null;
+};
+
+export type SessionAttendance = {
+  id: string;
+  session: string;
+  course: string;
+  user: PersonRef;
+  status: AttendanceStatus;
+  marked_by: PersonRef;
 };
 
 export type Exam = {
@@ -149,6 +174,7 @@ export type MarkEntry = {
   type_weight?: number | null;
   exam_type_weight?: number | null;
   mark: number;
+  grade?: string | null;
   graded_by: string;
 };
 
@@ -156,12 +182,44 @@ export type CourseMarks = {
   course: Course;
   results: MarkEntry[];
   average: number | null;
+  average_grade?: string | null;
+};
+
+export type AttendanceCounts = {
+  present: number;
+  absent: number;
+  late: number;
+  excused: number;
+  custom: Record<string, number>;
+  total: number;
+  rate: number | null;
+};
+
+export type CourseAttendance = {
+  course: Course;
+  counts: AttendanceCounts;
+};
+
+export type AttendanceReport = {
+  user: string;
+  events: AttendanceCounts;
+  sessions: AttendanceCounts;
+  courses: CourseAttendance[];
+};
+
+export type WorkEntry = {
+  id: string;
+  user: string;
+  check_in: number;
+  check_out: number | null;
+  duration_ms: number | null;
 };
 
 export type MarksReport = {
   user: string;
   courses: CourseMarks[];
   overall_average: number | null;
+  overall_grade?: string | null;
 };
 
 export type ExamStatistics = {
@@ -195,6 +253,7 @@ export type LiveRosterEntry = {
   status: AttemptStatus | "not_started" | "absent";
   attempt?: number | null;
   attempts_used?: number | null;
+  max_attempts?: number | null;
   deadline: number | null;
   remaining_ms: number | null;
   left_at?: number | null;

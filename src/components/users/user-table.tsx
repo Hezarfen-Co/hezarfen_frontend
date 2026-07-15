@@ -11,10 +11,24 @@ import {
 } from "@/components/ui/table";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableFrame } from "@/components/ui/data-table";
 import { IconCheck } from "@/components/ui/icons";
 import { ROLES } from "@/lib/roles";
+import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
+
+function displayName(user: User): string {
+  return [user.name, user.surname].filter(Boolean).join(" ") || "—";
+}
+
+function roleTone(role: Role): string {
+  if (role === "admin") return "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300";
+  if (role === "manager") return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  if (role === "teacher") return "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300";
+  return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+}
 
 function UserRoleRow(props: {
   user: User;
@@ -28,12 +42,19 @@ function UserRoleRow(props: {
   const dirty = () => pendingRole() !== props.user.role;
 
   return (
-    <TableRow class="h-16">
-      <TableCell class="font-medium">{props.user.username}</TableCell>
-      <TableCell class="font-mono text-xs text-muted-foreground">{props.user.id}</TableCell>
-      <TableCell class="space-y-2">
+    <TableRow>
+      <TableCell class="truncate font-medium">{props.user.username}</TableCell>
+      <TableCell class="truncate">{displayName(props.user)}</TableCell>
+      <TableCell class="truncate text-muted-foreground">{props.user.email || "—"}</TableCell>
+      <TableCell class="text-center">
+        <Badge variant="outline" class={cn("mono uppercase tracking-[0.08em]", roleTone(props.user.role))}>
+          {t(`role.${props.user.role}` as MessageKey)}
+        </Badge>
+      </TableCell>
+      <TableCell class="mono truncate text-xs text-muted-foreground">{props.user.id}</TableCell>
+      <TableCell class="w-52">
         <Select
-          class="h-10 rounded-md"
+          class="h-8 rounded-sm text-xs"
           value={pendingRole()}
           disabled={isSelf()}
           onChange={(e) => setPendingRole(e.currentTarget.value as Role)}
@@ -44,7 +65,7 @@ function UserRoleRow(props: {
           ))}
         </Select>
         <Show when={!isSelf() && dirty()}>
-          <Button type="button" size="sm" class="rounded-md" onClick={() => setConfirmOpen(true)}>
+          <Button type="button" size="sm" class="mt-2 h-7 rounded-sm px-2" onClick={() => setConfirmOpen(true)}>
             <IconCheck />
             {t("common.update")}
           </Button>
@@ -75,13 +96,24 @@ export function UserTable(props: {
 }) {
   const t = useT();
   return (
-    <div class="overflow-hidden rounded-lg bg-background/40">
-      <Table>
+    <DataTableFrame>
+      <Table class="data-table table-fixed min-w-[58rem]">
+        <colgroup>
+          <col class="w-[15%]" />
+          <col class="w-[18%]" />
+          <col class="w-[22%]" />
+          <col class="w-[9rem]" />
+          <col class="w-[18%]" />
+          <col class="w-[13rem]" />
+        </colgroup>
         <TableHeader>
           <TableRow>
             <TableHead>{t("admin.username")}</TableHead>
+            <TableHead>{t("profile.name")}</TableHead>
+            <TableHead>{t("profile.email")}</TableHead>
+            <TableHead class="text-center">{t("admin.role")}</TableHead>
             <TableHead>{t("admin.id")}</TableHead>
-            <TableHead class="w-56">{t("admin.role")}</TableHead>
+            <TableHead class="w-52">{t("common.update")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -96,6 +128,6 @@ export function UserTable(props: {
           </For>
         </TableBody>
       </Table>
-    </div>
+    </DataTableFrame>
   );
 }
