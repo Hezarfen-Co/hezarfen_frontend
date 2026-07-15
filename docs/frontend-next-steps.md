@@ -60,6 +60,9 @@ Started fixes:
 - Exam room entry is student/enrolled workflow only; teacher+ users get live monitor actions instead of the student exam-room action.
 - Student report lookup and course enrollment pickers pass `role=student` to `/users/search` so management flows do not suggest non-student accounts.
 - Courses page no longer calls `GET /courses` for students when it renders the enrolled-course list from `GET /courses/me`.
+- Exams page no longer calls `GET /courses` for students; course filters use enrolled courses from `GET /courses/me`.
+- Exams table edit action is limited to exam creator or manager+, matching course-management rights.
+- Dashboard course scope uses `GET /courses/me` for students and `GET /courses` for teacher+ visible-course scope.
 
 ## Priority 2: Pagination And Request Audit
 
