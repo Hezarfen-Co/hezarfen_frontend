@@ -73,6 +73,51 @@ Backend README Auth kolonunda:
 
 Ancak kodda `*/me` endpoint'leri `CurrentUser` (rol kontrolü yok) ile çalışıyor, `RequireTeacher`/`RequireStudent` değil. README'de `student` yazıp kodda herkese açık olması tutarsız. Bu endpoint'ler ya `RequireStudent` ile korunmalı ya da mevcut davranış (herkese açık) README'e yansıtılmalı.
 
+---
+
+## Known Gaps (English — for backend team)
+
+### Contract Mismatches
+
+| # | Issue | BE field | FE field | Impact |
+|---|-------|----------|----------|--------|
+| 1 | Course term field name mismatch | `term` (string ID) | `term_id` (in FE type, write body is correct for POST/PATCH) | Term column and term filter on courses page almost always show "unassigned". The read response field is `term` but the FE type expects `term_id` |
+
+### Role Guard Gaps (FE)
+
+| # | Issue | Files | Priority |
+|---|-------|-------|----------|
+| 1 | `/marks` page has no student-only guard — any authenticated user can see it | `marks-page.tsx`, `router.tsx`, `side-nav.tsx` | HIGH |
+| 2 | `/attendance` page has no student-only guard | `attendance-page.tsx`, `router.tsx`, `side-nav.tsx` | HIGH |
+| 3 | `RouteGuard` only supports `minRole` (hierarchical: teacher→manager→admin); no `exactRole` or student-only mode exists | `route-guard.tsx` | MEDIUM |
+| 4 | `/work`, `/live`, `/management/settings`, `/management/terms` have client-side `RouteGuard` but no router `beforeLoad` guard | `router.tsx` | LOW |
+
+### Missing BE → FE coverage
+
+| Endpoint | Purpose | Status |
+|---|---|---|
+| `PATCH /sessions/{id}` | Edit a course session | No helper, no UI |
+| `GET /work/{user}` | Read another user's work log (manager+) | No helper, no UI |
+| `PATCH /work/entries/{id}` | Correct a closed work stint (manager+) | No helper, no UI |
+| `DELETE /work/entries/{id}` | Delete a work entry (manager+) | No helper, no UI |
+
+### Incomplete Features
+
+| Feature | Detail |
+|---|---|
+| `allow_rejoin` | Type + request body exist; form always sends `true`; no UI toggle |
+| Exam weight badge | BE `ExamResponse` has no weight field; weight is derived from kind + settings. Badge never shows |
+| Exam room CTA | Visible to managers/admins on exam detail page; the room page itself blocks non-students |
+
+### Pagination Status
+
+- All list endpoints accept `?limit=&offset=` and return `{ items, total, limit, offset }`.
+- Main FE lists (courses, exams, events, notes, terms, work log, admin users) send real server page params.
+- Nested lists (sessions, enrollments, attendance, exam results/questions) unwrap full `.items` — acceptable for school-scale data.
+- Reports (`/marks/*`, `/attendance/*`) are not paged — aggregate report shapes.
+
+---
+
 ## Kullanılan Kısaltmalar
 
 - ✅ = erişim var
