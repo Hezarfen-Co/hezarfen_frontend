@@ -174,9 +174,7 @@ function ExamDetailContent() {
         when={exam()}
         fallback={
           <Show when={exam.error}>
-            <Alert variant="destructive">
-              {exam.error instanceof ApiError ? exam.error.message : t("common.notFound")}
-            </Alert>
+            <Alert variant="destructive">{formatApiError(exam.error)}</Alert>
           </Show>
         }
       >

@@ -52,7 +52,7 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
   };
 
   return (
-    <Link to="/exams/$id" params={() => ({ id: props.exam.id })} class="group block h-full">
+    <Link to="/exams/$id" params={{ id: props.exam.id }} class="group block h-full">
       <article class="surface-card relative flex h-full min-h-52 flex-col overflow-hidden transition-all group-hover:-translate-y-0.5 group-hover:border-rose-500/30 group-hover:shadow-sm">
         <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500/70 via-amber-400/50 to-transparent" />
         <div class="flex flex-1 flex-col p-4">

@@ -6,7 +6,7 @@ import { getEventAttendance } from "@/api/getEventAttendance";
 import { getEventById } from "@/api/getEventById";
 import { patchEventById } from "@/api/patchEventById";
 import { postEventAttendance } from "@/api/postEventAttendance";
-import { formatApiError, ApiError } from "@/api/client";
+import { formatApiError } from "@/api/client";
 import type { AttendanceStatus } from "@/api/types";
 import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
 import { AttendanceTable } from "@/components/events/attendance-table";
@@ -79,9 +79,7 @@ function EventDetailContent() {
         when={event()}
         fallback={
           <Show when={event.error}>
-            <Alert variant="destructive">
-              {event.error instanceof ApiError ? event.error.message : t("common.notFound")}
-            </Alert>
+            <Alert variant="destructive">{formatApiError(event.error)}</Alert>
           </Show>
         }
       >
