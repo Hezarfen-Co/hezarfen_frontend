@@ -1,126 +1,116 @@
-# Rol Kapsamı Matrisi
+# Role Scope Matrix
 
-## Sayfa Bazında Erişim
+## Page Access per Role
 
-| Sayfa / Özellik | Öğrenci | Öğretmen | Müdür | Admin |
+| Page / Feature | Student | Teacher | Manager | Admin |
 |---|---|---|---|---|
-| Ana sayfa `/` | ✅ | ✅ | ✅ | ✅ |
-| Profil `/profile` | ✅ | ✅ | ✅ | ✅ |
-| Rehber `/guide` | ✅ | ✅ | ✅ | ✅ |
-| Notlar `/notes` | ✅ | ✅ | ✅ | ✅ |
-| Dersler `/courses` | ✅ | ✅ | ✅ | ✅ |
-| Ders detay `/courses/:id` | ✅ | ✅ | ✅ | ✅ |
-| Sınavlar `/exams` | ✅ | ✅ | ✅ | ✅ |
-| Sınav detay `/exams/:id` | ✅ | ✅ | ✅ | ✅ |
-| Sınav salonu `/exam-room/:id` | ✅ | ❌ | ❌ | ❌ |
-| Canlı monitör `/exams/:id/live` | ❌ | ✅ | ✅ | ✅ |
-| Etkinlikler `/events` | ✅ | ✅ | ✅ | ✅ |
-| Etkinlik detay `/events/:id` | ✅ | ✅ | ✅ | ✅ |
-| **Karnem `/marks`** | ✅ | ❌ | ❌ | ❌ |
-| **Yoklamam `/attendance`** | ✅ | ❌ | ❌ | ❌ |
-| Öğrenci not sorgula `/management/student-marks` | ❌ | ✅ | ✅ | ✅ |
-| Öğrenci yoklama sorgula `/management/student-attendance` | ❌ | ✅ | ✅ | ✅ |
-| Mesai `/work` | ❌ | ✅ | ✅ | ✅ |
-| Ayarlar `/management/settings` | ❌ | ❌ | ✅ | ✅ |
-| Dönemler `/management/terms` | ❌ | ❌ | ✅ | ✅ |
-| Kullanıcı yönetimi `/admin/users` | ❌ | ❌ | ❌ | ✅ |
+| Home `/` | ✅ | ✅ | ✅ | ✅ |
+| Profile `/profile` | ✅ | ✅ | ✅ | ✅ |
+| Guide `/guide` | ✅ | ✅ | ✅ | ✅ |
+| Notes `/notes` | ✅ | ✅ | ✅ | ✅ |
+| Courses `/courses` | ✅ | ✅ | ✅ | ✅ |
+| Course detail `/courses/:id` | ✅ | ✅ | ✅ | ✅ |
+| Exams `/exams` | ✅ | ✅ | ✅ | ✅ |
+| Exam detail `/exams/:id` | ✅ | ✅ | ✅ | ✅ |
+| Exam room `/exam-room/:id` | ✅ | ❌ | ❌ | ❌ |
+| Live monitor `/exams/:id/live` | ❌ | ✅ | ✅ | ✅ |
+| Events `/events` | ✅ | ✅ | ✅ | ✅ |
+| Event detail `/events/:id` | ✅ | ✅ | ✅ | ✅ |
+| **Report card `/marks`** | ✅ | ❌ | ❌ | ❌ |
+| **My attendance `/attendance`** | ✅ | ❌ | ❌ | ❌ |
+| Student marks lookup `/management/student-marks` | ❌ | ✅ | ✅ | ✅ |
+| Student attendance lookup `/management/student-attendance` | ❌ | ✅ | ✅ | ✅ |
+| Work log `/work` | ❌ | ✅ | ✅ | ✅ |
+| Staff work log `/management/staff-work` | ❌ | ❌ | ✅ | ✅ |
+| Settings `/management/settings` | ❌ | ❌ | ✅ | ✅ |
+| Terms `/management/terms` | ❌ | ❌ | ✅ | ✅ |
+| User management `/admin/users` | ❌ | ❌ | ❌ | ✅ |
 
-## Sidebar’da Ne Görsün?
+## Sidebar Visibility per Role
 
-| Sidebar grubu / item | Öğrenci | Öğretmen | Müdür | Admin |
+| Sidebar group / item | Student | Teacher | Manager | Admin |
 |---|---|---|---|---|
-| **classes** — Dersler / Sınavlar / Etkinlikler | ✅ | ✅ | ✅ | ✅ |
-| **grades** — Karnem (`/marks`) | ✅ | ❌ | ❌ | ❌ |
-| **grades** — Notlar | ✅ | ✅ | ✅ | ✅ |
-| **students** — Yoklamam (`/attendance`) | ✅ | ❌ | ❌ | ❌ |
-| **reports** — Öğrenci notları / yoklama / mesai | ❌ | ✅ | ✅ | ✅ |
-| **settings** — Ayarlar / Dönemler | ❌ | ❌ | ✅ | ✅ |
-| **admin** — Kullanıcılar | ❌ | ❌ | ❌ | ✅ |
+| **classes** — Courses / Exams / Events | ✅ | ✅ | ✅ | ✅ |
+| **grades** — Report card (`/marks`) | ✅ | ❌ | ❌ | ❌ |
+| **grades** — Notes | ✅ | ✅ | ✅ | ✅ |
+| **students** — My attendance (`/attendance`) | ✅ | ❌ | ❌ | ❌ |
+| **reports** — Student marks / attendance / work | ❌ | ✅ | ✅ | ✅ |
+| **reports** — Staff work log | ❌ | ❌ | ✅ | ✅ |
+| **settings** — Settings / Terms | ❌ | ❌ | ✅ | ✅ |
+| **admin** — Users | ❌ | ❌ | ❌ | ✅ |
 
-## Dashboard Portal Kartları
+## Dashboard Portal Cards per Role
 
-| Kart | Öğrenci | Öğretmen | Müdür | Admin |
+| Card | Student | Teacher | Manager | Admin |
 |---|---|---|---|---|
-| Dersler | ✅ (kayıtlı) | ✅ | ✅ | ✅ |
-| Sınavlar | ✅ (kayıtlı) | ✅ | ✅ | ✅ |
-| Etkinlikler | ✅ | ✅ (teacher badge) | ✅ | ✅ |
-| Karnem | ✅ | ❌ | ❌ | ❌ |
-| Notlar | ✅ | ✅ | ✅ | ✅ |
-| Öğrenci notları | ❌ | ✅ (teacher badge) | ✅ (teacher badge) | ✅ (teacher badge) |
-| Öğrenci yoklaması | ❌ | ✅ (teacher badge) | ✅ (teacher badge) | ✅ (teacher badge) |
-| Mesai | ❌ | ✅ (teacher badge) | ✅ (teacher badge) | ✅ (teacher badge) |
-| Ayarlar | ❌ | ❌ | ✅ (manager badge) | ✅ (manager badge) |
-| Dönemler | ❌ | ❌ | ✅ (manager badge) | ✅ (manager badge) |
-| Kullanıcılar | ❌ | ❌ | ❌ | ✅ (admin badge) |
+| Courses | ✅ (enrolled count) | ✅ | ✅ | ✅ |
+| Exams | ✅ (enrolled scope) | ✅ | ✅ | ✅ |
+| Events | ✅ | ✅ (teacher badge) | ✅ | ✅ |
+| Report card | ✅ | ❌ | ❌ | ❌ |
+| Notes | ✅ | ✅ | ✅ | ✅ |
+| Student marks | ❌ | ✅ (teacher badge) | ✅ (teacher badge) | ✅ (teacher badge) |
+| Student attendance | ❌ | ✅ (teacher badge) | ✅ (teacher badge) | ✅ (teacher badge) |
+| Work log | ❌ | ✅ (teacher badge) | ✅ (teacher badge) | ✅ (teacher badge) |
+| Settings | ❌ | ❌ | ✅ (manager badge) | ✅ (manager badge) |
+| Terms | ❌ | ❌ | ✅ (manager badge) | ✅ (manager badge) |
+| Users | ❌ | ❌ | ❌ | ✅ (admin badge) |
 
-## Tespit Edilen Hatalar
+## Action Scope per Role
 
-| # | Hata | Dosya(lar) | Önem |
-|---|---|---|---|
-| 1 | `/marks` her role açık, RouteGuard yok, nav'da herkes görür | `marks-page.tsx`, `router.tsx`, `side-nav.tsx` | YÜKSEK |
-| 2 | `/attendance` her role açık, RouteGuard yok, nav'da herkes görür | `attendance-page.tsx`, `router.tsx`, `side-nav.tsx` | YÜKSEK |
-| 3 | `RouteGuard` student-only desteklemiyor (sadece `minRole` var) | `route-guard.tsx` | ORTA |
-| 4 | `/work`, `/live`, `/settings`, `/terms` `beforeLoad` guard'ı yok (client-side RouteGuard var ama tutarsız) | `router.tsx` | DÜŞÜK |
-| 5 | Sınav salonu butonu manager/admin'e görünüyor (tıklayınca hata) | `exam-detail-page.tsx` | DÜŞÜK |
+| Action | Student | Teacher | Manager | Admin |
+|---|---|---|---|---|
+| Create / edit / delete own notes | ✅ | ✅ | ✅ | ✅ |
+| Mark own attendance on events | ✅ | ✅ | ✅ | ✅ |
+| Mark other users' event attendance | ❌ | ✅ | ✅ | ✅ |
+| Create / edit / delete events | ❌ | ✅ (creator or manager+) | ✅ | ✅ |
+| Enroll / unenroll students | ❌ | ✅ (course creator) | ✅ | ✅ |
+| Edit / delete courses | ❌ | ✅ (course creator) | ✅ | ✅ |
+| Create / edit / delete course sessions | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Take session roll call | ❌ | ✅ (session teacher or course manager) | ✅ | ✅ |
+| Mark session teacher's own presence | ❌ | ❌ | ✅ | ✅ |
+| Create exams | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Edit / delete exams | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Grade students | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Read exam results / statistics | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Read own exam result | ✅ | ❌ | ❌ | ❌ |
+| Write exam questions | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Read answer sheets | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Watch live monitor | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Sit an exam (attempt) | ✅ | ❌ | ❌ | ❌ |
+| Work check-in / check-out | ❌ | ✅ | ✅ | ✅ |
+| Read / correct any user's work log | ❌ | ❌ | ✅ | ✅ |
+| Read school settings & terms | ✅ | ✅ | ✅ | ✅ |
+| Edit school settings & terms | ❌ | ❌ | ✅ | ✅ |
+| Change user roles | ❌ | ❌ | ❌ | ✅ |
+| Look up any user | ❌ | ✅ (search) | ✅ (search) | ✅ (full) |
 
-## Backend Notu
+## Architectural Rules
 
-Backend README Auth kolonunda:
-- `GET /marks/me` = **student**
-- `GET /attendance/me` = **student**
-- `GET /marks/{user}` = **teacher**
-- `GET /attendance/{user}` = **teacher**
+- **Hierarchical roles:** `student < teacher < manager < admin`. A higher role satisfies any lower requirement.
+- **Course management rights:** course creator or `manager+`. Required for enrollment, session CRUD, exam CRUD, grading, roster read.
+- **Ownership edits:** event/note edit/delete respects creator id. Manager+ overrides creator gate.
+- **Student-only pages:** `/marks` (personal report card) and `/attendance` (personal attendance) are guarded by `RouteGuard exactRole="student"` and router `beforeLoad` redirect.
+- **Management pages:** all `/management/*` routes require at least `teacher` (marks/attendance lookup) or `manager` (settings/terms/staff-work). Guarded by both `RouteGuard` and `beforeLoad`.
+- **Data scope:** students see only enrolled/related data; teachers see managed course scope; manager+ sees all.
 
-Ancak kodda `*/me` endpoint'leri `CurrentUser` (rol kontrolü yok) ile çalışıyor, `RequireTeacher`/`RequireStudent` değil. README'de `student` yazıp kodda herkese açık olması tutarsız. Bu endpoint'ler ya `RequireStudent` ile korunmalı ya da mevcut davranış (herkese açık) README'e yansıtılmalı.
+## Guard Implementation
 
----
-
-## Known Gaps (English — for backend team)
-
-### Contract Mismatches
-
-| # | Issue | BE field | FE field | Impact |
-|---|-------|----------|----------|--------|
-| 1 | Course term field name mismatch | `term` (string ID) | `term_id` (in FE type, write body is correct for POST/PATCH) | Term column and term filter on courses page almost always show "unassigned". The read response field is `term` but the FE type expects `term_id` |
-
-### Role Guard Gaps (FE)
-
-| # | Issue | Files | Priority |
-|---|-------|-------|----------|
-| 1 | `/marks` page has no student-only guard — any authenticated user can see it | `marks-page.tsx`, `router.tsx`, `side-nav.tsx` | HIGH |
-| 2 | `/attendance` page has no student-only guard | `attendance-page.tsx`, `router.tsx`, `side-nav.tsx` | HIGH |
-| 3 | `RouteGuard` only supports `minRole` (hierarchical: teacher→manager→admin); no `exactRole` or student-only mode exists | `route-guard.tsx` | MEDIUM |
-| 4 | `/work`, `/live`, `/management/settings`, `/management/terms` have client-side `RouteGuard` but no router `beforeLoad` guard | `router.tsx` | LOW |
-
-### Missing BE → FE coverage
-
-| Endpoint | Purpose | Status |
+| Guard mechanism | Where | Purpose |
 |---|---|---|
-| `PATCH /sessions/{id}` | Edit a course session | No helper, no UI |
-| `GET /work/{user}` | Read another user's work log (manager+) | No helper, no UI |
-| `PATCH /work/entries/{id}` | Correct a closed work stint (manager+) | No helper, no UI |
-| `DELETE /work/entries/{id}` | Delete a work entry (manager+) | No helper, no UI |
+| `RouteGuard` (client component) | Page component root | Blocks render; shows fallback |
+| `RouteGuard exactRole` | `/marks`, `/attendance` | Student-only pages |
+| `RouteGuard minRole` | Management pages | Teacher+ or manager+ |
+| `beforeLoad` redirect (router) | Route definition | Redirects before page JS loads |
+| `!isTeacherPlus()` | In-page logic | Exam room CTA, event self-mark |
+| `canManage()` / `hasCourseManagementRights()` | Detail pages | Course action visibility |
+| `canCreate` | List pages | Create button visibility |
+| Nav `exactRole` | Sidebar items | Student-only nav links |
+| Nav `minRole` | Sidebar items / groups | Teacher+, manager+, or admin only groups |
 
-### Incomplete Features
+## Legend
 
-| Feature | Detail |
-|---|---|
-| `allow_rejoin` | Type + request body exist; form always sends `true`; no UI toggle |
-| Exam weight badge | BE `ExamResponse` has no weight field; weight is derived from kind + settings. Badge never shows |
-| Exam room CTA | Visible to managers/admins on exam detail page; the room page itself blocks non-students |
-
-### Pagination Status
-
-- All list endpoints accept `?limit=&offset=` and return `{ items, total, limit, offset }`.
-- Main FE lists (courses, exams, events, notes, terms, work log, admin users) send real server page params.
-- Nested lists (sessions, enrollments, attendance, exam results/questions) unwrap full `.items` — acceptable for school-scale data.
-- Reports (`/marks/*`, `/attendance/*`) are not paged — aggregate report shapes.
-
----
-
-## Kullanılan Kısaltmalar
-
-- ✅ = erişim var
-- ❌ = erişim yok
-- FE = frontend (düzeltme sadece ön yüzde)
-- BE = backend (düzeltme sunucu tarafında)
+- ✅ = access granted
+- ❌ = access denied
+- FE = frontend only change
+- BE = backend change required
+- (badge) = visual indicator showing minimum role requirement on dashboard cards
