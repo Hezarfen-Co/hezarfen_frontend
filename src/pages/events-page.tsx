@@ -10,6 +10,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { SidePanel } from "@/components/ui/side-panel";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
@@ -55,19 +56,18 @@ function EventsContent() {
           description={t("events.subtitle")}
           actions={
             canCreate() ? (
-              <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowForm((v) => !v)}>
-                {showForm() ? t("common.cancel") : t("events.create")}
+              <Button type="button" variant="outline" size="sm" class="rounded-sm" onClick={() => setShowForm(true)}>
+                {t("events.create")}
               </Button>
             ) : undefined
           }
         />
       </div>
 
-      <Show when={canCreate() && showForm()}>
-        <section class="data-shell max-w-2xl p-4 animate-fade-up">
-          <h2 class="mb-4 font-display text-lg font-semibold">{t("events.create")}</h2>
+      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("events.create")} description={t("events.subtitle")}>
           <EventForm
             submitLabel={t("common.create")}
+            onCancel={() => setShowForm(false)}
             onSubmit={async (values) => {
               setError("");
               try {
@@ -89,8 +89,7 @@ function EventsContent() {
               }
             }}
           />
-        </section>
-      </Show>
+      </SidePanel>
 
       {error() && <p class="text-sm text-destructive">{error()}</p>}
 

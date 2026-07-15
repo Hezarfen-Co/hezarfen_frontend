@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { SidePanel } from "@/components/ui/side-panel";
 import { Textarea } from "@/components/ui/textarea";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -91,16 +92,16 @@ function CoursesContent() {
           description={t("courses.subtitle")}
           actions={
             canCreate() ? (
-              <Button type="button" size="sm" class="rounded-sm" onClick={() => setShowForm((v) => !v)}>
-                {showForm() ? t("common.cancel") : t("courses.create")}
+              <Button type="button" size="sm" class="rounded-sm" onClick={() => setShowForm(true)}>
+                {t("courses.create")}
               </Button>
             ) : undefined
           }
         />
       </div>
 
-      <Show when={canCreate() && showForm()}>
-        <form class="data-shell max-w-xl space-y-3 p-4" onSubmit={onCreate}>
+      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("courses.create")} description={t("courses.subtitle")}>
+        <form class="space-y-3" onSubmit={onCreate}>
           <div class="space-y-1.5">
             <Label for="course-title">{t("form.title")}</Label>
             <Input
@@ -129,11 +130,16 @@ function CoursesContent() {
             </Select>
           </div>
           {error() && <p class="text-sm text-destructive">{error()}</p>}
-          <Button type="submit" disabled={pending()}>
-            {t("common.create")}
-          </Button>
+          <div class="flex flex-wrap gap-2">
+            <Button type="submit" class="rounded-sm" disabled={pending()}>
+              {t("common.create")}
+            </Button>
+            <Button type="button" variant="outline" class="rounded-sm" onClick={() => setShowForm(false)}>
+              {t("common.cancel")}
+            </Button>
+          </div>
         </form>
-      </Show>
+      </SidePanel>
 
       <Suspense fallback={<PageSpinner />}>
         <Show when={courses.error}>
