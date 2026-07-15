@@ -1,4 +1,4 @@
-import { createResource, Show, Suspense, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { deleteNoteById } from "@/api/deleteNoteById";
 import { getNotes } from "@/api/getNotes";
 import { patchNoteById } from "@/api/patchNoteById";
@@ -13,7 +13,11 @@ import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { IconPlus } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { useT } from "@/stores/preferences-context";
+
+const NOTE_PAGE_SIZE = 12;
 
 export default function NotesPage() {
   return (
@@ -25,9 +29,25 @@ export default function NotesPage() {
 
 function NotesContent() {
   const t = useT();
-  const [notes, { refetch }] = createResource(() => getNotes());
   const [error, setError] = createSignal("");
   const [createOpen, setCreateOpen] = createSignal(false);
+  const [page, setPage] = createSignal(0);
+
+  const [list, { refetch }] = createResource(
+    () => page(),
+    async (currentPage) =>
+      loadListPage({
+        page: currentPage,
+        pageSize: NOTE_PAGE_SIZE,
+        clientMode: false,
+        fetch: getNotes,
+      }),
+  );
+
+  const total = () => list()?.total ?? 0;
+  const pageItems = () => list()?.items ?? [];
+  const totalPages = createMemo(() => pagesOf(total(), NOTE_PAGE_SIZE));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
 
   const wrap = async (fn: () => Promise<void>) => {
     setError("");
@@ -51,7 +71,7 @@ function NotesContent() {
           title={t("notes.title")}
           description={t("notes.subtitle")}
           actions={
-            <Button type="button" size="sm" class="rounded-sm" onClick={() => setCreateOpen(true)}>
+            <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
               <IconPlus class="h-4 w-4" />
               {t("notes.new")}
             </Button>
@@ -59,12 +79,7 @@ function NotesContent() {
         />
       </div>
 
-      <FormDialog
-        open={createOpen()}
-        onOpenChange={setCreateOpen}
-        title={t("notes.new")}
-        description={t("notes.subtitle")}
-      >
+      <FormDialog open={createOpen()} onOpenChange={setCreateOpen} title={t("notes.new")} description={t("notes.subtitle")}>
         <NoteForm
           submitLabel={t("common.create")}
           onCancel={() => setCreateOpen(false)}
@@ -80,29 +95,30 @@ function NotesContent() {
       </FormDialog>
 
       <div class="space-y-5">
-        <section class="min-w-0">
-          {error() && <p class="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+        <section class="min-w-0 space-y-4">
+          {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
           <Suspense fallback={<PageSpinner />}>
-            <Show when={notes.error}>
-              <Alert variant="destructive">{formatApiError(notes.error)}</Alert>
+            <Show when={list.error}>
+              <Alert variant="destructive">{formatApiError(list.error)}</Alert>
             </Show>
-            <Show when={notes()}>
-              {(list) => (
-                <NoteList
-                  notes={list()}
-                  emptyLabel={t("notes.empty")}
-                  onUpdate={(id, values) =>
-                    wrap(async () => {
-                      await patchNoteById(id, values);
-                    })
-                  }
-                  onDelete={(id) =>
-                    wrap(async () => {
-                      await deleteNoteById(id);
-                    })
-                  }
-                />
-              )}
+            <Show when={list()}>
+              <NoteList
+                notes={pageItems()}
+                emptyLabel={t("notes.empty")}
+                onUpdate={(id, values) =>
+                  wrap(async () => {
+                    await patchNoteById(id, values);
+                  })
+                }
+                onDelete={(id) =>
+                  wrap(async () => {
+                    await deleteNoteById(id);
+                  })
+                }
+              />
+              <Show when={total() > NOTE_PAGE_SIZE}>
+                <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+              </Show>
             </Show>
           </Suspense>
         </section>

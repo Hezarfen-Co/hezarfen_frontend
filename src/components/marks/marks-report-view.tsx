@@ -1,5 +1,6 @@
-import { For, Show } from "solid-js";
+import { For, Show, createResource } from "solid-js";
 import { Link } from "@tanstack/solid-router";
+import { getSettings } from "@/api/getSettings";
 import type { MarksReport } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { DataTableEmpty, DataTableFrame } from "@/components/ui/data-table";
@@ -18,6 +19,7 @@ function markWithGrade(mark: number | null, grade?: string | null) {
 
 export function MarksReportView(props: { report: MarksReport }) {
   const t = useT();
+  const [settings] = createResource(() => getSettings());
   return (
     <Show
       when={props.report.courses.length > 0}
@@ -86,7 +88,7 @@ export function MarksReportView(props: { report: MarksReport }) {
                                 {examKindLabel(entry.kind, t)}
                               </Badge>
                             </TableCell>
-                            <TableCell class="mono text-right">{examWeight(entry) ?? "—"}</TableCell>
+                            <TableCell class="mono text-right">{examWeight(entry, settings()?.exam_kinds) ?? "—"}</TableCell>
                             <TableCell class="mono text-right font-semibold">{markWithGrade(entry.mark, entry.grade)}</TableCell>
                           </TableRow>
                         )}

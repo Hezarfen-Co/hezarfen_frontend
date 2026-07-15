@@ -1,8 +1,9 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { getUserById } from "@/api/getUserById";
 import { getUsers } from "@/api/getUsers";
 import { patchUserRole } from "@/api/patchUserRole";
 import { formatApiError } from "@/api/client";
-import type { Role } from "@/api/types";
+import type { Role, User } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { UserSearchSelect } from "@/components/users/user-search-select";
@@ -10,10 +11,14 @@ import { UserTable } from "@/components/users/user-table";
 import { Badge } from "@/components/ui/badge";
 import { DataTableEmpty, DataTableSkeleton } from "@/components/ui/data-table";
 import { DataToolbar } from "@/components/ui/data-toolbar";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import type { MessageKey } from "@/i18n/messages";
 import { ROLES } from "@/lib/roles";
+
+const USER_PAGE_SIZE = 20;
 
 export default function AdminUsersPage() {
   return (
@@ -26,16 +31,36 @@ export default function AdminUsersPage() {
 function AdminUsersContent() {
   const auth = useAuth();
   const t = useT();
-  const [users, { refetch }] = createResource(() => getUsers());
   const [error, setError] = createSignal("");
   const [selectedUserId, setSelectedUserId] = createSignal("");
-  const visibleUsers = createMemo(() => {
-    const list = users() ?? [];
-    const id = selectedUserId().trim();
-    if (!id) return list;
-    return list.filter((user) => user.id === id);
-  });
-  const roleCount = (role: Role) => users()?.filter((user) => user.role === role).length ?? 0;
+  const [page, setPage] = createSignal(0);
+
+  const [stats] = createResource(async () => (await getUsers()).items);
+
+  const [list, { refetch }] = createResource(
+    () => ({
+      page: page(),
+      selected: selectedUserId().trim(),
+    }),
+    async (key) => {
+      if (key.selected) {
+        const user = await getUserById(key.selected);
+        return { items: [user], total: 1 };
+      }
+      return loadListPage({
+        page: key.page,
+        pageSize: USER_PAGE_SIZE,
+        clientMode: false,
+        fetch: getUsers,
+      });
+    },
+  );
+
+  const total = () => list()?.total ?? 0;
+  const visibleUsers = () => list()?.items ?? [];
+  const totalPages = createMemo(() => pagesOf(total(), USER_PAGE_SIZE));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+  const roleCount = (role: Role) => stats()?.filter((user) => user.role === role).length ?? 0;
 
   const onRoleChange = async (userId: string, role: Role) => {
     setError("");
@@ -61,7 +86,7 @@ function AdminUsersContent() {
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
       <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <Metric label={t("common.all")} value={users()?.length ?? 0} />
+        <Metric label={t("common.all")} value={stats()?.length ?? total()} />
         <For each={ROLES}>{(role) => <Metric label={t(`role.${role}` as MessageKey)} value={roleCount(role)} />}</For>
       </section>
 
@@ -69,9 +94,13 @@ function AdminUsersContent() {
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="font-display text-lg font-semibold">{t("nav.users")}</h2>
-            <p class="mt-1 text-sm text-muted-foreground">{visibleUsers().length} / {users()?.length ?? 0}</p>
+            <p class="mt-1 text-sm text-muted-foreground">
+              {visibleUsers().length} / {total()}
+            </p>
           </div>
-          <Badge variant="outline" class="mono rounded-sm uppercase tracking-[0.08em]">{t("admin.directory")}</Badge>
+          <Badge variant="outline" class="mono rounded-sm uppercase tracking-[0.08em]">
+            {t("admin.directory")}
+          </Badge>
         </div>
         <DataToolbar
           filters={
@@ -79,7 +108,10 @@ function AdminUsersContent() {
               <UserSearchSelect
                 id="admin-user-search"
                 value={selectedUserId()}
-                onChange={setSelectedUserId}
+                onChange={(value) => {
+                  setSelectedUserId(value);
+                  setPage(0);
+                }}
                 placeholder={t("common.searchPlaceholder")}
                 selectPlaceholder={t("admin.username")}
                 emptyMessage={t("admin.noUsers")}
@@ -88,16 +120,12 @@ function AdminUsersContent() {
           }
         />
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
-          <Show when={users()}>
-            <Show
-              when={visibleUsers().length > 0}
-              fallback={<DataTableEmpty>{t("admin.noUsers")}</DataTableEmpty>}
-            >
-              <UserTable
-                users={visibleUsers()}
-                currentUserId={auth.user()!.id}
-                onRoleChange={onRoleChange}
-              />
+          <Show when={list()}>
+            <Show when={visibleUsers().length > 0} fallback={<DataTableEmpty>{t("admin.noUsers")}</DataTableEmpty>}>
+              <UserTable users={visibleUsers() as User[]} currentUserId={auth.user()!.id} onRoleChange={onRoleChange} />
+              <Show when={!selectedUserId().trim() && total() > USER_PAGE_SIZE}>
+                <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+              </Show>
             </Show>
           </Show>
         </Suspense>

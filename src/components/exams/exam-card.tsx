@@ -1,4 +1,5 @@
-import { Show } from "solid-js";
+import { Show, createResource } from "solid-js";
+import { getSettings } from "@/api/getSettings";
 import type { Exam } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { ExamLink } from "@/components/exams/exam-link";
@@ -11,6 +12,7 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number }) {
   const t = useT();
   const { locale } = usePreferences();
+  const [settings] = createResource(() => getSettings());
   const modeLabel = () => {
     if (props.exam.mode === "sync") return t("exams.mode.sync");
     if (props.exam.mode === "async") return t("exams.mode.async");
@@ -77,7 +79,7 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
           <div class="mt-4 flex flex-wrap gap-2">
             <Badge variant="outline" class="rounded-sm capitalize">
               {examKindLabel(String(props.exam.kind), t)}
-              <Show when={examWeight(props.exam) != null}>
+              <Show when={examWeight(props.exam, settings()?.exam_kinds) != null}>
                 {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
               </Show>
             </Badge>

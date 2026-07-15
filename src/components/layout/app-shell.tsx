@@ -1,11 +1,12 @@
 import type { ParentProps } from "solid-js";
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
 import { Show, createSignal } from "solid-js";
+import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconMenu, IconPanelLeft } from "@/components/ui/icons";
+import { IconPanelLeft } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -32,18 +33,6 @@ export function AppShell(props: ParentProps) {
       <Show when={!auth.user()}>
         <NavBar />
       </Show>
-      <Show when={auth.user()}>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          class="fixed left-3 top-3 z-40 h-10 w-10 rounded-xl bg-background/90 px-0 shadow-sm backdrop-blur lg:hidden"
-          aria-label={t("nav.menu")}
-          onClick={() => setMobileOpen(true)}
-        >
-          <IconMenu class="h-5 w-5" />
-        </Button>
-      </Show>
       <div class="flex w-full">
         <Show when={auth.user()}>
           <aside
@@ -54,15 +43,21 @@ export function AppShell(props: ParentProps) {
           >
             <div
               class={cn(
-                "flex h-16 shrink-0 items-center gap-2 border-b border-border/70",
-                collapsed() ? "justify-center px-2" : "px-2",
+                "flex shrink-0 items-center gap-2 border-b border-border/70",
+                collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-16 px-2",
               )}
             >
-              <Link to="/" class={cn("flex min-w-0 flex-1 items-center gap-2", collapsed() && "hidden")}>
+              <Link
+                to="/"
+                class={cn("flex min-w-0 items-center gap-2", collapsed() ? "justify-center" : "flex-1")}
+                title={t("app.name")}
+              >
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-black text-primary-foreground shadow-sm">
                   H
                 </span>
-                <span class="truncate font-display text-lg font-semibold tracking-tight">{t("app.name")}</span>
+                <Show when={!collapsed()}>
+                  <span class="truncate font-display text-lg font-semibold tracking-tight">{t("app.name")}</span>
+                </Show>
               </Link>
               <Button
                 type="button"
@@ -115,11 +110,20 @@ export function AppShell(props: ParentProps) {
         </Show>
 
         <main class="min-w-0 flex-1">
-          <div class={cn("mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-5", wide() ? "max-w-none" : "max-w-[1200px]") }>
+          <div
+            class={cn(
+              "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-5",
+              auth.user() && !wide() && "pb-24 lg:pb-5",
+              wide() ? "max-w-none" : "max-w-[1200px]",
+            )}
+          >
             {props.children}
           </div>
         </main>
       </div>
+      <Show when={auth.user() && !wide()}>
+        <MobileTabBar onMenu={() => setMobileOpen(true)} />
+      </Show>
     </div>
   );
 }

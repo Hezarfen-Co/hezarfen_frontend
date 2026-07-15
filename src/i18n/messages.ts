@@ -11,6 +11,7 @@ export type MessageKey =
   | "nav.marks"
   | "nav.attendance"
   | "nav.work"
+  | "nav.staffWork"
   | "nav.users"
   | "nav.studentMarks"
   | "nav.studentAttendance"
@@ -62,6 +63,7 @@ export type MessageKey =
   | "confirm.deleteEvent"
   | "confirm.updateEvent"
   | "confirm.deleteExam"
+  | "confirm.deleteSession"
   | "confirm.updateExam"
   | "confirm.removeAttendance"
   | "confirm.removeResult"
@@ -150,6 +152,7 @@ export type MessageKey =
   | "dashboard.emptyEventsTitle"
   | "dashboard.emptyNotesCta"
   | "dashboard.emptyEventsCta"
+  | "dashboard.upcomingEmpty"
   | "dashboard.viewAll"
   | "dashboard.getStarted"
   | "dashboard.helpTitle"
@@ -230,6 +233,8 @@ export type MessageKey =
   | "exams.maxAttempts"
   | "exams.maxAttemptsRange"
   | "exams.retakes"
+  | "exams.allowRejoin"
+  | "exams.allowRejoinHelp"
   | "exams.startTime"
   | "exams.endTime"
   | "exams.scheduleRequired"
@@ -434,6 +439,9 @@ export type MessageKey =
   | "settings.min"
   | "settings.label"
   | "settings.addRow"
+  | "settings.locked"
+  | "settings.unsaved"
+  | "settings.empty"
   | "terms.title"
   | "terms.subtitle"
   | "terms.create"
@@ -446,6 +454,7 @@ export type MessageKey =
   | "sessions.subtitle"
   | "sessions.topic"
   | "sessions.add"
+  | "sessions.edit"
   | "sessions.empty"
   | "sessions.untitled"
   | "sessions.teacher"
@@ -475,7 +484,17 @@ export type MessageKey =
   | "work.empty"
   | "work.duration"
   | "work.open"
-  | "work.closed";
+  | "work.closed"
+  | "work.status"
+  | "work.staffTitle"
+  | "work.staffSubtitle"
+  | "work.show"
+  | "work.forUser"
+  | "work.correct"
+  | "work.correctHelp"
+  | "work.cannotEditOpen"
+  | "work.timesRequired"
+  | "work.deleteSummary";
 
 type Dict = Record<MessageKey, string>;
 
@@ -490,6 +509,7 @@ const en: Dict = {
   "nav.marks": "Report card",
   "nav.attendance": "Attendance",
   "nav.work": "Work log",
+  "nav.staffWork": "Staff work",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
@@ -541,6 +561,7 @@ const en: Dict = {
   "confirm.deleteEvent": "Delete event “{title}”?",
   "confirm.updateEvent": "Update event “{title}”?",
   "confirm.deleteExam": "Delete exam “{title}”?",
+  "confirm.deleteSession": "Delete session “{title}”?",
   "confirm.updateExam": "Update exam “{title}”?",
   "confirm.removeAttendance": "Remove attendance for user {user}?",
   "confirm.removeResult": "Remove grade for user {user}?",
@@ -629,12 +650,12 @@ const en: Dict = {
   "dashboard.emptyEventsTitle": "No events yet",
   "dashboard.emptyNotesCta": "Write a note",
   "dashboard.emptyEventsCta": "Browse events",
+  "dashboard.upcomingEmpty": "Nothing here.",
   "dashboard.viewAll": "View all",
   "dashboard.getStarted": "Get started",
-  "dashboard.helpTitle": "How this home works",
-  "dashboard.helpBody":
-    "Home shows live counts and shortcuts for notes, events, courses, exams, and your report card. Open Guide (bottom of the sidebar) for the full walkthrough.",
-  "dashboard.continueGuide": "Open the guide",
+  "dashboard.helpTitle": "Need a hand?",
+  "dashboard.helpBody": "Stuck on a page or looking for the next step? Open the short app guide.",
+  "dashboard.continueGuide": "Guide",
   "dashboard.portal.sections": "Sections",
   "dashboard.portal.coursesDesc": "Browse courses and class materials.",
   "dashboard.portal.examsDesc": "Upcoming exams, deadlines, and results.",
@@ -712,6 +733,8 @@ const en: Dict = {
   "exams.maxAttempts": "Max attempts",
   "exams.maxAttemptsRange": "Max attempts must be 1 or higher",
   "exams.retakes": "Retakes",
+  "exams.allowRejoin": "Allow rejoin",
+  "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
   "exams.startTime": "Start time",
   "exams.endTime": "End time",
   "exams.scheduleRequired": "Scheduled exams need start and end times",
@@ -831,7 +854,7 @@ const en: Dict = {
   "status.lateDetail": "Joined late",
   "status.excusedDetail": "Excused absence",
   "guide.tip1": "TR / EN and theme live in the avatar dropdown (submenus with icons).",
-  "guide.tip2": "Guide is pinned at the bottom of the sidebar, above @Hezarfen - 2026.",
+  "guide.tip2": "Open the guide from your account menu or the home dashboard when you need a refresher.",
   "guide.tip3": "“?” help panels start closed — open only when you need them.",
   "guide.tip4": "Create exams under a course; read averages on the report card.",
   "auth.featureModules": "Courses · Exams · Report card",
@@ -927,6 +950,9 @@ const en: Dict = {
   "settings.min": "Minimum",
   "settings.label": "Label",
   "settings.addRow": "Add row",
+  "settings.locked": "Locked",
+  "settings.unsaved": "Unsaved changes",
+  "settings.empty": "No rows yet.",
   "terms.title": "Academic terms",
   "terms.subtitle": "Manage calendar terms and assign courses to them.",
   "terms.create": "Create term",
@@ -939,6 +965,7 @@ const en: Dict = {
   "sessions.subtitle": "Create lessons and take course roll call.",
   "sessions.topic": "Topic",
   "sessions.add": "Add session",
+  "sessions.edit": "Edit session",
   "sessions.empty": "No lesson sessions yet.",
   "sessions.untitled": "Untitled lesson",
   "sessions.teacher": "Teacher",
@@ -969,6 +996,16 @@ const en: Dict = {
   "work.duration": "Duration",
   "work.open": "Open",
   "work.closed": "Closed",
+  "work.status": "Status",
+  "work.staffTitle": "Staff work logs",
+  "work.staffSubtitle": "Look up a staff member, correct closed stints, or delete entries.",
+  "work.show": "Show log",
+  "work.forUser": "Log for {user}",
+  "work.correct": "Correct entry",
+  "work.correctHelp": "Only closed stints can be corrected.",
+  "work.cannotEditOpen": "Open stints cannot be corrected. Check out or delete them first.",
+  "work.timesRequired": "Enter check-in and check-out date and time.",
+  "work.deleteSummary": "Delete work entry from {time}?",
 };
 
 const tr: Dict = {
@@ -982,6 +1019,7 @@ const tr: Dict = {
   "nav.marks": "Karnem",
   "nav.attendance": "Yoklama",
   "nav.work": "Mesai",
+  "nav.staffWork": "Personel mesai",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
   "nav.studentAttendance": "Öğrenci yoklaması",
@@ -1033,6 +1071,7 @@ const tr: Dict = {
   "confirm.deleteEvent": "“{title}” etkinliği silinsin mi?",
   "confirm.updateEvent": "“{title}” etkinliği güncellensin mi?",
   "confirm.deleteExam": "“{title}” sınavı silinsin mi?",
+  "confirm.deleteSession": "“{title}” oturumu silinsin mi?",
   "confirm.updateExam": "“{title}” sınavı güncellensin mi?",
   "confirm.removeAttendance": "{user} kullanıcısının yoklaması kaldırılsın mı?",
   "confirm.removeResult": "{user} kullanıcısının notu kaldırılsın mı?",
@@ -1121,12 +1160,12 @@ const tr: Dict = {
   "dashboard.emptyEventsTitle": "Henüz etkinlik yok",
   "dashboard.emptyNotesCta": "Not yaz",
   "dashboard.emptyEventsCta": "Etkinliklere git",
+  "dashboard.upcomingEmpty": "Burada bir şey yok.",
   "dashboard.viewAll": "Tümünü gör",
   "dashboard.getStarted": "Başla",
-  "dashboard.helpTitle": "Ana sayfa nasıl çalışır?",
-  "dashboard.helpBody":
-    "Ana sayfa not, etkinlik, ders, sınav ve karne kısayollarını gösterir. Tam tur için sidebar’ın altındaki Rehber’i aç.",
-  "dashboard.continueGuide": "Rehberi aç",
+  "dashboard.helpTitle": "Yardıma mı ihtiyacın var?",
+  "dashboard.helpBody": "Bir sayfada takıldın veya sonraki adımı mı arıyorsun? Kısa uygulama rehberini aç.",
+  "dashboard.continueGuide": "Rehber",
   "dashboard.portal.sections": "Bölümler",
   "dashboard.portal.coursesDesc": "Dersleri ve ders materyallerini görüntüle.",
   "dashboard.portal.examsDesc": "Sınavlar, son teslim tarihleri ve sonuçlar.",
@@ -1204,6 +1243,8 @@ const tr: Dict = {
   "exams.maxAttempts": "Deneme hakkı",
   "exams.maxAttemptsRange": "Deneme hakkı 1 veya daha büyük olmalı",
   "exams.retakes": "Deneme hakkı",
+  "exams.allowRejoin": "Yeniden girişe izin ver",
+  "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
   "exams.startTime": "Başlangıç saati",
   "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",
@@ -1323,7 +1364,7 @@ const tr: Dict = {
   "status.lateDetail": "Geç katıldı",
   "status.excusedDetail": "Mazeretli yok",
   "guide.tip1": "Dil ve tema avatar menüsünde (ikonlu alt menüler).",
-  "guide.tip2": "Rehber, sidebar’ın altında @Hezarfen - 2026’nın hemen üstünde.",
+  "guide.tip2": "İhtiyacın olduğunda rehberi hesap menüsünden veya ana sayfadaki kısayoldan aç.",
   "guide.tip3": "“?” panelleri kapalı gelir — ihtiyaç olunca aç.",
   "guide.tip4": "Sınavı dersin içinde oluştur; ortalamayı Karnem’de oku.",
   "auth.featureModules": "Dersler · Sınavlar · Karne",
@@ -1419,6 +1460,9 @@ const tr: Dict = {
   "settings.min": "Alt sınır",
   "settings.label": "Etiket",
   "settings.addRow": "Satır ekle",
+  "settings.locked": "Kilitli",
+  "settings.unsaved": "Kaydedilmemiş değişiklikler",
+  "settings.empty": "Henüz satır yok.",
   "terms.title": "Akademik dönemler",
   "terms.subtitle": "Takvim dönemlerini yönet ve dersleri dönemlere bağla.",
   "terms.create": "Dönem oluştur",
@@ -1431,6 +1475,7 @@ const tr: Dict = {
   "sessions.subtitle": "Ders oluştur ve ders yoklaması al.",
   "sessions.topic": "Konu",
   "sessions.add": "Oturum ekle",
+  "sessions.edit": "Oturumu düzenle",
   "sessions.empty": "Henüz ders oturumu yok.",
   "sessions.untitled": "Konu girilmemiş ders",
   "sessions.teacher": "Öğretmen",
@@ -1461,6 +1506,16 @@ const tr: Dict = {
   "work.duration": "Süre",
   "work.open": "Açık",
   "work.closed": "Kapalı",
+  "work.status": "Durum",
+  "work.staffTitle": "Personel mesai kayıtları",
+  "work.staffSubtitle": "Personel ara, kapalı mesaileri düzelt veya kayıt sil.",
+  "work.show": "Kaydı göster",
+  "work.forUser": "{user} için kayıtlar",
+  "work.correct": "Kaydı düzelt",
+  "work.correctHelp": "Yalnızca kapalı mesailer düzeltilebilir.",
+  "work.cannotEditOpen": "Açık mesai düzeltilemez. Önce çıkış yapın veya silin.",
+  "work.timesRequired": "Giriş ve çıkış tarih/saatini girin.",
+  "work.deleteSummary": "{time} mesai kaydı silinsin mi?",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
-import { hasMinRole } from "@/lib/roles";
+import { hasExactRole, hasMinRole } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import type { MessageKey } from "@/i18n/messages";
 import type { Role } from "@/api/types";
@@ -34,6 +34,8 @@ type NavItem = {
   labelKey: MessageKey;
   Icon: Component<{ class?: string }>;
   minRole?: Role;
+  /** When set, only this exact role sees the item. */
+  exactRole?: Role;
   exact?: boolean;
 };
 
@@ -51,7 +53,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.students",
     Icon: IconUsers,
     items: [
-      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck },
+      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
     ],
   },
   {
@@ -69,7 +71,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.grades",
     Icon: IconNote,
     items: [
-      { to: "/marks", labelKey: "nav.marks", Icon: IconChart },
+      { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
       { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
     ],
   },
@@ -82,6 +84,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
       { to: "/work", labelKey: "nav.work", Icon: IconReportAnalytics, minRole: "teacher" },
+      { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconReportAnalytics, minRole: "manager" },
     ],
   },
   {
@@ -155,30 +158,50 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
   const auth = useAuth();
   const t = useT();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const itemVisible = (item: NavItem) => {
+    const role = auth.user()?.role;
+    if (item.exactRole) return hasExactRole(role, item.exactRole);
+    if (item.minRole) return hasMinRole(role, item.minRole);
+    return true;
+  };
+
   const visibleGroups = createMemo(() =>
     NAV_GROUPS
       .filter((group) => !group.minRole || hasMinRole(auth.user()?.role, group.minRole))
       .map((group) => ({
         ...group,
-        items: group.items.filter((item) => !item.minRole || hasMinRole(auth.user()?.role, item.minRole)),
+        items: group.items.filter(itemVisible),
       }))
       .filter((group) => group.items.length > 0),
   );
-  const activeGroupId = createMemo(() => visibleGroups().find((group) => group.items.some((item) => pathActive(pathname(), item.to, item.exact)))?.id ?? visibleGroups()[0]?.id ?? "");
-  const [openGroup, setOpenGroup] = createSignal(activeGroupId());
+  const activeGroupId = createMemo(
+    () =>
+      visibleGroups().find((group) => group.items.some((item) => pathActive(pathname(), item.to, item.exact)))?.id ??
+      "",
+  );
+  const [openGroups, setOpenGroups] = createSignal<Record<string, boolean>>({});
+
+  const isOpen = (groupId: string) => openGroups()[groupId] === true;
+
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups((current) => ({ ...current, [groupId]: !current[groupId] }));
+  };
 
   createEffect(() => {
     const active = activeGroupId();
-    if (active) setOpenGroup(active);
+    if (!active) return;
+    setOpenGroups((current) => (current[active] ? current : { ...current, [active]: true }));
   });
 
   return (
-    <nav class="flex h-full flex-col" aria-label="Main">
+    <nav class="flex h-full flex-col" aria-label={t("nav.menu")}>
       <div class="flex flex-col gap-1 px-2">
         <NavLink item={HOME_ITEM} collapsed={props.collapsed} onNavigate={props.onNavigate} standalone />
         <For each={visibleGroups()}>
           {(group, index) => {
-            const open = () => openGroup() === group.id;
+            const open = () => isOpen(group.id);
+            const groupActive = () =>
+              group.items.some((item) => pathActive(pathname(), item.to, item.exact));
             const showManagementDivider = () => !!group.minRole && !visibleGroups()[index() - 1]?.minRole;
             return (
               <>
@@ -209,11 +232,11 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                           type="button"
                           class={cn(
                             "flex h-8 w-full items-center gap-2 rounded-sm px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground",
-                            open() && "text-foreground",
+                            (open() || groupActive()) && "text-foreground",
                           )}
                           title={t(group.labelKey)}
                           aria-expanded={open()}
-                          onClick={() => setOpenGroup(open() ? "" : group.id)}
+                          onClick={() => toggleGroup(group.id)}
                         >
                           <group.Icon class="h-3.5 w-3.5" />
                           <span class="min-w-0 flex-1 truncate text-left">{t(group.labelKey)}</span>
@@ -233,7 +256,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                       <DropdownMenuTrigger
                         class={cn(
                           "relative flex h-8 w-full items-center justify-center rounded-sm px-0 text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[expanded]:bg-muted data-[expanded]:text-foreground",
-                          open() && "text-foreground",
+                          groupActive() && "text-foreground",
                         )}
                         title={t(group.labelKey)}
                         aria-label={t(group.labelKey)}

@@ -12,4 +12,8 @@ export function hasMinRole(role: Role | undefined | null, min: Role): boolean {
   return RANK[role] >= RANK[min];
 }
 
+export function hasExactRole(role: Role | undefined | null, exact: Role): boolean {
+  return role === exact;
+}
+
 export const ROLES: Role[] = ["student", "teacher", "manager", "admin"];

@@ -18,7 +18,7 @@ validation, and list filtering cleanup.
 - Settings requests are cached and refreshed after settings patches.
 - Sidebar icons use local SVG wrappers to avoid large icon package module graphs.
 - Notes use a paper-style notebook card layout, a paper-style read dialog, and dialog-based create/edit/delete flows.
-- Courses use client-side table search plus term/unassigned filters while backend pagination/filter params are pending.
+- List endpoints return `{ items, total, limit, offset }`. API helpers under `src/api/` accept optional `limit`/`offset` via `Page<T>`.
 - Events keep card rendering with shared toolbar search and all/upcoming/past filters.
 - Event, exam, and lesson-session schedule forms use `GET /time` for server-clock-aware past-date warnings before submit.
 - Start/end date-time rows use equal-width date and time controls.
@@ -40,26 +40,51 @@ validation, and list filtering cleanup.
 
 ## Request And Pagination Result
 
-- `/courses`: client-paginated after `GET /courses` for teacher+ and `GET /courses/me` for students. Toolbar search and term filters are client-side until backend params exist.
-- `/exams`: client-paginated after `GET /exams`. Student filters use `GET /courses/me`; teacher+ filters use `GET /courses`.
-- `/events`: client-paginated after `GET /events`. Toolbar search and all/upcoming/past filters are client-side.
-- `/admin/users`: unpaginated `GET /users` plus client filtering/search UI. Admin-only.
-- `/work`: unpaginated `GET /work/me`, newest first. Personal staff log.
-- `/courses/:id` exams: unpaginated `GET /courses/{id}/exams`; course-scoped.
-- `/courses/:id` sessions: unpaginated `GET /courses/{id}/sessions`, deferred until sessions section or create panel is opened.
-- `/courses/:id` roster: unpaginated `GET /courses/{id}/enrollments`, course-management only.
-- `/events/:id` attendance: unpaginated `GET /events/{id}/attendance`, teacher+ only and deferred until the attendance disclosure opens.
-- `/exams/:id` results: unpaginated `GET /exams/{id}/results`, deferred until results/grade/answer-sheet workflow needs it.
-- `/exams/:id` questions: unpaginated `GET /exams/{id}/questions`, deferred until questions section is opened.
-- `/exams/:id/live`: client-paginated/sorted live roster over backend snapshot/SSE.
-- `/attendance` and `/management/student-attendance`: unpaginated report payloads; backend returns aggregate report shape, not a raw row list.
+- Backend list contract: `?limit=&offset=` → `{ items, total, limit, offset }` (opt-in; omit `limit` for full `items`).
+- Shared helpers: `src/api/page.ts` + `src/lib/list-page.ts` (`loadListPage`).
+- All paged list API files return `Page<T>` and accept optional page params.
+- Main lists use real server paging (`limit`/`offset` + `total`) when no client-only filter is active:
+  - courses, exams, events (hybrid: full fetch only while search/status/term filters need it)
+  - notes, terms, work log, admin users (server page; admin metrics still load full list once)
+- Nested/deferred lists unwrap full `.items` (sessions, enrollments, attendance, exam results/questions).
+- `/exams/:id/live`: client-paginated roster over snapshot/SSE (not the list envelope).
+- `/attendance` and marks reports: not paged; aggregate report shapes.
 
 ## Backend-Dependent Follow-Up
 
-- Backend pagination/search/filter params have been requested.
-- Do not claim true server-side pagination until those params exist in the backend README/API contract.
-- When backend params arrive, update `src/api/*` helpers first and then move toolbar/search/filter/page state into request params.
+- Server-side search/filter params are still absent; hybrid full-fetch remains for client filters until the API adds them.
 
 ## Active Backlog
 
-- No active frontend backlog items remain in this audit batch.
+### Recently fixed (this batch)
+
+| Item | Fix |
+|---|---|
+| Course term read | FE reads `Course.term` (write still `term_id`) |
+| Student-only pages | `RouteGuard exactRole="student"` + nav `exactRole` + `beforeLoad` on `/marks`, `/attendance` |
+| Session edit | `patchSessionById` + edit SidePanel in course sessions |
+| Manager work log | `/management/staff-work` + get/patch/delete work APIs |
+| Work route guard | `beforeLoad` teacher+ on `/work` |
+
+### Incomplete Product Features
+
+| Feature | Status |
+|---|---|
+| `allow_rejoin` toggle | Done — exam form checkbox + help text |
+| Exam weight badge | Done — resolved from `GET /settings` exam_kinds by kind name |
+| Router `beforeLoad` | Done — live (teacher+), settings/terms (manager+), exam-room (student) |
+| Exam room CTA | Done — student-only on exam detail |
+
+### Backend-Dependent Follow-Up
+
+- Server-side search/filter params are still absent; hybrid full-fetch remains for client filters until the API adds them.
+
+## UX polish batch (completed)
+
+- Session delete uses ConfirmDialog; exam room guards stale id on route change.
+- Mobile bottom tab bar (home/courses/exams/notes/menu); exam-room hides tab chrome.
+- Shared ErrorAlert with try-again; lookup pages show person labels; profile shows localized role.
+- Manager/admin dashboard portal includes daily tools + management cards; compact guide CTA on dashboard (guide stays in account menu).
+- Terms page: SidePanel create/edit + dense table row actions; header create buttons use shared min-width/radius.
+- Settings: dirty-state save gate and auto-clearing success message.
+- Nested breadcrumbs on exam room and live monitor.

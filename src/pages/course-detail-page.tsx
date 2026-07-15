@@ -6,6 +6,7 @@ import { getCourseById } from "@/api/getCourseById";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { getCourseExams } from "@/api/getCourseExams";
 import { getMyCourses } from "@/api/getMyCourses";
+import { getSettings } from "@/api/getSettings";
 import { getTerms } from "@/api/getTerms";
 import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
@@ -65,8 +66,9 @@ function CourseDetailContent() {
   });
 
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
-  const [terms] = createResource(() => getTerms());
-  const [exams, { refetch: refetchExams }] = createResource(id, (courseId) => getCourseExams(courseId));
+  const [terms] = createResource(async () => (await getTerms()).items);
+  const [settings] = createResource(() => getSettings());
+  const [exams, { refetch: refetchExams }] = createResource(id, async (courseId) => (await getCourseExams(courseId)).items);
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const hasCourseManagementRights = () => {
     const c = course();
@@ -76,11 +78,11 @@ function CourseDetailContent() {
   };
   const [roster, { refetch: refetchRoster }] = createResource(
     () => (hasCourseManagementRights() ? id() : null),
-    async (courseId) => (courseId ? getCourseEnrollments(courseId) : []),
+    async (courseId) => (courseId ? (await getCourseEnrollments(courseId)).items : []),
   );
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? getMyCourses() : []),
+    async (enabled) => (enabled ? (await getMyCourses()).items : []),
   );
 
   const [editing, setEditing] = createSignal(false);
@@ -142,7 +144,7 @@ function CourseDetailContent() {
     if (!c) return;
     setTitle(c.title);
     setDescription(c.description);
-    setTermId(c.term_id ?? "");
+    setTermId(c.term ?? "");
     setEditing(true);
   };
 
@@ -369,7 +371,7 @@ function CourseDetailContent() {
                   {t("terms.term")}
                 </p>
                 <p class="mono mt-2 truncate text-xl font-semibold">
-                  {terms()?.find((term) => term.id === c().term_id)?.name ?? t("terms.unassigned")}
+                  {terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}
                 </p>
                 <p class="mt-1 text-xs text-muted-foreground">{t("terms.title")}</p>
               </div>
@@ -414,7 +416,7 @@ function CourseDetailContent() {
                               <div class="flex flex-wrap items-center gap-2">
                                 <Badge variant="outline" class="rounded-sm capitalize">
                                   {examKindLabel(String(exam.kind), t)}
-                                  <Show when={examWeight(exam) != null}>
+                                  <Show when={examWeight(exam, settings()?.exam_kinds) != null}>
                                     {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
                                   </Show>
                                 </Badge>

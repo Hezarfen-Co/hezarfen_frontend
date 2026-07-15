@@ -9,10 +9,15 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableFrame } from "@/components/ui/data-table";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+const WORK_PAGE_SIZE = 15;
 
 export default function WorkLogPage() {
   return (
@@ -25,10 +30,32 @@ export default function WorkLogPage() {
 function WorkLogContent() {
   const t = useT();
   const { locale } = usePreferences();
-  const [entries, { refetch }] = createResource(() => getMyWorkLog());
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
-  const openEntry = createMemo(() => (entries() ?? []).find((entry) => entry.check_out == null) ?? null);
+  const [page, setPage] = createSignal(0);
+  const [version, setVersion] = createSignal(0);
+
+  const [openProbe, { refetch: refetchOpen }] = createResource(
+    () => version(),
+    async () => (await getMyWorkLog({ limit: 1, offset: 0 })).items,
+  );
+  const openEntry = createMemo(() => (openProbe() ?? []).find((entry) => entry.check_out == null) ?? null);
+
+  const [list, { refetch }] = createResource(
+    () => ({ page: page(), version: version() }),
+    async (key) =>
+      loadListPage({
+        page: key.page,
+        pageSize: WORK_PAGE_SIZE,
+        clientMode: false,
+        fetch: getMyWorkLog,
+      }),
+  );
+
+  const total = () => list()?.total ?? 0;
+  const pageItems = () => list()?.items ?? [];
+  const totalPages = createMemo(() => pagesOf(total(), WORK_PAGE_SIZE));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
 
   const toggle = async () => {
     setError("");
@@ -39,7 +66,9 @@ function WorkLogContent() {
       } else {
         await postWorkCheckIn();
       }
-      await refetch();
+      setPage(0);
+      setVersion((value) => value + 1);
+      await Promise.all([refetch(), refetchOpen()]);
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -65,7 +94,9 @@ function WorkLogContent() {
           <div>
             <h2 class="font-display text-xl font-semibold">{openEntry() ? t("work.checkedIn") : t("work.notCheckedIn")}</h2>
             <p class="mt-1 text-sm text-muted-foreground">
-              <Show when={openEntry()} fallback={t("work.ready")}>{(entry) => t("work.since", { time: formatDateTime(entry().check_in, locale()) })}</Show>
+              <Show when={openEntry()} fallback={t("work.ready")}>
+                {(entry) => t("work.since", { time: formatDateTime(entry().check_in, locale()) })}
+              </Show>
             </p>
           </div>
           <Button type="button" size="lg" class="rounded-sm" variant={openEntry() ? "destructive" : "default"} disabled={pending()} onClick={() => void toggle()}>
@@ -77,14 +108,16 @@ function WorkLogContent() {
       <section class="data-shell space-y-4 p-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="font-display text-lg font-semibold">{t("work.entries")}</h2>
-          <Badge variant="secondary" class="mono rounded-sm px-3 py-1">{entries()?.length ?? 0}</Badge>
+          <Badge variant="secondary" class="mono rounded-sm px-3 py-1">
+            {total()}
+          </Badge>
         </div>
         <Suspense fallback={<PageSpinner />}>
-          <Show when={entries.error}>
-            <Alert variant="destructive">{formatApiError(entries.error)}</Alert>
+          <Show when={list.error}>
+            <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
           </Show>
           <Show
-            when={(entries() ?? []).length > 0}
+            when={pageItems().length > 0}
             fallback={<div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("work.empty")}</div>}
           >
             <DataTableFrame>
@@ -94,11 +127,11 @@ function WorkLogContent() {
                     <TableHead>{t("work.checkIn")}</TableHead>
                     <TableHead>{t("work.checkOut")}</TableHead>
                     <TableHead>{t("work.duration")}</TableHead>
-                    <TableHead>{t("attempt.status")}</TableHead>
+                    <TableHead>{t("work.status")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <For each={entries() ?? []}>
+                  <For each={pageItems()}>
                     {(entry) => (
                       <TableRow>
                         <TableCell class="mono">{formatDateTime(entry.check_in, locale())}</TableCell>
@@ -115,6 +148,9 @@ function WorkLogContent() {
                 </TableBody>
               </Table>
             </DataTableFrame>
+            <Show when={total() > WORK_PAGE_SIZE}>
+              <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+            </Show>
           </Show>
         </Suspense>
       </section>

@@ -12,6 +12,7 @@ export function UserSearchSelect(props: {
   id: string;
   value: string;
   onChange: (value: string) => void;
+  onSelectUser?: (user: PersonRef | null) => void;
   label?: string;
   excludeIds?: string[];
   placeholder?: string;
@@ -56,7 +57,7 @@ export function UserSearchSelect(props: {
     setLoading(true);
     try {
       const data = await getUserSearch(q, abortController.signal, props.role);
-      setUsers(data);
+      setUsers(data.items);
     } catch {
       if (!abortController?.signal.aborted) setUsers([]);
     } finally {
@@ -67,7 +68,10 @@ export function UserSearchSelect(props: {
   createEffect(() => {
     const value = props.value.trim();
     if (!value) {
-      if (selectedUser()) setSelectedUser(null);
+      if (selectedUser()) {
+        setSelectedUser(null);
+        props.onSelectUser?.(null);
+      }
       if (query() === lastSelectedLabel()) {
         setQuery("");
         if (inputRef) inputRef.value = "";
@@ -112,6 +116,7 @@ export function UserSearchSelect(props: {
     setQuery(label);
     setOpen(false);
     props.onChange(user.id);
+    props.onSelectUser?.(user);
     if (inputRef) inputRef.value = label;
     queueMicrotask(() => inputRef?.focus({ preventScroll: true }));
   };
