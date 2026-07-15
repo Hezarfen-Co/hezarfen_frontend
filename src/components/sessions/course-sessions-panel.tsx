@@ -2,6 +2,7 @@ import { For, Show, Suspense, createEffect, createMemo, createResource, createSi
 import { deleteSessionById } from "@/api/deleteSessionById";
 import { getCourseSessions } from "@/api/getCourseSessions";
 import { getSessionAttendance } from "@/api/getSessionAttendance";
+import { getTime } from "@/api/getTime";
 import { postCourseSession } from "@/api/postCourseSession";
 import { postSessionAttendance } from "@/api/postSessionAttendance";
 import { formatApiError } from "@/api/client";
@@ -60,6 +61,7 @@ export function CourseSessionsPanel(props: {
   const [endsTime, setEndsTime] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
 
   const resetCreateForm = () => {
     setTopic("");
@@ -85,6 +87,10 @@ export function CourseSessionsPanel(props: {
     }
     if (ends_at != null && ends_at < starts_at) {
       setError(t("form.timeOrder"));
+      return;
+    }
+    if (starts_at < (serverTime()?.now ?? Date.now()) || (ends_at != null && ends_at < (serverTime()?.now ?? Date.now()))) {
+      setError(t("form.timePast"));
       return;
     }
     setPending(true);
@@ -161,16 +167,16 @@ export function CourseSessionsPanel(props: {
           <div class="grid gap-3">
             <div class="space-y-1.5">
               <Label for="session-starts">{t("events.starts")}</Label>
-              <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
-                <DatePicker id="session-starts" placeholder={t("form.datePlaceholder")} value={startsDate()} required onChange={setStartsDate} />
-                <Input class="font-mono placeholder:text-muted-foreground/35" placeholder="09:00" value={startsTime()} required onInput={(e) => setStartsTime(e.currentTarget.value)} />
+              <div class="grid grid-cols-2 gap-2">
+                <DatePicker id="session-starts" class="h-10" placeholder={t("form.datePlaceholder")} value={startsDate()} required onChange={setStartsDate} />
+                <Input class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/35" placeholder="09:00" value={startsTime()} required onInput={(e) => setStartsTime(e.currentTarget.value)} />
               </div>
             </div>
             <div class="space-y-1.5">
               <Label for="session-ends">{t("events.ends")}</Label>
-              <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2">
-                <DatePicker id="session-ends" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
-                <Input class="font-mono placeholder:text-muted-foreground/35" placeholder="10:00" value={endsTime()} onInput={(e) => setEndsTime(e.currentTarget.value)} />
+              <div class="grid grid-cols-2 gap-2">
+                <DatePicker id="session-ends" class="h-10" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
+                <Input class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/35" placeholder="10:00" value={endsTime()} onInput={(e) => setEndsTime(e.currentTarget.value)} />
               </div>
             </div>
           </div>

@@ -122,7 +122,7 @@ Current classification:
 
 Known follow-ups:
 
-- Ask backend for server-side pagination/search params before claiming true pagination on courses, exams, events, users, work log, or large detail tables.
+- Backend pagination/search params have been requested; do not claim true server-side pagination until those params exist in the backend README/API contract.
 - If backend adds pagination, update `src/api/*` helpers first and then move toolbar/search/filter state into request params.
 
 ## Priority 3: Docs Cleanup
@@ -137,8 +137,8 @@ Known follow-ups:
 ### Notes UX
 
 - Note create/edit `FormDialog` has been visually aligned with the newer form system.
-- Decide whether note create/edit should remain a modal, move to `SidePanel`, or become a richer notebook writing layout.
-- Decide whether the notes page should stay card-based or become a more structured notebook view.
+- Note create/edit stays in dialogs; note reading also opens a dialog.
+- Notes now render as richer notebook-style pages, with the read dialog using the same paper-like visual language.
 - Keep note detail work lightweight unless notes become a durable resource with its own full page.
 
 ### Exam Question Authoring
@@ -150,19 +150,19 @@ Known follow-ups:
 ### Schedule Validation
 
 - Lesson session creation currently validates date shape and end-after-start in the client; backend still enforces not-in-the-past with server time.
-- Consider adding a shared server-time helper around `GET /time` before warning users that event/exam/session schedule values are in the past.
+- Event, exam, and lesson session forms use `GET /time` before warning users that newly scheduled start/end values are in the past.
 - Keep client validation advisory only; backend remains authoritative.
 
 ### Course Table Polish
 
-- Add a term filter to the courses page.
+- Courses page has client-side search plus a term/unassigned filter while backend pagination/filter params are pending.
 - Consider an enrolled/all filter for students if the list becomes large.
 - Keep the table compact and preserve the full detail page for course resources.
 
 ### Visual Consistency
 
 - Settings, terms, notes, attendance, course sessions, and course detail section headers have been visually aligned with the newer radius/form/action language.
-- Decide how far to extend the table/toolbar pattern to `events-page` and remaining card-based views.
+- Events page keeps card rendering but now uses the shared toolbar pattern for search and upcoming/past filters.
 - Preserve non-table layouts only where cards communicate the domain better than rows.
 
 ## Request Budget Targets

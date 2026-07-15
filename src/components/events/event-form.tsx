@@ -1,5 +1,6 @@
-import { createSignal, Show } from "solid-js";
+import { createResource, createSignal, Show } from "solid-js";
 import { formatApiError } from "@/api/client";
+import { getTime } from "@/api/getTime";
 import type { Event } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -67,6 +68,7 @@ export function EventForm(props: {
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<EventFormValues | null>(null);
+  const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
 
   const resolveTime = (date: string, time: string, touched: boolean): number | null | undefined => {
     if (isEdit && !touched) return undefined;
@@ -86,6 +88,7 @@ export function EventForm(props: {
     if (startsTouched() && (startsDate().trim() || startsTime().trim()) && starts == null) return t("form.timeOrder");
     if (endsTouched() && (endsDate().trim() || endsTime().trim()) && ends == null) return t("form.timeOrder");
     if (s != null && e != null && e < s) return t("form.timeOrder");
+    if ((!isEdit || startsTouched() || endsTouched()) && ((s != null && s < (serverTime()?.now ?? Date.now())) || (e != null && e < (serverTime()?.now ?? Date.now())))) return t("form.timePast");
     return null;
   };
 

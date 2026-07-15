@@ -2,6 +2,7 @@ import { createEffect, createMemo, createResource, createSignal, Show } from "so
 import { formatApiError } from "@/api/client";
 import { For } from "solid-js";
 import { getSettings } from "@/api/getSettings";
+import { getTime } from "@/api/getTime";
 import type { Exam } from "@/api/types";
 import { EXAM_KINDS, EXAM_MODES } from "@/api/types";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,7 @@ export function ExamForm(props: {
   const [pendingValues, setPendingValues] = createSignal<ExamFormValues | null>(null);
   const isEdit = () => !!props.initial?.id;
   const [settings] = createResource(() => getSettings());
+  const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
   const examKinds = createMemo(() => {
     const names = settings()?.exam_kinds.map((item) => item.name) ?? EXAM_KINDS;
     return names.includes(kind()) ? names : [kind(), ...names];
@@ -109,7 +111,7 @@ export function ExamForm(props: {
     if (mode() === "sync" || mode() === "async") {
       if (starts == null || ends == null) return t("exams.scheduleRequired");
       if (ends <= starts) return t("form.timeOrder");
-      if (!isEdit() && (starts < Date.now() || ends < Date.now())) return t("form.timePast");
+      if (!isEdit() && (starts < (serverTime()?.now ?? Date.now()) || ends < (serverTime()?.now ?? Date.now()))) return t("form.timePast");
     }
     if (mode() === "async") {
       if (duration == null) return t("exams.durationRequired");
