@@ -1,24 +1,36 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
 import { getExams } from "@/api/getExams";
 import { getMyCourses } from "@/api/getMyCourses";
-import { ExamCard } from "@/components/exams/exam-card";
+import { patchExamById } from "@/api/patchExamById";
+import { postCourseExam } from "@/api/postCourseExam";
+import { formatApiError } from "@/api/client";
+import type { Course, Exam } from "@/api/types";
+import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { formatApiError } from "@/api/client";
-import { IconChevronRight } from "@/components/ui/icons";
-import { PageSpinner } from "@/components/ui/page-spinner";
+import { Button } from "@/components/ui/button";
+import { DataTableEmpty, DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataToolbar } from "@/components/ui/data-toolbar";
+import { IconEdit, IconEye, IconPlus } from "@/components/ui/icons";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { cn } from "@/lib/cn";
+import { Select } from "@/components/ui/select";
+import { SidePanel } from "@/components/ui/side-panel";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { createNow } from "@/lib/create-now";
-import { useAuth } from "@/stores/auth-context";
-import { useT } from "@/stores/preferences-context";
+import { examKindLabel } from "@/lib/exam-labels";
+import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
+import { cn } from "@/lib/cn";
+import { useAuth } from "@/stores/auth-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
-const EXAM_PAGE_SIZE = 6;
+const EXAM_PAGE_SIZE = 12;
+
+type ExamStatus = "unscheduled" | "upcoming" | "active" | "finished";
 
 export default function ExamsPage() {
   return (
@@ -31,18 +43,28 @@ export default function ExamsPage() {
 function ExamsContent() {
   const auth = useAuth();
   const t = useT();
+  const { locale } = usePreferences();
   const now = createNow();
-  const [exams] = createResource(() => getExams());
+  const [exams, { refetch: refetchExams }] = createResource(() => getExams());
   const [courses] = createResource(() => getCourses());
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
     async (enabled) => (enabled ? getMyCourses() : []),
   );
-  const [openCourse, setOpenCourse] = createSignal<string | null>(null);
-  const [sectionPages, setSectionPages] = createSignal<Record<string, number>>({});
+  const [query, setQuery] = createSignal("");
+  const [statusFilter, setStatusFilter] = createSignal<ExamStatus | "all">("all");
+  const [courseFilter, setCourseFilter] = createSignal("all");
+  const [showMoreFilters, setShowMoreFilters] = createSignal(false);
+  const [createOpen, setCreateOpen] = createSignal(false);
+  const [selectedCourseId, setSelectedCourseId] = createSignal("");
+  const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
+  const [page, setPage] = createSignal(0);
+
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
+  const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const isStudent = () => auth.user()?.role === "student";
   const visibleCourses = createMemo(() => (isStudent() ? mine() : courses()) ?? []);
+  const courseById = createMemo(() => new Map(visibleCourses().map((course) => [course.id, course])));
   const visibleExams = createMemo(() => {
     const all = exams() ?? [];
     if (!isStudent()) return all;
@@ -50,32 +72,74 @@ function ExamsContent() {
     return all.filter((exam) => allowed.has(exam.course));
   });
 
-  const courseSections = createMemo(() => {
-    const all = visibleExams();
-    const grouped = new Map<string, typeof all>();
-    for (const exam of all) {
-      const cid = exam.course;
-      if (!grouped.has(cid)) grouped.set(cid, []);
-      grouped.get(cid)!.push(exam);
-    }
-    const knownCourseIds = new Set(visibleCourses().map((c) => c.id));
-    const sections = visibleCourses()
-      .filter((c) => (grouped.get(c.id)?.length ?? 0) > 0)
-      .map((c) => ({ id: c.id, title: c.title, exams: grouped.get(c.id)! }));
-    const missingCourseExams = all.filter((exam) => !knownCourseIds.has(exam.course));
-    if (missingCourseExams.length > 0) {
-      sections.push({ id: "__missing_course__", title: t("exams.missingCourse"), exams: missingCourseExams });
-    }
-    return sections;
+  createEffect(() => {
+    if (!createOpen() || selectedCourseId()) return;
+    setSelectedCourseId(visibleCourses()[0]?.id ?? "");
   });
 
-  const toggleCourse = (id: string) => {
-    setOpenCourse((prev) => (prev === id ? null : id));
+  const examStatus = (exam: Exam): ExamStatus => {
+    if (exam.mode !== "sync" && exam.mode !== "async" && exam.mode !== "open") return "unscheduled";
+    if (exam.mode === "open") return "active";
+    const current = now();
+    if (exam.ends_at != null && exam.ends_at < current) return "finished";
+    if (exam.starts_at != null && exam.starts_at > current) return "upcoming";
+    return "active";
   };
 
-  const sectionPage = (id: string, totalPages: number) => Math.min(sectionPages()[id] ?? 0, totalPages - 1);
-  const setSectionPage = (id: string, page: number) => {
-    setSectionPages((current) => ({ ...current, [id]: page }));
+  const statusLabel = (status: ExamStatus) => {
+    if (status === "unscheduled") return t("exams.unscheduled");
+    if (status === "finished") return t("exams.finished");
+    if (status === "upcoming") return t("exams.upcoming");
+    return t("exams.active");
+  };
+
+  const statusTone = (status: ExamStatus) => {
+    if (status === "active") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+    if (status === "upcoming") return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+    return "border-muted bg-muted/50 text-muted-foreground";
+  };
+
+  const courseTitle = (courseId: string) => courseById().get(courseId)?.title ?? courseId;
+  const matchesQuery = (exam: Exam) => {
+    const needle = query().trim().toLocaleLowerCase(locale());
+    if (!needle) return true;
+    return [exam.title, exam.description, courseTitle(exam.course), examKindLabel(String(exam.kind), t)]
+      .join(" ")
+      .toLocaleLowerCase(locale())
+      .includes(needle);
+  };
+  const filteredExams = createMemo(() =>
+    visibleExams().filter((exam) => {
+      if (!matchesQuery(exam)) return false;
+      if (statusFilter() !== "all" && examStatus(exam) !== statusFilter()) return false;
+      if (courseFilter() !== "all" && exam.course !== courseFilter()) return false;
+      return true;
+    }),
+  );
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredExams().length / EXAM_PAGE_SIZE)));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+  const pageItems = createMemo(() => {
+    const start = safePage() * EXAM_PAGE_SIZE;
+    return filteredExams().slice(start, start + EXAM_PAGE_SIZE);
+  });
+
+  const createExam = async (values: ExamFormValues) => {
+    const courseId = selectedCourseId();
+    if (!courseId) throw new Error(t("exams.selectCourse"));
+    await postCourseExam(courseId, {
+      ...values,
+      description: values.description.trim() || undefined,
+    });
+    setCreateOpen(false);
+    await refetchExams();
+  };
+
+  const updateExam = async (values: ExamFormValues) => {
+    const exam = editingExam();
+    if (!exam) return;
+    await patchExamById(exam.id, values);
+    setEditingExam(null);
+    await refetchExams();
   };
 
   return (
@@ -94,77 +158,150 @@ function ExamsContent() {
         />
       </div>
 
-      <Show when={canCreate()}>
-        <p class="data-shell px-4 py-3 text-sm text-muted-foreground">
-          {t("exams.mustBelongCourse")}{" "}
-          <Link to="/courses" class="font-medium text-primary underline-offset-4 hover:underline">
-            {t("nav.courses")}
-          </Link>
-        </p>
-      </Show>
-
-      <Suspense fallback={<PageSpinner />}>
-        <Show when={exams.error}>
-          <Alert variant="destructive">{formatApiError(exams.error)}</Alert>
-        </Show>
-        <Show when={exams()}>
-            <Show
-              when={visibleExams().length > 0}
-              fallback={
-                <div class="rounded-md border border-dashed px-6 py-16 text-center text-sm text-muted-foreground">
-                  {t("exams.empty")}
-                </div>
-              }
-            >
-              <div class="space-y-3">
-                <For each={courseSections()}>
-                  {(section) => {
-                    const isOpen = () => openCourse() === section.id;
-                    const totalPages = () => Math.max(1, Math.ceil(section.exams.length / EXAM_PAGE_SIZE));
-                    const page = () => sectionPage(section.id, totalPages());
-                    const pageItems = () => {
-                      const start = page() * EXAM_PAGE_SIZE;
-                      return section.exams.slice(start, start + EXAM_PAGE_SIZE);
-                    };
-                    return (
-                      <section class="data-shell overflow-hidden">
-                        <button
-                          type="button"
-                          onClick={() => toggleCourse(section.id)}
-                          class="flex w-full items-center justify-between gap-3 bg-muted/35 px-4 py-3 text-left transition-colors hover:bg-muted/60"
-                        >
-                          <div class="flex items-center gap-3">
-                            <IconChevronRight
-                              class={cn("h-4 w-4 text-muted-foreground transition-transform", isOpen() && "rotate-90")}
-                            />
-                            <h2 class="font-display text-base font-semibold">{section.title}</h2>
-                          </div>
-                          <Badge variant="outline" class="mono rounded-sm">{section.exams.length}</Badge>
-                        </button>
-                        <Show when={isOpen()}>
-                          <div class="space-y-4 border-t border-border px-4 pb-4 pt-4">
-                            <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                              <For each={pageItems()}>
-                                {(exam) => (
-                                  <li>
-                                    <ExamCard exam={exam} courseTitle={section.title} now={now()} />
-                                  </li>
-                                )}
-                              </For>
-                            </ul>
-                            <Show when={section.exams.length > EXAM_PAGE_SIZE}>
-                              <PaginationControls page={page()} totalPages={totalPages()} onPageChange={(next) => setSectionPage(section.id, next)} />
-                            </Show>
-                          </div>
-                        </Show>
-                      </section>
-                    );
+      <section class="data-shell space-y-4 p-4">
+        <DataToolbar
+          searchValue={query()}
+          searchPlaceholder={t("exams.searchPlaceholder")}
+          onSearchInput={(value) => {
+            setQuery(value);
+            setPage(0);
+          }}
+          filters={
+            <>
+              <Select
+                class="h-9 w-full rounded-sm sm:w-40"
+                value={statusFilter()}
+                onChange={(event) => {
+                  setStatusFilter(event.currentTarget.value as ExamStatus | "all");
+                  setPage(0);
+                }}
+              >
+                <option value="all">{t("common.all")}</option>
+                <option value="upcoming">{t("exams.upcoming")}</option>
+                <option value="active">{t("exams.active")}</option>
+                <option value="finished">{t("exams.finished")}</option>
+                <option value="unscheduled">{t("exams.unscheduled")}</option>
+              </Select>
+              <Show when={showMoreFilters()}>
+                <Select
+                  class="h-9 w-full rounded-sm sm:w-52"
+                  value={courseFilter()}
+                  onChange={(event) => {
+                    setCourseFilter(event.currentTarget.value);
+                    setPage(0);
                   }}
-                </For>
-              </div>
+                >
+                  <option value="all">{t("common.all")}</option>
+                  <For each={visibleCourses()}>{(course) => <option value={course.id}>{course.title}</option>}</For>
+                </Select>
+              </Show>
+              <Button type="button" variant="outline" size="sm" class="h-9 rounded-sm" onClick={() => setShowMoreFilters((value) => !value)}>
+                {showMoreFilters() ? t("common.lessFilters") : t("common.moreFilters")}
+              </Button>
+            </>
+          }
+          actions={
+            <Show when={canCreate()}>
+              <Button type="button" size="sm" class="h-9 rounded-sm" onClick={() => setCreateOpen(true)}>
+                <IconPlus class="h-4 w-4" />
+                {t("exams.create")}
+              </Button>
             </Show>
+          }
+        />
+
+        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+          <Show when={exams.error}>
+            <Alert variant="destructive">{formatApiError(exams.error)}</Alert>
+          </Show>
+          <Show when={pageItems().length > 0} fallback={<DataTableEmpty>{t("exams.empty")}</DataTableEmpty>}>
+            <DataTableFrame>
+              <Table class="data-table table-fixed min-w-[64rem]">
+                <colgroup>
+                  <col class="w-[26%]" />
+                  <col class="w-[17%]" />
+                  <col class="w-[12rem]" />
+                  <col class="w-[9rem]" />
+                  <col class="w-[10rem]" />
+                  <col class="w-[12rem]" />
+                </colgroup>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("exams.title")}</TableHead>
+                    <TableHead>{t("nav.courses")}</TableHead>
+                    <TableHead class="text-right">{t("events.starts")}</TableHead>
+                    <TableHead class="text-center">{t("attempt.status")}</TableHead>
+                    <TableHead>{t("exams.kind")}</TableHead>
+                    <TableHead class="w-44 text-right">{t("common.actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <For each={pageItems()}>
+                    {(exam) => {
+                      const status = () => examStatus(exam);
+                      return (
+                        <TableRow>
+                          <TableCell>
+                            <div class="min-w-0">
+                              <p class="truncate font-medium">{exam.title}</p>
+                              <p class="truncate text-xs text-muted-foreground">{exam.description || "—"}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell class="truncate text-muted-foreground">{courseTitle(exam.course)}</TableCell>
+                          <TableCell class="mono whitespace-nowrap text-right text-muted-foreground">{formatDateTime(exam.starts_at, locale())}</TableCell>
+                          <TableCell class="text-center">
+                            <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", statusTone(status()))}>
+                              {statusLabel(status())}
+                            </Badge>
+                          </TableCell>
+                          <TableCell class="truncate text-muted-foreground">{examKindLabel(String(exam.kind), t)}</TableCell>
+                          <TableCell>
+                            <div class="flex justify-end gap-1">
+                              <Link to="/exams/$id" params={{ id: exam.id }}>
+                                <Button type="button" variant="ghost" size="sm" class="h-7 rounded-sm px-2">
+                                  <IconEye class="h-4 w-4" />
+                                  {t("common.view")}
+                                </Button>
+                              </Link>
+                              <Show when={isTeacherPlus()}>
+                                <Button type="button" variant="ghost" size="sm" class="h-7 rounded-sm px-2" onClick={() => setEditingExam(exam)}>
+                                  <IconEdit class="h-4 w-4" />
+                                  {t("common.edit")}
+                                </Button>
+                              </Show>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }}
+                  </For>
+                </TableBody>
+              </Table>
+            </DataTableFrame>
+          </Show>
+        </Suspense>
+
+        <Show when={filteredExams().length > EXAM_PAGE_SIZE}>
+          <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
         </Show>
-      </Suspense>
+      </section>
+
+      <SidePanel open={createOpen()} onOpenChange={setCreateOpen} title={t("exams.create")} description={t("exams.subtitle")}>
+        <div class="mb-4 space-y-1.5">
+          <label class="text-sm font-medium" for="exam-course">{t("exams.selectCourse")}</label>
+          <Select id="exam-course" class="rounded-sm" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
+            <option value="">{t("exams.selectCourse")}</option>
+            <For each={visibleCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>
+          </Select>
+        </div>
+        <ExamForm submitLabel={t("common.create")} onCancel={() => setCreateOpen(false)} onSubmit={createExam} />
+      </SidePanel>
+
+      <SidePanel open={editingExam() != null} onOpenChange={(open) => !open && setEditingExam(null)} title={t("common.edit")} description={editingExam()?.title}>
+        <Show when={editingExam()}>
+          {(exam) => <ExamForm initial={exam()} submitLabel={t("common.update")} onCancel={() => setEditingExam(null)} onSubmit={updateExam} />}
+        </Show>
+      </SidePanel>
     </div>
   );
 }

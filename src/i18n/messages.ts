@@ -39,6 +39,10 @@ export type MessageKey =
   | "common.update"
   | "common.remove"
   | "common.back"
+  | "common.view"
+  | "common.actions"
+  | "common.moreFilters"
+  | "common.lessFilters"
   | "common.search"
   | "common.or"
   | "common.tryAgain"
@@ -158,6 +162,8 @@ export type MessageKey =
   | "exams.title"
   | "exams.subtitle"
   | "exams.create"
+  | "exams.searchPlaceholder"
+  | "exams.selectCourse"
   | "exams.empty"
   | "exams.kind"
   | "exams.kind.homework"
@@ -469,6 +475,10 @@ const en: Dict = {
   "common.update": "Update",
   "common.remove": "Remove",
   "common.back": "Back",
+  "common.view": "View",
+  "common.actions": "Actions",
+  "common.moreFilters": "More filters",
+  "common.lessFilters": "Less filters",
   "common.search": "Search",
   "common.or": "or",
   "common.tryAgain": "Try again",
@@ -591,6 +601,8 @@ const en: Dict = {
   "exams.title": "Exams",
   "exams.subtitle": "All exams across courses — create them under a course.",
   "exams.create": "Create exam",
+  "exams.searchPlaceholder": "Search exams…",
+  "exams.selectCourse": "Select course",
   "exams.empty": "No exams published yet.",
   "exams.kind": "Kind",
   "exams.kind.homework": "Homework",
@@ -912,6 +924,10 @@ const tr: Dict = {
   "common.update": "Güncelle",
   "common.remove": "Kaldır",
   "common.back": "Geri",
+  "common.view": "Görüntüle",
+  "common.actions": "İşlem",
+  "common.moreFilters": "Daha fazla filtre",
+  "common.lessFilters": "Daha az filtre",
   "common.search": "Ara",
   "common.or": "veya",
   "common.tryAgain": "Tekrar dene",
@@ -1034,6 +1050,8 @@ const tr: Dict = {
   "exams.title": "Sınavlar",
   "exams.subtitle": "Tüm derslerin sınavları — yeni sınav ders içinden eklenir.",
   "exams.create": "Sınav oluştur",
+  "exams.searchPlaceholder": "Sınav ara…",
+  "exams.selectCourse": "Ders seç",
   "exams.empty": "Henüz yayınlanmış sınav yok.",
   "exams.kind": "Tür",
   "exams.kind.homework": "Ödev",

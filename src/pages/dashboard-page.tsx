@@ -12,12 +12,10 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   IconCalendar,
   IconExam,
   IconNote,
-  IconPlus,
 } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useAuth } from "@/stores/auth-context";
@@ -81,13 +79,6 @@ function DashboardContent() {
         accent="mint"
         title={t("dashboard.greeting", { name: user().username })}
         description={t("dashboard.subtitle")}
-        actions={
-          <Link to="/guide">
-            <Button variant="outline" size="sm" class="rounded-sm">
-              {t("dashboard.continueGuide")}
-            </Button>
-          </Link>
-        }
       />
 
       <Show when={resourceError()}>
@@ -134,9 +125,6 @@ function DashboardContent() {
         <div class="data-shell flex min-h-[18rem] flex-col overflow-hidden">
           <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
             <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.recentNotes")}</h2>
-            <Link to="/notes" class="text-sm font-medium text-primary hover:underline">
-              {t("dashboard.viewAll")}
-            </Link>
           </div>
           <div class="flex flex-1 p-4 sm:p-5">
           <Suspense fallback={<PageSpinner />}>
@@ -147,8 +135,6 @@ function DashboardContent() {
                   icon={<IconNote class="h-6 w-6" />}
                   title={t("dashboard.emptyNotesTitle")}
                   description={t("dashboard.noNotes")}
-                  cta={t("dashboard.emptyNotesCta")}
-                  to="/notes"
                   tone="amber"
                 />
               }
@@ -175,9 +161,6 @@ function DashboardContent() {
         <div class="data-shell flex min-h-[18rem] flex-col overflow-hidden">
           <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
             <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.upcomingEvents")}</h2>
-            <Link to="/events" class="text-sm font-medium text-primary hover:underline">
-              {t("dashboard.viewAll")}
-            </Link>
           </div>
           <div class="flex flex-1 p-4 sm:p-5">
           <Suspense fallback={<PageSpinner />}>
@@ -188,8 +171,6 @@ function DashboardContent() {
                   icon={<IconCalendar class="h-6 w-6" />}
                   title={t("dashboard.emptyEventsTitle")}
                   description={t("dashboard.noEvents")}
-                  cta={t("dashboard.emptyEventsCta")}
-                  to="/events"
                   tone="sky"
                 />
               }
@@ -225,9 +206,6 @@ function DashboardContent() {
         <div class="data-shell flex min-h-[18rem] flex-col overflow-hidden">
           <div class="flex items-center justify-between gap-2 border-b border-border/70 bg-muted/25 px-4 py-3 sm:px-5">
             <h2 class="font-display text-base font-semibold tracking-tight sm:text-lg">{t("dashboard.myExams")}</h2>
-            <Link to="/exams" class="text-sm font-medium text-primary hover:underline">
-              {t("dashboard.viewAll")}
-            </Link>
           </div>
           <div class="flex flex-1 p-4 sm:p-5">
           <Suspense fallback={<PageSpinner />}>
@@ -238,8 +216,6 @@ function DashboardContent() {
                   icon={<IconExam class="h-6 w-6" />}
                   title={t("dashboard.emptyExamsTitle")}
                   description={t("exams.empty")}
-                  cta={t("dashboard.emptyExamsCta")}
-                  to="/exams"
                   tone="rose"
                 />
               }
@@ -318,8 +294,6 @@ function EmptyPanel(props: {
   icon: any;
   title: string;
   description: string;
-  cta: string;
-  to: string;
   tone: "amber" | "sky" | "rose";
 }) {
   const tones = {
@@ -342,12 +316,6 @@ function EmptyPanel(props: {
       <p class="mt-1 max-w-[16rem] text-xs leading-relaxed text-muted-foreground">
         {props.description}
       </p>
-      <Link to={props.to} class="mt-4">
-        <Button size="sm" class="gap-1.5">
-          <IconPlus class="h-3.5 w-3.5" />
-          {props.cta}
-        </Button>
-      </Link>
     </div>
   );
 }
