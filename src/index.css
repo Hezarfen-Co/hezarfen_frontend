@@ -141,7 +141,7 @@
   }
 
   .data-table th {
-    @apply h-9 whitespace-nowrap border-r border-border/60 px-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] last:border-r-0;
+    @apply h-9 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/60 px-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] last:border-r-0;
   }
 
   .data-table td {

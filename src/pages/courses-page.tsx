@@ -227,13 +227,13 @@ function CoursesContent() {
                 </div>
               </div>
               <DataTableFrame>
-                <Table class="data-table table-fixed min-w-[56rem]">
+                <Table class="data-table table-fixed min-w-[44rem]">
                   <colgroup>
                     <col class="w-[28%]" />
                     <col class="w-[30%]" />
-                    <col class="w-[14rem]" />
-                    <col class="w-[11rem]" />
-                    <col class="w-[3.5rem]" />
+                    <col class="w-[9rem]" />
+                    <col class="w-[10rem]" />
+                    <col class="w-[5rem]" />
                   </colgroup>
                   <TableHeader>
                     <TableRow>
