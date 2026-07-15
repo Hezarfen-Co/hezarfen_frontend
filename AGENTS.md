@@ -69,8 +69,9 @@ Solid components run **once**, there is no re-render:
 
 - Treat these docs as active project context before changing related areas:
   - `docs/frontend-next-steps.md` — active backlog, role/pagination/request audit notes.
-  - `docs/navigation-patterns.md` — interaction rules, role scope, side-panel/full-page decisions.
-  - `docs/ui-redesign-tokens.md` — visual density, radius, table, side-panel, and status UI conventions.
+  - `docs/navigation-patterns.md` — interaction rules, role scope, side-panel/full-page decisions, dashboard structure.
+  - `docs/ui-redesign-tokens.md` — visual density, radius, table, side-panel, status UI, and dashboard card conventions.
+  - `docs/role-scope-matrix.md` — role access matrix for pages/nav/dashboard cards.
   - `docs/backend-ui-alignment-plan.md` — completed backend-alignment archive; do not treat it as active work unless backend scope changes.
 - Durable resources use full detail pages. Short create/edit/filter work uses `SidePanel`. Destructive actions use confirm dialogs.
 - Header create actions use compact icon+label buttons with consistent size and current radius.
@@ -78,6 +79,22 @@ Solid components run **once**, there is no re-render:
 - Date/time product forms use shared `DatePicker` plus a separate `HH:mm` input. Backend schedule fields are UTC unix-millisecond values and the backend rejects newly set past event/exam/session schedules with `400`; use `GET /time` for server-clock-aware checks when accuracy matters.
 - Lesson session roll call is teacher/manager workflow only. Students never self-mark lesson sessions; the session teacher or course manager marks enrolled students, and the session teacher's own presence row is manager-only per backend rules.
 - Attendance status UI uses shared localized metadata: label, short detail text, and semantic colors.
+
+## Dashboard / homepage design
+
+Reference: `src/pages/dashboard-page.tsx`. Homepage is a **read-only status board**, not a marketing landing or action hub.
+
+- **No mutations** on the dashboard: no create/edit/delete buttons, no primary CTAs that open forms. Links only navigate to existing list/detail routes.
+- **Palette:** monochrome / grayscale surfaces (border, card, muted). Decorative color accents, gradients, activity charts, and multi-tone portal cards are out. **Semantic color only** for status (active / today / soon / danger).
+- **Layout order (top → bottom):**
+  1. Compact header — greeting, role chip (neutral), date.
+  2. Role-scoped **workspace portal cards** (section links with optional counts).
+  3. **Needs attention** + **Upcoming** side by side on `lg+`, stacked on mobile.
+- **Portal cards:** horizontal dense rows — icon | title + short desc | optional count. On desktop, title and count share one line as `Title | 12` (pipe separator, mono tabular count). No separate KPI strip that repeats the same numbers under the cards.
+- **Grid:** `1` col mobile → `2` sm → `3` lg → `4` xl. Equal-ish min height; avoid uneven multi-line stat stacks.
+- **Role scoping:** card set matches nav/role matrix (student personal tools; teacher teaching tools; manager+ management; admin gets staff-work + users, not personal `/work`). Optional min-role badge on a card is muted/neutral, not rainbow.
+- **Attention list:** active / today / soon exams and events only; rows navigate to detail. Empty state is plain text, not a create CTA.
+- Do not reintroduce guide marketing blocks, vanity charts, or redundant bottom KPI tiles.
 
 ## Containers
 

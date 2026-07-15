@@ -8,7 +8,7 @@ validation, and list filtering cleanup.
 
 - Backend alignment is complete for settings, terms, course sessions, attendance reports, work logs, exam attempts, and grade bands.
 - Shared UI primitives cover dense tables, data toolbars, row action menus, side panels, confirm dialogs, date picking, and animated disclosures.
-- Dashboard is role-aware and read-only. Admin sees global course/exam scope; other roles use own/enrolled/related scope where the backend supports it.
+- Dashboard is a monochrome, role-aware, read-only status board: workspace portal cards (`Title | count` on desktop) + needs-attention / upcoming lists. No create CTAs, no vanity charts, no duplicate KPI strip. Admin sees global course/exam scope; other roles use own/enrolled/related scope where the backend supports it.
 - Table and card actions use narrow centered three-dot menus through `TableRowActions`.
 - Dense tables have subtle column separators, fixed action columns, and stable date/number alignment.
 - Course creator display uses a username/display label when available; raw ids are fallback only.
@@ -77,7 +77,8 @@ validation, and list filtering cleanup.
 - Session delete uses ConfirmDialog; exam room guards stale id on route change.
 - Mobile bottom tab bar (home/courses/exams/notes/menu); exam-room hides tab chrome.
 - Shared ErrorAlert with try-again; lookup pages show person labels; profile shows localized role.
-- Manager/admin dashboard portal includes daily tools + management cards; compact guide CTA on dashboard (guide stays in account menu).
+- Dashboard portal cards are role-ordered workspace links (manager/admin include management tools); guide stays in the account menu, not on the homepage.
+- Dashboard layout: portal grid on top; attention + upcoming below (two columns from `lg`); grayscale cards with semantic status only.
 - Terms page: SidePanel create/edit + dense table row actions; header create buttons use shared min-width/radius.
 - Settings: dirty-state save gate and auto-clearing success message.
 - Nested breadcrumbs on exam room and live monitor.
