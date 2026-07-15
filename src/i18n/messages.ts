@@ -496,7 +496,9 @@ export type MessageKey =
   | "work.timesRequired"
   | "work.deleteSummary"
   | "work.teacherIdentity"
-  | "work.noTeachers";
+  | "work.noTeachers"
+  | "lookup.searchHint"
+  | "work.userNotFound";
 
 type Dict = Record<MessageKey, string>;
 
@@ -1003,6 +1005,8 @@ const en: Dict = {
   "work.staffSubtitle": "Look up a teacher, correct closed stints, or delete entries.",
   "work.teacherIdentity": "Teacher",
   "work.noTeachers": "No teachers found.",
+  "lookup.searchHint": "Type at least 2 characters to search.",
+  "work.userNotFound": "No work log found for this user.",
   "work.show": "Show log",
   "work.forUser": "Log for {user}",
   "work.correct": "Correct entry",
@@ -1515,6 +1519,8 @@ const tr: Dict = {
   "work.staffSubtitle": "Öğretmen ara, kapalı mesaileri düzelt veya kayıt sil.",
   "work.teacherIdentity": "Öğretmen",
   "work.noTeachers": "Öğretmen bulunamadı.",
+  "lookup.searchHint": "Aramak için en az 2 karakter yaz.",
+  "work.userNotFound": "Bu kullanıcı için mesai kaydı bulunamadı.",
   "work.show": "Kaydı göster",
   "work.forUser": "{user} için kayıtlar",
   "work.correct": "Kaydı düzelt",
