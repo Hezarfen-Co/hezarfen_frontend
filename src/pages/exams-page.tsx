@@ -80,15 +80,22 @@ function ExamsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader
-        accent="rose"
-        eyebrow={t("nav.exams")}
-        title={t("exams.title")}
-        description={t("exams.subtitle")}
-      />
+      <div class="space-y-2">
+        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+          <span>{t("nav.group.classes")}</span>
+          <span>/</span>
+          <span>{t("nav.exams")}</span>
+        </div>
+        <PageHeader
+          accent="rose"
+          eyebrow={t("nav.exams")}
+          title={t("exams.title")}
+          description={t("exams.subtitle")}
+        />
+      </div>
 
       <Show when={canCreate()}>
-        <p class="rounded-md border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+        <p class="data-shell px-4 py-3 text-sm text-muted-foreground">
           {t("exams.mustBelongCourse")}{" "}
           <Link to="/courses" class="font-medium text-primary underline-offset-4 hover:underline">
             {t("nav.courses")}
@@ -109,7 +116,7 @@ function ExamsContent() {
                 </div>
               }
             >
-              <div class="space-y-4">
+              <div class="space-y-3">
                 <For each={courseSections()}>
                   {(section) => {
                     const isOpen = () => openCourse() === section.id;
@@ -120,11 +127,11 @@ function ExamsContent() {
                       return section.exams.slice(start, start + EXAM_PAGE_SIZE);
                     };
                     return (
-                      <section class="surface-card overflow-hidden">
+                      <section class="data-shell overflow-hidden">
                         <button
                           type="button"
                           onClick={() => toggleCourse(section.id)}
-                          class="flex w-full items-center justify-between gap-3 bg-gradient-to-r from-rose-500/10 via-transparent to-transparent px-5 py-4 text-left transition-colors hover:bg-muted/30"
+                          class="flex w-full items-center justify-between gap-3 bg-muted/35 px-4 py-3 text-left transition-colors hover:bg-muted/60"
                         >
                           <div class="flex items-center gap-3">
                             <IconChevronRight
@@ -132,11 +139,11 @@ function ExamsContent() {
                             />
                             <h2 class="font-display text-base font-semibold">{section.title}</h2>
                           </div>
-                          <Badge variant="outline" class="rounded-sm">{section.exams.length}</Badge>
+                          <Badge variant="outline" class="mono rounded-sm">{section.exams.length}</Badge>
                         </button>
                         <Show when={isOpen()}>
-                          <div class="space-y-4 border-t border-border/50 px-5 pb-5 pt-4">
-                            <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                          <div class="space-y-4 border-t border-border px-4 pb-4 pt-4">
+                            <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                               <For each={pageItems()}>
                                 {(exam) => (
                                   <li>

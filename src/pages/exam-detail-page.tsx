@@ -182,22 +182,30 @@ function ExamDetailContent() {
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
-            <PageHeader
-              accent="rose"
-              eyebrow={t("exams.title")}
-              title={ex().title}
-              description={ex().description || "—"}
-              actions={
-                <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                <span>{t("nav.group.classes")}</span>
+                <span>/</span>
+                <Link to="/exams" class="hover:text-foreground">{t("exams.title")}</Link>
+                <span>/</span>
+                <span class="truncate">{ex().title}</span>
+              </div>
+              <PageHeader
+                accent="rose"
+                eyebrow={t("exams.title")}
+                title={ex().title}
+                description={ex().description || "—"}
+                actions={
+                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-card p-1 shadow-sm sm:w-auto">
                   <Link to="/exams">
-                    <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
+                    <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
                       <IconChevronLeft class="h-4 w-4" />
                       {t("common.back")}
                     </Button>
                   </Link>
                   <Show when={!isFinished() && !isUpcoming() && isSittable()}>
                     <Link to="/exam-room/$id" params={{ id: id() }}>
-                      <Button size="sm" class="flex-1 rounded-md sm:flex-none">
+                      <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
                         <IconExam class="h-4 w-4" />
                         {t("attempt.openRoom")}
                       </Button>
@@ -205,7 +213,7 @@ function ExamDetailContent() {
                   </Show>
                   <Show when={isTeacherPlus() && !isUpcoming() && isSittable()}>
                     <Link to="/exams/$id/live" params={{ id: id() }}>
-                      <Button variant="outline" size="sm" class="flex-1 rounded-md sm:flex-none">
+                      <Button variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none">
                         <IconEye class="h-4 w-4" />
                         {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                       </Button>
@@ -217,7 +225,7 @@ function ExamDetailContent() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
+                        class="flex-1 rounded-sm sm:flex-none"
                         onClick={() => setEditing(true)}
                       >
                         <IconEdit class="h-4 w-4" />
@@ -227,7 +235,7 @@ function ExamDetailContent() {
                         type="button"
                         variant="destructive"
                         size="sm"
-                        class="flex-1 rounded-md sm:flex-none"
+                        class="flex-1 rounded-sm sm:flex-none"
                         disabled={pending()}
                         onClick={() => setDeleteOpen(true)}
                       >
@@ -237,8 +245,8 @@ function ExamDetailContent() {
                     </div>
                   </Show>
                 </div>
-              }
-            >
+                }
+              >
               <div class="flex flex-wrap items-center gap-2 pt-1">
                 <Badge variant="outline" class={cn(
                   "rounded-sm capitalize",
@@ -266,7 +274,8 @@ function ExamDetailContent() {
                   {examModeLabel(ex().mode)}
                 </Badge>
               </div>
-            </PageHeader>
+              </PageHeader>
+            </div>
 
             <ConfirmDialog
               open={deleteOpen()}
@@ -300,30 +309,30 @@ function ExamDetailContent() {
               />
             </FormDialog>
 
-            <section class="surface-card space-y-4 p-5">
+            <section class="data-shell space-y-4 p-4">
               <h2 class="font-display text-lg font-semibold">{t("exams.schedule")}</h2>
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-lg border bg-background/60 p-3">
-                  <p class="text-xs text-muted-foreground">{t("exams.mode")}</p>
+                <div class="rounded-lg border bg-muted/25 p-3">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
                   <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
                 </div>
-                <div class="rounded-lg border bg-background/60 p-3">
-                  <p class="text-xs text-muted-foreground">{t("events.starts")}</p>
-                  <p class="mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
+                <div class="rounded-lg border bg-muted/25 p-3">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</p>
+                  <p class="mono mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
                 </div>
-                <div class="rounded-lg border bg-background/60 p-3">
-                  <p class="text-xs text-muted-foreground">{t("events.ends")}</p>
-                  <p class="mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
+                <div class="rounded-lg border bg-muted/25 p-3">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.ends")}</p>
+                  <p class="mono mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
                 </div>
-                <div class="rounded-lg border bg-background/60 p-3">
-                  <p class="text-xs text-muted-foreground">{t("exams.durationMinutes")}</p>
-                  <p class="mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
+                <div class="rounded-lg border bg-muted/25 p-3">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.durationMinutes")}</p>
+                  <p class="mono mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
                 </div>
               </div>
             </section>
 
             <Show when={!isTeacherPlus() && !isScheduled()}>
-              <section class="surface-card p-6">
+              <section class="data-shell p-4">
                 <h2 class="font-display text-lg font-semibold">{t("exams.yourResult")}</h2>
                 <div class="mt-4">
                   <Suspense fallback={<PageSpinner />}>
@@ -336,7 +345,7 @@ function ExamDetailContent() {
             </Show>
 
             <Show when={isTeacherPlus() && sheetUserId()}>
-              <section class="surface-card space-y-4 p-5">
+              <section class="data-shell space-y-4 p-4">
                 <h2 class="font-display text-lg font-semibold">{t("exams.answerSheet")} — {sheetUserId()}</h2>
                 <Suspense fallback={<PageSpinner />}>
                   <AnswerSheetView examId={id()} userId={sheetUserId()!} />
@@ -345,27 +354,27 @@ function ExamDetailContent() {
             </Show>
 
             <Show when={isTeacherPlus()}>
-              <section class="surface-card space-y-4 p-5">
+              <section class="data-shell space-y-4 p-4">
                 <h2 class="font-display text-lg font-semibold">{t("exams.statistics")}</h2>
                 <Suspense fallback={<PageSpinner />}>
                   <Show when={stats()}>
                     {(s) => (
                       <div class="grid gap-3 text-sm sm:grid-cols-4">
-                        <div class="rounded-lg border bg-background/60 p-3">
-                          <p class="text-xs text-muted-foreground">{t("exams.graded")}</p>
-                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().graded}</p>
+                        <div class="rounded-lg border bg-muted/25 p-3">
+                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.graded")}</p>
+                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().graded}</p>
                         </div>
-                        <div class="rounded-lg border bg-background/60 p-3">
-                          <p class="text-xs text-muted-foreground">{t("exams.average")}</p>
-                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
+                        <div class="rounded-lg border bg-muted/25 p-3">
+                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.average")}</p>
+                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
                         </div>
-                        <div class="rounded-lg border bg-background/60 p-3">
-                          <p class="text-xs text-muted-foreground">{t("exams.min")}</p>
-                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
+                        <div class="rounded-lg border bg-muted/25 p-3">
+                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.min")}</p>
+                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
                         </div>
-                        <div class="rounded-lg border bg-background/60 p-3">
-                          <p class="text-xs text-muted-foreground">{t("exams.max")}</p>
-                          <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
+                        <div class="rounded-lg border bg-muted/25 p-3">
+                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.max")}</p>
+                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
                         </div>
                       </div>
                     )}
@@ -376,7 +385,7 @@ function ExamDetailContent() {
               <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} />
 
               <Show when={!isFinished()}>
-                <section class="surface-card space-y-4 p-5">
+                <section class="data-shell space-y-4 p-4">
                   <h2 class="font-display text-lg font-semibold">{t("exams.gradeStudent")}</h2>
                   <GradeForm
                     students={gradeStudents()}
@@ -388,7 +397,7 @@ function ExamDetailContent() {
                 </section>
               </Show>
 
-              <section class="surface-card space-y-4 p-5">
+              <section class="data-shell space-y-4 p-4">
                 <h2 class="font-display text-lg font-semibold">{t("exams.results")}</h2>
                 <Suspense fallback={<PageSpinner />}>
                   <Show
@@ -399,8 +408,8 @@ function ExamDetailContent() {
                       </p>
                     }
                   >
-                    <div class="overflow-hidden rounded-lg border border-border/70 bg-background/60">
-                      <Table>
+                    <div class="data-table-wrap">
+                      <Table class="data-table">
                         <TableHeader>
                           <TableRow>
                             <TableHead>{t("events.userId")}</TableHead>
@@ -415,7 +424,7 @@ function ExamDetailContent() {
                         <TableBody>
                           <For each={results() ?? []}>
                             {(row) => (
-                              <TableRow class="h-12">
+                              <TableRow>
                                 <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
                                 <TableCell>
                                   <ExamResultBadge mark={row.mark} />
@@ -426,7 +435,7 @@ function ExamDetailContent() {
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    class="rounded-md"
+                                    class="h-7 rounded-sm"
                                     onClick={() => {
                                       const rowUserId = personId(row.user);
                                       setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
@@ -441,7 +450,7 @@ function ExamDetailContent() {
                                       type="button"
                                       variant="ghost"
                                       size="sm"
-                                      class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                      class="h-7 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
                                       onClick={() => setRemoveUserId(personId(row.user))}
                                     >
                                       <IconTrash class="h-4 w-4" />
