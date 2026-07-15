@@ -1,4 +1,4 @@
-# Backend UI Alignment Plan
+# Backend UI Alignment Plan (Completed Archive)
 
 ## Context
 
@@ -17,7 +17,7 @@ Current frontend now supports:
 - Async duration derived from exam window.
 - Open exams untimed by default.
 
-This plan covers the remaining backend features that need simple, low-complexity UI support.
+This document is now a completed archive. It records the backend contract alignment work that was planned and implemented. Do not treat the commit list below as active work unless backend scope changes again.
 
 ## Product Principles
 
@@ -28,7 +28,7 @@ This plan covers the remaining backend features that need simple, low-complexity
 - Run `bun run build` before every commit.
 - Commit messages must follow repository rules and require explicit user approval.
 
-## Status
+## Completion Status
 
 - Commit 1 complete in UI: live monitor shows absent count/status, attempt usage, and left timestamp; exam room summary shows attempt usage and left timestamp.
 - Commit 2 complete in UI: report card types accept grade-band fields and marks show `mark / grade` when backend sends labels.
@@ -38,6 +38,12 @@ This plan covers the remaining backend features that need simple, low-complexity
 - Commit 6 complete in UI: attendance report pages show event/session totals, rates, and course breakdowns.
 - Commit 7 complete in UI: teacher work log page supports check-in, check-out, and recent entry listing.
 - No planned backend-alignment commits remain.
+
+## Current Follow-Up Documents
+
+- Active interaction rules: `docs/navigation-patterns.md`.
+- Active visual reference: `docs/ui-redesign-tokens.md`.
+- Active frontend backlog and dashboard plan: `docs/frontend-next-steps.md`.
 
 ## Remaining Commit Order
 

@@ -76,6 +76,15 @@ Implemented:
 - mono IDs and tabular metrics
 - neutral surfaces, subtle borders, no gradients or decorative cards
 
+## Current Implementation Notes
+
+- Data-heavy admin and management views should prefer `DataToolbar`, `DataTableFrame`, and `.data-table`.
+- Quick create/edit flows should use `SidePanel`; destructive actions stay in confirm dialogs.
+- Durable resources keep full detail pages with breadcrumbs.
+- Large detail sections can use `SectionDisclosure`, but closed sections must not mount children or fetch data.
+- Product date inputs should use the shared `DatePicker`; date-time flows should pair it with a compact `HH:mm` input.
+- Sidebar icons are local SVG wrappers to keep development builds small and avoid large icon package module graphs.
+
 Static wireframe:
 
 ```text
