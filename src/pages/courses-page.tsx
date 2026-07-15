@@ -40,7 +40,10 @@ function CoursesContent() {
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
-  const [courses, { refetch }] = createResource(() => getCourses());
+  const [courses, { refetch }] = createResource(
+    () => (auth.user()?.role && auth.user()?.role !== "student" ? true : null),
+    async (enabled) => (enabled ? getCourses() : []),
+  );
   const [terms] = createResource(() => getTerms());
   const [users] = createResource(
     () => (hasMinRole(auth.user()?.role, "manager") ? true : null),

@@ -317,6 +317,7 @@ function CourseDetailContent() {
                   excludeIds={enrolledUserIds()}
                   placeholder={t("form.selectStudent")}
                   onChange={setEnrollUserId}
+                  role="student"
                 />
                 <div class="flex flex-wrap gap-2">
                   <Button type="submit" class="rounded-sm" disabled={pending()}>

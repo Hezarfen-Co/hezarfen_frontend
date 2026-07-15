@@ -1,6 +1,6 @@
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 import { getUserSearch } from "@/api/getUserSearch";
-import type { PersonRef } from "@/api/types";
+import type { PersonRef, Role } from "@/api/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { personLabelWithId } from "@/lib/person";
@@ -19,6 +19,7 @@ export function UserSearchSelect(props: {
   emptyMessage?: string;
   disabled?: boolean;
   allowManualValue?: boolean;
+  role?: Role;
 }) {
   let inputRef: HTMLInputElement | undefined;
   const t = useT();
@@ -54,7 +55,7 @@ export function UserSearchSelect(props: {
     abortController = new AbortController();
     setLoading(true);
     try {
-      const data = await getUserSearch(q, abortController.signal);
+      const data = await getUserSearch(q, abortController.signal, props.role);
       setUsers(data);
     } catch {
       if (!abortController?.signal.aborted) setUsers([]);

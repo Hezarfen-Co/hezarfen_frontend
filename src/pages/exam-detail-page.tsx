@@ -222,7 +222,7 @@ function ExamDetailContent() {
                       {t("common.back")}
                     </Button>
                   </Link>
-                  <Show when={!isFinished() && !isUpcoming() && isSittable()}>
+                  <Show when={!isTeacherPlus() && !isFinished() && !isUpcoming() && isSittable()}>
                     <Link to="/exam-room/$id" params={{ id: id() }}>
                       <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
                         <IconExam class="h-4 w-4" />
