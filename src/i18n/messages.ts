@@ -59,6 +59,7 @@ export type MessageKey =
   | "confirm.deleteTitle"
   | "confirm.updateTitle"
   | "confirm.deleteNote"
+  | "confirm.deleteNoteFile"
   | "confirm.updateNote"
   | "confirm.deleteEvent"
   | "confirm.updateEvent"
@@ -176,6 +177,12 @@ export type MessageKey =
   | "notes.new"
   | "notes.empty"
   | "notes.noContent"
+  | "notes.files"
+  | "notes.filesHelp"
+  | "notes.addFile"
+  | "notes.noFiles"
+  | "notes.fileLimit"
+  | "notes.fileTooLarge"
   | "notes.helpTitle"
   | "notes.helpBody"
   | "events.title"
@@ -443,6 +450,9 @@ export type MessageKey =
   | "settings.locked"
   | "settings.unsaved"
   | "settings.empty"
+  | "settings.maxFileSize"
+  | "settings.maxFileSizeHelp"
+  | "settings.maxFileSizeInvalid"
   | "terms.title"
   | "terms.subtitle"
   | "terms.create"
@@ -562,6 +572,7 @@ const en: Dict = {
   "confirm.deleteTitle": "Confirm delete",
   "confirm.updateTitle": "Confirm update",
   "confirm.deleteNote": "Delete note “{title}”?",
+  "confirm.deleteNoteFile": "Delete file “{title}”?",
   "confirm.updateNote": "Update note “{title}”?",
   "confirm.deleteEvent": "Delete event “{title}”?",
   "confirm.updateEvent": "Update event “{title}”?",
@@ -679,6 +690,12 @@ const en: Dict = {
   "notes.new": "New note",
   "notes.empty": "Nothing here yet. Write your first note.",
   "notes.noContent": "No content",
+  "notes.files": "Attachments",
+  "notes.filesHelp": "Up to 10 files. Max {size} each.",
+  "notes.addFile": "Add file",
+  "notes.noFiles": "No files attached.",
+  "notes.fileLimit": "This note already has 10 files.",
+  "notes.fileTooLarge": "File is too large. Max {size}.",
   "notes.helpTitle": "About notes",
   "notes.helpBody":
     "Notes are private to you only. Title max 200 characters, content max 10,000. Delete and update open a confirmation dialog with a short summary before they run.",
@@ -959,6 +976,9 @@ const en: Dict = {
   "settings.locked": "Locked",
   "settings.unsaved": "Unsaved changes",
   "settings.empty": "No rows yet.",
+  "settings.maxFileSize": "Max note file size",
+  "settings.maxFileSizeHelp": "Per-file upload cap for note attachments, in MiB. Backend accepts 0.001-25 MiB.",
+  "settings.maxFileSizeInvalid": "Enter a valid file size.",
   "terms.title": "Academic terms",
   "terms.subtitle": "Manage calendar terms and assign courses to them.",
   "terms.create": "Create term",
@@ -1077,6 +1097,7 @@ const tr: Dict = {
   "confirm.deleteTitle": "Silmeyi onayla",
   "confirm.updateTitle": "Güncellemeyi onayla",
   "confirm.deleteNote": "“{title}” notu silinsin mi?",
+  "confirm.deleteNoteFile": "“{title}” dosyası silinsin mi?",
   "confirm.updateNote": "“{title}” notu güncellensin mi?",
   "confirm.deleteEvent": "“{title}” etkinliği silinsin mi?",
   "confirm.updateEvent": "“{title}” etkinliği güncellensin mi?",
@@ -1194,6 +1215,12 @@ const tr: Dict = {
   "notes.new": "Yeni not",
   "notes.empty": "Henüz bir şey yok. İlk notunu yaz.",
   "notes.noContent": "İçerik yok",
+  "notes.files": "Ekler",
+  "notes.filesHelp": "En fazla 10 dosya. Dosya başına {size} sınırı.",
+  "notes.addFile": "Dosya ekle",
+  "notes.noFiles": "Henüz dosya eklenmemiş.",
+  "notes.fileLimit": "Bu notta zaten 10 dosya var.",
+  "notes.fileTooLarge": "Dosya çok büyük. En fazla {size}.",
   "notes.helpTitle": "Notlar hakkında",
   "notes.helpBody":
     "Notlar yalnızca sana aittir. Başlık en fazla 200, içerik 10.000 karakter. Silme ve güncelleme özetli onay penceresi ister.",
@@ -1474,6 +1501,9 @@ const tr: Dict = {
   "settings.locked": "Kilitli",
   "settings.unsaved": "Kaydedilmemiş değişiklikler",
   "settings.empty": "Henüz satır yok.",
+  "settings.maxFileSize": "Not dosyası boyut sınırı",
+  "settings.maxFileSizeHelp": "Not ekleri için dosya başına yükleme sınırı, MiB cinsinden. Backend 0.001-25 MiB kabul eder.",
+  "settings.maxFileSizeInvalid": "Geçerli bir dosya boyutu gir.",
   "terms.title": "Akademik dönemler",
   "terms.subtitle": "Takvim dönemlerini yönet ve dersleri dönemlere bağla.",
   "terms.create": "Dönem oluştur",

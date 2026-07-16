@@ -18,7 +18,7 @@ validation, and list filtering cleanup.
 - Settings requests are cached and refreshed after settings patches.
 - Sidebar icons use local SVG wrappers to avoid large icon package module graphs.
 - Notes use a paper-style notebook card layout, a paper-style read dialog, and dialog-based create/edit/delete flows.
-- Backend note attachments are available but not yet wired in the frontend. Planned frontend scope is reader-dialog attachments only, using native `FormData` and backend-enforced caps.
+- Note attachments are wired in the reader dialog with native `FormData`, same-origin download links, and settings-based file-size warnings. Backend remains authoritative for the 10-file cap and upload validation.
 - List endpoints return `{ items, total, limit, offset }`. API helpers under `src/api/` accept optional `limit`/`offset` via `Page<T>`.
 - Events keep card rendering with shared toolbar search and all/upcoming/past filters.
 - Event, exam, and lesson-session schedule forms use `GET /time` for server-clock-aware past-date warnings before submit.
@@ -54,17 +54,6 @@ validation, and list filtering cleanup.
 
 ## Active Backlog
 
-### Note File Attachments
-
-| Item | Plan |
-|---|---|
-| API types | Add `NoteFile` and `SchoolSettings.max_file_bytes` |
-| API helpers | Add list/upload/delete helpers plus a download URL helper; keep one file per request |
-| Upload transport | Use native `FormData` with the multipart field named `file`; do not route multipart through JSON `client()` |
-| UI | Add a compact `NoteFilesPanel` inside the note reader dialog; no card-level file counts |
-| Limits | Read `settings.max_file_bytes` for client warning; backend remains authoritative for 10-file cap and `413` |
-| Deferred | No previews, no drag-drop dependency, no draft-upload queue before note creation |
-
 ### Recently fixed (this batch)
 
 | Item | Fix |
@@ -75,6 +64,7 @@ validation, and list filtering cleanup.
 | Manager work log | `/management/staff-work` + get/patch/delete work APIs |
 | Work route guard | `beforeLoad` teacher+ on `/work` |
 | BE student-only gates (enroll/sit/grade/roll call) | Localized error strings for the new 400/403 messages; student-marks lookup picker filters `role=student`; exam-detail own-result gates on `isStudent()` |
+| Note file attachments | Reader-dialog attachments panel with list/upload/download/delete; settings exposes `max_file_bytes` |
 
 ### Incomplete Product Features
 

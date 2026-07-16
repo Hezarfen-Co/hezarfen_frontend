@@ -171,6 +171,37 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
   return data as T;
 }
 
+export async function formClient<T>(path: string, body: FormData, signal?: AbortSignal): Promise<T> {
+  const res = await fetch(`${API_PREFIX}${path}`, {
+    method: "POST",
+    body,
+    credentials: "same-origin",
+    signal,
+  });
+
+  const text = await res.text();
+  let data: unknown = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { error: text };
+    }
+  }
+
+  if (!res.ok) {
+    const message =
+      data && typeof data === "object" && "error" in data && typeof (data as { error: unknown }).error === "string"
+        ? (data as { error: string }).error
+        : data && typeof data === "object" && "message" in data && typeof (data as { message: unknown }).message === "string"
+          ? (data as { message: string }).message
+          : res.statusText || "Request failed";
+    throw new ApiError(res.status, message);
+  }
+
+  return data as T;
+}
+
 export function formatApiErrorMessage(message: string, locale: Locale = currentLocale()): string {
   const normalized = normalizeApiMessage(message);
   const known = API_ERROR_MESSAGES[normalized]?.[locale];
