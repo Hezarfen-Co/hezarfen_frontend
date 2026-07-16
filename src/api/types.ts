@@ -1,6 +1,8 @@
 export type { Page, PageParams } from "./page";
 
 export type Role = "student" | "teacher" | "manager" | "admin";
+export type UserTheme = "light" | "dark";
+export type UserLanguage = "tr" | "en";
 export type CoreAttendanceStatus = "present" | "absent" | "late" | "excused";
 export type AttendanceStatus = CoreAttendanceStatus | string;
 export type KnownExamKind = "homework" | "quiz" | "midterm" | "final" | "project" | "oral";
@@ -18,6 +20,8 @@ export type User = {
   email: string | null;
   phone: string | null;
   birth_date: string | null;
+  theme: UserTheme | null;
+  language: UserLanguage | null;
 };
 
 export type ProfileUpdate = {

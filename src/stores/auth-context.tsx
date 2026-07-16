@@ -2,6 +2,7 @@ import {
   type Accessor,
   type ParentProps,
   createContext,
+  createEffect,
   createResource,
   createSignal,
   useContext,
@@ -10,6 +11,7 @@ import { getMe } from "@/api/getMe";
 import { postLogout } from "@/api/postLogout";
 import type { User } from "@/api/types";
 import { ApiError } from "@/api/client";
+import { usePreferences } from "@/stores/preferences-context";
 
 type AuthContextValue = {
   user: Accessor<User | null | undefined>;
@@ -22,6 +24,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue>();
 
 export function AuthProvider(props: ParentProps) {
+  const prefs = usePreferences();
   const [override, setOverride] = createSignal<User | null | undefined>(undefined);
   const [me, { refetch }] = createResource(async () => {
     try {
@@ -39,6 +42,11 @@ export function AuthProvider(props: ParentProps) {
   };
 
   const setUser = (u: User | null) => setOverride(u);
+
+  createEffect(() => {
+    const u = user();
+    if (u) prefs.hydratePreferences(u);
+  });
 
   const refresh = async () => {
     setOverride(undefined);

@@ -100,6 +100,16 @@ export function IconPlus(props: IconProps) {
   );
 }
 
+export function IconDownload(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 21h14" />
+    </Svg>
+  );
+}
+
 export function IconSun(props: IconProps) {
   return (
     <Svg {...props}>
@@ -175,6 +185,58 @@ export function IconNote(props: IconProps) {
       <path d="M10 9H8" />
       <path d="M16 13H8" />
       <path d="M16 17H8" />
+    </Svg>
+  );
+}
+
+export function IconFileImage(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
+    </Svg>
+  );
+}
+
+export function IconFileVideo(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect width="18" height="14" x="3" y="5" rx="2" />
+      <path d="m10 9 5 3-5 3Z" />
+    </Svg>
+  );
+}
+
+export function IconFileAudio(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 18V5l12-2v13" />
+      <circle cx="6" cy="18" r="3" />
+      <circle cx="18" cy="16" r="3" />
+    </Svg>
+  );
+}
+
+export function IconFileText(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M8 13h8" />
+      <path d="M8 17h5" />
+    </Svg>
+  );
+}
+
+export function IconFileSpreadsheet(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M8 13h8" />
+      <path d="M8 17h8" />
+      <path d="M11 10v10" />
     </Svg>
   );
 }
