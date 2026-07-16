@@ -6,6 +6,8 @@ import {
   createSignal,
   useContext,
 } from "solid-js";
+import { patchMyPreferences } from "@/api/patchMyPreferences";
+import type { User } from "@/api/types";
 import { formatMessage, messages, type Locale, type MessageKey } from "@/i18n/messages";
 
 export type ThemeMode = "light" | "dark";
@@ -16,6 +18,7 @@ type PreferencesContextValue = {
   theme: Accessor<ThemeMode>;
   setTheme: (theme: ThemeMode) => void;
   toggleTheme: () => void;
+  hydratePreferences: (user: Pick<User, "theme" | "language">) => void;
   sidebarCollapsed: Accessor<boolean>;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
@@ -88,9 +91,26 @@ export function PreferencesProvider(props: ParentProps) {
     localStorage.setItem(SIDEBAR_KEY, sidebarCollapsed() ? "1" : "0");
   });
 
-  const setLocale = (l: Locale) => setLocaleSignal(l);
-  const setTheme = (th: ThemeMode) => setThemeSignal(th);
-  const toggleTheme = () => setThemeSignal((t) => (t === "dark" ? "light" : "dark"));
+  const persistPreferences = (body: Parameters<typeof patchMyPreferences>[0]) => {
+    void patchMyPreferences(body).catch(() => undefined);
+  };
+
+  const setLocale = (l: Locale) => {
+    setLocaleSignal(l);
+    persistPreferences({ language: l });
+  };
+  const setTheme = (th: ThemeMode) => {
+    setThemeSignal(th);
+    persistPreferences({ theme: th });
+  };
+  const toggleTheme = () => {
+    const next = theme() === "dark" ? "light" : "dark";
+    setTheme(next);
+  };
+  const hydratePreferences = (user: Pick<User, "theme" | "language">) => {
+    if (user.language === "en" || user.language === "tr") setLocaleSignal(user.language);
+    if (user.theme === "light" || user.theme === "dark") setThemeSignal(user.theme);
+  };
   const setSidebarCollapsed = (v: boolean) => setSidebarCollapsedSignal(v);
   const toggleSidebar = () => setSidebarCollapsedSignal((v) => !v);
 
@@ -108,6 +128,7 @@ export function PreferencesProvider(props: ParentProps) {
         theme,
         setTheme,
         toggleTheme,
+        hydratePreferences,
         sidebarCollapsed,
         setSidebarCollapsed,
         toggleSidebar,
