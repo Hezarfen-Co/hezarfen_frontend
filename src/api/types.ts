@@ -40,6 +40,13 @@ export type Note = {
   content: string;
 };
 
+export type NoteFile = {
+  id: string;
+  name: string;
+  content_type: string;
+  size: number;
+};
+
 export type Event = {
   id: string;
   creator: string;
@@ -297,6 +304,7 @@ export type SchoolSettings = {
   exam_kinds: ExamKindSetting[];
   attendance_statuses: string[];
   grade_bands: GradeBand[];
+  max_file_bytes: number;
 };
 
 export const EXAM_KINDS: KnownExamKind[] = [

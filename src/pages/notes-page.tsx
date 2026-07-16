@@ -3,6 +3,7 @@ import { deleteNoteById } from "@/api/deleteNoteById";
 import { getNotes } from "@/api/getNotes";
 import { patchNoteById } from "@/api/patchNoteById";
 import { postNote } from "@/api/postNote";
+import { postNoteFile } from "@/api/postNoteFile";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -10,10 +11,10 @@ import { PageHeader } from "@/components/layout/page-header";
 import { NoteForm } from "@/components/notes/note-form";
 import { NoteList } from "@/components/notes/note-list";
 import { Button } from "@/components/ui/button";
-import { FormDialog } from "@/components/ui/form-dialog";
 import { IconPlus } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { SidePanel } from "@/components/ui/side-panel";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { useT } from "@/stores/preferences-context";
 
@@ -79,20 +80,25 @@ function NotesContent() {
         />
       </div>
 
-      <FormDialog open={createOpen()} onOpenChange={setCreateOpen} title={t("notes.new")} description={t("notes.subtitle")}>
+      <SidePanel open={createOpen()} onOpenChange={setCreateOpen} title={t("notes.new")} description={t("notes.subtitle")}>
         <NoteForm
+          enableFiles
           submitLabel={t("common.create")}
           onCancel={() => setCreateOpen(false)}
           onSubmit={async (values) => {
-            await postNote({
+            const note = await postNote({
               title: values.title,
               content: values.content || undefined,
             });
+            // ponytail: upload after create — file API needs note id
+            for (const file of values.files) {
+              await postNoteFile(note.id, file);
+            }
             await refetch();
             setCreateOpen(false);
           }}
         />
-      </FormDialog>
+      </SidePanel>
 
       <div class="space-y-5">
         <section class="min-w-0 space-y-4">
