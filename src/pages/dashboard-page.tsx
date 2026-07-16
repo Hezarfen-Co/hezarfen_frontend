@@ -304,17 +304,17 @@ function DashboardContent() {
   });
 
   return (
-    <div class="space-y-5">
-      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-border/80 pb-4">
+    <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-border/80 bg-muted/20 px-4 py-4 sm:px-5">
         <div class="min-w-0 space-y-1">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t("dashboard.today")}</p>
-          <h1 class="truncate font-display text-xl font-semibold tracking-tight sm:text-2xl">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("dashboard.today")}</p>
+          <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             {t("dashboard.greeting", { name: fullName() })}
           </h1>
           <p class="text-sm text-muted-foreground">{t("dashboard.observationOnly")}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span class="rounded-md border border-border bg-card px-2 py-1 font-medium text-foreground">
+          <span class="rounded-md border border-border bg-background px-2 py-1 font-medium text-foreground shadow-sm">
             {t(ROLE_KEY[role()])}
           </span>
           <span class="mono tabular-nums">{formatDateTime(Date.now(), locale()).split(",")[0]}</span>
@@ -322,15 +322,16 @@ function DashboardContent() {
       </header>
 
       <Show when={resourceError()}>
-        {(msg) => <Alert variant="destructive">{msg()}</Alert>}
+        {(msg) => <div class="px-4 pt-4 sm:px-5"><Alert variant="destructive">{msg()}</Alert></div>}
       </Show>
 
-      <Show when={!loading()} fallback={<PageSpinner />}>
+      <Show when={!loading()} fallback={<div class="px-4 py-8"><PageSpinner /></div>}>
+        <div class="space-y-5 bg-background/40 px-4 py-4 sm:px-5 sm:py-5">
         <section class="space-y-2.5" aria-labelledby="dash-sections">
           <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
             {t("dashboard.roleLinks")}
           </h2>
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5 lg:grid-cols-3 xl:grid-cols-4">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <For each={portalCards()}>{(card) => <PortalCard card={card} />}</For>
           </div>
         </section>
@@ -338,7 +339,7 @@ function DashboardContent() {
         <div class="grid gap-5 lg:grid-cols-2">
           <section class="space-y-2.5" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
-              <h2 id="dash-attention" class="text-sm font-semibold tracking-tight">
+              <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
                 {t("dashboard.attention")}
               </h2>
               <Show when={attention().length === 0}>
@@ -350,14 +351,14 @@ function DashboardContent() {
               when={attention().length > 0}
               fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
-              <ul class="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+              <ul class="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                 <For each={attention()}>
                   {(item) => (
                     <li>
                       <Link
                         to={item.to}
                         params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-muted/50 sm:px-4 sm:py-3"
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/40 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
                       >
                         <StatusDot status={item.status} />
                         <div class="min-w-0 flex-1">
@@ -387,21 +388,21 @@ function DashboardContent() {
           </section>
 
           <section class="space-y-2.5" aria-labelledby="dash-upcoming">
-            <h2 id="dash-upcoming" class="text-sm font-semibold tracking-tight">
+            <h2 id="dash-upcoming" class="text-sm font-semibold tracking-tight text-foreground">
               {t("dashboard.upcoming")}
             </h2>
             <Show
               when={upcoming().length > 0}
               fallback={<DashEmpty>{t("dashboard.upcomingEmpty")}</DashEmpty>}
             >
-              <ul class="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+              <ul class="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                 <For each={upcoming()}>
                   {(item) => (
                     <li>
                       <Link
                         to={item.kind === "exam" ? "/exams/$id" : "/events/$id"}
                         params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-muted/50 sm:px-4 sm:py-3"
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/40 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
                       >
                         <span class="mono w-24 shrink-0 text-[11px] tabular-nums text-muted-foreground sm:w-28 sm:text-xs">
                           {formatDateTime(item.at, locale())}
@@ -424,6 +425,7 @@ function DashboardContent() {
             </Show>
           </section>
         </div>
+        </div>
       </Show>
     </div>
   );
@@ -431,7 +433,7 @@ function DashboardContent() {
 
 function DashEmpty(props: { children: string }) {
   return (
-    <div class="rounded-lg border border-dashed border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+    <div class="rounded-xl border border-dashed border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground shadow-sm">
       {props.children}
     </div>
   );
@@ -445,13 +447,13 @@ function PortalCard(props: { card: PortalCardDef }) {
   return (
     <Link
       to={props.card.to}
-      class="flex min-h-[4.5rem] items-center gap-3 rounded-lg border border-border bg-card px-3 py-3 transition-colors hover:bg-muted/40 sm:min-h-[5rem] sm:gap-3.5 sm:px-4"
+      class="group relative flex min-h-[6rem] items-start gap-3 overflow-hidden rounded-xl border border-border bg-card px-3 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/50 hover:bg-muted/30 hover:shadow-[0_18px_45px_rgba(15,23,42,0.14)] hover:before:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[6.5rem] sm:gap-3.5 sm:px-4 sm:py-3.5"
     >
-      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground">
+      <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary">
         <Icon class="h-4 w-4" />
       </span>
-      <div class="min-w-0 flex-1">
-        <div class="flex min-w-0 items-center gap-2">
+      <div class="min-w-0 flex-1 space-y-1">
+        <div class="flex min-w-0 items-start gap-2">
           <h3 class="truncate text-sm font-semibold tracking-tight text-foreground">{t(props.card.titleKey)}</h3>
           <Show when={hasStat()}>
             <span class="hidden text-muted-foreground/50 sm:inline" aria-hidden="true">
@@ -467,7 +469,7 @@ function PortalCard(props: { card: PortalCardDef }) {
             </span>
           </Show>
         </div>
-        <p class="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{t(props.card.descKey)}</p>
+        <p class="line-clamp-2 text-xs leading-5 text-muted-foreground">{t(props.card.descKey)}</p>
       </div>
     </Link>
   );

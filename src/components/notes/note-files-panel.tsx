@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, type JSX } from "solid-js";
 import { deleteNoteFileById } from "@/api/deleteNoteFileById";
 import { getNoteFileUrl } from "@/api/getNoteFileUrl";
 import { getNoteFiles } from "@/api/getNoteFiles";
@@ -9,11 +9,26 @@ import type { NoteFile } from "@/api/types";
 import { NoteFilePreview } from "@/components/notes/note-file-preview";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
+import {
+  IconDownload,
+  IconEye,
+  IconFileAudio,
+  IconFileImage,
+  IconFileSpreadsheet,
+  IconFileText,
+  IconFileVideo,
+  IconNote,
+  IconPlus,
+  IconTrash,
+} from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TableRowActions } from "@/components/ui/table-row-actions";
+import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
 
 const MAX_NOTE_FILES = 10;
+const FILE_PAGE_SIZE = 4;
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -21,11 +36,29 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function extension(name: string): string {
+  const ext = name.split(".").pop()?.toLowerCase();
+  return ext && ext !== name.toLowerCase() ? ext : "file";
+}
+
+function fileMeta(file: NoteFile): { label: string; class: string; icon: JSX.Element } {
+  const type = file.content_type.toLowerCase();
+  const ext = extension(file.name);
+  if (type.startsWith("image/")) return { label: ext, class: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300", icon: <IconFileImage class="h-8 w-8" /> };
+  if (type.startsWith("video/")) return { label: ext, class: "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300", icon: <IconFileVideo class="h-8 w-8" /> };
+  if (type.startsWith("audio/")) return { label: ext, class: "border-fuchsia-500/25 bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300", icon: <IconFileAudio class="h-8 w-8" /> };
+  if (type === "application/pdf" || ext === "pdf") return { label: "pdf", class: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300", icon: <IconFileText class="h-8 w-8" /> };
+  if (["xls", "xlsx", "csv"].includes(ext) || type.includes("spreadsheet")) return { label: ext, class: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300", icon: <IconFileSpreadsheet class="h-8 w-8" /> };
+  if (["doc", "docx", "txt", "md", "rtf"].includes(ext) || type.startsWith("text/") || type.includes("word")) return { label: ext, class: "border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-blue-300", icon: <IconFileText class="h-8 w-8" /> };
+  return { label: ext, class: "border-border bg-background text-muted-foreground", icon: <IconNote class="h-8 w-8" /> };
+}
+
 export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   let input: HTMLInputElement | undefined;
   const t = useT();
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  const [filePage, setFilePage] = createSignal(0);
   const [previewFile, setPreviewFile] = createSignal<NoteFile | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<NoteFile | null>(null);
   const [files, { refetch }] = createResource(
@@ -50,6 +83,15 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   });
   const maxFileBytes = () => settings()?.max_file_bytes ?? 5 * 1024 * 1024;
   const atLimit = () => (files() ?? []).length >= MAX_NOTE_FILES;
+  const totalPages = createMemo(() => Math.max(1, Math.ceil((files() ?? []).length / FILE_PAGE_SIZE)));
+  const pageFiles = createMemo(() => {
+    const start = filePage() * FILE_PAGE_SIZE;
+    return (files() ?? []).slice(start, start + FILE_PAGE_SIZE);
+  });
+
+  createEffect(() => {
+    if (filePage() >= totalPages()) setFilePage(totalPages() - 1);
+  });
 
   const upload = async (file: File | undefined) => {
     if (!file) return;
@@ -68,6 +110,13 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
     } finally {
       setPending(false);
     }
+  };
+
+  const download = (file: NoteFile) => {
+    const link = document.createElement("a");
+    link.href = getNoteFileUrl(props.noteId, file.id);
+    link.download = file.name;
+    link.click();
   };
 
   return (
@@ -106,28 +155,57 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           when={(files() ?? []).length > 0}
           fallback={<p class="rounded-md border border-dashed border-border/80 bg-muted/20 px-3 py-6 text-center text-sm text-muted-foreground">{t("notes.noFiles")}</p>}
         >
-          <ul class="divide-y divide-border/70 rounded-md border border-border/70 bg-background/70">
-            <For each={files() ?? []}>
-              {(file) => (
-                <li class="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-                  <span class="min-w-0 flex-1 truncate font-medium">
-                    {file.name}
-                  </span>
-                  <span class="shrink-0 text-xs text-muted-foreground">{formatBytes(file.size)}</span>
-                  <Button type="button" variant="ghost" size="sm" class="h-8 rounded-md" onClick={() => setPreviewFile(file)}>
-                    <IconEye class="h-4 w-4" />
-                    {t("common.view")}
-                  </Button>
-                  <a class="inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium transition-all hover:bg-accent hover:text-accent-foreground" href={getNoteFileUrl(props.noteId, file.id)} download={file.name}>
-                    {t("notes.downloadFile")}
-                  </a>
-                  <Button type="button" variant="ghost" size="icon" class="h-8 w-8 rounded-md text-destructive hover:text-destructive" onClick={() => setDeleteTarget(file)}>
-                    <IconTrash class="h-4 w-4" />
-                  </Button>
-                </li>
-              )}
+          <ul class="grid grid-cols-1 gap-3 rounded-md border border-border/70 bg-background/70 p-2 sm:grid-cols-2">
+            <For each={pageFiles()}>
+              {(file) => {
+                const meta = fileMeta(file);
+                return (
+                  <li class="group overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-sm transition-colors hover:border-primary/30">
+                    <div class="relative h-28 bg-muted/25">
+                      <button type="button" class="flex h-full w-full items-center justify-center rounded-t-xl transition-colors hover:bg-muted/40" onClick={() => setPreviewFile(file)}>
+                        <span class={cn("flex h-16 w-16 items-center justify-center rounded-2xl border", meta.class)}>
+                          {meta.icon}
+                        </span>
+                      </button>
+                      <span class={cn("absolute left-2 top-2 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide", meta.class)}>
+                        {meta.label}
+                      </span>
+                      <div class="absolute right-2 top-2 rounded-md bg-background/80 shadow-sm backdrop-blur">
+                        <TableRowActions
+                          label={t("common.actions")}
+                          actions={[
+                            {
+                              label: t("common.view"),
+                              icon: <IconEye class="h-4 w-4" />,
+                              onSelect: () => setPreviewFile(file),
+                            },
+                            {
+                              label: t("notes.downloadFile"),
+                              icon: <IconDownload class="h-4 w-4" />,
+                              onSelect: () => download(file),
+                            },
+                            {
+                              label: t("common.delete"),
+                              icon: <IconTrash class="h-4 w-4" />,
+                              destructive: true,
+                              onSelect: () => setDeleteTarget(file),
+                            },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                    <button type="button" class="w-full px-3 py-2 text-left hover:bg-muted/30" onClick={() => setPreviewFile(file)}>
+                      <span class="block truncate font-medium">{file.name}</span>
+                      <span class="mt-1 block text-xs text-muted-foreground">{formatBytes(file.size)}</span>
+                    </button>
+                  </li>
+                );
+              }}
             </For>
           </ul>
+          <Show when={(files() ?? []).length > FILE_PAGE_SIZE}>
+            <PaginationControls page={filePage()} totalPages={totalPages()} onPageChange={setFilePage} />
+          </Show>
           <NoteFilePreview noteId={props.noteId} file={previewFile()} onClose={() => setPreviewFile(null)} />
         </Show>
       </Suspense>

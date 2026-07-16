@@ -9,7 +9,7 @@ import {
 import { getMe } from "@/api/getMe";
 import { hasMinRole, roleInRange } from "@/lib/roles";
 import { ApiError } from "@/api/client";
-import { Suspense, lazy, type Component } from "solid-js";
+import { Suspense, createRenderEffect, createRoot, lazy, type Component } from "solid-js";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageSpinner } from "@/components/ui/page-spinner";
 
@@ -359,6 +359,23 @@ export const router = createRouter({
   defaultPendingComponent: PageSpinner,
   defaultPreload: "intent",
   scrollRestoration: true,
+});
+
+// Workaround for a @tanstack/solid-router bug (present through v1.170.18):
+// `useParams({ from })` reads a per-route match store that is a Solid memo
+// living outside the component tree. When no component on that route is
+// mounted (e.g. on the list page between two detail visits), the memo has no
+// observers, misses the next navigation's update, and then serves the
+// previous visit's params forever — detail pages showed the previously
+// viewed record. A permanent subscription per param route keeps those memos
+// observed so they always recompute. Remove once fixed upstream.
+createRoot(() => {
+  const paramRouteIds = Object.keys(router.routesById).filter((routeId) => routeId.includes("$"));
+  for (const routeId of paramRouteIds) {
+    createRenderEffect(() => {
+      (router.stores.getRouteMatchStore as (id: string) => { get: () => unknown })(routeId).get();
+    });
+  }
 });
 
 declare module "@tanstack/solid-router" {

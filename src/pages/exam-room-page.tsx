@@ -1,4 +1,4 @@
-import { Link, useLocation, useParams } from "@tanstack/solid-router";
+import { Link, useLocation } from "@tanstack/solid-router";
 import { Show, Suspense, createMemo, createResource } from "solid-js";
 import { getExamById } from "@/api/getExamById";
 import { getMyCourses } from "@/api/getMyCourses";
@@ -23,13 +23,14 @@ export default function ExamRoomPage() {
 
 function ExamRoomContent() {
   const location = useLocation();
-  const params = useParams({ from: "/exam-room/$id" });
   const auth = useAuth();
   const t = useT();
-  const id = createMemo(() => {
-    location();
-    return params().id;
-  });
+  // Keep the previous id while navigating away, so the resource does not
+  // fetch the next page's path segment (e.g. GET /exams/exams) mid-transition.
+  const id = createMemo((prev: string) => {
+    const match = /^\/exam-room\/([^/]+)$/.exec(location().pathname);
+    return match ? decodeURIComponent(match[1]) : prev;
+  }, "");
   const [exam] = createResource(id, (examId) => getExamById(examId));
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
