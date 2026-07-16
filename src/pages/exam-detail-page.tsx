@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { deleteExamById } from "@/api/deleteExamById";
 import { deleteExamResultByUserId } from "@/api/deleteExamResultByUserId";
@@ -57,16 +57,12 @@ export default function ExamDetailPage() {
 
 function ExamDetailContent() {
   const location = useLocation();
-  const params = useParams({ from: "/exams/$id" });
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
-  const id = createMemo(() => {
-    location();
-    return params().id;
-  });
+  const id = createMemo(() => decodeURIComponent(location().pathname.split("/").pop() ?? ""));
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
   const [settings] = createResource(() => getSettings());
