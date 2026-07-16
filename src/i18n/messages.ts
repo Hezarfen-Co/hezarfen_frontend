@@ -196,8 +196,18 @@ export type MessageKey =
   | "events.ends"
   | "events.markSelf"
   | "events.markOther"
+  | "events.myAttendance"
+  | "events.myAttendanceHelp"
+  | "events.studentAttendance"
+  | "events.studentAttendanceHelp"
+  | "events.saveStudentAttendance"
   | "events.attendance"
+  | "events.attendanceRecords"
+  | "events.attendanceRecordsHelp"
   | "events.noAttendance"
+  | "events.attendee"
+  | "events.selectAttendee"
+  | "events.noAttendees"
   | "events.userId"
   | "events.status"
   | "events.helpTitle"
@@ -713,8 +723,18 @@ const en: Dict = {
   "events.ends": "Ends",
   "events.markSelf": "Mark my attendance",
   "events.markOther": "Mark another person",
+  "events.myAttendance": "My attendance",
+  "events.myAttendanceHelp": "Choose your event status and save it.",
+  "events.studentAttendance": "Participant attendance",
+  "events.studentAttendanceHelp": "Select a user, choose a status, then save the record.",
+  "events.saveStudentAttendance": "Save attendance",
   "events.attendance": "Attendance roster",
+  "events.attendanceRecords": "Attendance records",
+  "events.attendanceRecordsHelp": "Saved event attendance, including who recorded each row.",
   "events.noAttendance": "No attendance rows yet.",
+  "events.attendee": "Attendee",
+  "events.selectAttendee": "Search user",
+  "events.noAttendees": "No users found",
   "events.userId": "User id",
   "events.status": "Status",
   "events.helpTitle": "About events",
@@ -872,7 +892,7 @@ const en: Dict = {
   "form.timePast": "Start and end times must be in the future",
   "form.weightRange": "Weight must be an integer from 1 to 100",
   "form.markRange": "Mark must be an integer from 0 to 100",
-  "events.markedBy": "Marked by",
+  "events.markedBy": "Recorded by",
   "exams.gradedBy": "Graded by",
   "status.present": "Present",
   "status.absent": "Absent",
@@ -1241,8 +1261,18 @@ const tr: Dict = {
   "events.ends": "Bitiş",
   "events.markSelf": "Yoklamamı işaretle",
   "events.markOther": "Başkasını işaretle",
+  "events.myAttendance": "Katılım durumum",
+  "events.myAttendanceHelp": "Etkinlik durumunu seç ve kaydet.",
+  "events.studentAttendance": "Katılımcı yoklaması",
+  "events.studentAttendanceHelp": "Kullanıcıyı seç, durumunu belirle, kaydı kaydet.",
+  "events.saveStudentAttendance": "Yoklamayı kaydet",
   "events.attendance": "Yoklama listesi",
+  "events.attendanceRecords": "Yoklama kayıtları",
+  "events.attendanceRecordsHelp": "Kaydedilmiş etkinlik yoklaması ve kaydı kimin girdiği.",
   "events.noAttendance": "Henüz yoklama kaydı yok.",
+  "events.attendee": "Katılımcı",
+  "events.selectAttendee": "Kullanıcı ara",
+  "events.noAttendees": "Kullanıcı bulunamadı",
   "events.userId": "Kullanıcı id",
   "events.status": "Durum",
   "events.helpTitle": "Etkinlikler hakkında",
@@ -1400,7 +1430,7 @@ const tr: Dict = {
   "form.timePast": "Başlangıç ve bitiş gelecekte olmalı",
   "form.weightRange": "Ağırlık 1–100 arası tam sayı olmalı",
   "form.markRange": "Not 0–100 arası tam sayı olmalı",
-  "events.markedBy": "İşaretleyen",
+  "events.markedBy": "Kaydeden",
   "exams.gradedBy": "Notlayan",
   "status.present": "Var",
   "status.absent": "Yok",

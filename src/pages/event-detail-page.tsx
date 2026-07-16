@@ -188,8 +188,8 @@ function EventDetailContent() {
             <div class="grid gap-4 lg:grid-cols-2">
               <section class="data-shell p-4">
                 <div>
-                  <h2 class="font-display text-lg font-semibold">{t("events.markSelf")}</h2>
-                  <p class="mt-1 text-sm text-muted-foreground">{t("events.status")}</p>
+                  <h2 class="font-display text-lg font-semibold">{t("events.myAttendance")}</h2>
+                  <p class="mt-1 text-sm text-muted-foreground">{t("events.myAttendanceHelp")}</p>
                 </div>
                 <div class="mt-4 space-y-3">
                   <AttendanceStatusPicker value={status()} onChange={setStatus} label={t("events.status")} />
@@ -204,7 +204,7 @@ function EventDetailContent() {
                       })
                     }
                   >
-                    {t("events.markSelf")}
+                    {t("common.saveAttendance")}
                   </Button>
                 </div>
               </section>
@@ -212,15 +212,16 @@ function EventDetailContent() {
               <Show when={isTeacherPlus()}>
                 <section class="data-shell p-4">
                   <div>
-                    <h2 class="font-display text-lg font-semibold">{t("events.markOther")}</h2>
-                    <p class="mt-1 text-sm text-muted-foreground">{t("events.userId")}</p>
+                    <h2 class="font-display text-lg font-semibold">{t("events.studentAttendance")}</h2>
+                    <p class="mt-1 text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
                   </div>
                   <div class="mt-4 grid gap-3">
                     <UserSearchSelect
                       id="other-user"
-                      label={t("events.userId")}
+                      label={t("events.attendee")}
                       value={otherUserId()}
-                      placeholder={t("form.selectStudent")}
+                      placeholder={t("events.selectAttendee")}
+                      emptyMessage={t("events.noAttendees")}
                       onChange={setOtherUserId}
                     />
                     <AttendanceStatusPicker
@@ -249,7 +250,7 @@ function EventDetailContent() {
                         })
                       }
                     >
-                      {t("events.markOther")}
+                      {t("events.saveStudentAttendance")}
                     </Button>
                   </div>
                 </section>
@@ -264,8 +265,8 @@ function EventDetailContent() {
               <SectionDisclosure
                 open={attendanceOpen()}
                 onToggle={() => setAttendanceOpen((open) => !open)}
-                title={t("events.attendance")}
-                description={t("events.markedBy")}
+                title={t("events.attendanceRecords")}
+                description={t("events.attendanceRecordsHelp")}
               >
                 <Suspense fallback={<PageSpinner />}>
                   <Show when={attendance()}>
