@@ -25,7 +25,12 @@ function ExamRoomContent() {
   const location = useLocation();
   const auth = useAuth();
   const t = useT();
-  const id = createMemo(() => decodeURIComponent(location().pathname.split("/").pop() ?? ""));
+  // Keep the previous id while navigating away, so the resource does not
+  // fetch the next page's path segment (e.g. GET /exams/exams) mid-transition.
+  const id = createMemo((prev: string) => {
+    const match = /^\/exam-room\/([^/]+)$/.exec(location().pathname);
+    return match ? decodeURIComponent(match[1]) : prev;
+  }, "");
   const [exam] = createResource(id, (examId) => getExamById(examId));
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),

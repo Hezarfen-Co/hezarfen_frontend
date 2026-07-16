@@ -62,7 +62,12 @@ function ExamDetailContent() {
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
-  const id = createMemo(() => decodeURIComponent(location().pathname.split("/").pop() ?? ""));
+  // Keep the previous id while navigating away, so the resource does not
+  // fetch the next page's path segment (e.g. GET /exams/exams) mid-transition.
+  const id = createMemo((prev: string) => {
+    const match = /^\/exams\/([^/]+)$/.exec(location().pathname);
+    return match ? decodeURIComponent(match[1]) : prev;
+  }, "");
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
   const [settings] = createResource(() => getSettings());
