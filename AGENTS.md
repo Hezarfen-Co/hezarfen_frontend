@@ -68,7 +68,7 @@ Solid components run **once**, there is no re-render:
 ## Project docs and current UI rules
 
 - Treat these docs as active project context before changing related areas:
-  - `docs/frontend-next-steps.md` — active backlog, role/pagination/request audit notes.
+  - `docs/frontend-next-steps.md` — completed audit summary plus active backend-dependent/frontend follow-up notes.
   - `docs/navigation-patterns.md` — interaction rules, role scope, side-panel/full-page decisions, dashboard structure.
   - `docs/ui-redesign-tokens.md` — visual density, radius, table, side-panel, status UI, and dashboard card conventions.
   - `docs/role-scope-matrix.md` — role access matrix for pages/nav/dashboard cards.
