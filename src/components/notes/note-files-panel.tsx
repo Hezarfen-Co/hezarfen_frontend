@@ -6,9 +6,10 @@ import { getSettings } from "@/api/getSettings";
 import { postNoteFile } from "@/api/postNoteFile";
 import { ApiError, formatApiError } from "@/api/client";
 import type { NoteFile } from "@/api/types";
+import { NoteFilePreview } from "@/components/notes/note-file-preview";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useT } from "@/stores/preferences-context";
 
@@ -25,6 +26,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   const t = useT();
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  const [previewFile, setPreviewFile] = createSignal<NoteFile | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<NoteFile | null>(null);
   const [files, { refetch }] = createResource(
     () => (props.active ? props.noteId : null),
@@ -107,11 +109,18 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           <ul class="divide-y divide-border/70 rounded-md border border-border/70 bg-background/70">
             <For each={files() ?? []}>
               {(file) => (
-                <li class="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                  <a class="min-w-0 flex-1 truncate font-medium hover:text-primary" href={getNoteFileUrl(props.noteId, file.id)} download={file.name}>
+                <li class="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                  <span class="min-w-0 flex-1 truncate font-medium">
                     {file.name}
-                  </a>
+                  </span>
                   <span class="shrink-0 text-xs text-muted-foreground">{formatBytes(file.size)}</span>
+                  <Button type="button" variant="ghost" size="sm" class="h-8 rounded-md" onClick={() => setPreviewFile(file)}>
+                    <IconEye class="h-4 w-4" />
+                    {t("common.view")}
+                  </Button>
+                  <a class="inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium transition-all hover:bg-accent hover:text-accent-foreground" href={getNoteFileUrl(props.noteId, file.id)} download={file.name}>
+                    {t("notes.downloadFile")}
+                  </a>
                   <Button type="button" variant="ghost" size="icon" class="h-8 w-8 rounded-md text-destructive hover:text-destructive" onClick={() => setDeleteTarget(file)}>
                     <IconTrash class="h-4 w-4" />
                   </Button>
@@ -119,6 +128,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
               )}
             </For>
           </ul>
+          <NoteFilePreview noteId={props.noteId} file={previewFile()} onClose={() => setPreviewFile(null)} />
         </Show>
       </Suspense>
 
@@ -132,6 +142,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           const target = deleteTarget();
           if (!target) return;
           await deleteNoteFileById(props.noteId, target.id);
+          if (previewFile()?.id === target.id) setPreviewFile(null);
           setDeleteTarget(null);
           await refetch();
         }}

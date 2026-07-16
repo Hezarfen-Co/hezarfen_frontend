@@ -202,6 +202,19 @@ export async function formClient<T>(path: string, body: FormData, signal?: Abort
   return data as T;
 }
 
+export async function blobClient(path: string, signal?: AbortSignal): Promise<Blob> {
+  const res = await fetch(`${API_PREFIX}${path}`, {
+    credentials: "same-origin",
+    signal,
+  });
+
+  if (!res.ok) {
+    throw new ApiError(res.status, res.statusText || "Request failed");
+  }
+
+  return res.blob();
+}
+
 export function formatApiErrorMessage(message: string, locale: Locale = currentLocale()): string {
   const normalized = normalizeApiMessage(message);
   const known = API_ERROR_MESSAGES[normalized]?.[locale];

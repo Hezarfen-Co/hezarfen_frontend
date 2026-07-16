@@ -180,9 +180,12 @@ export type MessageKey =
   | "notes.files"
   | "notes.filesHelp"
   | "notes.addFile"
+  | "notes.downloadFile"
   | "notes.noFiles"
   | "notes.fileLimit"
   | "notes.fileTooLarge"
+  | "notes.previewUnsupported"
+  | "notes.unknownFileType"
   | "notes.helpTitle"
   | "notes.helpBody"
   | "events.title"
@@ -693,9 +696,12 @@ const en: Dict = {
   "notes.files": "Attachments",
   "notes.filesHelp": "Up to 10 files. Max {size} each.",
   "notes.addFile": "Add file",
+  "notes.downloadFile": "Download",
   "notes.noFiles": "No files attached.",
   "notes.fileLimit": "This note already has 10 files.",
   "notes.fileTooLarge": "File is too large. Max {size}.",
+  "notes.previewUnsupported": "Preview is not available for this file type. Download the file to open it.",
+  "notes.unknownFileType": "Unknown file type",
   "notes.helpTitle": "About notes",
   "notes.helpBody":
     "Notes are private to you only. Title max 200 characters, content max 10,000. Delete and update open a confirmation dialog with a short summary before they run.",
@@ -1218,9 +1224,12 @@ const tr: Dict = {
   "notes.files": "Ekler",
   "notes.filesHelp": "En fazla 10 dosya. Dosya başına {size} sınırı.",
   "notes.addFile": "Dosya ekle",
+  "notes.downloadFile": "İndir",
   "notes.noFiles": "Henüz dosya eklenmemiş.",
   "notes.fileLimit": "Bu notta zaten 10 dosya var.",
   "notes.fileTooLarge": "Dosya çok büyük. En fazla {size}.",
+  "notes.previewUnsupported": "Bu dosya türü için önizleme yok. Açmak için dosyayı indirin.",
+  "notes.unknownFileType": "Bilinmeyen dosya türü",
   "notes.helpTitle": "Notlar hakkında",
   "notes.helpBody":
     "Notlar yalnızca sana aittir. Başlık en fazla 200, içerik 10.000 karakter. Silme ve güncelleme özetli onay penceresi ister.",
