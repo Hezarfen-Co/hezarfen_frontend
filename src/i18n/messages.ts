@@ -59,6 +59,7 @@ export type MessageKey =
   | "confirm.deleteTitle"
   | "confirm.updateTitle"
   | "confirm.deleteNote"
+  | "confirm.deleteNoteFile"
   | "confirm.updateNote"
   | "confirm.deleteEvent"
   | "confirm.updateEvent"
@@ -176,6 +177,15 @@ export type MessageKey =
   | "notes.new"
   | "notes.empty"
   | "notes.noContent"
+  | "notes.files"
+  | "notes.filesHelp"
+  | "notes.addFile"
+  | "notes.downloadFile"
+  | "notes.noFiles"
+  | "notes.fileLimit"
+  | "notes.fileTooLarge"
+  | "notes.previewUnsupported"
+  | "notes.unknownFileType"
   | "notes.helpTitle"
   | "notes.helpBody"
   | "events.title"
@@ -186,8 +196,18 @@ export type MessageKey =
   | "events.ends"
   | "events.markSelf"
   | "events.markOther"
+  | "events.myAttendance"
+  | "events.myAttendanceHelp"
+  | "events.studentAttendance"
+  | "events.studentAttendanceHelp"
+  | "events.saveStudentAttendance"
   | "events.attendance"
+  | "events.attendanceRecords"
+  | "events.attendanceRecordsHelp"
   | "events.noAttendance"
+  | "events.attendee"
+  | "events.selectAttendee"
+  | "events.noAttendees"
   | "events.userId"
   | "events.status"
   | "events.helpTitle"
@@ -443,6 +463,9 @@ export type MessageKey =
   | "settings.locked"
   | "settings.unsaved"
   | "settings.empty"
+  | "settings.maxFileSize"
+  | "settings.maxFileSizeHelp"
+  | "settings.maxFileSizeInvalid"
   | "terms.title"
   | "terms.subtitle"
   | "terms.create"
@@ -562,6 +585,7 @@ const en: Dict = {
   "confirm.deleteTitle": "Confirm delete",
   "confirm.updateTitle": "Confirm update",
   "confirm.deleteNote": "Delete note “{title}”?",
+  "confirm.deleteNoteFile": "Delete file “{title}”?",
   "confirm.updateNote": "Update note “{title}”?",
   "confirm.deleteEvent": "Delete event “{title}”?",
   "confirm.updateEvent": "Update event “{title}”?",
@@ -679,6 +703,15 @@ const en: Dict = {
   "notes.new": "New note",
   "notes.empty": "Nothing here yet. Write your first note.",
   "notes.noContent": "No content",
+  "notes.files": "Attachments",
+  "notes.filesHelp": "Up to 10 files. Max {size} each.",
+  "notes.addFile": "Add file",
+  "notes.downloadFile": "Download",
+  "notes.noFiles": "No files attached.",
+  "notes.fileLimit": "This note already has 10 files.",
+  "notes.fileTooLarge": "File is too large. Max {size}.",
+  "notes.previewUnsupported": "Preview is not available for this file type. Download the file to open it.",
+  "notes.unknownFileType": "Unknown file type",
   "notes.helpTitle": "About notes",
   "notes.helpBody":
     "Notes are private to you only. Title max 200 characters, content max 10,000. Delete and update open a confirmation dialog with a short summary before they run.",
@@ -690,8 +723,18 @@ const en: Dict = {
   "events.ends": "Ends",
   "events.markSelf": "Mark my attendance",
   "events.markOther": "Mark another person",
+  "events.myAttendance": "My attendance",
+  "events.myAttendanceHelp": "Choose your event status and save it.",
+  "events.studentAttendance": "Participant attendance",
+  "events.studentAttendanceHelp": "Select a user, choose a status, then save the record.",
+  "events.saveStudentAttendance": "Save attendance",
   "events.attendance": "Attendance roster",
+  "events.attendanceRecords": "Attendance records",
+  "events.attendanceRecordsHelp": "Saved event attendance, including who recorded each row.",
   "events.noAttendance": "No attendance rows yet.",
+  "events.attendee": "Attendee",
+  "events.selectAttendee": "Search user",
+  "events.noAttendees": "No users found",
   "events.userId": "User id",
   "events.status": "Status",
   "events.helpTitle": "About events",
@@ -849,7 +892,7 @@ const en: Dict = {
   "form.timePast": "Start and end times must be in the future",
   "form.weightRange": "Weight must be an integer from 1 to 100",
   "form.markRange": "Mark must be an integer from 0 to 100",
-  "events.markedBy": "Marked by",
+  "events.markedBy": "Recorded by",
   "exams.gradedBy": "Graded by",
   "status.present": "Present",
   "status.absent": "Absent",
@@ -959,6 +1002,9 @@ const en: Dict = {
   "settings.locked": "Locked",
   "settings.unsaved": "Unsaved changes",
   "settings.empty": "No rows yet.",
+  "settings.maxFileSize": "Max note file size",
+  "settings.maxFileSizeHelp": "Per-file upload cap for note attachments, in MiB. Backend accepts 0.001-25 MiB.",
+  "settings.maxFileSizeInvalid": "Enter a valid file size.",
   "terms.title": "Academic terms",
   "terms.subtitle": "Manage calendar terms and assign courses to them.",
   "terms.create": "Create term",
@@ -1077,6 +1123,7 @@ const tr: Dict = {
   "confirm.deleteTitle": "Silmeyi onayla",
   "confirm.updateTitle": "Güncellemeyi onayla",
   "confirm.deleteNote": "“{title}” notu silinsin mi?",
+  "confirm.deleteNoteFile": "“{title}” dosyası silinsin mi?",
   "confirm.updateNote": "“{title}” notu güncellensin mi?",
   "confirm.deleteEvent": "“{title}” etkinliği silinsin mi?",
   "confirm.updateEvent": "“{title}” etkinliği güncellensin mi?",
@@ -1194,6 +1241,15 @@ const tr: Dict = {
   "notes.new": "Yeni not",
   "notes.empty": "Henüz bir şey yok. İlk notunu yaz.",
   "notes.noContent": "İçerik yok",
+  "notes.files": "Ekler",
+  "notes.filesHelp": "En fazla 10 dosya. Dosya başına {size} sınırı.",
+  "notes.addFile": "Dosya ekle",
+  "notes.downloadFile": "İndir",
+  "notes.noFiles": "Henüz dosya eklenmemiş.",
+  "notes.fileLimit": "Bu notta zaten 10 dosya var.",
+  "notes.fileTooLarge": "Dosya çok büyük. En fazla {size}.",
+  "notes.previewUnsupported": "Bu dosya türü için önizleme yok. Açmak için dosyayı indirin.",
+  "notes.unknownFileType": "Bilinmeyen dosya türü",
   "notes.helpTitle": "Notlar hakkında",
   "notes.helpBody":
     "Notlar yalnızca sana aittir. Başlık en fazla 200, içerik 10.000 karakter. Silme ve güncelleme özetli onay penceresi ister.",
@@ -1205,8 +1261,18 @@ const tr: Dict = {
   "events.ends": "Bitiş",
   "events.markSelf": "Yoklamamı işaretle",
   "events.markOther": "Başkasını işaretle",
+  "events.myAttendance": "Katılım durumum",
+  "events.myAttendanceHelp": "Etkinlik durumunu seç ve kaydet.",
+  "events.studentAttendance": "Katılımcı yoklaması",
+  "events.studentAttendanceHelp": "Kullanıcıyı seç, durumunu belirle, kaydı kaydet.",
+  "events.saveStudentAttendance": "Yoklamayı kaydet",
   "events.attendance": "Yoklama listesi",
+  "events.attendanceRecords": "Yoklama kayıtları",
+  "events.attendanceRecordsHelp": "Kaydedilmiş etkinlik yoklaması ve kaydı kimin girdiği.",
   "events.noAttendance": "Henüz yoklama kaydı yok.",
+  "events.attendee": "Katılımcı",
+  "events.selectAttendee": "Kullanıcı ara",
+  "events.noAttendees": "Kullanıcı bulunamadı",
   "events.userId": "Kullanıcı id",
   "events.status": "Durum",
   "events.helpTitle": "Etkinlikler hakkında",
@@ -1364,7 +1430,7 @@ const tr: Dict = {
   "form.timePast": "Başlangıç ve bitiş gelecekte olmalı",
   "form.weightRange": "Ağırlık 1–100 arası tam sayı olmalı",
   "form.markRange": "Not 0–100 arası tam sayı olmalı",
-  "events.markedBy": "İşaretleyen",
+  "events.markedBy": "Kaydeden",
   "exams.gradedBy": "Notlayan",
   "status.present": "Var",
   "status.absent": "Yok",
@@ -1474,6 +1540,9 @@ const tr: Dict = {
   "settings.locked": "Kilitli",
   "settings.unsaved": "Kaydedilmemiş değişiklikler",
   "settings.empty": "Henüz satır yok.",
+  "settings.maxFileSize": "Not dosyası boyut sınırı",
+  "settings.maxFileSizeHelp": "Not ekleri için dosya başına yükleme sınırı, MiB cinsinden. Backend 0.001-25 MiB kabul eder.",
+  "settings.maxFileSizeInvalid": "Geçerli bir dosya boyutu gir.",
   "terms.title": "Akademik dönemler",
   "terms.subtitle": "Takvim dönemlerini yönet ve dersleri dönemlere bağla.",
   "terms.create": "Dönem oluştur",

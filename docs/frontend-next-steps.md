@@ -18,6 +18,7 @@ validation, and list filtering cleanup.
 - Settings requests are cached and refreshed after settings patches.
 - Sidebar icons use local SVG wrappers to avoid large icon package module graphs.
 - Notes use a paper-style notebook card layout, a paper-style read dialog, and dialog-based create/edit/delete flows.
+- Note attachments are wired in the reader dialog with native `FormData`, same-origin download links, and settings-based file-size warnings. Backend remains authoritative for the 10-file cap and upload validation.
 - List endpoints return `{ items, total, limit, offset }`. API helpers under `src/api/` accept optional `limit`/`offset` via `Page<T>`.
 - Events keep card rendering with shared toolbar search and all/upcoming/past filters.
 - Event, exam, and lesson-session schedule forms use `GET /time` for server-clock-aware past-date warnings before submit.
@@ -63,6 +64,7 @@ validation, and list filtering cleanup.
 | Manager work log | `/management/staff-work` + get/patch/delete work APIs |
 | Work route guard | `beforeLoad` teacher+ on `/work` |
 | BE student-only gates (enroll/sit/grade/roll call) | Localized error strings for the new 400/403 messages; student-marks lookup picker filters `role=student`; exam-detail own-result gates on `isStudent()` |
+| Note file attachments | Reader-dialog attachments panel with list/upload/download/delete; settings exposes `max_file_bytes` |
 
 ### Incomplete Product Features
 

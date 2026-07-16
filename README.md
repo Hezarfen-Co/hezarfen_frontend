@@ -56,7 +56,7 @@ Dashboard and table summaries must use the same role scope as the related page. 
 | `/login`, `/register` | Guests | Authentication |
 | `/` | Authenticated | Role-scoped, observation-only dashboard |
 | `/profile` | Authenticated | Edit personal info (name, email, phone, birth date) |
-| `/notes` | Student+ | Personal notebook CRUD with paper-style read dialogs |
+| `/notes` | Student+ | Personal notebook CRUD with paper-style read dialogs and file attachments |
 | `/events`, `/events/:id` | Student+ | Event list & detail with search, time filters, and lazy attendance roster |
 | `/exams` | Student+ | Exam table with role-scoped course filtering |
 | `/exams/:id` | Student+ | Exam detail, questions, grading, statistics (teacher+) |
@@ -79,6 +79,7 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - **Course sessions**: right-panel session creation and paginated roll call panels
 - **Schedule validation**: event, exam, and lesson-session forms use `GET /time` for server-clock-aware past-date warnings before submit
 - **Notebook**: notes render as paper-style cards, open in a paper-style read dialog, and keep create/edit/delete in dialogs with three-dot card actions
+- **Note files**: per-note upload/list/download/delete through native `FormData`, with school-configured file-size warnings from settings
 - **Events and courses**: events keep card rendering with toolbar search and upcoming/past filters; courses use table search plus term/unassigned filters
 - **Attendance UI**: localized status labels with explanatory detail text and semantic colors
 - **Role-scoped dashboard**: read-only summaries and KPIs by current role
@@ -95,6 +96,8 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - Start/end date-time rows use equal-width date and time controls.
 - Disclosure sections either defer hidden content for request savings or preserve mounted content when local state should not reset.
 - Event detail attendance roster is teacher-only and lazy-loaded when its disclosure opens.
+
+- Note attachments live in the note reader dialog. Upload uses native `FormData`; downloads are same-origin links to `/api/notes/{id}/files/{file_id}`. Backend remains authoritative for the 10-file cap and payload validation.
 
 ## Docs
 

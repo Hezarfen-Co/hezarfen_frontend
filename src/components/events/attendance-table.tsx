@@ -41,7 +41,7 @@ export function AttendanceTable(props: {
           <Table class="data-table">
             <TableHeader>
               <TableRow>
-                <TableHead>{t("events.userId")}</TableHead>
+                <TableHead>{t("events.attendee")}</TableHead>
                 <TableHead>{t("events.status")}</TableHead>
                 <TableHead>{t("events.markedBy")}</TableHead>
                 <Show when={props.canRemove}>

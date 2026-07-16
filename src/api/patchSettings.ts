@@ -6,6 +6,7 @@ export type PatchSettingsBody = {
   exam_kinds?: ExamKindSetting[];
   attendance_statuses?: string[];
   grade_bands?: GradeBand[];
+  max_file_bytes?: number;
 };
 
 export function patchSettings(body: PatchSettingsBody): Promise<SchoolSettings> {

@@ -24,6 +24,8 @@ const CORE_ATTENDANCE_LABELS = {
   excused: "status.excused",
 } as const;
 
+const BYTES_PER_MIB = 1024 * 1024;
+
 function isCoreAttendance(status: string): status is keyof typeof CORE_ATTENDANCE_LABELS {
   return status in CORE_ATTENDANCE_LABELS;
 }
@@ -42,6 +44,7 @@ function SettingsContent() {
   const [examKinds, setExamKinds] = createSignal<ExamKindSetting[]>([]);
   const [attendanceStatuses, setAttendanceStatuses] = createSignal<string[]>([]);
   const [gradeBands, setGradeBands] = createSignal<GradeBand[]>([]);
+  const [maxFileMiB, setMaxFileMiB] = createSignal("5");
   const [error, setError] = createSignal("");
   const [saved, setSaved] = createSignal(false);
   const [pending, setPending] = createSignal(false);
@@ -53,19 +56,23 @@ function SettingsContent() {
       exam_kinds: examKinds(),
       attendance_statuses: attendanceStatuses(),
       grade_bands: gradeBands(),
+      max_file_bytes: Math.round(Number(maxFileMiB()) * BYTES_PER_MIB),
     });
 
   createEffect(() => {
     const next = settings();
     if (!next) return;
+    const fileBytes = next.max_file_bytes ?? 5 * BYTES_PER_MIB;
     setExamKinds(next.exam_kinds.map((item) => ({ ...item })));
     setAttendanceStatuses([...next.attendance_statuses]);
     setGradeBands(next.grade_bands.map((item) => ({ ...item })));
+    setMaxFileMiB(String(Math.round((fileBytes / BYTES_PER_MIB) * 10) / 10));
     setBaseline(
       JSON.stringify({
         exam_kinds: next.exam_kinds,
         attendance_statuses: next.attendance_statuses,
         grade_bands: next.grade_bands,
+        max_file_bytes: fileBytes,
       }),
     );
   });
@@ -79,12 +86,18 @@ function SettingsContent() {
   const save = async () => {
     setError("");
     setSaved(false);
+    const maxFileBytes = Math.round(Number(maxFileMiB()) * BYTES_PER_MIB);
+    if (!Number.isFinite(maxFileBytes)) {
+      setError(t("settings.maxFileSizeInvalid"));
+      return;
+    }
     setPending(true);
     try {
       const next = await patchSettings({
         exam_kinds: examKinds().map((item) => ({ name: item.name.trim(), weight: Number(item.weight) })),
         attendance_statuses: attendanceStatuses().map((status) => status.trim()),
         grade_bands: gradeBands().map((band) => ({ min: Number(band.min), label: band.label.trim() })),
+        max_file_bytes: maxFileBytes,
       });
       mutate(next);
       setBaseline(
@@ -92,6 +105,7 @@ function SettingsContent() {
           exam_kinds: next.exam_kinds,
           attendance_statuses: next.attendance_statuses,
           grade_bands: next.grade_bands,
+          max_file_bytes: next.max_file_bytes,
         }),
       );
       setSaved(true);
@@ -149,10 +163,30 @@ function SettingsContent() {
           <ErrorAlert message={formatApiError(settings.error)} onRetry={() => void refetch()} />
         </Show>
         <Show when={settings()}>
-          <section class="grid grid-cols-3 gap-3">
+          <section class="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Metric label={t("settings.examKinds")} value={examKinds().length} />
             <Metric label={t("settings.attendanceStatuses")} value={attendanceStatuses().length} />
             <Metric label={t("settings.gradeBands")} value={gradeBands().length} />
+            <Metric label={t("settings.maxFileSize")} value={`${maxFileMiB()} MiB`} />
+          </section>
+
+          <section class="data-shell p-4">
+            <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-end">
+              <div>
+                <h2 class="font-display text-base font-semibold">{t("settings.maxFileSize")}</h2>
+                <p class="mt-1 text-sm text-muted-foreground">{t("settings.maxFileSizeHelp")}</p>
+              </div>
+              <Input
+                aria-label={t("settings.maxFileSize")}
+                class="h-10 rounded-md text-right font-mono"
+                type="number"
+                min={0.001}
+                max={25}
+                step={0.1}
+                value={maxFileMiB()}
+                onInput={(event) => setMaxFileMiB(event.currentTarget.value)}
+              />
+            </div>
           </section>
 
           <div class="grid gap-4 xl:grid-cols-3">
@@ -414,7 +448,7 @@ function SettingsContent() {
   );
 }
 
-function Metric(props: { label: string; value: number }) {
+function Metric(props: { label: string; value: number | string }) {
   return (
     <div class="rounded-xl border border-border/60 bg-card px-3 py-3 shadow-xs">
       <p class="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{props.label}</p>
