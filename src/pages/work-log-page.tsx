@@ -14,6 +14,7 @@ import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { createFlash } from "@/lib/flash";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -32,6 +33,7 @@ function WorkLogContent() {
   const t = useT();
   const { locale } = usePreferences();
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
   const [page, setPage] = createSignal(0);
   const [version, setVersion] = createSignal(0);
@@ -64,8 +66,10 @@ function WorkLogContent() {
     try {
       if (openEntry()) {
         await postWorkCheckOut();
+        setFlash(t("common.saved"));
       } else {
         await postWorkCheckIn();
+        setFlash(t("common.saved"));
       }
       setPage(0);
       setVersion((value) => value + 1);
@@ -88,6 +92,9 @@ function WorkLogContent() {
         <PageHeader accent="amber" eyebrow={t("nav.work")} title={t("work.title")} description={t("work.subtitle")} />
       </div>
 
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       {error() && <Alert variant="destructive">{error()}</Alert>}
 
       <section class="data-shell overflow-hidden p-4">

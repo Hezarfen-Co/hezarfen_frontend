@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
+import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -78,6 +79,7 @@ export function CourseSessionsPanel(props: {
   const [endsDate, setEndsDate] = createSignal("");
   const [endsTime, setEndsTime] = createSignal("");
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
 
@@ -147,12 +149,14 @@ export function CourseSessionsPanel(props: {
           starts_at,
           ends_at,
         });
+        setFlash(t("common.saved"));
       } else {
         await postCourseSession(props.courseId, {
           starts_at,
           ...(topic().trim() ? { topic: topic().trim() } : {}),
           ...(ends_at != null ? { ends_at } : {}),
         });
+        setFlash(t("common.created"));
       }
       resetForm();
       props.onCreateOpenChange(false);
@@ -168,6 +172,9 @@ export function CourseSessionsPanel(props: {
 
   return (
     <div class="space-y-4">
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       {error() && <Alert variant="destructive">{error()}</Alert>}
 
       <Suspense fallback={<PageSpinner />}>
@@ -316,6 +323,7 @@ export function CourseSessionsPanel(props: {
             await deleteSessionById(session.id);
             if (selectedSession()?.id === session.id) setSelectedSession(null);
             await refetch();
+            setFlash(t("common.deleted"));
           } catch (err) {
             setError(formatApiError(err));
           } finally {
@@ -336,6 +344,7 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
   const rows = createMemo(() => new Map((attendance() ?? []).map((row) => [row.user.id, row])));
   const [local, setLocal] = createSignal<Record<string, AttendanceStatus>>({});
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [page, setPage] = createSignal(0);
   const totalPages = createMemo(() => Math.max(1, Math.ceil(props.roster.length / ROLL_CALL_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
@@ -354,6 +363,7 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
     try {
       await postSessionAttendance(props.sessionId, { user_id: userId, status: statusFor(userId) });
       await refetch();
+      setFlash(t("common.saved"));
     } catch (err) {
       setError(formatApiError(err));
     }
@@ -361,6 +371,9 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
 
   return (
     <div class="space-y-3">
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       {error() && <Alert variant="destructive">{error()}</Alert>}
       <Show
         when={props.roster.length > 0}

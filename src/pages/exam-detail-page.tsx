@@ -44,6 +44,7 @@ import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
+import { createFlash } from "@/lib/flash";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -180,11 +181,14 @@ function ExamDetailContent() {
       }));
   };
 
-  const wrap = async (fn: () => Promise<void>) => {
+  const [flash, setFlash] = createFlash();
+
+  const wrap = async (fn: () => Promise<void>, ok?: string) => {
     setError("");
     setPending(true);
     try {
       await fn();
+      if (ok) setFlash(ok);
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -347,6 +351,7 @@ function ExamDetailContent() {
                   await patchExamById(id(), values);
                   setEditing(false);
                   await refetchExam();
+                  setFlash(t("common.saved"));
                 }}
               />
             </SidePanel>
@@ -454,6 +459,7 @@ function ExamDetailContent() {
                   onSubmit={async (values) => {
                     await postExamResult(id(), values);
                     await refetchResults();
+                    setFlash(t("common.saved"));
                   }}
                 />
               </SidePanel>
@@ -539,6 +545,9 @@ function ExamDetailContent() {
               </SectionDisclosure>
             </Show>
 
+            <Show when={flash()}>
+              <Alert variant="success">{flash()}</Alert>
+            </Show>
             {error() && (
               <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
@@ -557,7 +566,7 @@ function ExamDetailContent() {
                 await wrap(async () => {
                   await deleteExamResultByUserId(id(), userId);
                   await refetchResults();
-                });
+                }, t("common.deleted"));
                 setRemoveUserId(null);
               }}
             />
