@@ -12,6 +12,7 @@ import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
 import { postCourseExam } from "@/api/postCourseExam";
 import { formatApiError } from "@/api/client";
+import type { CourseKind } from "@/api/types";
 import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm } from "@/components/exams/exam-form";
 import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
@@ -45,6 +46,8 @@ import { useT } from "@/stores/preferences-context";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
 import { hasMinRole } from "@/lib/roles";
+
+const COURSE_KINDS: CourseKind[] = ["course", "study"];
 
 export default function CourseDetailPage() {
   return (
@@ -88,6 +91,7 @@ function CourseDetailContent() {
   const [editing, setEditing] = createSignal(false);
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
+  const [kind, setKind] = createSignal<CourseKind>("course");
   const [termId, setTermId] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
   const [showSessionForm, setShowSessionForm] = createSignal(false);
@@ -117,6 +121,8 @@ function CourseDetailContent() {
     if (mode === "open") return t("exams.mode.open");
     return t("exams.unscheduled");
   };
+  const courseKindLabel = (value: CourseKind | undefined) =>
+    value === "study" ? t("courses.kind.study") : t("courses.kind.course");
 
   const examCount = createMemo(() => exams()?.length ?? 0);
   const rosterCount = createMemo(() => roster()?.length ?? 0);
@@ -144,6 +150,7 @@ function CourseDetailContent() {
     if (!c) return;
     setTitle(c.title);
     setDescription(c.description);
+    setKind(c.kind ?? "course");
     setTermId(c.term ?? "");
     setEditing(true);
   };
@@ -198,6 +205,11 @@ function CourseDetailContent() {
                   </div>
                 }
               />
+              <div class="flex flex-wrap gap-2">
+                <Badge variant="outline" class="rounded-sm">
+                  {courseKindLabel(c().kind)}
+                </Badge>
+              </div>
             </div>
 
             <ConfirmDialog
@@ -243,6 +255,7 @@ function CourseDetailContent() {
                     await patchCourseById(id(), {
                       title: title().trim(),
                       description: description(),
+                      kind: kind(),
                       term_id: termId() || null,
                     });
                     setEditing(false);
@@ -267,6 +280,12 @@ function CourseDetailContent() {
                     rows={3}
                     onInput={(e) => setDescription(e.currentTarget.value)}
                   />
+                </div>
+                <div class="space-y-1.5">
+                  <Label for="edit-course-kind">{t("courses.kind")}</Label>
+                  <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
+                    <For each={COURSE_KINDS}>{(item) => <option value={item}>{courseKindLabel(item)}</option>}</For>
+                  </Select>
                 </div>
                 <div class="space-y-1.5">
                   <Label for="edit-course-term">{t("terms.term")}</Label>

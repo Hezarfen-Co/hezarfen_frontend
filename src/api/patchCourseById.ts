@@ -1,9 +1,10 @@
 import { client } from "./client";
-import type { Course } from "./types";
+import type { Course, CourseKind } from "./types";
 
 export type PatchCourseBody = {
   title?: string | null;
   description?: string | null;
+  kind?: CourseKind | null;
   term_id?: string | null;
 };
 

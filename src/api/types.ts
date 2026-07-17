@@ -3,6 +3,7 @@ export type { Page, PageParams } from "./page";
 export type Role = "student" | "teacher" | "manager" | "admin";
 export type UserTheme = "light" | "dark";
 export type UserLanguage = "tr" | "en";
+export type CourseKind = "course" | "study" | string;
 export type CoreAttendanceStatus = "present" | "absent" | "late" | "excused";
 export type AttendanceStatus = CoreAttendanceStatus | string;
 export type KnownExamKind = "homework" | "quiz" | "midterm" | "final" | "project" | "oral";
@@ -73,6 +74,7 @@ export type Course = {
   creator: string;
   title: string;
   description: string;
+  kind: CourseKind;
   /** Academic term id from API (`CourseResponse.term`). */
   term?: string | null;
 };

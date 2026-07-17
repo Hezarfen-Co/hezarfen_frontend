@@ -386,6 +386,9 @@ export type MessageKey =
   | "courses.addExam"
   | "courses.weight"
   | "courses.delete"
+  | "courses.kind"
+  | "courses.kind.course"
+  | "courses.kind.study"
   | "marks.title"
   | "marks.subtitle"
   | "marks.overall"
@@ -926,6 +929,9 @@ const en: Dict = {
   "courses.addExam": "Add exam",
   "courses.weight": "Weight",
   "courses.delete": "Delete course",
+  "courses.kind": "Course type",
+  "courses.kind.course": "Course",
+  "courses.kind.study": "Study",
   "marks.title": "Report card",
   "marks.subtitle": "Weighted averages across enrolled courses.",
   "marks.overall": "Overall average",
@@ -1465,6 +1471,9 @@ const tr: Dict = {
   "courses.addExam": "Sınav ekle",
   "courses.weight": "Ağırlık",
   "courses.delete": "Dersi sil",
+  "courses.kind": "Ders türü",
+  "courses.kind.course": "Ders",
+  "courses.kind.study": "Etüt",
   "marks.title": "Karnem",
   "marks.subtitle": "Kayıtlı derslerdeki ağırlıklı ortalamalar.",
   "marks.overall": "Genel ortalama",

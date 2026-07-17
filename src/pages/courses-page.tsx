@@ -6,7 +6,7 @@ import { getTerms } from "@/api/getTerms";
 import { getUsers } from "@/api/getUsers";
 import { postCourse } from "@/api/postCourse";
 import { formatApiError } from "@/api/client";
-import type { Course } from "@/api/types";
+import type { Course, CourseKind } from "@/api/types";
 import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -29,6 +29,7 @@ import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
 
 const COURSE_PAGE_SIZE = 12;
+const COURSE_KINDS: CourseKind[] = ["course", "study"];
 
 export default function CoursesPage() {
   return (
@@ -45,6 +46,7 @@ function CoursesContent() {
   const [showForm, setShowForm] = createSignal(false);
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
+  const [kind, setKind] = createSignal<CourseKind>("course");
   const [termId, setTermId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -63,6 +65,8 @@ function CoursesContent() {
   );
 
   const termName = (id: string | null | undefined) => terms()?.find((term) => term.id === id)?.name ?? t("terms.unassigned");
+  const courseKindLabel = (value: CourseKind | undefined) =>
+    value === "study" ? t("courses.kind.study") : t("courses.kind.course");
   const creatorName = (creatorId: string) => {
     if (creatorId === auth.user()?.id) return auth.user()?.username ?? creatorId;
     return users()?.find((user) => user.id === creatorId)?.username ?? creatorId;
@@ -75,7 +79,7 @@ function CoursesContent() {
       if (selectedTerm === "unassigned" && course.term) return false;
       if (selectedTerm !== "all" && selectedTerm !== "unassigned" && course.term !== selectedTerm) return false;
       if (!needle) return true;
-      return [course.title, course.description, course.creator, creatorName(course.creator), termName(course.term)]
+      return [course.title, course.description, course.creator, creatorName(course.creator), termName(course.term), courseKindLabel(course.kind)]
         .join(" ")
         .toLocaleLowerCase()
         .includes(needle);
@@ -115,10 +119,12 @@ function CoursesContent() {
       await postCourse({
         title: title().trim(),
         description: description().trim() || undefined,
+        kind: kind(),
         term_id: termId() || null,
       });
       setTitle("");
       setDescription("");
+      setKind("course");
       setTermId("");
       setShowForm(false);
       await refetch();
@@ -162,6 +168,12 @@ function CoursesContent() {
           <div class="space-y-1.5">
             <Label for="course-desc">{t("form.description")}</Label>
             <Textarea id="course-desc" maxlength={2000} rows={3} value={description()} onInput={(e) => setDescription(e.currentTarget.value)} />
+          </div>
+          <div class="space-y-1.5">
+            <Label for="course-kind">{t("courses.kind")}</Label>
+            <Select id="course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
+              <For each={COURSE_KINDS}>{(item) => <option value={item}>{courseKindLabel(item)}</option>}</For>
+            </Select>
           </div>
           <div class="space-y-1.5">
             <Label for="course-term">{t("terms.term")}</Label>
@@ -251,6 +263,9 @@ function CoursesContent() {
                           <TableCell>
                             <div class="min-w-0 space-y-1">
                               <p class="truncate font-medium">{course.title}</p>
+                              <Badge variant="outline" class="rounded-sm text-[11px]">
+                                {courseKindLabel(course.kind)}
+                              </Badge>
                               <Show when={isStudent()}>
                                 <Badge variant="secondary" class="rounded-sm">{t("courses.enrolled")}</Badge>
                               </Show>
