@@ -23,7 +23,6 @@ export function NoteReaderPanel(props: {
       open={props.open && note() != null}
       onOpenChange={props.onOpenChange}
       title={note()?.title ?? t("notes.title")}
-      description={t("notes.subtitle")}
       size="wide"
     >
       <Show when={note()}>

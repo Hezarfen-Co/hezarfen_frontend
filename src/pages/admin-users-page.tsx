@@ -8,10 +8,12 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { UserTable } from "@/components/users/user-table";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { DataTableEmpty, DataTableSkeleton } from "@/components/ui/data-table";
 import { DataToolbar } from "@/components/ui/data-toolbar";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { createFlash } from "@/lib/flash";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -62,11 +64,14 @@ function AdminUsersContent() {
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
   const roleCount = (role: Role) => stats()?.filter((user) => user.role === role).length ?? 0;
 
+  const [flash, setFlash] = createFlash();
+
   const onRoleChange = async (userId: string, role: Role) => {
     setError("");
     try {
       await patchUserRole(userId, role);
       await refetch();
+      setFlash(t("common.saved"));
     } catch (err) {
       setError(formatApiError(err));
     }
@@ -83,6 +88,9 @@ function AdminUsersContent() {
         <PageHeader accent="violet" eyebrow={t("nav.users")} title={t("admin.title")} description={t("admin.subtitle")} />
       </div>
 
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
       <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">

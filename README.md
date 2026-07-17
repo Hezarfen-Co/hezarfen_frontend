@@ -54,9 +54,9 @@ Dashboard and table summaries must use the same role scope as the related page. 
 | Path | Access | Description |
 |---|---|---|
 | `/login`, `/register` | Guests | Authentication |
-| `/` | Authenticated | Role-scoped, observation-only dashboard |
+| `/` | Authenticated | Role-scoped observation dashboard (portal cards + attention/upcoming) |
 | `/profile` | Authenticated | Edit personal info (name, email, phone, birth date) |
-| `/notes` | Student+ | Personal notebook CRUD with paper-style read dialogs and file attachments |
+| `/notes` | Student+ | Personal notebook CRUD with paper-style cards, side-panel create, reader panel, file attachments |
 | `/events`, `/events/:id` | Student+ | Event list & detail with search, time filters, and lazy attendance roster |
 | `/exams` | Student+ | Exam table with role-scoped course filtering |
 | `/exams/:id` | Student+ | Exam detail, questions, grading, statistics (teacher+) |
@@ -78,11 +78,13 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - **Side panels**: quick create/edit workflows without losing list context
 - **Course sessions**: right-panel session creation and paginated roll call panels
 - **Schedule validation**: event, exam, and lesson-session forms use `GET /time` for server-clock-aware past-date warnings before submit
-- **Notebook**: notes render as paper-style cards, open in a paper-style read dialog, and keep create/edit/delete in dialogs with three-dot card actions
-- **Note files**: per-note upload/list/download/delete through native `FormData`, with school-configured file-size warnings from settings
-- **Events and courses**: events keep card rendering with toolbar search and upcoming/past filters; courses use table search plus term/unassigned filters
+- **Notebook**: paper-style note cards; create in `SidePanel`; read in reader panel with attachments; three-dot card actions for edit/delete
+- **Note files**: per-note upload/list/download/delete via native `FormData`; school `max_file_bytes` from settings
+- **Events and courses**: event cards with schedule status chips + toolbar search/time filters; courses table with search and term filters
 - **Attendance UI**: localized status labels with explanatory detail text and semantic colors
-- **Role-scoped dashboard**: read-only summaries and KPIs by current role
+- **Role-scoped dashboard**: monochrome observation board — portal cards (`Title | count`), needs-attention and upcoming lists only
+- **Empty states**: shared `EmptyState` with optional create CTA where the role can mutate
+- **Mutation feedback**: short auto-clear success flash (`createFlash` + success `Alert`) after create/save/delete; not used for exam-room autosave
 - **i18n**: full Turkish / English interface
 
 ## UI Patterns
@@ -90,14 +92,16 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - Durable resources use full detail pages with breadcrumbs.
 - Short create/edit/filter work uses `SidePanel`.
 - Destructive actions use confirm dialogs.
+- Form dialogs dismiss with the header close control (outside click / ESC disabled to avoid click-through races).
 - Data-heavy views use `DataToolbar`, `DataTableFrame`, `.data-table`, and `TableRowActions`.
 - Large list pages should use server-side pagination/search/filtering when the backend supports it; client-side slicing is only acceptable for small or temporary datasets.
 - Date fields use the shared `DatePicker`; date-time flows pair it with an `HH:mm` input.
 - Start/end date-time rows use equal-width date and time controls.
 - Disclosure sections either defer hidden content for request savings or preserve mounted content when local state should not reset.
 - Event detail attendance roster is teacher-only and lazy-loaded when its disclosure opens.
-
-- Note attachments live in the note reader dialog. Upload uses native `FormData`; downloads are same-origin links to `/api/notes/{id}/files/{file_id}`. Backend remains authoritative for the 10-file cap and payload validation.
+- Schedule status chips share `src/lib/schedule-status.ts` tones (active / upcoming / finished / muted).
+- Note attachments live in the note reader panel. Upload uses native `FormData`; downloads are same-origin links to `/api/notes/{id}/files/{file_id}`. Backend remains authoritative for the 10-file cap and payload validation.
+- App providers (`PreferencesProvider`, `AuthProvider`) wrap `RouterProvider` so every route and pending shell can use auth/preferences context.
 
 ## Docs
 
@@ -117,7 +121,7 @@ src/
 │   ├── ui/        # Design system (Button, Badge, Table, SidePanel, row actions, etc.)
 │   └── users/     # Profile form, user table
 ├── i18n/          # Message keys + EN/TR dictionaries
-├── lib/           # Utilities (format, cn, roles, exam-labels)
+├── lib/           # Utilities (format, cn, roles, exam-labels, flash, schedule-status)
 ├── pages/         # Route-level page components
 ├── routes/        # TanStack Router tree
 └── stores/        # Auth, preferences (locale, theme) contexts

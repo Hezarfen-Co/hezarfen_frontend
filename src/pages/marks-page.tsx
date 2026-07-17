@@ -5,6 +5,7 @@ import { Alert } from "@/components/ui/alert";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useT } from "@/stores/preferences-context";
 
@@ -33,14 +34,7 @@ function MarksContent() {
         <Show when={mine.error}>
           <Alert variant="destructive">{formatApiError(mine.error)}</Alert>
         </Show>
-        <Show
-          when={mine()}
-          fallback={
-            <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-              {t("marks.empty")}
-            </div>
-          }
-        >
+        <Show when={mine()} fallback={<EmptyState title={t("marks.empty")} />}>
           {(report) => <MarksReportView report={report()} />}
         </Show>
       </Suspense>

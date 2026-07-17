@@ -23,7 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableFrame } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { createFlash } from "@/lib/flash";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -133,11 +135,14 @@ function CourseDetailContent() {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
 
-  const wrap = async (fn: () => Promise<void>) => {
+  const [flash, setFlash] = createFlash();
+
+  const wrap = async (fn: () => Promise<void>, ok?: string) => {
     setError("");
     setPending(true);
     try {
       await fn();
+      if (ok) setFlash(ok);
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -238,6 +243,7 @@ function CourseDetailContent() {
                 try {
                   await deleteCourseEnrollmentByUserId(id(), target.userId);
                   await refetchRoster();
+                  setFlash(t("common.deleted"));
                 } catch (err) {
                   setError(formatApiError(err));
                 } finally {
@@ -260,7 +266,7 @@ function CourseDetailContent() {
                     });
                     setEditing(false);
                     await refetchCourse();
-                  });
+                  }, t("common.saved"));
                 }}
               >
                 <div class="space-y-1.5">
@@ -316,6 +322,7 @@ function CourseDetailContent() {
                   });
                   setShowExamForm(false);
                   await refetchExams();
+                  setFlash(t("common.created"));
                 }}
               />
             </SidePanel>
@@ -332,7 +339,7 @@ function CourseDetailContent() {
                     setEnrollUserId("");
                     setShowEnrollPanel(false);
                     await refetchRoster();
-                  });
+                  }, t("common.saved"));
                 }}
               >
                 <UserSearchSelect
@@ -354,6 +361,9 @@ function CourseDetailContent() {
               </form>
             </SidePanel>
 
+            <Show when={flash()}>
+              <Alert variant="success">{flash()}</Alert>
+            </Show>
             {error() && (
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
@@ -415,9 +425,17 @@ function CourseDetailContent() {
                 <Show
                   when={(exams() ?? []).length > 0}
                   fallback={
-                    <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                      {t("exams.empty")}
-                    </div>
+                    <EmptyState
+                      title={t("exams.empty")}
+                      action={
+                        canManage() ? (
+                          <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
+                            <IconPlus class="h-4 w-4" />
+                            {t("courses.addExam")}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   }
                 >
                   <ul class="space-y-2">
@@ -498,9 +516,17 @@ function CourseDetailContent() {
                   <Show
                     when={(roster() ?? []).length > 0}
                     fallback={
-                      <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                        {t("exams.emptyRoster")}
-                      </div>
+                      <EmptyState
+                        title={t("exams.emptyRoster")}
+                        action={
+                          canManage() ? (
+                            <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
+                              <IconPlus class="h-4 w-4" />
+                              {t("courses.enroll")}
+                            </Button>
+                          ) : undefined
+                        }
+                      />
                     }
                   >
                     <DataTableFrame>

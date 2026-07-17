@@ -93,3 +93,13 @@ Active backend-refresh work is tracked in
 - Terms page: SidePanel create/edit + dense table row actions; header create buttons use shared min-width/radius.
 - Settings: dirty-state save gate and auto-clearing success message.
 - Nested breadcrumbs on exam room and live monitor.
+
+### UX batch (2026-07, observation UI + feedback)
+
+- Homepage is a monochrome observation board: workspace portal cards (`Title | N` on desktop), needs-attention + upcoming lists, no create CTAs or vanity charts.
+- `EmptyState` component with optional primary action; wired on notes, courses, exams, events, terms, marks, work log, staff work, and course-detail sections (exams/roster/sessions).
+- `createFlash` + `Alert variant="success"` for short auto-clearing confirmations after create/save/delete (lists, detail pages, profile, admin roles, sessions, questions, note files). Settings keeps its own dirty-state saved chip.
+- Shared `schedule-status` tones for exam/event active/upcoming/finished chips (list, card, detail, dashboard attention).
+- Auth/preferences providers wrap `RouterProvider` in `App` so pending shells and all routes keep `useAuth` context.
+- Form dialogs close via header X only (outside/ESC disabled) to avoid card click-through reopen races.
+- Note reader/create panels drop marketing subtitle copy; page header keeps the notebook blurb.

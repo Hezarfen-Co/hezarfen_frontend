@@ -10,11 +10,13 @@ import { EventForm } from "@/components/events/event-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { DataToolbar } from "@/components/ui/data-toolbar";
+import { EmptyState } from "@/components/ui/empty-state";
 import { IconPlus } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
+import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { hasMinRole } from "@/lib/roles";
@@ -36,6 +38,7 @@ function EventsContent() {
   const { locale } = usePreferences();
   const t = useT();
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [showForm, setShowForm] = createSignal(false);
   const [query, setQuery] = createSignal("");
   const [timeFilter, setTimeFilter] = createSignal("all");
@@ -120,6 +123,7 @@ function EventsContent() {
               await postEvent(body);
               setShowForm(false);
               await refetch();
+              setFlash(t("common.created"));
             } catch (err) {
               setError(formatApiError(err));
               throw err;
@@ -128,6 +132,9 @@ function EventsContent() {
         />
       </SidePanel>
 
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       {error() && <p class="text-sm text-destructive">{error()}</p>}
 
       <section class="data-shell space-y-4 p-4">
@@ -163,9 +170,17 @@ function EventsContent() {
             <Show
               when={pageItems().length > 0}
               fallback={
-                <div class="rounded-sm border border-dashed border-border bg-muted/20 px-6 py-16 text-center text-sm text-muted-foreground">
-                  {t("events.empty")}
-                </div>
+                <EmptyState
+                  title={t("events.empty")}
+                  action={
+                    canCreate() ? (
+                      <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowForm(true)}>
+                        <IconPlus class="h-4 w-4" />
+                        {t("events.create")}
+                      </Button>
+                    ) : undefined
+                  }
+                />
               }
             >
               <div class="space-y-4">

@@ -5,6 +5,7 @@ import { patchExamQuestionById } from "@/api/patchExamQuestionById";
 import { postExamQuestion } from "@/api/postExamQuestion";
 import { ApiError, formatApiError } from "@/api/client";
 import type { ExamQuestion } from "@/api/types";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -12,6 +13,7 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { QuestionForm, type QuestionValues } from "@/components/exams/question-form";
 import { IconChevronLeft, IconChevronRight, IconPlus, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { createFlash } from "@/lib/flash";
 import { useT } from "@/stores/preferences-context";
 
 const QUESTION_PAGE_SIZE = 5;
@@ -30,6 +32,7 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
   const [editing, setEditing] = createSignal<ExamQuestion | null>(null);
   const [removeQuestion, setRemoveQuestion] = createSignal<ExamQuestion | null>(null);
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [page, setPage] = createSignal(0);
 
   const formInitial = createMemo(() => editing() ?? undefined);
@@ -60,8 +63,10 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
       const isNewQuestion = !q;
       if (q) {
         await patchExamQuestionById(props.examId, q.id, values);
+        setFlash(t("common.saved"));
       } else {
         await postExamQuestion(props.examId, values);
+        setFlash(t("common.created"));
       }
       setEditing(null);
       setShowForm(false);
@@ -74,6 +79,9 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
 
   return (
     <div class={props.embedded ? "space-y-4" : "surface-card space-y-4 p-5"}>
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <Show when={!props.embedded}>
           <h2 class="font-display text-lg font-semibold">{t("questions.title")}</h2>
@@ -222,6 +230,7 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
           try {
             await deleteExamQuestionById(props.examId, q.id);
             await refetch();
+            setFlash(t("common.deleted"));
           } catch (err) {
             setError(formatApiError(err));
           } finally {
