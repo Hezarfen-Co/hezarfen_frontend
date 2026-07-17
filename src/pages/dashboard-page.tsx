@@ -25,6 +25,7 @@ import {
 import { PageSpinner } from "@/components/ui/page-spinner";
 import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
+import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -104,7 +105,7 @@ function DashboardContent() {
   const { locale } = usePreferences();
   const user = () => auth.user()!;
   const role = () => user().role;
-  const now = () => Date.now();
+  const now = createNow();
 
   const [courses] = createResource(
     () => (role() !== "student" ? true : null),
@@ -318,7 +319,7 @@ function DashboardContent() {
           <span class="rounded-md border border-border bg-background px-2 py-1 font-medium text-foreground shadow-sm">
             {t(ROLE_KEY[role()])}
           </span>
-          <span class="mono tabular-nums">{formatDateTime(Date.now(), locale()).split(",")[0]}</span>
+          <span class="mono tabular-nums">{formatDateTime(now(), locale()).split(",")[0]}</span>
         </div>
       </header>
 

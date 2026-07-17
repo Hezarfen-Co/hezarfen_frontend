@@ -226,21 +226,21 @@ function EventDetailContent() {
                     type="button"
                     class="w-full rounded-sm sm:w-auto"
                     disabled={pending()}
-                    onClick={() =>
+                    onClick={() => {
+                      const uid = otherUserId().trim();
+                      if (!uid) {
+                        setError(t("events.userIdRequired"));
+                        return;
+                      }
                       void wrap(async () => {
-                        const uid = otherUserId().trim();
-                        if (!uid) {
-                          setError(t("events.userIdRequired"));
-                          return;
-                        }
                         await postEventAttendance(id(), {
                           status: status(),
                           user_id: uid,
                         });
                         setOtherUserId("");
                         if (attendanceOpen()) await refetchAttendance();
-                      }, t("common.saved"))
-                    }
+                      }, t("common.saved"));
+                    }}
                   >
                     {t("events.saveStudentAttendance")}
                   </Button>

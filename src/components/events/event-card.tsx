@@ -4,6 +4,7 @@ import type { Event, EventAudience } from "@/api/types";
 import type { MessageKey } from "@/i18n/messages";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
+import { createNow } from "@/lib/create-now";
 import { formatDateTime } from "@/lib/format";
 import { scheduleStatusClass, scheduleStatusDotClass, type ScheduleStatus } from "@/lib/schedule-status";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -25,7 +26,8 @@ function eventStatus(event: Event, now: number): ScheduleStatus {
 export function EventCard(props: { event: Event }) {
   const t = useT();
   const { locale } = usePreferences();
-  const status = () => eventStatus(props.event, Date.now());
+  const now = createNow();
+  const status = () => eventStatus(props.event, now());
   const statusLabel = () => {
     const s = status();
     if (s === "unscheduled") return t("exams.unscheduled");
