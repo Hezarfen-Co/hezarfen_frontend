@@ -44,6 +44,7 @@ import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
+import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -274,20 +275,35 @@ function ExamDetailContent() {
                 }
               >
               <div class="flex flex-wrap items-center gap-2 pt-1">
-                <Badge variant="outline" class={cn(
-                  "rounded-sm capitalize",
-                  !isScheduled() && "bg-muted text-muted-foreground border-muted",
-                  isFinished() && "bg-muted text-muted-foreground border-muted",
-                  isScheduled() && !isFinished() && !isUpcoming() && "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
-                  isUpcoming() && "bg-amber-500/15 text-amber-600 border-amber-500/30",
-                )}>
-                  <span class={cn(
-                    "mr-1.5 inline-block h-1.5 w-1.5 rounded-full",
-                    !isScheduled() && "bg-muted-foreground",
-                    isFinished() && "bg-muted-foreground",
-                    isScheduled() && !isFinished() && !isUpcoming() && "bg-emerald-600",
-                    isUpcoming() && "bg-amber-600",
-                  )} />
+                <Badge
+                  variant="outline"
+                  class={cn(
+                    "rounded-sm capitalize",
+                    scheduleStatusClass(
+                      !isScheduled()
+                        ? "unscheduled"
+                        : isFinished()
+                          ? "finished"
+                          : isUpcoming()
+                            ? "upcoming"
+                            : "active",
+                    ),
+                  )}
+                >
+                  <span
+                    class={cn(
+                      "mr-1.5 inline-block h-1.5 w-1.5 rounded-full",
+                      scheduleStatusDotClass(
+                        !isScheduled()
+                          ? "unscheduled"
+                          : isFinished()
+                            ? "finished"
+                            : isUpcoming()
+                              ? "upcoming"
+                              : "active",
+                      ),
+                    )}
+                  />
                   {!isScheduled() ? t("exams.unscheduled") : isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
                 </Badge>
                 <Badge variant="outline" class="rounded-sm capitalize">

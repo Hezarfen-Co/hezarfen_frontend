@@ -28,6 +28,7 @@ import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { hasMinRole } from "@/lib/roles";
+import { scheduleStatusClass } from "@/lib/schedule-status";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -141,12 +142,6 @@ function ExamsContent() {
     if (status === "finished") return t("exams.finished");
     if (status === "upcoming") return t("exams.upcoming");
     return t("exams.active");
-  };
-
-  const statusTone = (status: ExamStatus) => {
-    if (status === "active") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
-    if (status === "upcoming") return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
-    return "border-muted bg-muted/50 text-muted-foreground";
   };
 
   const total = () => list()?.total ?? 0;
@@ -301,7 +296,7 @@ function ExamsContent() {
                           <TableCell class="truncate text-muted-foreground">{courseTitle(exam.course)}</TableCell>
                           <TableCell class="mono whitespace-nowrap text-muted-foreground">{formatDateTime(exam.starts_at, locale())}</TableCell>
                           <TableCell class="text-center">
-                            <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", statusTone(status()))}>
+                            <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", scheduleStatusClass(status()))}>
                               {statusLabel(status())}
                             </Badge>
                           </TableCell>

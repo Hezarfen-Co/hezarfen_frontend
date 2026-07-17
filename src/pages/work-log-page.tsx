@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableFrame } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -118,7 +119,7 @@ function WorkLogContent() {
           </Show>
           <Show
             when={pageItems().length > 0}
-            fallback={<div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("work.empty")}</div>}
+            fallback={<EmptyState title={t("work.empty")} description={t("work.ready")} />}
           >
             <DataTableFrame>
               <Table class="data-table">

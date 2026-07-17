@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableEmpty, DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
 import { DataToolbar } from "@/components/ui/data-toolbar";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
@@ -298,7 +299,7 @@ function StaffWorkContent() {
         <Show when={!entries.loading} fallback={<DataTableSkeleton columns={5} rows={4} />}>
           <Show
             when={entryRows().length > 0}
-            fallback={<div class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">{t("work.empty")}</div>}
+            fallback={<EmptyState title={t("work.empty")} />}
           >
             <div class="space-y-3">
               <DataTableFrame>

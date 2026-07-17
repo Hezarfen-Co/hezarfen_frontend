@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number }) {
@@ -37,22 +38,6 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
     return t("exams.active");
   };
 
-  const statusClass = () => {
-    const s = status();
-    if (s === "unscheduled") return "bg-muted text-muted-foreground border-muted";
-    if (s === "finished") return "bg-muted text-muted-foreground border-muted";
-    if (s === "upcoming") return "bg-amber-500/15 text-amber-600 border-amber-500/30";
-    return "bg-emerald-500/15 text-emerald-600 border-emerald-500/30";
-  };
-
-  const statusDot = () => {
-    const s = status();
-    if (s === "unscheduled") return "bg-muted-foreground";
-    if (s === "finished") return "bg-muted-foreground";
-    if (s === "upcoming") return "bg-amber-600";
-    return "bg-emerald-600";
-  };
-
   return (
     <ExamLink examId={props.exam.id} class="group block h-full">
       <article class="data-shell flex h-full min-h-48 flex-col overflow-hidden transition-colors group-hover:border-primary/35">
@@ -66,8 +51,8 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
               {props.exam.title}
               </h3>
             </div>
-            <Badge variant="outline" class={cn("shrink-0 rounded-sm capitalize", statusClass())}>
-              <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", statusDot())} />
+            <Badge variant="outline" class={cn("shrink-0 rounded-sm capitalize", scheduleStatusClass(status()))}>
+              <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(status()))} />
               {statusLabel()}
             </Badge>
           </div>
