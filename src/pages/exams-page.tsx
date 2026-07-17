@@ -13,7 +13,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTableEmpty, DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DataToolbar } from "@/components/ui/data-toolbar";
 import { IconEdit, IconEye, IconPlus } from "@/components/ui/icons";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -23,6 +24,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
+import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { hasMinRole } from "@/lib/roles";
@@ -56,6 +58,7 @@ function ExamsContent() {
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
   const [page, setPage] = createSignal(0);
+  const [flash, setFlash] = createFlash();
 
   const [courses] = createResource(
     () => (auth.user()?.role && auth.user()?.role !== "student" ? true : null),
@@ -160,6 +163,7 @@ function ExamsContent() {
     });
     setCreateOpen(false);
     await refetchExams();
+    setFlash(t("common.created"));
   };
 
   const updateExam = async (values: ExamFormValues) => {
@@ -168,6 +172,7 @@ function ExamsContent() {
     await patchExamById(exam.id, values);
     setEditingExam(null);
     await refetchExams();
+    setFlash(t("common.saved"));
   };
 
   return (
@@ -238,11 +243,29 @@ function ExamsContent() {
           }
         />
 
+        <Show when={flash()}>
+          <Alert variant="success">{flash()}</Alert>
+        </Show>
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
-          <Show when={pageItems().length > 0} fallback={<DataTableEmpty>{t("exams.empty")}</DataTableEmpty>}>
+          <Show
+            when={pageItems().length > 0}
+            fallback={
+              <EmptyState
+                title={t("exams.empty")}
+                action={
+                  canCreate() ? (
+                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("exams.create")}
+                    </Button>
+                  ) : undefined
+                }
+              />
+            }
+          >
             <DataTableFrame>
               <Table class="data-table table-fixed min-w-[64rem]">
                 <colgroup>

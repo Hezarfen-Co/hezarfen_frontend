@@ -12,7 +12,8 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTableEmpty, DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DataToolbar } from "@/components/ui/data-toolbar";
 import { IconEye, IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { createFlash } from "@/lib/flash";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -49,6 +51,7 @@ function CoursesContent() {
   const [kind, setKind] = createSignal<CourseKind>("course");
   const [termId, setTermId] = createSignal("");
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
   const [query, setQuery] = createSignal("");
   const [termFilter, setTermFilter] = createSignal("all");
@@ -128,6 +131,7 @@ function CoursesContent() {
       setTermId("");
       setShowForm(false);
       await refetch();
+      setFlash(t("common.created"));
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -221,11 +225,29 @@ function CoursesContent() {
           }
         />
 
+        <Show when={flash()}>
+          <Alert variant="success">{flash()}</Alert>
+        </Show>
         <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
-          <Show when={pageItems().length > 0} fallback={<DataTableEmpty>{t("courses.empty")}</DataTableEmpty>}>
+          <Show
+            when={pageItems().length > 0}
+            fallback={
+              <EmptyState
+                title={t("courses.empty")}
+                action={
+                  canCreate() ? (
+                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowForm(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("courses.create")}
+                    </Button>
+                  ) : undefined
+                }
+              />
+            }
+          >
             <div class="space-y-4">
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>

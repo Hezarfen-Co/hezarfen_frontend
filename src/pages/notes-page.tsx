@@ -15,6 +15,7 @@ import { IconPlus } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
+import { createFlash } from "@/lib/flash";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { useT } from "@/stores/preferences-context";
 
@@ -31,6 +32,7 @@ export default function NotesPage() {
 function NotesContent() {
   const t = useT();
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [createOpen, setCreateOpen] = createSignal(false);
   const [page, setPage] = createSignal(0);
 
@@ -50,11 +52,12 @@ function NotesContent() {
   const totalPages = createMemo(() => pagesOf(total(), NOTE_PAGE_SIZE));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
 
-  const wrap = async (fn: () => Promise<void>) => {
+  const wrap = async (fn: () => Promise<void>, okMessage: string) => {
     setError("");
     try {
       await fn();
       await refetch();
+      setFlash(okMessage);
     } catch (err) {
       setError(formatApiError(err));
     }
@@ -101,13 +104,20 @@ function NotesContent() {
             }
             await refetch();
             setCreateOpen(false);
-            if (failedUploads > 0) setError(t("notes.fileUploadPartial", { count: failedUploads }));
+            if (failedUploads > 0) {
+              setError(t("notes.fileUploadPartial", { count: failedUploads }));
+              return;
+            }
+            setFlash(t("common.created"));
           }}
         />
       </SidePanel>
 
       <div class="space-y-5">
         <section class="min-w-0 space-y-4">
+          <Show when={flash()}>
+            <Alert variant="success">{flash()}</Alert>
+          </Show>
           {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
           <Suspense fallback={<PageSpinner />}>
             <Show when={list.error}>
@@ -116,16 +126,23 @@ function NotesContent() {
             <Show when={list()}>
               <NoteList
                 notes={pageItems()}
-                emptyLabel={t("notes.empty")}
+                emptyTitle={t("dashboard.emptyNotesTitle")}
+                emptyDescription={t("notes.empty")}
+                emptyAction={
+                  <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("notes.new")}
+                  </Button>
+                }
                 onUpdate={(id, values) =>
                   wrap(async () => {
                     await patchNoteById(id, values);
-                  })
+                  }, t("common.saved"))
                 }
                 onDelete={(id) =>
                   wrap(async () => {
                     await deleteNoteById(id);
-                  })
+                  }, t("common.deleted"))
                 }
               />
               <Show when={total() > NOTE_PAGE_SIZE}>
