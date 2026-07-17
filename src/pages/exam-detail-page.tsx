@@ -445,7 +445,7 @@ function ExamDetailContent() {
                 description={t("exams.examQuestions")}
               >
                 <Show when={openSections().questions}>
-                  <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} embedded />
+                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished() || isUpcoming()} embedded />
                 </Show>
               </SectionDisclosure>
 

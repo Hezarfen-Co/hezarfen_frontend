@@ -289,10 +289,19 @@ export type MessageKey =
   | "questions.correctHint"
   | "questions.kind.choice"
   | "questions.kind.text"
+  | "questions.subjectRequired"
   | "questions.textRequired"
   | "questions.pointsRange"
   | "questions.choicesRange"
   | "questions.correctRange"
+  | "subjects.title"
+  | "subjects.subject"
+  | "subjects.name"
+  | "subjects.add"
+  | "subjects.edit"
+  | "subjects.empty"
+  | "subjects.select"
+  | "subjects.help"
   | "attempt.title"
   | "attempt.openRoom"
   | "attempt.start"
@@ -835,10 +844,19 @@ const en: Dict = {
   "questions.correctHint": "Zero-based: first choice is 0.",
   "questions.kind.choice": "Choice",
   "questions.kind.text": "Text",
+  "questions.subjectRequired": "Select a subject for this question",
   "questions.textRequired": "Question text is required",
   "questions.pointsRange": "Points must be an integer from 1 to 100",
   "questions.choicesRange": "Choice questions need 2–10 choices, each at most 500 characters",
   "questions.correctRange": "Correct index must point to one of the choices",
+  "subjects.title": "Subjects",
+  "subjects.subject": "Subject",
+  "subjects.name": "Subject name",
+  "subjects.add": "Add subject",
+  "subjects.edit": "Edit subject",
+  "subjects.empty": "No subjects yet.",
+  "subjects.select": "Select subject",
+  "subjects.help": "Curriculum topics for this education item. Every exam question must be tagged with one.",
   "attempt.title": "Exam room",
   "attempt.openRoom": "Open exam room",
   "attempt.start": "Start exam",
@@ -1391,10 +1409,19 @@ const tr: Dict = {
   "questions.correctHint": "Sıfırdan başlar: ilk seçenek 0.",
   "questions.kind.choice": "Seçmeli",
   "questions.kind.text": "Metin",
+  "questions.subjectRequired": "Bu soru için konu seç",
   "questions.textRequired": "Soru metni gerekli",
   "questions.pointsRange": "Puan 1–100 arası tam sayı olmalı",
   "questions.choicesRange": "Seçmeli soruda 2–10 seçenek gerekir; her biri en fazla 500 karakter olmalı",
   "questions.correctRange": "Doğru indeks seçeneklerden birini göstermeli",
+  "subjects.title": "Konular",
+  "subjects.subject": "Konu",
+  "subjects.name": "Konu adı",
+  "subjects.add": "Konu ekle",
+  "subjects.edit": "Konuyu düzenle",
+  "subjects.empty": "Henüz konu yok.",
+  "subjects.select": "Konu seç",
+  "subjects.help": "Bu eğitim kaydının müfredat konuları. Her sınav sorusu bir konuya bağlanmalı.",
   "attempt.title": "Sınav odası",
   "attempt.openRoom": "Sınav odasını aç",
   "attempt.start": "Sınava başla",

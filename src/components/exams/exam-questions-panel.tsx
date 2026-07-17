@@ -1,5 +1,6 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import { deleteExamQuestionById } from "@/api/deleteExamQuestionById";
+import { getCourseSubjects } from "@/api/getCourseSubjects";
 import { getExamQuestions } from "@/api/getExamQuestions";
 import { patchExamQuestionById } from "@/api/patchExamQuestionById";
 import { postExamQuestion } from "@/api/postExamQuestion";
@@ -18,8 +19,9 @@ import { useT } from "@/stores/preferences-context";
 
 const QUESTION_PAGE_SIZE = 5;
 
-export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; embedded?: boolean }) {
+export function ExamQuestionsPanel(props: { examId: string; courseId: string; readOnly?: boolean; embedded?: boolean }) {
   const t = useT();
+  const [subjects] = createResource(() => props.courseId, async (courseId) => (await getCourseSubjects(courseId)).items);
   const [questions, { refetch }] = createResource(() => props.examId, async (examId) => {
     try {
       return (await getExamQuestions(examId)).items;
@@ -37,6 +39,7 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
 
   const formInitial = createMemo(() => editing() ?? undefined);
   const questionList = createMemo(() => questions() ?? []);
+  const subjectName = (subjectId: string) => subjects()?.find((subject) => subject.id === subjectId)?.name ?? subjectId;
   const totalPages = createMemo(() => Math.max(1, Math.ceil(questionList().length / QUESTION_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
   const pageItems = createMemo(() => {
@@ -115,6 +118,7 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
       >
         <QuestionForm
           initial={formInitial()}
+          subjects={subjects() ?? []}
           onCancel={() => {
             setEditing(null);
             setShowForm(false);
@@ -142,6 +146,7 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
                           <Badge variant="outline" class="capitalize">
                             {q.kind === "choice" ? t("questions.kind.choice") : t("questions.kind.text")}
                           </Badge>
+                          <Badge variant="secondary">{subjectName(q.subject)}</Badge>
                           <Badge variant="outline">{q.points} {t("questions.points")}</Badge>
                         </div>
                         <p class="whitespace-pre-wrap text-sm font-medium">{q.text}</p>

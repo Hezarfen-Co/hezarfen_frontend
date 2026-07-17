@@ -66,6 +66,7 @@
 | Enroll students / unenroll any enrollment | ❌ | ✅ (course creator) | ✅ | ✅ |
 | Edit / delete courses | ❌ | ✅ (course creator) | ✅ | ✅ |
 | Create / edit / delete course sessions | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Create / edit / delete course subjects | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Take session roll call | ❌ | ✅ (session teacher or course manager) | ✅ | ✅ |
 | Mark session teacher's own presence | ❌ | ❌ | ✅ | ✅ |
 | Create exams | ❌ | ✅ (course manager) | ✅ | ✅ |
@@ -87,7 +88,7 @@
 ## Architectural Rules
 
 - **Hierarchical roles:** `student < teacher < manager < admin`. A higher role satisfies any lower requirement. The only exception is `exactRole` page guards (below), which are presentation filters — backend authorization never breaks the hierarchy.
-- **Course management rights:** course creator or `manager+`. Required for enrollment, session CRUD, exam CRUD, grading, roster read.
+- **Course management rights:** course creator or `manager+`. Required for enrollment, subject/session CRUD, exam CRUD, grading, roster read.
 - **Ownership edits:** event/note edit/delete respects creator id. Manager+ overrides creator gate.
 - **Student-only actions (BE-enforced):** enrolling, sitting exams (including the exam-room WebSocket — the role is re-checked on every answer save, so a mid-exam promotion closes the sheet), being graded, and being marked on lesson roll call all require the target's live role to be `student`. Unenroll, result removal, and roll-call removal stay role-free on the target, so stale rows left behind by a promotion remain removable.
 - **Student-only pages (FE-only):** `/marks` (personal report card) is hidden from staff by `RouteGuard exactRole="student"` + router `beforeLoad` redirect as presentation, not security — the backend serves `GET /marks/me` and `GET /exams/{id}/result` to any authenticated user; a staff member's report is just permanently empty (staff cannot be enrolled or graded). Do not "fix" the backend to 403 these: a student promoted to staff must keep read access to their own history.

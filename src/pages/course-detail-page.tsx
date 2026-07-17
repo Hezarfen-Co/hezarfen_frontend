@@ -15,6 +15,7 @@ import { formatApiError } from "@/api/client";
 import type { CourseKind } from "@/api/types";
 import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm } from "@/components/exams/exam-form";
+import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
 import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -98,7 +99,7 @@ function CourseDetailContent() {
   const [showExamForm, setShowExamForm] = createSignal(false);
   const [showSessionForm, setShowSessionForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
-  const [openSections, setOpenSections] = createSignal({ exams: true, sessions: false, roster: false });
+  const [openSections, setOpenSections] = createSignal({ subjects: true, exams: true, sessions: false, roster: false });
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -131,7 +132,7 @@ function CourseDetailContent() {
   const examKindCount = createMemo(() => new Set((exams() ?? []).map((exam) => exam.kind)).size);
 
   const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
-  const toggleSection = (section: "exams" | "sessions" | "roster") => {
+  const toggleSection = (section: "subjects" | "exams" | "sessions" | "roster") => {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
 
@@ -405,6 +406,16 @@ function CourseDetailContent() {
                 <p class="mt-1 text-xs text-muted-foreground">{t("terms.title")}</p>
               </div>
             </section>
+
+            <SectionDisclosure
+              open={openSections().subjects}
+              onToggle={() => toggleSection("subjects")}
+              title={t("subjects.title")}
+              description={t("subjects.help")}
+              meta={<Badge variant="secondary" class="rounded-lg px-3 py-1">{t("subjects.title")}</Badge>}
+            >
+              <CourseSubjectsPanel courseId={id()} canManage={canManage()} active={openSections().subjects} />
+            </SectionDisclosure>
 
             <SectionDisclosure
               open={openSections().exams}

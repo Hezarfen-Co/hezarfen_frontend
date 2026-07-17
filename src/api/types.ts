@@ -148,6 +148,7 @@ export type ExamResult = {
 export type ExamQuestion = {
   id: string;
   exam: string;
+  subject: string;
   text: string;
   kind: QuestionKind;
   points: number;
@@ -181,11 +182,19 @@ export type AttemptAnswer = {
 export type AttemptQuestion = {
   id: string;
   exam: string;
+  subject: string;
   text: string;
   kind: QuestionKind;
   points: number;
   choices: string[] | null;
   answer: AttemptAnswer | null;
+};
+
+export type Subject = {
+  id: string;
+  course: string;
+  name: string;
+  description: string;
 };
 
 export type MarkEntry = {

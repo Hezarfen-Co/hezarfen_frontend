@@ -63,13 +63,13 @@ Dashboard and table summaries must use the same role scope as the related page. 
 | `/exams/:id/live` | Teacher+ | Live monitor / final state roster with pagination & sorting |
 | `/exam-room/:id` | Student+ | WebSocket-based real-time exam room (auto-save, timer, local expiry close) |
 | `/courses` | Student+ | Course table with search and term filters; create/edit flows for teacher+ |
-| `/courses/:id` | Student+ | Course detail, exams, roster, lesson sessions, and roll call tools |
+| `/courses/:id` | Student+ | Course detail, subjects, exams, roster, lesson sessions, and roll call tools |
 | `/guide` | Authenticated | App usage guide |
 | `/admin/users` | Admin | User management |
 
 ## Features
 
-- **Exam lifecycle**: create (scheduled/async/unscheduled), automatic async duration from start/end, questions (multiple-choice / text), real-time WebSocket exam room, auto-close on expiry, teacher grading
+- **Exam lifecycle**: create (scheduled/async/unscheduled), automatic async duration from start/end, subject-tagged questions (multiple-choice / text), real-time WebSocket exam room, auto-close on expiry, teacher grading
 - **Live monitor**: 2-second polling during active exams, static final state view after exam ends, pagination (10/page), column sorting
 - **Statistics**: graded count, average/min/max marks on exam detail
 - **Answer sheet**: teacher review of student answers with correct/wrong highlighting
@@ -77,6 +77,7 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - **Dense tables**: toolbar search/filter, subtle column separators, narrow centered three-dot row actions
 - **Side panels**: quick create/edit workflows without losing list context
 - **Course sessions**: right-panel session creation and paginated roll call panels
+- **Course subjects**: course/study curriculum topics managed on the detail page; every exam question must pick one
 - **Schedule validation**: event, exam, and lesson-session forms use `GET /time` for server-clock-aware past-date warnings before submit
 - **Notebook**: paper-style note cards; create in `SidePanel`; read in reader panel with attachments; three-dot card actions for edit/delete
 - **Note files**: per-note upload/list/download/delete via native `FormData`; school `max_file_bytes` from settings

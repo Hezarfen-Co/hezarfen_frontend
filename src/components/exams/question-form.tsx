@@ -1,6 +1,6 @@
 import { For, Index, Show, createEffect, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
-import type { ExamQuestion, QuestionKind } from "@/api/types";
+import type { ExamQuestion, QuestionKind, Subject } from "@/api/types";
 import { QUESTION_KINDS } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { IconCheck, IconPlus, IconTrash } from "@/components/ui/icons";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/stores/preferences-context";
 
 export type QuestionValues = {
+  subject_id: string;
   text: string;
   kind: QuestionKind;
   points: number;
@@ -20,12 +21,14 @@ export type QuestionValues = {
 
 export function QuestionForm(props: {
   initial?: ExamQuestion;
+  subjects: Subject[];
   onSubmit: (values: QuestionValues) => Promise<void>;
   onCancel: () => void;
 }) {
   const t = useT();
   let textAreaRef: HTMLTextAreaElement | undefined;
   const [text, setText] = createSignal(props.initial?.text ?? "");
+  const [subjectId, setSubjectId] = createSignal(props.initial?.subject ?? props.subjects[0]?.id ?? "");
   const [kind, setKind] = createSignal<QuestionKind>(props.initial?.kind ?? "choice");
   const [points, setPoints] = createSignal(String(props.initial?.points ?? 1));
   const [choices, setChoices] = createSignal<string[]>(props.initial?.choices ?? ["", "", "", ""]);
@@ -36,6 +39,7 @@ export function QuestionForm(props: {
   createEffect(() => {
     const initial = props.initial;
     setText(initial?.text ?? "");
+    setSubjectId(initial?.subject ?? props.subjects[0]?.id ?? "");
     setKind(initial?.kind ?? "choice");
     setPoints(String(initial?.points ?? 1));
     setChoices(initial?.choices ?? ["", "", "", ""]);
@@ -69,12 +73,14 @@ export function QuestionForm(props: {
 
   const validate = (): QuestionValues | string => {
     const body = text().trim();
+    const subject = subjectId().trim();
+    if (!subject) return t("questions.subjectRequired");
     if (!body) return t("questions.textRequired");
     if (body.length > 2000) return t("form.descriptionMax");
     const p = Number(points());
     if (!Number.isInteger(p) || p < 1 || p > 100) return t("questions.pointsRange");
     if (kind() === "text") {
-      return { text: body, kind: "text", points: p, choices: null, correct: null };
+      return { subject_id: subject, text: body, kind: "text", points: p, choices: null, correct: null };
     }
     const cleanChoices = choices().map((choice) => choice.trim()).filter(Boolean);
     if (cleanChoices.length < 2 || cleanChoices.length > 10 || cleanChoices.some((choice) => choice.length > 500)) {
@@ -82,7 +88,7 @@ export function QuestionForm(props: {
     }
     const c = correct();
     if (!Number.isInteger(c) || c < 0 || c >= cleanChoices.length) return t("questions.correctRange");
-    return { text: body, kind: "choice", points: p, choices: cleanChoices, correct: c };
+    return { subject_id: subject, text: body, kind: "choice", points: p, choices: cleanChoices, correct: c };
   };
 
   const submit = async (e: SubmitEvent) => {
@@ -126,6 +132,13 @@ export function QuestionForm(props: {
         <div class="space-y-1.5">
           <Label for="question-kind" class="text-sm font-semibold">{t("questions.kind")}</Label>
           <div class="flex h-[10rem] min-h-[10rem] flex-col justify-between rounded-md border bg-background p-3">
+            <div class="space-y-1.5">
+              <Label for="question-subject">{t("subjects.subject")}</Label>
+              <Select id="question-subject" value={subjectId()} required onChange={(e) => setSubjectId(e.currentTarget.value)}>
+                <option value="">{t("subjects.select")}</option>
+                <For each={props.subjects}>{(subject) => <option value={subject.id}>{subject.name}</option>}</For>
+              </Select>
+            </div>
             <div class="space-y-1.5">
               <Select id="question-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as QuestionKind)}>
                 <For each={QUESTION_KINDS}>
