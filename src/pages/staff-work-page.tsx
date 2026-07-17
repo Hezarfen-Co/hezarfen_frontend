@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableEmpty, DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
 import { DataToolbar } from "@/components/ui/data-toolbar";
+import { EmptyState } from "@/components/ui/empty-state";
+import { createFlash } from "@/lib/flash";
 import { DatePicker } from "@/components/ui/date-picker";
 import { IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
@@ -80,6 +82,7 @@ function StaffWorkContent() {
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
   const [entryPage, setEntryPage] = createSignal(0);
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [editTarget, setEditTarget] = createSignal<WorkEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<WorkEntry | null>(null);
   const [checkInDate, setCheckInDate] = createSignal("");
@@ -186,6 +189,7 @@ function StaffWorkContent() {
       await patchWorkEntryById(entry.id, { check_in, check_out });
       setEditTarget(null);
       await refetchEntries();
+      setFlash(t("common.saved"));
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -203,6 +207,10 @@ function StaffWorkContent() {
         </div>
         <PageHeader accent="amber" eyebrow={t("nav.admin")} title={t("work.staffTitle")} description={t("work.staffSubtitle")} />
       </div>
+
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
 
       <section class="data-shell space-y-4 p-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
@@ -298,7 +306,7 @@ function StaffWorkContent() {
         <Show when={!entries.loading} fallback={<DataTableSkeleton columns={5} rows={4} />}>
           <Show
             when={entryRows().length > 0}
-            fallback={<div class="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">{t("work.empty")}</div>}
+            fallback={<EmptyState title={t("work.empty")} />}
           >
             <div class="space-y-3">
               <DataTableFrame>
@@ -411,6 +419,7 @@ function StaffWorkContent() {
           try {
             await deleteWorkEntryById(entry.id);
             await refetchEntries();
+            setFlash(t("common.deleted"));
           } catch (err) {
             setError(formatApiError(err));
           } finally {

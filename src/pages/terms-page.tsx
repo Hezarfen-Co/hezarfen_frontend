@@ -10,7 +10,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTableEmpty, DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTableFrame, DataTableSkeleton } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
@@ -20,6 +21,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -77,6 +79,7 @@ function TermsContent() {
   const [editing, setEditing] = createSignal<Term | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<Term | null>(null);
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
 
   const resetForm = () => {
@@ -119,8 +122,10 @@ function TermsContent() {
       const current = editing();
       if (current) {
         await patchTermById(current.id, { name: name().trim(), starts_at, ends_at });
+        setFlash(t("common.saved"));
       } else {
         await postTerm({ name: name().trim(), starts_at, ends_at });
+        setFlash(t("common.created"));
       }
       resetForm();
       setPanelOpen(false);
@@ -154,6 +159,9 @@ function TermsContent() {
         />
       </div>
 
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       <Show when={error() && !panelOpen()}>
         <Alert variant="destructive">{error()}</Alert>
       </Show>
@@ -163,7 +171,20 @@ function TermsContent() {
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
           </Show>
-          <Show when={terms().length > 0} fallback={<DataTableEmpty>{t("terms.empty")}</DataTableEmpty>}>
+          <Show
+            when={terms().length > 0}
+            fallback={
+              <EmptyState
+                title={t("terms.empty")}
+                action={
+                  <Button type="button" size="sm" class="rounded-lg" onClick={openCreate}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("terms.create")}
+                  </Button>
+                }
+              />
+            }
+          >
             <DataTableFrame>
               <Table class="data-table min-w-[40rem]">
                 <TableHeader>
@@ -260,6 +281,7 @@ function TermsContent() {
           try {
             await deleteTermById(term.id);
             await refetch();
+            setFlash(t("common.deleted"));
           } catch (err) {
             setError(formatApiError(err));
           } finally {

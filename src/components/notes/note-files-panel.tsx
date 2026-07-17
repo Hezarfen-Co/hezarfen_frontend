@@ -7,8 +7,10 @@ import { postNoteFile } from "@/api/postNoteFile";
 import { formatApiError } from "@/api/client";
 import type { NoteFile } from "@/api/types";
 import { NoteFilePreview } from "@/components/notes/note-file-preview";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { createFlash } from "@/lib/flash";
 import {
   IconDownload,
   IconEye,
@@ -57,6 +59,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   let input: HTMLInputElement | undefined;
   const t = useT();
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
   const [filePage, setFilePage] = createSignal(0);
   const [previewFile, setPreviewFile] = createSignal<NoteFile | null>(null);
@@ -99,6 +102,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
       await postNoteFile(props.noteId, file);
       await refetch();
       if (input) input.value = "";
+      setFlash(t("common.created"));
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -115,6 +119,9 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
 
   return (
     <section class="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm">
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 class="font-display text-sm font-semibold">{t("notes.files")}</h3>
@@ -217,6 +224,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           if (previewFile()?.id === target.id) setPreviewFile(null);
           setDeleteTarget(null);
           await refetch();
+          setFlash(t("common.deleted"));
         }}
       />
     </section>

@@ -1,11 +1,13 @@
-import { createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
 import { patchMe } from "@/api/patchMe";
 import type { ProfileUpdate, User } from "@/api/types";
 import { formatApiError } from "@/api/client";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createFlash } from "@/lib/flash";
 import { useT } from "@/stores/preferences-context";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,6 +46,7 @@ export function ProfileForm(props: { user: User; onSaved: () => void }) {
   const [phone, setPhone] = createSignal(props.user.phone ?? "");
   const [birthDate, setBirthDate] = createSignal(dateInputFromIso(props.user.birth_date));
   const [error, setError] = createSignal("");
+  const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
 
   const validate = (): string | null => {
@@ -82,6 +85,7 @@ export function ProfileForm(props: { user: User; onSaved: () => void }) {
     try {
       await patchMe(body);
       props.onSaved();
+      setFlash(t("common.saved"));
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -91,6 +95,9 @@ export function ProfileForm(props: { user: User; onSaved: () => void }) {
 
   return (
     <form onSubmit={submit} class="space-y-4">
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
       <div class="grid gap-3 sm:grid-cols-2">
         <div class="space-y-1.5">
           <Label for="pf-name">{t("profile.name")}</Label>

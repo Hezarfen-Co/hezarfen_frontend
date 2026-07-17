@@ -77,6 +77,9 @@ export type MessageKey =
   | "common.searchPlaceholder"
   | "common.all"
   | "common.saveAttendance"
+  | "common.created"
+  | "common.deleted"
+  | "common.saved"
   | "theme.light"
   | "theme.dark"
   | "theme.toggle"
@@ -618,6 +621,9 @@ const en: Dict = {
   "common.searchPlaceholder": "Search…",
   "common.all": "All",
   "common.saveAttendance": "Save my attendance",
+  "common.created": "Created.",
+  "common.deleted": "Deleted.",
+  "common.saved": "Saved.",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.toggle": "Toggle theme",
@@ -1171,6 +1177,9 @@ const tr: Dict = {
   "common.searchPlaceholder": "Ara…",
   "common.all": "Tümü",
   "common.saveAttendance": "Yoklamamı kaydet",
+  "common.created": "Oluşturuldu.",
+  "common.deleted": "Silindi.",
+  "common.saved": "Kaydedildi.",
   "theme.light": "Açık",
   "theme.dark": "Koyu",
   "theme.toggle": "Tema",

@@ -22,6 +22,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
 import { UserSearchSelect } from "@/components/users/user-search-select";
+import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -76,11 +77,14 @@ function EventDetailContent() {
     if (!e || !u) return false;
     return e.creator === u.id || hasMinRole(u.role, "manager");
   };
-  const wrap = async (fn: () => Promise<void>) => {
+  const [flash, setFlash] = createFlash();
+
+  const wrap = async (fn: () => Promise<void>, ok?: string) => {
     setError("");
     setPending(true);
     try {
       await fn();
+      if (ok) setFlash(ok);
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -191,6 +195,7 @@ function EventDetailContent() {
                   await patchEventById(id(), body);
                   setEditing(false);
                   await refetchEvent();
+                  setFlash(t("common.saved"));
                 }}
               />
             </SidePanel>
@@ -221,21 +226,21 @@ function EventDetailContent() {
                     type="button"
                     class="w-full rounded-sm sm:w-auto"
                     disabled={pending()}
-                    onClick={() =>
+                    onClick={() => {
+                      const uid = otherUserId().trim();
+                      if (!uid) {
+                        setError(t("events.userIdRequired"));
+                        return;
+                      }
                       void wrap(async () => {
-                        const uid = otherUserId().trim();
-                        if (!uid) {
-                          setError(t("events.userIdRequired"));
-                          return;
-                        }
                         await postEventAttendance(id(), {
                           status: status(),
                           user_id: uid,
                         });
                         setOtherUserId("");
                         if (attendanceOpen()) await refetchAttendance();
-                      })
-                    }
+                      }, t("common.saved"));
+                    }}
                   >
                     {t("events.saveStudentAttendance")}
                   </Button>
@@ -243,6 +248,9 @@ function EventDetailContent() {
               </section>
             </Show>
 
+            <Show when={flash()}>
+              <Alert variant="success">{flash()}</Alert>
+            </Show>
             {error() && (
               <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
@@ -265,7 +273,7 @@ function EventDetailContent() {
                           await wrap(async () => {
                             await deleteEventAttendanceByUserId(id(), userId);
                             await refetchAttendance();
-                          });
+                          }, t("common.deleted"));
                         }}
                       />
                     )}

@@ -25,9 +25,11 @@ import {
 import { PageSpinner } from "@/components/ui/page-spinner";
 import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
+import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
+import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -103,7 +105,7 @@ function DashboardContent() {
   const { locale } = usePreferences();
   const user = () => auth.user()!;
   const role = () => user().role;
-  const now = () => Date.now();
+  const now = createNow();
 
   const [courses] = createResource(
     () => (role() !== "student" ? true : null),
@@ -317,7 +319,7 @@ function DashboardContent() {
           <span class="rounded-md border border-border bg-background px-2 py-1 font-medium text-foreground shadow-sm">
             {t(ROLE_KEY[role()])}
           </span>
-          <span class="mono tabular-nums">{formatDateTime(Date.now(), locale()).split(",")[0]}</span>
+          <span class="mono tabular-nums">{formatDateTime(now(), locale()).split(",")[0]}</span>
         </div>
       </header>
 
@@ -478,12 +480,7 @@ function PortalCard(props: { card: PortalCardDef }) {
 function StatusDot(props: { status: AttentionKind }) {
   return (
     <span
-      class={cn(
-        "mt-0.5 h-2 w-2 shrink-0 rounded-full",
-        props.status === "active" && "bg-success",
-        props.status === "today" && "bg-warning",
-        props.status === "soon" && "bg-muted-foreground",
-      )}
+      class={cn("mt-0.5 h-2 w-2 shrink-0 rounded-full", scheduleStatusDotClass(props.status))}
       aria-hidden="true"
     />
   );
@@ -502,9 +499,7 @@ function StatusLabel(props: {
     <span
       class={cn(
         "inline-flex rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-        props.status === "active" && "border-success/30 bg-success/10 text-success",
-        props.status === "today" && "border-warning/30 bg-warning/10 text-warning",
-        props.status === "soon" && "border-border bg-muted text-muted-foreground",
+        scheduleStatusClass(props.status),
       )}
     >
       {label()}

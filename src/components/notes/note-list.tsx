@@ -1,11 +1,14 @@
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, createSignal, type JSX } from "solid-js";
 import type { Note } from "@/api/types";
 import { NoteCard } from "@/components/notes/note-card";
 import { NoteReaderPanel } from "@/components/notes/note-reader-panel";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export function NoteList(props: {
   notes: Note[];
-  emptyLabel?: string;
+  emptyTitle: string;
+  emptyDescription?: string;
+  emptyAction?: JSX.Element;
   onUpdate: (id: string, values: { title: string; content: string }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
@@ -16,9 +19,11 @@ export function NoteList(props: {
       <Show
         when={props.notes.length > 0}
         fallback={
-          <div class="flex min-h-[12rem] items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/20 px-6 text-center text-sm text-muted-foreground">
-            {props.emptyLabel ?? ""}
-          </div>
+          <EmptyState
+            title={props.emptyTitle}
+            description={props.emptyDescription}
+            action={props.emptyAction}
+          />
         }
       >
         <ul class="grid grid-cols-2 gap-3 xl:grid-cols-3">
