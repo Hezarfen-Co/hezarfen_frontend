@@ -12,10 +12,6 @@ import { ApiError } from "@/api/client";
 import { Suspense, createRenderEffect, createRoot, lazy, type Component } from "solid-js";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { AuthProvider } from "@/stores/auth-context";
-import { PreferencesProvider } from "@/stores/preferences-context";
-
-const RouterDevtools = import.meta.env.DEV ? lazy(() => import("@/router-devtools")) : undefined;
 
 function lazyRoute(loader: () => Promise<{ default: Component }>): Component {
   const Page = lazy(loader);
@@ -54,18 +50,9 @@ const GuidePage = lazyRoute(() => import("@/pages/guide-page"));
 
 function RootComponent() {
   return (
-    <PreferencesProvider>
-      <AuthProvider>
-        <AppShell>
-          <Outlet />
-        </AppShell>
-        {RouterDevtools ? (
-          <Suspense>
-            <RouterDevtools />
-          </Suspense>
-        ) : null}
-      </AuthProvider>
-    </PreferencesProvider>
+    <AppShell>
+      <Outlet />
+    </AppShell>
   );
 }
 
