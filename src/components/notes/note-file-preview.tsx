@@ -1,4 +1,5 @@
 import { Show, createEffect, createSignal, onCleanup } from "solid-js";
+import { formatApiError } from "@/api/client";
 import { getNoteFileBlob } from "@/api/getNoteFileBlob";
 import type { NoteFile } from "@/api/types";
 import { getNoteFileUrl } from "@/api/getNoteFileUrl";
@@ -18,6 +19,7 @@ export function NoteFilePreview(props: { noteId: string; file: NoteFile | null; 
   const t = useT();
   let currentUrl = "";
   const [previewUrl, setPreviewUrl] = createSignal("");
+  const [previewError, setPreviewError] = createSignal("");
   const downloadUrl = () => (props.file ? getNoteFileUrl(props.noteId, props.file.id) : "");
   const type = () => props.file?.content_type ?? "";
 
@@ -25,16 +27,21 @@ export function NoteFilePreview(props: { noteId: string; file: NoteFile | null; 
     if (currentUrl) URL.revokeObjectURL(currentUrl);
     currentUrl = "";
     setPreviewUrl("");
+    setPreviewError("");
 
     const file = props.file;
     if (!file || !canPreview(file)) return;
 
     const controller = new AbortController();
-    void getNoteFileBlob(props.noteId, file.id, controller.signal).then((blob) => {
-      if (controller.signal.aborted) return;
-      currentUrl = URL.createObjectURL(blob);
-      setPreviewUrl(currentUrl);
-    });
+    void getNoteFileBlob(props.noteId, file.id, controller.signal)
+      .then((blob) => {
+        if (controller.signal.aborted) return;
+        currentUrl = URL.createObjectURL(blob);
+        setPreviewUrl(currentUrl);
+      })
+      .catch((err) => {
+        if (!controller.signal.aborted) setPreviewError(formatApiError(err));
+      });
 
     onCleanup(() => {
       controller.abort();
@@ -69,19 +76,21 @@ export function NoteFilePreview(props: { noteId: string; file: NoteFile | null; 
                     when={canPreview(file())}
                     fallback={<p class="mx-auto max-w-md rounded-md border border-dashed border-white/20 bg-white/5 px-4 py-8 text-center text-sm text-white/70">{t("notes.previewUnsupported")}</p>}
                   >
-                    <Show when={type().startsWith("image/") && previewUrl()} fallback={<p class="text-sm text-white/60">{t("common.loading")}</p>}>
-                      <img src={previewUrl()} alt={file().name} class="max-h-full max-w-full object-contain" />
-                    </Show>
-                    <Show when={type().startsWith("video/") && previewUrl()}>
-                      <video src={previewUrl()} controls class="max-h-full max-w-full" />
-                    </Show>
-                    <Show when={type().startsWith("audio/") && previewUrl()}>
-                      <div class="w-full max-w-2xl rounded-lg bg-background p-4 shadow-sm">
-                        <audio src={previewUrl()} controls class="w-full" />
-                      </div>
-                    </Show>
-                    <Show when={canFrame(type()) && previewUrl()}>
-                      <iframe title={file().name} src={previewUrl()} class="h-full w-full rounded-md border border-white/10 bg-background" />
+                    <Show when={!previewError()} fallback={<p class="mx-auto max-w-md rounded-md border border-dashed border-white/20 bg-white/5 px-4 py-8 text-center text-sm text-white/70">{previewError()}</p>}>
+                      <Show when={type().startsWith("image/") && previewUrl()} fallback={<p class="text-sm text-white/60">{t("common.loading")}</p>}>
+                        <img src={previewUrl()} alt={file().name} class="max-h-full max-w-full object-contain" />
+                      </Show>
+                      <Show when={type().startsWith("video/") && previewUrl()}>
+                        <video src={previewUrl()} controls class="max-h-full max-w-full" />
+                      </Show>
+                      <Show when={type().startsWith("audio/") && previewUrl()}>
+                        <div class="w-full max-w-2xl rounded-lg bg-background p-4 shadow-sm">
+                          <audio src={previewUrl()} controls class="w-full" />
+                        </div>
+                      </Show>
+                      <Show when={canFrame(type()) && previewUrl()}>
+                        <iframe title={file().name} src={previewUrl()} class="h-full w-full rounded-md border border-white/10 bg-background" />
+                      </Show>
                     </Show>
                   </Show>
                 </div>

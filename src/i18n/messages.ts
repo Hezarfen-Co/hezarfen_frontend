@@ -184,6 +184,7 @@ export type MessageKey =
   | "notes.noFiles"
   | "notes.fileLimit"
   | "notes.fileTooLarge"
+  | "notes.fileUploadPartial"
   | "notes.previewUnsupported"
   | "notes.unknownFileType"
   | "notes.helpTitle"
@@ -710,6 +711,7 @@ const en: Dict = {
   "notes.noFiles": "No files attached.",
   "notes.fileLimit": "This note already has 10 files.",
   "notes.fileTooLarge": "File is too large. Max {size}.",
+  "notes.fileUploadPartial": "Note saved, but {count} file(s) could not be uploaded.",
   "notes.previewUnsupported": "Preview is not available for this file type. Download the file to open it.",
   "notes.unknownFileType": "Unknown file type",
   "notes.helpTitle": "About notes",
@@ -1248,6 +1250,7 @@ const tr: Dict = {
   "notes.noFiles": "Henüz dosya eklenmemiş.",
   "notes.fileLimit": "Bu notta zaten 10 dosya var.",
   "notes.fileTooLarge": "Dosya çok büyük. En fazla {size}.",
+  "notes.fileUploadPartial": "Not kaydedildi ama {count} dosya yüklenemedi.",
   "notes.previewUnsupported": "Bu dosya türü için önizleme yok. Açmak için dosyayı indirin.",
   "notes.unknownFileType": "Bilinmeyen dosya türü",
   "notes.helpTitle": "Notlar hakkında",
