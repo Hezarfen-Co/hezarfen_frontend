@@ -4,7 +4,7 @@ import { getNoteFileUrl } from "@/api/getNoteFileUrl";
 import { getNoteFiles } from "@/api/getNoteFiles";
 import { getSettings } from "@/api/getSettings";
 import { postNoteFile } from "@/api/postNoteFile";
-import { ApiError, formatApiError } from "@/api/client";
+import { formatApiError } from "@/api/client";
 import type { NoteFile } from "@/api/types";
 import { NoteFilePreview } from "@/components/notes/note-file-preview";
 import { Button } from "@/components/ui/button";
@@ -65,13 +65,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
     () => (props.active ? props.noteId : null),
     async (noteId) => {
       if (!noteId) return [] as NoteFile[];
-      // ponytail: empty on 404 so missing BE file API doesn't kill the reader dialog
-      try {
-        return (await getNoteFiles(noteId, { limit: MAX_NOTE_FILES })).items;
-      } catch (err) {
-        if (err instanceof ApiError && (err.status === 404 || err.status === 501)) return [];
-        throw err;
-      }
+      return (await getNoteFiles(noteId, { limit: MAX_NOTE_FILES })).items;
     },
   );
   const [settings] = createResource(async () => {

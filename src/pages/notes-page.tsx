@@ -86,16 +86,22 @@ function NotesContent() {
           submitLabel={t("common.create")}
           onCancel={() => setCreateOpen(false)}
           onSubmit={async (values) => {
+            setError("");
             const note = await postNote({
               title: values.title,
               content: values.content || undefined,
             });
-            // ponytail: upload after create — file API needs note id
+            let failedUploads = 0;
             for (const file of values.files) {
-              await postNoteFile(note.id, file);
+              try {
+                await postNoteFile(note.id, file);
+              } catch {
+                failedUploads += 1;
+              }
             }
             await refetch();
             setCreateOpen(false);
+            if (failedUploads > 0) setError(t("notes.fileUploadPartial", { count: failedUploads }));
           }}
         />
       </SidePanel>

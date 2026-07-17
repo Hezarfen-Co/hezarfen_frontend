@@ -184,6 +184,7 @@ export type MessageKey =
   | "notes.noFiles"
   | "notes.fileLimit"
   | "notes.fileTooLarge"
+  | "notes.fileUploadPartial"
   | "notes.previewUnsupported"
   | "notes.unknownFileType"
   | "notes.helpTitle"
@@ -210,6 +211,16 @@ export type MessageKey =
   | "events.noAttendees"
   | "events.userId"
   | "events.status"
+  | "events.audience"
+  | "events.audience.school"
+  | "events.audience.role"
+  | "events.audience.course"
+  | "events.audience.registration"
+  | "events.selectCourse"
+  | "events.capacity"
+  | "events.capacityOptional"
+  | "events.audienceCourseRequired"
+  | "events.audienceCapacityInvalid"
   | "events.helpTitle"
   | "events.helpBody"
   | "events.clearStart"
@@ -375,6 +386,7 @@ export type MessageKey =
   | "role.manager"
   | "role.admin"
   | "courses.title"
+  | "courses.listTitle"
   | "courses.subtitle"
   | "courses.create"
   | "courses.empty"
@@ -385,6 +397,9 @@ export type MessageKey =
   | "courses.addExam"
   | "courses.weight"
   | "courses.delete"
+  | "courses.kind"
+  | "courses.kind.course"
+  | "courses.kind.study"
   | "marks.title"
   | "marks.subtitle"
   | "marks.overall"
@@ -533,7 +548,7 @@ const en: Dict = {
   "nav.notes": "Notebook",
   "nav.events": "Events",
   "nav.exams": "Exams",
-  "nav.courses": "Courses",
+  "nav.courses": "Education",
   "nav.marks": "Report card",
   "nav.attendance": "Attendance",
   "nav.work": "Work log",
@@ -553,7 +568,7 @@ const en: Dict = {
   "nav.account": "Account",
   "nav.preferences": "Preferences",
   "nav.group.students": "Students",
-  "nav.group.classes": "Classes",
+  "nav.group.classes": "Education",
   "nav.group.grades": "My space",
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
@@ -635,8 +650,8 @@ const en: Dict = {
   "dashboard.action.noteHint": "Capture something quickly",
   "dashboard.action.event": "Create event",
   "dashboard.action.eventHint": "Schedule a session",
-  "dashboard.action.course": "New course",
-  "dashboard.action.courseHint": "Open a class",
+  "dashboard.action.course": "New education item",
+  "dashboard.action.courseHint": "Open a course or study session",
   "dashboard.action.exam": "Add exam",
   "dashboard.action.examHint": "Under a course",
   "dashboard.action.attend": "Mark attendance",
@@ -646,7 +661,7 @@ const en: Dict = {
   "dashboard.stats.notes": "Notes",
   "dashboard.stats.events": "Events",
   "dashboard.stats.exams": "Exams",
-  "dashboard.stats.courses": "Courses",
+  "dashboard.stats.courses": "Education",
   "dashboard.stats.role": "Your role",
   "dashboard.stats.average": "Average",
   "dashboard.stats.averageHint": "Overall report card",
@@ -666,7 +681,7 @@ const en: Dict = {
   "dashboard.allClear": "All clear",
   "dashboard.roleLinks": "Workspace overview",
   "dashboard.activityGraph": "Activity graph",
-  "dashboard.activityGraphDesc": "Events, exams, and courses at a glance.",
+  "dashboard.activityGraphDesc": "Events, exams, and education at a glance.",
   "dashboard.records": "records",
   "dashboard.myExams": "My exams",
   "dashboard.emptyExamsTitle": "No exams yet",
@@ -687,13 +702,13 @@ const en: Dict = {
   "dashboard.helpBody": "Stuck on a page or looking for the next step? Open the short app guide.",
   "dashboard.continueGuide": "Guide",
   "dashboard.portal.sections": "Sections",
-  "dashboard.portal.coursesDesc": "Browse courses and class materials.",
-  "dashboard.portal.examsDesc": "Upcoming exams, deadlines, and results.",
-  "dashboard.portal.eventsDesc": "Sessions, meetups, and attendance.",
+  "dashboard.portal.coursesDesc": "Browse courses, study sessions, and materials.",
+  "dashboard.portal.examsDesc": "Course exams, deadlines, and results.",
+  "dashboard.portal.eventsDesc": "Events with student attendance records.",
   "dashboard.portal.marksDesc": "Your grades and overall report card.",
   "dashboard.portal.notesDesc": "Private scratchpad for quick ideas.",
   "dashboard.portal.usersDesc": "Manage user accounts and roles.",
-  "dashboard.portal.attendanceDesc": "Mark and review attendance records.",
+  "dashboard.portal.attendanceDesc": "Review student attendance records.",
   "dashboard.portal.workDesc": "Track your work hours and shifts.",
   "dashboard.portal.studentMarksDesc": "View and grade student results.",
   "dashboard.portal.settingsDesc": "System preferences and configuration.",
@@ -710,13 +725,14 @@ const en: Dict = {
   "notes.noFiles": "No files attached.",
   "notes.fileLimit": "This note already has 10 files.",
   "notes.fileTooLarge": "File is too large. Max {size}.",
+  "notes.fileUploadPartial": "Note saved, but {count} file(s) could not be uploaded.",
   "notes.previewUnsupported": "Preview is not available for this file type. Download the file to open it.",
   "notes.unknownFileType": "Unknown file type",
   "notes.helpTitle": "About notes",
   "notes.helpBody":
     "Notes are private to you only. Title max 200 characters, content max 10,000. Delete and update open a confirmation dialog with a short summary before they run.",
   "events.title": "Events",
-  "events.subtitle": "Sessions, meetups, and attendance in one list.",
+  "events.subtitle": "Events and student attendance records in one list.",
   "events.create": "Create event",
   "events.empty": "No events yet.",
   "events.starts": "Starts",
@@ -725,27 +741,37 @@ const en: Dict = {
   "events.markOther": "Mark another person",
   "events.myAttendance": "My attendance",
   "events.myAttendanceHelp": "Choose your event status and save it.",
-  "events.studentAttendance": "Participant attendance",
-  "events.studentAttendanceHelp": "Select a user, choose a status, then save the record.",
+  "events.studentAttendance": "Student attendance",
+  "events.studentAttendanceHelp": "Select a student, choose a status, then save the record.",
   "events.saveStudentAttendance": "Save attendance",
   "events.attendance": "Attendance roster",
   "events.attendanceRecords": "Attendance records",
-  "events.attendanceRecordsHelp": "Saved event attendance, including who recorded each row.",
+  "events.attendanceRecordsHelp": "Saved student attendance for this event, including who recorded each row.",
   "events.noAttendance": "No attendance rows yet.",
-  "events.attendee": "Attendee",
-  "events.selectAttendee": "Search user",
-  "events.noAttendees": "No users found",
-  "events.userId": "User id",
+  "events.attendee": "Student",
+  "events.selectAttendee": "Search student",
+  "events.noAttendees": "No students found",
+  "events.userId": "Student id",
   "events.status": "Status",
+  "events.audience": "Audience",
+  "events.audience.school": "Whole school",
+  "events.audience.role": "Role",
+  "events.audience.course": "Course roster",
+  "events.audience.registration": "Registration list",
+  "events.selectCourse": "Select course",
+  "events.capacity": "Capacity",
+  "events.capacityOptional": "Optional seat cap",
+  "events.audienceCourseRequired": "Select a course for this audience.",
+  "events.audienceCapacityInvalid": "Capacity must be at least 1.",
   "events.helpTitle": "About events",
   "events.helpBody":
-    "Students mark themselves present / absent / late / excused with the big status buttons, then save attendance. Teachers create events and can mark others by user id. Managers can edit any event.",
+    "Teachers and managers record attendance for students only. Managers can edit any event.",
   "events.clearStart": "Will clear start time",
   "events.clearEnd": "Will clear end time",
   "events.upcoming": "Upcoming",
   "events.past": "Past",
   "exams.title": "Exams",
-  "exams.subtitle": "All exams across courses — create them under a course.",
+  "exams.subtitle": "All exams across courses and study sessions — create them under an education item.",
   "exams.create": "Create exam",
   "exams.searchPlaceholder": "Search exams…",
   "exams.selectCourse": "Select course",
@@ -832,7 +858,7 @@ const en: Dict = {
   "attempt.absent": "No-show",
   "exams.helpTitle": "About exams",
   "exams.helpBody":
-    "Exams belong to a course. Teachers add them from the course page with a kind; weighting is defined by the exam kind. Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
+    "Exams belong to an education item. Teachers add them from that detail page with a kind; weighting is defined by the exam kind. Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
   "admin.title": "People & roles",
   "admin.subtitle": "Promote or demote accounts. You can’t change your own role.",
   "admin.username": "Username",
@@ -844,7 +870,7 @@ const en: Dict = {
     "student < teacher < manager < admin. Higher roles inherit lower permissions. Registration always creates a student. Only admins list users and change roles.",
   "admin.noUsers": "No users registered yet.",
   "guide.title": "Product guide",
-  "guide.subtitle": "Campus flow: courses → exams → report card, plus notes and events.",
+  "guide.subtitle": "Campus flow: education → exams → report card, plus notes and events.",
   "guide.step1.title": "1. Home overview",
   "guide.step1.body":
     "Live counts and shortcuts for notes, events, courses, exams, and your report card.",
@@ -853,13 +879,13 @@ const en: Dict = {
     "Private scratchpad. Create, edit, delete — delete/update ask for confirmation with a short summary.",
   "guide.step3.title": "3. Events & attendance",
   "guide.step3.body":
-    "Open an event, pick present/absent/late/excused, save attendance. Teachers can mark others.",
-  "guide.step4.title": "4. Courses",
+    "Teachers and managers open an event, select a student, then save present/absent/late/excused attendance.",
+  "guide.step4.title": "4. Education",
   "guide.step4.body":
-    "Teachers create a course, enroll students, then add exams by kind inside that course.",
+    "Teachers create a course or study session, enroll students, then add exams by kind inside it.",
   "guide.step5.title": "5. Exams",
   "guide.step5.body":
-    "List all exams here. New exams are created from a course page (not from this list).",
+    "List all exams here. New exams are created from an education detail page, not from this list.",
   "guide.step6.title": "6. Report card",
   "guide.step6.body":
     "Your weighted course averages and overall average. Teachers can look up any student.",
@@ -867,9 +893,9 @@ const en: Dict = {
   "guide.rolesBody":
     "Student: notes, events attendance, view courses/exams, own results & report card. Teacher: create courses/events, enroll, add exams, grade. Manager: manage any course/event. Admin: user roles.",
   "guide.tipsTitle": "Tips",
-  "courses.helpTitle": "About courses",
+  "courses.helpTitle": "About education",
   "courses.helpBody":
-    "A course is the classroom container. Teachers enroll students and add exams here; exam kind weights drive averages. Deleting a course removes its exams, results, and enrollments.",
+    "Education items can be courses or study sessions. Teachers enroll students and add exams here; exam kind weights drive averages. Deleting one removes its exams, results, and enrollments.",
   "marks.helpTitle": "About the report card",
   "marks.helpBody":
     "Course average uses the weight defined on each exam kind over graded exams. Overall average is the mean of non-null course averages. Ungraded exams are skipped, not zeroed.",
@@ -906,16 +932,17 @@ const en: Dict = {
   "guide.tip2": "Open the guide from your account menu or the home dashboard when you need a refresher.",
   "guide.tip3": "“?” help panels start closed — open only when you need them.",
   "guide.tip4": "Create exams under a course; read averages on the report card.",
-  "auth.featureModules": "Courses · Exams · Report card",
+  "auth.featureModules": "Education · Exams · Report card",
   "auth.featurePrefs": "TR / EN · light / dark",
   "app.workspace": "@Hezarfen - 2026",
   "role.student": "Student",
   "role.teacher": "Teacher",
   "role.manager": "Manager",
   "role.admin": "ADMIN",
-  "courses.title": "Courses",
-  "courses.subtitle": "Classes, enrollment, and course exams live here.",
-  "courses.create": "New course",
+  "courses.title": "Education",
+  "courses.listTitle": "Courses and study sessions",
+  "courses.subtitle": "Courses, study sessions, enrollment, and exams live here.",
+  "courses.create": "New education item",
   "courses.empty": "No courses yet.",
   "courses.enrolled": "Enrolled",
   "courses.roster": "Roster",
@@ -924,6 +951,9 @@ const en: Dict = {
   "courses.addExam": "Add exam",
   "courses.weight": "Weight",
   "courses.delete": "Delete course",
+  "courses.kind": "Course type",
+  "courses.kind.course": "Course",
+  "courses.kind.study": "Study",
   "marks.title": "Report card",
   "marks.subtitle": "Weighted averages across enrolled courses.",
   "marks.overall": "Overall average",
@@ -1071,7 +1101,7 @@ const tr: Dict = {
   "nav.notes": "Defter",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
-  "nav.courses": "Dersler",
+  "nav.courses": "Eğitim",
   "nav.marks": "Karnem",
   "nav.attendance": "Yoklama",
   "nav.work": "Mesai",
@@ -1091,7 +1121,7 @@ const tr: Dict = {
   "nav.account": "Hesap",
   "nav.preferences": "Tercihler",
   "nav.group.students": "Öğrenciler",
-  "nav.group.classes": "Sınıflar",
+  "nav.group.classes": "Eğitim",
   "nav.group.grades": "Benim Alanım",
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
@@ -1173,8 +1203,8 @@ const tr: Dict = {
   "dashboard.action.noteHint": "Hızlıca bir şey kaydet",
   "dashboard.action.event": "Etkinlik oluştur",
   "dashboard.action.eventHint": "Oturum planla",
-  "dashboard.action.course": "Yeni ders",
-  "dashboard.action.courseHint": "Sınıf aç",
+  "dashboard.action.course": "Yeni eğitim kaydı",
+  "dashboard.action.courseHint": "Ders veya etüt aç",
   "dashboard.action.exam": "Sınav ekle",
   "dashboard.action.examHint": "Dersin içinden",
   "dashboard.action.attend": "Yoklama işaretle",
@@ -1184,7 +1214,7 @@ const tr: Dict = {
   "dashboard.stats.notes": "Notlar",
   "dashboard.stats.events": "Etkinlikler",
   "dashboard.stats.exams": "Sınavlar",
-  "dashboard.stats.courses": "Dersler",
+  "dashboard.stats.courses": "Eğitim",
   "dashboard.stats.role": "Rolün",
   "dashboard.stats.average": "Ortalama",
   "dashboard.stats.averageHint": "Genel karne",
@@ -1204,7 +1234,7 @@ const tr: Dict = {
   "dashboard.allClear": "Temiz",
   "dashboard.roleLinks": "Çalışma alanı özeti",
   "dashboard.activityGraph": "Aktivite grafiği",
-  "dashboard.activityGraphDesc": "Etkinlik, sınav ve ders yoğunluğu tek bakışta.",
+  "dashboard.activityGraphDesc": "Etkinlik, sınav ve eğitim yoğunluğu tek bakışta.",
   "dashboard.records": "kayıt",
   "dashboard.myExams": "Sınavlarım",
   "dashboard.emptyExamsTitle": "Henüz sınav yok",
@@ -1225,13 +1255,13 @@ const tr: Dict = {
   "dashboard.helpBody": "Bir sayfada takıldın veya sonraki adımı mı arıyorsun? Kısa uygulama rehberini aç.",
   "dashboard.continueGuide": "Rehber",
   "dashboard.portal.sections": "Bölümler",
-  "dashboard.portal.coursesDesc": "Dersleri ve ders materyallerini görüntüle.",
-  "dashboard.portal.examsDesc": "Sınavlar, son teslim tarihleri ve sonuçlar.",
-  "dashboard.portal.eventsDesc": "Oturumlar, etkinlikler ve yoklama.",
+  "dashboard.portal.coursesDesc": "Dersleri, etütleri ve materyalleri görüntüle.",
+  "dashboard.portal.examsDesc": "Ders/etüt sınavları, tarihler ve sonuçlar.",
+  "dashboard.portal.eventsDesc": "Öğrenci yoklamalı etkinlikler.",
   "dashboard.portal.marksDesc": "Notların ve genel karnen.",
   "dashboard.portal.notesDesc": "Hızlı fikirler için özel not defteri.",
   "dashboard.portal.usersDesc": "Kullanıcı hesaplarını ve rollerini yönet.",
-  "dashboard.portal.attendanceDesc": "Yoklama kayıtlarını işaretle ve incele.",
+  "dashboard.portal.attendanceDesc": "Öğrenci yoklama kayıtlarını incele.",
   "dashboard.portal.workDesc": "Çalışma saatlerini ve mesainizi takip edin.",
   "dashboard.portal.studentMarksDesc": "Öğrenci sonuçlarını görüntüle ve notlandır.",
   "dashboard.portal.settingsDesc": "Sistem tercihleri ve yapılandırma.",
@@ -1248,13 +1278,14 @@ const tr: Dict = {
   "notes.noFiles": "Henüz dosya eklenmemiş.",
   "notes.fileLimit": "Bu notta zaten 10 dosya var.",
   "notes.fileTooLarge": "Dosya çok büyük. En fazla {size}.",
+  "notes.fileUploadPartial": "Not kaydedildi ama {count} dosya yüklenemedi.",
   "notes.previewUnsupported": "Bu dosya türü için önizleme yok. Açmak için dosyayı indirin.",
   "notes.unknownFileType": "Bilinmeyen dosya türü",
   "notes.helpTitle": "Notlar hakkında",
   "notes.helpBody":
     "Notlar yalnızca sana aittir. Başlık en fazla 200, içerik 10.000 karakter. Silme ve güncelleme özetli onay penceresi ister.",
   "events.title": "Etkinlikler",
-  "events.subtitle": "Oturumlar, buluşmalar ve yoklama tek listede.",
+  "events.subtitle": "Etkinlikler ve öğrenci yoklama kayıtları tek listede.",
   "events.create": "Etkinlik oluştur",
   "events.empty": "Henüz etkinlik yok.",
   "events.starts": "Başlangıç",
@@ -1263,27 +1294,37 @@ const tr: Dict = {
   "events.markOther": "Başkasını işaretle",
   "events.myAttendance": "Katılım durumum",
   "events.myAttendanceHelp": "Etkinlik durumunu seç ve kaydet.",
-  "events.studentAttendance": "Katılımcı yoklaması",
-  "events.studentAttendanceHelp": "Kullanıcıyı seç, durumunu belirle, kaydı kaydet.",
+  "events.studentAttendance": "Öğrenci yoklaması",
+  "events.studentAttendanceHelp": "Öğrenciyi seç, durumunu belirle, kaydı kaydet.",
   "events.saveStudentAttendance": "Yoklamayı kaydet",
   "events.attendance": "Yoklama listesi",
   "events.attendanceRecords": "Yoklama kayıtları",
-  "events.attendanceRecordsHelp": "Kaydedilmiş etkinlik yoklaması ve kaydı kimin girdiği.",
+  "events.attendanceRecordsHelp": "Bu etkinlik için kaydedilmiş öğrenci yoklaması ve kaydı kimin girdiği.",
   "events.noAttendance": "Henüz yoklama kaydı yok.",
-  "events.attendee": "Katılımcı",
-  "events.selectAttendee": "Kullanıcı ara",
-  "events.noAttendees": "Kullanıcı bulunamadı",
-  "events.userId": "Kullanıcı id",
+  "events.attendee": "Öğrenci",
+  "events.selectAttendee": "Öğrenci ara",
+  "events.noAttendees": "Öğrenci bulunamadı",
+  "events.userId": "Öğrenci id",
   "events.status": "Durum",
+  "events.audience": "Hedef kitle",
+  "events.audience.school": "Tüm okul",
+  "events.audience.role": "Rol",
+  "events.audience.course": "Ders listesi",
+  "events.audience.registration": "Kayıt listesi",
+  "events.selectCourse": "Ders seç",
+  "events.capacity": "Kapasite",
+  "events.capacityOptional": "İsteğe bağlı kontenjan",
+  "events.audienceCourseRequired": "Bu hedef kitle için ders seç.",
+  "events.audienceCapacityInvalid": "Kapasite en az 1 olmalı.",
   "events.helpTitle": "Etkinlikler hakkında",
   "events.helpBody":
-    "Öğrenciler büyük durum butonlarıyla var/yok/geç/mazeretli seçip yoklamayı kaydeder. Öğretmenler etkinlik oluşturur ve başkasını işaretleyebilir. Yöneticiler her etkinliği düzenleyebilir.",
+    "Öğretmenler ve yöneticiler yalnız öğrenciler için yoklama kaydeder. Yöneticiler her etkinliği düzenleyebilir.",
   "events.clearStart": "Başlangıç saati temizlenecek",
   "events.clearEnd": "Bitiş saati temizlenecek",
   "events.upcoming": "Yaklaşan",
   "events.past": "Geçmiş",
   "exams.title": "Sınavlar",
-  "exams.subtitle": "Tüm derslerin sınavları — yeni sınav ders içinden eklenir.",
+  "exams.subtitle": "Tüm ders ve etüt sınavları — yeni sınav eğitim kaydı içinden eklenir.",
   "exams.create": "Sınav oluştur",
   "exams.searchPlaceholder": "Sınav ara…",
   "exams.selectCourse": "Ders seç",
@@ -1370,7 +1411,7 @@ const tr: Dict = {
   "attempt.absent": "Katılmadı",
   "exams.helpTitle": "Sınavlar hakkında",
   "exams.helpBody":
-    "Sınavlar bir derse aittir. Öğretmenler ders sayfasından tür seçerek ekler; ağırlık sınav türünde tanımlıdır. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",
+    "Sınavlar bir eğitim kaydına aittir. Öğretmenler detay sayfasından tür seçerek ekler; ağırlık sınav türünde tanımlıdır. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",
   "admin.title": "Kişiler ve roller",
   "admin.subtitle": "Hesapları yükselt / düşür. Kendi rolünü değiştiremezsin.",
   "admin.username": "Kullanıcı adı",
@@ -1382,7 +1423,7 @@ const tr: Dict = {
     "öğrenci < öğretmen < yönetici < admin. Üst roller alt yetkileri miras alır. Kayıt her zaman öğrenci oluşturur. Rolleri yalnız admin değiştirir.",
   "admin.noUsers": "Henüz kayıtlı kullanıcı yok.",
   "guide.title": "Ürün rehberi",
-  "guide.subtitle": "Kampüs akışı: ders → sınav → karne; artı notlar ve etkinlikler.",
+  "guide.subtitle": "Kampüs akışı: eğitim → sınav → karne; artı notlar ve etkinlikler.",
   "guide.step1.title": "1. Ana sayfa",
   "guide.step1.body":
     "Not, etkinlik, ders, sınav ve karne için canlı sayılar ve kısayollar.",
@@ -1391,13 +1432,13 @@ const tr: Dict = {
     "Özel defter. Oluştur, düzenle, sil — silme/güncelleme özetli onay ister.",
   "guide.step3.title": "3. Etkinlik ve yoklama",
   "guide.step3.body":
-    "Etkinliği aç, var/yok/geç/mazeretli seç, yoklamayı kaydet. Öğretmen başkasını işaretleyebilir.",
-  "guide.step4.title": "4. Dersler",
+    "Öğretmenler ve yöneticiler etkinliği açar, öğrenciyi seçer ve var/yok/geç/mazeretli yoklama kaydeder.",
+  "guide.step4.title": "4. Eğitim",
   "guide.step4.body":
-    "Öğretmen ders oluşturur, öğrenci kaydeder, dersin içine türe göre sınav ekler.",
+    "Öğretmen ders veya etüt oluşturur, öğrenci kaydeder, içine türe göre sınav ekler.",
   "guide.step5.title": "5. Sınavlar",
   "guide.step5.body":
-    "Tüm sınavlar burada listelenir. Yeni sınav bu listeden değil, ders sayfasından eklenir.",
+    "Tüm sınavlar burada listelenir. Yeni sınav bu listeden değil, eğitim detayından eklenir.",
   "guide.step6.title": "6. Karnem",
   "guide.step6.body":
     "Ders ortalamaları ve genel ortalama. Öğretmen herhangi bir öğrencinin karnesine bakabilir.",
@@ -1405,9 +1446,9 @@ const tr: Dict = {
   "guide.rolesBody":
     "Öğrenci: notlar, yoklama, ders/sınav görüntüleme, kendi sonucu ve karne. Öğretmen: ders/etkinlik, kayıt, sınav, not. Yönetici: her ders/etkinlik. Admin: roller.",
   "guide.tipsTitle": "İpuçları",
-  "courses.helpTitle": "Dersler hakkında",
+  "courses.helpTitle": "Eğitim hakkında",
   "courses.helpBody":
-    "Ders, sınıf kabıdır. Öğretmen öğrenci kaydeder ve buradan sınav ekler; ortalamalarda sınav türü ağırlığı kullanılır. Dersi silmek sınavları, sonuçları ve kayıtları da siler.",
+    "Eğitim kayıtları ders veya etüt olabilir. Öğretmen öğrenci kaydeder ve buradan sınav ekler; ortalamalarda sınav türü ağırlığı kullanılır. Bir kaydı silmek sınavları, sonuçları ve kayıtları da siler.",
   "marks.helpTitle": "Karne hakkında",
   "marks.helpBody":
     "Ders ortalaması, notlanmış sınavlarda sınav türünde tanımlı ağırlıkla hesaplanır. Genel ortalama, dolu ders ortalamalarının aritmetik ortalamasıdır. Notlanmamış sınavlar sıfır sayılmaz, atlanır.",
@@ -1444,16 +1485,17 @@ const tr: Dict = {
   "guide.tip2": "İhtiyacın olduğunda rehberi hesap menüsünden veya ana sayfadaki kısayoldan aç.",
   "guide.tip3": "“?” panelleri kapalı gelir — ihtiyaç olunca aç.",
   "guide.tip4": "Sınavı dersin içinde oluştur; ortalamayı Karnem’de oku.",
-  "auth.featureModules": "Dersler · Sınavlar · Karne",
+  "auth.featureModules": "Eğitim · Sınavlar · Karne",
   "auth.featurePrefs": "TR / EN · açık / koyu",
   "app.workspace": "@Hezarfen - 2026",
   "role.student": "Öğrenci",
   "role.teacher": "Öğretmen",
   "role.manager": "Yönetici",
   "role.admin": "ADMIN",
-  "courses.title": "Dersler",
-  "courses.subtitle": "Sınıflar, kayıt ve ders sınavları burada.",
-  "courses.create": "Yeni ders",
+  "courses.title": "Eğitim",
+  "courses.listTitle": "Dersler ve etütler",
+  "courses.subtitle": "Dersler, etütler, kayıtlar ve sınavlar burada.",
+  "courses.create": "Yeni eğitim kaydı",
   "courses.empty": "Henüz ders yok.",
   "courses.enrolled": "Kayıtlı",
   "courses.roster": "Sınıf listesi",
@@ -1462,6 +1504,9 @@ const tr: Dict = {
   "courses.addExam": "Sınav ekle",
   "courses.weight": "Ağırlık",
   "courses.delete": "Dersi sil",
+  "courses.kind": "Ders türü",
+  "courses.kind.course": "Ders",
+  "courses.kind.study": "Etüt",
   "marks.title": "Karnem",
   "marks.subtitle": "Kayıtlı derslerdeki ağırlıklı ortalamalar.",
   "marks.overall": "Genel ortalama",

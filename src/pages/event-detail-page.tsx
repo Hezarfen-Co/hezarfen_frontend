@@ -7,7 +7,8 @@ import { getEventById } from "@/api/getEventById";
 import { patchEventById } from "@/api/patchEventById";
 import { postEventAttendance } from "@/api/postEventAttendance";
 import { formatApiError } from "@/api/client";
-import type { AttendanceStatus } from "@/api/types";
+import type { AttendanceStatus, EventAudience } from "@/api/types";
+import type { MessageKey } from "@/i18n/messages";
 import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
 import { AttendanceTable } from "@/components/events/attendance-table";
 import { EventForm } from "@/components/events/event-form";
@@ -25,6 +26,13 @@ import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+function audienceLabel(audience: EventAudience, t: ReturnType<typeof useT>): string {
+  if (audience.kind === "role") return `${t("events.audience.role")}: ${t(`role.${audience.role}` as MessageKey)}`;
+  if (audience.kind === "course") return t("events.audience.course");
+  if (audience.kind === "registration") return t("events.audience.registration");
+  return t("events.audience.school");
+}
 
 export default function EventDetailPage() {
   return (
@@ -144,6 +152,7 @@ function EventDetailContent() {
               <p class="mt-3 max-w-2xl whitespace-pre-wrap text-sm text-muted-foreground">
                 {ev().description || "—"}
               </p>
+              <p class="mt-2 text-xs font-medium text-muted-foreground">{audienceLabel(ev().audience, t)}</p>
               </PageHeader>
             </div>
 
@@ -175,6 +184,7 @@ function EventDetailContent() {
                   const body: Record<string, unknown> = {
                     title: values.title,
                     description: values.description,
+                    audience: values.audience,
                   };
                   if (values.starts_at !== undefined) body.starts_at = values.starts_at;
                   if (values.ends_at !== undefined) body.ends_at = values.ends_at;
@@ -185,77 +195,53 @@ function EventDetailContent() {
               />
             </SidePanel>
 
-            <div class="grid gap-4 lg:grid-cols-2">
+            <Show when={isTeacherPlus()}>
               <section class="data-shell p-4">
                 <div>
-                  <h2 class="font-display text-lg font-semibold">{t("events.myAttendance")}</h2>
-                  <p class="mt-1 text-sm text-muted-foreground">{t("events.myAttendanceHelp")}</p>
+                  <h2 class="font-display text-lg font-semibold">{t("events.studentAttendance")}</h2>
+                  <p class="mt-1 text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
                 </div>
-                <div class="mt-4 space-y-3">
-                  <AttendanceStatusPicker value={status()} onChange={setStatus} label={t("events.status")} />
+                <div class="mt-4 grid gap-3">
+                  <UserSearchSelect
+                    id="other-user"
+                    label={t("events.attendee")}
+                    value={otherUserId()}
+                    placeholder={t("events.selectAttendee")}
+                    emptyMessage={t("events.noAttendees")}
+                    role="student"
+                    onChange={setOtherUserId}
+                  />
+                  <AttendanceStatusPicker
+                    id="other-status"
+                    value={status()}
+                    onChange={setStatus}
+                    label={t("events.status")}
+                  />
                   <Button
                     type="button"
                     class="w-full rounded-sm sm:w-auto"
                     disabled={pending()}
                     onClick={() =>
                       void wrap(async () => {
-                        await postEventAttendance(id(), { status: status() });
+                        const uid = otherUserId().trim();
+                        if (!uid) {
+                          setError(t("events.userIdRequired"));
+                          return;
+                        }
+                        await postEventAttendance(id(), {
+                          status: status(),
+                          user_id: uid,
+                        });
+                        setOtherUserId("");
                         if (attendanceOpen()) await refetchAttendance();
                       })
                     }
                   >
-                    {t("common.saveAttendance")}
+                    {t("events.saveStudentAttendance")}
                   </Button>
                 </div>
               </section>
-
-              <Show when={isTeacherPlus()}>
-                <section class="data-shell p-4">
-                  <div>
-                    <h2 class="font-display text-lg font-semibold">{t("events.studentAttendance")}</h2>
-                    <p class="mt-1 text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
-                  </div>
-                  <div class="mt-4 grid gap-3">
-                    <UserSearchSelect
-                      id="other-user"
-                      label={t("events.attendee")}
-                      value={otherUserId()}
-                      placeholder={t("events.selectAttendee")}
-                      emptyMessage={t("events.noAttendees")}
-                      onChange={setOtherUserId}
-                    />
-                    <AttendanceStatusPicker
-                      id="other-status"
-                      value={status()}
-                      onChange={setStatus}
-                      label={t("events.status")}
-                    />
-                    <Button
-                      type="button"
-                      class="w-full rounded-sm sm:w-auto"
-                      disabled={pending()}
-                      onClick={() =>
-                        void wrap(async () => {
-                          const uid = otherUserId().trim();
-                          if (!uid) {
-                            setError(t("events.userIdRequired"));
-                            return;
-                          }
-                          await postEventAttendance(id(), {
-                            status: status(),
-                            user_id: uid,
-                          });
-                          setOtherUserId("");
-                          if (attendanceOpen()) await refetchAttendance();
-                        })
-                      }
-                    >
-                      {t("events.saveStudentAttendance")}
-                    </Button>
-                  </div>
-                </section>
-              </Show>
-            </div>
+            </Show>
 
             {error() && (
               <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>

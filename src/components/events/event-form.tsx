@@ -1,14 +1,20 @@
-import { createResource, createSignal, Show } from "solid-js";
+import { createResource, createSignal, For, Show } from "solid-js";
 import { formatApiError } from "@/api/client";
+import { getCourses } from "@/api/getCourses";
 import { getTime } from "@/api/getTime";
-import type { Event } from "@/api/types";
+import type { Event, EventAudience, Role } from "@/api/types";
+import type { MessageKey } from "@/i18n/messages";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/stores/preferences-context";
+
+const AUDIENCE_KINDS = ["school", "role", "course", "registration"] as const;
+const AUDIENCE_ROLES: Role[] = ["student", "teacher", "manager", "admin"];
 
 function dateInputFromMs(ms: number | null | undefined): string {
   if (ms == null) return "";
@@ -44,6 +50,7 @@ function dateTimeInputToMs(date: string, time: string): number | null {
 export type EventFormValues = {
   title: string;
   description: string;
+  audience: EventAudience;
   starts_at: number | null | undefined;
   ends_at: number | null | undefined;
 };
@@ -58,6 +65,12 @@ export function EventForm(props: {
   const isEdit = !!props.initial?.id;
   const [title, setTitle] = createSignal(props.initial?.title ?? "");
   const [description, setDescription] = createSignal(props.initial?.description ?? "");
+  const initialAudience = () => props.initial?.audience ?? { kind: "school" as const };
+  const audience = initialAudience();
+  const [audienceKind, setAudienceKind] = createSignal<EventAudience["kind"]>(audience.kind);
+  const [audienceRole, setAudienceRole] = createSignal<Role>(audience.kind === "role" ? audience.role : "student");
+  const [audienceCourse, setAudienceCourse] = createSignal(audience.kind === "course" ? audience.course : "");
+  const [capacity, setCapacity] = createSignal(audience.kind === "registration" && audience.capacity != null ? String(audience.capacity) : "");
   const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
   const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
@@ -69,6 +82,7 @@ export function EventForm(props: {
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<EventFormValues | null>(null);
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
+  const [courses] = createResource(async () => (await getCourses().catch(() => ({ items: [] }))).items);
 
   const resolveTime = (date: string, time: string, touched: boolean): number | null | undefined => {
     if (isEdit && !touched) return undefined;
@@ -83,6 +97,8 @@ export function EventForm(props: {
     if (!value) return t("form.titleRequired");
     if (value.length > 200) return t("form.titleMax");
     if (description().length > 2000) return t("form.descriptionMax");
+    if (audienceKind() === "course" && !audienceCourse()) return t("events.audienceCourseRequired");
+    if (audienceKind() === "registration" && capacity().trim() && Number(capacity()) < 1) return t("events.audienceCapacityInvalid");
     const s = starts === undefined ? props.initial?.starts_at ?? null : starts;
     const e = ends === undefined ? props.initial?.ends_at ?? null : ends;
     if (startsTouched() && (startsDate().trim() || startsTime().trim()) && starts == null) return t("form.timeOrder");
@@ -90,6 +106,16 @@ export function EventForm(props: {
     if (s != null && e != null && e < s) return t("form.timeOrder");
     if ((!isEdit || startsTouched() || endsTouched()) && ((s != null && s < (serverTime()?.now ?? Date.now())) || (e != null && e < (serverTime()?.now ?? Date.now())))) return t("form.timePast");
     return null;
+  };
+
+  const audienceValue = (): EventAudience => {
+    if (audienceKind() === "role") return { kind: "role", role: audienceRole() };
+    if (audienceKind() === "course") return { kind: "course", course: audienceCourse() };
+    if (audienceKind() === "registration") {
+      const value = capacity().trim();
+      return { kind: "registration", capacity: value ? Number(value) : null };
+    }
+    return { kind: "school" };
   };
 
   const save = async (values: EventFormValues) => {
@@ -100,6 +126,10 @@ export function EventForm(props: {
       if (!isEdit) {
         setTitle("");
         setDescription("");
+        setAudienceKind("school");
+        setAudienceRole("student");
+        setAudienceCourse("");
+        setCapacity("");
         setStartsDate("");
         setStartsTime("");
         setEndsDate("");
@@ -126,6 +156,7 @@ export function EventForm(props: {
     const values = {
       title: title().trim(),
       description: description(),
+      audience: audienceValue(),
       starts_at,
       ends_at,
     };
@@ -162,6 +193,43 @@ export function EventForm(props: {
           onInput={(e) => setDescription(e.currentTarget.value)}
         />
       </div>
+      <div class="space-y-1.5">
+        <Label for="event-audience">{t("events.audience")}</Label>
+        <Select id="event-audience" value={audienceKind()} onChange={(e) => setAudienceKind(e.currentTarget.value as EventAudience["kind"])}>
+          <For each={AUDIENCE_KINDS}>{(kind) => <option value={kind}>{t(`events.audience.${kind}` as MessageKey)}</option>}</For>
+        </Select>
+      </div>
+      <Show when={audienceKind() === "role"}>
+        <div class="space-y-1.5">
+          <Label for="event-audience-role">{t("admin.role")}</Label>
+          <Select id="event-audience-role" value={audienceRole()} onChange={(e) => setAudienceRole(e.currentTarget.value as Role)}>
+            <For each={AUDIENCE_ROLES}>{(role) => <option value={role}>{t(`role.${role}` as MessageKey)}</option>}</For>
+          </Select>
+        </div>
+      </Show>
+      <Show when={audienceKind() === "course"}>
+        <div class="space-y-1.5">
+          <Label for="event-audience-course">{t("nav.courses")}</Label>
+          <Select id="event-audience-course" value={audienceCourse()} onChange={(e) => setAudienceCourse(e.currentTarget.value)}>
+            <option value="">{t("events.selectCourse")}</option>
+            <For each={courses() ?? []}>{(course) => <option value={course.id}>{course.title}</option>}</For>
+          </Select>
+        </div>
+      </Show>
+      <Show when={audienceKind() === "registration"}>
+        <div class="space-y-1.5">
+          <Label for="event-audience-capacity">{t("events.capacity")}</Label>
+          <Input
+            id="event-audience-capacity"
+            type="number"
+            min="1"
+            inputMode="numeric"
+            placeholder={t("events.capacityOptional")}
+            value={capacity()}
+            onInput={(e) => setCapacity(e.currentTarget.value)}
+          />
+        </div>
+      </Show>
       <div class="grid gap-3">
         <div class="space-y-1.5">
           <Label for="event-starts">{t("events.starts")}</Label>
