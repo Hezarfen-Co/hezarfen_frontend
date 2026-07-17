@@ -209,7 +209,18 @@ export async function blobClient(path: string, signal?: AbortSignal): Promise<Bl
   });
 
   if (!res.ok) {
-    throw new ApiError(res.status, res.statusText || "Request failed");
+    const text = await res.text();
+    let message = res.statusText || "Request failed";
+    if (text) {
+      try {
+        const data = JSON.parse(text) as { error?: unknown; message?: unknown };
+        if (typeof data.error === "string") message = data.error;
+        else if (typeof data.message === "string") message = data.message;
+      } catch {
+        message = text;
+      }
+    }
+    throw new ApiError(res.status, message);
   }
 
   return res.blob();

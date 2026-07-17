@@ -2,7 +2,7 @@ import { For, Show, Suspense, createMemo, createResource, createSignal } from "s
 import { getEvents } from "@/api/getEvents";
 import { postEvent } from "@/api/postEvent";
 import { formatApiError } from "@/api/client";
-import type { Event } from "@/api/types";
+import type { Event, EventAudience } from "@/api/types";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/events/event-card";
@@ -111,8 +111,10 @@ function EventsContent() {
                 description?: string;
                 starts_at?: number;
                 ends_at?: number;
+                audience?: EventAudience;
               } = { title: values.title };
               if (values.description) body.description = values.description;
+              body.audience = values.audience;
               if (values.starts_at != null) body.starts_at = values.starts_at;
               if (values.ends_at != null) body.ends_at = values.ends_at;
               await postEvent(body);

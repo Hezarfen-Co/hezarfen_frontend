@@ -1,10 +1,11 @@
 import { client } from "./client";
-import type { Event } from "./types";
+import type { Event, EventAudience } from "./types";
 
 /** Omitted time fields keep their value; explicit null clears them. */
 export type PatchEventBody = {
   title?: string | null;
   description?: string | null;
+  audience?: EventAudience | null;
   starts_at?: number | null;
   ends_at?: number | null;
 };

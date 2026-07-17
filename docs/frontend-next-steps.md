@@ -4,6 +4,9 @@ This document records the completed frontend backlog after backend alignment,
 role/request audits, dense table work, side panels, notebook UI, schedule
 validation, and list filtering cleanup.
 
+Active backend-refresh work is tracked in
+`docs/backend-contract-refresh-plan.md`.
+
 ## Completed State
 
 - Backend alignment is complete for settings, terms, course sessions, attendance reports, work logs, exam attempts, and grade bands.
