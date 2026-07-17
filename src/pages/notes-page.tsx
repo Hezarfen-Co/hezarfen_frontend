@@ -80,7 +80,7 @@ function NotesContent() {
         />
       </div>
 
-      <SidePanel open={createOpen()} onOpenChange={setCreateOpen} title={t("notes.new")} description={t("notes.subtitle")}>
+      <SidePanel open={createOpen()} onOpenChange={setCreateOpen} title={t("notes.new")}>
         <NoteForm
           enableFiles
           submitLabel={t("common.create")}
