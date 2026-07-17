@@ -204,9 +204,6 @@ function CoursesContent() {
           }}
           filters={
             <div class="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" class="mono h-9 rounded-sm px-3 uppercase tracking-[0.08em]">
-                {isStudent() ? t("courses.enrolled") : t("common.all")}
-              </Badge>
               <Select
                 class="h-9 w-full rounded-sm sm:w-44"
                 value={termFilter()}
@@ -232,7 +229,7 @@ function CoursesContent() {
             <div class="space-y-4">
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 class="font-display text-lg font-semibold">{t("courses.title")}</h2>
+                  <h2 class="font-display text-lg font-semibold">{t("courses.listTitle")}</h2>
                   <p class="mt-1 text-sm text-muted-foreground">
                     {pageItems().length} / {total()} {t("nav.courses")}
                   </p>

@@ -386,6 +386,7 @@ export type MessageKey =
   | "role.manager"
   | "role.admin"
   | "courses.title"
+  | "courses.listTitle"
   | "courses.subtitle"
   | "courses.create"
   | "courses.empty"
@@ -939,6 +940,7 @@ const en: Dict = {
   "role.manager": "Manager",
   "role.admin": "ADMIN",
   "courses.title": "Education",
+  "courses.listTitle": "Courses and study sessions",
   "courses.subtitle": "Courses, study sessions, enrollment, and exams live here.",
   "courses.create": "New education item",
   "courses.empty": "No courses yet.",
@@ -1491,6 +1493,7 @@ const tr: Dict = {
   "role.manager": "Yönetici",
   "role.admin": "ADMIN",
   "courses.title": "Eğitim",
+  "courses.listTitle": "Dersler ve etütler",
   "courses.subtitle": "Dersler, etütler, kayıtlar ve sınavlar burada.",
   "courses.create": "Yeni eğitim kaydı",
   "courses.empty": "Henüz ders yok.",
