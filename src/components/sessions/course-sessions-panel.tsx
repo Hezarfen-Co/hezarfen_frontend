@@ -13,8 +13,9 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -173,7 +174,22 @@ export function CourseSessionsPanel(props: {
         <Show when={sessions.error}>
           <ErrorAlert message={formatApiError(sessions.error)} onRetry={() => void refetch()} />
         </Show>
-        <Show when={(sessions() ?? []).length > 0} fallback={<div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("sessions.empty")}</div>}>
+        <Show
+          when={(sessions() ?? []).length > 0}
+          fallback={
+            <EmptyState
+              title={t("sessions.empty")}
+              action={
+                props.canManage ? (
+                  <Button type="button" size="sm" class="rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("sessions.add")}
+                  </Button>
+                ) : undefined
+              }
+            />
+          }
+        >
           <div class="space-y-3">
             <For each={sessions() ?? []}>
               {(session) => (
@@ -348,7 +364,7 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
       {error() && <Alert variant="destructive">{error()}</Alert>}
       <Show
         when={props.roster.length > 0}
-        fallback={<p class="rounded-xl border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("sessions.emptyRoster")}</p>}
+        fallback={<EmptyState title={t("sessions.emptyRoster")} />}
       >
         <For each={visibleRoster()}>
           {(row) => {

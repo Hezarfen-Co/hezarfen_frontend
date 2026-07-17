@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableFrame } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -415,9 +416,17 @@ function CourseDetailContent() {
                 <Show
                   when={(exams() ?? []).length > 0}
                   fallback={
-                    <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                      {t("exams.empty")}
-                    </div>
+                    <EmptyState
+                      title={t("exams.empty")}
+                      action={
+                        canManage() ? (
+                          <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
+                            <IconPlus class="h-4 w-4" />
+                            {t("courses.addExam")}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   }
                 >
                   <ul class="space-y-2">
@@ -498,9 +507,17 @@ function CourseDetailContent() {
                   <Show
                     when={(roster() ?? []).length > 0}
                     fallback={
-                      <div class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                        {t("exams.emptyRoster")}
-                      </div>
+                      <EmptyState
+                        title={t("exams.emptyRoster")}
+                        action={
+                          canManage() ? (
+                            <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
+                              <IconPlus class="h-4 w-4" />
+                              {t("courses.enroll")}
+                            </Button>
+                          ) : undefined
+                        }
+                      />
                     }
                   >
                     <DataTableFrame>
