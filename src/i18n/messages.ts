@@ -211,6 +211,16 @@ export type MessageKey =
   | "events.noAttendees"
   | "events.userId"
   | "events.status"
+  | "events.audience"
+  | "events.audience.school"
+  | "events.audience.role"
+  | "events.audience.course"
+  | "events.audience.registration"
+  | "events.selectCourse"
+  | "events.capacity"
+  | "events.capacityOptional"
+  | "events.audienceCourseRequired"
+  | "events.audienceCapacityInvalid"
   | "events.helpTitle"
   | "events.helpBody"
   | "events.clearStart"
@@ -742,6 +752,16 @@ const en: Dict = {
   "events.noAttendees": "No users found",
   "events.userId": "User id",
   "events.status": "Status",
+  "events.audience": "Audience",
+  "events.audience.school": "Whole school",
+  "events.audience.role": "Role",
+  "events.audience.course": "Course roster",
+  "events.audience.registration": "Registration list",
+  "events.selectCourse": "Select course",
+  "events.capacity": "Capacity",
+  "events.capacityOptional": "Optional seat cap",
+  "events.audienceCourseRequired": "Select a course for this audience.",
+  "events.audienceCapacityInvalid": "Capacity must be at least 1.",
   "events.helpTitle": "About events",
   "events.helpBody":
     "Students mark themselves present / absent / late / excused with the big status buttons, then save attendance. Teachers create events and can mark others by user id. Managers can edit any event.",
@@ -1284,6 +1304,16 @@ const tr: Dict = {
   "events.noAttendees": "Kullanıcı bulunamadı",
   "events.userId": "Kullanıcı id",
   "events.status": "Durum",
+  "events.audience": "Hedef kitle",
+  "events.audience.school": "Tüm okul",
+  "events.audience.role": "Rol",
+  "events.audience.course": "Ders listesi",
+  "events.audience.registration": "Kayıt listesi",
+  "events.selectCourse": "Ders seç",
+  "events.capacity": "Kapasite",
+  "events.capacityOptional": "İsteğe bağlı kontenjan",
+  "events.audienceCourseRequired": "Bu hedef kitle için ders seç.",
+  "events.audienceCapacityInvalid": "Kapasite en az 1 olmalı.",
   "events.helpTitle": "Etkinlikler hakkında",
   "events.helpBody":
     "Öğrenciler büyük durum butonlarıyla var/yok/geç/mazeretli seçip yoklamayı kaydeder. Öğretmenler etkinlik oluşturur ve başkasını işaretleyebilir. Yöneticiler her etkinliği düzenleyebilir.",

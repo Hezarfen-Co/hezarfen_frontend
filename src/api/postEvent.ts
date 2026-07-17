@@ -1,9 +1,10 @@
 import { client } from "./client";
-import type { Event } from "./types";
+import type { Event, EventAudience } from "./types";
 
 export type PostEventBody = {
   title: string;
   description?: string | null;
+  audience?: EventAudience | null;
   starts_at?: number | null;
   ends_at?: number | null;
 };

@@ -7,7 +7,8 @@ import { getEventById } from "@/api/getEventById";
 import { patchEventById } from "@/api/patchEventById";
 import { postEventAttendance } from "@/api/postEventAttendance";
 import { formatApiError } from "@/api/client";
-import type { AttendanceStatus } from "@/api/types";
+import type { AttendanceStatus, EventAudience } from "@/api/types";
+import type { MessageKey } from "@/i18n/messages";
 import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
 import { AttendanceTable } from "@/components/events/attendance-table";
 import { EventForm } from "@/components/events/event-form";
@@ -25,6 +26,13 @@ import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+function audienceLabel(audience: EventAudience, t: ReturnType<typeof useT>): string {
+  if (audience.kind === "role") return `${t("events.audience.role")}: ${t(`role.${audience.role}` as MessageKey)}`;
+  if (audience.kind === "course") return t("events.audience.course");
+  if (audience.kind === "registration") return t("events.audience.registration");
+  return t("events.audience.school");
+}
 
 export default function EventDetailPage() {
   return (
@@ -144,6 +152,7 @@ function EventDetailContent() {
               <p class="mt-3 max-w-2xl whitespace-pre-wrap text-sm text-muted-foreground">
                 {ev().description || "—"}
               </p>
+              <p class="mt-2 text-xs font-medium text-muted-foreground">{audienceLabel(ev().audience, t)}</p>
               </PageHeader>
             </div>
 
@@ -175,6 +184,7 @@ function EventDetailContent() {
                   const body: Record<string, unknown> = {
                     title: values.title,
                     description: values.description,
+                    audience: values.audience,
                   };
                   if (values.starts_at !== undefined) body.starts_at = values.starts_at;
                   if (values.ends_at !== undefined) body.ends_at = values.ends_at;

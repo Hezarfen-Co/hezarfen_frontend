@@ -52,11 +52,18 @@ export type NoteFile = {
   size: number;
 };
 
+export type EventAudience =
+  | { kind: "school" }
+  | { kind: "role"; role: Role }
+  | { kind: "course"; course: string }
+  | { kind: "registration"; capacity?: number | null };
+
 export type Event = {
   id: string;
   creator: string;
   title: string;
   description: string;
+  audience: EventAudience;
   starts_at: number | null;
   ends_at: number | null;
 };
