@@ -90,7 +90,7 @@ export type EventRegistration = {
 
 export type Course = {
   id: string;
-  creator: string;
+  creator: PersonRef;
   title: string;
   description: string;
   kind: CourseKind;
