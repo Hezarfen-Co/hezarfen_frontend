@@ -84,7 +84,7 @@ function ExamDetailContent() {
   const [sheetUserId, setSheetUserId] = createSignal<string | null>(null);
   const [gradeOpen, setGradeOpen] = createSignal(false);
   const [openSections, setOpenSections] = createSignal({
-    schedule: true,
+    schedule: false,
     ownResult: false,
     answerSheet: false,
     statistics: false,
@@ -272,57 +272,44 @@ function ExamDetailContent() {
                 description={ex().description || "—"}
                 actions={
                   <div class="detail-action-group">
-                  <Link to="/exams">
-                    <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
-                      <IconChevronLeft class="h-4 w-4" />
-                      {t("common.back")}
-                    </Button>
-                  </Link>
-                  <Show when={isStudent() && !isDraft() && !isFinished() && !isUpcoming() && isSittable()}>
-                    <Link to="/exam-room/$id" params={{ id: id() }}>
-                      <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
-                        <IconExam class="h-4 w-4" />
-                        {t("attempt.openRoom")}
+                    <Link to="/exams">
+                      <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
+                        <IconChevronLeft class="h-4 w-4" />
+                        {t("common.back")}
                       </Button>
                     </Link>
-                  </Show>
-                  <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
-                    <Link to="/exams/$id/live" params={{ id: id() }}>
-                      <Button variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none">
-                        <IconEye class="h-4 w-4" />
-                        {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
-                      </Button>
-                    </Link>
-                  </Show>
-                  <Show when={canManage()}>
-                    <div class="detail-action-divider">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        class="flex-1 rounded-sm sm:flex-none"
-                        onClick={() => setEditing(true)}
-                      >
-                        <IconEdit class="h-4 w-4" />
-                        {t("common.edit")}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        class="flex-1 rounded-sm sm:flex-none"
-                        disabled={pending()}
-                        onClick={() => setDeleteOpen(true)}
-                      >
-                        <IconTrash class="h-4 w-4" />
-                        {t("common.delete")}
-                      </Button>
-                    </div>
-                  </Show>
-                </div>
+                    <Show when={isStudent() && !isDraft() && !isFinished() && !isUpcoming() && isSittable()}>
+                      <Link to="/exam-room/$id" params={{ id: id() }}>
+                        <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
+                          <IconExam class="h-4 w-4" />
+                          {t("attempt.openRoom")}
+                        </Button>
+                      </Link>
+                    </Show>
+                    <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
+                      <Link to="/exams/$id/live" params={{ id: id() }}>
+                        <Button variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none">
+                          <IconEye class="h-4 w-4" />
+                          {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
+                        </Button>
+                      </Link>
+                    </Show>
+                    <Show when={canManage()}>
+                      <div class="detail-action-divider">
+                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setEditing(true)}>
+                          <IconEdit class="h-4 w-4" />
+                          {t("common.edit")}
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
+                          <IconTrash class="h-4 w-4" />
+                          {t("common.delete")}
+                        </Button>
+                      </div>
+                    </Show>
+                  </div>
                 }
-              >
-              <div class="flex flex-wrap items-center gap-2 pt-1">
+              />
+              <div class="flex flex-wrap items-center gap-2">
                 <Badge
                   variant="outline"
                   class={cn(
@@ -367,7 +354,6 @@ function ExamDetailContent() {
                   <Badge variant="secondary" class="rounded-sm">{t("exams.draft")}</Badge>
                 </Show>
               </div>
-              </PageHeader>
             </div>
 
             <ConfirmDialog

@@ -59,6 +59,7 @@ function EventDetailContent() {
   const [otherUserId, setOtherUserId] = createSignal("");
   const [editing, setEditing] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
+  const [studentAttendanceOpen, setStudentAttendanceOpen] = createSignal(false);
   const [attendanceOpen, setAttendanceOpen] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -116,48 +117,35 @@ function EventDetailContent() {
                 accent="sky"
                 eyebrow={t("events.title")}
                 title={ev().title}
-                description={`${formatDateTime(ev().starts_at, locale())} → ${formatDateTime(ev().ends_at, locale())}`}
+                description={`${formatDateTime(ev().starts_at, locale())} - ${formatDateTime(ev().ends_at, locale())}${ev().description ? ` - ${ev().description}` : ""}`}
                 actions={
                   <div class="detail-action-group">
-                  <Link to="/events">
-                    <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
-                      <IconChevronLeft class="h-4 w-4" />
-                      {t("common.back")}
-                    </Button>
-                  </Link>
-                  <Show when={canManage()}>
-                    <div class="detail-action-divider">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        class="flex-1 rounded-sm sm:flex-none"
-                        onClick={() => setEditing(true)}
-                      >
-                        <IconEdit class="h-4 w-4" />
-                        {t("common.edit")}
+                    <Link to="/events">
+                      <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
+                        <IconChevronLeft class="h-4 w-4" />
+                        {t("common.back")}
                       </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        class="flex-1 rounded-sm sm:flex-none"
-                        disabled={pending()}
-                        onClick={() => setDeleteOpen(true)}
-                      >
-                        <IconTrash class="h-4 w-4" />
-                        {t("common.delete")}
-                      </Button>
-                    </div>
-                  </Show>
-                </div>
+                    </Link>
+                    <Show when={canManage()}>
+                      <div class="detail-action-divider">
+                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setEditing(true)}>
+                          <IconEdit class="h-4 w-4" />
+                          {t("common.edit")}
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
+                          <IconTrash class="h-4 w-4" />
+                          {t("common.delete")}
+                        </Button>
+                      </div>
+                    </Show>
+                  </div>
                 }
-              >
-              <p class="mt-3 max-w-2xl whitespace-pre-wrap text-sm text-muted-foreground">
-                {ev().description || "—"}
-              </p>
-              <p class="mt-2 text-xs font-medium text-muted-foreground">{audienceLabel(ev().audience, t)}</p>
-              </PageHeader>
+              />
+              <div class="flex flex-wrap gap-2">
+                <span class="inline-flex items-center rounded-sm border border-border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                  {audienceLabel(ev().audience, t)}
+                </span>
+              </div>
             </div>
 
             <ConfirmDialog
@@ -201,12 +189,13 @@ function EventDetailContent() {
             </SidePanel>
 
             <Show when={isTeacherPlus()}>
-              <section class="data-shell p-4">
-                <div>
-                  <h2 class="font-display text-lg font-semibold">{t("events.studentAttendance")}</h2>
-                  <p class="mt-1 text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
-                </div>
-                <div class="mt-4 grid gap-3">
+              <SectionDisclosure
+                open={studentAttendanceOpen()}
+                onToggle={() => setStudentAttendanceOpen((open) => !open)}
+                title={t("events.studentAttendance")}
+                description={t("events.studentAttendanceHelp")}
+              >
+                <div class="grid gap-3">
                   <UserSearchSelect
                     id="other-user"
                     label={t("events.attendee")}
@@ -245,7 +234,7 @@ function EventDetailContent() {
                     {t("events.saveStudentAttendance")}
                   </Button>
                 </div>
-              </section>
+              </SectionDisclosure>
             </Show>
 
             <Show when={flash()}>
