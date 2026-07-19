@@ -15,7 +15,6 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
 import { IconEdit, IconEye, IconPlus } from "@/components/ui/icons";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -244,53 +243,37 @@ function ExamsContent() {
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
-          <Show
-            when={rows().length > 0}
-            fallback={
-              <EmptyState
-                title={t("exams.empty")}
-                action={
-                  canCreate() ? (
-                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("exams.create")}
-                    </Button>
-                  ) : undefined
-                }
-              />
-            }
-          >
-            <DataTable
-              columns={columns()}
-              data={rows()}
-              tableClass="table-fixed min-w-[64rem]"
-              filterPlaceholder={t("exams.searchPlaceholder")}
-              searchPredicate={searchExam}
-              enablePagination
-              pageSize={EXAM_PAGE_SIZE}
-              filters={
-                <>
-                  <Select class="h-9 w-full rounded-sm sm:w-40" value={statusFilter()} onChange={(event) => setStatusFilter(event.currentTarget.value as ExamStatus | "all")}>
+          <DataTable
+            columns={columns()}
+            data={rows()}
+            tableClass="table-fixed min-w-[64rem]"
+            filterPlaceholder={t("exams.searchPlaceholder")}
+            searchPredicate={searchExam}
+            enablePagination
+            pageSize={EXAM_PAGE_SIZE}
+            empty={t("exams.empty")}
+            filters={
+              <>
+                <Select class="h-9 w-full rounded-sm sm:w-40" value={statusFilter()} onChange={(event) => setStatusFilter(event.currentTarget.value as ExamStatus | "all")}>
+                  <option value="all">{t("common.all")}</option>
+                  <option value="draft">{t("exams.draft")}</option>
+                  <option value="upcoming">{t("exams.upcoming")}</option>
+                  <option value="active">{t("exams.active")}</option>
+                  <option value="finished">{t("exams.finished")}</option>
+                  <option value="unscheduled">{t("exams.unscheduled")}</option>
+                </Select>
+                <Show when={showMoreFilters()}>
+                  <Select class="h-9 w-full rounded-sm sm:w-52" value={courseFilter()} onChange={(event) => setCourseFilter(event.currentTarget.value)}>
                     <option value="all">{t("common.all")}</option>
-                    <option value="draft">{t("exams.draft")}</option>
-                    <option value="upcoming">{t("exams.upcoming")}</option>
-                    <option value="active">{t("exams.active")}</option>
-                    <option value="finished">{t("exams.finished")}</option>
-                    <option value="unscheduled">{t("exams.unscheduled")}</option>
+                    <For each={visibleCourses()}>{(course) => <option value={course.id}>{course.title}</option>}</For>
                   </Select>
-                  <Show when={showMoreFilters()}>
-                    <Select class="h-9 w-full rounded-sm sm:w-52" value={courseFilter()} onChange={(event) => setCourseFilter(event.currentTarget.value)}>
-                      <option value="all">{t("common.all")}</option>
-                      <For each={visibleCourses()}>{(course) => <option value={course.id}>{course.title}</option>}</For>
-                    </Select>
-                  </Show>
-                  <Button type="button" variant="outline" size="sm" class="h-9 rounded-sm" onClick={() => setShowMoreFilters((value) => !value)}>
-                    {showMoreFilters() ? t("common.lessFilters") : t("common.moreFilters")}
-                  </Button>
-                </>
-              }
-            />
-          </Show>
+                </Show>
+                <Button type="button" variant="outline" size="sm" class="h-9 rounded-sm" onClick={() => setShowMoreFilters((value) => !value)}>
+                  {showMoreFilters() ? t("common.lessFilters") : t("common.moreFilters")}
+                </Button>
+              </>
+            }
+          />
         </Suspense>
       </section>
 

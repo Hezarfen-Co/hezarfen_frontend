@@ -14,7 +14,6 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
 import { IconEye, IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -232,53 +231,37 @@ function CoursesContent() {
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
-          <Show
-            when={rows().length > 0}
-            fallback={
-              <EmptyState
-                title={t("courses.empty", { item: pageLabel() })}
-                action={
-                  canCreate() ? (
-                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowForm(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("common.createItem", { item: pageLabel() })}
-                    </Button>
-                  ) : undefined
-                }
-              />
-            }
-          >
-            <div class="space-y-4">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 class="font-display text-lg font-semibold">{t("courses.listTitle", { item: pageLabel() })}</h2>
-                  <p class="mt-1 text-sm text-muted-foreground">
-                    {t("common.countItem", { count: rows().length, item: pageLabel() })}
-                  </p>
-                </div>
+          <div class="space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 class="font-display text-lg font-semibold">{t("courses.listTitle", { item: pageLabel() })}</h2>
+                <p class="mt-1 text-sm text-muted-foreground">
+                  {t("common.countItem", { count: rows().length, item: pageLabel() })}
+                </p>
               </div>
-              <DataTable
-                columns={columns()}
-                data={rows()}
-                tableClass="table-fixed min-w-[44rem]"
-                searchPredicate={searchCourse}
-                enablePagination
-                pageSize={COURSE_PAGE_SIZE}
-                filters={
-                  <Select
-                    class="h-9 w-full rounded-sm sm:w-44"
-                    value={termFilter()}
-                    aria-label={t("terms.term")}
-                    onChange={(event) => setTermFilter(event.currentTarget.value)}
-                  >
-                    <option value="all">{t("common.all")}</option>
-                    <option value="unassigned">{t("terms.unassigned")}</option>
-                    <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
-                  </Select>
-                }
-              />
             </div>
-          </Show>
+            <DataTable
+              columns={columns()}
+              data={rows()}
+              tableClass="table-fixed min-w-[44rem]"
+              searchPredicate={searchCourse}
+              enablePagination
+              pageSize={COURSE_PAGE_SIZE}
+              empty={t("courses.empty", { item: pageLabel() })}
+              filters={
+                <Select
+                  class="h-9 w-full rounded-sm sm:w-44"
+                  value={termFilter()}
+                  aria-label={t("terms.term")}
+                  onChange={(event) => setTermFilter(event.currentTarget.value)}
+                >
+                  <option value="all">{t("common.all")}</option>
+                  <option value="unassigned">{t("terms.unassigned")}</option>
+                  <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+                </Select>
+              }
+            />
+          </div>
         </Suspense>
       </section>
     </div>

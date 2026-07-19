@@ -109,6 +109,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     },
   });
   const hiddenLocked = (columnId: string) => columnId === "actions" || columnId === "update";
+  const actionColumnClass = (columnId: string) => hiddenLocked(columnId) ? "w-20 min-w-20 max-w-20 px-1 text-center" : undefined;
   const hideableColumns = () => table.getAllColumns().filter((column) => column.getCanHide() && !hiddenLocked(column.id));
   const columnLabel = (column: Column<TData, unknown>) => {
     const header = column.columnDef.header;
@@ -193,7 +194,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                 <TableRow>
                   <For each={headerGroup.headers}>
                     {(header) => (
-                      <TableHead colSpan={header.colSpan} class={header.column.columnDef.meta?.headerClass}>
+                        <TableHead colSpan={header.colSpan} class={cn(actionColumnClass(header.column.id), header.column.columnDef.meta?.headerClass)}>
                         <Show when={!header.isPlaceholder}>{renderHeader(header)}</Show>
                       </TableHead>
                     )}
@@ -218,7 +219,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                   <TableRow data-state={row.getIsSelected() ? "selected" : undefined}>
                     <For each={row.getVisibleCells()}>
                       {(cell) => (
-                        <TableCell class={cell.column.columnDef.meta?.cellClass}>
+                        <TableCell class={cn(actionColumnClass(cell.column.id), cell.column.columnDef.meta?.cellClass)}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       )}
