@@ -90,13 +90,12 @@ export type EventRegistration = {
 
 export type Course = {
   id: string;
-  creator: string;
+  creator: PersonRef;
   title: string;
   description: string;
   kind: CourseKind;
-  /** Academic term id from API (`CourseResponse.term`). */
-  term?: string | null;
-  capacity?: number | null;
+  term: string | null;
+  capacity: number | null;
 };
 
 export type Term = {
@@ -138,17 +137,13 @@ export type Exam = {
   title: string;
   description: string;
   kind: ExamKind | string;
-  weight?: number | null;
-  kind_weight?: number | null;
-  type_weight?: number | null;
-  exam_type_weight?: number | null;
   mode: ExamMode | string | null;
   starts_at: number | null;
   ends_at: number | null;
   duration_ms: number | null;
-  max_attempts?: number | null;
-  allow_rejoin?: boolean | null;
-  draft?: boolean | null;
+  max_attempts: number;
+  allow_rejoin: boolean;
+  draft: boolean;
 };
 
 export type ImageMeta = {
@@ -178,16 +173,18 @@ export type ExamQuestion = {
 };
 
 export type ExamAttempt = {
-  id?: string;
-  exam?: string;
-  user?: PersonRef;
+  id: string;
+  exam: string;
+  user: PersonRef;
   status: AttemptStatus;
-  attempt?: number;
-  attempts_used?: number;
-  max_attempts?: number;
+  attempt: number;
+  attempts_used: number;
+  max_attempts: number;
+  started_at: number;
+  finished_at: number | null;
   deadline: number | null;
   remaining_ms: number | null;
-  left_at?: number | null;
+  left_at: number | null;
   mark: number | null;
   answered: number;
   question_count: number;
@@ -200,9 +197,8 @@ export type AttemptAnswer = {
   updated_at?: number;
 };
 
-export type AttemptQuestion = {
+export type AttemptQuestionResponse = {
   id: string;
-  exam: string;
   subject: string;
   text: string;
   kind: QuestionKind;
@@ -212,6 +208,8 @@ export type AttemptQuestion = {
   choice_images?: (ImageMeta | null)[] | null;
   answer: AttemptAnswer | null;
 };
+
+export type AttemptQuestion = AttemptQuestionResponse & { exam: string };
 
 export type PomodoroSession = {
   id: string;
@@ -240,10 +238,7 @@ export type MarkEntry = {
   exam: string;
   title: string;
   kind: string;
-  weight?: number | null;
-  kind_weight?: number | null;
-  type_weight?: number | null;
-  exam_type_weight?: number | null;
+  weight: number;
   mark: number;
   grade?: string | null;
   graded_by: string;
@@ -294,44 +289,40 @@ export type MarksReport = {
 };
 
 export type ExamStatistics = {
+  exam: string;
   graded: number;
   average: number | null;
   min: number | null;
   max: number | null;
 };
 
-export type GradedAnswer = {
-  question_id: string;
-  text: string;
-  kind: QuestionKind;
-  points: number;
-  choices: string[] | null;
-  correct: number | null;
+export type StudentAnswer = {
+  question: string;
   selected: number | null;
-  text_answer: string | null;
+  text: string | null;
+  updated_at: number;
   is_correct: boolean | null;
-  auto_score: { earned: number; possible: number };
 };
 
 export type StudentAnswerSheet = {
+  exam: string;
   user: PersonRef;
-  answers: GradedAnswer[];
+  answers: StudentAnswer[];
   auto_score: { earned: number; possible: number };
 };
 
 export type LiveRosterEntry = {
   user: PersonRef;
   status: AttemptStatus | "not_started" | "absent";
-  attempt?: number | null;
-  attempts_used?: number | null;
-  max_attempts?: number | null;
+  attempt: number | null;
+  attempts_used: number;
   deadline: number | null;
   remaining_ms: number | null;
-  left_at?: number | null;
+  left_at: number | null;
   mark: number | null;
   answered: number;
-  started_at?: number | null;
-  finished_at?: number | null;
+  started_at: number | null;
+  finished_at: number | null;
   last_activity: number | null;
 };
 
@@ -341,13 +332,13 @@ export type LiveMonitor = {
   question_count: number;
   students: LiveRosterEntry[];
   counts: {
-    enrolled?: number;
+    enrolled: number;
     not_started: number;
-    absent?: number;
+    absent: number;
     in_progress: number;
     submitted: number;
     expired: number;
-    graded?: number;
+    graded: number;
   };
 };
 

@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
 import { getMyCourses } from "@/api/getMyCourses";
 import { getTerms } from "@/api/getTerms";
-import { getUserSearch } from "@/api/getUserSearch";
 import { postCourse } from "@/api/postCourse";
 import { formatApiError } from "@/api/client";
 import type { Course, CourseKind } from "@/api/types";
@@ -22,6 +21,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { createFlash } from "@/lib/flash";
+import { personLabel } from "@/lib/person";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
@@ -55,21 +55,12 @@ function CoursesContent() {
   const isStudent = () => auth.user()?.role === "student";
 
   const [terms] = createResource(async () => (await getTerms()).items);
-  const [users] = createResource(
-    () => (hasMinRole(auth.user()?.role, "manager") ? true : null),
-    async (enabled) => (enabled ? (await getUserSearch("")).items : []),
-  );
 
   const termName = (id: string | null | undefined) => terms()?.find((term) => term.id === id)?.name ?? t("terms.unassigned");
   const courseKindLabel = (value: CourseKind | undefined) =>
     value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
   const pageKind = (): CourseKind => location().pathname.startsWith("/studies") ? "study" : location().pathname.startsWith("/clubs") ? "club" : "course";
   const pageLabel = () => courseKindLabel(pageKind());
-  const creatorName = (creatorId: string) => {
-    if (creatorId === auth.user()?.id) return auth.user()?.username ?? creatorId;
-    return users()?.find((user) => user.id === creatorId)?.username ?? creatorId;
-  };
-
   const filterCourses = (items: Course[]) => {
     const selectedTerm = termFilter();
     return items.filter((course) => {
@@ -79,7 +70,7 @@ function CoursesContent() {
     });
   };
   const searchCourse = (course: Course, query: string) =>
-    [course.title, course.description, course.creator, creatorName(course.creator), termName(course.term), courseKindLabel(course.kind)]
+    [course.title, course.description, personLabel(course.creator), course.creator.username, termName(course.term), courseKindLabel(course.kind)]
       .join(" ")
       .toLocaleLowerCase()
       .includes(query.toLocaleLowerCase());
@@ -117,10 +108,10 @@ function CoursesContent() {
     },
     {
       id: "creator",
-      accessorFn: (course) => creatorName(course.creator),
+      accessorFn: (course) => personLabel(course.creator),
       header: t("common.creator"),
       meta: { cellClass: "truncate text-muted-foreground" },
-      cell: (cell) => creatorName(cell.row.original.creator),
+      cell: (cell) => personLabel(cell.row.original.creator),
     },
     {
       id: "actions",

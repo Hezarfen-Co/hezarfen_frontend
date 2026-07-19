@@ -84,8 +84,8 @@ function isLowRemaining(entry: LiveRosterEntry): boolean {
   return entry.status === "in_progress" && remaining <= 5 * 60 * 1000;
 }
 
-function attemptLabel(entry: LiveRosterEntry): string {
-  if (entry.attempts_used != null && entry.max_attempts != null) return `${entry.attempts_used} / ${entry.max_attempts}`;
+function attemptLabel(entry: LiveRosterEntry, maxAttempts: number | null): string {
+  if (entry.attempts_used != null && maxAttempts != null) return `${entry.attempts_used} / ${maxAttempts}`;
   if (entry.attempt != null) return String(entry.attempt);
   if (entry.attempts_used != null) return String(entry.attempts_used);
   return "—";
@@ -246,7 +246,7 @@ function LiveMonitorContent() {
                 accessorFn: (entry) => entry.attempts_used ?? entry.attempt ?? 0,
                 header: t("attempt.attempt"),
                 meta: { headerClass: "text-center", cellClass: "text-center tabular-nums" },
-                cell: (cell) => attemptLabel(cell.row.original),
+                cell: (cell) => attemptLabel(cell.row.original, m.exam.max_attempts),
               },
               {
                 id: "progress",

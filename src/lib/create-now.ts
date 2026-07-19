@@ -1,7 +1,7 @@
 import { createSignal, onCleanup } from "solid-js";
 import { getTime } from "@/api/getTime";
 
-export function createNow(intervalMs = 1000) {
+export function createNow(intervalMs = 30000) {
   let offset = 0;
   const serverNow = () => Date.now() + offset;
   const [now, setNow] = createSignal(serverNow());

@@ -89,17 +89,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
         setAttempt((prev) =>
           prev
             ? { ...prev, status: msg.status as any, deadline: msg.deadline, remaining_ms: msg.remaining_ms, answered: msg.answered, question_count: msg.question_count, now: msg.now }
-            : {
-                id: undefined,
-                exam: props.exam.id,
-                status: msg.status as any,
-                deadline: msg.deadline,
-                remaining_ms: msg.remaining_ms,
-                mark: null,
-                answered: msg.answered,
-                question_count: msg.question_count,
-                now: msg.now,
-              },
+            : prev,
         );
         setRemainingMs(msg.remaining_ms);
         break;

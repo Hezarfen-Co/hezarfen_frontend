@@ -72,7 +72,7 @@ function CourseDetailContent() {
     const c = course();
     const u = auth.user();
     if (!c || !u) return false;
-    return c.creator === u.id || hasMinRole(u.role, "manager");
+    return c.creator.id === u.id || hasMinRole(u.role, "manager");
   };
   const [roster, { refetch: refetchRoster }] = createResource(
     () => (hasCourseManagementRights() ? id() : null),
