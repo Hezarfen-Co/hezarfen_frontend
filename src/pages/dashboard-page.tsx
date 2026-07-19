@@ -401,8 +401,8 @@ function DashboardContent() {
           </div>
         </section>
 
-        <div class="grid gap-5 lg:grid-cols-2">
-          <section class="space-y-2.5" aria-labelledby="dash-attention">
+        <div class="grid items-stretch gap-5 lg:grid-cols-2">
+          <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
                 {t("dashboard.attention")}
@@ -416,7 +416,7 @@ function DashboardContent() {
               when={attention().length > 0}
               fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
-              <ul class="divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
                 <For each={attention()}>
                   {(item) => (
                     <li>
@@ -452,7 +452,7 @@ function DashboardContent() {
             </Show>
           </section>
 
-          <section class="space-y-2.5" aria-labelledby="dash-upcoming">
+          <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-upcoming">
             <h2 id="dash-upcoming" class="text-sm font-semibold tracking-tight text-foreground">
               {t("dashboard.upcoming")}
             </h2>
@@ -460,7 +460,7 @@ function DashboardContent() {
               when={upcoming().length > 0}
               fallback={<DashEmpty>{t("dashboard.upcomingEmpty")}</DashEmpty>}
             >
-              <ul class="divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
                 <For each={upcoming()}>
                   {(item) => (
                     <li>
@@ -498,7 +498,7 @@ function DashboardContent() {
 
 function DashEmpty(props: { children: string }) {
   return (
-    <div class="rounded-xl border border-dashed border-border bg-card/80 px-4 py-8 text-center text-sm text-muted-foreground shadow-sm">
+    <div class="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-dashed border-border bg-card/80 px-4 py-8 text-center text-sm text-muted-foreground shadow-sm">
       {props.children}
     </div>
   );

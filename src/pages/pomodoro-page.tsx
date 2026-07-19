@@ -99,7 +99,7 @@ function PomodoroContent() {
         <div class="detail-metric-card">
           <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("attempt.status")}</p>
           <div class="mt-2 flex flex-wrap items-center gap-2">
-            <Badge variant={running() ? "default" : "secondary"} class="rounded-sm">
+            <Badge variant={running() ? "default" : "secondary"} class="rounded-md px-3 py-1 text-sm">
               {running() ? t("pomodoro.running") : t("pomodoro.idle")}
             </Badge>
           </div>
