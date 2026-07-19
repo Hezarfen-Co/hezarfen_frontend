@@ -46,7 +46,7 @@ function AdminUsersContent() {
     }
   };
 
-  const onPreferencesChange = async (userId: string, body: { theme?: UserTheme | null; language?: UserLanguage | null }) => {
+  const onPreferencesChange = async (userId: string, body: { theme?: UserTheme | ""; language?: UserLanguage | "" }) => {
     setError("");
     try {
       await patchUserPreferences(userId, body);

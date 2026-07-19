@@ -75,7 +75,7 @@ export function UserTable(props: {
   users: User[];
   currentUserId: string;
   onRoleChange: (userId: string, role: Role) => Promise<void>;
-  onPreferencesChange?: (userId: string, body: { theme?: UserTheme | null; language?: UserLanguage | null }) => Promise<void>;
+  onPreferencesChange?: (userId: string, body: { theme?: UserTheme | ""; language?: UserLanguage | "" }) => Promise<void>;
 }) {
   const t = useT();
   const searchUser = (user: User, query: string) =>

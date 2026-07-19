@@ -17,6 +17,7 @@ import { IconChevronLeft } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { createNow } from "@/lib/create-now";
+import { attemptLabel } from "@/lib/exam-labels";
 import { formatDateTime } from "@/lib/format";
 
 const PAGE_SIZE = 10;
@@ -82,13 +83,6 @@ function remainingMinutesLabel(entry: LiveRosterEntry): string {
 function isLowRemaining(entry: LiveRosterEntry): boolean {
   const remaining = entry.remaining_ms ?? 0;
   return entry.status === "in_progress" && remaining <= 5 * 60 * 1000;
-}
-
-function attemptLabel(entry: LiveRosterEntry, maxAttempts: number | null): string {
-  if (entry.attempts_used != null && maxAttempts != null) return `${entry.attempts_used} / ${maxAttempts}`;
-  if (entry.attempt != null) return String(entry.attempt);
-  if (entry.attempts_used != null) return String(entry.attempts_used);
-  return "—";
 }
 
 function LiveMonitorContent() {
