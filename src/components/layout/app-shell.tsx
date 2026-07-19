@@ -1,12 +1,13 @@
 import type { ParentProps } from "solid-js";
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
+import { CelebiPanel } from "@/components/layout/celebi-panel";
 import { Show, createSignal } from "solid-js";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconPanelLeft, IconX } from "@/components/ui/icons";
+import { IconPanelLeft, IconSparkles, IconX } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -21,6 +22,7 @@ export function AppShell(props: ParentProps) {
   const t = useT();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = createSignal(false);
+  const [celebiOpen, setCelebiOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
   const wide = () => location().pathname.startsWith("/exam-room/");
@@ -115,6 +117,14 @@ export function AppShell(props: ParentProps) {
         </Show>
 
         <main class="min-w-0 flex-1">
+          <Show when={auth.user()}>
+            <header class="sticky top-0 z-20 flex h-14 items-center justify-end border-b border-border/70 bg-background/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+              <Button type="button" variant="outline" size="sm" class="rounded-lg border-sky-500/30 bg-sky-500/10 text-sky-700 shadow-sm hover:bg-sky-500/15 dark:text-sky-300" onClick={() => setCelebiOpen(true)}>
+                <IconSparkles class="h-4 w-4" />
+                {t("ai.askCelebi")}
+              </Button>
+            </header>
+          </Show>
           <div
             class={cn(
               "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-5",
@@ -128,6 +138,9 @@ export function AppShell(props: ParentProps) {
       </div>
       <Show when={auth.user() && !wide()}>
         <MobileTabBar onMenu={() => setMobileOpen(true)} />
+      </Show>
+      <Show when={auth.user()}>
+        <CelebiPanel open={celebiOpen()} onOpenChange={setCelebiOpen} />
       </Show>
       <Toaster />
     </div>

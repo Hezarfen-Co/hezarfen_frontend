@@ -3,6 +3,13 @@ export type Locale = "en" | "tr";
 export type MessageKey =
   | "app.name"
   | "app.tagline"
+  | "ai.askCelebi"
+  | "ai.title"
+  | "ai.description"
+  | "ai.empty"
+  | "ai.placeholder"
+  | "ai.send"
+  | "ai.unavailable"
   | "nav.home"
   | "nav.notes"
   | "nav.events"
@@ -592,6 +599,13 @@ type Dict = Record<MessageKey, string>;
 const en: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Your campus workspace — notes, events, exams in one calm place.",
+  "ai.askCelebi": "Ask Çelebi",
+  "ai.title": "Çelebi",
+  "ai.description": "Campus assistant",
+  "ai.empty": "Ask Çelebi about this workspace. AI answers will be enabled when the backend is connected.",
+  "ai.placeholder": "Ask about courses, exams, attendance...",
+  "ai.send": "Send",
+  "ai.unavailable": "Çelebi is not connected yet. Backend AI endpoint is needed for real answers.",
   "nav.home": "Home",
   "nav.notes": "Notes",
   "nav.events": "Events",
@@ -1193,6 +1207,13 @@ const en: Dict = {
 const tr: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Kampüs çalışma alanın — notlar, etkinlikler ve sınavlar tek yerde.",
+  "ai.askCelebi": "Çelebi’ye sor",
+  "ai.title": "Çelebi",
+  "ai.description": "Kampüs asistanı",
+  "ai.empty": "Bu çalışma alanı hakkında Çelebi’ye sor. Backend bağlanınca gerçek yanıtlar aktif olacak.",
+  "ai.placeholder": "Dersler, sınavlar, yoklamalar hakkında sor...",
+  "ai.send": "Gönder",
+  "ai.unavailable": "Çelebi henüz bağlı değil. Gerçek yanıtlar için backend AI endpoint’i gerekli.",
   "nav.home": "Ana sayfa",
   "nav.notes": "Notlar",
   "nav.events": "Etkinlikler",

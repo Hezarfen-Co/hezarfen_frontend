@@ -461,3 +461,13 @@ export function IconSearch(props: IconProps) {
     </Svg>
   );
 }
+
+export function IconSparkles(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9.9 4.24 12 2l2.1 2.24L17 5l-2.9.76L12 8l-2.1-2.24L7 5z" />
+      <path d="M18 12.5 19.5 11l1.5 1.5 2 .5-2 .5-1.5 1.5L18 13.5l-2-.5z" />
+      <path d="M4 15.5 6.5 13 9 15.5l3 .75-3 .75-2.5 2.5L4 17l-3-.75z" />
+    </Svg>
+  );
+}
