@@ -1,4 +1,4 @@
-import { For, Show, createMemo, createResource, type Component } from "solid-js";
+import { For, Show, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { formatApiError } from "@/api/client";
 import { getCourses } from "@/api/getCourses";
@@ -7,15 +7,17 @@ import { getExams } from "@/api/getExams";
 import { getMyCourses } from "@/api/getMyCourses";
 import { getMyMarks } from "@/api/getMyMarks";
 import { getNotes } from "@/api/getNotes";
-import type { Exam, Event, Role } from "@/api/types";
+import type { Course, Exam, Event, Role } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   IconBook,
   IconBriefcase,
   IconCalendar,
   IconCalendarDays,
   IconChart,
+  IconClock,
   IconClipboardCheck,
   IconExam,
   IconNote,
@@ -36,6 +38,7 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const ATTENTION_LIMIT = 8;
 const UPCOMING_LIMIT = 6;
+const PORTAL_ORDER_KEY = "hezarfen.dashboard.portalOrder";
 
 type AttentionKind = "active" | "soon" | "today";
 
@@ -106,6 +109,9 @@ function DashboardContent() {
   const user = () => auth.user()!;
   const role = () => user().role;
   const now = createNow();
+  const [portalOrder, setPortalOrder] = createSignal<string[]>([]);
+  const [draggingPortal, setDraggingPortal] = createSignal<string | null>(null);
+  const [editingPortalOrder, setEditingPortalOrder] = createSignal(false);
 
   const [courses] = createResource(
     () => (role() !== "student" ? true : null),
@@ -165,7 +171,10 @@ function DashboardContent() {
     return all;
   });
 
-  const courseCount = createMemo(() => scopedCourses().length);
+  const countCoursesByKind = (kind: Course["kind"]) => scopedCourses().filter((course) => course.kind === kind).length;
+  const courseCount = createMemo(() => countCoursesByKind("course"));
+  const studyCount = createMemo(() => countCoursesByKind("study"));
+  const clubCount = createMemo(() => countCoursesByKind("club"));
   const examCount = createMemo(() => visibleExams().length);
   const eventCount = createMemo(() => events().length);
   const noteCount = createMemo(() => notes().length);
@@ -177,6 +186,8 @@ function DashboardContent() {
   const portalCards = createMemo<PortalCardDef[]>(() => {
     const r = role();
     const cc = String(courseCount());
+    const sc = String(studyCount());
+    const clc = String(clubCount());
     const ec = String(examCount());
     const evc = String(eventCount());
     const nc = String(noteCount());
@@ -185,9 +196,12 @@ function DashboardContent() {
     if (r === "student") {
       list.push(
         { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
         { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
         { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
         { Icon: IconChart, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avgLabel() },
+        { Icon: IconClock, titleKey: "nav.pomodoro", to: "/pomodoro", descKey: "dashboard.portal.pomodoroDesc" },
         { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       );
       return list;
@@ -196,12 +210,15 @@ function DashboardContent() {
     if (r === "teacher") {
       list.push(
         { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
         { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
         { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, minRole: "teacher" },
         { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
         { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
-        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
+        { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
         { Icon: IconBriefcase, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" },
+        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       );
       return list;
     }
@@ -209,11 +226,14 @@ function DashboardContent() {
     // manager + admin
     list.push(
       { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+      { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+      { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
       { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
       { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
-      { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
       { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
+      { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
+      { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       { Icon: IconSettings, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", minRole: "manager" },
       { Icon: IconCalendarDays, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
     );
@@ -226,6 +246,32 @@ function DashboardContent() {
     }
     return list;
   });
+  const portalOrderKey = () => `${PORTAL_ORDER_KEY}.${role()}`;
+  const orderedPortalCards = createMemo(() => {
+    const cards = portalCards();
+    const byId = new Map(cards.map((card) => [card.to, card]));
+    if (portalOrder().some((id) => !byId.has(id)) || portalOrder().length !== cards.length) return cards;
+    const ordered = portalOrder().flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
+    const seen = new Set(ordered.map((card) => card.to));
+    return [...ordered, ...cards.filter((card) => !seen.has(card.to))];
+  });
+  createEffect(() => {
+    try {
+      setPortalOrder(JSON.parse(window.localStorage.getItem(portalOrderKey()) || "[]") as string[]);
+    } catch {
+      setPortalOrder([]);
+    }
+  });
+  const movePortalCard = (from: string, to: string) => {
+    if (from === to) return;
+    const ids = orderedPortalCards().map((card) => card.to);
+    const fromIndex = ids.indexOf(from);
+    const toIndex = ids.indexOf(to);
+    if (fromIndex < 0 || toIndex < 0) return;
+    ids.splice(toIndex, 0, ids.splice(fromIndex, 1)[0]);
+    setPortalOrder(ids);
+    window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
+  };
 
   const attention = createMemo<AttentionItem[]>(() => {
     const n = now();
@@ -306,8 +352,8 @@ function DashboardContent() {
   });
 
   return (
-    <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-border/80 bg-muted/20 px-4 py-4 sm:px-5">
+    <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_18px_55px_rgba(15,23,42,0.07)]">
+      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-border/80 bg-muted/30 px-4 py-4 sm:px-5">
         <div class="min-w-0 space-y-1">
           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("dashboard.today")}</p>
           <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -316,10 +362,10 @@ function DashboardContent() {
           <p class="text-sm text-muted-foreground">{t("dashboard.observationOnly")}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span class="rounded-md border border-border bg-background px-2 py-1 font-medium text-foreground shadow-sm">
+          <span class="rounded-md border border-border bg-background px-2.5 py-1 font-semibold text-foreground shadow-sm">
             {t(ROLE_KEY[role()])}
           </span>
-          <span class="mono tabular-nums">{formatDateTime(now(), locale()).split(",")[0]}</span>
+          <span class="rounded-md border border-border/70 bg-background/70 px-2.5 py-1 mono tabular-nums shadow-sm">{formatDateTime(now(), locale()).split(",")[0]}</span>
         </div>
       </header>
 
@@ -328,18 +374,38 @@ function DashboardContent() {
       </Show>
 
       <Show when={!loading()} fallback={<div class="px-4 py-8"><PageSpinner /></div>}>
-        <div class="space-y-5 bg-background/40 px-4 py-4 sm:px-5 sm:py-5">
+        <div class="space-y-5 bg-background/50 px-4 py-4 sm:px-5 sm:py-5">
         <section class="space-y-2.5" aria-labelledby="dash-sections">
-          <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
-            {t("dashboard.roleLinks")}
-          </h2>
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <For each={portalCards()}>{(card) => <PortalCard card={card} />}</For>
+          <div class="flex items-center justify-between gap-3">
+            <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
+              {t("dashboard.roleLinks")}
+            </h2>
+            <Button type="button" variant="outline" size="sm" class="h-8 rounded-md" onClick={() => setEditingPortalOrder((value) => !value)}>
+              {editingPortalOrder() ? t("common.done") : t("common.edit")}
+            </Button>
+          </div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <For each={orderedPortalCards()}>
+              {(card) => (
+                <PortalCard
+                  card={card}
+                  editing={editingPortalOrder()}
+                  dragging={draggingPortal() === card.to}
+                  onDragStart={() => setDraggingPortal(card.to)}
+                  onDragEnd={() => setDraggingPortal(null)}
+                  onDrop={(target) => {
+                    const source = draggingPortal();
+                    setDraggingPortal(null);
+                    if (source) movePortalCard(source, target);
+                  }}
+                />
+              )}
+            </For>
           </div>
         </section>
 
-        <div class="grid gap-5 lg:grid-cols-2">
-          <section class="space-y-2.5" aria-labelledby="dash-attention">
+        <div class="grid items-stretch gap-5 lg:grid-cols-2">
+          <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
                 {t("dashboard.attention")}
@@ -353,14 +419,14 @@ function DashboardContent() {
               when={attention().length > 0}
               fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
-              <ul class="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
                 <For each={attention()}>
                   {(item) => (
                     <li>
                       <Link
                         to={item.to}
                         params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/40 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/45 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
                       >
                         <StatusDot status={item.status} />
                         <div class="min-w-0 flex-1">
@@ -389,7 +455,7 @@ function DashboardContent() {
             </Show>
           </section>
 
-          <section class="space-y-2.5" aria-labelledby="dash-upcoming">
+          <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-upcoming">
             <h2 id="dash-upcoming" class="text-sm font-semibold tracking-tight text-foreground">
               {t("dashboard.upcoming")}
             </h2>
@@ -397,14 +463,14 @@ function DashboardContent() {
               when={upcoming().length > 0}
               fallback={<DashEmpty>{t("dashboard.upcomingEmpty")}</DashEmpty>}
             >
-              <ul class="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
                 <For each={upcoming()}>
                   {(item) => (
                     <li>
                       <Link
                         to={item.kind === "exam" ? "/exams/$id" : "/events/$id"}
                         params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/40 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/45 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
                       >
                         <span class="mono w-24 shrink-0 text-[11px] tabular-nums text-muted-foreground sm:w-28 sm:text-xs">
                           {formatDateTime(item.at, locale())}
@@ -435,13 +501,13 @@ function DashboardContent() {
 
 function DashEmpty(props: { children: string }) {
   return (
-    <div class="rounded-xl border border-dashed border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground shadow-sm">
+    <div class="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-dashed border-border bg-card/80 px-4 py-8 text-center text-sm text-muted-foreground shadow-sm">
       {props.children}
     </div>
   );
 }
 
-function PortalCard(props: { card: PortalCardDef }) {
+function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: boolean; onDragStart: () => void; onDragEnd: () => void; onDrop: (target: string) => void }) {
   const t = useT();
   const Icon = props.card.Icon;
   const hasStat = () => props.card.stat != null && props.card.stat !== "";
@@ -449,9 +515,33 @@ function PortalCard(props: { card: PortalCardDef }) {
   return (
     <Link
       to={props.card.to}
-      class="group relative flex min-h-[6rem] items-start gap-3 overflow-hidden rounded-xl border border-border bg-card px-3 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/50 hover:bg-muted/30 hover:shadow-[0_18px_45px_rgba(15,23,42,0.14)] hover:before:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[6.5rem] sm:gap-3.5 sm:px-4 sm:py-3.5"
+      draggable={props.editing}
+      onClick={(event) => {
+        if (props.editing) event.preventDefault();
+      }}
+      onDragStart={(event) => {
+        if (!props.editing) return;
+        event.dataTransfer?.setData("text/plain", props.card.to);
+        event.dataTransfer?.setDragImage(event.currentTarget, 12, 12);
+        props.onDragStart();
+      }}
+      onDragEnd={props.onDragEnd}
+      onDragOver={(event) => {
+        if (props.editing) event.preventDefault();
+      }}
+      onDrop={(event) => {
+        if (!props.editing) return;
+        event.preventDefault();
+        props.onDrop(props.card.to);
+      }}
+      class={cn(
+        "group relative flex min-h-[5.75rem] items-start gap-3 overflow-hidden rounded-xl border border-border bg-card px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/45 hover:bg-muted/30 hover:shadow-[0_16px_38px_rgba(15,23,42,0.11)] hover:before:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[6.25rem] sm:gap-3.5 sm:px-4 sm:py-3.5",
+        props.editing && "cursor-move border-dashed",
+        props.editing && !props.dragging && "dashboard-jiggle",
+        props.dragging && "scale-[0.98] border-primary/50 opacity-60",
+      )}
     >
-      <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary">
+      <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm transition-colors group-hover:border-primary/40 group-hover:text-primary">
         <Icon class="h-4 w-4" />
       </span>
       <div class="min-w-0 flex-1 space-y-1">

@@ -63,6 +63,7 @@ export type ExamFormValues = {
   duration_ms: number | null;
   max_attempts: number;
   allow_rejoin: boolean;
+  draft: boolean;
 };
 
 export function ExamForm(props: {
@@ -79,6 +80,7 @@ export function ExamForm(props: {
   const [hasRetakes, setHasRetakes] = createSignal((props.initial?.max_attempts ?? 1) !== 1);
   const [maxAttempts, setMaxAttempts] = createSignal(String(props.initial?.max_attempts ?? 1));
   const [allowRejoin, setAllowRejoin] = createSignal(props.initial?.allow_rejoin ?? true);
+  const [draft, setDraft] = createSignal(props.initial?.draft ?? false);
   const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
   const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
@@ -133,6 +135,7 @@ export function ExamForm(props: {
         setHasRetakes(false);
         setMaxAttempts("1");
         setAllowRejoin(true);
+        setDraft(false);
         setStartsDate("");
         setStartsTime("");
         setEndsDate("");
@@ -166,6 +169,7 @@ export function ExamForm(props: {
       duration_ms,
       max_attempts: hasRetakes() ? Number(maxAttempts()) : 1,
       allow_rejoin: allowRejoin(),
+      draft: draft(),
     } satisfies ExamFormValues;
     if (isEdit()) {
       setPendingValues(values);
@@ -256,6 +260,18 @@ export function ExamForm(props: {
           </div>
         </Show>
       </div>
+      <label class="flex items-start gap-2 rounded-sm border bg-background/60 px-3 py-2 text-sm">
+        <input
+          type="checkbox"
+          class="mt-0.5 h-4 w-4 rounded border-border"
+          checked={draft()}
+          onChange={(e) => setDraft(e.currentTarget.checked)}
+        />
+        <span>
+          <span class="block font-medium">{t("exams.draft")}</span>
+          <span class="block text-xs text-muted-foreground">{t("exams.draftHelp")}</span>
+        </span>
+      </label>
       <div class="space-y-1.5">
         <label class="flex h-10 items-center gap-2 rounded-sm border bg-background/60 px-3 text-sm">
           <input

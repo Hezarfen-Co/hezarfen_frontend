@@ -19,9 +19,11 @@ import {
   IconCalendarDays,
   IconChart,
   IconChevronRight,
+  IconClock,
   IconClipboardCheck,
   IconExam,
   IconHome,
+  IconMessage,
   IconNote,
   IconReportAnalytics,
   IconSchool,
@@ -52,19 +54,13 @@ type NavGroup = {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    id: "students",
-    labelKey: "nav.group.students",
-    Icon: IconUsers,
-    items: [
-      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
-    ],
-  },
-  {
     id: "classes",
     labelKey: "nav.group.classes",
     Icon: IconSchool,
     items: [
       { to: "/courses", labelKey: "nav.courses", Icon: IconBook },
+      { to: "/studies", labelKey: "nav.studies", Icon: IconClock },
+      { to: "/clubs", labelKey: "nav.clubs", Icon: IconUsers },
       { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
     ],
@@ -75,6 +71,9 @@ const NAV_GROUPS: NavGroup[] = [
     Icon: IconChart,
     items: [
       { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
+      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
+      { to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
+      { to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
       { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
     ],
   },
@@ -86,6 +85,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
+      { to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
       { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
       { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
     ],

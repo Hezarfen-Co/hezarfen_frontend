@@ -1,18 +1,11 @@
-import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js";
+import { createSignal, type Accessor } from "solid-js";
+import { showToast } from "@/components/ui/toast";
 
-/** Short-lived success banner; auto-clears after `ms` (default 3s). */
-export function createFlash(ms = 3000): [Accessor<string>, (text: string) => void] {
+/** Short-lived success feedback; page banners stay empty, global toast renders it. */
+export function createFlash(_ms = 3000): [Accessor<string>, (text: string) => void] {
   const [message, setMessage] = createSignal("");
-  const [tick, setTick] = createSignal(0);
-  createEffect(() => {
-    tick();
-    const text = message();
-    if (!text) return;
-    const id = window.setTimeout(() => setMessage(""), ms);
-    onCleanup(() => window.clearTimeout(id));
-  });
   return [message, (text) => {
-    setMessage(text);
-    setTick((value) => value + 1);
+    setMessage("");
+    showToast({ title: text });
   }];
 }

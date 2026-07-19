@@ -9,8 +9,10 @@ import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -42,6 +44,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
   const [roomOpen, setRoomOpen] = createSignal(false);
   const [attempt, setAttempt] = createSignal<ExamAttempt | null>(null);
   const [questions, setQuestions] = createSignal<AttemptQuestion[]>([]);
+  const [activeQuestionIndex, setActiveQuestionIndex] = createSignal(0);
   const [remainingMs, setRemainingMs] = createSignal<number | null>(0);
   const [wsState, setWsState] = createSignal<WsState>("disconnected");
   const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async" || props.exam.mode === "open");
@@ -146,6 +149,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       setRoomOpen(true);
       const qs = await getExamAttemptQuestions(props.exam.id);
       setQuestions(qs);
+      setActiveQuestionIndex(0);
       connectWs();
     } catch (err) {
       setError(formatApiError(err, locale()));
@@ -161,6 +165,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       setAttempt(next);
       const qs = await getExamAttemptQuestions(props.exam.id);
       setQuestions(qs);
+      setActiveQuestionIndex(0);
       connectWs();
     } catch (err) {
       setError(formatApiError(err, locale()));
@@ -218,6 +223,15 @@ export function ExamRoomWS(props: { exam: Exam }) {
     }
   };
 
+  const currentQuestion = createMemo(() => {
+    const list = questions();
+    if (list.length === 0) return null;
+    return list[Math.min(activeQuestionIndex(), list.length - 1)] ?? list[0];
+  });
+
+  const goPrevious = () => setActiveQuestionIndex((index) => Math.max(0, index - 1));
+  const goNext = () => setActiveQuestionIndex((index) => Math.min(questions().length - 1, index + 1));
+
   onCleanup(() => {
     if (ws) ws.close();
   });
@@ -270,7 +284,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
       <Suspense fallback={<PageSpinner />}>
-        <Show when={scheduled()}>
+        <Show when={scheduled() && (!attempt() || !roomOpen())}>
           <Show
             when={attempt()}
             fallback={
@@ -284,52 +298,69 @@ export function ExamRoomWS(props: { exam: Exam }) {
         </Show>
 
         <Show when={attempt() && roomOpen()}>
-          <Show when={!canWrite()}>
-            <p class="rounded-lg border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">{t("attempt.closed")}</p>
-          </Show>
-          <div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_12rem] xl:grid-cols-[minmax(0,1fr)_13rem] 2xl:grid-cols-[minmax(0,1fr)_14rem]">
-            <div class="grid auto-rows-fr items-stretch gap-4 2xl:grid-cols-2">
-              <For each={questions()}>
-                {(question, index) => (
-                  <QuestionAnswerCardWS
-                    index={index() + 1}
-                    nextQuestionId={questions()[index() + 1]?.id}
-                    question={question}
-                    disabled={!canWrite() || pending()}
-                    onSave={(value) => saveAnswer(question, value)}
-                  />
+          <div class="min-h-[calc(100vh-9rem)] space-y-3">
+            <AttemptFocusBar attempt={attempt()!} remainingMs={remainingMs()} wsState={wsState()} />
+            <Show when={!canWrite()}>
+              <p class="rounded-lg border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">{t("attempt.closed")}</p>
+            </Show>
+            <div class="grid min-h-[calc(100vh-13rem)] items-start gap-3 lg:grid-cols-[minmax(0,1fr)_11rem] xl:grid-cols-[minmax(0,1fr)_12rem]">
+              <Show when={currentQuestion()}>
+                {(question) => (
+                  <div class="min-w-0 space-y-3">
+                    <QuestionAnswerCardWS
+                      index={activeQuestionIndex() + 1}
+                      question={question()}
+                      disabled={!canWrite() || pending()}
+                      onSave={(value) => saveAnswer(question(), value)}
+                      onSaved={goNext}
+                    />
+                    <div class="flex items-center justify-between gap-2">
+                      <Button type="button" variant="outline" class="rounded-lg" disabled={activeQuestionIndex() === 0} onClick={goPrevious}>
+                        <IconChevronLeft class="h-4 w-4" />
+                        {t("common.prev")}
+                      </Button>
+                      <span class="text-xs text-muted-foreground">
+                        {activeQuestionIndex() + 1} / {questions().length}
+                      </span>
+                      <Button type="button" variant="outline" class="rounded-lg" disabled={activeQuestionIndex() >= questions().length - 1} onClick={goNext}>
+                        {t("common.next")}
+                        <IconChevronRight class="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 )}
-              </For>
-            </div>
-            <aside class="surface-card order-first space-y-3 p-4 lg:sticky lg:top-4 lg:order-none">
+              </Show>
+              <aside class="surface-card order-first space-y-3 p-3 lg:sticky lg:top-4 lg:order-none">
               <div>
                 <h3 class="font-display text-sm font-semibold">{t("questions.title")}</h3>
                 <p class="mt-1 text-xs text-muted-foreground">
                   {attempt()?.answered ?? 0} / {attempt()?.question_count ?? questions().length} {t("attempt.progress").toLowerCase()}
                 </p>
               </div>
-              <div class="grid grid-cols-4 gap-2">
+               <div class="grid grid-cols-4 gap-1.5">
                 <For each={questions()}>
                   {(question, index) => (
-                    <a
-                      href={`#question-${question.id}`}
-                      class={
-                        question.answer
-                          ? "inline-flex h-9 items-center justify-center rounded-lg border border-primary/35 bg-primary/10 text-sm font-medium text-primary hover:bg-primary/15"
-                          : "inline-flex h-9 items-center justify-center rounded-lg border bg-background text-sm font-medium hover:bg-accent"
-                      }
+                    <button
+                      type="button"
+                      class={cn(
+                        "inline-flex h-8 items-center justify-center rounded-md border text-xs font-medium transition-colors hover:bg-accent",
+                        question.answer ? "border-primary/35 bg-primary/10 text-primary hover:bg-primary/15" : "bg-background",
+                        activeQuestionIndex() === index() && "ring-2 ring-primary/60",
+                      )}
+                      onClick={() => setActiveQuestionIndex(index())}
                     >
                       {index() + 1}
-                    </a>
+                    </button>
                   )}
                 </For>
               </div>
               <Show when={canWrite()}>
-                <Button type="button" variant="destructive" class="h-10 w-full" disabled={pending()} onClick={() => setFinishOpen(true)}>
+                <Button type="button" variant="destructive" class="h-9 w-full rounded-md" disabled={pending()} onClick={() => setFinishOpen(true)}>
                   {t("attempt.finish")}
                 </Button>
               </Show>
-            </aside>
+              </aside>
+            </div>
           </div>
         </Show>
       </Suspense>
@@ -345,7 +376,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
   );
 }
 
-function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | null; wsState: WsState }) {
+function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | null; wsState: WsState; compact?: boolean }) {
   const t = useT();
   const { locale } = usePreferences();
   const progressPct = () =>
@@ -371,12 +402,12 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | n
     return "—";
   };
   return (
-    <div class="grid auto-rows-fr gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-      <div class="h-full rounded-lg border bg-background/60 p-3">
+    <div class={cn("grid auto-rows-fr gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6", props.compact && "2xl:grid-cols-7")}>
+      <div class={cn("h-full rounded-lg border bg-background/60 p-3", props.compact && "hidden xl:block")}>
         <p class="text-xs text-muted-foreground">{t("attempt.status")}</p>
         <p class="mt-1 font-medium">{statusLabel()}</p>
       </div>
-      <div class="h-full rounded-lg border bg-background/60 p-3">
+      <div class={cn("h-full rounded-lg border bg-background/60 p-3", props.compact && "hidden 2xl:block")}>
         <p class="text-xs text-muted-foreground">{t("attempt.attempt")}</p>
         <p class="mt-1 font-medium tabular-nums">{attemptLabel()}</p>
       </div>
@@ -384,14 +415,14 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | n
         <p class="text-xs text-muted-foreground">{t("attempt.remaining")}</p>
         <p class="mt-1 font-mono text-lg font-semibold tabular-nums">{formatRemaining(props.remainingMs)}</p>
       </div>
-      <div class="h-full rounded-lg border bg-background/60 p-3">
+      <div class={cn("h-full rounded-lg border bg-background/60 p-3", props.compact && "hidden 2xl:block")}>
         <p class="text-xs text-muted-foreground">{t("attempt.progress")}</p>
         <p class="mt-1 font-medium">{props.attempt.answered} / {props.attempt.question_count}</p>
         <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
           <div class="h-full rounded-full bg-primary" style={{ width: `${progressPct()}%` }} />
         </div>
       </div>
-      <div class="h-full rounded-lg border bg-background/60 p-3">
+      <div class={cn("h-full rounded-lg border bg-background/60 p-3", props.compact && "hidden 2xl:block")}>
         <p class="text-xs text-muted-foreground">{t("attempt.deadline")}</p>
         <p class="mt-1 font-medium">{formatDateTime(props.attempt.deadline, locale())}</p>
       </div>
@@ -422,12 +453,44 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | n
   );
 }
 
+function AttemptFocusBar(props: { attempt: ExamAttempt; remainingMs: number | null; wsState: WsState }) {
+  const t = useT();
+  const progressPct = () =>
+    props.attempt.question_count <= 0
+      ? 0
+      : Math.round((props.attempt.answered / props.attempt.question_count) * 100);
+  const wsLabel = () => {
+    if (props.wsState === "connecting") return t("ws.connecting");
+    if (props.wsState === "connected") return t("ws.connected");
+    return t("ws.disconnected");
+  };
+
+  return (
+    <div class="rounded-xl border bg-card px-3 py-2 shadow-sm">
+      <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span class="font-medium text-foreground">{t("attempt.inProgress")}</span>
+        <span class="mono font-semibold tabular-nums text-foreground">{formatRemaining(props.remainingMs)}</span>
+        <span>
+          {props.attempt.answered} / {props.attempt.question_count} {t("attempt.progress").toLowerCase()}
+        </span>
+        <span class="ml-auto inline-flex items-center gap-1.5">
+          <span class={props.wsState === "connected" ? "h-2 w-2 rounded-full bg-success" : "h-2 w-2 rounded-full bg-warning"} />
+          {wsLabel()}
+        </span>
+      </div>
+      <div class="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+        <div class="h-full rounded-full bg-primary" style={{ width: `${progressPct()}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function QuestionAnswerCardWS(props: {
   index: number;
-  nextQuestionId?: string;
   question: AttemptQuestion;
   disabled: boolean;
   onSave: (value: string) => Promise<void>;
+  onSaved?: () => void;
 }) {
   const t = useT();
   const { locale } = usePreferences();
@@ -454,13 +517,11 @@ function QuestionAnswerCardWS(props: {
   const save = async () => {
     await props.onSave(value());
     setSaved(true);
-    if (props.nextQuestionId) {
-      document.getElementById(`question-${props.nextQuestionId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    props.onSaved?.();
   };
 
   return (
-    <article id={`question-${props.question.id}`} class="surface-card min-h-[18rem] scroll-mt-24 p-5">
+    <article id={`question-${props.question.id}`} class="surface-card min-h-[calc(100vh-16rem)] p-5 sm:p-6 lg:p-8">
       <div class="mb-3 flex flex-wrap items-center gap-2">
         <span class="text-xs font-semibold text-muted-foreground">#{props.index}</span>
         <Badge variant="outline" class="rounded-full">{props.question.points} {t("questions.points")}</Badge>
@@ -471,7 +532,14 @@ function QuestionAnswerCardWS(props: {
           {(updatedAt) => <Badge variant="outline" class="rounded-full">{t("attempt.savedAt")}: {formatDateTime(updatedAt(), locale())}</Badge>}
         </Show>
       </div>
-      <p class="mb-4 whitespace-pre-wrap text-sm font-medium">{props.question.text}</p>
+      <Show when={props.question.image}>
+        <img
+          src={`/api/exams/${props.question.exam}/questions/${props.question.id}/image`}
+          alt={t("questions.image")}
+          class="mb-4 max-h-64 rounded-md border object-contain"
+        />
+      </Show>
+      <p class="mb-5 whitespace-pre-wrap text-base font-semibold leading-7 sm:text-lg">{props.question.text}</p>
       <Show
         when={props.question.kind === "choice"}
         fallback={
@@ -493,7 +561,7 @@ function QuestionAnswerCardWS(props: {
             {(choice, choiceIndex) => (
               <button
                 type="button"
-                class="flex w-full items-center gap-3 rounded-lg border bg-background/60 px-3 py-2.5 text-left text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+              class="flex w-full items-center gap-3 rounded-xl border bg-background/70 px-4 py-3 text-left text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
                 disabled={props.disabled}
                 onClick={() => {
                   setSaved(false);
@@ -511,7 +579,16 @@ function QuestionAnswerCardWS(props: {
                     class={value() === String(choiceIndex()) ? "h-2 w-2 rounded-[1px] bg-primary-foreground" : "hidden"}
                   />
                 </span>
-                <span>{choice}</span>
+                <span class="min-w-0 space-y-2">
+                  <span class="block whitespace-pre-wrap">{choice}</span>
+                  <Show when={props.question.choice_images?.[choiceIndex()]}>
+                    <img
+                      src={`/api/exams/${props.question.exam}/questions/${props.question.id}/choices/${choiceIndex()}/image`}
+                      alt={t("questions.choiceImage")}
+                      class="max-h-40 rounded-md border object-contain"
+                    />
+                  </Show>
+                </span>
               </button>
             )}
           </For>

@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { getMyWorkLog } from "@/api/getMyWorkLog";
 import { postWorkCheckIn } from "@/api/postWorkCheckIn";
 import { postWorkCheckOut } from "@/api/postWorkCheckOut";
@@ -8,16 +9,14 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTableFrame } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { PaginationControls } from "@/components/ui/pagination-controls";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
-import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import type { WorkEntry } from "@/api/types";
 
 const WORK_PAGE_SIZE = 15;
 
@@ -35,7 +34,6 @@ function WorkLogContent() {
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
-  const [page, setPage] = createSignal(0);
   const [version, setVersion] = createSignal(0);
 
   const [openProbe, { refetch: refetchOpen }] = createResource(
@@ -45,20 +43,38 @@ function WorkLogContent() {
   const openEntry = createMemo(() => (openProbe() ?? []).find((entry) => entry.check_out == null) ?? null);
 
   const [list, { refetch }] = createResource(
-    () => ({ page: page(), version: version() }),
-    async (key) =>
-      loadListPage({
-        page: key.page,
-        pageSize: WORK_PAGE_SIZE,
-        clientMode: false,
-        fetch: getMyWorkLog,
-      }),
+    () => version(),
+    async () => getMyWorkLog(),
   );
 
   const total = () => list()?.total ?? 0;
   const pageItems = () => list()?.items ?? [];
-  const totalPages = createMemo(() => pagesOf(total(), WORK_PAGE_SIZE));
-  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+  const columns = createMemo<ColumnDef<WorkEntry>[]>(() => [
+    {
+      accessorKey: "check_in",
+      header: t("work.checkIn"),
+      cell: (cell) => <span class="mono">{formatDateTime(cell.row.original.check_in, locale())}</span>,
+    },
+    {
+      accessorKey: "check_out",
+      header: t("work.checkOut"),
+      cell: (cell) => <span class="mono">{formatDateTime(cell.row.original.check_out, locale())}</span>,
+    },
+    {
+      accessorKey: "duration_ms",
+      header: t("work.duration"),
+      cell: (cell) => <span class="mono">{formatDurationMinutes(cell.row.original.duration_ms, locale())}</span>,
+    },
+    {
+      id: "status",
+      header: t("work.status"),
+      cell: (cell) => (
+        <Badge variant={cell.row.original.check_out == null ? "default" : "secondary"} class="rounded-sm">
+          {cell.row.original.check_out == null ? t("work.open") : t("work.closed")}
+        </Badge>
+      ),
+    },
+  ]);
 
   const toggle = async () => {
     setError("");
@@ -71,7 +87,6 @@ function WorkLogContent() {
         await postWorkCheckIn();
         setFlash(t("common.saved"));
       }
-      setPage(0);
       setVersion((value) => value + 1);
       await Promise.all([refetch(), refetchOpen()]);
     } catch (err) {
@@ -84,11 +99,6 @@ function WorkLogContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          <span>{t("nav.admin")}</span>
-          <span>/</span>
-          <span>{t("nav.work")}</span>
-        </div>
         <PageHeader accent="amber" eyebrow={t("nav.work")} title={t("work.title")} description={t("work.subtitle")} />
       </div>
 
@@ -128,37 +138,7 @@ function WorkLogContent() {
             when={pageItems().length > 0}
             fallback={<EmptyState title={t("work.empty")} description={t("work.ready")} />}
           >
-            <DataTableFrame>
-              <Table class="data-table">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("work.checkIn")}</TableHead>
-                    <TableHead>{t("work.checkOut")}</TableHead>
-                    <TableHead>{t("work.duration")}</TableHead>
-                    <TableHead>{t("work.status")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <For each={pageItems()}>
-                    {(entry) => (
-                      <TableRow>
-                        <TableCell class="mono">{formatDateTime(entry.check_in, locale())}</TableCell>
-                        <TableCell class="mono">{formatDateTime(entry.check_out, locale())}</TableCell>
-                        <TableCell class="mono">{formatDurationMinutes(entry.duration_ms, locale())}</TableCell>
-                        <TableCell>
-                          <Badge variant={entry.check_out == null ? "default" : "secondary"} class="rounded-sm">
-                            {entry.check_out == null ? t("work.open") : t("work.closed")}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </For>
-                </TableBody>
-              </Table>
-            </DataTableFrame>
-            <Show when={total() > WORK_PAGE_SIZE}>
-              <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
-            </Show>
+            <DataTable columns={columns()} data={pageItems()} enablePagination pageSize={WORK_PAGE_SIZE} />
           </Show>
         </Suspense>
       </section>

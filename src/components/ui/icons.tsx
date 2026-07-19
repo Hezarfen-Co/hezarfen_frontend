@@ -45,6 +45,33 @@ export function IconTrash(props: IconProps) {
   );
 }
 
+export function IconArchive(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect width="20" height="5" x="2" y="3" rx="1" />
+      <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+      <path d="M10 12h4" />
+    </Svg>
+  );
+}
+
+export function IconSend(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="m22 2-7 20-4-9-9-4Z" />
+      <path d="M22 2 11 13" />
+    </Svg>
+  );
+}
+
+export function IconMessage(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+    </Svg>
+  );
+}
+
 export function IconCheck(props: IconProps) {
   return (
     <Svg {...props}>
@@ -269,6 +296,15 @@ export function IconCalendarDays(props: IconProps) {
   );
 }
 
+export function IconClock(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 6v6l4 2" />
+    </Svg>
+  );
+}
+
 export function IconExam(props: IconProps) {
   return (
     <Svg {...props}>
@@ -449,6 +485,16 @@ export function IconSearch(props: IconProps) {
     <Svg {...props}>
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.3-4.3" />
+    </Svg>
+  );
+}
+
+export function IconSparkles(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9.9 4.24 12 2l2.1 2.24L17 5l-2.9.76L12 8l-2.1-2.24L7 5z" />
+      <path d="M18 12.5 19.5 11l1.5 1.5 2 .5-2 .5-1.5 1.5L18 13.5l-2-.5z" />
+      <path d="M4 15.5 6.5 13 9 15.5l3 .75-3 .75-2.5 2.5L4 17l-3-.75z" />
     </Svg>
   );
 }

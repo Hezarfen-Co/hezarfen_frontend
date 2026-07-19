@@ -1,12 +1,14 @@
 import type { ParentProps } from "solid-js";
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
-import { Show, createSignal } from "solid-js";
+import { CelebiPanel } from "@/components/layout/celebi-panel";
+import { Show, createMemo, createSignal } from "solid-js";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconPanelLeft, IconX } from "@/components/ui/icons";
+import { IconPanelLeft, IconSparkles, IconX } from "@/components/ui/icons";
+import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -20,9 +22,36 @@ export function AppShell(props: ParentProps) {
   const t = useT();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = createSignal(false);
+  const [celebiOpen, setCelebiOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
-  const wide = () => location().pathname.startsWith("/exam-room/");
+  const wide = () => location().pathname.startsWith("/exam-room/") || location().pathname === "/messages";
+  const routeLabel = createMemo(() => {
+    const path = location().pathname;
+    if (path === "/") return t("nav.home");
+    if (path === "/notes") return `${t("nav.group.grades")} / ${t("nav.notes")}`;
+    if (path === "/messages") return `${t("nav.group.grades")} / ${t("nav.messages")}`;
+    if (path === "/marks") return `${t("nav.group.grades")} / ${t("nav.marks")}`;
+    if (path === "/attendance") return `${t("nav.group.grades")} / ${t("nav.attendance")}`;
+    if (path === "/pomodoro") return `${t("nav.group.grades")} / ${t("nav.pomodoro")}`;
+    if (path === "/courses" || path.startsWith("/courses/")) return `${t("nav.group.classes")} / ${t("nav.courses")}`;
+    if (path === "/studies") return `${t("nav.group.classes")} / ${t("nav.studies")}`;
+    if (path === "/clubs") return `${t("nav.group.classes")} / ${t("nav.clubs")}`;
+    if (path === "/events" || path.startsWith("/events/")) return `${t("nav.group.classes")} / ${t("nav.events")}`;
+    if (path === "/exams" || path.startsWith("/exams/")) return `${t("nav.group.classes")} / ${t("nav.exams")}`;
+    if (path.startsWith("/exam-room/")) return t("nav.exams");
+    if (path === "/work") return `${t("nav.group.reports")} / ${t("nav.work")}`;
+    if (path === "/management/student-marks") return `${t("nav.group.reports")} / ${t("nav.studentMarks")}`;
+    if (path === "/management/student-attendance") return `${t("nav.group.reports")} / ${t("nav.studentAttendance")}`;
+    if (path === "/management/pomodoros") return `${t("nav.group.reports")} / ${t("nav.studentPomodoro")}`;
+    if (path === "/management/staff-work") return `${t("nav.group.reports")} / ${t("nav.staffWork")}`;
+    if (path === "/management/settings") return `${t("nav.group.settings")} / ${t("nav.settings")}`;
+    if (path === "/management/terms") return `${t("nav.group.settings")} / ${t("nav.terms")}`;
+    if (path === "/admin/users") return `${t("nav.admin")} / ${t("nav.users")}`;
+    if (path === "/profile") return `${t("nav.account")} / ${t("nav.preferences")}`;
+    if (path === "/guide") return t("nav.guide");
+    return path;
+  });
   const logout = async () => {
     await auth.logout();
     void navigate({ to: "/login" });
@@ -114,6 +143,17 @@ export function AppShell(props: ParentProps) {
         </Show>
 
         <main class="min-w-0 flex-1">
+          <Show when={auth.user()}>
+            <header class="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border/70 bg-background/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+              <div class="min-w-0 rounded-lg border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
+                <span class="block truncate">{routeLabel()}</span>
+              </div>
+              <Button type="button" variant="outline" size="sm" class="rounded-lg border-sky-500/30 bg-sky-500/10 text-sky-700 shadow-sm hover:bg-sky-500/15 dark:text-sky-300" onClick={() => setCelebiOpen(true)}>
+                <IconSparkles class="h-4 w-4" />
+                {t("ai.askCelebi")}
+              </Button>
+            </header>
+          </Show>
           <div
             class={cn(
               "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-5",
@@ -128,6 +168,10 @@ export function AppShell(props: ParentProps) {
       <Show when={auth.user() && !wide()}>
         <MobileTabBar onMenu={() => setMobileOpen(true)} />
       </Show>
+      <Show when={auth.user()}>
+        <CelebiPanel open={celebiOpen()} onOpenChange={setCelebiOpen} />
+      </Show>
+      <Toaster />
     </div>
   );
 }

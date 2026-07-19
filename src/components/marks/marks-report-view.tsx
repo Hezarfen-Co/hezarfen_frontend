@@ -1,17 +1,18 @@
-import { For, Show, createResource } from "solid-js";
+import { For, Show, createMemo, createResource } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { Link } from "@tanstack/solid-router";
 import { getSettings } from "@/api/getSettings";
 import type { MarksReport } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
-import { DataTableEmpty, DataTableFrame } from "@/components/ui/data-table";
+import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { ExamLink } from "@/components/exams/exam-link";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
 import { useT } from "@/stores/preferences-context";
 
 const round = (n: number) => (Math.round(n * 100) / 100).toString();
+type MarkRow = MarksReport["courses"][number]["results"][number];
 
 function markWithGrade(mark: number | null, grade?: string | null) {
   if (mark == null) return grade ?? "—";
@@ -22,6 +23,42 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
   const t = useT();
   const [settings] = createResource(() => getSettings());
   const compact = () => props.compact === true;
+  const columns = createMemo<ColumnDef<MarkRow>[]>(() => [
+    {
+      accessorKey: "title",
+      header: t("marks.exam"),
+      cell: (cell) => (
+        <span class="min-w-0">
+          <ExamLink examId={cell.row.original.exam} class="block truncate font-medium hover:underline">
+            {cell.row.original.title}
+          </ExamLink>
+          <Show when={compact()}>
+            <p class="mt-0.5 truncate text-[11px] text-muted-foreground sm:hidden">
+              {examKindLabel(cell.row.original.kind, t)}
+            </p>
+          </Show>
+        </span>
+      ),
+    },
+    {
+      accessorKey: "kind",
+      header: t("exams.kind"),
+      meta: { headerClass: compact() ? "hidden sm:table-cell" : undefined, cellClass: compact() ? "hidden sm:table-cell" : undefined },
+      cell: (cell) => <Badge variant="outline" class="rounded-sm capitalize">{examKindLabel(cell.row.original.kind, t)}</Badge>,
+    },
+    {
+      id: "weight",
+      header: () => <span class="block text-right">{t("marks.weight")}</span>,
+      meta: { cellClass: "mono text-right" },
+      cell: (cell) => examWeight(cell.row.original, settings()?.exam_kinds) ?? "—",
+    },
+    {
+      accessorKey: "mark",
+      header: () => <span class="block text-right">{t("marks.mark")}</span>,
+      meta: { cellClass: "mono text-right font-semibold" },
+      cell: (cell) => markWithGrade(cell.row.original.mark, cell.row.original.grade),
+    },
+  ]);
 
   return (
     <Show when={props.report.courses.length > 0} fallback={<DataTableEmpty>{t("marks.empty")}</DataTableEmpty>}>
@@ -65,51 +102,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
               </header>
 
               <Show when={block.results.length > 0} fallback={<DataTableEmpty class="py-6">{t("exams.noResults")}</DataTableEmpty>}>
-                <DataTableFrame class="min-w-0">
-                  <Table class={cn("data-table w-full", compact() ? "text-xs" : "table-fixed min-w-[36rem]")}>
-                    <Show when={!compact()}>
-                      <colgroup>
-                        <col class="w-[42%]" />
-                        <col class="w-[18%]" />
-                        <col class="w-[8rem]" />
-                        <col class="w-[10rem]" />
-                      </colgroup>
-                    </Show>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t("marks.exam")}</TableHead>
-                        <TableHead class={compact() ? "hidden sm:table-cell" : undefined}>{t("exams.kind")}</TableHead>
-                        <TableHead class="text-right">{t("marks.weight")}</TableHead>
-                        <TableHead class="text-right">{t("marks.mark")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <For each={block.results}>
-                        {(entry) => (
-                          <TableRow>
-                            <TableCell class="min-w-0">
-                              <ExamLink examId={entry.exam} class="block truncate font-medium hover:underline">
-                                {entry.title}
-                              </ExamLink>
-                              <Show when={compact()}>
-                                <p class="mt-0.5 truncate text-[11px] text-muted-foreground sm:hidden">
-                                  {examKindLabel(entry.kind, t)}
-                                </p>
-                              </Show>
-                            </TableCell>
-                            <TableCell class={compact() ? "hidden sm:table-cell" : undefined}>
-                              <Badge variant="outline" class="rounded-sm capitalize">
-                                {examKindLabel(entry.kind, t)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell class="mono text-right">{examWeight(entry, settings()?.exam_kinds) ?? "—"}</TableCell>
-                            <TableCell class="mono text-right font-semibold">{markWithGrade(entry.mark, entry.grade)}</TableCell>
-                          </TableRow>
-                        )}
-                      </For>
-                    </TableBody>
-                  </Table>
-                </DataTableFrame>
+                <DataTable class="min-w-0" columns={columns()} data={block.results} tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-[36rem]")} />
               </Show>
             </article>
           )}

@@ -11,6 +11,7 @@ export type PostCourseExamBody = {
   duration_ms?: number | null;
   max_attempts?: number | null;
   allow_rejoin?: boolean | null;
+  draft?: boolean | null;
 };
 
 export function postCourseExam(

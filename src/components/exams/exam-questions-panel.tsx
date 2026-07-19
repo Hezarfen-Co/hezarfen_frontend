@@ -1,7 +1,12 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { deleteExamChoiceImage } from "@/api/deleteExamChoiceImage";
+import { deleteExamQuestionImage } from "@/api/deleteExamQuestionImage";
 import { deleteExamQuestionById } from "@/api/deleteExamQuestionById";
+import { getCourseSubjects } from "@/api/getCourseSubjects";
 import { getExamQuestions } from "@/api/getExamQuestions";
 import { patchExamQuestionById } from "@/api/patchExamQuestionById";
+import { postExamChoiceImage } from "@/api/postExamChoiceImage";
+import { postExamQuestionImage } from "@/api/postExamQuestionImage";
 import { postExamQuestion } from "@/api/postExamQuestion";
 import { ApiError, formatApiError } from "@/api/client";
 import type { ExamQuestion } from "@/api/types";
@@ -18,8 +23,9 @@ import { useT } from "@/stores/preferences-context";
 
 const QUESTION_PAGE_SIZE = 5;
 
-export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; embedded?: boolean }) {
+export function ExamQuestionsPanel(props: { examId: string; courseId: string; readOnly?: boolean; embedded?: boolean }) {
   const t = useT();
+  const [subjects] = createResource(() => props.courseId, async (courseId) => (await getCourseSubjects(courseId)).items);
   const [questions, { refetch }] = createResource(() => props.examId, async (examId) => {
     try {
       return (await getExamQuestions(examId)).items;
@@ -32,11 +38,13 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
   const [editing, setEditing] = createSignal<ExamQuestion | null>(null);
   const [removeQuestion, setRemoveQuestion] = createSignal<ExamQuestion | null>(null);
   const [error, setError] = createSignal("");
+  const [imagePending, setImagePending] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [page, setPage] = createSignal(0);
 
   const formInitial = createMemo(() => editing() ?? undefined);
   const questionList = createMemo(() => questions() ?? []);
+  const subjectName = (subjectId: string) => subjects()?.find((subject) => subject.id === subjectId)?.name ?? subjectId;
   const totalPages = createMemo(() => Math.max(1, Math.ceil(questionList().length / QUESTION_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
   const pageItems = createMemo(() => {
@@ -61,11 +69,17 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
     try {
       const q = editing();
       const isNewQuestion = !q;
+      const { image, choice_images, ...body } = values;
+      const saved = q
+        ? await patchExamQuestionById(props.examId, q.id, body)
+        : await postExamQuestion(props.examId, body);
+      if (image) await postExamQuestionImage(props.examId, saved.id, image);
+      for (const [index, file] of (choice_images ?? []).entries()) {
+        if (file) await postExamChoiceImage(props.examId, saved.id, index, file);
+      }
       if (q) {
-        await patchExamQuestionById(props.examId, q.id, values);
         setFlash(t("common.saved"));
       } else {
-        await postExamQuestion(props.examId, values);
         setFlash(t("common.created"));
       }
       setEditing(null);
@@ -74,6 +88,36 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
       if (isNewQuestion) setPage(Math.max(0, Math.ceil(questionList().length / QUESTION_PAGE_SIZE) - 1));
     } catch (err) {
       setError(formatApiError(err));
+    }
+  };
+
+  const removeQuestionImage = async (question: ExamQuestion) => {
+    if (props.readOnly) return;
+    setError("");
+    setImagePending(`${question.id}:question`);
+    try {
+      await deleteExamQuestionImage(props.examId, question.id);
+      await refetch();
+      setFlash(t("common.deleted"));
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setImagePending("");
+    }
+  };
+
+  const removeChoiceImage = async (question: ExamQuestion, index: number) => {
+    if (props.readOnly) return;
+    setError("");
+    setImagePending(`${question.id}:choice:${index}`);
+    try {
+      await deleteExamChoiceImage(props.examId, question.id, index);
+      await refetch();
+      setFlash(t("common.deleted"));
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setImagePending("");
     }
   };
 
@@ -115,6 +159,7 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
       >
         <QuestionForm
           initial={formInitial()}
+          subjects={subjects() ?? []}
           onCancel={() => {
             setEditing(null);
             setShowForm(false);
@@ -142,8 +187,21 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
                           <Badge variant="outline" class="capitalize">
                             {q.kind === "choice" ? t("questions.kind.choice") : t("questions.kind.text")}
                           </Badge>
+                          <Badge variant="secondary">{subjectName(q.subject)}</Badge>
                           <Badge variant="outline">{q.points} {t("questions.points")}</Badge>
                         </div>
+                        <Show when={q.image}>
+                          <img
+                            src={`/api/exams/${props.examId}/questions/${q.id}/image`}
+                            alt={t("questions.image")}
+                            class="max-h-64 rounded-md border object-contain"
+                          />
+                        </Show>
+                        <Show when={!props.readOnly && q.image}>
+                          <Button type="button" variant="ghost" size="sm" class="h-8 w-fit text-destructive" disabled={imagePending() === `${q.id}:question`} onClick={() => void removeQuestionImage(q)}>
+                            {t("common.delete")}
+                          </Button>
+                        </Show>
                         <p class="whitespace-pre-wrap text-sm font-medium">{q.text}</p>
                         <Show when={q.kind === "choice" && q.choices}>
                           <ol class="grid gap-2 text-sm text-muted-foreground">
@@ -159,7 +217,21 @@ export function ExamQuestionsPanel(props: { examId: string; readOnly?: boolean; 
                                   <span class="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-[3px] border bg-background text-[11px] font-semibold text-foreground">
                                     {String.fromCharCode(65 + choiceIndex())}
                                   </span>
-                                  <span class="min-w-0 whitespace-pre-wrap">{choice}</span>
+                                  <span class="min-w-0 flex-1 space-y-2 whitespace-pre-wrap">
+                                    <span class="block">{choice}</span>
+                                    <Show when={q.choice_images?.[choiceIndex()]}>
+                                      <img
+                                        src={`/api/exams/${props.examId}/questions/${q.id}/choices/${choiceIndex()}/image`}
+                                        alt={t("questions.choiceImage")}
+                                        class="max-h-40 rounded-md border object-contain"
+                                      />
+                                    </Show>
+                                    <Show when={!props.readOnly && q.choice_images?.[choiceIndex()]}>
+                                      <Button type="button" variant="ghost" size="sm" class="h-8 px-2 text-destructive" disabled={imagePending() === `${q.id}:choice:${choiceIndex()}`} onClick={() => void removeChoiceImage(q, choiceIndex())}>
+                                        {t("common.delete")}
+                                      </Button>
+                                    </Show>
+                                  </span>
                                 </li>
                               )}
                             </For>

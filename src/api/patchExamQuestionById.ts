@@ -2,6 +2,7 @@ import { client } from "./client";
 import type { ExamQuestion, QuestionKind } from "./types";
 
 export type PatchExamQuestionBody = {
+  subject_id?: string;
   text?: string | null;
   kind?: QuestionKind | null;
   points?: number | null;

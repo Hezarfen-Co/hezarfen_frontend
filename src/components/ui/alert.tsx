@@ -12,7 +12,7 @@ export function Alert(
       class={cn(
         "relative w-full rounded-md border px-4 py-3 text-sm shadow-sm",
         local.variant === "destructive" && "border-destructive/30 bg-destructive/10 text-destructive",
-        local.variant === "success" && "border-emerald-600/30 bg-emerald-600/10 text-emerald-800 dark:text-emerald-300",
+        local.variant === "success" && "fixed right-4 top-4 z-50 w-[calc(100vw-2rem)] max-w-sm border-emerald-600/30 bg-background text-emerald-800 shadow-lg dark:text-emerald-300 sm:right-6 sm:top-6",
         (!local.variant || local.variant === "default") && "bg-background text-foreground",
         local.class,
       )}
