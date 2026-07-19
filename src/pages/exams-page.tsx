@@ -25,7 +25,7 @@ import { examKindLabel } from "@/lib/exam-labels";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
-import { scheduleStatusClass } from "@/lib/schedule-status";
+import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -155,7 +155,12 @@ function ExamsContent() {
       meta: { headerClass: "text-center", cellClass: "text-center" },
       cell: (cell) => {
         const status = examStatus(cell.row.original);
-        return <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", scheduleStatusClass(status))}>{statusLabel(status)}</Badge>;
+        return (
+          <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", scheduleStatusClass(status))}>
+            <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(status))} />
+            {statusLabel(status)}
+          </Badge>
+        );
       },
     },
     {
