@@ -1,10 +1,11 @@
 import { client } from "./client";
 import type { CourseSession } from "./types";
 
+/** Omitted fields keep their value. Only `ends_at` clears on explicit null. */
 export type PatchSessionBody = {
-  topic?: string | null;
-  teacher_id?: string | null;
-  starts_at?: number | null;
+  topic?: string;
+  teacher_id?: string;
+  starts_at?: number;
   ends_at?: number | null;
 };
 

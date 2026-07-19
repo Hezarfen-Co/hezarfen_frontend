@@ -359,6 +359,7 @@ function CourseDetailContent() {
                     id="edit-course-title"
                     value={title()}
                     required
+                    maxlength={200}
                     onInput={(e) => setTitle(e.currentTarget.value)}
                   />
                 </div>
@@ -368,6 +369,7 @@ function CourseDetailContent() {
                     id="edit-course-desc"
                     value={description()}
                     rows={3}
+                    maxlength={2000}
                     onInput={(e) => setDescription(e.currentTarget.value)}
                   />
                 </div>

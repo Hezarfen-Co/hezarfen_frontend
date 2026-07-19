@@ -7,7 +7,7 @@ import { useT } from "@/stores/preferences-context";
 
 export function UserPreferencesActions(props: {
   user: User;
-  onPreferencesChange: (userId: string, body: { theme?: UserTheme | null; language?: UserLanguage | null }) => Promise<void>;
+  onPreferencesChange: (userId: string, body: { theme?: UserTheme | ""; language?: UserLanguage | "" }) => Promise<void>;
 }) {
   const t = useT();
   const [theme, setTheme] = createSignal<UserTheme | "">(props.user.theme ?? "");
@@ -29,7 +29,8 @@ export function UserPreferencesActions(props: {
         </Select>
       </div>
       <Show when={dirty()}>
-        <Button type="button" size="sm" class="h-7 rounded-sm px-2" onClick={() => props.onPreferencesChange(props.user.id, { theme: theme() || null, language: language() || null })}>
+        {/* "" clears the preference on the backend; null would silently keep it. */}
+        <Button type="button" size="sm" class="h-7 rounded-sm px-2" onClick={() => props.onPreferencesChange(props.user.id, { theme: theme(), language: language() })}>
           <IconCheck />
           {t("common.save")}
         </Button>
