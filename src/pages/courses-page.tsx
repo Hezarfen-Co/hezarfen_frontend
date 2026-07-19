@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
 import { getMyCourses } from "@/api/getMyCourses";
 import { getTerms } from "@/api/getTerms";
-import { getUsers } from "@/api/getUsers";
+import { getUserSearch } from "@/api/getUserSearch";
 import { postCourse } from "@/api/postCourse";
 import { formatApiError } from "@/api/client";
 import type { Course, CourseKind } from "@/api/types";
@@ -57,7 +57,7 @@ function CoursesContent() {
   const [terms] = createResource(async () => (await getTerms()).items);
   const [users] = createResource(
     () => (hasMinRole(auth.user()?.role, "manager") ? true : null),
-    async (enabled) => (enabled ? (await getUsers().catch(() => ({ items: [] as Awaited<ReturnType<typeof getUsers>>["items"] }))).items : []),
+    async (enabled) => (enabled ? (await getUserSearch("")).items : []),
   );
 
   const termName = (id: string | null | undefined) => terms()?.find((term) => term.id === id)?.name ?? t("terms.unassigned");

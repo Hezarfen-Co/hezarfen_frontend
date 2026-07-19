@@ -1,7 +1,7 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteWorkEntryById } from "@/api/deleteWorkEntryById";
-import { getUsers } from "@/api/getUsers";
+import { getUserSearch } from "@/api/getUserSearch";
 import { getUserWorkLog } from "@/api/getUserWorkLog";
 import { patchWorkEntryById } from "@/api/patchWorkEntryById";
 import { ApiError, formatApiError } from "@/api/client";
@@ -83,13 +83,7 @@ function StaffWorkContent() {
   const [people] = createResource(
     async () => {
       try {
-        return (await getUsers()).items
-          .filter((user) => user.role === "teacher")
-          .map((user) => ({
-            id: user.id,
-            username: user.username,
-            display_name: [user.name, user.surname].filter(Boolean).join(" ") || null,
-          }));
+        return (await getUserSearch("", undefined, "teacher")).items;
       } catch (err) {
         setError(formatApiError(err));
         return [];

@@ -1,7 +1,7 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getUserAttendance } from "@/api/getUserAttendance";
-import { getUsers } from "@/api/getUsers";
+import { getUserSearch } from "@/api/getUserSearch";
 import { ApiError, formatApiError } from "@/api/client";
 import type { PersonRef } from "@/api/types";
 import { AttendanceReportView } from "@/components/attendance/attendance-report-view";
@@ -35,13 +35,7 @@ function StudentAttendanceContent() {
     async () => {
       try {
         setError("");
-        return (await getUsers()).items
-          .filter((user) => user.role === "student")
-          .map((user) => ({
-            id: user.id,
-            username: user.username,
-            display_name: [user.name, user.surname].filter(Boolean).join(" ") || null,
-          }));
+        return (await getUserSearch("", undefined, "student")).items;
       } catch (err) {
         setError(formatApiError(err));
         return [];
