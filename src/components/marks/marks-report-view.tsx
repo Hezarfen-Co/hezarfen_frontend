@@ -58,7 +58,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
       meta: { cellClass: "mono text-right font-semibold" },
       cell: (cell) => markWithGrade(cell.row.original.mark, cell.row.original.grade),
     },
-  ];
+  ]);
 
   return (
     <Show when={props.report.courses.length > 0} fallback={<DataTableEmpty>{t("marks.empty")}</DataTableEmpty>}>
