@@ -1,5 +1,7 @@
 import { For, Show, Suspense, createResource } from "solid-js";
+import { getExamQuestions } from "@/api/getExamQuestions";
 import { getStudentAnswers } from "@/api/getStudentAnswers";
+import type { ExamQuestion, StudentAnswer } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { personLabelWithId } from "@/lib/person";
@@ -9,7 +11,17 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
   const t = useT();
   const [sheet] = createResource(
     () => [props.examId, props.userId] as const,
-    async ([examId, userId]) => getStudentAnswers(examId, userId),
+    async ([examId, userId]) => {
+      const [answers, questions] = await Promise.all([getStudentAnswers(examId, userId), getExamQuestions(examId)]);
+      const byId = new Map(questions.items.map((question) => [question.id, question]));
+      return {
+        ...answers,
+        rows: answers.answers.flatMap((answer) => {
+          const question = byId.get(answer.question);
+          return question ? [answerRow(answer, question)] : [];
+        }),
+      };
+    },
   );
 
   return (
@@ -24,7 +36,7 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
               </Badge>
             </div>
 
-            <For each={s().answers}>
+            <For each={s().rows}>
               {(answer, idx) => (
                 <div class="rounded-md border p-4">
                   <div class="mb-2 flex flex-wrap items-center gap-2">
@@ -86,4 +98,21 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
       </Show>
     </Suspense>
   );
+}
+
+function answerRow(answer: StudentAnswer, question: ExamQuestion) {
+  const isChoice = question.kind === "choice";
+  const possible = isChoice ? question.points : 0;
+  return {
+    question_id: answer.question,
+    text: question.text,
+    kind: question.kind,
+    points: question.points,
+    choices: question.choices,
+    correct: question.correct,
+    selected: answer.selected,
+    text_answer: answer.text,
+    is_correct: answer.is_correct,
+    auto_score: { earned: answer.is_correct ? question.points : 0, possible },
+  };
 }

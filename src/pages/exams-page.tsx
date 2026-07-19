@@ -69,7 +69,7 @@ function ExamsContent() {
   const canEditExam = (exam: Exam) => exam.creator === auth.user()?.id || hasMinRole(auth.user()?.role, "manager");
   const visibleCourses = createMemo(() => (isStudent() ? mine() : courses()) ?? []);
   const manageableCourses = createMemo(() =>
-    visibleCourses().filter((course) => course.creator === auth.user()?.id || hasMinRole(auth.user()?.role, "manager")),
+    visibleCourses().filter((course) => course.creator.id === auth.user()?.id || hasMinRole(auth.user()?.role, "manager")),
   );
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher") && manageableCourses().length > 0;
   const courseById = createMemo(() => new Map(visibleCourses().map((course) => [course.id, course])));

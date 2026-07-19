@@ -1,8 +1,10 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { Portal } from "solid-js/web";
 import { Button } from "@/components/ui/button";
 import { IconCalendar, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
+import { usePreferences } from "@/stores/preferences-context";
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
@@ -47,15 +49,29 @@ export function DatePicker(props: {
   class?: string;
   onChange: (value: string) => void;
 }) {
+  const { locale } = usePreferences();
   let root: HTMLDivElement | undefined;
+  let panel: HTMLDivElement | undefined;
   const [open, setOpen] = createSignal(false);
   const [position, setPosition] = createSignal({ left: 0, top: 0, width: 288 });
   const selected = createMemo(() => parseDate(props.value));
   const [month, setMonth] = createSignal(selected() ?? new Date());
   const days = createMemo(() => monthDays(month()));
   const monthLabel = createMemo(() =>
-    new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(month()),
+    new Intl.DateTimeFormat(locale(), { month: "long", year: "numeric" }).format(month()),
   );
+  const selectedDayLabel = createMemo(() => {
+    const date = selected();
+    return date ? new Intl.DateTimeFormat(locale(), { weekday: "long" }).format(date) : "";
+  });
+  const dayHeaders = createMemo(() => {
+    const base = new Date(2024, 0, 1);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(base);
+      d.setDate(base.getDate() + i);
+      return new Intl.DateTimeFormat(locale(), { weekday: "short" }).format(d);
+    });
+  });
 
   createEffect(() => {
     const date = selected();
@@ -81,7 +97,8 @@ export function DatePicker(props: {
     };
     updatePosition();
     const closeOnOutside = (event: MouseEvent) => {
-      if (root && !root.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (root && !root.contains(target) && panel && !panel.contains(target)) setOpen(false);
     };
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
@@ -119,49 +136,49 @@ export function DatePicker(props: {
         />
         <IconCalendar class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       </div>
+      <Show when={selectedDayLabel()}>
+        {(day) => <p class="mt-1 text-xs font-medium capitalize text-muted-foreground">{day()}</p>}
+      </Show>
       <Show when={open()}>
-        <div
-          class="fixed z-[80] rounded-xl border border-border/80 bg-popover p-2.5 text-popover-foreground shadow-xl"
-          style={{ left: `${position().left}px`, top: `${position().top}px`, width: `${position().width}px` }}
-        >
-          <div class="mb-3 flex items-center justify-between gap-2">
-            <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={() => moveMonth(-1)}>
-              <IconChevronLeft class="h-4 w-4" />
-            </Button>
-            <p class="min-w-0 truncate px-2 text-sm font-semibold capitalize">{monthLabel()}</p>
-            <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={() => moveMonth(1)}>
-              <IconChevronRight class="h-4 w-4" />
-            </Button>
+        <Portal>
+          <div
+            ref={panel}
+            class="fixed z-[80] rounded-xl border border-border/80 bg-popover p-2.5 text-popover-foreground shadow-xl"
+            style={{ left: `${position().left}px`, top: `${position().top}px`, width: `${position().width}px` }}
+          >
+            <div class="mb-3 flex items-center justify-between gap-2">
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={() => moveMonth(-1)}>
+                <IconChevronLeft class="h-4 w-4" />
+              </Button>
+              <p class="min-w-0 truncate px-2 text-sm font-semibold capitalize">{monthLabel()}</p>
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={() => moveMonth(1)}>
+                <IconChevronRight class="h-4 w-4" />
+              </Button>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-muted-foreground">
+              <For each={dayHeaders()}>{(day) => <span>{day}</span>}</For>
+            </div>
+            <div class="mt-1 grid grid-cols-7 gap-0.5">
+              <For each={days()}>
+                {(date) => (
+                  <Show when={date} fallback={<span class="h-8" />}>
+                    {(day) => (
+                      <Button
+                        type="button"
+                        variant={sameDay(selected(), day()) ? "default" : "ghost"}
+                        size="sm"
+                        class="h-8 rounded-lg p-0 text-xs"
+                        onClick={() => pick(day())}
+                      >
+                        {day().getDate()}
+                      </Button>
+                    )}
+                  </Show>
+                )}
+              </For>
+            </div>
           </div>
-          <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-muted-foreground">
-            <span>Pzt</span>
-            <span>Sal</span>
-            <span>Çar</span>
-            <span>Per</span>
-            <span>Cum</span>
-            <span>Cmt</span>
-            <span>Paz</span>
-          </div>
-          <div class="mt-1 grid grid-cols-7 gap-0.5">
-            <For each={days()}>
-              {(date) => (
-                <Show when={date} fallback={<span class="h-8" />}>
-                  {(day) => (
-                    <Button
-                      type="button"
-                      variant={sameDay(selected(), day()) ? "default" : "ghost"}
-                      size="sm"
-                      class="h-8 rounded-lg p-0 text-xs"
-                      onClick={() => pick(day())}
-                    >
-                      {day().getDate()}
-                    </Button>
-                  )}
-                </Show>
-              )}
-            </For>
-          </div>
-        </div>
+        </Portal>
       </Show>
     </div>
   );

@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { getUserSearch } from "@/api/getUserSearch";
 import type { PersonRef, Role } from "@/api/types";
 import { Input } from "@/components/ui/input";
@@ -46,23 +46,26 @@ export function UserSearchSelect(props: {
   });
 
   let abortController: AbortController | null = null;
-  createEffect(async () => {
+  createEffect(() => {
     const q = query().trim();
-    if (abortController) abortController.abort();
+    abortController?.abort();
     if (q.length === 0) {
       setUsers([]);
       return;
     }
-    abortController = new AbortController();
-    setLoading(true);
-    try {
-      const data = await getUserSearch(q, abortController.signal, props.role);
-      setUsers(data.items);
-    } catch {
-      if (!abortController?.signal.aborted) setUsers([]);
-    } finally {
-      if (!abortController?.signal.aborted) setLoading(false);
-    }
+    // Debounce keystrokes so a typed name is one request, not one per letter.
+    const timer = window.setTimeout(() => {
+      const controller = new AbortController();
+      abortController = controller;
+      setLoading(true);
+      void getUserSearch(q, controller.signal, props.role)
+        .then((data) => setUsers(data.items))
+        .catch(() => {
+          if (!controller.signal.aborted) setUsers([]);
+        })
+        .finally(() => setLoading(false));
+    }, 250);
+    onCleanup(() => window.clearTimeout(timer));
   });
 
   createEffect(() => {
