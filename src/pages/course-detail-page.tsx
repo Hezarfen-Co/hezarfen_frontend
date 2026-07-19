@@ -1,5 +1,6 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteCourseById } from "@/api/deleteCourseById";
 import { deleteCourseEnrollmentByUserId } from "@/api/deleteCourseEnrollmentByUserId";
 import { getCourseById } from "@/api/getCourseById";
@@ -12,9 +13,10 @@ import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
 import { postCourseExam } from "@/api/postCourseExam";
 import { formatApiError } from "@/api/client";
-import type { CourseKind } from "@/api/types";
+import type { CourseKind, Enrollment, Exam } from "@/api/types";
 import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm } from "@/components/exams/exam-form";
+import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
 import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -22,7 +24,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTableFrame } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { createFlash } from "@/lib/flash";
@@ -32,14 +34,6 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
 import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchSelect } from "@/components/users/user-search-select";
@@ -49,7 +43,7 @@ import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
 import { hasMinRole } from "@/lib/roles";
 
-const COURSE_KINDS: CourseKind[] = ["course", "study"];
+const COURSE_KINDS: CourseKind[] = ["course", "study", "club"];
 
 export default function CourseDetailPage() {
   return (
@@ -74,7 +68,6 @@ function CourseDetailContent() {
   const [terms] = createResource(async () => (await getTerms()).items);
   const [settings] = createResource(() => getSettings());
   const [exams, { refetch: refetchExams }] = createResource(id, async (courseId) => (await getCourseExams(courseId)).items);
-  const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const hasCourseManagementRights = () => {
     const c = course();
     const u = auth.user();
@@ -95,10 +88,14 @@ function CourseDetailContent() {
   const [description, setDescription] = createSignal("");
   const [kind, setKind] = createSignal<CourseKind>("course");
   const [termId, setTermId] = createSignal("");
+  const [capacity, setCapacity] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
+  const [showSubjectForm, setShowSubjectForm] = createSignal(false);
   const [showSessionForm, setShowSessionForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
-  const [openSections, setOpenSections] = createSignal({ exams: true, sessions: false, roster: false });
+  const [openSections, setOpenSections] = createSignal({ subjects: false, exams: false, sessions: false, roster: false });
+  const [subjectCount, setSubjectCount] = createSignal(0);
+  const [sessionCount, setSessionCount] = createSignal(0);
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -124,14 +121,96 @@ function CourseDetailContent() {
     return t("exams.unscheduled");
   };
   const courseKindLabel = (value: CourseKind | undefined) =>
-    value === "study" ? t("courses.kind.study") : t("courses.kind.course");
+    value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
+  const courseListPath = (value: CourseKind | undefined) => value === "study" ? "/studies" : value === "club" ? "/clubs" : "/courses";
 
   const examCount = createMemo(() => exams()?.length ?? 0);
   const rosterCount = createMemo(() => roster()?.length ?? 0);
-  const examKindCount = createMemo(() => new Set((exams() ?? []).map((exam) => exam.kind)).size);
+  const countDescription = (count: number, item: string) => t("common.countItem", { count, item });
 
   const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
-  const toggleSection = (section: "exams" | "sessions" | "roster") => {
+  const rosterColumns = createMemo<ColumnDef<Enrollment>[]>(() => [
+    {
+      id: "username",
+      accessorFn: (row) => row.user.display_name || row.user.username,
+      header: t("admin.username"),
+      meta: { cellClass: "font-medium" },
+      cell: (cell) => cell.row.original.user.display_name || cell.row.original.user.username,
+    },
+    {
+      id: "id",
+      accessorFn: (row) => row.user.id,
+      header: t("admin.id"),
+      meta: { cellClass: "mono text-xs text-muted-foreground" },
+      cell: (cell) => cell.row.original.user.id,
+    },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+      cell: (cell) => (
+        <Show when={canManage()}>
+          <TableRowActions
+            label={t("common.actions")}
+            actions={[
+              {
+                label: t("common.remove"),
+                icon: <IconTrash class="h-4 w-4" />,
+                destructive: true,
+                onSelect: () =>
+                  setRemoveTarget({
+                    userId: cell.row.original.user.id,
+                    userName: cell.row.original.user.display_name || cell.row.original.user.username,
+                  }),
+              },
+            ]}
+          />
+        </Show>
+      ),
+    },
+  ]);
+  const examColumns = createMemo<ColumnDef<Exam>[]>(() => [
+    {
+      accessorKey: "title",
+      header: t("form.title"),
+      meta: { cellClass: "font-medium" },
+      cell: (cell) => (
+        <ExamLink examId={cell.row.original.id} class="hover:text-primary hover:underline">
+          {cell.row.original.title}
+        </ExamLink>
+      ),
+    },
+    {
+      id: "kind",
+      accessorFn: (row) => examKindLabel(String(row.kind), t),
+      header: t("exams.kind"),
+      cell: (cell) => (
+        <Badge variant="outline" class="rounded-sm capitalize">
+          {examKindLabel(String(cell.row.original.kind), t)}
+          <Show when={examWeight(cell.row.original, settings()?.exam_kinds) != null}>
+            {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
+          </Show>
+        </Badge>
+      ),
+    },
+    {
+      id: "mode",
+      accessorFn: (row) => examModeLabel(row.mode),
+      header: t("exams.mode"),
+      cell: (cell) => <Badge variant="secondary" class="rounded-sm">{examModeLabel(cell.row.original.mode)}</Badge>,
+    },
+    {
+      id: "status",
+      accessorFn: (row) => (row.draft ? t("exams.draft") : ""),
+      header: t("events.status"),
+      cell: (cell) => (
+        <Show when={cell.row.original.draft} fallback="—">
+          <Badge variant="secondary" class="rounded-sm">{t("exams.draft")}</Badge>
+        </Show>
+      ),
+    },
+  ]);
+  const toggleSection = (section: "subjects" | "exams" | "sessions" | "roster") => {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
 
@@ -157,6 +236,7 @@ function CourseDetailContent() {
     setDescription(c.description);
     setKind(c.kind ?? "course");
     setTermId(c.term ?? "");
+    setCapacity(c.capacity == null ? "" : String(c.capacity));
     setEditing(true);
   };
 
@@ -175,21 +255,14 @@ function CourseDetailContent() {
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
             <div class="space-y-2">
-              <div class="detail-breadcrumb">
-                <span>{t("nav.group.classes")}</span>
-                <span>/</span>
-                <Link to="/courses">{t("courses.title")}</Link>
-                <span>/</span>
-                <span class="truncate">{c().title}</span>
-              </div>
               <PageHeader
                 accent="violet"
-                eyebrow={t("courses.title")}
+                eyebrow={courseKindLabel(c().kind)}
                 title={c().title}
-                description={c().description || undefined}
+                description={c().description || "—"}
                 actions={
                   <div class="detail-action-group">
-                    <Link to="/courses">
+                    <Link to={courseListPath(c().kind)}>
                       <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
                         {t("common.back")}
@@ -210,10 +283,19 @@ function CourseDetailContent() {
                   </div>
                 }
               />
-              <div class="flex flex-wrap gap-2">
-                <Badge variant="outline" class="rounded-sm">
-                  {courseKindLabel(c().kind)}
-                </Badge>
+              <div class="grid gap-3 text-sm sm:grid-cols-3">
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("courses.kind")}</p>
+                  <p class="mt-1 font-medium">{courseKindLabel(c().kind)}</p>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("terms.term")}</p>
+                  <p class="mt-1 font-medium">{terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}</p>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("courses.capacity")}</p>
+                  <p class="mono mt-1 font-medium">{c().capacity == null ? "—" : hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}</p>
+                </div>
               </div>
             </div>
 
@@ -226,7 +308,7 @@ function CourseDetailContent() {
               onConfirm={async () => {
                 await wrap(async () => {
                   await deleteCourseById(id());
-                  void navigate({ to: "/courses" });
+                  void navigate({ to: courseListPath(c().kind) });
                 });
               }}
             />
@@ -258,11 +340,13 @@ function CourseDetailContent() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   void wrap(async () => {
+                    const cap = capacity().trim();
                     await patchCourseById(id(), {
                       title: title().trim(),
                       description: description(),
                       kind: kind(),
                       term_id: termId() || null,
+                      capacity: cap ? Number(cap) : null,
                     });
                     setEditing(false);
                     await refetchCourse();
@@ -299,6 +383,10 @@ function CourseDetailContent() {
                     <option value="">{t("terms.unassigned")}</option>
                     <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
                   </Select>
+                </div>
+                <div class="space-y-1.5">
+                  <Label for="edit-course-capacity">{t("courses.capacity")}</Label>
+                  <Input id="edit-course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
                 </div>
                 <div class="flex flex-wrap gap-2">
                   <Button type="submit" class="rounded-sm" disabled={pending()}>
@@ -368,50 +456,28 @@ function CourseDetailContent() {
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
-            <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div class="detail-metric-card">
-                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  {t("courses.exams")}
-                </p>
-                <p class="mono mt-2 text-3xl font-semibold tabular-nums">{examCount()}</p>
-                <p class="mt-1 text-xs text-muted-foreground">{t("nav.exams")}</p>
-              </div>
-
-              <Show when={isTeacherPlus()}>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                    {t("courses.roster")}
-                  </p>
-                  <p class="mono mt-2 text-3xl font-semibold tabular-nums">{rosterCount()}</p>
-                  <p class="mt-1 text-xs text-muted-foreground">{t("courses.enroll")}</p>
-                </div>
-              </Show>
-
-              <div class="detail-metric-card">
-                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  {t("exams.kind")}
-                </p>
-                <p class="mono mt-2 text-3xl font-semibold tabular-nums">{examKindCount()}</p>
-                <p class="mt-1 text-xs text-muted-foreground">{t("courses.exams")}</p>
-              </div>
-
-              <div class="detail-metric-card">
-                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  {t("terms.term")}
-                </p>
-                <p class="mono mt-2 truncate text-xl font-semibold">
-                  {terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}
-                </p>
-                <p class="mt-1 text-xs text-muted-foreground">{t("terms.title")}</p>
-              </div>
-            </section>
+            <SectionDisclosure
+              open={openSections().subjects}
+              onToggle={() => toggleSection("subjects")}
+              title={t("subjects.title")}
+              description={countDescription(subjectCount(), t("subjects.item"))}
+              actions={
+                <Show when={canManage()}>
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSubjectForm(true)}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("subjects.add")}
+                  </Button>
+                </Show>
+              }
+            >
+              <CourseSubjectsPanel courseId={id()} canManage={canManage()} active={openSections().subjects} createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
+            </SectionDisclosure>
 
             <SectionDisclosure
               open={openSections().exams}
               onToggle={() => toggleSection("exams")}
               title={t("courses.exams")}
-              description={`${examCount()} ${t("nav.exams")}`}
-              meta={<Badge variant="secondary" class="rounded-lg px-3 py-1"><span class="mono tabular-nums">{examCount()}</span><span class="ml-1">{t("nav.exams")}</span></Badge>}
+              description={countDescription(examCount(), t("courses.examItem"))}
               actions={
                 <Show when={canManage()}>
                   <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
@@ -422,52 +488,7 @@ function CourseDetailContent() {
               }
             >
               <Suspense fallback={<PageSpinner />}>
-                <Show
-                  when={(exams() ?? []).length > 0}
-                  fallback={
-                    <EmptyState
-                      title={t("exams.empty")}
-                      action={
-                        canManage() ? (
-                          <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
-                            <IconPlus class="h-4 w-4" />
-                            {t("courses.addExam")}
-                          </Button>
-                        ) : undefined
-                      }
-                    />
-                  }
-                >
-                  <ul class="space-y-2">
-                    <For each={exams() ?? []}>
-                      {(exam) => (
-                        <li>
-                          <ExamLink
-                            examId={exam.id}
-                            class="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/35 hover:bg-muted/40"
-                          >
-                            <div class="min-w-0 space-y-2">
-                              <div>
-                                <p class="truncate font-medium group-hover:text-primary">{exam.title}</p>
-                              </div>
-                              <div class="flex flex-wrap items-center gap-2">
-                                <Badge variant="outline" class="rounded-sm capitalize">
-                                  {examKindLabel(String(exam.kind), t)}
-                                  <Show when={examWeight(exam, settings()?.exam_kinds) != null}>
-                                    {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
-                                  </Show>
-                                </Badge>
-                                <Badge variant="secondary" class="rounded-sm">
-                                  {examModeLabel(exam.mode)}
-                                </Badge>
-                              </div>
-                            </div>
-                          </ExamLink>
-                        </li>
-                      )}
-                    </For>
-                  </ul>
-                </Show>
+                <DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} />
               </Suspense>
             </SectionDisclosure>
 
@@ -475,8 +496,7 @@ function CourseDetailContent() {
               open={openSections().sessions}
               onToggle={() => toggleSection("sessions")}
               title={t("sessions.title")}
-              description={t("sessions.subtitle")}
-              meta={<Badge variant="secondary" class="rounded-lg px-3 py-1">{t("sessions.title")}</Badge>}
+              description={countDescription(sessionCount(), t("sessions.item"))}
               actions={
                 <Show when={canManage()}>
                   <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSessionForm(true)}>
@@ -493,6 +513,7 @@ function CourseDetailContent() {
                 active={openSections().sessions}
                 createOpen={showSessionForm()}
                 onCreateOpenChange={setShowSessionForm}
+                onCountChange={setSessionCount}
               />
             </SectionDisclosure>
 
@@ -501,8 +522,7 @@ function CourseDetailContent() {
                 open={openSections().roster}
                 onToggle={() => toggleSection("roster")}
                 title={t("courses.roster")}
-                description={t("courses.enroll")}
-                meta={<Badge variant="secondary" class="rounded-lg px-3 py-1"><span class="mono tabular-nums">{rosterCount()}</span><span class="ml-1">{t("courses.roster")}</span></Badge>}
+                description={countDescription(rosterCount(), t("courses.rosterItem"))}
                 actions={
                   <Show when={canManage()}>
                     <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
@@ -529,50 +549,7 @@ function CourseDetailContent() {
                       />
                     }
                   >
-                    <DataTableFrame>
-                      <Table class="data-table">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>{t("admin.username")}</TableHead>
-                            <TableHead>{t("admin.id")}</TableHead>
-                            <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <For each={roster() ?? []}>
-                            {(row) => (
-                              <TableRow>
-                                <TableCell class="font-medium">
-                                  {row.user.display_name || row.user.username}
-                                </TableCell>
-                                <TableCell class="mono text-xs text-muted-foreground">
-                                  {row.user.id}
-                                </TableCell>
-                                <TableCell class="px-1 text-center">
-                                  <Show when={canManage()}>
-                                    <TableRowActions
-                                      label={t("common.actions")}
-                                      actions={[
-                                        {
-                                          label: t("common.remove"),
-                                          icon: <IconTrash class="h-4 w-4" />,
-                                          destructive: true,
-                                          onSelect: () =>
-                                            setRemoveTarget({
-                                              userId: row.user.id,
-                                              userName: row.user.display_name || row.user.username,
-                                            }),
-                                        },
-                                      ]}
-                                    />
-                                  </Show>
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </For>
-                        </TableBody>
-                      </Table>
-                    </DataTableFrame>
+                    <DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} />
                   </Show>
                 </Suspense>
               </SectionDisclosure>

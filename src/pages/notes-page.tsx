@@ -66,9 +66,6 @@ function NotesContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          <span>{t("nav.notes")}</span>
-        </div>
         <PageHeader
           accent="amber"
           eyebrow={t("nav.notes")}

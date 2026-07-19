@@ -9,7 +9,7 @@ Active backend-refresh work is tracked in
 
 ## Completed State
 
-- Backend alignment is complete for settings, terms, course sessions, attendance reports, work logs, exam attempts, and grade bands.
+- Backend alignment is complete for settings, terms, course subjects/capacity, draft exams, course sessions, attendance reports, pomodoro focus logs, work logs, exam attempts, and grade bands.
 - Shared UI primitives cover dense tables, data toolbars, row action menus, side panels, confirm dialogs, date picking, and animated disclosures.
 - Dashboard is a monochrome, role-aware, read-only status board: workspace portal cards (`Title | count` on desktop) + needs-attention / upcoming lists. No create CTAs, no vanity charts, no duplicate KPI strip. Admin sees global course/exam scope; other roles use own/enrolled/related scope where the backend supports it.
 - Table and card actions use narrow centered three-dot menus through `TableRowActions`.

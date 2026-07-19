@@ -75,6 +75,9 @@ Solid components run **once**, there is no re-render:
   - `docs/backend-ui-alignment-plan.md` — completed backend-alignment archive; do not treat it as active work unless backend scope changes.
 - Durable resources use full detail pages. Short create/edit/filter work uses `SidePanel`. Destructive actions use confirm dialogs.
 - Header create actions use compact icon+label buttons with consistent size and current radius.
+- Application tables must use `src/components/ui/data-table.tsx` `DataTable`.
+  Pages/domain components must not import or render `Table` primitives directly;
+  only the `DataTable` wrapper and table primitive files may do that.
 - Disclosure sections may either defer mounting for request savings or keep content mounted for state preservation; choose deliberately and avoid hidden heavy requests unless needed.
 - Date/time product forms use shared `DatePicker` plus a separate `HH:mm` input. Backend schedule fields are UTC unix-millisecond values and the backend rejects newly set past event/exam/session schedules with `400`; use `GET /time` for server-clock-aware checks when accuracy matters.
 - Lesson session roll call is teacher/manager workflow only. Students never self-mark lesson sessions; the session teacher or course manager marks enrolled students, and the session teacher's own presence row is manager-only per backend rules.

@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteExamById } from "@/api/deleteExamById";
 import { deleteExamResultByUserId } from "@/api/deleteExamResultByUserId";
 import { getExamById } from "@/api/getExamById";
@@ -12,6 +13,7 @@ import { getSettings } from "@/api/getSettings";
 import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
+import type { ExamResult } from "@/api/types";
 import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { AnswerSheetView } from "@/components/exams/answer-sheet-view";
@@ -23,19 +25,11 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTableFrame } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
@@ -90,7 +84,7 @@ function ExamDetailContent() {
   const [sheetUserId, setSheetUserId] = createSignal<string | null>(null);
   const [gradeOpen, setGradeOpen] = createSignal(false);
   const [openSections, setOpenSections] = createSignal({
-    schedule: true,
+    schedule: false,
     ownResult: false,
     answerSheet: false,
     statistics: false,
@@ -171,6 +165,7 @@ function ExamDetailContent() {
   };
   const isSittable = () => exam()?.mode === "sync" || exam()?.mode === "async" || exam()?.mode === "open";
   const isScheduled = () => isSittable();
+  const isDraft = () => exam()?.draft === true;
   const gradeStudents = () => {
     const graded = new Set((results() ?? []).map((row) => personId(row.user)));
     return (roster() ?? [])
@@ -180,6 +175,55 @@ function ExamDetailContent() {
         label: personLabelWithId(row.user),
       }));
   };
+  const resultColumns = createMemo<ColumnDef<ExamResult>[]>(() => [
+    {
+      id: "user",
+      accessorFn: (row) => personLabel(row.user),
+      header: t("events.userId"),
+      meta: { cellClass: "font-medium" },
+      cell: (cell) => personLabel(cell.row.original.user),
+    },
+    {
+      accessorKey: "mark",
+      header: t("form.mark"),
+      cell: (cell) => <ExamResultBadge mark={cell.row.original.mark} />,
+    },
+    {
+      id: "graded_by",
+      accessorFn: (row) => personLabel(row.graded_by),
+      header: t("exams.gradedBy"),
+      meta: { cellClass: "text-sm text-muted-foreground" },
+      cell: (cell) => personLabel(cell.row.original.graded_by),
+    },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+      cell: (cell) => (
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+            {
+              label: t("exams.answerSheet"),
+              icon: <IconEye class="h-4 w-4" />,
+              onSelect: () => {
+                const rowUserId = personId(cell.row.original.user);
+                setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
+              },
+            },
+            ...(!isFinished()
+              ? [{
+                  label: t("common.remove"),
+                  icon: <IconTrash class="h-4 w-4" />,
+                  destructive: true,
+                  onSelect: () => setRemoveUserId(personId(cell.row.original.user)),
+                }]
+              : []),
+          ]}
+        />
+      ),
+    },
+  ]);
 
   const [flash, setFlash] = createFlash();
 
@@ -214,13 +258,6 @@ function ExamDetailContent() {
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
             <div class="space-y-2">
-              <div class="detail-breadcrumb">
-                <span>{t("nav.group.classes")}</span>
-                <span>/</span>
-                <Link to="/exams">{t("exams.title")}</Link>
-                <span>/</span>
-                <span class="truncate">{ex().title}</span>
-              </div>
               <PageHeader
                 accent="rose"
                 eyebrow={t("exams.title")}
@@ -228,99 +265,73 @@ function ExamDetailContent() {
                 description={ex().description || "—"}
                 actions={
                   <div class="detail-action-group">
-                  <Link to="/exams">
-                    <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
-                      <IconChevronLeft class="h-4 w-4" />
-                      {t("common.back")}
-                    </Button>
-                  </Link>
-                  <Show when={isStudent() && !isFinished() && !isUpcoming() && isSittable()}>
-                    <Link to="/exam-room/$id" params={{ id: id() }}>
-                      <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
-                        <IconExam class="h-4 w-4" />
-                        {t("attempt.openRoom")}
+                    <Link to="/exams">
+                      <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
+                        <IconChevronLeft class="h-4 w-4" />
+                        {t("common.back")}
                       </Button>
                     </Link>
-                  </Show>
-                  <Show when={hasCourseManagementRights() && !isUpcoming() && isSittable()}>
-                    <Link to="/exams/$id/live" params={{ id: id() }}>
-                      <Button variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none">
-                        <IconEye class="h-4 w-4" />
-                        {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
-                      </Button>
-                    </Link>
-                  </Show>
-                  <Show when={canManage()}>
-                    <div class="detail-action-divider">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        class="flex-1 rounded-sm sm:flex-none"
-                        onClick={() => setEditing(true)}
-                      >
-                        <IconEdit class="h-4 w-4" />
-                        {t("common.edit")}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        class="flex-1 rounded-sm sm:flex-none"
-                        disabled={pending()}
-                        onClick={() => setDeleteOpen(true)}
-                      >
-                        <IconTrash class="h-4 w-4" />
-                        {t("common.delete")}
-                      </Button>
-                    </div>
+                    <Show when={isStudent() && !isDraft() && !isFinished() && !isUpcoming() && isSittable()}>
+                      <Link to="/exam-room/$id" params={{ id: id() }}>
+                        <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
+                          <IconExam class="h-4 w-4" />
+                          {t("attempt.openRoom")}
+                        </Button>
+                      </Link>
+                    </Show>
+                    <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
+                      <Link to="/exams/$id/live" params={{ id: id() }}>
+                        <Button variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none">
+                          <IconEye class="h-4 w-4" />
+                          {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
+                        </Button>
+                      </Link>
+                    </Show>
+                    <Show when={canManage()}>
+                      <div class="detail-action-divider">
+                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setEditing(true)}>
+                          <IconEdit class="h-4 w-4" />
+                          {t("common.edit")}
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
+                          <IconTrash class="h-4 w-4" />
+                          {t("common.delete")}
+                        </Button>
+                      </div>
+                    </Show>
+                  </div>
+                }
+              />
+              <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("work.status")}</p>
+                  <Badge
+                    variant="outline"
+                    class={cn(
+                      "mt-2 w-fit rounded-sm capitalize",
+                      scheduleStatusClass(!isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active"),
+                    )}
+                  >
+                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(!isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active"))} />
+                    {!isScheduled() ? t("exams.unscheduled") : isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
+                  </Badge>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.kind")}</p>
+                  <p class="mt-1 font-medium capitalize">{examKindLabel(String(ex().kind), t)}</p>
+                  <Show when={examWeight(ex(), settings()?.exam_kinds) != null}>
+                    {(weight) => <p class="mt-1 text-xs text-muted-foreground">{t("courses.weight")}: {weight()}</p>}
                   </Show>
                 </div>
-                }
-              >
-              <div class="flex flex-wrap items-center gap-2 pt-1">
-                <Badge
-                  variant="outline"
-                  class={cn(
-                    "rounded-sm capitalize",
-                    scheduleStatusClass(
-                      !isScheduled()
-                        ? "unscheduled"
-                        : isFinished()
-                          ? "finished"
-                          : isUpcoming()
-                            ? "upcoming"
-                            : "active",
-                    ),
-                  )}
-                >
-                  <span
-                    class={cn(
-                      "mr-1.5 inline-block h-1.5 w-1.5 rounded-full",
-                      scheduleStatusDotClass(
-                        !isScheduled()
-                          ? "unscheduled"
-                          : isFinished()
-                            ? "finished"
-                            : isUpcoming()
-                              ? "upcoming"
-                              : "active",
-                      ),
-                    )}
-                  />
-                  {!isScheduled() ? t("exams.unscheduled") : isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
-                </Badge>
-                <Badge variant="outline" class="rounded-sm capitalize">
-                  {examKindLabel(String(ex().kind), t)}
-                  <Show when={examWeight(ex(), settings()?.exam_kinds) != null}>
-                    {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
-                  </Show>
-                </Badge>
-                <Badge variant="outline" class="rounded-sm">
-                  {examModeLabel(ex().mode)}
-                </Badge>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
+                  <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.draft")}</p>
+                  <p class="mt-1 font-medium">{ex().draft ? t("exams.draft") : "—"}</p>
+                </div>
               </div>
-              </PageHeader>
             </div>
 
             <ConfirmDialog
@@ -445,7 +456,7 @@ function ExamDetailContent() {
                 description={t("exams.examQuestions")}
               >
                 <Show when={openSections().questions}>
-                  <ExamQuestionsPanel examId={id()} readOnly={isFinished() || isUpcoming()} embedded />
+                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished() || isUpcoming()} embedded />
                 </Show>
               </SectionDisclosure>
 
@@ -475,7 +486,7 @@ function ExamDetailContent() {
                       <Show when={!isFinished()}>
                         <span class="text-xs text-muted-foreground">{t("exams.gradeAfterExam")}</span>
                       </Show>
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={!isFinished()} onClick={() => setGradeOpen(true)}>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={!isFinished() || isDraft()} onClick={() => setGradeOpen(true)}>
                         <IconEdit class="h-4 w-4" />
                         {t("exams.gradeStudent")}
                       </Button>
@@ -492,54 +503,7 @@ function ExamDetailContent() {
                       </p>
                     }
                   >
-                    <DataTableFrame>
-                      <Table class="data-table">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>{t("events.userId")}</TableHead>
-                            <TableHead>{t("form.mark")}</TableHead>
-                            <TableHead>{t("exams.gradedBy")}</TableHead>
-                            <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <For each={results() ?? []}>
-                            {(row) => (
-                              <TableRow>
-                                <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
-                                <TableCell>
-                                  <ExamResultBadge mark={row.mark} />
-                                </TableCell>
-                                <TableCell class="text-sm text-muted-foreground">{personLabel(row.graded_by)}</TableCell>
-                                <TableCell class="px-1 text-center">
-                                  <TableRowActions
-                                    label={t("common.actions")}
-                                    actions={[
-                                      {
-                                        label: t("exams.answerSheet"),
-                                        icon: <IconEye class="h-4 w-4" />,
-                                        onSelect: () => {
-                                          const rowUserId = personId(row.user);
-                                          setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
-                                        },
-                                      },
-                                      ...(!isFinished()
-                                        ? [{
-                                            label: t("common.remove"),
-                                            icon: <IconTrash class="h-4 w-4" />,
-                                            destructive: true,
-                                            onSelect: () => setRemoveUserId(personId(row.user)),
-                                          }]
-                                        : []),
-                                    ]}
-                                  />
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </For>
-                        </TableBody>
-                      </Table>
-                    </DataTableFrame>
+                    <DataTable columns={resultColumns()} data={results() ?? []} filterColumn="user" enablePagination pageSize={10} />
                   </Show>
                 </Suspense>
               </SectionDisclosure>

@@ -3,7 +3,7 @@ export type { Page, PageParams } from "./page";
 export type Role = "student" | "teacher" | "manager" | "admin";
 export type UserTheme = "light" | "dark";
 export type UserLanguage = "tr" | "en";
-export type CourseKind = "course" | "study" | string;
+export type CourseKind = "course" | "study" | "club" | string;
 export type CoreAttendanceStatus = "present" | "absent" | "late" | "excused";
 export type AttendanceStatus = CoreAttendanceStatus | string;
 export type KnownExamKind = "homework" | "quiz" | "midterm" | "final" | "project" | "oral";
@@ -76,6 +76,18 @@ export type Attendance = {
   marked_by: PersonRef;
 };
 
+export type EventRosterEntry = {
+  user: PersonRef;
+  status: AttendanceStatus | null;
+  marked_by: PersonRef | null;
+};
+
+export type EventRegistration = {
+  event: string;
+  user: PersonRef;
+  registered_by: PersonRef;
+};
+
 export type Course = {
   id: string;
   creator: string;
@@ -84,6 +96,7 @@ export type Course = {
   kind: CourseKind;
   /** Academic term id from API (`CourseResponse.term`). */
   term?: string | null;
+  capacity?: number | null;
 };
 
 export type Term = {
@@ -135,6 +148,12 @@ export type Exam = {
   duration_ms: number | null;
   max_attempts?: number | null;
   allow_rejoin?: boolean | null;
+  draft?: boolean | null;
+};
+
+export type ImageMeta = {
+  content_type: string;
+  size: number;
 };
 
 export type ExamResult = {
@@ -148,11 +167,14 @@ export type ExamResult = {
 export type ExamQuestion = {
   id: string;
   exam: string;
+  subject: string;
   text: string;
   kind: QuestionKind;
   points: number;
   choices: string[] | null;
   correct: number | null;
+  image?: ImageMeta | null;
+  choice_images?: (ImageMeta | null)[] | null;
 };
 
 export type ExamAttempt = {
@@ -181,11 +203,37 @@ export type AttemptAnswer = {
 export type AttemptQuestion = {
   id: string;
   exam: string;
+  subject: string;
   text: string;
   kind: QuestionKind;
   points: number;
   choices: string[] | null;
+  image?: ImageMeta | null;
+  choice_images?: (ImageMeta | null)[] | null;
   answer: AttemptAnswer | null;
+};
+
+export type PomodoroSession = {
+  id: string;
+  user: string;
+  started_at: number;
+  finished_at: number | null;
+  duration_ms: number | null;
+};
+
+export type PomodoroLog = {
+  items: PomodoroSession[];
+  total: number;
+  limit: number | null;
+  offset: number;
+  total_focus_ms: number;
+};
+
+export type Subject = {
+  id: string;
+  course: string;
+  name: string;
+  description: string;
 };
 
 export type MarkEntry = {

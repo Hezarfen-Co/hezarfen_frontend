@@ -2,6 +2,7 @@ import { client } from "./client";
 import type { ExamQuestion, QuestionKind } from "./types";
 
 export type ExamQuestionBody = {
+  subject_id: string;
   text: string;
   kind: QuestionKind;
   points: number;

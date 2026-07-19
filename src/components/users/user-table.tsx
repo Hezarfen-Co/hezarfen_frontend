@@ -1,20 +1,14 @@
-import { For, createSignal, Show } from "solid-js";
-import type { Role, User } from "@/api/types";
+import { createMemo, createSignal, Show } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
+import type { Role, User, UserLanguage, UserTheme } from "@/api/types";
 import type { MessageKey } from "@/i18n/messages";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTableFrame } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { IconCheck } from "@/components/ui/icons";
+import { UserPreferencesActions } from "@/components/users/user-preferences-actions";
 import { ROLES } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
@@ -30,7 +24,7 @@ function roleTone(role: Role): string {
   return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
 }
 
-function UserRoleRow(props: {
+function UserRoleActions(props: {
   user: User;
   currentUserId: string;
   onRoleChange: (userId: string, role: Role) => Promise<void>;
@@ -42,36 +36,24 @@ function UserRoleRow(props: {
   const dirty = () => pendingRole() !== props.user.role;
 
   return (
-    <TableRow>
-      <TableCell class="truncate font-medium">{props.user.username}</TableCell>
-      <TableCell class="truncate">{displayName(props.user)}</TableCell>
-      <TableCell class="truncate text-muted-foreground">{props.user.email || "—"}</TableCell>
-      <TableCell class="text-center">
-        <Badge variant="outline" class={cn("mono uppercase tracking-[0.08em]", roleTone(props.user.role))}>
-          {t(`role.${props.user.role}` as MessageKey)}
-        </Badge>
-      </TableCell>
-      <TableCell class="mono truncate text-xs text-muted-foreground">{props.user.id}</TableCell>
-      <TableCell class="w-52">
-        <Select
-          class="h-8 rounded-sm text-xs"
-          value={pendingRole()}
-          disabled={isSelf()}
-          onChange={(e) => setPendingRole(e.currentTarget.value as Role)}
-          aria-label={t("admin.role")}
-        >
-          {ROLES.map((r) => (
-            <option value={r}>{t(`role.${r}` as MessageKey)}</option>
-          ))}
-        </Select>
-        <Show when={!isSelf() && dirty()}>
-          <Button type="button" size="sm" class="mt-2 h-7 rounded-sm px-2" onClick={() => setConfirmOpen(true)}>
-            <IconCheck />
-            {t("common.update")}
-          </Button>
-        </Show>
-      </TableCell>
-
+    <>
+      <Select
+        class="h-8 rounded-sm text-xs"
+        value={pendingRole()}
+        disabled={isSelf()}
+        onChange={(e) => setPendingRole(e.currentTarget.value as Role)}
+        aria-label={t("admin.role")}
+      >
+        {ROLES.map((r) => (
+          <option value={r}>{t(`role.${r}` as MessageKey)}</option>
+        ))}
+      </Select>
+      <Show when={!isSelf() && dirty()}>
+        <Button type="button" size="sm" class="mt-2 h-7 rounded-sm px-2" onClick={() => setConfirmOpen(true)}>
+          <IconCheck />
+          {t("common.update")}
+        </Button>
+      </Show>
       <ConfirmDialog
         open={confirmOpen()}
         onOpenChange={setConfirmOpen}
@@ -85,7 +67,7 @@ function UserRoleRow(props: {
           await props.onRoleChange(props.user.id, pendingRole());
         }}
       />
-    </TableRow>
+    </>
   );
 }
 
@@ -93,41 +75,66 @@ export function UserTable(props: {
   users: User[];
   currentUserId: string;
   onRoleChange: (userId: string, role: Role) => Promise<void>;
+  onPreferencesChange?: (userId: string, body: { theme?: UserTheme | null; language?: UserLanguage | null }) => Promise<void>;
 }) {
   const t = useT();
+  const searchUser = (user: User, query: string) =>
+    [user.username, displayName(user), user.email, user.id, t(`role.${user.role}` as MessageKey)]
+      .join(" ")
+      .toLocaleLowerCase()
+      .includes(query.toLocaleLowerCase());
+  const columns = createMemo<ColumnDef<User>[]>(() => [
+    {
+      accessorKey: "username",
+      header: t("admin.username"),
+      meta: { cellClass: "truncate font-medium" },
+    },
+    {
+      id: "name",
+      header: t("profile.name"),
+      meta: { cellClass: "truncate" },
+      cell: (cell) => displayName(cell.row.original),
+    },
+    {
+      accessorKey: "email",
+      header: t("profile.email"),
+      meta: { cellClass: "truncate text-muted-foreground" },
+      cell: (cell) => cell.row.original.email || "—",
+    },
+    {
+      accessorKey: "role",
+      header: t("admin.role"),
+      meta: { headerClass: "text-center", cellClass: "text-center" },
+      cell: (cell) => (
+        <Badge variant="outline" class={cn("mono uppercase tracking-[0.08em]", roleTone(cell.row.original.role))}>
+          {t(`role.${cell.row.original.role}` as MessageKey)}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "id",
+      header: t("admin.id"),
+      meta: { cellClass: "mono truncate text-xs text-muted-foreground" },
+    },
+    {
+      id: "preferences",
+      header: t("nav.preferences"),
+      meta: { headerClass: "w-56", cellClass: "w-56" },
+      cell: (cell) => props.onPreferencesChange
+        ? <UserPreferencesActions user={cell.row.original} onPreferencesChange={props.onPreferencesChange} />
+        : "—",
+    },
+    {
+      id: "update",
+      header: t("common.update"),
+      meta: { headerClass: "w-52", cellClass: "w-52" },
+      cell: (cell) => (
+        <UserRoleActions user={cell.row.original} currentUserId={props.currentUserId} onRoleChange={props.onRoleChange} />
+      ),
+    },
+  ]);
+
   return (
-    <DataTableFrame>
-      <Table class="data-table table-fixed min-w-[58rem]">
-        <colgroup>
-          <col class="w-[15%]" />
-          <col class="w-[18%]" />
-          <col class="w-[22%]" />
-          <col class="w-[9rem]" />
-          <col class="w-[18%]" />
-          <col class="w-[13rem]" />
-        </colgroup>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("admin.username")}</TableHead>
-            <TableHead>{t("profile.name")}</TableHead>
-            <TableHead>{t("profile.email")}</TableHead>
-            <TableHead class="text-center">{t("admin.role")}</TableHead>
-            <TableHead>{t("admin.id")}</TableHead>
-            <TableHead class="w-52">{t("common.update")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <For each={props.users}>
-            {(user) => (
-              <UserRoleRow
-                user={user}
-                currentUserId={props.currentUserId}
-                onRoleChange={props.onRoleChange}
-              />
-            )}
-          </For>
-        </TableBody>
-      </Table>
-    </DataTableFrame>
+    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-[70rem]" searchPredicate={searchUser} enablePagination pageSize={20} />
   );
 }

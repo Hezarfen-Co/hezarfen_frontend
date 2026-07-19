@@ -6,6 +6,7 @@ export type PatchCourseBody = {
   description?: string | null;
   kind?: CourseKind | null;
   term_id?: string | null;
+  capacity?: number | null;
 };
 
 export function patchCourseById(id: string, body: PatchCourseBody): Promise<Course> {
