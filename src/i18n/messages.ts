@@ -39,6 +39,7 @@ export type MessageKey =
   | "common.save"
   | "common.create"
   | "common.edit"
+  | "common.done"
   | "common.delete"
   | "common.update"
   | "common.remove"
@@ -627,6 +628,7 @@ const en: Dict = {
   "common.save": "Save",
   "common.create": "Create",
   "common.edit": "Edit",
+  "common.done": "Done",
   "common.delete": "Delete",
   "common.update": "Update",
   "common.remove": "Remove",
@@ -1227,6 +1229,7 @@ const tr: Dict = {
   "common.save": "Kaydet",
   "common.create": "Oluştur",
   "common.edit": "Düzenle",
+  "common.done": "Bitti",
   "common.delete": "Sil",
   "common.update": "Güncelle",
   "common.remove": "Kaldır",

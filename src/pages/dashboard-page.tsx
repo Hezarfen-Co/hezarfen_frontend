@@ -1,4 +1,4 @@
-import { For, Show, createMemo, createResource, type Component } from "solid-js";
+import { For, Show, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { formatApiError } from "@/api/client";
 import { getCourses } from "@/api/getCourses";
@@ -10,6 +10,7 @@ import { getNotes } from "@/api/getNotes";
 import type { Course, Exam, Event, Role } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   IconBook,
   IconBriefcase,
@@ -37,6 +38,7 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const ATTENTION_LIMIT = 8;
 const UPCOMING_LIMIT = 6;
+const PORTAL_ORDER_KEY = "hezarfen.dashboard.portalOrder";
 
 type AttentionKind = "active" | "soon" | "today";
 
@@ -107,6 +109,9 @@ function DashboardContent() {
   const user = () => auth.user()!;
   const role = () => user().role;
   const now = createNow();
+  const [portalOrder, setPortalOrder] = createSignal<string[]>([]);
+  const [draggingPortal, setDraggingPortal] = createSignal<string | null>(null);
+  const [editingPortalOrder, setEditingPortalOrder] = createSignal(false);
 
   const [courses] = createResource(
     () => (role() !== "student" ? true : null),
@@ -239,6 +244,31 @@ function DashboardContent() {
     }
     return list;
   });
+  const portalOrderKey = () => `${PORTAL_ORDER_KEY}.${role()}`;
+  const orderedPortalCards = createMemo(() => {
+    const cards = portalCards();
+    const byId = new Map(cards.map((card) => [card.to, card]));
+    const ordered = portalOrder().flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
+    const seen = new Set(ordered.map((card) => card.to));
+    return [...ordered, ...cards.filter((card) => !seen.has(card.to))];
+  });
+  createEffect(() => {
+    try {
+      setPortalOrder(JSON.parse(window.localStorage.getItem(portalOrderKey()) || "[]") as string[]);
+    } catch {
+      setPortalOrder([]);
+    }
+  });
+  const movePortalCard = (from: string, to: string) => {
+    if (from === to) return;
+    const ids = orderedPortalCards().map((card) => card.to);
+    const fromIndex = ids.indexOf(from);
+    const toIndex = ids.indexOf(to);
+    if (fromIndex < 0 || toIndex < 0) return;
+    ids.splice(toIndex, 0, ids.splice(fromIndex, 1)[0]);
+    setPortalOrder(ids);
+    window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
+  };
 
   const attention = createMemo<AttentionItem[]>(() => {
     const n = now();
@@ -343,11 +373,31 @@ function DashboardContent() {
       <Show when={!loading()} fallback={<div class="px-4 py-8"><PageSpinner /></div>}>
         <div class="space-y-5 bg-background/40 px-4 py-4 sm:px-5 sm:py-5">
         <section class="space-y-2.5" aria-labelledby="dash-sections">
-          <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
-            {t("dashboard.roleLinks")}
-          </h2>
+          <div class="flex items-center justify-between gap-3">
+            <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
+              {t("dashboard.roleLinks")}
+            </h2>
+            <Button type="button" variant="outline" size="sm" class="h-8 rounded-sm" onClick={() => setEditingPortalOrder((value) => !value)}>
+              {editingPortalOrder() ? t("common.done") : t("common.edit")}
+            </Button>
+          </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <For each={portalCards()}>{(card) => <PortalCard card={card} />}</For>
+            <For each={orderedPortalCards()}>
+              {(card) => (
+                <PortalCard
+                  card={card}
+                  editing={editingPortalOrder()}
+                  dragging={draggingPortal() === card.to}
+                  onDragStart={() => setDraggingPortal(card.to)}
+                  onDragEnd={() => setDraggingPortal(null)}
+                  onDrop={(target) => {
+                    const source = draggingPortal();
+                    setDraggingPortal(null);
+                    if (source) movePortalCard(source, target);
+                  }}
+                />
+              )}
+            </For>
           </div>
         </section>
 
@@ -454,7 +504,7 @@ function DashEmpty(props: { children: string }) {
   );
 }
 
-function PortalCard(props: { card: PortalCardDef }) {
+function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: boolean; onDragStart: () => void; onDragEnd: () => void; onDrop: (target: string) => void }) {
   const t = useT();
   const Icon = props.card.Icon;
   const hasStat = () => props.card.stat != null && props.card.stat !== "";
@@ -462,7 +512,31 @@ function PortalCard(props: { card: PortalCardDef }) {
   return (
     <Link
       to={props.card.to}
-      class="group relative flex min-h-[6rem] items-start gap-3 overflow-hidden rounded-xl border border-border bg-card px-3 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/50 hover:bg-muted/30 hover:shadow-[0_18px_45px_rgba(15,23,42,0.14)] hover:before:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[6.5rem] sm:gap-3.5 sm:px-4 sm:py-3.5"
+      draggable={props.editing}
+      onClick={(event) => {
+        if (props.editing) event.preventDefault();
+      }}
+      onDragStart={(event) => {
+        if (!props.editing) return;
+        event.dataTransfer?.setData("text/plain", props.card.to);
+        event.dataTransfer?.setDragImage(event.currentTarget, 12, 12);
+        props.onDragStart();
+      }}
+      onDragEnd={props.onDragEnd}
+      onDragOver={(event) => {
+        if (props.editing) event.preventDefault();
+      }}
+      onDrop={(event) => {
+        if (!props.editing) return;
+        event.preventDefault();
+        props.onDrop(props.card.to);
+      }}
+      class={cn(
+        "group relative flex min-h-[6rem] items-start gap-3 overflow-hidden rounded-xl border border-border bg-card px-3 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/50 hover:bg-muted/30 hover:shadow-[0_18px_45px_rgba(15,23,42,0.14)] hover:before:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[6.5rem] sm:gap-3.5 sm:px-4 sm:py-3.5",
+        props.editing && "cursor-move border-dashed",
+        props.editing && !props.dragging && "dashboard-jiggle",
+        props.dragging && "scale-[0.98] border-primary/50 opacity-60",
+      )}
     >
       <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary">
         <Icon class="h-4 w-4" />

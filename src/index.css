@@ -160,6 +160,21 @@
     background-color: hsl(var(--primary) / 0.045);
   }
 
+  @keyframes dashboard-jiggle {
+    0%, 100% { transform: rotate(-0.35deg) translateY(0); }
+    50% { transform: rotate(0.35deg) translateY(-1px); }
+  }
+
+  .dashboard-jiggle {
+    animation: dashboard-jiggle 160ms ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-jiggle {
+      animation: none;
+    }
+  }
+
   .detail-breadcrumb {
     @apply flex flex-wrap items-center gap-1 text-xs text-muted-foreground;
   }
