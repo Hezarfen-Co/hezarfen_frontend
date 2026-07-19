@@ -1,11 +1,10 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteWorkEntryById } from "@/api/deleteWorkEntryById";
-import { getUserSearch } from "@/api/getUserSearch";
+import { getUsers } from "@/api/getUsers";
 import { getUserWorkLog } from "@/api/getUserWorkLog";
 import { patchWorkEntryById } from "@/api/patchWorkEntryById";
 import { ApiError, formatApiError } from "@/api/client";
-import type { Page } from "@/api/page";
 import type { PersonRef, WorkEntry } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -56,7 +55,6 @@ function dateInputToMs(date: string, time: string): number | null {
   return d.getTime();
 }
 
-const emptyPeople: Page<PersonRef> = { items: [], total: 0, limit: null, offset: 0 };
 const emptyEntries = { items: [] as WorkEntry[], total: 0 };
 
 export default function StaffWorkPage() {
@@ -85,13 +83,19 @@ function StaffWorkContent() {
   const [people] = createResource(
     async () => {
       try {
-        return await getUserSearch("", undefined, "teacher");
+        return (await getUsers()).items
+          .filter((user) => user.role === "teacher")
+          .map((user) => ({
+            id: user.id,
+            username: user.username,
+            display_name: [user.name, user.surname].filter(Boolean).join(" ") || null,
+          }));
       } catch (err) {
         setError(formatApiError(err));
-        return emptyPeople;
+        return [];
       }
     },
-    { initialValue: emptyPeople },
+    { initialValue: [] },
   );
 
   const [entries, { refetch: refetchEntries }] = createResource(
@@ -111,8 +115,8 @@ function StaffWorkContent() {
     { initialValue: emptyEntries },
   );
 
-  const peopleTotal = () => people().total;
-  const peopleRows = () => people().items;
+  const peopleTotal = () => people().length;
+  const peopleRows = () => people();
   const entryRows = () => entries().items;
   const peopleLoading = () => people.loading;
   const searchPerson = (person: PersonRef, query: string) =>

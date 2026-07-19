@@ -1,9 +1,8 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getUserAttendance } from "@/api/getUserAttendance";
-import { getUserSearch } from "@/api/getUserSearch";
+import { getUsers } from "@/api/getUsers";
 import { ApiError, formatApiError } from "@/api/client";
-import type { Page } from "@/api/page";
 import type { PersonRef } from "@/api/types";
 import { AttendanceReportView } from "@/components/attendance/attendance-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -18,7 +17,6 @@ import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
 const PAGE_SIZE = 12;
-const emptyPage: Page<PersonRef> = { items: [], total: 0, limit: null, offset: 0 };
 
 export default function StudentAttendancePage() {
   return (
@@ -36,13 +34,20 @@ function StudentAttendanceContent() {
   const [list] = createResource(
     async () => {
       try {
-        return await getUserSearch("", undefined, "student");
+        setError("");
+        return (await getUsers()).items
+          .filter((user) => user.role === "student")
+          .map((user) => ({
+            id: user.id,
+            username: user.username,
+            display_name: [user.name, user.surname].filter(Boolean).join(" ") || null,
+          }));
       } catch (err) {
         setError(formatApiError(err));
-        return emptyPage;
+        return [];
       }
     },
-    { initialValue: emptyPage },
+    { initialValue: [] },
   );
 
   const [report, { refetch: refetchReport }] = createResource(
@@ -62,8 +67,8 @@ function StudentAttendanceContent() {
     },
   );
 
-  const total = () => list().total;
-  const rows = () => list().items;
+  const total = () => list().length;
+  const rows = () => list();
   const listLoading = () => list.loading;
   const searchPerson = (person: PersonRef, query: string) =>
     [person.username, person.display_name, person.id].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase());

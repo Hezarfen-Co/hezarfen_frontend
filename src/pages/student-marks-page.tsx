@@ -1,9 +1,8 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getUserMarks } from "@/api/getUserMarks";
-import { getUserSearch } from "@/api/getUserSearch";
+import { getUsers } from "@/api/getUsers";
 import { ApiError, formatApiError } from "@/api/client";
-import type { Page } from "@/api/page";
 import type { PersonRef } from "@/api/types";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -18,7 +17,6 @@ import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
 const PAGE_SIZE = 12;
-const emptyPage: Page<PersonRef> = { items: [], total: 0, limit: null, offset: 0 };
 
 export default function StudentMarksPage() {
   return (
@@ -32,22 +30,24 @@ function StudentMarksContent() {
   const t = useT();
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
   const [error, setError] = createSignal("");
-  const [search, setSearch] = createSignal("");
-  const [page, setPage] = createSignal(0);
 
   const [list] = createResource(
-    () => ({ query: search().trim(), page: page() }),
-    async ({ query, page }) => {
-      if (!query) return emptyPage;
+    async () => {
       try {
         setError("");
-        return await getUserSearch(query, undefined, "student", { limit: PAGE_SIZE, offset: page * PAGE_SIZE });
+        return (await getUsers()).items
+          .filter((user) => user.role === "student")
+          .map((user) => ({
+            id: user.id,
+            username: user.username,
+            display_name: [user.name, user.surname].filter(Boolean).join(" ") || null,
+          }));
       } catch (err) {
         setError(formatApiError(err));
-        return emptyPage;
+        return [];
       }
     },
-    { initialValue: emptyPage },
+    { initialValue: [] },
   );
 
   const [report, { refetch: refetchReport }] = createResource(
@@ -67,9 +67,11 @@ function StudentMarksContent() {
     },
   );
 
-  const total = () => list().total;
-  const rows = () => list().items;
+  const total = () => list().length;
+  const rows = () => list();
   const listLoading = () => list.loading;
+  const searchPerson = (person: PersonRef, query: string) =>
+    [person.username, person.display_name, person.id].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase());
   const columns = createMemo<ColumnDef<PersonRef>[]>(() => [
     {
       accessorKey: "username",
@@ -139,11 +141,9 @@ function StudentMarksContent() {
             data={rows()}
             tableClass="min-w-[36rem]"
             empty={t("form.noStudents")}
-            searchValue={search()}
-            onSearchInput={setSearch}
+            searchPredicate={searchPerson}
             enablePagination
             pageSize={PAGE_SIZE}
-            manualPagination={{ pageIndex: page(), pageSize: PAGE_SIZE, total: total(), onPageChange: setPage }}
           />
         </Show>
       </section>
