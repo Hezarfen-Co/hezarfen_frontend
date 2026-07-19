@@ -65,7 +65,26 @@ function PomodoroContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader accent="mint" eyebrow={t("nav.pomodoro")} title={t("pomodoro.title")} description={t("pomodoro.subtitle")} />
+      <PageHeader
+        accent="mint"
+        eyebrow={t("nav.pomodoro")}
+        title={t("pomodoro.title")}
+        description={t("pomodoro.subtitle")}
+        actions={
+          <Show
+            when={running()}
+            fallback={
+              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" disabled={pending()} onClick={() => void run(postPomodoroStart, t("pomodoro.started"))}>
+                {t("pomodoro.start")}
+              </Button>
+            }
+          >
+            <Button type="button" size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled={pending()} onClick={() => void run(postPomodoroFinish, t("pomodoro.finished"))}>
+              {t("pomodoro.finish")}
+            </Button>
+          </Show>
+        }
+      />
 
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
@@ -83,18 +102,6 @@ function PomodoroContent() {
             <Badge variant={running() ? "default" : "secondary"} class="rounded-sm">
               {running() ? t("pomodoro.running") : t("pomodoro.idle")}
             </Badge>
-            <Show
-              when={running()}
-              fallback={
-                <Button type="button" size="sm" class="rounded-sm" disabled={pending()} onClick={() => void run(postPomodoroStart, t("pomodoro.started"))}>
-                  {t("pomodoro.start")}
-                </Button>
-              }
-            >
-              <Button type="button" size="sm" variant="outline" class="rounded-sm" disabled={pending()} onClick={() => void run(postPomodoroFinish, t("pomodoro.finished"))}>
-                {t("pomodoro.finish")}
-              </Button>
-            </Show>
           </div>
         </div>
       </section>
