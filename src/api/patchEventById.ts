@@ -1,11 +1,11 @@
 import { client } from "./client";
 import type { Event, EventAudience } from "./types";
 
-/** Omitted time fields keep their value; explicit null clears them. */
+/** Omitted fields keep their value. Only the time fields clear on explicit null. */
 export type PatchEventBody = {
-  title?: string | null;
-  description?: string | null;
-  audience?: EventAudience | null;
+  title?: string;
+  description?: string;
+  audience?: EventAudience;
   starts_at?: number | null;
   ends_at?: number | null;
 };
