@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -21,13 +21,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { createFlash } from "@/lib/flash";
 import { useT } from "@/stores/preferences-context";
 
-export function CourseSubjectsPanel(props: { courseId: string; canManage: boolean; active: boolean }) {
+export function CourseSubjectsPanel(props: { courseId: string; canManage: boolean; active: boolean; createOpen: boolean; onCreateOpenChange: (open: boolean) => void; onCountChange: (count: number) => void }) {
   const t = useT();
   const [subjects, { refetch }] = createResource(
-    () => (props.active ? props.courseId : null),
-    async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
+    () => props.courseId,
+    async (courseId) => (await getCourseSubjects(courseId)).items,
   );
-  const [panelOpen, setPanelOpen] = createSignal(false);
   const [editing, setEditing] = createSignal<Subject | null>(null);
   const [removeSubject, setRemoveSubject] = createSignal<Subject | null>(null);
   const [name, setName] = createSignal("");
@@ -76,16 +75,16 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
     setDescription(subject?.description ?? "");
   });
 
-  const openCreate = () => {
-    setEditing(null);
-    setName("");
-    setDescription("");
-    setPanelOpen(true);
-  };
+  createEffect(() => props.onCountChange(subjects()?.length ?? 0));
 
   const openEdit = (subject: Subject) => {
     setEditing(subject);
-    setPanelOpen(true);
+    props.onCreateOpenChange(true);
+  };
+
+  const setPanelOpen = (open: boolean) => {
+    props.onCreateOpenChange(open);
+    if (!open) setEditing(null);
   };
 
   const save = async (event: SubmitEvent) => {
@@ -113,14 +112,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
-      <Show when={props.canManage}>
-        <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={openCreate}>
-          <IconPlus class="h-4 w-4" />
-          {t("subjects.add")}
-        </Button>
-      </Show>
-
-      <SidePanel open={panelOpen()} onOpenChange={setPanelOpen} title={editing() ? t("subjects.edit") : t("subjects.add")} description={t("subjects.help")}>
+      <SidePanel open={props.createOpen} onOpenChange={setPanelOpen} title={editing() ? t("subjects.edit") : t("subjects.add")} description={t("subjects.help")}>
         <form class="space-y-3" onSubmit={(event) => void save(event)}>
           <div class="space-y-1.5">
             <Label for="subject-name">{t("subjects.name")}</Label>

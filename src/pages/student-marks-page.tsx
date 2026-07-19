@@ -32,11 +32,16 @@ function StudentMarksContent() {
   const t = useT();
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
   const [error, setError] = createSignal("");
+  const [search, setSearch] = createSignal("");
+  const [page, setPage] = createSignal(0);
 
   const [list] = createResource(
-    async () => {
+    () => ({ query: search().trim(), page: page() }),
+    async ({ query, page }) => {
+      if (!query) return emptyPage;
       try {
-        return await getUserSearch("", undefined, "student");
+        setError("");
+        return await getUserSearch(query, undefined, "student", { limit: PAGE_SIZE, offset: page * PAGE_SIZE });
       } catch (err) {
         setError(formatApiError(err));
         return emptyPage;
@@ -65,8 +70,6 @@ function StudentMarksContent() {
   const total = () => list().total;
   const rows = () => list().items;
   const listLoading = () => list.loading;
-  const searchPerson = (person: PersonRef, query: string) =>
-    [person.username, person.display_name, person.id].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase());
   const columns = createMemo<ColumnDef<PersonRef>[]>(() => [
     {
       accessorKey: "username",
@@ -136,9 +139,11 @@ function StudentMarksContent() {
             data={rows()}
             tableClass="min-w-[36rem]"
             empty={t("form.noStudents")}
-            searchPredicate={searchPerson}
+            searchValue={search()}
+            onSearchInput={setSearch}
             enablePagination
             pageSize={PAGE_SIZE}
+            manualPagination={{ pageIndex: page(), pageSize: PAGE_SIZE, total: total(), onPageChange: setPage }}
           />
         </Show>
       </section>

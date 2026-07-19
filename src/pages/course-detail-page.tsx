@@ -13,7 +13,7 @@ import { patchCourseById } from "@/api/patchCourseById";
 import { postCourseEnrollment } from "@/api/postCourseEnrollment";
 import { postCourseExam } from "@/api/postCourseExam";
 import { formatApiError } from "@/api/client";
-import type { CourseKind, Enrollment } from "@/api/types";
+import type { CourseKind, Enrollment, Exam } from "@/api/types";
 import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm } from "@/components/exams/exam-form";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
@@ -68,7 +68,6 @@ function CourseDetailContent() {
   const [terms] = createResource(async () => (await getTerms()).items);
   const [settings] = createResource(() => getSettings());
   const [exams, { refetch: refetchExams }] = createResource(id, async (courseId) => (await getCourseExams(courseId)).items);
-  const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const hasCourseManagementRights = () => {
     const c = course();
     const u = auth.user();
@@ -91,9 +90,12 @@ function CourseDetailContent() {
   const [termId, setTermId] = createSignal("");
   const [capacity, setCapacity] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
+  const [showSubjectForm, setShowSubjectForm] = createSignal(false);
   const [showSessionForm, setShowSessionForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
-  const [openSections, setOpenSections] = createSignal({ subjects: true, exams: true, sessions: false, roster: false });
+  const [openSections, setOpenSections] = createSignal({ subjects: false, exams: false, sessions: false, roster: false });
+  const [subjectCount, setSubjectCount] = createSignal(0);
+  const [sessionCount, setSessionCount] = createSignal(0);
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -123,7 +125,7 @@ function CourseDetailContent() {
 
   const examCount = createMemo(() => exams()?.length ?? 0);
   const rosterCount = createMemo(() => roster()?.length ?? 0);
-  const examKindCount = createMemo(() => new Set((exams() ?? []).map((exam) => exam.kind)).size);
+  const countDescription = (count: number, item: string) => t("common.countItem", { count, item });
 
   const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
   const rosterColumns = createMemo<ColumnDef<Enrollment>[]>(() => [
@@ -162,6 +164,47 @@ function CourseDetailContent() {
               },
             ]}
           />
+        </Show>
+      ),
+    },
+  ]);
+  const examColumns = createMemo<ColumnDef<Exam>[]>(() => [
+    {
+      accessorKey: "title",
+      header: t("form.title"),
+      meta: { cellClass: "font-medium" },
+      cell: (cell) => (
+        <ExamLink examId={cell.row.original.id} class="hover:text-primary hover:underline">
+          {cell.row.original.title}
+        </ExamLink>
+      ),
+    },
+    {
+      id: "kind",
+      accessorFn: (row) => examKindLabel(String(row.kind), t),
+      header: t("exams.kind"),
+      cell: (cell) => (
+        <Badge variant="outline" class="rounded-sm capitalize">
+          {examKindLabel(String(cell.row.original.kind), t)}
+          <Show when={examWeight(cell.row.original, settings()?.exam_kinds) != null}>
+            {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
+          </Show>
+        </Badge>
+      ),
+    },
+    {
+      id: "mode",
+      accessorFn: (row) => examModeLabel(row.mode),
+      header: t("exams.mode"),
+      cell: (cell) => <Badge variant="secondary" class="rounded-sm">{examModeLabel(cell.row.original.mode)}</Badge>,
+    },
+    {
+      id: "status",
+      accessorFn: (row) => (row.draft ? t("exams.draft") : ""),
+      header: t("events.status"),
+      cell: (cell) => (
+        <Show when={cell.row.original.draft} fallback="—">
+          <Badge variant="secondary" class="rounded-sm">{t("exams.draft")}</Badge>
         </Show>
       ),
     },
@@ -222,7 +265,7 @@ function CourseDetailContent() {
                 accent="violet"
                 eyebrow={t("courses.title")}
                 title={c().title}
-                description={c().description || undefined}
+                description={`${t("terms.term")}: ${terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}${c().description ? ` - ${c().description}` : ""}`}
                 actions={
                   <div class="detail-action-group">
                     <Link to="/courses">
@@ -247,9 +290,6 @@ function CourseDetailContent() {
                 }
               />
               <div class="flex flex-wrap gap-2">
-                <Badge variant="outline" class="rounded-sm">
-                  {courseKindLabel(c().kind)}
-                </Badge>
                 <Show when={c().capacity != null}>
                   <Badge variant="secondary" class="rounded-sm">
                     {t("courses.capacity")}: {hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}
@@ -415,60 +455,28 @@ function CourseDetailContent() {
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
-            <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div class="detail-metric-card">
-                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  {t("courses.exams")}
-                </p>
-                <p class="mono mt-2 text-3xl font-semibold tabular-nums">{examCount()}</p>
-                <p class="mt-1 text-xs text-muted-foreground">{t("nav.exams")}</p>
-              </div>
-
-              <Show when={isTeacherPlus()}>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                    {t("courses.roster")}
-                  </p>
-                  <p class="mono mt-2 text-3xl font-semibold tabular-nums">{rosterCount()}</p>
-                  <p class="mt-1 text-xs text-muted-foreground">{t("courses.enroll")}</p>
-                </div>
-              </Show>
-
-              <div class="detail-metric-card">
-                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  {t("exams.kind")}
-                </p>
-                <p class="mono mt-2 text-3xl font-semibold tabular-nums">{examKindCount()}</p>
-                <p class="mt-1 text-xs text-muted-foreground">{t("courses.exams")}</p>
-              </div>
-
-              <div class="detail-metric-card">
-                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  {t("terms.term")}
-                </p>
-                <p class="mono mt-2 truncate text-xl font-semibold">
-                  {terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}
-                </p>
-                <p class="mt-1 text-xs text-muted-foreground">{t("terms.title")}</p>
-              </div>
-            </section>
-
             <SectionDisclosure
               open={openSections().subjects}
               onToggle={() => toggleSection("subjects")}
               title={t("subjects.title")}
-              description={t("subjects.help")}
-              meta={<Badge variant="secondary" class="rounded-lg px-3 py-1">{t("subjects.title")}</Badge>}
+              description={countDescription(subjectCount(), t("subjects.item"))}
+              actions={
+                <Show when={canManage()}>
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSubjectForm(true)}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("subjects.add")}
+                  </Button>
+                </Show>
+              }
             >
-              <CourseSubjectsPanel courseId={id()} canManage={canManage()} active={openSections().subjects} />
+              <CourseSubjectsPanel courseId={id()} canManage={canManage()} active={openSections().subjects} createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
             </SectionDisclosure>
 
             <SectionDisclosure
               open={openSections().exams}
               onToggle={() => toggleSection("exams")}
               title={t("courses.exams")}
-              description={`${examCount()} ${t("nav.exams")}`}
-              meta={<Badge variant="secondary" class="rounded-lg px-3 py-1"><span class="mono tabular-nums">{examCount()}</span><span class="ml-1">{t("nav.exams")}</span></Badge>}
+              description={countDescription(examCount(), t("courses.examItem"))}
               actions={
                 <Show when={canManage()}>
                   <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
@@ -479,55 +487,7 @@ function CourseDetailContent() {
               }
             >
               <Suspense fallback={<PageSpinner />}>
-                <Show
-                  when={(exams() ?? []).length > 0}
-                  fallback={
-                    <EmptyState
-                      title={t("exams.empty")}
-                      action={
-                        canManage() ? (
-                          <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
-                            <IconPlus class="h-4 w-4" />
-                            {t("courses.addExam")}
-                          </Button>
-                        ) : undefined
-                      }
-                    />
-                  }
-                >
-                  <ul class="space-y-2">
-                    <For each={exams() ?? []}>
-                      {(exam) => (
-                        <li>
-                          <ExamLink
-                            examId={exam.id}
-                            class="group flex items-start justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/35 hover:bg-muted/40"
-                          >
-                            <div class="min-w-0 space-y-2">
-                              <div>
-                                <p class="truncate font-medium group-hover:text-primary">{exam.title}</p>
-                              </div>
-                              <div class="flex flex-wrap items-center gap-2">
-                                <Badge variant="outline" class="rounded-sm capitalize">
-                                  {examKindLabel(String(exam.kind), t)}
-                                  <Show when={examWeight(exam, settings()?.exam_kinds) != null}>
-                                    {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
-                                  </Show>
-                                </Badge>
-                                <Badge variant="secondary" class="rounded-sm">
-                                  {examModeLabel(exam.mode)}
-                                </Badge>
-                                <Show when={exam.draft}>
-                                  <Badge variant="secondary" class="rounded-sm">{t("exams.draft")}</Badge>
-                                </Show>
-                              </div>
-                            </div>
-                          </ExamLink>
-                        </li>
-                      )}
-                    </For>
-                  </ul>
-                </Show>
+                <DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} />
               </Suspense>
             </SectionDisclosure>
 
@@ -535,8 +495,7 @@ function CourseDetailContent() {
               open={openSections().sessions}
               onToggle={() => toggleSection("sessions")}
               title={t("sessions.title")}
-              description={t("sessions.subtitle")}
-              meta={<Badge variant="secondary" class="rounded-lg px-3 py-1">{t("sessions.title")}</Badge>}
+              description={countDescription(sessionCount(), t("sessions.item"))}
               actions={
                 <Show when={canManage()}>
                   <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSessionForm(true)}>
@@ -553,6 +512,7 @@ function CourseDetailContent() {
                 active={openSections().sessions}
                 createOpen={showSessionForm()}
                 onCreateOpenChange={setShowSessionForm}
+                onCountChange={setSessionCount}
               />
             </SectionDisclosure>
 
@@ -561,8 +521,7 @@ function CourseDetailContent() {
                 open={openSections().roster}
                 onToggle={() => toggleSection("roster")}
                 title={t("courses.roster")}
-                description={t("courses.enroll")}
-                meta={<Badge variant="secondary" class="rounded-lg px-3 py-1"><span class="mono tabular-nums">{rosterCount()}</span><span class="ml-1">{t("courses.roster")}</span></Badge>}
+                description={countDescription(rosterCount(), t("courses.rosterItem"))}
                 actions={
                   <Show when={canManage()}>
                     <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>

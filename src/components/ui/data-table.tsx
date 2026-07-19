@@ -47,8 +47,16 @@ export type DataTableProps<TData, TValue = unknown> = {
   filters?: JSX.Element;
   filterColumn?: string;
   filterPlaceholder?: string;
+  manualPagination?: {
+    pageIndex: number;
+    pageSize: number;
+    total: number;
+    onPageChange: (pageIndex: number) => void;
+  };
+  onSearchInput?: (value: string) => void;
   pageSize?: number;
   searchPredicate?: (row: TData, query: string) => boolean;
+  searchValue?: string;
 };
 
 export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, TValue>) {
@@ -61,8 +69,9 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     pageSize: props.pageSize ?? 10,
   });
   const [search, setSearch] = createSignal("");
+  const searchValue = () => props.searchValue ?? search();
   const tableData = () => {
-    const query = search().trim();
+    const query = searchValue().trim();
     if (!query || !props.searchPredicate) return props.data;
     return props.data.filter((row) => props.searchPredicate?.(row, query));
   };
@@ -77,7 +86,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    ...(props.enablePagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
+    ...(props.enablePagination && !props.manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -93,7 +102,9 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         return columnVisibility();
       },
       get pagination() {
-        return pagination();
+        return props.manualPagination
+          ? { pageIndex: props.manualPagination.pageIndex, pageSize: props.manualPagination.pageSize }
+          : pagination();
       },
     },
   });
@@ -105,8 +116,14 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   };
   const colSpan = () => Math.max(1, table.getVisibleLeafColumns().length);
   const showColumnMenu = () => (props.enableColumnVisibility ?? true) && hideableColumns().length > 0;
-  const showSearch = () => props.searchPredicate != null || props.filterColumn != null;
+  const showSearch = () => props.searchPredicate != null || props.filterColumn != null || props.onSearchInput != null;
   const showToolbar = () => showSearch() || props.filters != null || showColumnMenu();
+  const pageCount = () => props.manualPagination ? Math.max(1, Math.ceil(props.manualPagination.total / props.manualPagination.pageSize)) : table.getPageCount();
+  const pageIndex = () => props.manualPagination?.pageIndex ?? table.getState().pagination.pageIndex;
+  const setPageIndex = (next: number) => {
+    if (props.manualPagination) props.manualPagination.onPageChange(next);
+    else table.setPageIndex(next);
+  };
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
     if (!(props.enableSorting ?? true) || !header.column.getCanSort()) return content;
@@ -132,12 +149,13 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           <Show when={showSearch()}>
             <Input
               class="max-w-sm rounded-sm"
-              value={props.searchPredicate ? search() : ((props.filterColumn ? table.getColumn(props.filterColumn)?.getFilterValue() : "") as string) ?? ""}
+              value={props.onSearchInput || props.searchPredicate ? searchValue() : ((props.filterColumn ? table.getColumn(props.filterColumn)?.getFilterValue() : "") as string) ?? ""}
               placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
               onInput={(event) => {
-                if (props.searchPredicate) setSearch(event.currentTarget.value);
+                if (props.onSearchInput) props.onSearchInput(event.currentTarget.value);
+                else if (props.searchPredicate) setSearch(event.currentTarget.value);
                 else if (props.filterColumn) table.getColumn(props.filterColumn)?.setFilterValue(event.currentTarget.value);
-                table.setPageIndex(0);
+                setPageIndex(0);
               }}
             />
           </Show>
@@ -212,15 +230,15 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </TableBody>
         </Table>
       </DataTableFrame>
-      <Show when={props.enablePagination && table.getPageCount() > 1}>
+      <Show when={props.enablePagination && pageCount() > 1}>
         <div class="flex items-center justify-end gap-2 py-3">
           <span class="mr-auto text-xs tabular-nums text-muted-foreground">
-            {t("common.pageOf", { page: table.getState().pagination.pageIndex + 1, total: table.getPageCount() })}
+            {t("common.pageOf", { page: pageIndex() + 1, total: pageCount() })}
           </span>
-          <Button type="button" variant="outline" size="sm" disabled={!table.getCanPreviousPage()} onClick={() => table.previousPage()}>
+          <Button type="button" variant="outline" size="sm" disabled={pageIndex() <= 0} onClick={() => setPageIndex(Math.max(0, pageIndex() - 1))}>
             {t("common.prev")}
           </Button>
-          <Button type="button" variant="outline" size="sm" disabled={!table.getCanNextPage()} onClick={() => table.nextPage()}>
+          <Button type="button" variant="outline" size="sm" disabled={pageIndex() >= pageCount() - 1} onClick={() => setPageIndex(Math.min(pageCount() - 1, pageIndex() + 1))}>
             {t("common.next")}
           </Button>
         </div>

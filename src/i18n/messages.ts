@@ -83,6 +83,7 @@ export type MessageKey =
   | "common.created"
   | "common.deleted"
   | "common.saved"
+  | "common.countItem"
   | "theme.light"
   | "theme.dark"
   | "theme.toggle"
@@ -303,6 +304,7 @@ export type MessageKey =
   | "questions.choicesRange"
   | "questions.correctRange"
   | "subjects.title"
+  | "subjects.item"
   | "subjects.subject"
   | "subjects.name"
   | "subjects.add"
@@ -426,8 +428,10 @@ export type MessageKey =
   | "courses.empty"
   | "courses.enrolled"
   | "courses.roster"
+  | "courses.rosterItem"
   | "courses.enroll"
   | "courses.exams"
+  | "courses.examItem"
   | "courses.addExam"
   | "courses.weight"
   | "courses.delete"
@@ -527,6 +531,7 @@ export type MessageKey =
   | "terms.unassigned"
   | "terms.dateRequired"
   | "sessions.title"
+  | "sessions.item"
   | "sessions.subtitle"
   | "sessions.topic"
   | "sessions.add"
@@ -661,6 +666,7 @@ const en: Dict = {
   "common.created": "Created.",
   "common.deleted": "Deleted.",
   "common.saved": "Saved.",
+  "common.countItem": "{count} {item}",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.toggle": "Toggle theme",
@@ -883,6 +889,7 @@ const en: Dict = {
   "questions.choicesRange": "Choice questions need 2–10 choices, each at most 500 characters",
   "questions.correctRange": "Correct index must point to one of the choices",
   "subjects.title": "Subjects",
+  "subjects.item": "Subject",
   "subjects.subject": "Subject",
   "subjects.name": "Subject name",
   "subjects.add": "Add subject",
@@ -1017,8 +1024,10 @@ const en: Dict = {
   "courses.empty": "No courses yet.",
   "courses.enrolled": "Enrolled",
   "courses.roster": "Roster",
+  "courses.rosterItem": "Student",
   "courses.enroll": "Enroll student",
   "courses.exams": "Course exams",
+  "courses.examItem": "Exam",
   "courses.addExam": "Add exam",
   "courses.weight": "Weight",
   "courses.delete": "Delete course",
@@ -1118,6 +1127,7 @@ const en: Dict = {
   "terms.unassigned": "Unassigned",
   "terms.dateRequired": "Start and end dates are required.",
   "sessions.title": "Lesson sessions",
+  "sessions.item": "Session",
   "sessions.subtitle": "Create lessons and take course roll call.",
   "sessions.topic": "Topic",
   "sessions.add": "Add session",
@@ -1251,6 +1261,7 @@ const tr: Dict = {
   "common.created": "Oluşturuldu.",
   "common.deleted": "Silindi.",
   "common.saved": "Kaydedildi.",
+  "common.countItem": "{count} Adet {item}",
   "theme.light": "Açık",
   "theme.dark": "Koyu",
   "theme.toggle": "Tema",
@@ -1473,6 +1484,7 @@ const tr: Dict = {
   "questions.choicesRange": "Seçmeli soruda 2–10 seçenek gerekir; her biri en fazla 500 karakter olmalı",
   "questions.correctRange": "Doğru indeks seçeneklerden birini göstermeli",
   "subjects.title": "Konular",
+  "subjects.item": "Konu",
   "subjects.subject": "Konu",
   "subjects.name": "Konu adı",
   "subjects.add": "Konu ekle",
@@ -1607,8 +1619,10 @@ const tr: Dict = {
   "courses.empty": "Henüz ders yok.",
   "courses.enrolled": "Kayıtlı",
   "courses.roster": "Sınıf listesi",
+  "courses.rosterItem": "Öğrenci",
   "courses.enroll": "Öğrenci kaydet",
   "courses.exams": "Ders sınavları",
+  "courses.examItem": "Sınav",
   "courses.addExam": "Sınav ekle",
   "courses.weight": "Ağırlık",
   "courses.delete": "Dersi sil",
@@ -1708,6 +1722,7 @@ const tr: Dict = {
   "terms.unassigned": "Atanmamış",
   "terms.dateRequired": "Başlangıç ve bitiş tarihi gerekli.",
   "sessions.title": "Ders oturumları",
+  "sessions.item": "Oturum",
   "sessions.subtitle": "Ders oluştur ve ders yoklaması al.",
   "sessions.topic": "Konu",
   "sessions.add": "Oturum ekle",

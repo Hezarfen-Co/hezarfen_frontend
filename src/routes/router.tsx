@@ -7,6 +7,8 @@ import {
 import { Suspense, createRenderEffect, createRoot, lazy, type Component } from "solid-js";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { AuthProvider } from "@/stores/auth-context";
+import { PreferencesProvider } from "@/stores/preferences-context";
 
 function lazyRoute(loader: () => Promise<{ default: Component }>): Component {
   const Page = lazy(loader);
@@ -46,9 +48,13 @@ const GuidePage = lazyRoute(() => import("@/pages/guide-page"));
 
 function RootComponent() {
   return (
-    <AppShell>
-      <Outlet />
-    </AppShell>
+    <PreferencesProvider>
+      <AuthProvider>
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      </AuthProvider>
+    </PreferencesProvider>
   );
 }
 

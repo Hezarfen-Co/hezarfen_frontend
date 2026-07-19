@@ -1,4 +1,5 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteSessionById } from "@/api/deleteSessionById";
 import { getCourseSessions } from "@/api/getCourseSessions";
 import { getSessionAttendance } from "@/api/getSessionAttendance";
@@ -13,14 +14,16 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
+import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconClipboardCheck, IconEdit, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { personLabel } from "@/lib/person";
@@ -63,12 +66,13 @@ export function CourseSessionsPanel(props: {
   active: boolean;
   createOpen: boolean;
   onCreateOpenChange: (open: boolean) => void;
+  onCountChange: (count: number) => void;
 }) {
   const t = useT();
   const { locale } = usePreferences();
   const [sessions, { refetch }] = createResource(
-    () => (props.active || props.createOpen ? props.courseId : null),
-    async (courseId) => (courseId ? (await getCourseSessions(courseId)).items : []),
+    () => props.courseId,
+    async (courseId) => (await getCourseSessions(courseId)).items,
   );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
   const [editingSession, setEditingSession] = createSignal<CourseSession | null>(null);
@@ -169,6 +173,52 @@ export function CourseSessionsPanel(props: {
   };
 
   const panelOpen = () => props.createOpen || editingSession() != null;
+  createEffect(() => props.onCountChange(sessions()?.length ?? 0));
+  const columns = createMemo<ColumnDef<CourseSession>[]>(() => [
+    {
+      accessorKey: "topic",
+      header: t("sessions.topic"),
+      meta: { cellClass: "font-medium" },
+      cell: (cell) => cell.row.original.topic || t("sessions.untitled"),
+    },
+    {
+      id: "starts_at",
+      accessorFn: (row) => row.starts_at,
+      header: t("events.starts"),
+      meta: { cellClass: "mono text-xs text-muted-foreground" },
+      cell: (cell) => formatDateTime(cell.row.original.starts_at, locale()),
+    },
+    {
+      id: "ends_at",
+      accessorFn: (row) => row.ends_at ?? 0,
+      header: t("events.ends"),
+      meta: { cellClass: "mono text-xs text-muted-foreground" },
+      cell: (cell) => (cell.row.original.ends_at ? formatDateTime(cell.row.original.ends_at, locale()) : "—"),
+    },
+    {
+      id: "teacher",
+      accessorFn: (row) => personLabel(row.teacher),
+      header: t("sessions.teacher"),
+      cell: (cell) => personLabel(cell.row.original.teacher),
+    },
+    ...(props.canManage
+      ? [{
+          id: "actions",
+          header: t("common.actions"),
+          meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+          cell: (cell) => (
+            <TableRowActions
+              label={t("common.actions")}
+              actions={[
+                { label: t("sessions.rollCall"), icon: <IconClipboardCheck class="h-4 w-4" />, onSelect: () => setSelectedSession(cell.row.original) },
+                { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => startEdit(cell.row.original) },
+                { label: t("common.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
+              ]}
+            />
+          ),
+        } satisfies ColumnDef<CourseSession>]
+      : []),
+  ]);
 
   return (
     <div class="space-y-4">
@@ -181,67 +231,7 @@ export function CourseSessionsPanel(props: {
         <Show when={sessions.error}>
           <ErrorAlert message={formatApiError(sessions.error)} onRetry={() => void refetch()} />
         </Show>
-        <Show
-          when={(sessions() ?? []).length > 0}
-          fallback={
-            <EmptyState
-              title={t("sessions.empty")}
-              action={
-                props.canManage ? (
-                  <Button type="button" size="sm" class="rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
-                    <IconPlus class="h-4 w-4" />
-                    {t("sessions.add")}
-                  </Button>
-                ) : undefined
-              }
-            />
-          }
-        >
-          <div class="space-y-3">
-            <For each={sessions() ?? []}>
-              {(session) => (
-                <article class="rounded-xl border border-border/80 bg-card p-4 shadow-sm">
-                  <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h3 class="font-medium">{session.topic || t("sessions.untitled")}</h3>
-                      <p class="mt-1 text-sm text-muted-foreground">
-                        {formatDateTime(session.starts_at, locale())} {session.ends_at ? `- ${formatDateTime(session.ends_at, locale())}` : ""}
-                      </p>
-                      <p class="mt-1 text-xs text-muted-foreground">{t("sessions.teacher")}: {personLabel(session.teacher)}</p>
-                    </div>
-                    <div class="flex gap-2">
-                      <Show when={props.canManage}>
-                        <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setSelectedSession(session)}>
-                          {t("sessions.rollCall")}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          class="rounded-lg"
-                          aria-label={t("common.edit")}
-                          onClick={() => startEdit(session)}
-                        >
-                          <IconEdit class="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          class="rounded-lg text-destructive hover:text-destructive"
-                          aria-label={t("common.delete")}
-                          onClick={() => setDeleteTarget(session)}
-                        >
-                          <IconTrash class="h-4 w-4" />
-                        </Button>
-                      </Show>
-                    </div>
-                  </div>
-                </article>
-              )}
-            </For>
-          </div>
-        </Show>
+        <DataTable columns={columns()} data={sessions() ?? []} filterColumn="topic" enablePagination pageSize={10} empty={t("sessions.empty")} />
       </Suspense>
 
       <SidePanel
