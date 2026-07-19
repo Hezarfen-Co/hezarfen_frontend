@@ -1,4 +1,4 @@
-import { For, Show, createResource } from "solid-js";
+import { For, Show, createMemo, createResource } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { Link } from "@tanstack/solid-router";
 import { getSettings } from "@/api/getSettings";
@@ -23,7 +23,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
   const t = useT();
   const [settings] = createResource(() => getSettings());
   const compact = () => props.compact === true;
-  const columns = (): ColumnDef<MarkRow>[] => [
+  const columns = createMemo<ColumnDef<MarkRow>[]>(() => [
     {
       accessorKey: "title",
       header: t("marks.exam"),
