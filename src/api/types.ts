@@ -3,7 +3,7 @@ export type { Page, PageParams } from "./page";
 export type Role = "student" | "teacher" | "manager" | "admin";
 export type UserTheme = "light" | "dark";
 export type UserLanguage = "tr" | "en";
-export type CourseKind = "course" | "study" | string;
+export type CourseKind = "course" | "study" | "club" | string;
 export type CoreAttendanceStatus = "present" | "absent" | "late" | "excused";
 export type AttendanceStatus = CoreAttendanceStatus | string;
 export type KnownExamKind = "homework" | "quiz" | "midterm" | "final" | "project" | "oral";
@@ -84,6 +84,7 @@ export type Course = {
   kind: CourseKind;
   /** Academic term id from API (`CourseResponse.term`). */
   term?: string | null;
+  capacity?: number | null;
 };
 
 export type Term = {
@@ -135,6 +136,12 @@ export type Exam = {
   duration_ms: number | null;
   max_attempts?: number | null;
   allow_rejoin?: boolean | null;
+  draft?: boolean | null;
+};
+
+export type ImageMeta = {
+  content_type: string;
+  size: number;
 };
 
 export type ExamResult = {
@@ -154,6 +161,8 @@ export type ExamQuestion = {
   points: number;
   choices: string[] | null;
   correct: number | null;
+  image?: ImageMeta | null;
+  choice_images?: (ImageMeta | null)[] | null;
 };
 
 export type ExamAttempt = {
@@ -187,7 +196,25 @@ export type AttemptQuestion = {
   kind: QuestionKind;
   points: number;
   choices: string[] | null;
+  image?: ImageMeta | null;
+  choice_images?: (ImageMeta | null)[] | null;
   answer: AttemptAnswer | null;
+};
+
+export type PomodoroSession = {
+  id: string;
+  user: string;
+  started_at: number;
+  finished_at: number | null;
+  duration_ms: number | null;
+};
+
+export type PomodoroLog = {
+  items: PomodoroSession[];
+  total: number;
+  limit: number | null;
+  offset: number;
+  total_focus_ms: number;
 };
 
 export type Subject = {

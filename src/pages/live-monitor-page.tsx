@@ -1,5 +1,6 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup, untrack } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup, untrack } from "solid-js";
 import { Link, useLocation, useParams } from "@tanstack/solid-router";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { getExamLive } from "@/api/getExamLive";
 import { getExamLiveStreamUrl } from "@/api/getExamLiveStreamUrl";
 import { getExamById } from "@/api/getExamById";
@@ -11,16 +12,12 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTableFrame } from "@/components/ui/data-table";
-import { IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
+import { DataTable } from "@/components/ui/data-table";
+import { IconChevronLeft } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { createNow } from "@/lib/create-now";
 import { formatDateTime } from "@/lib/format";
-import { cn } from "@/lib/cn";
-
-type SortKey = "username" | "status" | "attempt" | "progress" | "remaining" | "left" | "mark";
 
 const PAGE_SIZE = 10;
 
@@ -108,9 +105,6 @@ function LiveMonitorContent() {
   const [exam] = createResource(id, (eid) => getExamById(eid));
   const [snapshot, setSnapshot] = createSignal<LiveMonitor | null>(null);
   const [error, setError] = createSignal("");
-  const [sortKey, setSortKey] = createSignal<SortKey>("status");
-  const [sortDir, setSortDir] = createSignal<"asc" | "desc">("asc");
-  const [page, setPage] = createSignal(0);
 
   const isFinished = () => {
     const e = exam();
@@ -183,32 +177,6 @@ function LiveMonitorContent() {
     });
   });
 
-  const toggleSort = (key: SortKey) => {
-    setPage(0);
-    if (sortKey() === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortDir("asc");
-    }
-  };
-
-  const sortFn = (a: LiveRosterEntry, b: LiveRosterEntry) => {
-    const d = sortDir();
-    const cmp = (() => {
-      const k = sortKey();
-      if (k === "username") return liveRosterName(a, "").localeCompare(liveRosterName(b, ""));
-      if (k === "status") return labelFromStatus(a.status, t).localeCompare(labelFromStatus(b.status, t));
-      if (k === "attempt") return (a.attempts_used ?? a.attempt ?? 0) - (b.attempts_used ?? b.attempt ?? 0);
-      if (k === "progress") return (a.answered ?? 0) - (b.answered ?? 0);
-      if (k === "remaining") return (a.remaining_ms ?? 0) - (b.remaining_ms ?? 0);
-      if (k === "left") return (a.left_at ?? 0) - (b.left_at ?? 0);
-      if (k === "mark") return (a.mark ?? -1) - (b.mark ?? -1);
-      return 0;
-    })();
-    return d === "asc" ? cmp : -cmp;
-  };
-
   return (
     <Suspense fallback={<PageSpinner />}>
       <div class="space-y-6">
@@ -254,10 +222,79 @@ function LiveMonitorContent() {
             if (!m) return null;
             const counts = m.counts ?? { not_started: 0, in_progress: 0, submitted: 0, expired: 0 };
             const raw = Array.isArray(m.students) ? m.students : [];
-            const sorted = [...raw].sort(sortFn);
-            const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-            const safePage = Math.min(page(), totalPages - 1);
-            const pageItems = sorted.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+            const columns: ColumnDef<LiveRosterEntry>[] = [
+              {
+                id: "username",
+                accessorFn: (entry) => liveRosterName(entry, ""),
+                header: t("admin.username"),
+                meta: { cellClass: "font-medium" },
+                cell: (cell) => liveRosterName(cell.row.original, t("exams.nameless")),
+              },
+              {
+                id: "status",
+                accessorFn: (entry) => labelFromStatus(entry.status, t),
+                header: t("attempt.status"),
+                meta: { headerClass: "text-center", cellClass: "text-center" },
+                cell: (cell) => (
+                  <Badge
+                    class="rounded-full"
+                    variant={
+                      cell.row.original.status === "in_progress" ? "default" :
+                      cell.row.original.status === "submitted" ? "secondary" :
+                      "outline"
+                    }
+                  >
+                    {labelFromStatus(cell.row.original.status, t)}
+                  </Badge>
+                ),
+              },
+              {
+                id: "attempt",
+                accessorFn: (entry) => entry.attempts_used ?? entry.attempt ?? 0,
+                header: t("attempt.attempt"),
+                meta: { headerClass: "text-center", cellClass: "text-center tabular-nums" },
+                cell: (cell) => attemptLabel(cell.row.original),
+              },
+              {
+                id: "progress",
+                accessorFn: (entry) => entry.answered ?? 0,
+                header: t("attempt.progress"),
+                meta: { headerClass: "text-center", cellClass: "min-w-32 tabular-nums" },
+                cell: (cell) => (
+                  <div class="flex items-center justify-center gap-2">
+                    <span>{cell.row.original.answered}/{m.question_count}</span>
+                    <div class="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                      <div class="h-full rounded-full bg-primary" style={{ width: `${progressPercent(cell.row.original, m.question_count)}%` }} />
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                id: "remaining",
+                accessorFn: (entry) => entry.remaining_ms ?? 0,
+                header: t("attempt.remaining"),
+                meta: { headerClass: "text-center", cellClass: "tabular-nums text-center" },
+                cell: (cell) => (
+                  <span class={isLowRemaining(cell.row.original) ? "rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300" : ""}>
+                    {remainingMinutesLabel(cell.row.original)}
+                  </span>
+                ),
+              },
+              {
+                id: "left",
+                accessorFn: (entry) => entry.left_at ?? 0,
+                header: t("attempt.left"),
+                meta: { headerClass: "text-center", cellClass: "text-center text-xs" },
+                cell: (cell) => cell.row.original.left_at ? formatDateTime(cell.row.original.left_at, locale()) : "—",
+              },
+              {
+                id: "mark",
+                accessorFn: (entry) => entry.mark ?? -1,
+                header: t("marks.mark"),
+                meta: { headerClass: "text-center", cellClass: "text-center font-semibold tabular-nums" },
+                cell: (cell) => cell.row.original.mark != null ? cell.row.original.mark : "—",
+              },
+            ];
 
             return (
               <>
@@ -291,107 +328,18 @@ function LiveMonitorContent() {
                       <p class="mt-1 text-sm text-muted-foreground">{t("attempt.progress")}</p>
                     </div>
                     <Badge variant="outline" class="rounded-full px-3 py-1">
-                      {sorted.length} / {m.question_count}
+                      {raw.length} / {m.question_count}
                     </Badge>
                   </div>
                   <Show
-                    when={sorted.length > 0}
+                    when={raw.length > 0}
                     fallback={
                       <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
                         {t("exams.emptyRoster")}
                       </p>
                     }
                   >
-                    <DataTableFrame>
-                      <Table class="data-table">
-                        <TableHeader>
-                          <TableRow>
-                            <SortHead label={t("admin.username")} sortKey="username" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-left" />
-                            <SortHead label={t("attempt.status")} sortKey="status" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                            <SortHead label={t("attempt.attempt")} sortKey="attempt" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                            <SortHead label={t("attempt.progress")} sortKey="progress" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                            <SortHead label={t("attempt.remaining")} sortKey="remaining" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                            <SortHead label={t("attempt.left")} sortKey="left" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                            <SortHead label={t("marks.mark")} sortKey="mark" currentKey={sortKey()} currentDir={sortDir()} onSort={toggleSort} class="text-center" />
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <For each={pageItems}>
-                            {(entry) => (
-                              <TableRow>
-                                <TableCell class="font-medium">
-                                  {liveRosterName(entry, t("exams.nameless"))}
-                                </TableCell>
-                                <TableCell class="text-center">
-                                  <Badge
-                                    class="rounded-full"
-                                    variant={
-                                      entry.status === "in_progress" ? "default" :
-                                      entry.status === "submitted" ? "secondary" :
-                                      "outline"
-                                    }
-                                  >
-                                    {labelFromStatus(entry.status, t)}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell class="text-center tabular-nums">
-                                  {attemptLabel(entry)}
-                                </TableCell>
-                                <TableCell class="min-w-32 tabular-nums">
-                                  <div class="flex items-center justify-center gap-2">
-                                    <span>{entry.answered}/{m.question_count}</span>
-                                    <div class="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
-                                      <div class="h-full rounded-full bg-primary" style={{ width: `${progressPercent(entry, m.question_count)}%` }} />
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell class="tabular-nums text-center">
-                                  <span class={isLowRemaining(entry) ? "rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300" : ""}>
-                                    {remainingMinutesLabel(entry)}
-                                  </span>
-                                </TableCell>
-                                <TableCell class="text-center text-xs">
-                                  {entry.left_at ? formatDateTime(entry.left_at, locale()) : "—"}
-                                </TableCell>
-                                <TableCell class="text-center font-semibold tabular-nums">
-                                  {entry.mark != null ? entry.mark : "—"}
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </For>
-                        </TableBody>
-                      </Table>
-                    </DataTableFrame>
-
-                    <Show when={sorted.length > PAGE_SIZE}>
-                      <div class="mt-4 flex flex-col items-stretch gap-2 border-t border-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          class="h-9 gap-1 rounded-md"
-                          disabled={safePage <= 0}
-                          onClick={() => setPage((p) => Math.max(0, p - 1))}
-                        >
-                          <IconChevronLeft class="h-3.5 w-3.5" />
-                          {t("common.prev")}
-                        </Button>
-                        <span class="text-center text-xs tabular-nums text-muted-foreground">
-                          {t("common.pageOf", { page: safePage + 1, total: totalPages })}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          class="h-9 gap-1 rounded-md"
-                          disabled={safePage >= totalPages - 1}
-                          onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                        >
-                          {t("common.next")}
-                          <IconChevronRight class="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </Show>
+                    <DataTable columns={columns} data={raw} filterColumn="username" enablePagination pageSize={PAGE_SIZE} />
                   </Show>
                 </section>
               </>
@@ -400,29 +348,5 @@ function LiveMonitorContent() {
         </Show>
       </div>
     </Suspense>
-  );
-}
-
-function SortHead(props: {
-  label: string;
-  sortKey: SortKey;
-  currentKey: SortKey;
-  currentDir: "asc" | "desc";
-  onSort: (key: SortKey) => void;
-  class?: string;
-}) {
-  const active = () => props.sortKey === props.currentKey;
-  return (
-    <TableHead
-      class={cn("cursor-pointer select-none hover:text-foreground", props.class, active() && "text-foreground")}
-      onClick={() => props.onSort(props.sortKey)}
-    >
-      <span class="inline-flex items-center gap-1">
-        {props.label}
-        <Show when={active()}>
-          <span class="text-[10px]">{props.currentDir === "asc" ? "▲" : "▼"}</span>
-        </Show>
-      </span>
-    </TableHead>
   );
 }

@@ -19,6 +19,7 @@ import {
   IconCalendarDays,
   IconChart,
   IconChevronRight,
+  IconClock,
   IconClipboardCheck,
   IconExam,
   IconHome,
@@ -52,14 +53,6 @@ type NavGroup = {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    id: "students",
-    labelKey: "nav.group.students",
-    Icon: IconUsers,
-    items: [
-      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
-    ],
-  },
-  {
     id: "classes",
     labelKey: "nav.group.classes",
     Icon: IconSchool,
@@ -75,6 +68,8 @@ const NAV_GROUPS: NavGroup[] = [
     Icon: IconChart,
     items: [
       { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
+      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
+      { to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
       { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
     ],
   },

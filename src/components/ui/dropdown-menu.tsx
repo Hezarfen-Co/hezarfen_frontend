@@ -1,7 +1,7 @@
 import { DropdownMenu as DropdownMenuPrimitive } from "@kobalte/core/dropdown-menu";
 import type { ComponentProps, ParentProps, ValidComponent } from "solid-js";
 import { splitProps } from "solid-js";
-import { IconChevronRight } from "@/components/ui/icons";
+import { IconCheck, IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
 export const DropdownMenu = DropdownMenuPrimitive;
@@ -52,6 +52,30 @@ export function DropdownMenuItem<T extends ValidComponent = "div">(
       )}
       {...rest}
     />
+  );
+}
+
+export function DropdownMenuCheckboxItem<T extends ValidComponent = "div">(
+  props: ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem<T>>,
+) {
+  const [local, rest] = splitProps(props as any, ["class", "children"]);
+  return (
+    <DropdownMenuPrimitive.CheckboxItem
+      class={cn(
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors",
+        "focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        local.class,
+      )}
+      {...rest}
+    >
+      <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          <IconCheck class="h-3.5 w-3.5" />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {local.children}
+    </DropdownMenuPrimitive.CheckboxItem>
   );
 }
 

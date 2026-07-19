@@ -1,9 +1,9 @@
-import { For, Show } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { Link } from "@tanstack/solid-router";
 import type { AttendanceCounts, AttendanceReport } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
-import { DataTableEmpty, DataTableFrame } from "@/components/ui/data-table";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { ATTENDANCE_STATUSES } from "@/lib/attendance-status";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
@@ -16,6 +16,8 @@ function percent(rate: number | null): string {
 function customEntries(counts: AttendanceCounts) {
   return Object.entries(counts.custom ?? {}).filter(([, count]) => count > 0);
 }
+
+type CourseAttendanceRow = AttendanceReport["courses"][number];
 
 function CountsCard(props: { title: string; counts: AttendanceCounts; compact?: boolean }) {
   const t = useT();
@@ -85,6 +87,39 @@ function StatusStat(props: { label: string; detail?: string; value: number; clas
 export function AttendanceReportView(props: { report: AttendanceReport; compact?: boolean }) {
   const t = useT();
   const compact = () => props.compact === true;
+  const columns = createMemo<ColumnDef<CourseAttendanceRow>[]>(() => [
+    {
+      id: "course",
+      header: t("nav.courses"),
+      cell: (cell) => (
+        <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} class="block truncate font-medium hover:underline">
+          {cell.row.original.course.title}
+        </Link>
+      ),
+    },
+    ...ATTENDANCE_STATUSES.map((status) => ({
+      id: status.value,
+      header: () => <span title={t(status.detailKey)}>{compact() ? t(status.key).slice(0, 1) : t(status.key)}</span>,
+      meta: { headerClass: "text-right", cellClass: "text-right" },
+      cell: (cell) => (
+        <span class={cn("mono inline-flex min-w-7 justify-center rounded-full border px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", status.class)}>
+          {cell.row.original.counts[status.value]}
+        </span>
+      ),
+    } satisfies ColumnDef<CourseAttendanceRow>)),
+    {
+      id: "total",
+      header: () => <span class="block text-right">{compact() ? "Σ" : t("common.all")}</span>,
+      meta: { cellClass: "mono text-right" },
+      cell: (cell) => cell.row.original.counts.total,
+    },
+    {
+      id: "rate",
+      header: () => <span class="block text-right">%</span>,
+      meta: { cellClass: "mono text-right font-semibold" },
+      cell: (cell) => percent(cell.row.original.counts.rate),
+    },
+  ]);
 
   return (
     <div class={cn("min-w-0 space-y-3", !compact() && "space-y-4")}>
@@ -99,53 +134,7 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
           when={props.report.courses.length > 0}
           fallback={<DataTableEmpty class="py-6">{t("attendance.emptyCourses")}</DataTableEmpty>}
         >
-          <DataTableFrame class="min-w-0">
-            <Table class={cn("data-table w-full", compact() ? "text-xs" : "table-fixed min-w-[40rem]")}>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("nav.courses")}</TableHead>
-                  <For each={ATTENDANCE_STATUSES}>
-                    {(status) => (
-                      <TableHead class="text-right" title={t(status.detailKey)}>
-                        {compact() ? t(status.key).slice(0, 1) : t(status.key)}
-                      </TableHead>
-                    )}
-                  </For>
-                  <TableHead class="text-right">{compact() ? "Σ" : t("common.all")}</TableHead>
-                  <TableHead class="text-right">%</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <For each={props.report.courses}>
-                  {(block) => (
-                    <TableRow>
-                      <TableCell class="min-w-0 font-medium">
-                        <Link to="/courses/$id" params={{ id: block.course.id }} class="block truncate hover:underline">
-                          {block.course.title}
-                        </Link>
-                      </TableCell>
-                      <For each={ATTENDANCE_STATUSES}>
-                        {(status) => (
-                          <TableCell class="text-right">
-                            <span
-                              class={cn(
-                                "mono inline-flex min-w-7 justify-center rounded-full border px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
-                                status.class,
-                              )}
-                            >
-                              {block.counts[status.value]}
-                            </span>
-                          </TableCell>
-                        )}
-                      </For>
-                      <TableCell class="mono text-right">{block.counts.total}</TableCell>
-                      <TableCell class="mono text-right font-semibold">{percent(block.counts.rate)}</TableCell>
-                    </TableRow>
-                  )}
-                </For>
-              </TableBody>
-            </Table>
-          </DataTableFrame>
+          <DataTable class="min-w-0" columns={columns()} data={props.report.courses} tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-[40rem]")} />
         </Show>
       </section>
     </div>

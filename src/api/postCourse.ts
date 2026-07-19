@@ -6,6 +6,7 @@ export type PostCourseBody = {
   description?: string | null;
   kind?: CourseKind | null;
   term_id?: string | null;
+  capacity?: number | null;
 };
 
 export function postCourse(body: PostCourseBody): Promise<Course> {

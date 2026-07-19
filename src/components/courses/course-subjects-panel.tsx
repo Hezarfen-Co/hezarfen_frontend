@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteSubjectById } from "@/api/deleteSubjectById";
 import { getCourseSubjects } from "@/api/getCourseSubjects";
 import { patchSubjectById } from "@/api/patchSubjectById";
@@ -8,13 +9,13 @@ import type { Subject } from "@/api/types";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { createFlash } from "@/lib/flash";
@@ -34,6 +35,40 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [flash, setFlash] = createFlash();
+  const columns = createMemo<ColumnDef<Subject>[]>(() => [
+    {
+      accessorKey: "name",
+      header: t("subjects.name"),
+      cell: (cell) => <span class="font-medium">{cell.row.original.name}</span>,
+    },
+    {
+      accessorKey: "description",
+      header: t("form.description"),
+      meta: { cellClass: "text-sm text-muted-foreground" },
+      cell: (cell) => cell.row.original.description || "—",
+    },
+    ...(props.canManage
+      ? [{
+          id: "actions",
+          header: t("common.actions"),
+          meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+          cell: (cell) => (
+            <TableRowActions
+              label={t("common.actions")}
+              actions={[
+                { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => openEdit(cell.row.original) },
+                {
+                  label: t("common.remove"),
+                  icon: <IconTrash class="h-4 w-4" />,
+                  destructive: true,
+                  onSelect: () => setRemoveSubject(cell.row.original),
+                },
+              ]}
+            />
+          ),
+        } satisfies ColumnDef<Subject>]
+      : []),
+  ]);
 
   createEffect(() => {
     const subject = editing();
@@ -135,43 +170,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
 
       <Suspense fallback={<PageSpinner />}>
         <Show when={(subjects() ?? []).length > 0} fallback={<EmptyState title={t("subjects.empty")} />}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("subjects.name")}</TableHead>
-                <TableHead>{t("form.description")}</TableHead>
-                <Show when={props.canManage}>
-                  <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
-                </Show>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={subjects() ?? []}>
-                {(subject) => (
-                  <TableRow>
-                    <TableCell class="font-medium">{subject.name}</TableCell>
-                    <TableCell class="text-sm text-muted-foreground">{subject.description || "—"}</TableCell>
-                    <Show when={props.canManage}>
-                      <TableCell class="px-1 text-center">
-                        <TableRowActions
-                          label={t("common.actions")}
-                          actions={[
-                            { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => openEdit(subject) },
-                            {
-                              label: t("common.remove"),
-                              icon: <IconTrash class="h-4 w-4" />,
-                              destructive: true,
-                              onSelect: () => setRemoveSubject(subject),
-                            },
-                          ]}
-                        />
-                      </TableCell>
-                    </Show>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
+          <DataTable columns={columns()} data={subjects() ?? []} filterColumn="name" enablePagination pageSize={10} />
         </Show>
       </Suspense>
     </div>

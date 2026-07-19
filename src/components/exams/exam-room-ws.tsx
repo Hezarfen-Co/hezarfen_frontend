@@ -471,6 +471,13 @@ function QuestionAnswerCardWS(props: {
           {(updatedAt) => <Badge variant="outline" class="rounded-full">{t("attempt.savedAt")}: {formatDateTime(updatedAt(), locale())}</Badge>}
         </Show>
       </div>
+      <Show when={props.question.image}>
+        <img
+          src={`/api/exams/${props.question.exam}/questions/${props.question.id}/image`}
+          alt={t("questions.image")}
+          class="mb-4 max-h-64 rounded-md border object-contain"
+        />
+      </Show>
       <p class="mb-4 whitespace-pre-wrap text-sm font-medium">{props.question.text}</p>
       <Show
         when={props.question.kind === "choice"}
@@ -511,7 +518,16 @@ function QuestionAnswerCardWS(props: {
                     class={value() === String(choiceIndex()) ? "h-2 w-2 rounded-[1px] bg-primary-foreground" : "hidden"}
                   />
                 </span>
-                <span>{choice}</span>
+                <span class="min-w-0 space-y-2">
+                  <span class="block whitespace-pre-wrap">{choice}</span>
+                  <Show when={props.question.choice_images?.[choiceIndex()]}>
+                    <img
+                      src={`/api/exams/${props.question.exam}/questions/${props.question.id}/choices/${choiceIndex()}/image`}
+                      alt={t("questions.choiceImage")}
+                      class="max-h-40 rounded-md border object-contain"
+                    />
+                  </Show>
+                </span>
               </button>
             )}
           </For>

@@ -149,6 +149,13 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
                           <Badge variant="secondary">{subjectName(q.subject)}</Badge>
                           <Badge variant="outline">{q.points} {t("questions.points")}</Badge>
                         </div>
+                        <Show when={q.image}>
+                          <img
+                            src={`/api/exams/${props.examId}/questions/${q.id}/image`}
+                            alt={t("questions.image")}
+                            class="max-h-64 rounded-md border object-contain"
+                          />
+                        </Show>
                         <p class="whitespace-pre-wrap text-sm font-medium">{q.text}</p>
                         <Show when={q.kind === "choice" && q.choices}>
                           <ol class="grid gap-2 text-sm text-muted-foreground">
@@ -165,6 +172,13 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
                                     {String.fromCharCode(65 + choiceIndex())}
                                   </span>
                                   <span class="min-w-0 whitespace-pre-wrap">{choice}</span>
+                                  <Show when={q.choice_images?.[choiceIndex()]}>
+                                    <img
+                                      src={`/api/exams/${props.examId}/questions/${q.id}/choices/${choiceIndex()}/image`}
+                                      alt={t("questions.choiceImage")}
+                                      class="max-h-40 rounded-md border object-contain"
+                                    />
+                                  </Show>
                                 </li>
                               )}
                             </For>

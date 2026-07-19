@@ -9,6 +9,7 @@ export type MessageKey =
   | "nav.exams"
   | "nav.courses"
   | "nav.marks"
+  | "nav.pomodoro"
   | "nav.attendance"
   | "nav.work"
   | "nav.staffWork"
@@ -42,6 +43,7 @@ export type MessageKey =
   | "common.back"
   | "common.view"
   | "common.actions"
+  | "common.columns"
   | "common.moreFilters"
   | "common.lessFilters"
   | "common.search"
@@ -73,6 +75,7 @@ export type MessageKey =
   | "common.prev"
   | "common.next"
   | "common.pageOf"
+  | "common.noResults"
   | "common.creator"
   | "common.searchPlaceholder"
   | "common.all"
@@ -168,6 +171,7 @@ export type MessageKey =
   | "dashboard.portal.examsDesc"
   | "dashboard.portal.eventsDesc"
   | "dashboard.portal.marksDesc"
+  | "dashboard.portal.pomodoroDesc"
   | "dashboard.portal.notesDesc"
   | "dashboard.portal.usersDesc"
   | "dashboard.portal.attendanceDesc"
@@ -270,6 +274,8 @@ export type MessageKey =
   | "exams.retakes"
   | "exams.allowRejoin"
   | "exams.allowRejoinHelp"
+  | "exams.draft"
+  | "exams.draftHelp"
   | "exams.startTime"
   | "exams.endTime"
   | "exams.scheduleRequired"
@@ -289,6 +295,8 @@ export type MessageKey =
   | "questions.correctHint"
   | "questions.kind.choice"
   | "questions.kind.text"
+  | "questions.image"
+  | "questions.choiceImage"
   | "questions.subjectRequired"
   | "questions.textRequired"
   | "questions.pointsRange"
@@ -302,6 +310,20 @@ export type MessageKey =
   | "subjects.empty"
   | "subjects.select"
   | "subjects.help"
+  | "pomodoro.title"
+  | "pomodoro.subtitle"
+  | "pomodoro.total"
+  | "pomodoro.running"
+  | "pomodoro.idle"
+  | "pomodoro.start"
+  | "pomodoro.finish"
+  | "pomodoro.started"
+  | "pomodoro.finished"
+  | "pomodoro.history"
+  | "pomodoro.empty"
+  | "pomodoro.startedAt"
+  | "pomodoro.finishedAt"
+  | "pomodoro.duration"
   | "attempt.title"
   | "attempt.openRoom"
   | "attempt.start"
@@ -412,6 +434,9 @@ export type MessageKey =
   | "courses.kind"
   | "courses.kind.course"
   | "courses.kind.study"
+  | "courses.kind.club"
+  | "courses.capacity"
+  | "courses.capacityOptional"
   | "marks.title"
   | "marks.subtitle"
   | "marks.overall"
@@ -557,13 +582,14 @@ const en: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Your campus workspace — notes, events, exams in one calm place.",
   "nav.home": "Home",
-  "nav.notes": "Notebook",
+  "nav.notes": "Notes",
   "nav.events": "Events",
   "nav.exams": "Exams",
   "nav.courses": "Education",
   "nav.marks": "Report card",
+  "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
-  "nav.work": "Work log",
+  "nav.work": "Work logs",
   "nav.staffWork": "Staff work",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
@@ -595,6 +621,7 @@ const en: Dict = {
   "common.back": "Back",
   "common.view": "View",
   "common.actions": "Actions",
+  "common.columns": "Columns",
   "common.moreFilters": "More filters",
   "common.lessFilters": "Less filters",
   "common.search": "Search",
@@ -626,6 +653,7 @@ const en: Dict = {
   "common.prev": "Previous",
   "common.next": "Next",
   "common.pageOf": "{page} / {total}",
+  "common.noResults": "No results.",
   "common.creator": "Created by",
   "common.searchPlaceholder": "Search…",
   "common.all": "All",
@@ -666,7 +694,7 @@ const en: Dict = {
   "dashboard.action.event": "Create event",
   "dashboard.action.eventHint": "Schedule a session",
   "dashboard.action.course": "New education item",
-  "dashboard.action.courseHint": "Open a course or study session",
+  "dashboard.action.courseHint": "Open an education item",
   "dashboard.action.exam": "Add exam",
   "dashboard.action.examHint": "Under a course",
   "dashboard.action.attend": "Mark attendance",
@@ -717,10 +745,11 @@ const en: Dict = {
   "dashboard.helpBody": "Stuck on a page or looking for the next step? Open the short app guide.",
   "dashboard.continueGuide": "Guide",
   "dashboard.portal.sections": "Sections",
-  "dashboard.portal.coursesDesc": "Browse courses, study sessions, and materials.",
+  "dashboard.portal.coursesDesc": "Browse courses, study sessions, clubs, and materials.",
   "dashboard.portal.examsDesc": "Course exams, deadlines, and results.",
   "dashboard.portal.eventsDesc": "Events with student attendance records.",
   "dashboard.portal.marksDesc": "Your grades and overall report card.",
+  "dashboard.portal.pomodoroDesc": "Track focused study sessions.",
   "dashboard.portal.notesDesc": "Private scratchpad for quick ideas.",
   "dashboard.portal.usersDesc": "Manage user accounts and roles.",
   "dashboard.portal.attendanceDesc": "Review student attendance records.",
@@ -786,7 +815,7 @@ const en: Dict = {
   "events.upcoming": "Upcoming",
   "events.past": "Past",
   "exams.title": "Exams",
-  "exams.subtitle": "All exams across courses and study sessions — create them under an education item.",
+  "exams.subtitle": "All exams across education items — create them under an education item.",
   "exams.create": "Create exam",
   "exams.searchPlaceholder": "Search exams…",
   "exams.selectCourse": "Select course",
@@ -825,6 +854,8 @@ const en: Dict = {
   "exams.retakes": "Retakes",
   "exams.allowRejoin": "Allow rejoin",
   "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
+  "exams.draft": "Draft",
+  "exams.draftHelp": "Keep hidden from students until published.",
   "exams.startTime": "Start time",
   "exams.endTime": "End time",
   "exams.scheduleRequired": "Scheduled exams need start and end times",
@@ -844,6 +875,8 @@ const en: Dict = {
   "questions.correctHint": "Zero-based: first choice is 0.",
   "questions.kind.choice": "Choice",
   "questions.kind.text": "Text",
+  "questions.image": "Question image",
+  "questions.choiceImage": "Choice image",
   "questions.subjectRequired": "Select a subject for this question",
   "questions.textRequired": "Question text is required",
   "questions.pointsRange": "Points must be an integer from 1 to 100",
@@ -857,6 +890,20 @@ const en: Dict = {
   "subjects.empty": "No subjects yet.",
   "subjects.select": "Select subject",
   "subjects.help": "Curriculum topics for this education item. Every exam question must be tagged with one.",
+  "pomodoro.title": "Pomodoro",
+  "pomodoro.subtitle": "Start and finish server-stamped study focus sessions.",
+  "pomodoro.total": "Total focus",
+  "pomodoro.running": "Running",
+  "pomodoro.idle": "Idle",
+  "pomodoro.start": "Start focus",
+  "pomodoro.finish": "Finish focus",
+  "pomodoro.started": "Focus session started.",
+  "pomodoro.finished": "Focus session finished.",
+  "pomodoro.history": "Recent sessions",
+  "pomodoro.empty": "No focus sessions yet.",
+  "pomodoro.startedAt": "Started",
+  "pomodoro.finishedAt": "Finished",
+  "pomodoro.duration": "Duration",
   "attempt.title": "Exam room",
   "attempt.openRoom": "Open exam room",
   "attempt.start": "Start exam",
@@ -906,7 +953,7 @@ const en: Dict = {
     "Teachers and managers open an event, select a student, then save present/absent/late/excused attendance.",
   "guide.step4.title": "4. Education",
   "guide.step4.body":
-    "Teachers create a course or study session, enroll students, then add exams by kind inside it.",
+    "Teachers create a course, study session, or club, enroll students, then add exams by kind inside it.",
   "guide.step5.title": "5. Exams",
   "guide.step5.body":
     "List all exams here. New exams are created from an education detail page, not from this list.",
@@ -919,7 +966,7 @@ const en: Dict = {
   "guide.tipsTitle": "Tips",
   "courses.helpTitle": "About education",
   "courses.helpBody":
-    "Education items can be courses or study sessions. Teachers enroll students and add exams here; exam kind weights drive averages. Deleting one removes its exams, results, and enrollments.",
+    "Education items can be courses, study sessions, or clubs. Teachers enroll students and add exams here; exam kind weights drive averages. Deleting one removes its exams, results, and enrollments.",
   "marks.helpTitle": "About the report card",
   "marks.helpBody":
     "Course average uses the weight defined on each exam kind over graded exams. Overall average is the mean of non-null course averages. Ungraded exams are skipped, not zeroed.",
@@ -964,8 +1011,8 @@ const en: Dict = {
   "role.manager": "Manager",
   "role.admin": "ADMIN",
   "courses.title": "Education",
-  "courses.listTitle": "Courses and study sessions",
-  "courses.subtitle": "Courses, study sessions, enrollment, and exams live here.",
+  "courses.listTitle": "Education records",
+  "courses.subtitle": "Courses, study sessions, clubs, enrollment, and exams live here.",
   "courses.create": "New education item",
   "courses.empty": "No courses yet.",
   "courses.enrolled": "Enrolled",
@@ -978,6 +1025,9 @@ const en: Dict = {
   "courses.kind": "Course type",
   "courses.kind.course": "Course",
   "courses.kind.study": "Study",
+  "courses.kind.club": "Club",
+  "courses.capacity": "Capacity",
+  "courses.capacityOptional": "Optional seat cap",
   "marks.title": "Report card",
   "marks.subtitle": "Weighted averages across enrolled courses.",
   "marks.overall": "Overall average",
@@ -1122,17 +1172,18 @@ const tr: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Kampüs çalışma alanın — notlar, etkinlikler ve sınavlar tek yerde.",
   "nav.home": "Ana sayfa",
-  "nav.notes": "Defter",
+  "nav.notes": "Notlar",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
   "nav.courses": "Eğitim",
-  "nav.marks": "Karnem",
-  "nav.attendance": "Yoklama",
-  "nav.work": "Mesai",
-  "nav.staffWork": "Personel mesai",
+  "nav.marks": "Notlar",
+  "nav.pomodoro": "Pomodoro",
+  "nav.attendance": "Yoklamalar",
+  "nav.work": "Mesailer",
+  "nav.staffWork": "Mesailer",
   "nav.users": "Kullanıcılar",
-  "nav.studentMarks": "Öğrenci notları",
-  "nav.studentAttendance": "Öğrenci yoklaması",
+  "nav.studentMarks": "Notlar",
+  "nav.studentAttendance": "Yoklamalar",
   "nav.settings": "Ayarlar",
   "nav.terms": "Dönemler",
   "nav.guide": "Rehber",
@@ -1160,6 +1211,7 @@ const tr: Dict = {
   "common.back": "Geri",
   "common.view": "Görüntüle",
   "common.actions": "İşlem",
+  "common.columns": "Kolonlar",
   "common.moreFilters": "Daha fazla filtre",
   "common.lessFilters": "Daha az filtre",
   "common.search": "Ara",
@@ -1191,6 +1243,7 @@ const tr: Dict = {
   "common.prev": "Önceki",
   "common.next": "Sonraki",
   "common.pageOf": "{page} / {total}",
+  "common.noResults": "Sonuç yok.",
   "common.creator": "Oluşturan",
   "common.searchPlaceholder": "Ara…",
   "common.all": "Tümü",
@@ -1231,7 +1284,7 @@ const tr: Dict = {
   "dashboard.action.event": "Etkinlik oluştur",
   "dashboard.action.eventHint": "Oturum planla",
   "dashboard.action.course": "Yeni eğitim kaydı",
-  "dashboard.action.courseHint": "Ders veya etüt aç",
+  "dashboard.action.courseHint": "Eğitim kaydı aç",
   "dashboard.action.exam": "Sınav ekle",
   "dashboard.action.examHint": "Dersin içinden",
   "dashboard.action.attend": "Yoklama işaretle",
@@ -1282,10 +1335,11 @@ const tr: Dict = {
   "dashboard.helpBody": "Bir sayfada takıldın veya sonraki adımı mı arıyorsun? Kısa uygulama rehberini aç.",
   "dashboard.continueGuide": "Rehber",
   "dashboard.portal.sections": "Bölümler",
-  "dashboard.portal.coursesDesc": "Dersleri, etütleri ve materyalleri görüntüle.",
-  "dashboard.portal.examsDesc": "Ders/etüt sınavları, tarihler ve sonuçlar.",
+  "dashboard.portal.coursesDesc": "Dersleri, etütleri, kulüpleri ve materyalleri görüntüle.",
+  "dashboard.portal.examsDesc": "Eğitim sınavları, tarihler ve sonuçlar.",
   "dashboard.portal.eventsDesc": "Öğrenci yoklamalı etkinlikler.",
   "dashboard.portal.marksDesc": "Notların ve genel karnen.",
+  "dashboard.portal.pomodoroDesc": "Odaklı çalışma oturumlarını takip et.",
   "dashboard.portal.notesDesc": "Hızlı fikirler için özel not defteri.",
   "dashboard.portal.usersDesc": "Kullanıcı hesaplarını ve rollerini yönet.",
   "dashboard.portal.attendanceDesc": "Öğrenci yoklama kayıtlarını incele.",
@@ -1351,7 +1405,7 @@ const tr: Dict = {
   "events.upcoming": "Yaklaşan",
   "events.past": "Geçmiş",
   "exams.title": "Sınavlar",
-  "exams.subtitle": "Tüm ders ve etüt sınavları — yeni sınav eğitim kaydı içinden eklenir.",
+  "exams.subtitle": "Tüm eğitim sınavları — yeni sınav eğitim kaydı içinden eklenir.",
   "exams.create": "Sınav oluştur",
   "exams.searchPlaceholder": "Sınav ara…",
   "exams.selectCourse": "Ders seç",
@@ -1390,6 +1444,8 @@ const tr: Dict = {
   "exams.retakes": "Deneme hakkı",
   "exams.allowRejoin": "Yeniden girişe izin ver",
   "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
+  "exams.draft": "Taslak",
+  "exams.draftHelp": "Yayınlanana kadar öğrencilerden gizle.",
   "exams.startTime": "Başlangıç saati",
   "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",
@@ -1409,6 +1465,8 @@ const tr: Dict = {
   "questions.correctHint": "Sıfırdan başlar: ilk seçenek 0.",
   "questions.kind.choice": "Seçmeli",
   "questions.kind.text": "Metin",
+  "questions.image": "Soru görseli",
+  "questions.choiceImage": "Seçenek görseli",
   "questions.subjectRequired": "Bu soru için konu seç",
   "questions.textRequired": "Soru metni gerekli",
   "questions.pointsRange": "Puan 1–100 arası tam sayı olmalı",
@@ -1422,6 +1480,20 @@ const tr: Dict = {
   "subjects.empty": "Henüz konu yok.",
   "subjects.select": "Konu seç",
   "subjects.help": "Bu eğitim kaydının müfredat konuları. Her sınav sorusu bir konuya bağlanmalı.",
+  "pomodoro.title": "Pomodoro",
+  "pomodoro.subtitle": "Sunucu zamanıyla odaklı çalışma oturumu başlat ve bitir.",
+  "pomodoro.total": "Toplam odak",
+  "pomodoro.running": "Devam ediyor",
+  "pomodoro.idle": "Boşta",
+  "pomodoro.start": "Odağı başlat",
+  "pomodoro.finish": "Odağı bitir",
+  "pomodoro.started": "Odak oturumu başladı.",
+  "pomodoro.finished": "Odak oturumu bitti.",
+  "pomodoro.history": "Son oturumlar",
+  "pomodoro.empty": "Henüz odak oturumu yok.",
+  "pomodoro.startedAt": "Başlangıç",
+  "pomodoro.finishedAt": "Bitiş",
+  "pomodoro.duration": "Süre",
   "attempt.title": "Sınav odası",
   "attempt.openRoom": "Sınav odasını aç",
   "attempt.start": "Sınava başla",
@@ -1471,7 +1543,7 @@ const tr: Dict = {
     "Öğretmenler ve yöneticiler etkinliği açar, öğrenciyi seçer ve var/yok/geç/mazeretli yoklama kaydeder.",
   "guide.step4.title": "4. Eğitim",
   "guide.step4.body":
-    "Öğretmen ders veya etüt oluşturur, öğrenci kaydeder, içine türe göre sınav ekler.",
+    "Öğretmen ders, etüt veya kulüp oluşturur, öğrenci kaydeder, içine türe göre sınav ekler.",
   "guide.step5.title": "5. Sınavlar",
   "guide.step5.body":
     "Tüm sınavlar burada listelenir. Yeni sınav bu listeden değil, eğitim detayından eklenir.",
@@ -1484,7 +1556,7 @@ const tr: Dict = {
   "guide.tipsTitle": "İpuçları",
   "courses.helpTitle": "Eğitim hakkında",
   "courses.helpBody":
-    "Eğitim kayıtları ders veya etüt olabilir. Öğretmen öğrenci kaydeder ve buradan sınav ekler; ortalamalarda sınav türü ağırlığı kullanılır. Bir kaydı silmek sınavları, sonuçları ve kayıtları da siler.",
+    "Eğitim kayıtları ders, etüt veya kulüp olabilir. Öğretmen öğrenci kaydeder ve buradan sınav ekler; ortalamalarda sınav türü ağırlığı kullanılır. Bir kaydı silmek sınavları, sonuçları ve kayıtları da siler.",
   "marks.helpTitle": "Karne hakkında",
   "marks.helpBody":
     "Ders ortalaması, notlanmış sınavlarda sınav türünde tanımlı ağırlıkla hesaplanır. Genel ortalama, dolu ders ortalamalarının aritmetik ortalamasıdır. Notlanmamış sınavlar sıfır sayılmaz, atlanır.",
@@ -1529,8 +1601,8 @@ const tr: Dict = {
   "role.manager": "Yönetici",
   "role.admin": "ADMIN",
   "courses.title": "Eğitim",
-  "courses.listTitle": "Dersler ve etütler",
-  "courses.subtitle": "Dersler, etütler, kayıtlar ve sınavlar burada.",
+  "courses.listTitle": "Eğitim kayıtları",
+  "courses.subtitle": "Dersler, etütler, kulüpler, kayıtlar ve sınavlar burada.",
   "courses.create": "Yeni eğitim kaydı",
   "courses.empty": "Henüz ders yok.",
   "courses.enrolled": "Kayıtlı",
@@ -1543,6 +1615,9 @@ const tr: Dict = {
   "courses.kind": "Ders türü",
   "courses.kind.course": "Ders",
   "courses.kind.study": "Etüt",
+  "courses.kind.club": "Kulüp",
+  "courses.capacity": "Kapasite",
+  "courses.capacityOptional": "İsteğe bağlı kontenjan",
   "marks.title": "Karnem",
   "marks.subtitle": "Kayıtlı derslerdeki ağırlıklı ortalamalar.",
   "marks.overall": "Genel ortalama",

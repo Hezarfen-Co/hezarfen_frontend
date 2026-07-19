@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteExamById } from "@/api/deleteExamById";
 import { deleteExamResultByUserId } from "@/api/deleteExamResultByUserId";
 import { getExamById } from "@/api/getExamById";
@@ -12,6 +13,7 @@ import { getSettings } from "@/api/getSettings";
 import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
+import type { ExamResult } from "@/api/types";
 import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { AnswerSheetView } from "@/components/exams/answer-sheet-view";
@@ -23,19 +25,11 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTableFrame } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
@@ -171,6 +165,7 @@ function ExamDetailContent() {
   };
   const isSittable = () => exam()?.mode === "sync" || exam()?.mode === "async" || exam()?.mode === "open";
   const isScheduled = () => isSittable();
+  const isDraft = () => exam()?.draft === true;
   const gradeStudents = () => {
     const graded = new Set((results() ?? []).map((row) => personId(row.user)));
     return (roster() ?? [])
@@ -180,6 +175,55 @@ function ExamDetailContent() {
         label: personLabelWithId(row.user),
       }));
   };
+  const resultColumns = createMemo<ColumnDef<ExamResult>[]>(() => [
+    {
+      id: "user",
+      accessorFn: (row) => personLabel(row.user),
+      header: t("events.userId"),
+      meta: { cellClass: "font-medium" },
+      cell: (cell) => personLabel(cell.row.original.user),
+    },
+    {
+      accessorKey: "mark",
+      header: t("form.mark"),
+      cell: (cell) => <ExamResultBadge mark={cell.row.original.mark} />,
+    },
+    {
+      id: "graded_by",
+      accessorFn: (row) => personLabel(row.graded_by),
+      header: t("exams.gradedBy"),
+      meta: { cellClass: "text-sm text-muted-foreground" },
+      cell: (cell) => personLabel(cell.row.original.graded_by),
+    },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+      cell: (cell) => (
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+            {
+              label: t("exams.answerSheet"),
+              icon: <IconEye class="h-4 w-4" />,
+              onSelect: () => {
+                const rowUserId = personId(cell.row.original.user);
+                setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
+              },
+            },
+            ...(!isFinished()
+              ? [{
+                  label: t("common.remove"),
+                  icon: <IconTrash class="h-4 w-4" />,
+                  destructive: true,
+                  onSelect: () => setRemoveUserId(personId(cell.row.original.user)),
+                }]
+              : []),
+          ]}
+        />
+      ),
+    },
+  ]);
 
   const [flash, setFlash] = createFlash();
 
@@ -234,7 +278,7 @@ function ExamDetailContent() {
                       {t("common.back")}
                     </Button>
                   </Link>
-                  <Show when={isStudent() && !isFinished() && !isUpcoming() && isSittable()}>
+                  <Show when={isStudent() && !isDraft() && !isFinished() && !isUpcoming() && isSittable()}>
                     <Link to="/exam-room/$id" params={{ id: id() }}>
                       <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
                         <IconExam class="h-4 w-4" />
@@ -242,7 +286,7 @@ function ExamDetailContent() {
                       </Button>
                     </Link>
                   </Show>
-                  <Show when={hasCourseManagementRights() && !isUpcoming() && isSittable()}>
+                  <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
                     <Link to="/exams/$id/live" params={{ id: id() }}>
                       <Button variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none">
                         <IconEye class="h-4 w-4" />
@@ -319,6 +363,9 @@ function ExamDetailContent() {
                 <Badge variant="outline" class="rounded-sm">
                   {examModeLabel(ex().mode)}
                 </Badge>
+                <Show when={ex().draft}>
+                  <Badge variant="secondary" class="rounded-sm">{t("exams.draft")}</Badge>
+                </Show>
               </div>
               </PageHeader>
             </div>
@@ -475,7 +522,7 @@ function ExamDetailContent() {
                       <Show when={!isFinished()}>
                         <span class="text-xs text-muted-foreground">{t("exams.gradeAfterExam")}</span>
                       </Show>
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={!isFinished()} onClick={() => setGradeOpen(true)}>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={!isFinished() || isDraft()} onClick={() => setGradeOpen(true)}>
                         <IconEdit class="h-4 w-4" />
                         {t("exams.gradeStudent")}
                       </Button>
@@ -492,54 +539,7 @@ function ExamDetailContent() {
                       </p>
                     }
                   >
-                    <DataTableFrame>
-                      <Table class="data-table">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>{t("events.userId")}</TableHead>
-                            <TableHead>{t("form.mark")}</TableHead>
-                            <TableHead>{t("exams.gradedBy")}</TableHead>
-                            <TableHead class="w-14 text-center">{t("common.actions")}</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <For each={results() ?? []}>
-                            {(row) => (
-                              <TableRow>
-                                <TableCell class="font-medium">{personLabel(row.user)}</TableCell>
-                                <TableCell>
-                                  <ExamResultBadge mark={row.mark} />
-                                </TableCell>
-                                <TableCell class="text-sm text-muted-foreground">{personLabel(row.graded_by)}</TableCell>
-                                <TableCell class="px-1 text-center">
-                                  <TableRowActions
-                                    label={t("common.actions")}
-                                    actions={[
-                                      {
-                                        label: t("exams.answerSheet"),
-                                        icon: <IconEye class="h-4 w-4" />,
-                                        onSelect: () => {
-                                          const rowUserId = personId(row.user);
-                                          setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
-                                        },
-                                      },
-                                      ...(!isFinished()
-                                        ? [{
-                                            label: t("common.remove"),
-                                            icon: <IconTrash class="h-4 w-4" />,
-                                            destructive: true,
-                                            onSelect: () => setRemoveUserId(personId(row.user)),
-                                          }]
-                                        : []),
-                                    ]}
-                                  />
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </For>
-                        </TableBody>
-                      </Table>
-                    </DataTableFrame>
+                    <DataTable columns={resultColumns()} data={results() ?? []} filterColumn="user" enablePagination pageSize={10} />
                   </Show>
                 </Suspense>
               </SectionDisclosure>

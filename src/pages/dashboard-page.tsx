@@ -16,6 +16,7 @@ import {
   IconCalendar,
   IconCalendarDays,
   IconChart,
+  IconClock,
   IconClipboardCheck,
   IconExam,
   IconNote,
@@ -188,6 +189,7 @@ function DashboardContent() {
         { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
         { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
         { Icon: IconChart, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avgLabel() },
+        { Icon: IconClock, titleKey: "nav.pomodoro", to: "/pomodoro", descKey: "dashboard.portal.pomodoroDesc" },
         { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       );
       return list;

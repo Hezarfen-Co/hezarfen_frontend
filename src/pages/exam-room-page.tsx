@@ -15,7 +15,7 @@ import { useT } from "@/stores/preferences-context";
 
 export default function ExamRoomPage() {
   return (
-    <RouteGuard>
+    <RouteGuard exactRole="student">
       <ExamRoomContent />
     </RouteGuard>
   );

@@ -26,6 +26,15 @@ export function GradeForm(props: {
   const [pendingValues, setPendingValues] = createSignal<GradeFormValues | null>(null);
   const selectedStudentLabel = createMemo(() => props.students.find((student) => student.id === userId())?.label ?? userId());
 
+  const setClampedMark = (value: string) => {
+    if (value === "") {
+      setMark(value);
+      return;
+    }
+    const next = Math.max(0, Math.min(100, Number(value)));
+    setMark(Number.isNaN(next) ? "" : String(Math.trunc(next)));
+  };
+
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     const uid = userId().trim();
@@ -74,7 +83,7 @@ export function GradeForm(props: {
               step={1}
               value={mark()}
               required
-              onInput={(e) => setMark(e.currentTarget.value)}
+              onInput={(e) => setClampedMark(e.currentTarget.value)}
             />
           </div>
         </div>

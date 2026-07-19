@@ -75,6 +75,7 @@
 | Read exam results / statistics | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Read own exam result | ✅ | ❌ (FE) | ❌ (FE) | ❌ (FE) |
 | Write exam questions | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Start / finish own pomodoro focus session | ✅ | ❌ | ❌ | ❌ |
 | Read answer sheets | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Watch live monitor | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Sit an exam (attempt) | ✅ | ❌ | ❌ | ❌ |
