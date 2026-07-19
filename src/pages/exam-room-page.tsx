@@ -60,13 +60,6 @@ function ExamRoomContent() {
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
             <div class="space-y-2">
-              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                <Link to="/exams" class="hover:text-foreground">{t("nav.exams")}</Link>
-                <span>/</span>
-                <Link to="/exams/$id" params={{ id: id() }} class="hover:text-foreground truncate max-w-[12rem]">{ex().title}</Link>
-                <span>/</span>
-                <span>{t("attempt.title")}</span>
-              </div>
               <PageHeader
                 compact
                 accent="rose"

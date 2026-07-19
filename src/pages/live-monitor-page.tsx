@@ -186,13 +186,6 @@ function LiveMonitorContent() {
         <Show when={exam()}>
           {(ex) => (
             <div class="space-y-2">
-              <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                <Link to="/exams" class="hover:text-foreground">{t("nav.exams")}</Link>
-                <span>/</span>
-                <Link to="/exams/$id" params={{ id: id() }} class="max-w-[12rem] truncate hover:text-foreground">{ex().title}</Link>
-                <span>/</span>
-                <span>{isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}</span>
-              </div>
               <PageHeader
                 compact
                 accent="rose"

@@ -99,11 +99,6 @@ function WorkLogContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          <span>{t("nav.admin")}</span>
-          <span>/</span>
-          <span>{t("nav.work")}</span>
-        </div>
         <PageHeader accent="amber" eyebrow={t("nav.work")} title={t("work.title")} description={t("work.subtitle")} />
       </div>
 

@@ -48,11 +48,6 @@ function AdminUsersContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          <span>{t("nav.group.students")}</span>
-          <span>/</span>
-          <span>{t("nav.users")}</span>
-        </div>
         <PageHeader accent="violet" eyebrow={t("nav.users")} title={t("admin.title")} description={t("admin.subtitle")} />
       </div>
 

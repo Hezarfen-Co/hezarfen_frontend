@@ -18,6 +18,7 @@ export type MessageKey =
   | "nav.studies"
   | "nav.clubs"
   | "nav.marks"
+  | "nav.messages"
   | "nav.pomodoro"
   | "nav.attendance"
   | "nav.work"
@@ -614,6 +615,7 @@ const en: Dict = {
   "nav.studies": "Study sessions",
   "nav.clubs": "Clubs",
   "nav.marks": "Report card",
+  "nav.messages": "Messages",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
   "nav.work": "Work logs",
@@ -1222,6 +1224,7 @@ const tr: Dict = {
   "nav.studies": "Etüt",
   "nav.clubs": "Kulüp",
   "nav.marks": "Notlar",
+  "nav.messages": "Mesajlar",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Yoklamalar",
   "nav.work": "Mesailer",

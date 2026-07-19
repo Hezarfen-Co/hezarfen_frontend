@@ -113,11 +113,6 @@ function StudentMarksContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          <span>{t("nav.admin")}</span>
-          <span>/</span>
-          <span>{t("nav.studentMarks")}</span>
-        </div>
         <PageHeader accent="violet" eyebrow={t("nav.admin")} title={t("nav.studentMarks")} description={t("marks.lookup")} />
       </div>
 

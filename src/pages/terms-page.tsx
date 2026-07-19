@@ -165,11 +165,6 @@ function TermsContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-          <span>{t("nav.admin")}</span>
-          <span>/</span>
-          <span>{t("terms.title")}</span>
-        </div>
         <PageHeader
           accent="violet"
           eyebrow={t("nav.admin")}
