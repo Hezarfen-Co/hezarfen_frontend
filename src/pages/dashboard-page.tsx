@@ -216,8 +216,9 @@ function DashboardContent() {
         { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, minRole: "teacher" },
         { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
         { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
-        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
+        { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
         { Icon: IconBriefcase, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" },
+        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       );
       return list;
     }
@@ -229,9 +230,10 @@ function DashboardContent() {
       { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
       { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
       { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
-      { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
       { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
+      { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
+      { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
       { Icon: IconSettings, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", minRole: "manager" },
       { Icon: IconCalendarDays, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
     );
@@ -248,6 +250,7 @@ function DashboardContent() {
   const orderedPortalCards = createMemo(() => {
     const cards = portalCards();
     const byId = new Map(cards.map((card) => [card.to, card]));
+    if (portalOrder().some((id) => !byId.has(id)) || portalOrder().length !== cards.length) return cards;
     const ordered = portalOrder().flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
     const seen = new Set(ordered.map((card) => card.to));
     return [...ordered, ...cards.filter((card) => !seen.has(card.to))];

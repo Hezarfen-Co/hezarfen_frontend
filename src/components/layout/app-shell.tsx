@@ -43,6 +43,7 @@ export function AppShell(props: ParentProps) {
     if (path === "/work") return `${t("nav.group.reports")} / ${t("nav.work")}`;
     if (path === "/management/student-marks") return `${t("nav.group.reports")} / ${t("nav.studentMarks")}`;
     if (path === "/management/student-attendance") return `${t("nav.group.reports")} / ${t("nav.studentAttendance")}`;
+    if (path === "/management/pomodoros") return `${t("nav.group.reports")} / ${t("nav.studentPomodoro")}`;
     if (path === "/management/staff-work") return `${t("nav.group.reports")} / ${t("nav.staffWork")}`;
     if (path === "/management/settings") return `${t("nav.group.settings")} / ${t("nav.settings")}`;
     if (path === "/management/terms") return `${t("nav.group.settings")} / ${t("nav.terms")}`;

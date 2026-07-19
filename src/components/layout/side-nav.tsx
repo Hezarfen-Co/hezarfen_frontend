@@ -85,6 +85,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
+      { to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
       { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
       { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
     ],

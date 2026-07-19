@@ -1,6 +1,6 @@
 import { createMemo, createSignal, Show } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import type { Role, User } from "@/api/types";
+import type { Role, User, UserLanguage, UserTheme } from "@/api/types";
 import type { MessageKey } from "@/i18n/messages";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { IconCheck } from "@/components/ui/icons";
+import { UserPreferencesActions } from "@/components/users/user-preferences-actions";
 import { ROLES } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
@@ -74,6 +75,7 @@ export function UserTable(props: {
   users: User[];
   currentUserId: string;
   onRoleChange: (userId: string, role: Role) => Promise<void>;
+  onPreferencesChange?: (userId: string, body: { theme?: UserTheme | null; language?: UserLanguage | null }) => Promise<void>;
 }) {
   const t = useT();
   const searchUser = (user: User, query: string) =>
@@ -115,6 +117,14 @@ export function UserTable(props: {
       meta: { cellClass: "mono truncate text-xs text-muted-foreground" },
     },
     {
+      id: "preferences",
+      header: t("nav.preferences"),
+      meta: { headerClass: "w-56", cellClass: "w-56" },
+      cell: (cell) => props.onPreferencesChange
+        ? <UserPreferencesActions user={cell.row.original} onPreferencesChange={props.onPreferencesChange} />
+        : "—",
+    },
+    {
       id: "update",
       header: t("common.update"),
       meta: { headerClass: "w-52", cellClass: "w-52" },
@@ -125,6 +135,6 @@ export function UserTable(props: {
   ]);
 
   return (
-    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-[58rem]" searchPredicate={searchUser} enablePagination pageSize={20} />
+    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-[70rem]" searchPredicate={searchUser} enablePagination pageSize={20} />
   );
 }

@@ -26,6 +26,7 @@ export type MessageKey =
   | "nav.users"
   | "nav.studentMarks"
   | "nav.studentAttendance"
+  | "nav.studentPomodoro"
   | "nav.settings"
   | "nav.terms"
   | "nav.guide"
@@ -344,6 +345,8 @@ export type MessageKey =
   | "pomodoro.finished"
   | "pomodoro.history"
   | "pomodoro.empty"
+  | "pomodoro.lookup"
+  | "pomodoro.forUser"
   | "pomodoro.startedAt"
   | "pomodoro.finishedAt"
   | "pomodoro.duration"
@@ -630,6 +633,7 @@ const en: Dict = {
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
+  "nav.studentPomodoro": "Pomodoros",
   "nav.settings": "Settings",
   "nav.terms": "Terms",
   "nav.guide": "Guide",
@@ -950,6 +954,8 @@ const en: Dict = {
   "pomodoro.finished": "Focus session finished.",
   "pomodoro.history": "Recent sessions",
   "pomodoro.empty": "No focus sessions yet.",
+  "pomodoro.lookup": "Select a student to review their pomodoro focus history.",
+  "pomodoro.forUser": "Pomodoros for {user}",
   "pomodoro.startedAt": "Started",
   "pomodoro.finishedAt": "Finished",
   "pomodoro.duration": "Duration",
@@ -1231,7 +1237,7 @@ const tr: Dict = {
   "ai.send": "Gönder",
   "ai.unavailable": "Çelebi henüz bağlı değil. Gerçek yanıtlar için backend AI endpoint’i gerekli.",
   "nav.home": "Ana sayfa",
-  "nav.notes": "Notlar",
+  "nav.notes": "Defter",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
   "nav.courses": "Ders",
@@ -1246,6 +1252,7 @@ const tr: Dict = {
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Notlar",
   "nav.studentAttendance": "Yoklamalar",
+  "nav.studentPomodoro": "Pomodorolar",
   "nav.settings": "Ayarlar",
   "nav.terms": "Dönemler",
   "nav.guide": "Rehber",
@@ -1566,6 +1573,8 @@ const tr: Dict = {
   "pomodoro.finished": "Odak oturumu bitti.",
   "pomodoro.history": "Son oturumlar",
   "pomodoro.empty": "Henüz odak oturumu yok.",
+  "pomodoro.lookup": "Öğrencinin pomodoro odak geçmişini görmek için öğrenci seç.",
+  "pomodoro.forUser": "{user} için pomodorolar",
   "pomodoro.startedAt": "Başlangıç",
   "pomodoro.finishedAt": "Bitiş",
   "pomodoro.duration": "Süre",

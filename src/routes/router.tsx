@@ -36,6 +36,7 @@ const MarksPage = lazyRoute(() => import("@/pages/marks-page"));
 const MessagesPage = lazyRoute(() => import("@/pages/messages-page"));
 const PomodoroPage = lazyRoute(() => import("@/pages/pomodoro-page"));
 const StudentMarksPage = lazyRoute(() => import("@/pages/student-marks-page"));
+const StudentPomodoroPage = lazyRoute(() => import("@/pages/student-pomodoro-page"));
 const AttendancePage = lazyRoute(() => import("@/pages/attendance-page"));
 const StudentAttendancePage = lazyRoute(() => import("@/pages/student-attendance-page"));
 const WorkLogPage = lazyRoute(() => import("@/pages/work-log-page"));
@@ -173,6 +174,12 @@ const studentMarksRoute = createRoute({
   component: StudentMarksPage,
 });
 
+const studentPomodoroRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/pomodoros",
+  component: StudentPomodoroPage,
+});
+
 const attendanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/attendance",
@@ -252,6 +259,7 @@ const routeTree = rootRoute.addChildren([
   messagesRoute,
   pomodoroRoute,
   studentMarksRoute,
+  studentPomodoroRoute,
   attendanceRoute,
   studentAttendanceRoute,
   workRoute,

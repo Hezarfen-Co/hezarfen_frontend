@@ -1,8 +1,9 @@
 import { For, Show, Suspense, createResource, createSignal } from "solid-js";
 import { getUsers } from "@/api/getUsers";
+import { patchUserPreferences } from "@/api/patchUserPreferences";
 import { patchUserRole } from "@/api/patchUserRole";
 import { formatApiError } from "@/api/client";
-import type { Role, User } from "@/api/types";
+import type { Role, User, UserLanguage, UserTheme } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { UserTable } from "@/components/users/user-table";
@@ -45,6 +46,17 @@ function AdminUsersContent() {
     }
   };
 
+  const onPreferencesChange = async (userId: string, body: { theme?: UserTheme | null; language?: UserLanguage | null }) => {
+    setError("");
+    try {
+      await patchUserPreferences(userId, body);
+      await refetch();
+      setFlash(t("common.saved"));
+    } catch (err) {
+      setError(formatApiError(err));
+    }
+  };
+
   return (
     <div class="space-y-6">
       <div class="space-y-2">
@@ -76,7 +88,7 @@ function AdminUsersContent() {
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list()}>
             <Show when={visibleUsers().length > 0} fallback={<DataTableEmpty>{t("admin.noUsers")}</DataTableEmpty>}>
-              <UserTable users={visibleUsers() as User[]} currentUserId={auth.user()!.id} onRoleChange={onRoleChange} />
+              <UserTable users={visibleUsers() as User[]} currentUserId={auth.user()!.id} onRoleChange={onRoleChange} onPreferencesChange={onPreferencesChange} />
             </Show>
           </Show>
         </Suspense>

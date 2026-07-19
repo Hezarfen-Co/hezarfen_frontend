@@ -1,0 +1,190 @@
+import { Show, createMemo, createResource, createSignal } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
+import { getPomodoroByUser } from "@/api/getPomodoroByUser";
+import { getUserSearch } from "@/api/getUserSearch";
+import type { PersonRef, PomodoroSession } from "@/api/types";
+import { ApiError, formatApiError } from "@/api/client";
+import { RouteGuard } from "@/components/layout/route-guard";
+import { PageHeader } from "@/components/layout/page-header";
+import { Alert } from "@/components/ui/alert";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { IconEye } from "@/components/ui/icons";
+import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
+import { formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { personLabel } from "@/lib/person";
+import { usePreferences, useT } from "@/stores/preferences-context";
+
+const PAGE_SIZE = 12;
+
+export default function StudentPomodoroPage() {
+  return (
+    <RouteGuard minRole="teacher">
+      <StudentPomodoroContent />
+    </RouteGuard>
+  );
+}
+
+function StudentPomodoroContent() {
+  const t = useT();
+  const { locale } = usePreferences();
+  const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
+  const [error, setError] = createSignal("");
+
+  const [list] = createResource(
+    async () => {
+      try {
+        setError("");
+        return (await getUserSearch("", undefined, "student")).items;
+      } catch (err) {
+        setError(formatApiError(err));
+        return [];
+      }
+    },
+    { initialValue: [] },
+  );
+
+  const [log, { refetch: refetchLog }] = createResource(
+    () => viewUser()?.id ?? null,
+    async (id) => {
+      if (!id) return null;
+      try {
+        return await getPomodoroByUser(id, { limit: 20 });
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          setError(t("common.notFound"));
+          return null;
+        }
+        setError(formatApiError(err));
+        return null;
+      }
+    },
+  );
+
+  const total = () => list().length;
+  const rows = () => list();
+  const listLoading = () => list.loading;
+  const searchPerson = (person: PersonRef, query: string) =>
+    [person.username, person.display_name, person.id].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase());
+  const studentColumns = createMemo<ColumnDef<PersonRef>[]>(() => [
+    {
+      accessorKey: "username",
+      header: t("admin.username"),
+      cell: (cell) => <span class="font-medium">{cell.row.original.username}</span>,
+    },
+    {
+      accessorKey: "display_name",
+      header: t("profile.name"),
+      cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
+    },
+    {
+      accessorKey: "id",
+      header: t("admin.id"),
+      cell: (cell) => <span class="mono text-xs text-muted-foreground">{cell.row.original.id}</span>,
+    },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "w-14 text-center" },
+      cell: (cell) => (
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+            {
+              label: t("common.view"),
+              icon: <IconEye class="h-4 w-4" />,
+              onSelect: () => {
+                setError("");
+                setViewUser(cell.row.original);
+              },
+            },
+          ]}
+        />
+      ),
+    },
+  ]);
+  const logColumns = createMemo<ColumnDef<PomodoroSession>[]>(() => [
+    {
+      accessorKey: "started_at",
+      header: t("pomodoro.startedAt"),
+      cell: (cell) => <span class="mono whitespace-nowrap">{formatDateTime(cell.row.original.started_at, locale())}</span>,
+    },
+    {
+      accessorKey: "finished_at",
+      header: t("pomodoro.finishedAt"),
+      cell: (cell) => <span class="mono whitespace-nowrap">{formatDateTime(cell.row.original.finished_at, locale())}</span>,
+    },
+    {
+      accessorKey: "duration_ms",
+      header: t("pomodoro.duration"),
+      cell: (cell) => formatDurationMinutes(cell.row.original.duration_ms, locale()),
+    },
+  ]);
+
+  return (
+    <div class="space-y-6">
+      <PageHeader accent="mint" eyebrow={t("nav.admin")} title={t("nav.studentPomodoro")} description={t("pomodoro.lookup")} />
+
+      <section class="data-shell space-y-4 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="font-display text-lg font-semibold">{t("nav.studentPomodoro")}</h2>
+            <p class="mt-1 text-sm text-muted-foreground">
+              {rows().length} / {total()}
+            </p>
+          </div>
+        </div>
+
+        <Show when={error() && !viewUser()}>
+          <Alert variant="destructive">{error()}</Alert>
+        </Show>
+
+        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+          <DataTable
+            columns={studentColumns()}
+            data={rows()}
+            tableClass="min-w-[36rem]"
+            empty={t("form.noStudents")}
+            searchPredicate={searchPerson}
+            enablePagination
+            pageSize={PAGE_SIZE}
+          />
+        </Show>
+      </section>
+
+      <SidePanel
+        size="wide"
+        open={viewUser() != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewUser(null);
+            setError("");
+          }
+        }}
+        title={t("pomodoro.forUser", { user: personLabel(viewUser()) })}
+        description={t("pomodoro.lookup")}
+      >
+        <div class="min-w-0 space-y-3">
+          <Show when={error()}>
+            <ErrorAlert message={error()} onRetry={() => void refetchLog()} />
+          </Show>
+          <Show when={log.loading}>
+            <p class="text-sm text-muted-foreground">{t("common.loading")}</p>
+          </Show>
+          <Show when={log()}>
+            {(p) => (
+              <div class="space-y-4">
+            <div class="detail-metric-card">
+              <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.total")}</p>
+                  <p class="mono mt-2 text-3xl font-semibold tabular-nums">{formatDurationMinutes(p().total_focus_ms, locale())}</p>
+            </div>
+                <DataTable columns={logColumns()} data={p().items} empty={t("pomodoro.empty")} enablePagination pageSize={10} />
+          </div>
+            )}
+          </Show>
+        </div>
+      </SidePanel>
+    </div>
+  );
+}
