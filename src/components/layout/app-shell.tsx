@@ -7,6 +7,7 @@ import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
 import { IconPanelLeft, IconX } from "@/components/ui/icons";
+import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -128,6 +129,7 @@ export function AppShell(props: ParentProps) {
       <Show when={auth.user() && !wide()}>
         <MobileTabBar onMenu={() => setMobileOpen(true)} />
       </Show>
+      <Toaster />
     </div>
   );
 }
