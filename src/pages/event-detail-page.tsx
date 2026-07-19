@@ -106,18 +106,11 @@ function EventDetailContent() {
         {(ev) => (
           <div class="space-y-6">
             <div class="space-y-2">
-              <div class="detail-breadcrumb">
-                <span>{t("nav.group.classes")}</span>
-                <span>/</span>
-                <Link to="/events">{t("events.title")}</Link>
-                <span>/</span>
-                <span class="truncate">{ev().title}</span>
-              </div>
               <PageHeader
                 accent="sky"
                 eyebrow={t("events.title")}
                 title={ev().title}
-                description={`${formatDateTime(ev().starts_at, locale())} - ${formatDateTime(ev().ends_at, locale())}${ev().description ? ` - ${ev().description}` : ""}`}
+                description={ev().description || "—"}
                 actions={
                   <div class="detail-action-group">
                     <Link to="/events">
@@ -141,10 +134,19 @@ function EventDetailContent() {
                   </div>
                 }
               />
-              <div class="flex flex-wrap gap-2">
-                <span class="inline-flex items-center rounded-sm border border-border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                  {audienceLabel(ev().audience, t)}
-                </span>
+              <div class="grid gap-3 text-sm sm:grid-cols-3">
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.audience")}</p>
+                  <p class="mt-1 font-medium">{audienceLabel(ev().audience, t)}</p>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</p>
+                  <p class="mono mt-1 font-medium">{formatDateTime(ev().starts_at, locale())}</p>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.ends")}</p>
+                  <p class="mono mt-1 font-medium">{formatDateTime(ev().ends_at, locale())}</p>
+                </div>
               </div>
             </div>
 

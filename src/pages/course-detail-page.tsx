@@ -255,18 +255,11 @@ function CourseDetailContent() {
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
             <div class="space-y-2">
-              <div class="detail-breadcrumb">
-                <span>{t("nav.group.classes")}</span>
-                <span>/</span>
-                <Link to={courseListPath(c().kind)}>{courseKindLabel(c().kind)}</Link>
-                <span>/</span>
-                <span class="truncate">{c().title}</span>
-              </div>
               <PageHeader
                 accent="violet"
                 eyebrow={courseKindLabel(c().kind)}
                 title={c().title}
-                description={`${t("terms.term")}: ${terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}${c().description ? ` - ${c().description}` : ""}`}
+                description={c().description || "—"}
                 actions={
                   <div class="detail-action-group">
                     <Link to={courseListPath(c().kind)}>
@@ -290,12 +283,19 @@ function CourseDetailContent() {
                   </div>
                 }
               />
-              <div class="flex flex-wrap gap-2">
-                <Show when={c().capacity != null}>
-                  <Badge variant="secondary" class="rounded-sm">
-                    {t("courses.capacity")}: {hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}
-                  </Badge>
-                </Show>
+              <div class="grid gap-3 text-sm sm:grid-cols-3">
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("courses.kind")}</p>
+                  <p class="mt-1 font-medium">{courseKindLabel(c().kind)}</p>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("terms.term")}</p>
+                  <p class="mt-1 font-medium">{terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}</p>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("courses.capacity")}</p>
+                  <p class="mono mt-1 font-medium">{c().capacity == null ? "—" : hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}</p>
+                </div>
               </div>
             </div>
 

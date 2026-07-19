@@ -258,13 +258,6 @@ function ExamDetailContent() {
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
             <div class="space-y-2">
-              <div class="detail-breadcrumb">
-                <span>{t("nav.group.classes")}</span>
-                <span>/</span>
-                <Link to="/exams">{t("exams.title")}</Link>
-                <span>/</span>
-                <span class="truncate">{ex().title}</span>
-              </div>
               <PageHeader
                 accent="rose"
                 eyebrow={t("exams.title")}
@@ -309,50 +302,35 @@ function ExamDetailContent() {
                   </div>
                 }
               />
-              <div class="flex flex-wrap items-center gap-2">
-                <Badge
-                  variant="outline"
-                  class={cn(
-                    "rounded-sm capitalize",
-                    scheduleStatusClass(
-                      !isScheduled()
-                        ? "unscheduled"
-                        : isFinished()
-                          ? "finished"
-                          : isUpcoming()
-                            ? "upcoming"
-                            : "active",
-                    ),
-                  )}
-                >
-                  <span
+              <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("work.status")}</p>
+                  <Badge
+                    variant="outline"
                     class={cn(
-                      "mr-1.5 inline-block h-1.5 w-1.5 rounded-full",
-                      scheduleStatusDotClass(
-                        !isScheduled()
-                          ? "unscheduled"
-                          : isFinished()
-                            ? "finished"
-                            : isUpcoming()
-                              ? "upcoming"
-                              : "active",
-                      ),
+                      "mt-2 w-fit rounded-sm capitalize",
+                      scheduleStatusClass(!isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active"),
                     )}
-                  />
-                  {!isScheduled() ? t("exams.unscheduled") : isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
-                </Badge>
-                <Badge variant="outline" class="rounded-sm capitalize">
-                  {examKindLabel(String(ex().kind), t)}
+                  >
+                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(!isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active"))} />
+                    {!isScheduled() ? t("exams.unscheduled") : isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
+                  </Badge>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.kind")}</p>
+                  <p class="mt-1 font-medium capitalize">{examKindLabel(String(ex().kind), t)}</p>
                   <Show when={examWeight(ex(), settings()?.exam_kinds) != null}>
-                    {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
+                    {(weight) => <p class="mt-1 text-xs text-muted-foreground">{t("courses.weight")}: {weight()}</p>}
                   </Show>
-                </Badge>
-                <Badge variant="outline" class="rounded-sm">
-                  {examModeLabel(ex().mode)}
-                </Badge>
-                <Show when={ex().draft}>
-                  <Badge variant="secondary" class="rounded-sm">{t("exams.draft")}</Badge>
-                </Show>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
+                  <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
+                </div>
+                <div class="detail-metric-card">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.draft")}</p>
+                  <p class="mt-1 font-medium">{ex().draft ? t("exams.draft") : "—"}</p>
+                </div>
               </div>
             </div>
 

@@ -23,11 +23,12 @@ export function SidePanel(
   return (
     <DialogPrimitive open={props.open} onOpenChange={props.onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/25 backdrop-blur-[1px] dark:bg-black/55" />
+        <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/25 backdrop-blur-[1px] transition-opacity duration-200 data-[closed]:opacity-0 data-[expanded]:opacity-100 dark:bg-black/55" />
         <DialogPrimitive.Content
           class={cn(
             "fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l border-border/80 bg-background text-foreground shadow-[0_20px_70px_hsl(var(--foreground)/0.18)] outline-none",
             "sm:inset-y-3 sm:right-3 sm:h-auto sm:max-h-[calc(100vh-1.5rem)] sm:rounded-2xl sm:border sm:border-border/80",
+            "transition-[transform,opacity] duration-200 ease-out data-[closed]:translate-x-full data-[closed]:opacity-0 data-[expanded]:translate-x-0 data-[expanded]:opacity-100",
             width(),
             props.class,
           )}
