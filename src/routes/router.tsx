@@ -130,6 +130,18 @@ const coursesRoute = createRoute({
   component: CoursesPage,
 });
 
+const studiesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/studies",
+  component: CoursesPage,
+});
+
+const clubsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/clubs",
+  component: CoursesPage,
+});
+
 const courseDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/courses/$id",
@@ -226,6 +238,8 @@ const routeTree = rootRoute.addChildren([
   liveMonitorRoute,
   examsRoute,
   coursesRoute,
+  studiesRoute,
+  clubsRoute,
   courseDetailRoute,
   marksRoute,
   pomodoroRoute,

@@ -8,6 +8,8 @@ export type MessageKey =
   | "nav.events"
   | "nav.exams"
   | "nav.courses"
+  | "nav.studies"
+  | "nav.clubs"
   | "nav.marks"
   | "nav.pomodoro"
   | "nav.attendance"
@@ -83,6 +85,7 @@ export type MessageKey =
   | "common.created"
   | "common.deleted"
   | "common.saved"
+  | "common.createItem"
   | "common.countItem"
   | "theme.light"
   | "theme.dark"
@@ -169,6 +172,8 @@ export type MessageKey =
   | "dashboard.continueGuide"
   | "dashboard.portal.sections"
   | "dashboard.portal.coursesDesc"
+  | "dashboard.portal.studiesDesc"
+  | "dashboard.portal.clubsDesc"
   | "dashboard.portal.examsDesc"
   | "dashboard.portal.eventsDesc"
   | "dashboard.portal.marksDesc"
@@ -590,7 +595,9 @@ const en: Dict = {
   "nav.notes": "Notes",
   "nav.events": "Events",
   "nav.exams": "Exams",
-  "nav.courses": "Education",
+  "nav.courses": "Courses",
+  "nav.studies": "Study sessions",
+  "nav.clubs": "Clubs",
   "nav.marks": "Report card",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
@@ -666,6 +673,7 @@ const en: Dict = {
   "common.created": "Created.",
   "common.deleted": "Deleted.",
   "common.saved": "Saved.",
+  "common.createItem": "Create {item}",
   "common.countItem": "{count} {item}",
   "theme.light": "Light",
   "theme.dark": "Dark",
@@ -751,7 +759,9 @@ const en: Dict = {
   "dashboard.helpBody": "Stuck on a page or looking for the next step? Open the short app guide.",
   "dashboard.continueGuide": "Guide",
   "dashboard.portal.sections": "Sections",
-  "dashboard.portal.coursesDesc": "Browse courses, study sessions, clubs, and materials.",
+  "dashboard.portal.coursesDesc": "Browse course rosters, subjects, and exams.",
+  "dashboard.portal.studiesDesc": "Browse study sessions, rosters, and exams.",
+  "dashboard.portal.clubsDesc": "Browse clubs, rosters, and exams.",
   "dashboard.portal.examsDesc": "Course exams, deadlines, and results.",
   "dashboard.portal.eventsDesc": "Events with student attendance records.",
   "dashboard.portal.marksDesc": "Your grades and overall report card.",
@@ -1018,10 +1028,10 @@ const en: Dict = {
   "role.manager": "Manager",
   "role.admin": "ADMIN",
   "courses.title": "Education",
-  "courses.listTitle": "Education records",
-  "courses.subtitle": "Courses, study sessions, clubs, enrollment, and exams live here.",
+  "courses.listTitle": "{item} records",
+  "courses.subtitle": "Manage {item}, enrollment, and exams here.",
   "courses.create": "New education item",
-  "courses.empty": "No courses yet.",
+  "courses.empty": "No {item} yet.",
   "courses.enrolled": "Enrolled",
   "courses.roster": "Roster",
   "courses.rosterItem": "Student",
@@ -1185,7 +1195,9 @@ const tr: Dict = {
   "nav.notes": "Notlar",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
-  "nav.courses": "Eğitim",
+  "nav.courses": "Ders",
+  "nav.studies": "Etüt",
+  "nav.clubs": "Kulüp",
   "nav.marks": "Notlar",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Yoklamalar",
@@ -1261,6 +1273,7 @@ const tr: Dict = {
   "common.created": "Oluşturuldu.",
   "common.deleted": "Silindi.",
   "common.saved": "Kaydedildi.",
+  "common.createItem": "{item} oluştur",
   "common.countItem": "{count} Adet {item}",
   "theme.light": "Açık",
   "theme.dark": "Koyu",
@@ -1346,7 +1359,9 @@ const tr: Dict = {
   "dashboard.helpBody": "Bir sayfada takıldın veya sonraki adımı mı arıyorsun? Kısa uygulama rehberini aç.",
   "dashboard.continueGuide": "Rehber",
   "dashboard.portal.sections": "Bölümler",
-  "dashboard.portal.coursesDesc": "Dersleri, etütleri, kulüpleri ve materyalleri görüntüle.",
+  "dashboard.portal.coursesDesc": "Dersleri, konuları, kayıtları ve sınavları görüntüle.",
+  "dashboard.portal.studiesDesc": "Etütleri, kayıtları ve sınavları görüntüle.",
+  "dashboard.portal.clubsDesc": "Kulüpleri, kayıtları ve sınavları görüntüle.",
   "dashboard.portal.examsDesc": "Eğitim sınavları, tarihler ve sonuçlar.",
   "dashboard.portal.eventsDesc": "Öğrenci yoklamalı etkinlikler.",
   "dashboard.portal.marksDesc": "Notların ve genel karnen.",
@@ -1613,10 +1628,10 @@ const tr: Dict = {
   "role.manager": "Yönetici",
   "role.admin": "ADMIN",
   "courses.title": "Eğitim",
-  "courses.listTitle": "Eğitim kayıtları",
-  "courses.subtitle": "Dersler, etütler, kulüpler, kayıtlar ve sınavlar burada.",
+  "courses.listTitle": "{item} kayıtları",
+  "courses.subtitle": "{item}, kayıtlar ve sınavlar burada.",
   "courses.create": "Yeni eğitim kaydı",
-  "courses.empty": "Henüz ders yok.",
+  "courses.empty": "Henüz {item} yok.",
   "courses.enrolled": "Kayıtlı",
   "courses.roster": "Sınıf listesi",
   "courses.rosterItem": "Öğrenci",

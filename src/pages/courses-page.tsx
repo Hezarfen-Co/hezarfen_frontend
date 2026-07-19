@@ -1,6 +1,6 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { useNavigate } from "@tanstack/solid-router";
+import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
 import { getMyCourses } from "@/api/getMyCourses";
 import { getTerms } from "@/api/getTerms";
@@ -28,7 +28,6 @@ import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
 
 const COURSE_PAGE_SIZE = 12;
-const COURSE_KINDS: CourseKind[] = ["course", "study", "club"];
 
 export default function CoursesPage() {
   return (
@@ -41,11 +40,11 @@ export default function CoursesPage() {
 function CoursesContent() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const t = useT();
   const [showForm, setShowForm] = createSignal(false);
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
-  const [kind, setKind] = createSignal<CourseKind>("course");
   const [termId, setTermId] = createSignal("");
   const [capacity, setCapacity] = createSignal("");
   const [error, setError] = createSignal("");
@@ -65,6 +64,8 @@ function CoursesContent() {
   const termName = (id: string | null | undefined) => terms()?.find((term) => term.id === id)?.name ?? t("terms.unassigned");
   const courseKindLabel = (value: CourseKind | undefined) =>
     value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
+  const pageKind = (): CourseKind => location().pathname.startsWith("/studies") ? "study" : location().pathname.startsWith("/clubs") ? "club" : "course";
+  const pageLabel = () => courseKindLabel(pageKind());
   const creatorName = (creatorId: string) => {
     if (creatorId === auth.user()?.id) return auth.user()?.username ?? creatorId;
     return users()?.find((user) => user.id === creatorId)?.username ?? creatorId;
@@ -75,7 +76,7 @@ function CoursesContent() {
     return items.filter((course) => {
       if (selectedTerm === "unassigned" && course.term) return false;
       if (selectedTerm !== "all" && selectedTerm !== "unassigned" && course.term !== selectedTerm) return false;
-      return true;
+      return course.kind === pageKind();
     });
   };
   const searchCourse = (course: Course, query: string) =>
@@ -93,11 +94,10 @@ function CoursesContent() {
   const columns = createMemo<ColumnDef<Course>[]>(() => [
     {
       accessorKey: "title",
-      header: t("courses.title"),
+      header: pageLabel(),
       cell: (cell) => (
         <div class="min-w-0 space-y-1">
           <p class="truncate font-medium">{cell.row.original.title}</p>
-          <Badge variant="outline" class="rounded-sm text-[11px]">{courseKindLabel(cell.row.original.kind)}</Badge>
           <Show when={isStudent()}>
             <Badge variant="secondary" class="rounded-sm">{t("courses.enrolled")}</Badge>
           </Show>
@@ -149,13 +149,12 @@ function CoursesContent() {
       await postCourse({
         title: title().trim(),
         description: description().trim() || undefined,
-        kind: kind(),
+        kind: pageKind(),
         term_id: termId() || null,
         capacity: cap ? Number(cap) : null,
       });
       setTitle("");
       setDescription("");
-      setKind("course");
       setTermId("");
       setCapacity("");
       setShowForm(false);
@@ -174,25 +173,25 @@ function CoursesContent() {
         <div class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
           <span>{t("nav.group.classes")}</span>
           <span>/</span>
-          <span>{t("nav.courses")}</span>
+          <span>{pageLabel()}</span>
         </div>
         <PageHeader
           accent="violet"
-          eyebrow={t("nav.courses")}
-          title={t("courses.title")}
-          description={t("courses.subtitle")}
+          eyebrow={t("nav.group.classes")}
+          title={pageLabel()}
+          description={t("courses.subtitle", { item: pageLabel() })}
           actions={
             canCreate() ? (
               <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowForm(true)}>
                 <IconPlus class="h-4 w-4" />
-                {t("courses.create")}
+                {t("common.createItem", { item: pageLabel() })}
               </Button>
             ) : undefined
           }
         />
       </div>
 
-      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("courses.create")} description={t("courses.subtitle")}>
+      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: pageLabel() })} description={t("courses.subtitle", { item: pageLabel() })}>
         <form class="space-y-3" onSubmit={onCreate}>
           <div class="space-y-1.5">
             <Label for="course-title">{t("form.title")}</Label>
@@ -201,12 +200,6 @@ function CoursesContent() {
           <div class="space-y-1.5">
             <Label for="course-desc">{t("form.description")}</Label>
             <Textarea id="course-desc" maxlength={2000} rows={3} value={description()} onInput={(e) => setDescription(e.currentTarget.value)} />
-          </div>
-          <div class="space-y-1.5">
-            <Label for="course-kind">{t("courses.kind")}</Label>
-            <Select id="course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
-              <For each={COURSE_KINDS}>{(item) => <option value={item}>{courseKindLabel(item)}</option>}</For>
-            </Select>
           </div>
           <div class="space-y-1.5">
             <Label for="course-term">{t("terms.term")}</Label>
@@ -243,12 +236,12 @@ function CoursesContent() {
             when={rows().length > 0}
             fallback={
               <EmptyState
-                title={t("courses.empty")}
+                title={t("courses.empty", { item: pageLabel() })}
                 action={
                   canCreate() ? (
                     <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowForm(true)}>
                       <IconPlus class="h-4 w-4" />
-                      {t("courses.create")}
+                      {t("common.createItem", { item: pageLabel() })}
                     </Button>
                   ) : undefined
                 }
@@ -258,9 +251,9 @@ function CoursesContent() {
             <div class="space-y-4">
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 class="font-display text-lg font-semibold">{t("courses.listTitle")}</h2>
+                  <h2 class="font-display text-lg font-semibold">{t("courses.listTitle", { item: pageLabel() })}</h2>
                   <p class="mt-1 text-sm text-muted-foreground">
-                    {rows().length} {t("nav.courses")}
+                    {t("common.countItem", { count: rows().length, item: pageLabel() })}
                   </p>
                 </div>
               </div>

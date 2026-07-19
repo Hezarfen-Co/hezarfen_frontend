@@ -122,6 +122,7 @@ function CourseDetailContent() {
   };
   const courseKindLabel = (value: CourseKind | undefined) =>
     value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
+  const courseListPath = (value: CourseKind | undefined) => value === "study" ? "/studies" : value === "club" ? "/clubs" : "/courses";
 
   const examCount = createMemo(() => exams()?.length ?? 0);
   const rosterCount = createMemo(() => roster()?.length ?? 0);
@@ -257,18 +258,18 @@ function CourseDetailContent() {
               <div class="detail-breadcrumb">
                 <span>{t("nav.group.classes")}</span>
                 <span>/</span>
-                <Link to="/courses">{t("courses.title")}</Link>
+                <Link to={courseListPath(c().kind)}>{courseKindLabel(c().kind)}</Link>
                 <span>/</span>
                 <span class="truncate">{c().title}</span>
               </div>
               <PageHeader
                 accent="violet"
-                eyebrow={t("courses.title")}
+                eyebrow={courseKindLabel(c().kind)}
                 title={c().title}
                 description={`${t("terms.term")}: ${terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}${c().description ? ` - ${c().description}` : ""}`}
                 actions={
                   <div class="detail-action-group">
-                    <Link to="/courses">
+                    <Link to={courseListPath(c().kind)}>
                       <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
                         {t("common.back")}
@@ -307,7 +308,7 @@ function CourseDetailContent() {
               onConfirm={async () => {
                 await wrap(async () => {
                   await deleteCourseById(id());
-                  void navigate({ to: "/courses" });
+                  void navigate({ to: courseListPath(c().kind) });
                 });
               }}
             />

@@ -7,7 +7,7 @@ import { getExams } from "@/api/getExams";
 import { getMyCourses } from "@/api/getMyCourses";
 import { getMyMarks } from "@/api/getMyMarks";
 import { getNotes } from "@/api/getNotes";
-import type { Exam, Event, Role } from "@/api/types";
+import type { Course, Exam, Event, Role } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import {
@@ -166,7 +166,10 @@ function DashboardContent() {
     return all;
   });
 
-  const courseCount = createMemo(() => scopedCourses().length);
+  const countCoursesByKind = (kind: Course["kind"]) => scopedCourses().filter((course) => course.kind === kind).length;
+  const courseCount = createMemo(() => countCoursesByKind("course"));
+  const studyCount = createMemo(() => countCoursesByKind("study"));
+  const clubCount = createMemo(() => countCoursesByKind("club"));
   const examCount = createMemo(() => visibleExams().length);
   const eventCount = createMemo(() => events().length);
   const noteCount = createMemo(() => notes().length);
@@ -178,6 +181,8 @@ function DashboardContent() {
   const portalCards = createMemo<PortalCardDef[]>(() => {
     const r = role();
     const cc = String(courseCount());
+    const sc = String(studyCount());
+    const clc = String(clubCount());
     const ec = String(examCount());
     const evc = String(eventCount());
     const nc = String(noteCount());
@@ -186,6 +191,8 @@ function DashboardContent() {
     if (r === "student") {
       list.push(
         { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
         { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
         { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
         { Icon: IconChart, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avgLabel() },
@@ -198,6 +205,8 @@ function DashboardContent() {
     if (r === "teacher") {
       list.push(
         { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
         { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
         { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, minRole: "teacher" },
         { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
@@ -211,6 +220,8 @@ function DashboardContent() {
     // manager + admin
     list.push(
       { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+      { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+      { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
       { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
       { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
       { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
