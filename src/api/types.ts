@@ -76,6 +76,18 @@ export type Attendance = {
   marked_by: PersonRef;
 };
 
+export type EventRosterEntry = {
+  user: PersonRef;
+  status: AttendanceStatus | null;
+  marked_by: PersonRef | null;
+};
+
+export type EventRegistration = {
+  event: string;
+  user: PersonRef;
+  registered_by: PersonRef;
+};
+
 export type Course = {
   id: string;
   creator: string;

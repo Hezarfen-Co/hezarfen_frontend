@@ -80,6 +80,7 @@ export type MessageKey =
   | "confirm.deleteSession"
   | "confirm.updateExam"
   | "confirm.removeAttendance"
+  | "confirm.removeEventRegistration"
   | "confirm.removeResult"
   | "confirm.updateRole"
   | "confirm.gradeStudent"
@@ -228,6 +229,12 @@ export type MessageKey =
   | "events.attendanceRecords"
   | "events.attendanceRecordsHelp"
   | "events.noAttendance"
+  | "events.registrationRoster"
+  | "events.registrationRosterHelp"
+  | "events.registerStudent"
+  | "events.unregister"
+  | "events.noRoster"
+  | "events.notMarked"
   | "events.attendee"
   | "events.selectAttendee"
   | "events.noAttendees"
@@ -677,6 +684,7 @@ const en: Dict = {
   "confirm.deleteSession": "Delete session “{title}”?",
   "confirm.updateExam": "Update exam “{title}”?",
   "confirm.removeAttendance": "Remove attendance for user {user}?",
+  "confirm.removeEventRegistration": "Remove registration for user {user}?",
   "confirm.removeResult": "Remove grade for user {user}?",
   "confirm.updateRole": "Change role of {user} from {from} to {to}?",
   "confirm.gradeStudent": "Grade user {user} with mark {mark}/100?",
@@ -826,6 +834,12 @@ const en: Dict = {
   "events.attendanceRecords": "Attendance records",
   "events.attendanceRecordsHelp": "Saved student attendance for this event, including who recorded each row.",
   "events.noAttendance": "No attendance rows yet.",
+  "events.registrationRoster": "Registration list",
+  "events.registrationRosterHelp": "Add students before attendance and review who is expected for this event.",
+  "events.registerStudent": "Register student",
+  "events.unregister": "Remove registration",
+  "events.noRoster": "No students registered yet.",
+  "events.notMarked": "Not marked",
   "events.attendee": "Student",
   "events.selectAttendee": "Search student",
   "events.noAttendees": "No students found",
@@ -1286,6 +1300,7 @@ const tr: Dict = {
   "confirm.deleteSession": "“{title}” oturumu silinsin mi?",
   "confirm.updateExam": "“{title}” sınavı güncellensin mi?",
   "confirm.removeAttendance": "{user} kullanıcısının yoklaması kaldırılsın mı?",
+  "confirm.removeEventRegistration": "{user} kullanıcısının etkinlik kaydı kaldırılsın mı?",
   "confirm.removeResult": "{user} kullanıcısının notu kaldırılsın mı?",
   "confirm.updateRole": "{user} rolü {from} → {to} olarak değiştirilsin mi?",
   "confirm.gradeStudent": "{user} kullanıcısına {mark}/100 notu verilsin mi?",
@@ -1435,6 +1450,12 @@ const tr: Dict = {
   "events.attendanceRecords": "Yoklama kayıtları",
   "events.attendanceRecordsHelp": "Bu etkinlik için kaydedilmiş öğrenci yoklaması ve kaydı kimin girdiği.",
   "events.noAttendance": "Henüz yoklama kaydı yok.",
+  "events.registrationRoster": "Kayıt listesi",
+  "events.registrationRosterHelp": "Yoklama öncesi öğrencileri ekle ve bu etkinlikte beklenenleri kontrol et.",
+  "events.registerStudent": "Öğrenciyi kaydet",
+  "events.unregister": "Kaydı kaldır",
+  "events.noRoster": "Henüz kayıtlı öğrenci yok.",
+  "events.notMarked": "İşaretlenmedi",
   "events.attendee": "Öğrenci",
   "events.selectAttendee": "Öğrenci ara",
   "events.noAttendees": "Öğrenci bulunamadı",
