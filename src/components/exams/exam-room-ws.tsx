@@ -550,8 +550,11 @@ function QuestionAnswerCardWS(props: {
       : props.question.answer?.text ?? "",
   );
   const [saved, setSaved] = createSignal(false);
+  let questionId = props.question.id;
 
   createEffect(() => {
+    if (props.question.id === questionId) return;
+    questionId = props.question.id;
     setValue(
       props.question.kind === "choice"
         ? props.question.answer?.selected != null
