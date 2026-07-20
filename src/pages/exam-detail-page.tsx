@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteExamById } from "@/api/deleteExamById";
 import { deleteExamResultByUserId } from "@/api/deleteExamResultByUserId";
@@ -10,14 +10,12 @@ import { getExamResults } from "@/api/getExamResults";
 import { getExamStatistics } from "@/api/getExamStatistics";
 import { getCourseEnrollments } from "@/api/getCourseEnrollments";
 import { getMyCourses } from "@/api/getMyCourses";
-import { getSettings } from "@/api/getSettings";
 import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
 import type { ExamResult } from "@/api/types";
 import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
-import { AnswerSheetView } from "@/components/exams/answer-sheet-view";
 import { ExamResultBadge } from "@/components/exams/exam-result-badge";
 import { GradeForm } from "@/components/exams/grade-form";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -28,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { IconChevronLeft, IconEdit, IconExam, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -36,7 +35,6 @@ import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDisplayStatus, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
-import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
@@ -44,6 +42,8 @@ import { createFlash } from "@/lib/flash";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+const RESULT_PAGE_SIZE = 10;
 
 export default function ExamDetailPage() {
   return (
@@ -68,7 +68,6 @@ function ExamDetailContent() {
   }, "");
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
-  const [settings] = createResource(() => getSettings());
   const isStudent = createMemo(() => auth.user()?.role === "student");
 
   const hasCourseManagementRights = () => {
@@ -83,13 +82,12 @@ function ExamDetailContent() {
   const [pending, setPending] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
-  const [sheetUserId, setSheetUserId] = createSignal<string | null>(null);
   const [gradeOpen, setGradeOpen] = createSignal(false);
+  const [resultPage, setResultPage] = createSignal(0);
   const [questionCreateOpen, setQuestionCreateOpen] = createSignal(false);
   const [openSections, setOpenSections] = createSignal({
     schedule: false,
     ownResult: false,
-    answerSheet: false,
     statistics: false,
     questions: false,
     results: false,
@@ -101,7 +99,7 @@ function ExamDetailContent() {
   const isScheduled = () => isSittable();
 
   const [ownResult] = createResource(
-    () => (isStudent() ? id() : null),
+    () => (isStudent() && openSections().ownResult ? id() : null),
     async (examId) => {
       if (!examId) return null;
       try {
@@ -126,11 +124,16 @@ function ExamDetailContent() {
   );
 
   const [results, { refetch: refetchResults }] = createResource(
-    () => (hasCourseManagementRights() && (openSections().results || gradeOpen() || sheetUserId()) ? id() : null),
-    async (examId) => {
-      if (!examId) return [];
-      return (await getExamResults(examId)).items;
+    () => (hasCourseManagementRights() ? [id(), resultPage()] as const : null),
+    async (source) => {
+      if (!source) return { items: [], total: 0, limit: RESULT_PAGE_SIZE, offset: 0 };
+      const [examId, page] = source;
+      return getExamResults(examId, { limit: RESULT_PAGE_SIZE, offset: page * RESULT_PAGE_SIZE });
     },
+  );
+  const [gradeResults, { refetch: refetchGradeResults }] = createResource(
+    () => (hasCourseManagementRights() && gradeOpen() ? id() : null),
+    async (examId) => examId ? getExamResults(examId, { limit: 500, offset: 0 }) : null,
   );
   const [stats] = createResource(
     () => (hasCourseManagementRights() && openSections().statistics ? id() : null),
@@ -200,8 +203,14 @@ function ExamDetailContent() {
     return t("exams.unscheduled");
   };
   const isDraft = () => exam()?.draft === true;
+  const resultTotal = () => results()?.total ?? 0;
+  const resultTotalPages = () => Math.max(1, Math.ceil(resultTotal() / RESULT_PAGE_SIZE));
+  createEffect(() => {
+    if (resultPage() >= resultTotalPages()) setResultPage(resultTotalPages() - 1);
+  });
   const gradeStudents = () => {
-    const graded = new Set((results() ?? []).map((row) => personId(row.user)));
+    if (gradeResults.loading) return [];
+    const graded = new Set((gradeResults()?.items ?? []).map((row) => personId(row.user)));
     return (roster() ?? [])
       .filter((row) => !graded.has(row.user.id))
       .map((row) => ({
@@ -240,10 +249,12 @@ function ExamDetailContent() {
             {
               label: t("exams.answerSheet"),
               icon: <IconEye class="h-4 w-4" />,
-              onSelect: () => {
-                const rowUserId = personId(cell.row.original.user);
-                setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
-              },
+              onSelect: () => void navigate({ to: "/exam-answers/$examId/$userId", params: { examId: id(), userId: personId(cell.row.original.user) } }),
+            },
+            {
+              label: t("common.update"),
+              icon: <IconEdit class="h-4 w-4" />,
+              onSelect: () => void navigate({ to: "/exam-answers/$examId/$userId", params: { examId: id(), userId: personId(cell.row.original.user) } }),
             },
             ...(!isFinished()
               ? [{
@@ -273,7 +284,7 @@ function ExamDetailContent() {
       setPending(false);
     }
   };
-  const toggleSection = (section: "schedule" | "ownResult" | "answerSheet" | "statistics" | "questions" | "results") => {
+  const toggleSection = (section: "schedule" | "ownResult" | "statistics" | "questions" | "results") => {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
 
@@ -363,9 +374,6 @@ function ExamDetailContent() {
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.kind")}</p>
                   <p class="mt-1 font-medium capitalize">{examKindLabel(String(ex().kind), t)}</p>
-                  <Show when={examWeight(ex(), settings()?.exam_kinds) != null}>
-                    {(weight) => <p class="mt-1 text-xs text-muted-foreground">{t("courses.weight")}: {weight()}</p>}
-                  </Show>
                 </div>
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
@@ -458,19 +466,6 @@ function ExamDetailContent() {
               </SectionDisclosure>
             </Show>
 
-            <Show when={hasCourseManagementRights() && sheetUserId()}>
-              <SectionDisclosure
-                open={openSections().answerSheet}
-                onToggle={() => toggleSection("answerSheet")}
-                title={t("exams.answerSheet")}
-                description={sheetUserId() ?? undefined}
-              >
-                <Suspense fallback={<PageSpinner />}>
-                  <AnswerSheetView examId={id()} userId={sheetUserId()!} />
-                </Suspense>
-              </SectionDisclosure>
-            </Show>
-
             <Show when={hasCourseManagementRights()}>
               <SectionDisclosure open={openSections().statistics} onToggle={() => toggleSection("statistics")} title={t("exams.statistics")} description={t("exams.examStatistics")}>
                 <Suspense fallback={<PageSpinner />}>
@@ -538,6 +533,7 @@ function ExamDetailContent() {
                   onSubmit={async (values) => {
                     await postExamResult(id(), values);
                     await refetchResults();
+                    await refetchGradeResults();
                     setFlash(t("common.saved"));
                   }}
                 />
@@ -547,7 +543,7 @@ function ExamDetailContent() {
                 open={openSections().results}
                 onToggle={() => toggleSection("results")}
                 title={t("exams.results")}
-                description={`${(results() ?? []).length} ${t("exams.studentResults")}`}
+                description={`${resultTotal()} ${t("exams.studentResults")}`}
                 actions={
                   <Show when={hasCourseManagementRights()}>
                     <div class="flex items-center gap-2">
@@ -564,14 +560,17 @@ function ExamDetailContent() {
               >
                 <Suspense fallback={<PageSpinner />}>
                   <Show
-                    when={(results() ?? []).length > 0}
+                    when={(results()?.items ?? []).length > 0}
                     fallback={
                       <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
                         {t("exams.noResults")}
                       </p>
                     }
                   >
-                    <DataTable columns={resultColumns()} data={results() ?? []} filterColumn="user" enablePagination pageSize={10} />
+                    <DataTable columns={resultColumns()} data={results()?.items ?? []} filterColumn="user" />
+                    <Show when={resultTotal() > RESULT_PAGE_SIZE}>
+                      <PaginationControls page={Math.min(resultPage(), resultTotalPages() - 1)} totalPages={resultTotalPages()} onPageChange={setResultPage} />
+                    </Show>
                   </Show>
                 </Suspense>
               </SectionDisclosure>

@@ -25,7 +25,7 @@ export function AppShell(props: ParentProps) {
   const [celebiOpen, setCelebiOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
-  const wide = () => location().pathname.startsWith("/exam-room/") || location().pathname === "/messages";
+  const wide = () => location().pathname.startsWith("/exam-room/") || location().pathname.startsWith("/exam-answers/") || location().pathname === "/messages";
   const routeLabel = createMemo(() => {
     const path = location().pathname;
     if (path === "/") return t("nav.home");
