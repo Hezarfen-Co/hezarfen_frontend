@@ -1,7 +1,8 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { Show } from "solid-js";
+import { Show, createSignal } from "solid-js";
 import type { User } from "@/api/types";
 import type { MessageKey } from "@/i18n/messages";
+import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,12 +31,14 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
   const prefs = usePreferences();
   const t = useT();
   const navigate = useNavigate();
+  const [profileOpen, setProfileOpen] = createSignal(false);
 
   return (
-    <Show when={auth.user()}>
-      {(u) => {
-        const name = () => displayName(u());
-        return (
+    <>
+      <Show when={auth.user()}>
+        {(u) => {
+          const name = () => displayName(u());
+          return (
           <div class={cn("shrink-0 border-t border-border/80 p-2", props.collapsed && "px-2 py-2") }>
             <DropdownMenu placement="right-end" gutter={8}>
               <DropdownMenuTrigger
@@ -68,7 +71,7 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
               </DropdownMenuTrigger>
 
               <DropdownMenuContent class="w-52 rounded-lg border-border/80 bg-popover p-1 shadow-soft">
-                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => void navigate({ to: "/profile" })}>
+                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => setProfileOpen(true)}>
                   <IconEdit class="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span>{t("profile.edit")}</span>
                 </DropdownMenuItem>
@@ -97,8 +100,10 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        );
-      }}
-    </Show>
+          );
+        }}
+      </Show>
+      <AccountProfileDialog open={profileOpen()} onOpenChange={setProfileOpen} />
+    </>
   );
 }

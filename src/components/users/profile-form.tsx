@@ -38,7 +38,7 @@ function isoFromDateInput(value: string): string {
   return `${year}-${month}-${day}`;
 }
 
-export function ProfileForm(props: { user: User; onSaved: () => void }) {
+export function ProfileForm(props: { user: User; onSaved: () => void; onSave?: (body: ProfileUpdate) => Promise<User> }) {
   const t = useT();
   const [name, setName] = createSignal(props.user.name ?? "");
   const [surname, setSurname] = createSignal(props.user.surname ?? "");
@@ -83,7 +83,7 @@ export function ProfileForm(props: { user: User; onSaved: () => void }) {
     if (Object.keys(body).length === 0) { props.onSaved(); return; }
     setPending(true);
     try {
-      await patchMe(body);
+      await (props.onSave ?? patchMe)(body);
       props.onSaved();
       setFlash(t("common.saved"));
     } catch (err) {

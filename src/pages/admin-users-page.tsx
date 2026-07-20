@@ -1,15 +1,17 @@
 import { For, Show, Suspense, createResource, createSignal } from "solid-js";
 import { getUsers } from "@/api/getUsers";
-import { patchUserPreferences } from "@/api/patchUserPreferences";
+import { patchUserProfile } from "@/api/patchUserProfile";
 import { patchUserRole } from "@/api/patchUserRole";
 import { formatApiError } from "@/api/client";
-import type { Role, User, UserLanguage, UserTheme } from "@/api/types";
+import type { Role, User } from "@/api/types";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { ProfileForm } from "@/components/users/profile-form";
 import { UserTable } from "@/components/users/user-table";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { DataTableEmpty, DataTableSkeleton } from "@/components/ui/data-table";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { createFlash } from "@/lib/flash";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -28,6 +30,7 @@ function AdminUsersContent() {
   const auth = useAuth();
   const t = useT();
   const [error, setError] = createSignal("");
+  const [editUser, setEditUser] = createSignal<User | null>(null);
 
   const [list, { refetch }] = createResource(async () => (await getUsers()).items);
   const visibleUsers = () => list() ?? [];
@@ -39,17 +42,6 @@ function AdminUsersContent() {
     setError("");
     try {
       await patchUserRole(userId, role);
-      await refetch();
-      setFlash(t("common.saved"));
-    } catch (err) {
-      setError(formatApiError(err));
-    }
-  };
-
-  const onPreferencesChange = async (userId: string, body: { theme?: UserTheme | ""; language?: UserLanguage | "" }) => {
-    setError("");
-    try {
-      await patchUserPreferences(userId, body);
       await refetch();
       setFlash(t("common.saved"));
     } catch (err) {
@@ -88,11 +80,26 @@ function AdminUsersContent() {
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list()}>
             <Show when={visibleUsers().length > 0} fallback={<DataTableEmpty>{t("admin.noUsers")}</DataTableEmpty>}>
-              <UserTable users={visibleUsers() as User[]} currentUserId={auth.user()!.id} onRoleChange={onRoleChange} onPreferencesChange={onPreferencesChange} />
+              <UserTable users={visibleUsers() as User[]} currentUserId={auth.user()!.id} onRoleChange={onRoleChange} onUserClick={setEditUser} />
             </Show>
           </Show>
         </Suspense>
       </div>
+      <Show when={editUser()} keyed>
+        {(user) => (
+          <FormDialog open onOpenChange={(open) => !open && setEditUser(null)} title={user.username} description={t("profile.subtitle")}>
+            <ProfileForm
+              user={user}
+              onSave={(body) => patchUserProfile(user.id, body)}
+              onSaved={async () => {
+                await refetch();
+                setEditUser(null);
+                setFlash(t("common.saved"));
+              }}
+            />
+          </FormDialog>
+        )}
+      </Show>
     </div>
   );
 }
