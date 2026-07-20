@@ -110,7 +110,9 @@ function DashboardContent() {
   const role = () => user().role;
   const now = createNow();
   const [portalOrder, setPortalOrder] = createSignal<string[]>([]);
+  const [previewPortalOrder, setPreviewPortalOrder] = createSignal<string[] | null>(null);
   const [draggingPortal, setDraggingPortal] = createSignal<string | null>(null);
+  const [dragOverPortal, setDragOverPortal] = createSignal<string | null>(null);
   const [editingPortalOrder, setEditingPortalOrder] = createSignal(false);
 
   const [courses] = createResource(
@@ -247,13 +249,18 @@ function DashboardContent() {
     return list;
   });
   const portalOrderKey = () => `${PORTAL_ORDER_KEY}.${role()}`;
-  const orderedPortalCards = createMemo(() => {
-    const cards = portalCards();
+  const cardsFromOrder = (cards: PortalCardDef[], order: string[]) => {
     const byId = new Map(cards.map((card) => [card.to, card]));
-    if (portalOrder().some((id) => !byId.has(id)) || portalOrder().length !== cards.length) return cards;
-    const ordered = portalOrder().flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
+    if (order.some((id) => !byId.has(id)) || order.length !== cards.length) return cards;
+    const ordered = order.flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
     const seen = new Set(ordered.map((card) => card.to));
     return [...ordered, ...cards.filter((card) => !seen.has(card.to))];
+  };
+  const baseOrderedPortalCards = createMemo(() => cardsFromOrder(portalCards(), portalOrder()));
+  const orderedPortalCards = createMemo(() => {
+    const cards = portalCards();
+    const preview = previewPortalOrder();
+    return preview ? cardsFromOrder(cards, preview) : baseOrderedPortalCards();
   });
   createEffect(() => {
     try {
@@ -264,13 +271,25 @@ function DashboardContent() {
   });
   const movePortalCard = (from: string, to: string) => {
     if (from === to) return;
-    const ids = orderedPortalCards().map((card) => card.to);
+    const ids = (previewPortalOrder() ?? (() => {
+      const next = baseOrderedPortalCards().map((card) => card.to);
+      const fromIndex = next.indexOf(from);
+      const toIndex = next.indexOf(to);
+      if (fromIndex >= 0 && toIndex >= 0) next.splice(toIndex, 0, next.splice(fromIndex, 1)[0]);
+      return next;
+    })()).slice();
+    setPortalOrder(ids);
+    setPreviewPortalOrder(null);
+    window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
+  };
+  const previewMovePortalCard = (from: string, to: string) => {
+    if (from === to) return;
+    const ids = (previewPortalOrder() ?? baseOrderedPortalCards().map((card) => card.to)).slice();
     const fromIndex = ids.indexOf(from);
     const toIndex = ids.indexOf(to);
     if (fromIndex < 0 || toIndex < 0) return;
     ids.splice(toIndex, 0, ids.splice(fromIndex, 1)[0]);
-    setPortalOrder(ids);
-    window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
+    setPreviewPortalOrder(ids);
   };
 
   const attention = createMemo<AttentionItem[]>(() => {
@@ -391,11 +410,22 @@ function DashboardContent() {
                   card={card}
                   editing={editingPortalOrder()}
                   dragging={draggingPortal() === card.to}
+                  preview={dragOverPortal() === card.to && draggingPortal() !== card.to}
                   onDragStart={() => setDraggingPortal(card.to)}
-                  onDragEnd={() => setDraggingPortal(null)}
+                  onDragEnd={() => {
+                    setDraggingPortal(null);
+                    setDragOverPortal(null);
+                    setPreviewPortalOrder(null);
+                  }}
+                  onDragOver={() => {
+                    const source = draggingPortal();
+                    setDragOverPortal(card.to);
+                    if (source) previewMovePortalCard(source, card.to);
+                  }}
                   onDrop={(target) => {
                     const source = draggingPortal();
                     setDraggingPortal(null);
+                    setDragOverPortal(null);
                     if (source) movePortalCard(source, target);
                   }}
                 />
@@ -507,7 +537,7 @@ function DashEmpty(props: { children: string }) {
   );
 }
 
-function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: boolean; onDragStart: () => void; onDragEnd: () => void; onDrop: (target: string) => void }) {
+function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: boolean; preview: boolean; onDragStart: () => void; onDragEnd: () => void; onDragOver: () => void; onDrop: (target: string) => void }) {
   const t = useT();
   const Icon = props.card.Icon;
   const hasStat = () => props.card.stat != null && props.card.stat !== "";
@@ -527,7 +557,9 @@ function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: bo
       }}
       onDragEnd={props.onDragEnd}
       onDragOver={(event) => {
-        if (props.editing) event.preventDefault();
+        if (!props.editing) return;
+        event.preventDefault();
+        props.onDragOver();
       }}
       onDrop={(event) => {
         if (!props.editing) return;
@@ -538,6 +570,7 @@ function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: bo
         "group relative flex min-h-[5.75rem] items-start gap-3 overflow-hidden rounded-xl border border-border bg-card px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/45 hover:bg-muted/30 hover:shadow-[0_16px_38px_rgba(15,23,42,0.11)] hover:before:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[6.25rem] sm:gap-3.5 sm:px-4 sm:py-3.5",
         props.editing && "cursor-move border-dashed",
         props.editing && !props.dragging && "dashboard-jiggle",
+        props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-[0_18px_42px_rgba(15,23,42,0.14)] before:opacity-100",
         props.dragging && "scale-[0.98] border-primary/50 opacity-60",
       )}
     >
