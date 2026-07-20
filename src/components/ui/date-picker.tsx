@@ -148,7 +148,7 @@ export function DatePicker(props: {
           <div
             ref={panel}
             data-kb-top-layer=""
-            class="fixed z-[80] rounded-xl border border-border/80 bg-popover p-2.5 text-popover-foreground shadow-xl"
+            class="pointer-events-auto fixed z-[80] rounded-xl border border-border/80 bg-popover p-2.5 text-popover-foreground shadow-xl"
             style={{ left: `${position().left}px`, top: `${position().top}px`, width: `${position().width}px` }}
             on:pointerdown={(e) => e.stopPropagation()}
           >

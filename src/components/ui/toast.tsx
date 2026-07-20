@@ -24,7 +24,7 @@ function dismissToast(id: number) {
 export function Toaster() {
   return (
     <Portal>
-      <div class="pointer-events-none fixed inset-x-3 bottom-4 z-[80] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:w-96">
+      <div class="pointer-events-none fixed inset-x-3 top-4 z-[80] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:w-96">
         <For each={toasts()}>
           {(toast) => (
             <div class="pointer-events-auto flex w-full items-start gap-3 rounded-xl border border-border bg-card px-3 py-3 text-card-foreground shadow-soft">
