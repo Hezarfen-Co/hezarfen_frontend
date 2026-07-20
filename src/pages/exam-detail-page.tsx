@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteExamById } from "@/api/deleteExamById";
 import { deleteExamResultByUserId } from "@/api/deleteExamResultByUserId";
 import { getExamById } from "@/api/getExamById";
+import { getExamAttempt } from "@/api/getExamAttempt";
 import { getExamResult } from "@/api/getExamResult";
 import { getExamResults } from "@/api/getExamResults";
 import { getExamStatistics } from "@/api/getExamStatistics";
@@ -13,7 +14,7 @@ import { getSettings } from "@/api/getSettings";
 import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
-import type { ExamResult } from "@/api/types";
+import type { AttemptStatus, ExamResult } from "@/api/types";
 import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { AnswerSheetView } from "@/components/exams/answer-sheet-view";
@@ -104,6 +105,18 @@ function ExamDetailContent() {
       }
     },
   );
+  const [ownAttempt] = createResource(
+    () => (isStudent() && isSittable() ? id() : null),
+    async (examId) => {
+      if (!examId) return null;
+      try {
+        return await getExamAttempt(examId);
+      } catch (err) {
+        if (err instanceof ApiError && (err.status === 404 || err.status === 409)) return null;
+        throw err;
+      }
+    },
+  );
 
   const [results, { refetch: refetchResults }] = createResource(
     () => (hasCourseManagementRights() && (openSections().results || gradeOpen() || sheetUserId()) ? id() : null),
@@ -142,6 +155,21 @@ function ExamDetailContent() {
   };
   const isFinished = () => examStatus().finished;
   const isUpcoming = () => examStatus().upcoming;
+  const ownAttemptStatus = (): AttemptStatus | null => ownAttempt()?.status ?? null;
+  const detailStatus = () => {
+    const own = ownAttemptStatus();
+    if (own === "submitted" || own === "expired") return own;
+    return !isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active";
+  };
+  const detailStatusLabel = () => {
+    const status = detailStatus();
+    if (status === "submitted") return t("attempt.submitted");
+    if (status === "expired") return t("attempt.expired");
+    if (status === "unscheduled") return t("exams.unscheduled");
+    if (status === "finished") return t("exams.finished");
+    if (status === "upcoming") return t("exams.upcoming");
+    return t("exams.active");
+  };
 
   const canManage = () => {
     if (isFinished()) return false;
@@ -271,13 +299,23 @@ function ExamDetailContent() {
                         {t("common.back")}
                       </Button>
                     </Link>
-                    <Show when={isStudent() && !isDraft() && !isFinished() && !isUpcoming() && isSittable()}>
-                      <Link to="/exam-room/$id" params={{ id: id() }}>
-                        <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
-                          <IconExam class="h-4 w-4" />
-                          {t("attempt.openRoom")}
-                        </Button>
-                      </Link>
+                    <Show when={isStudent() && !isDraft() && isSittable()}>
+                      <Show when={!isUpcoming() && !isFinished()}>
+                        <Show when={ownAttempt()?.status === "submitted" || ownAttempt()?.status === "expired"}
+                          fallback={
+                            <Link to="/exam-room/$id" params={{ id: id() }}>
+                              <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
+                                <IconExam class="h-4 w-4" />
+                                {ownAttempt() ? t("attempt.resume") : t("attempt.openRoom")}
+                              </Button>
+                            </Link>
+                          }
+                        >
+                          <Badge variant="secondary" class="flex-1 rounded-sm px-3 py-2 text-center sm:flex-none">
+                            {ownAttempt()?.status === "submitted" ? t("attempt.submitted") : t("attempt.expired")}
+                          </Badge>
+                        </Show>
+                      </Show>
                     </Show>
                     <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
                       <Link to="/exams/$id/live" params={{ id: id() }}>
@@ -309,11 +347,11 @@ function ExamDetailContent() {
                     variant="outline"
                     class={cn(
                       "mt-2 w-fit rounded-sm capitalize",
-                      scheduleStatusClass(!isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active"),
+                      scheduleStatusClass(detailStatus() === "submitted" || detailStatus() === "expired" ? "finished" : detailStatus()),
                     )}
                   >
-                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(!isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active"))} />
-                    {!isScheduled() ? t("exams.unscheduled") : isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
+                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(detailStatus() === "submitted" || detailStatus() === "expired" ? "finished" : detailStatus()))} />
+                    {detailStatusLabel()}
                   </Badge>
                 </div>
                 <div class="detail-metric-card">
@@ -392,6 +430,12 @@ function ExamDetailContent() {
                 </div>
               </div>
             </SectionDisclosure>
+
+            <Show when={isStudent() && ownAttempt()?.status && (ownAttempt()!.status === "submitted" || ownAttempt()!.status === "expired")}>
+              <Alert variant={ownAttempt()!.status === "submitted" ? "default" : "destructive"} class="border">
+                <p class="text-sm font-medium">{ownAttempt()!.status === "submitted" ? t("attempt.submittedInfo") : t("attempt.expiredInfo")}</p>
+              </Alert>
+            </Show>
 
             <Show when={isStudent() && !isScheduled()}>
               <SectionDisclosure

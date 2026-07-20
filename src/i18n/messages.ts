@@ -369,7 +369,9 @@ export type MessageKey =
   | "attempt.mark"
   | "attempt.saveAnswer"
   | "attempt.submitted"
+  | "attempt.submittedInfo"
   | "attempt.expired"
+  | "attempt.expiredInfo"
   | "attempt.closed"
   | "attempt.inProgress"
   | "attempt.absent"
@@ -978,7 +980,9 @@ const en: Dict = {
   "attempt.mark": "Mark",
   "attempt.saveAnswer": "Save answer",
   "attempt.submitted": "Submitted",
+  "attempt.submittedInfo": "You have already submitted this exam. It cannot be reopened.",
   "attempt.expired": "Expired",
+  "attempt.expiredInfo": "The time for this exam has expired. It cannot be reopened.",
   "attempt.closed": "This attempt is closed. Answers are read-only.",
   "attempt.inProgress": "In progress",
   "attempt.absent": "No-show",
@@ -1597,7 +1601,9 @@ const tr: Dict = {
   "attempt.mark": "Not",
   "attempt.saveAnswer": "Cevabı kaydet",
   "attempt.submitted": "Teslim edildi",
+  "attempt.submittedInfo": "Bu sınavı zaten teslim ettin. Yeniden açılamaz.",
   "attempt.expired": "Süresi doldu",
+  "attempt.expiredInfo": "Bu sınavın süresi doldu. Yeniden açılamaz.",
   "attempt.closed": "Bu oturum kapalı. Cevaplar salt okunur.",
   "attempt.inProgress": "Devam ediyor",
   "attempt.absent": "Katılmadı",
