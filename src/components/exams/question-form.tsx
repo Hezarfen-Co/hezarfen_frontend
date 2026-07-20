@@ -150,7 +150,7 @@ export function QuestionForm(props: {
               <img
                 src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/image`}
                 alt={t("questions.image")}
-                class="mt-2 max-h-40 rounded-md border object-contain"
+                class="mt-2 h-40 w-full max-w-md rounded-md border bg-muted/20 object-contain"
               />
             </Show>
             <input
@@ -268,7 +268,7 @@ export function QuestionForm(props: {
                     <img
                       src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/choices/${index}/image`}
                       alt={t("questions.choiceImage")}
-                      class="mt-2 max-h-32 rounded-md border object-contain"
+                      class="mt-2 h-32 w-full max-w-sm rounded-md border bg-muted/20 object-contain"
                     />
                   </Show>
                   <div class="mt-2">

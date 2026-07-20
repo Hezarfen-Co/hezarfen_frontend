@@ -66,14 +66,13 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                                     : "border-border"
                             }`}
                           >
-                            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] border text-[11px] font-medium">
-                              {ci() === row.question.correct || ci() === row.answer?.selected
-                                ? ci() === row.question.correct
-                                  ? "✓"
-                                  : "✗"
-                                : String.fromCharCode(65 + ci())}
+                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border bg-background text-[11px] font-semibold text-foreground">
+                              {String.fromCharCode(65 + ci())}
                             </span>
                             <span>{choice}</span>
+                            <Show when={ci() === row.answer?.selected && ci() !== row.question.correct}>
+                              <Badge variant="destructive" class="ml-auto text-[10px]">✗</Badge>
+                            </Show>
                             {ci() === row.question.correct && <Badge variant="outline" class="ml-auto text-[10px]">{t("questions.correct")}</Badge>}
                           </div>
                         )}

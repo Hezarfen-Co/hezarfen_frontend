@@ -199,7 +199,7 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
                           <img
                             src={`/api/exams/${props.examId}/questions/${q.id}/image`}
                             alt={t("questions.image")}
-                            class="max-h-64 rounded-md border object-contain"
+                            class="h-64 w-full max-w-2xl rounded-md border bg-muted/20 object-contain"
                           />
                         </Show>
                         <Show when={!props.readOnly && q.image}>
@@ -228,7 +228,7 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
                                       <img
                                         src={`/api/exams/${props.examId}/questions/${q.id}/choices/${choiceIndex()}/image`}
                                         alt={t("questions.choiceImage")}
-                                        class="max-h-40 rounded-md border object-contain"
+                                        class="h-36 w-full max-w-md rounded-md border bg-background object-contain"
                                       />
                                     </Show>
                                     <Show when={!props.readOnly && q.choice_images?.[choiceIndex()]}>

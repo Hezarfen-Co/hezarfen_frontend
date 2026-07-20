@@ -584,7 +584,7 @@ function QuestionAnswerCardWS(props: {
         <img
           src={`/api/exams/${props.question.exam}/questions/${props.question.id}/image`}
           alt={t("questions.image")}
-          class="mb-4 max-h-64 rounded-md border object-contain"
+          class="mb-4 h-64 w-full max-w-2xl rounded-md border bg-muted/20 object-contain"
         />
       </Show>
       <p class="mb-5 whitespace-pre-wrap text-base font-semibold leading-7 sm:text-lg">{props.question.text}</p>
@@ -616,16 +616,8 @@ function QuestionAnswerCardWS(props: {
                   setValue(String(choiceIndex()));
                 }}
               >
-                <span
-                  class={
-                    value() === String(choiceIndex())
-                      ? "flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-primary bg-primary"
-                      : "h-4 w-4 shrink-0 rounded-[3px] border border-input bg-background"
-                  }
-                >
-                  <span
-                    class={value() === String(choiceIndex()) ? "h-2 w-2 rounded-[1px] bg-primary-foreground" : "hidden"}
-                  />
+                <span class={value() === String(choiceIndex()) ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary bg-primary text-xs font-semibold text-primary-foreground" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input bg-background text-xs font-semibold text-foreground"}>
+                  {String.fromCharCode(65 + choiceIndex())}
                 </span>
                 <span class="min-w-0 space-y-2">
                   <span class="block whitespace-pre-wrap">{choice}</span>
@@ -633,7 +625,7 @@ function QuestionAnswerCardWS(props: {
                     <img
                       src={`/api/exams/${props.question.exam}/questions/${props.question.id}/choices/${choiceIndex()}/image`}
                       alt={t("questions.choiceImage")}
-                      class="max-h-40 rounded-md border object-contain"
+                      class="h-36 w-full max-w-md rounded-md border bg-muted/20 object-contain"
                     />
                   </Show>
                 </span>

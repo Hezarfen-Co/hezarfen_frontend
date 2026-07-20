@@ -177,7 +177,7 @@ function ExamsContent() {
       cell: (cell) => {
         const status = cell.row.original.displayStatus;
         return (
-          <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", scheduleStatusClass(examStatusTone(status)))}>
+          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap rounded-sm", scheduleStatusClass(examStatusTone(status)))}>
             <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(status)))} />
             {statusLabel(status)}
           </Badge>

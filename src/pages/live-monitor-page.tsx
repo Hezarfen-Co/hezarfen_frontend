@@ -13,12 +13,13 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { IconChevronLeft } from "@/components/ui/icons";
+import { IconAlert, IconCheck, IconChevronLeft, IconClock, IconExam, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { createNow } from "@/lib/create-now";
 import { cn } from "@/lib/cn";
 import { attemptLabel } from "@/lib/exam-labels";
+import { examDisplayStatus, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
 import { formatDateTime } from "@/lib/format";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 
@@ -38,7 +39,11 @@ const STATUS_KEY: Record<string, MessageKey> = {
   submitted: "attempt.submitted",
   expired: "attempt.expired",
   absent: "attempt.absent",
+  no_attempts_left: "attempt.noAttemptsLeft",
 };
+
+type LiveDisplayStatus = LiveRosterEntry["status"] | ExamDisplayStatus;
+type LiveRosterRow = LiveRosterEntry & { displayStatus: LiveDisplayStatus };
 
 function labelFromStatus(status: string, t: (key: MessageKey) => string): string {
   const k = STATUS_KEY[status];
@@ -48,8 +53,23 @@ function labelFromStatus(status: string, t: (key: MessageKey) => string): string
 function statusTone(status: string): string {
   if (status === "in_progress") return "active";
   if (status === "submitted") return "submitted";
-  if (status === "expired" || status === "absent") return "finished";
+  if (status === "expired" || status === "absent" || status === "no_attempts_left") return "finished";
   return "unscheduled";
+}
+
+function liveTone(status: LiveDisplayStatus): string {
+  if (status === "in_progress") return "active";
+  if (status === "expired") return "finished";
+  if (status === "absent" || status === "not_started") return statusTone(status);
+  return examStatusTone(status);
+}
+
+function liveDisplayStatus(entry: LiveRosterEntry, exam: LiveMonitor["exam"], now: number): LiveDisplayStatus {
+  if (entry.status === "absent") return "absent";
+  if (entry.status === "not_started") return "not_started";
+  if (entry.status !== "submitted" && entry.status !== "expired" && exam.max_attempts > 0 && entry.attempts_used >= exam.max_attempts) return "no_attempts_left";
+  const status = examDisplayStatus(exam, now, { status: entry.status, attempts_used: entry.attempts_used, max_attempts: exam.max_attempts });
+  return status === "active" ? "in_progress" : status;
 }
 
 function progressPercent(entry: LiveRosterEntry, questionCount: number): number {
@@ -81,17 +101,21 @@ function liveRosterName(entry: LiveRosterEntry, fallback: string): string {
   );
 }
 
-function remainingMinutesLabel(entry: LiveRosterEntry): string {
-  const remaining = entry.remaining_ms;
-  if (entry.status !== "in_progress") return "—";
-  if (remaining == null) return "—";
-  if (remaining > 0) return `${Math.ceil(remaining / 60000)}dk`;
-  return "<1dk";
+function minutesLabel(ms: number): string {
+  if (ms <= 0) return "0dk";
+  return `${Math.ceil(ms / 60000)}dk`;
 }
 
-function isLowRemaining(entry: LiveRosterEntry): boolean {
+function remainingMinutesLabel(entry: LiveRosterRow): string {
+  const remaining = entry.remaining_ms;
+  if (entry.displayStatus !== "not_started" && entry.displayStatus !== "in_progress") return "—";
+  if (remaining == null) return "—";
+  return minutesLabel(remaining);
+}
+
+function isLowRemaining(entry: LiveRosterRow): boolean {
   const remaining = entry.remaining_ms ?? 0;
-  return entry.status === "in_progress" && remaining <= 5 * 60 * 1000;
+  return entry.displayStatus === "in_progress" && remaining <= 5 * 60 * 1000;
 }
 
 function LiveMonitorContent() {
@@ -219,9 +243,20 @@ function LiveMonitorContent() {
           {(s) => {
             const m = s();
             if (!m) return null;
-            const counts = m.counts ?? { not_started: 0, in_progress: 0, submitted: 0, expired: 0 };
-            const raw = Array.isArray(m.students) ? m.students : [];
-            const columns: ColumnDef<LiveRosterEntry>[] = [
+            const raw: LiveRosterRow[] = Array.isArray(m.students) ? m.students.map((entry) => ({ ...entry, displayStatus: liveDisplayStatus(entry, m.exam, m.now) })) : [];
+            const counts = raw.reduce(
+              (acc, entry) => {
+                if (entry.displayStatus === "submitted") acc.submitted += 1;
+                else if (entry.displayStatus === "expired") acc.expired += 1;
+                else if (entry.displayStatus === "no_attempts_left") acc.no_attempts_left += 1;
+                else if (entry.displayStatus === "absent") acc.absent += 1;
+                else if (entry.displayStatus === "in_progress") acc.in_progress += 1;
+                else acc.not_started += 1;
+                return acc;
+              },
+              { not_started: 0, in_progress: 0, submitted: 0, expired: 0, no_attempts_left: 0, absent: 0 },
+            );
+            const columns: ColumnDef<LiveRosterRow>[] = [
               {
                 id: "username",
                 accessorFn: (entry) => liveRosterName(entry, ""),
@@ -231,16 +266,16 @@ function LiveMonitorContent() {
               },
               {
                 id: "status",
-                accessorFn: (entry) => labelFromStatus(entry.status, t),
+                accessorFn: (entry) => labelFromStatus(entry.displayStatus, t),
                 header: t("attempt.status"),
                 meta: { headerClass: "text-center", cellClass: "text-center" },
                 cell: (cell) => (
                   <Badge
                     variant="outline"
-                    class={cn("rounded-full", scheduleStatusClass(statusTone(cell.row.original.status)))}
+                    class={cn("rounded-full", scheduleStatusClass(liveTone(cell.row.original.displayStatus)))}
                   >
-                    <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(statusTone(cell.row.original.status)))} />
-                    {labelFromStatus(cell.row.original.status, t)}
+                    <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(liveTone(cell.row.original.displayStatus)))} />
+                    {labelFromStatus(cell.row.original.displayStatus, t)}
                   </Badge>
                 ),
               },
@@ -278,10 +313,13 @@ function LiveMonitorContent() {
               },
               {
                 id: "left",
-                accessorFn: (entry) => entry.left_at ?? 0,
+                accessorFn: (entry) => entry.finished_at ?? entry.left_at ?? 0,
                 header: t("attempt.left"),
                 meta: { headerClass: "text-center", cellClass: "text-center text-xs" },
-                cell: (cell) => cell.row.original.left_at ? formatDateTime(cell.row.original.left_at, locale()) : "—",
+                cell: (cell) => {
+                  const at = cell.row.original.finished_at ?? cell.row.original.left_at;
+                  return at ? formatDateTime(at, locale()) : "—";
+                },
               },
               {
                 id: "mark",
@@ -294,26 +332,24 @@ function LiveMonitorContent() {
 
             return (
               <>
-                <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                  <div class="surface-card bg-card/80 p-4">
-                    <p class="text-xs text-muted-foreground">{t("exams.notStarted")}</p>
-                    <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.not_started}</p>
+                <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                  <div class="surface-card bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5" />{t("exams.notStarted")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.not_started}</p>
                   </div>
-                  <div class="surface-card bg-card/80 p-4">
-                    <p class="text-xs text-muted-foreground">{t("attempt.inProgress")}</p>
-                    <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.in_progress}</p>
+                  <div class="surface-card bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconExam class="h-3.5 w-3.5 text-sky-700 dark:text-sky-300" />{t("attempt.inProgress")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.in_progress}</p>
                   </div>
-                  <div class="surface-card bg-card/80 p-4">
-                    <p class="text-xs text-muted-foreground">{t("attempt.submitted")}</p>
-                    <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.submitted}</p>
+                  <div class="surface-card bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconCheck class="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-300" />{t("attempt.submitted")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.submitted}</p>
                   </div>
-                  <div class="surface-card bg-card/80 p-4">
-                    <p class="text-xs text-muted-foreground">{t("attempt.expired")}</p>
-                    <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.expired}</p>
+                  <div class="surface-card bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5 text-rose-700 dark:text-rose-300" />{t("attempt.expired")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.expired}</p>
                   </div>
-                  <div class="surface-card bg-card/80 p-4">
-                    <p class="text-xs text-muted-foreground">{t("attempt.absent")}</p>
-                    <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.absent ?? 0}</p>
+                  <div class="surface-card bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconAlert class="h-3.5 w-3.5 text-rose-700 dark:text-rose-300" />{t("attempt.noAttemptsLeft")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.no_attempts_left}</p>
+                  </div>
+                  <div class="surface-card bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconUsers class="h-3.5 w-3.5" />{t("attempt.absent")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts.absent}</p>
                   </div>
                 </section>
 
