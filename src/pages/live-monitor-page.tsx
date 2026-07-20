@@ -147,8 +147,11 @@ function LiveMonitorContent() {
       }, 2000);
     };
 
+    // ponytail: keep polling even with SSE; some live proxies accept EventSource
+    // but never flush events. 2s GET is cheaper than stale teacher screen.
+    startPolling();
+
     if (!("EventSource" in window)) {
-      startPolling();
       onCleanup(() => {
         if (interval) clearInterval(interval);
       });
@@ -314,9 +317,6 @@ function LiveMonitorContent() {
                       <h2 class="font-display text-lg font-semibold">{t("exams.liveRoster")}</h2>
                       <p class="mt-1 text-sm text-muted-foreground">{t("attempt.progress")}</p>
                     </div>
-                    <Badge variant="outline" class="rounded-full px-3 py-1">
-                      {raw.length} / {m.question_count}
-                    </Badge>
                   </div>
                   <Show
                     when={raw.length > 0}
