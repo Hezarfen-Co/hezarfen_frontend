@@ -25,6 +25,7 @@ import {
   IconSettings,
   IconUsers,
 } from "@/components/ui/icons";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
@@ -39,7 +40,6 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const ATTENTION_LIMIT = 8;
-const UPCOMING_LIMIT = 6;
 const PORTAL_ORDER_KEY = "hezarfen.dashboard.portalOrder";
 
 type AttentionKind = "active" | "soon" | "today";
@@ -116,6 +116,7 @@ function DashboardContent() {
   const [draggingPortal, setDraggingPortal] = createSignal<string | null>(null);
   const [dragOverPortal, setDragOverPortal] = createSignal<string | null>(null);
   const [editingPortalOrder, setEditingPortalOrder] = createSignal(false);
+  const [attentionPage, setAttentionPage] = createSignal(0);
   const [attemptStatuses, setAttemptStatuses] = createSignal<Record<string, ExamAttemptSummary>>({});
 
   const [courses] = createResource(
@@ -355,42 +356,17 @@ function DashboardContent() {
         const r = rank[a.status] - rank[b.status];
         if (r !== 0) return r;
         return (a.at ?? Number.MAX_SAFE_INTEGER) - (b.at ?? Number.MAX_SAFE_INTEGER);
-      })
-      .slice(0, ATTENTION_LIMIT);
+      });
   });
 
-  const upcoming = createMemo(() => {
-    const n = now();
-    const items: { id: string; kind: "exam" | "event"; title: string; at: number; subtitle: string }[] = [];
+  const attentionTotalPages = createMemo(() => Math.max(1, Math.ceil(attention().length / ATTENTION_LIMIT)));
+  const pagedAttention = createMemo(() => {
+    const start = attentionPage() * ATTENTION_LIMIT;
+    return attention().slice(start, start + ATTENTION_LIMIT);
+  });
 
-    for (const exam of visibleExams()) {
-      if (exam.starts_at != null && exam.starts_at > n && exam.starts_at <= n + WEEK_MS) {
-        const w = examWindow(exam, n, attemptStatuses()[exam.id]);
-        if (w === "upcoming" || w === "soon" || w === "today") {
-          items.push({
-            id: exam.id,
-            kind: "exam",
-            title: exam.title,
-            at: exam.starts_at,
-            subtitle: courseMap().get(exam.course) ?? examKindLabel(String(exam.kind), t),
-          });
-        }
-      }
-    }
-
-    for (const event of events()) {
-      if (event.starts_at != null && event.starts_at > n && event.starts_at <= n + WEEK_MS) {
-        items.push({
-          id: event.id,
-          kind: "event",
-          title: event.title,
-          at: event.starts_at,
-          subtitle: event.description || t("nav.events"),
-        });
-      }
-    }
-
-    return items.sort((a, b) => a.at - b.at).slice(0, UPCOMING_LIMIT);
+  createEffect(() => {
+    if (attentionPage() >= attentionTotalPages()) setAttentionPage(attentionTotalPages() - 1);
   });
 
   return (
@@ -457,7 +433,7 @@ function DashboardContent() {
           </div>
         </section>
 
-        <div class="grid items-stretch gap-5 lg:grid-cols-2">
+        <div class="grid items-stretch gap-5">
           <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
@@ -473,7 +449,7 @@ function DashboardContent() {
               fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
               <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                <For each={attention()}>
+                <For each={pagedAttention()}>
                   {(item) => (
                     <li>
                       <Link
@@ -505,44 +481,9 @@ function DashboardContent() {
                   )}
                 </For>
               </ul>
-            </Show>
-          </section>
-
-          <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-upcoming">
-            <h2 id="dash-upcoming" class="text-sm font-semibold tracking-tight text-foreground">
-              {t("dashboard.upcoming")}
-            </h2>
-            <Show
-              when={upcoming().length > 0}
-              fallback={<DashEmpty>{t("dashboard.upcomingEmpty")}</DashEmpty>}
-            >
-              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                <For each={upcoming()}>
-                  {(item) => (
-                    <li>
-                      <Link
-                        to={item.kind === "exam" ? "/exams/$id" : "/events/$id"}
-                        params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/45 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
-                      >
-                        <span class="mono w-24 shrink-0 text-[11px] tabular-nums text-muted-foreground sm:w-28 sm:text-xs">
-                          {formatDateTime(item.at, locale())}
-                        </span>
-                        <div class="min-w-0 flex-1">
-                          <p class="truncate font-medium text-foreground">{item.title}</p>
-                          <p class="truncate text-xs text-muted-foreground">
-                            {item.kind === "exam" ? t("nav.exams") : t("nav.events")}
-                            <Show when={item.subtitle}>
-                              {" · "}
-                              {item.subtitle}
-                            </Show>
-                          </p>
-                        </div>
-                      </Link>
-                    </li>
-                  )}
-                </For>
-              </ul>
+              <Show when={attentionTotalPages() > 1}>
+                <PaginationControls page={attentionPage()} totalPages={attentionTotalPages()} onPageChange={setAttentionPage} />
+              </Show>
             </Show>
           </section>
         </div>
