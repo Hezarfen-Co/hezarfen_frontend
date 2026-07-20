@@ -1,8 +1,12 @@
 import { For, Show, Suspense, createResource } from "solid-js";
+import { ApiError } from "@/api/client";
 import { getExamQuestions } from "@/api/getExamQuestions";
 import { getStudentAnswers } from "@/api/getStudentAnswers";
+import type { StudentAnswerSheet } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
+import { IconCheck, IconX } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { cn } from "@/lib/cn";
 import { joinAnswerSheet } from "@/lib/answer-sheet";
 import { personLabelWithId } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
@@ -12,7 +16,22 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
   const [data] = createResource(
     () => [props.examId, props.userId] as const,
     async ([examId, userId]) => {
-      const [questions, sheet] = await Promise.all([getExamQuestions(examId), getStudentAnswers(examId, userId)]);
+      const questions = await getExamQuestions(examId);
+      let sheet: StudentAnswerSheet;
+      try {
+        sheet = await getStudentAnswers(examId, userId);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          sheet = {
+            exam: examId,
+            user: { id: userId, username: userId, display_name: null },
+            answers: [],
+            auto_score: { earned: 0, possible: 0 },
+          };
+        } else {
+          throw err;
+        }
+      }
       return { sheet, rows: joinAnswerSheet(questions.items, sheet.answers) };
     },
   );
@@ -24,9 +43,11 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
           <div class="space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-4 py-3">
               <p class="text-sm font-medium">{personLabelWithId(d().sheet.user)}</p>
-              <Badge variant="secondary">
-                {t("exams.autoScore")}: {d().sheet.auto_score.earned}/{d().sheet.auto_score.possible}
-              </Badge>
+              <Show when={d().sheet.answers.length > 0} fallback={<Badge variant="outline">{t("exams.notStarted")}</Badge>}>
+                <Badge variant="secondary">
+                  {t("exams.autoScore")}: {d().sheet.auto_score.earned}/{d().sheet.auto_score.possible}
+                </Badge>
+              </Show>
             </div>
 
             <For each={d().rows}>
@@ -35,11 +56,22 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                   <div class="mb-2 flex flex-wrap items-center gap-2">
                     <span class="text-xs font-semibold text-muted-foreground">#{idx() + 1}</span>
                     <Badge variant="outline">{row.question.points} {t("questions.points")}</Badge>
-                    <Badge variant={row.answer?.is_correct === true ? "default" : row.answer?.is_correct === false ? "destructive" : "outline"}>
-                      {row.answer?.is_correct === true ? t("exams.isCorrect") :
-                       row.answer?.is_correct === false ? "✗" :
-                       row.question.kind === "text" ? t("questions.kind.text") : "—"}
-                    </Badge>
+                    <Show when={row.answer?.is_correct != null}>
+                      <Badge variant="outline" class={cn(
+                        "size-[22px] p-0 flex items-center justify-center",
+                        row.answer?.is_correct ? "border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/30 dark:text-green-400" : "border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/30 dark:text-red-400",
+                      )}>
+                        <Show when={row.answer?.is_correct} fallback={<IconX class="h-3 w-3" />}>
+                          <IconCheck class="h-3 w-3" />
+                        </Show>
+                      </Badge>
+                    </Show>
+                    <Show when={row.answer?.is_correct == null && row.question.kind === "text"}>
+                      <Badge variant="outline" class="text-[10px]">{t("questions.kind.text")}</Badge>
+                    </Show>
+                    <Show when={row.answer?.is_correct == null && row.question.kind !== "text"}>
+                      <span class="text-xs text-muted-foreground">—</span>
+                    </Show>
                   </div>
                   <p class="mb-3 whitespace-pre-wrap text-sm font-medium">{row.question.text}</p>
 
@@ -73,7 +105,11 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                             <Show when={ci() === row.answer?.selected && ci() !== row.question.correct}>
                               <Badge variant="destructive" class="ml-auto text-[10px]">✗</Badge>
                             </Show>
-                            {ci() === row.question.correct && <Badge variant="outline" class="ml-auto text-[10px]">{t("questions.correct")}</Badge>}
+                            {ci() === row.question.correct && (
+                              <Badge variant="outline" class="ml-auto border-green-300 bg-green-50 text-green-700 text-[10px] dark:border-green-700 dark:bg-green-950/30 dark:text-green-400">
+                                <IconCheck class="h-3 w-3" />
+                              </Badge>
+                            )}
                           </div>
                         )}
                       </For>

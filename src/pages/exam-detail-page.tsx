@@ -16,6 +16,7 @@ import { ApiError, formatApiError } from "@/api/client";
 import type { ExamResult } from "@/api/types";
 import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
+import { AnswerSheetView } from "@/components/exams/answer-sheet-view";
 import { ExamResultBadge } from "@/components/exams/exam-result-badge";
 import { GradeForm } from "@/components/exams/grade-form";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -25,7 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
-import { IconChevronLeft, IconEdit, IconExam, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconChevronDown, IconChevronLeft, IconEdit, IconExam, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
+import { Input } from "@/components/ui/input";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SectionDisclosure } from "@/components/ui/section-disclosure";
@@ -84,6 +86,11 @@ function ExamDetailContent() {
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
   const [gradeOpen, setGradeOpen] = createSignal(false);
   const [resultPage, setResultPage] = createSignal(0);
+  const [answerSheetUserId, setAnswerSheetUserId] = createSignal<string | null>(null);
+  const answerSheetOpen = () => answerSheetUserId() != null;
+  const [answerMark, setAnswerMark] = createSignal("0");
+  const [answerError, setAnswerError] = createSignal("");
+  const [answerPending, setAnswerPending] = createSignal(false);
   const [questionCreateOpen, setQuestionCreateOpen] = createSignal(false);
   const [openSections, setOpenSections] = createSignal({
     schedule: false,
@@ -134,6 +141,17 @@ function ExamDetailContent() {
   const [gradeResults, { refetch: refetchGradeResults }] = createResource(
     () => (hasCourseManagementRights() && gradeOpen() ? id() : null),
     async (examId) => examId ? getExamResults(examId, { limit: 500, offset: 0 }) : null,
+  );
+  const [answerResult, { refetch: refetchAnswerResult }] = createResource(
+    () => (hasCourseManagementRights() && answerSheetOpen() ? [id(), answerSheetUserId()!] as const : null),
+    async (source) => {
+      if (!source) return null;
+      const [examId, userId] = source;
+      const page = await getExamResults(examId, { limit: 500, offset: 0 });
+      const row = page.items.find((item) => personId(item.user) === userId) ?? null;
+      setAnswerMark(row ? String(row.mark) : "0");
+      return row;
+    },
   );
   const [stats] = createResource(
     () => (hasCourseManagementRights() && openSections().statistics ? id() : null),
@@ -205,6 +223,36 @@ function ExamDetailContent() {
   const isDraft = () => exam()?.draft === true;
   const resultTotal = () => results()?.total ?? 0;
   const resultTotalPages = () => Math.max(1, Math.ceil(resultTotal() / RESULT_PAGE_SIZE));
+  const setClampedAnswerMark = (value: string) => {
+    if (value === "") {
+      setAnswerMark(value);
+      return;
+    }
+    const next = Math.max(0, Math.min(100, Number(value)));
+    setAnswerMark(Number.isNaN(next) ? "" : String(Math.trunc(next)));
+  };
+  const submitAnswerMark = async (event: SubmitEvent) => {
+    event.preventDefault();
+    const userId = answerSheetUserId();
+    if (!userId) return;
+    const mark = Number(answerMark());
+    if (!Number.isInteger(mark) || mark < 0 || mark > 100) {
+      setAnswerError(t("form.markRange"));
+      return;
+    }
+    setAnswerError("");
+    setAnswerPending(true);
+    try {
+      await postExamResult(id(), { user_id: userId, mark });
+      await refetchAnswerResult();
+      await refetchResults();
+      setFlash(t("common.saved"));
+    } catch (err) {
+      setAnswerError(formatApiError(err));
+    } finally {
+      setAnswerPending(false);
+    }
+  };
   createEffect(() => {
     if (resultPage() >= resultTotalPages()) setResultPage(resultTotalPages() - 1);
   });
@@ -249,12 +297,12 @@ function ExamDetailContent() {
             {
               label: t("exams.answerSheet"),
               icon: <IconEye class="h-4 w-4" />,
-              onSelect: () => void navigate({ to: "/exam-answers/$examId/$userId", params: { examId: id(), userId: personId(cell.row.original.user) } }),
+              onSelect: () => setAnswerSheetUserId(personId(cell.row.original.user)),
             },
             {
               label: t("common.update"),
               icon: <IconEdit class="h-4 w-4" />,
-              onSelect: () => void navigate({ to: "/exam-answers/$examId/$userId", params: { examId: id(), userId: personId(cell.row.original.user) } }),
+              onSelect: () => setAnswerSheetUserId(personId(cell.row.original.user)),
             },
             ...(!isFinished()
               ? [{
@@ -385,6 +433,63 @@ function ExamDetailContent() {
                 </div>
               </div>
             </div>
+
+            <SidePanel
+              open={answerSheetOpen()}
+              onOpenChange={(open) => { if (!open) setAnswerSheetUserId(null); }}
+              title={t("exams.answerSheet")}
+              size="wide"
+            >
+              <Show when={answerSheetUserId()}>
+                {(userId) => {
+                  const [markOpen, setMarkOpen] = createSignal(false);
+                  return (
+                  <div class="space-y-4">
+                    <button
+                      type="button"
+                      onClick={() => setMarkOpen((v) => !v)}
+                      class="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm shadow-sm transition-colors hover:bg-muted/40"
+                    >
+                      <span class="inline-flex items-center gap-2 font-medium">
+                        <IconEdit class="h-4 w-4" />
+                        <span>{t("form.mark")} {t("common.update")}</span>
+                      </span>
+                      <span class="inline-flex items-center gap-2">
+                        <Show when={answerResult()}>
+                          {(row) => <span class="tabular-nums font-semibold">{row().mark}/100</span>}
+                        </Show>
+                        <IconChevronDown class={cn("h-4 w-4 text-muted-foreground transition-transform", markOpen() && "rotate-180")} />
+                      </span>
+                    </button>
+                    <Show when={markOpen()}>
+                      <form class="space-y-3" onSubmit={submitAnswerMark}>
+                        <div class="flex items-end gap-2">
+                          <Input
+                            id="answer-sheet-mark"
+                            class="h-10 flex-1 rounded-lg"
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={answerMark()}
+                            onInput={(event) => setClampedAnswerMark(event.currentTarget.value)}
+                          />
+                          <span class="pb-2 text-sm text-muted-foreground">/ 100</span>
+                          <Button type="submit" class="h-10 rounded-lg shrink-0" disabled={answerPending() || answerResult.loading}>
+                            {t("common.save")}
+                          </Button>
+                        </div>
+                        <Show when={answerError()}>
+                          {(msg) => <p class="text-sm text-destructive">{msg()}</p>}
+                        </Show>
+                      </form>
+                    </Show>
+                    <AnswerSheetView examId={id()} userId={userId()} />
+                  </div>
+                  );
+                }}
+              </Show>
+            </SidePanel>
 
             <ConfirmDialog
               open={deleteOpen()}

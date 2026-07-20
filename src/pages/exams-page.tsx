@@ -1,6 +1,7 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useNavigate } from "@tanstack/solid-router";
+import { getCourseById } from "@/api/getCourseById";
 import { getCourses } from "@/api/getCourses";
 import { getExamAttempt } from "@/api/getExamAttempt";
 import { getExams } from "@/api/getExams";
@@ -75,8 +76,12 @@ function ExamsContent() {
     visibleCourses().filter((course) => course.creator.id === auth.user()?.id || hasMinRole(auth.user()?.role, "manager")),
   );
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher") && manageableCourses().length > 0;
-  const courseById = createMemo(() => new Map(visibleCourses().map((course) => [course.id, course])));
-  const courseTitle = (courseId: string) => courseById().get(courseId)?.title ?? courseId;
+  const [courseMap, setCourseMap] = createSignal<Record<string, string>>({});
+  const courseTitle = (courseId: string) => {
+    const cached = visibleCourses().find((c) => c.id === courseId);
+    if (cached) return cached.title;
+    return courseMap()[courseId] ?? courseId;
+  };
 
   const examStatus = (exam: Exam) => examDisplayStatus(exam, now(), attemptStatuses()[exam.id]);
 
@@ -99,9 +104,21 @@ function ExamsContent() {
     () => {
       // Do not track now() here — it ticks every second and would re-fetch forever.
       if (isStudent() && mine() === undefined) return null;
+      if (!isStudent() && courses() === undefined) return null;
       return [isStudent() ? "s" : "t", (mine() ?? []).map((c) => c.id).join(",")].join("|");
     },
-    async () => (await getExams()).items,
+    async () => {
+      const items = (await getExams()).items;
+      const known = new Map(visibleCourses().map((c) => [c.id, c.title]));
+      const missing = [...new Set(items.map((e) => e.course))].filter((id) => !known.has(id));
+      if (missing.length > 0) {
+        await Promise.all(missing.map((id) =>
+          getCourseById(id).then((c) => known.set(id, c.title)).catch(() => {}),
+        ));
+      }
+      setCourseMap(Object.fromEntries(known));
+      return items;
+    },
   );
 
   createEffect(() => {
