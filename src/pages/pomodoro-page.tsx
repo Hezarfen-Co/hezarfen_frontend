@@ -10,9 +10,11 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { IconClock } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { createFlash } from "@/lib/flash";
-import { formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { createNow } from "@/lib/create-now";
+import { formatDateTime, formatDurationClock } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 export default function PomodoroPage() {
@@ -29,8 +31,13 @@ function PomodoroContent() {
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [flash, setFlash] = createFlash();
+  const now = createNow(1000);
   const [log, { refetch }] = createResource(() => getPomodoroMe({ limit: 20 }));
   const running = createMemo(() => log()?.items.find((item) => item.finished_at == null) ?? null);
+  const runningDuration = createMemo(() => {
+    const current = running();
+    return current ? now() - current.started_at : null;
+  });
   const columns = createMemo<ColumnDef<NonNullable<ReturnType<typeof log>>["items"][number]>[]>(() => [
     {
       accessorKey: "started_at",
@@ -45,7 +52,7 @@ function PomodoroContent() {
     {
       accessorKey: "duration_ms",
       header: t("pomodoro.duration"),
-      cell: (cell) => formatDurationMinutes(cell.row.original.duration_ms, locale()),
+      cell: (cell) => <span class="mono tabular-nums">{formatDurationClock(cell.row.original.duration_ms)}</span>,
     },
   ]);
 
@@ -92,10 +99,25 @@ function PomodoroContent() {
       {error() && <Alert variant="destructive">{error()}</Alert>}
 
       <section class="grid gap-3 sm:grid-cols-2">
-        <div class="detail-metric-card">
-          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.total")}</p>
-          <p class="mono mt-2 text-3xl font-semibold tabular-nums">{formatDurationMinutes(log()?.total_focus_ms, locale())}</p>
-        </div>
+        <Show
+          when={running()}
+          fallback={
+            <div class="detail-metric-card">
+              <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.total")}</p>
+              <p class="mono mt-2 text-3xl font-semibold tabular-nums">{formatDurationClock(log()?.total_focus_ms)}</p>
+            </div>
+          }
+        >
+          <div class="detail-metric-card overflow-hidden border-emerald-500/25 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.16),transparent_38%)]">
+            <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              <span class="flex h-7 w-7 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                <IconClock class="h-3.5 w-3.5" />
+              </span>
+              {t("pomodoro.running")}
+            </div>
+            <p class="mono mt-4 text-5xl font-semibold leading-none tracking-tight tabular-nums sm:text-6xl">{formatDurationClock(runningDuration())}</p>
+          </div>
+        </Show>
         <div class="detail-metric-card">
           <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("attempt.status")}</p>
           <div class="mt-2 flex flex-wrap items-center gap-2">

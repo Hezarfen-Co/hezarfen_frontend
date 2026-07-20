@@ -28,6 +28,14 @@ export function formatDurationMinutes(ms: number | null | undefined, locale: Loc
   return locale === "tr" ? `${Math.round(ms / 60_000)} dk` : `${Math.round(ms / 60_000)} min`;
 }
 
+export function formatDurationClock(ms: number | null | undefined): string {
+  if (ms == null) return "--:--";
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 export function examDurationMs(durationMs: number | null | undefined, startsAt: number | null, endsAt: number | null): number | null {
   if (durationMs != null) return durationMs;
   if (startsAt == null || endsAt == null || endsAt <= startsAt) return null;
