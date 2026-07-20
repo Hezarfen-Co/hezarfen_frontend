@@ -92,6 +92,8 @@ function ExamDetailContent() {
     questions: false,
     results: false,
   });
+  const isSittable = () => exam()?.mode === "sync" || exam()?.mode === "async" || exam()?.mode === "open";
+  const isScheduled = () => isSittable();
 
   const [ownResult] = createResource(
     () => (isStudent() ? id() : null),
@@ -191,8 +193,6 @@ function ExamDetailContent() {
     if (mode === "open") return t("exams.mode.open");
     return t("exams.unscheduled");
   };
-  const isSittable = () => exam()?.mode === "sync" || exam()?.mode === "async" || exam()?.mode === "open";
-  const isScheduled = () => isSittable();
   const isDraft = () => exam()?.draft === true;
   const gradeStudents = () => {
     const graded = new Set((results() ?? []).map((row) => personId(row.user)));
@@ -347,10 +347,10 @@ function ExamDetailContent() {
                     variant="outline"
                     class={cn(
                       "mt-2 w-fit rounded-sm capitalize",
-                      scheduleStatusClass(detailStatus() === "submitted" || detailStatus() === "expired" ? "finished" : detailStatus()),
+                      scheduleStatusClass(detailStatus() === "expired" ? "finished" : detailStatus()),
                     )}
                   >
-                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(detailStatus() === "submitted" || detailStatus() === "expired" ? "finished" : detailStatus()))} />
+                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(detailStatus() === "expired" ? "finished" : detailStatus()))} />
                     {detailStatusLabel()}
                   </Badge>
                 </div>

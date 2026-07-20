@@ -1,13 +1,14 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useNavigate } from "@tanstack/solid-router";
 import { getCourses } from "@/api/getCourses";
+import { getExamAttempt } from "@/api/getExamAttempt";
 import { getExams } from "@/api/getExams";
 import { getMyCourses } from "@/api/getMyCourses";
 import { patchExamById } from "@/api/patchExamById";
 import { postCourseExam } from "@/api/postCourseExam";
 import { formatApiError } from "@/api/client";
-import type { Course, Exam } from "@/api/types";
+import type { AttemptStatus, Course, Exam } from "@/api/types";
 import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -31,7 +32,8 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 
 const EXAM_PAGE_SIZE = 12;
 
-type ExamStatus = "draft" | "unscheduled" | "upcoming" | "active" | "finished";
+type ExamStatus = "draft" | "unscheduled" | "upcoming" | "active" | "finished" | "submitted" | "expired";
+type ExamRow = Exam & { displayStatus: ExamStatus };
 
 export default function ExamsPage() {
   return (
@@ -53,6 +55,7 @@ function ExamsContent() {
   const [createOpen, setCreateOpen] = createSignal(false);
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
+  const [attemptStatuses, setAttemptStatuses] = createSignal<Record<string, AttemptStatus | "not_started">>({});
   const [flash, setFlash] = createFlash();
 
   const [courses] = createResource(
@@ -75,9 +78,12 @@ function ExamsContent() {
   const courseById = createMemo(() => new Map(visibleCourses().map((course) => [course.id, course])));
   const courseTitle = (courseId: string) => courseById().get(courseId)?.title ?? courseId;
 
+  const isSittable = (exam: Exam) => exam.mode === "sync" || exam.mode === "async" || exam.mode === "open";
   const examStatus = (exam: Exam): ExamStatus => {
+    const own = attemptStatuses()[exam.id];
+    if (own === "submitted" || own === "expired") return own;
     if (exam.draft) return "draft";
-    if (exam.mode !== "sync" && exam.mode !== "async" && exam.mode !== "open") return "unscheduled";
+    if (!isSittable(exam)) return "unscheduled";
     if (exam.mode === "open") return "active";
     const current = now();
     if (exam.ends_at != null && exam.ends_at < current) return "finished";
@@ -94,8 +100,8 @@ function ExamsContent() {
       return true;
     });
   };
-  const searchExam = (exam: Exam, query: string) =>
-    [exam.title, exam.description, courseTitle(exam.course), examKindLabel(String(exam.kind), t), statusLabel(examStatus(exam))]
+  const searchExam = (exam: ExamRow, query: string) =>
+    [exam.title, exam.description, courseTitle(exam.course), examKindLabel(String(exam.kind), t), statusLabel(exam.displayStatus)]
       .join(" ")
       .toLocaleLowerCase(locale())
       .includes(query.toLocaleLowerCase(locale()));
@@ -115,15 +121,42 @@ function ExamsContent() {
   });
 
   const statusLabel = (status: ExamStatus) => {
+    if (status === "submitted") return t("attempt.submitted");
+    if (status === "expired") return t("attempt.expired");
     if (status === "draft") return t("exams.draft");
     if (status === "unscheduled") return t("exams.unscheduled");
     if (status === "finished") return t("exams.finished");
     if (status === "upcoming") return t("exams.upcoming");
     return t("exams.active");
   };
+  const statusTone = (status: ExamStatus) => status === "expired" ? "finished" : status;
 
-  const rows = () => filterExams(list() ?? []);
-  const columns = createMemo<ColumnDef<Exam>[]>(() => [
+  const rows = (): ExamRow[] => filterExams(list() ?? []).map((exam) => ({ ...exam, displayStatus: examStatus(exam) }));
+  createEffect(() => {
+    if (!isStudent()) return;
+    const exams = list();
+    if (!exams) return;
+    const allowed = new Set(visibleCourses().map((course) => course.id));
+    const refresh = () => {
+      for (const exam of exams) {
+        if (!allowed.has(exam.course) || !isSittable(exam)) continue;
+        const current = attemptStatuses()[exam.id];
+        if (current === "submitted" || current === "expired") continue;
+        if (current != null && current !== "in_progress") continue;
+        void getExamAttempt(exam.id)
+          .then((attempt) => {
+            setAttemptStatuses((prev) => ({ ...prev, [exam.id]: attempt.status }));
+          })
+          .catch(() => {
+            setAttemptStatuses((prev) => ({ ...prev, [exam.id]: "not_started" }));
+          });
+      }
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 5000);
+    onCleanup(() => window.clearInterval(interval));
+  });
+  const columns = createMemo<ColumnDef<ExamRow>[]>(() => [
     {
       accessorKey: "title",
       header: t("exams.title"),
@@ -149,14 +182,14 @@ function ExamsContent() {
     },
     {
       id: "status",
-      accessorFn: (exam) => statusLabel(examStatus(exam)),
+      accessorFn: (exam) => statusLabel(exam.displayStatus),
       header: t("attempt.status"),
       meta: { headerClass: "text-center", cellClass: "text-center" },
       cell: (cell) => {
-        const status = examStatus(cell.row.original);
+        const status = cell.row.original.displayStatus;
         return (
-          <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", scheduleStatusClass(status))}>
-            <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(status))} />
+          <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", scheduleStatusClass(statusTone(status)))}>
+            <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(statusTone(status)))} />
             {statusLabel(status)}
           </Badge>
         );
@@ -251,6 +284,8 @@ function ExamsContent() {
               <>
                 <Select class="h-9 w-full rounded-sm sm:w-40" value={statusFilter()} onChange={(event) => setStatusFilter(event.currentTarget.value as ExamStatus | "all")}>
                   <option value="all">{t("common.all")}</option>
+                  <option value="submitted">{t("attempt.submitted")}</option>
+                  <option value="expired">{t("attempt.expired")}</option>
                   <option value="draft">{t("exams.draft")}</option>
                   <option value="upcoming">{t("exams.upcoming")}</option>
                   <option value="active">{t("exams.active")}</option>

@@ -6,10 +6,14 @@ export type ScheduleStatus =
   | "soon"
   | "finished"
   | "past"
-  | "unscheduled";
+  | "unscheduled"
+  | "submitted";
 
 export function scheduleStatusClass(status: ScheduleStatus | string): string {
   if (status === "active") {
+    return "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300";
+  }
+  if (status === "submitted") {
     return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
   }
   if (status === "today" || status === "upcoming" || status === "soon") {
@@ -22,7 +26,8 @@ export function scheduleStatusClass(status: ScheduleStatus | string): string {
 }
 
 export function scheduleStatusDotClass(status: ScheduleStatus | string): string {
-  if (status === "active") return "bg-emerald-600";
+  if (status === "active") return "bg-sky-600";
+  if (status === "submitted") return "bg-emerald-600";
   if (status === "today" || status === "upcoming" || status === "soon") return "bg-amber-600";
   if (status === "finished" || status === "past") return "bg-rose-600";
   return "bg-muted-foreground";
