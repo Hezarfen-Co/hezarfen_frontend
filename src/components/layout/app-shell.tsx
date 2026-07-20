@@ -48,7 +48,6 @@ export function AppShell(props: ParentProps) {
     if (path === "/management/settings") return `${t("nav.group.settings")} / ${t("nav.settings")}`;
     if (path === "/management/terms") return `${t("nav.group.settings")} / ${t("nav.terms")}`;
     if (path === "/admin/users") return `${t("nav.admin")} / ${t("nav.users")}`;
-    if (path === "/profile") return `${t("nav.account")} / ${t("nav.preferences")}`;
     if (path === "/guide") return t("nav.guide");
     return path;
   });
