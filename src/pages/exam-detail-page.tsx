@@ -27,7 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
-import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
+import { IconChevronLeft, IconEdit, IconExam, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -85,6 +85,7 @@ function ExamDetailContent() {
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
   const [sheetUserId, setSheetUserId] = createSignal<string | null>(null);
   const [gradeOpen, setGradeOpen] = createSignal(false);
+  const [questionCreateOpen, setQuestionCreateOpen] = createSignal(false);
   const [openSections, setOpenSections] = createSignal({
     schedule: false,
     ownResult: false,
@@ -503,9 +504,27 @@ function ExamDetailContent() {
                 onToggle={() => toggleSection("questions")}
                 title={t("questions.title")}
                 description={t("exams.examQuestions")}
+                actions={
+                  <Show when={hasCourseManagementRights() && !isFinished()}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      class="rounded-lg"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenSections((current) => ({ ...current, questions: true }));
+                        setQuestionCreateOpen(true);
+                      }}
+                    >
+                      <IconPlus class="h-4 w-4" />
+                      {t("questions.add")}
+                    </Button>
+                  </Show>
+                }
               >
                 <Show when={openSections().questions}>
-                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished() || isUpcoming()} embedded />
+                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded createOpen={questionCreateOpen()} onCreateOpenChange={setQuestionCreateOpen} />
                 </Show>
               </SectionDisclosure>
 

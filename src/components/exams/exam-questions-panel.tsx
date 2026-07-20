@@ -23,7 +23,7 @@ import { useT } from "@/stores/preferences-context";
 
 const QUESTION_PAGE_SIZE = 5;
 
-export function ExamQuestionsPanel(props: { examId: string; courseId: string; readOnly?: boolean; embedded?: boolean }) {
+export function ExamQuestionsPanel(props: { examId: string; courseId: string; readOnly?: boolean; embedded?: boolean; createOpen?: boolean; onCreateOpenChange?: (open: boolean) => void }) {
   const t = useT();
   const [subjects] = createResource(() => props.courseId, async (courseId) => (await getCourseSubjects(courseId)).items);
   const [questions, { refetch }] = createResource(() => props.examId, async (examId) => {
@@ -41,6 +41,11 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
   const [imagePending, setImagePending] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [page, setPage] = createSignal(0);
+  const formOpen = () => props.createOpen ?? showForm();
+  const setFormOpen = (open: boolean) => {
+    props.onCreateOpenChange?.(open);
+    setShowForm(open);
+  };
 
   const formInitial = createMemo(() => editing() ?? undefined);
   const questionList = createMemo(() => questions() ?? []);
@@ -55,7 +60,7 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
   createEffect(() => {
     if (!props.readOnly) return;
     setEditing(null);
-    setShowForm(false);
+    setFormOpen(false);
     setRemoveQuestion(null);
   });
 
@@ -83,7 +88,7 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
         setFlash(t("common.created"));
       }
       setEditing(null);
-      setShowForm(false);
+      setFormOpen(false);
       await refetch();
       if (isNewQuestion) setPage(Math.max(0, Math.ceil(questionList().length / QUESTION_PAGE_SIZE) - 1));
     } catch (err) {
@@ -130,14 +135,14 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
         <Show when={!props.embedded}>
           <h2 class="font-display text-lg font-semibold">{t("questions.title")}</h2>
         </Show>
-        <Show when={!props.readOnly}>
+        <Show when={!props.readOnly && !props.embedded}>
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => {
               setEditing(null);
-              setShowForm(true);
+              setFormOpen(true);
             }}
           >
             <IconPlus class="h-4 w-4" />
@@ -147,11 +152,11 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
       </div>
 
       <FormDialog
-        open={showForm() || editing() != null}
+        open={formOpen() || editing() != null}
         onOpenChange={(open) => {
           if (!open) {
             setEditing(null);
-            setShowForm(false);
+            setFormOpen(false);
           }
         }}
         title={editing() ? t("questions.edit") : t("questions.add")}
@@ -162,7 +167,7 @@ export function ExamQuestionsPanel(props: { examId: string; courseId: string; re
           subjects={subjects() ?? []}
           onCancel={() => {
             setEditing(null);
-            setShowForm(false);
+            setFormOpen(false);
           }}
           onSubmit={submit}
         />
