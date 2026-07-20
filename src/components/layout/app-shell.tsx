@@ -157,7 +157,7 @@ export function AppShell(props: ParentProps) {
             class={cn(
               "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-5",
               auth.user() && !wide() && "pb-24 lg:pb-5",
-              wide() ? "max-w-none" : "max-w-[1200px]",
+              wide() ? "max-w-none" : "max-w-[1280px] xl:max-w-[1600px] 2xl:max-w-none",
             )}
           >
             {props.children}
