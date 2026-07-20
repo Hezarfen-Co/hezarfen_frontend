@@ -14,7 +14,7 @@ import { getSettings } from "@/api/getSettings";
 import { patchExamById } from "@/api/patchExamById";
 import { postExamResult } from "@/api/postExamResult";
 import { ApiError, formatApiError } from "@/api/client";
-import type { AttemptStatus, ExamResult } from "@/api/types";
+import type { ExamResult } from "@/api/types";
 import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { AnswerSheetView } from "@/components/exams/answer-sheet-view";
@@ -35,6 +35,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examDisplayStatus, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
 import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
@@ -92,7 +93,10 @@ function ExamDetailContent() {
     questions: false,
     results: false,
   });
-  const isSittable = () => exam()?.mode === "sync" || exam()?.mode === "async" || exam()?.mode === "open";
+  const isSittable = () => {
+    const e = exam();
+    return e ? isSittableExam(e) : false;
+  };
   const isScheduled = () => isSittable();
 
   const [ownResult] = createResource(
@@ -157,16 +161,17 @@ function ExamDetailContent() {
   };
   const isFinished = () => examStatus().finished;
   const isUpcoming = () => examStatus().upcoming;
-  const ownAttemptStatus = (): AttemptStatus | null => ownAttempt()?.status ?? null;
-  const detailStatus = () => {
-    const own = ownAttemptStatus();
-    if (own === "submitted" || own === "expired") return own;
-    return !isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active";
+  const ownAttemptSummary = (): ExamAttemptSummary | null => {
+    const attempt = ownAttempt();
+    return attempt ? { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } : null;
   };
+  const noAttemptsLeft = () => detailStatus() === "no_attempts_left";
+  const detailStatus = (): ExamDisplayStatus => exam() ? examDisplayStatus(exam()!, now(), ownAttemptSummary()) : "unscheduled";
   const detailStatusLabel = () => {
     const status = detailStatus();
     if (status === "submitted") return t("attempt.submitted");
     if (status === "expired") return t("attempt.expired");
+    if (status === "no_attempts_left") return t("attempt.noAttemptsLeft");
     if (status === "unscheduled") return t("exams.unscheduled");
     if (status === "finished") return t("exams.finished");
     if (status === "upcoming") return t("exams.upcoming");
@@ -301,7 +306,7 @@ function ExamDetailContent() {
                     </Link>
                     <Show when={isStudent() && !isDraft() && isSittable()}>
                       <Show when={!isUpcoming() && !isFinished()}>
-                        <Show when={ownAttempt()?.status === "submitted" || ownAttempt()?.status === "expired"}
+                        <Show when={ownAttempt()?.status === "submitted" || ownAttempt()?.status === "expired" || noAttemptsLeft()}
                           fallback={
                             <Link to="/exam-room/$id" params={{ id: id() }}>
                               <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
@@ -312,7 +317,7 @@ function ExamDetailContent() {
                           }
                         >
                           <Badge variant="secondary" class="flex-1 rounded-sm px-3 py-2 text-center sm:flex-none">
-                            {ownAttempt()?.status === "submitted" ? t("attempt.submitted") : t("attempt.expired")}
+                            {ownAttempt()?.status === "submitted" ? t("attempt.submitted") : ownAttempt()?.status === "expired" ? t("attempt.expired") : t("attempt.noAttemptsLeft")}
                           </Badge>
                         </Show>
                       </Show>
@@ -347,10 +352,10 @@ function ExamDetailContent() {
                     variant="outline"
                     class={cn(
                       "mt-2 w-fit rounded-sm capitalize",
-                      scheduleStatusClass(detailStatus() === "expired" ? "finished" : detailStatus()),
+                      scheduleStatusClass(examStatusTone(detailStatus())),
                     )}
                   >
-                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(detailStatus() === "expired" ? "finished" : detailStatus()))} />
+                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(detailStatus())))} />
                     {detailStatusLabel()}
                   </Badge>
                 </div>
@@ -366,8 +371,8 @@ function ExamDetailContent() {
                   <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
                 </div>
                 <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.draft")}</p>
-                  <p class="mt-1 font-medium">{ex().draft ? t("exams.draft") : "—"}</p>
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.maxAttempts")}</p>
+                  <p class="mono mt-1 font-medium tabular-nums">{ex().max_attempts}</p>
                 </div>
               </div>
             </div>

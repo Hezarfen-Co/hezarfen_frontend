@@ -17,8 +17,10 @@ import { IconChevronLeft } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { createNow } from "@/lib/create-now";
+import { cn } from "@/lib/cn";
 import { attemptLabel } from "@/lib/exam-labels";
 import { formatDateTime } from "@/lib/format";
+import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 
 const PAGE_SIZE = 10;
 
@@ -41,6 +43,13 @@ const STATUS_KEY: Record<string, MessageKey> = {
 function labelFromStatus(status: string, t: (key: MessageKey) => string): string {
   const k = STATUS_KEY[status];
   return k ? t(k) : status;
+}
+
+function statusTone(status: string): string {
+  if (status === "in_progress") return "active";
+  if (status === "submitted") return "submitted";
+  if (status === "expired" || status === "absent") return "finished";
+  return "unscheduled";
 }
 
 function progressPercent(entry: LiveRosterEntry, questionCount: number): number {
@@ -227,13 +236,10 @@ function LiveMonitorContent() {
                 meta: { headerClass: "text-center", cellClass: "text-center" },
                 cell: (cell) => (
                   <Badge
-                    class="rounded-full"
-                    variant={
-                      cell.row.original.status === "in_progress" ? "default" :
-                      cell.row.original.status === "submitted" ? "secondary" :
-                      "outline"
-                    }
+                    variant="outline"
+                    class={cn("rounded-full", scheduleStatusClass(statusTone(cell.row.original.status)))}
                   >
+                    <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(statusTone(cell.row.original.status)))} />
                     {labelFromStatus(cell.row.original.status, t)}
                   </Badge>
                 ),

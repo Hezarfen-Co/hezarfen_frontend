@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExamLink } from "@/components/exams/exam-link";
 import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examDisplayStatus, examStatusTone } from "@/lib/exam-status";
 import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
@@ -22,17 +23,16 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
   };
 
   const status = () => {
-    if (props.exam.mode !== "sync" && props.exam.mode !== "async" && props.exam.mode !== "open") return "unscheduled";
-    if (props.exam.mode === "open") return "active";
-    const current = props.now ?? Date.now();
-    if (props.exam.ends_at != null && props.exam.ends_at < current) return "finished";
-    if (props.exam.starts_at != null && props.exam.starts_at > current) return "upcoming";
-    return "active";
+    return examDisplayStatus(props.exam, props.now ?? Date.now());
   };
 
   const statusLabel = () => {
     const s = status();
+    if (s === "draft") return t("exams.draft");
     if (s === "unscheduled") return t("exams.unscheduled");
+    if (s === "submitted") return t("attempt.submitted");
+    if (s === "expired") return t("attempt.expired");
+    if (s === "no_attempts_left") return t("attempt.noAttemptsLeft");
     if (s === "finished") return t("exams.finished");
     if (s === "upcoming") return t("exams.upcoming");
     return t("exams.active");
@@ -51,8 +51,8 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
               {props.exam.title}
               </h3>
             </div>
-            <Badge variant="outline" class={cn("shrink-0 rounded-sm capitalize", scheduleStatusClass(status()))}>
-              <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(status()))} />
+            <Badge variant="outline" class={cn("shrink-0 rounded-sm capitalize", scheduleStatusClass(examStatusTone(status())))}>
+              <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(status())))} />
               {statusLabel()}
             </Badge>
           </div>

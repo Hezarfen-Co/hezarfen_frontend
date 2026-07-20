@@ -1,7 +1,8 @@
-import { For, Show, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
+import { For, Show, createEffect, createMemo, createResource, createSignal, onCleanup, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { formatApiError } from "@/api/client";
 import { getCourses } from "@/api/getCourses";
+import { getExamAttempt } from "@/api/getExamAttempt";
 import { getEvents } from "@/api/getEvents";
 import { getExams } from "@/api/getExams";
 import { getMyCourses } from "@/api/getMyCourses";
@@ -29,6 +30,7 @@ import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examDisplayStatus, isSittableExam, type ExamAttemptSummary } from "@/lib/exam-status";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
@@ -68,17 +70,17 @@ const ROLE_KEY: Record<Role, MessageKey> = {
   admin: "role.admin",
 };
 
-function examWindow(exam: Exam, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
-  if (exam.mode === "open") return "active";
-  if (exam.mode !== "sync" && exam.mode !== "async") return "unscheduled";
-  if (exam.ends_at != null && exam.ends_at < now) return "past";
+function examWindow(exam: Exam, now: number, attempt?: ExamAttemptSummary | null): AttentionKind | "upcoming" | "past" | "unscheduled" {
+  const status = examDisplayStatus(exam, now, attempt);
+  if (status === "active") return "active";
+  if (status !== "upcoming") return status === "unscheduled" ? "unscheduled" : "past";
   if (exam.starts_at != null && exam.starts_at > now) {
     const delta = exam.starts_at - now;
     if (delta <= 24 * 60 * 60 * 1000) return "today";
     if (delta <= WEEK_MS) return "soon";
     return "upcoming";
   }
-  return "active";
+  return "upcoming";
 }
 
 function eventWindow(event: Event, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
@@ -114,6 +116,7 @@ function DashboardContent() {
   const [draggingPortal, setDraggingPortal] = createSignal<string | null>(null);
   const [dragOverPortal, setDragOverPortal] = createSignal<string | null>(null);
   const [editingPortalOrder, setEditingPortalOrder] = createSignal(false);
+  const [attemptStatuses, setAttemptStatuses] = createSignal<Record<string, ExamAttemptSummary>>({});
 
   const [courses] = createResource(
     () => (role() !== "student" ? true : null),
@@ -171,6 +174,26 @@ function DashboardContent() {
       return all.filter((exam) => allowed.has(exam.course));
     }
     return all;
+  });
+
+  createEffect(() => {
+    if (role() !== "student") return;
+    const exams = visibleExams();
+    const refresh = () => {
+      for (const exam of exams) {
+        if (!isSittableExam(exam)) continue;
+        const current = attemptStatuses()[exam.id];
+        if (current?.status === "submitted" || current?.status === "expired") continue;
+        if (current && current.max_attempts > 0 && current.attempts_used >= current.max_attempts) continue;
+        if (current != null && current.status !== "in_progress") continue;
+        void getExamAttempt(exam.id)
+          .then((attempt) => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } })))
+          .catch(() => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: "not_started", attempts_used: 0, max_attempts: exam.max_attempts } })));
+      }
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 5000);
+    onCleanup(() => window.clearInterval(interval));
   });
 
   const countCoursesByKind = (kind: Course["kind"]) => scopedCourses().filter((course) => course.kind === kind).length;
@@ -297,7 +320,7 @@ function DashboardContent() {
     const items: AttentionItem[] = [];
 
     for (const exam of visibleExams()) {
-      const status = examWindow(exam, n);
+      const status = examWindow(exam, n, attemptStatuses()[exam.id]);
       if (status === "active" || status === "today" || status === "soon") {
         items.push({
           id: exam.id,
@@ -342,7 +365,7 @@ function DashboardContent() {
 
     for (const exam of visibleExams()) {
       if (exam.starts_at != null && exam.starts_at > n && exam.starts_at <= n + WEEK_MS) {
-        const w = examWindow(exam, n);
+        const w = examWindow(exam, n, attemptStatuses()[exam.id]);
         if (w === "upcoming" || w === "soon" || w === "today") {
           items.push({
             id: exam.id,
