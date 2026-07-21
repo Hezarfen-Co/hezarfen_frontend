@@ -55,7 +55,7 @@ export default function TermsPage() {
 function TermsContent() {
   const t = useT();
   const { locale } = usePreferences();
-  const [list, { refetch }] = createResource(async () => (await getTerms()).items);
+  const [list, { refetch }] = createResource(async () => (await getTerms({ limit: 100 })).items);
   const terms = () => list() ?? [];
   const [panelOpen, setPanelOpen] = createSignal(false);
   const [name, setName] = createSignal("");

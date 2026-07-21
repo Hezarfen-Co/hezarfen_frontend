@@ -66,11 +66,11 @@ function ExamsContent() {
 
   const [courses] = createResource(
     () => (auth.user()?.role && auth.user()?.role !== "student" ? true : null),
-    async (enabled) => (enabled ? (await getCourses()).items : []),
+    async (enabled) => (enabled ? (await getCourses({ limit: 100 })).items : []),
   );
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? (await getMyCourses()).items : []),
+    async (enabled) => (enabled ? (await getMyCourses({ limit: 100 })).items : []),
   );
 
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
@@ -112,7 +112,7 @@ function ExamsContent() {
       return [isStudent() ? "s" : "t", (mine() ?? []).map((c) => c.id).join(",")].join("|");
     },
     async () => {
-      const items = (await getExams()).items;
+      const items = (await getExams({ limit: 100 })).items;
       const known = new Map(visibleCourses().map((c) => [c.id, c.title]));
       const missing = [...new Set(items.map((e) => e.course))].filter((id) => !known.has(id));
       if (missing.length > 0) {

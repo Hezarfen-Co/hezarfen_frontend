@@ -85,7 +85,7 @@ Solid components run **once**, there is no re-render:
   - `docs/role-scope-matrix.md` — role access matrix for pages/nav/dashboard cards.
   - `docs/backend-ui-alignment-plan.md` — completed backend-alignment archive; do not treat it as active work unless backend scope changes.
 - Durable resources use full detail pages. Short create/edit/filter work uses `SidePanel`. Destructive actions use confirm dialogs.
-- Header create actions use compact icon+label buttons with consistent size and current radius.
+- Header create actions use compact icon+label buttons with consistent size and current radius (e.g. `variant="outline" size="sm" class="rounded-lg"` in `SectionDisclosure` header `actions`). Action buttons inside sub-panels must not duplicate section headers — primary create/add/assign actions must be placed in the header `actions` prop of the parent disclosure or page header.
 - Application tables must use `src/components/ui/data-table.tsx` `DataTable`.
   Pages/domain components must not import or render `Table` primitives directly;
   only the `DataTable` wrapper and table primitive files may do that.

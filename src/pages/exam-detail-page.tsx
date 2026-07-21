@@ -131,7 +131,7 @@ function ExamDetailContent() {
   );
 
   const [results, { refetch: refetchResults }] = createResource(
-    () => (hasCourseManagementRights() ? [id(), resultPage()] as const : null),
+    () => (hasCourseManagementRights() && openSections().results ? [id(), resultPage()] as const : null),
     async (source) => {
       if (!source) return { items: [], total: 0, limit: RESULT_PAGE_SIZE, offset: 0 };
       const [examId, page] = source;

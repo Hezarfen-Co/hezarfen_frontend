@@ -78,7 +78,7 @@ function CoursesContent() {
 
   const [list, { refetch }] = createResource(
     () => auth.user()?.role ?? null,
-    async (role) => (role === "student" ? (await getMyCourses()).items : (await getCourses()).items),
+    async (role) => (role === "student" ? (await getMyCourses({ limit: 100 })).items : (await getCourses({ limit: 100 })).items),
   );
 
   const rows = () => filterCourses(list() ?? []);
