@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
-import { IconCheck } from "@/components/ui/icons";
+import { TableRowActions } from "@/components/ui/table-row-actions";
+import { IconCheck, IconEye, IconUsers } from "@/components/ui/icons";
 import { ROLES } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
@@ -52,11 +53,6 @@ function UserRoleActions(props: {
         <Button type="button" size="sm" class="mt-2 h-7 rounded-sm px-2" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
           <IconCheck />
           {t("common.update")}
-        </Button>
-      </Show>
-      <Show when={props.user.role === "parent"}>
-        <Button variant="outline" size="sm" class="ml-2 h-7 rounded-sm px-2" onClick={(e) => { e.stopPropagation(); props.onParentClick?.(props.user); }}>
-          {t("nav.group.students")}
         </Button>
       </Show>
       <ConfirmDialog
@@ -124,15 +120,39 @@ export function UserTable(props: {
     },
     {
       id: "update",
-      header: t("common.update"),
+      header: t("admin.role"),
       meta: { headerClass: "w-52", cellClass: "w-52" },
       cell: (cell) => (
         <UserRoleActions user={cell.row.original} currentUserId={props.currentUserId} onRoleChange={props.onRoleChange} onParentClick={props.onParentClick} />
       ),
     },
+    {
+      id: "actions",
+      header: () => (
+        <span class="flex items-center justify-center" title={t("common.actions")}>
+          <IconEye class="h-4 w-4 text-muted-foreground" />
+          <span class="sr-only">{t("common.actions")}</span>
+        </span>
+      ),
+      meta: { headerClass: "w-14 text-center", cellClass: "w-14" },
+      cell: (cell) => (
+        <Show when={cell.row.original.role === "parent"} fallback={<span class="text-center text-muted-foreground/40">—</span>}>
+          <TableRowActions
+            label={t("common.actions")}
+            actions={[
+              {
+                label: t("nav.myStudents"),
+                icon: <IconUsers class="h-4 w-4" />,
+                onSelect: () => props.onParentClick?.(cell.row.original),
+              },
+            ]}
+          />
+        </Show>
+      ),
+    },
   ]);
 
   return (
-    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-[54rem]" searchPredicate={searchUser} enablePagination pageSize={20} onRowClick={props.onUserClick} />
+    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-[58rem]" searchPredicate={searchUser} enablePagination pageSize={20} onRowClick={props.onUserClick} />
   );
 }

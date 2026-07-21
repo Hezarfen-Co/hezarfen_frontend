@@ -63,7 +63,6 @@ function AdminUsersContent() {
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
       <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <Metric label={t("common.all")} value={visibleUsers().length} />
         <For each={ROLES}>{(role) => <Metric label={t(`role.${role}` as MessageKey)} value={roleCount(role)} />}</For>
       </section>
 
