@@ -351,7 +351,7 @@ function ExamDetailContent() {
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="space-y-6">
-            <div class="space-y-2">
+            <div class="sticky top-14 z-10 -mx-4 bg-background px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
               <PageHeader
                 accent="rose"
                 eyebrow={t("exams.title")}
@@ -406,7 +406,8 @@ function ExamDetailContent() {
                   </div>
                 }
               />
-              <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            </div>
+            <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("work.status")}</p>
                   <Badge
@@ -460,7 +461,6 @@ function ExamDetailContent() {
                   )}
                 </Show>
               </div>
-            </div>
 
             <SidePanel
               open={answerSheetOpen()}

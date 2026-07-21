@@ -40,6 +40,7 @@ export function AppShell(props: ParentProps) {
     if (path === "/clubs") return `${t("nav.group.classes")} / ${t("nav.clubs")}`;
     if (path === "/events" || path.startsWith("/events/")) return `${t("nav.group.classes")} / ${t("nav.events")}`;
     if (path === "/exams" || path.startsWith("/exams/")) return `${t("nav.group.classes")} / ${t("nav.exams")}`;
+    if (path === "/calendar") return `${t("nav.group.classes")} / ${t("nav.calendar")}`;
     if (path === "/questions" || path.startsWith("/questions/")) return `${t("nav.group.community")} / ${t("pool.title")}`;
     if (path.startsWith("/exam-room/")) return t("nav.exams");
     if (path === "/work") return `${t("nav.group.reports")} / ${t("nav.work")}`;

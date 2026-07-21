@@ -85,6 +85,13 @@ export function ExamForm(props: {
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
   const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
   const [endsTime, setEndsTime] = createSignal(timeInputFromMs(props.initial?.ends_at));
+
+  const initialDurationMin = props.initial?.duration_ms
+    ? String(Math.round(props.initial.duration_ms / 60000))
+    : "";
+  const [hasDuration, setHasDuration] = createSignal(props.initial?.duration_ms != null || props.initial?.mode === "async");
+  const [durationMinutes, setDurationMinutes] = createSignal(initialDurationMin);
+
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
@@ -115,7 +122,7 @@ export function ExamForm(props: {
       if (ends <= starts) return t("form.timeOrder");
       if (!isEdit() && (starts < (serverTime()?.now ?? Date.now()) || ends < (serverTime()?.now ?? Date.now()))) return t("form.timePast");
     }
-    if (mode() === "async") {
+    if (hasDuration() || mode() === "async") {
       if (duration == null) return t("exams.durationRequired");
       if (duration < 60000 || duration > 86400000) return t("exams.durationRange");
     }
@@ -140,6 +147,8 @@ export function ExamForm(props: {
         setStartsTime("");
         setEndsDate("");
         setEndsTime("");
+        setHasDuration(false);
+        setDurationMinutes("");
       }
     } catch (err) {
       setError(formatApiError(err));
@@ -153,7 +162,17 @@ export function ExamForm(props: {
     const hasWindow = mode() === "sync" || mode() === "async";
     const starts_at = hasWindow ? scheduleInputToMs(startsDate(), startsTime()) : null;
     const ends_at = hasWindow ? scheduleInputToMs(endsDate(), endsTime()) : null;
-    const duration_ms = mode() === "async" && starts_at != null && ends_at != null ? ends_at - starts_at : null;
+
+    let duration_ms: number | null = null;
+    if (hasDuration() && durationMinutes().trim() !== "") {
+      const mins = Number(durationMinutes().trim());
+      if (!Number.isNaN(mins) && mins > 0) {
+        duration_ms = mins * 60 * 1000;
+      }
+    } else if (mode() === "async" && starts_at != null && ends_at != null) {
+      duration_ms = ends_at - starts_at;
+    }
+
     const v = validate(starts_at, ends_at, duration_ms);
     if (v) {
       setError(v);
@@ -171,6 +190,7 @@ export function ExamForm(props: {
       allow_rejoin: allowRejoin(),
       draft: draft(),
     } satisfies ExamFormValues;
+
     if (isEdit()) {
       setPendingValues(values);
       setConfirmOpen(true);
@@ -181,184 +201,243 @@ export function ExamForm(props: {
 
   return (
     <>
-    <form class="space-y-3" onSubmit={handleSubmit}>
-      <div class="space-y-1.5">
-        <Label for="exam-title">{t("form.title")}</Label>
-        <Input
-          id="exam-title"
-          class="rounded-sm"
-          value={title()}
-          maxlength={200}
-          required
-          onInput={(e) => setTitle(e.currentTarget.value)}
-        />
-      </div>
-      <div class="space-y-1.5">
-        <Label for="exam-description">{t("form.description")}</Label>
-        <Textarea
-          id="exam-description"
-          class="rounded-sm"
-          value={description()}
-          maxlength={2000}
-          rows={3}
-          onInput={(e) => setDescription(e.currentTarget.value)}
-        />
-      </div>
-      <div class="grid gap-3 sm:grid-cols-2">
-        <div class="space-y-1.5">
-          <Label for="exam-kind">{t("exams.kind")}</Label>
-          <Select
-            id="exam-kind"
-            class="rounded-sm"
-            value={kind()}
-            onChange={(e) => setKind(e.currentTarget.value)}
-          >
-            <For each={examKinds()}>{(k) => <option value={k}>{examKindLabel(k, t)}</option>}</For>
-          </Select>
+      <form class="space-y-4" onSubmit={handleSubmit}>
+        {/* Section 1: Basic Info */}
+        <div class="space-y-3 rounded-lg border bg-card p-3.5 shadow-sm">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionBasic")}</h3>
+          <div class="space-y-1.5">
+            <Label for="exam-title">{t("form.title")}</Label>
+            <Input
+              id="exam-title"
+              class="rounded-sm"
+              value={title()}
+              maxlength={200}
+              required
+              onInput={(e) => setTitle(e.currentTarget.value)}
+            />
+          </div>
+          <div class="space-y-1.5">
+            <Label for="exam-description">{t("form.description")}</Label>
+            <Textarea
+              id="exam-description"
+              class="rounded-sm"
+              value={description()}
+              maxlength={2000}
+              rows={3}
+              onInput={(e) => setDescription(e.currentTarget.value)}
+            />
+          </div>
+          <div class="space-y-1.5">
+            <Label for="exam-kind">{t("exams.kind")}</Label>
+            <Select
+              id="exam-kind"
+              class="rounded-sm"
+              value={kind()}
+              onChange={(e) => setKind(e.currentTarget.value)}
+            >
+              <For each={examKinds()}>{(k) => <option value={k}>{examKindLabel(k, t)}</option>}</For>
+            </Select>
+          </div>
         </div>
-        <div class="space-y-1.5">
-          <Label for="exam-mode">{t("exams.mode")}</Label>
-          <Select id="exam-mode" class="rounded-sm" value={mode()} onChange={(e) => setMode(e.currentTarget.value)}>
-            <For each={EXAM_MODES}>
-              {(m) => (
-                <option value={m}>
-                  {m === "sync" ? t("exams.mode.sync") : m === "async" ? t("exams.mode.async") : t("exams.mode.open")}
-                </option>
-              )}
-            </For>
-          </Select>
+
+        {/* Section 2: Mode & Schedule */}
+        <div class="space-y-3 rounded-lg border bg-card p-3.5 shadow-sm">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionSchedule")}</h3>
+          <div class="space-y-1.5">
+            <Label for="exam-mode">{t("exams.mode")}</Label>
+            <Select
+              id="exam-mode"
+              class="rounded-sm"
+              value={mode()}
+              onChange={(e) => {
+                const next = e.currentTarget.value;
+                setMode(next);
+                if (next === "async") setHasDuration(true);
+              }}
+            >
+              <For each={EXAM_MODES}>
+                {(m) => (
+                  <option value={m}>
+                    {m === "sync" ? t("exams.mode.sync") : m === "async" ? t("exams.mode.async") : t("exams.mode.open")}
+                  </option>
+                )}
+              </For>
+            </Select>
+          </div>
+
+          <Show when={mode() === "sync" || mode() === "async"}>
+            <div class="grid gap-3 pt-1">
+              <div class="space-y-1.5">
+                <Label for="exam-starts">{t("events.starts")}</Label>
+                <div class="grid grid-cols-2 gap-2">
+                  <DatePicker
+                    id="exam-starts"
+                    class="h-10"
+                    placeholder={t("form.datePlaceholder")}
+                    value={startsDate()}
+                    required
+                    onChange={setStartsDate}
+                  />
+                  <Input
+                    id="exam-starts-time"
+                    class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
+                    inputMode="numeric"
+                    placeholder="14:30"
+                    pattern="[0-2][0-9]:[0-5][0-9]"
+                    value={startsTime()}
+                    required
+                    aria-label={t("exams.startTime")}
+                    onInput={(e) => setStartsTime(e.currentTarget.value)}
+                  />
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <Label for="exam-ends">{t("events.ends")}</Label>
+                <div class="grid grid-cols-2 gap-2">
+                  <DatePicker
+                    id="exam-ends"
+                    class="h-10"
+                    placeholder={t("form.datePlaceholder")}
+                    value={endsDate()}
+                    required
+                    onChange={setEndsDate}
+                  />
+                  <Input
+                    id="exam-ends-time"
+                    class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
+                    inputMode="numeric"
+                    placeholder="15:30"
+                    pattern="[0-2][0-9]:[0-5][0-9]"
+                    value={endsTime()}
+                    required
+                    aria-label={t("exams.endTime")}
+                    onInput={(e) => setEndsTime(e.currentTarget.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </Show>
         </div>
-      </div>
-      <div class="grid items-end gap-3 sm:grid-cols-2">
-        <div class="space-y-1.5">
-          <label class="flex h-10 items-center gap-2 rounded-sm border bg-background/60 px-3 text-sm">
+
+        {/* Section 3: Time Limit / Duration */}
+        <div class="space-y-3 rounded-lg border bg-card p-3.5 shadow-sm">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionDuration")}</h3>
+          <label class="flex items-center gap-2 text-sm font-medium">
             <input
               type="checkbox"
               class="h-4 w-4 rounded border-border"
-              checked={hasRetakes()}
-              onChange={(e) => {
-                setHasRetakes(e.currentTarget.checked);
-                if (e.currentTarget.checked && maxAttempts() === "1") setMaxAttempts("2");
-              }}
+              checked={hasDuration()}
+              onChange={(e) => setHasDuration(e.currentTarget.checked)}
             />
-            <span>{t("exams.retakes")}</span>
+            <span>{t("exams.hasDuration")}</span>
+          </label>
+          <p class="text-xs text-muted-foreground">{t("exams.hasDurationHelp")}</p>
+          <Show when={hasDuration()}>
+            <div class="pt-1">
+              <Label for="exam-duration">{t("exams.durationMinutes")}</Label>
+              <Input
+                id="exam-duration"
+                type="number"
+                min={1}
+                max={1440}
+                class="mt-1.5 h-10 rounded-sm bg-background/60"
+                placeholder="60"
+                value={durationMinutes()}
+                onInput={(e) => setDurationMinutes(e.currentTarget.value)}
+              />
+            </div>
+          </Show>
+        </div>
+
+        {/* Section 4: Participation & Attempts */}
+        <div class="space-y-3 rounded-lg border bg-card p-3.5 shadow-sm">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionAccess")}</h3>
+
+          <div class="rounded-sm border bg-background/60 px-3 py-2">
+            <label class="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                class="mt-0.5 h-4 w-4 rounded border-border"
+                checked={hasRetakes()}
+                onChange={(e) => {
+                  setHasRetakes(e.currentTarget.checked);
+                  if (e.currentTarget.checked && maxAttempts() === "1") setMaxAttempts("2");
+                }}
+              />
+              <div>
+                <span class="font-medium">{t("exams.retakes")}</span>
+                <p class="text-xs font-normal text-muted-foreground">{t("exams.retakesHelp")}</p>
+              </div>
+            </label>
+            <Show when={hasRetakes()}>
+              <div class="ml-6 mt-2 flex items-center gap-2">
+                <Input
+                  id="exam-max-attempts"
+                  class="h-8 w-20 rounded-sm text-center"
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={maxAttempts()}
+                  required
+                  onInput={(e) => setMaxAttempts(e.currentTarget.value)}
+                />
+                <span class="text-xs text-muted-foreground">{t("exams.times")}</span>
+              </div>
+            </Show>
+          </div>
+
+          <label class="flex items-start gap-2 rounded-sm border bg-background/60 px-3 py-2 text-sm">
+            <input
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 shrink-0 rounded border-border"
+              checked={allowRejoin()}
+              onChange={(e) => setAllowRejoin(e.currentTarget.checked)}
+            />
+            <div>
+              <span class="font-medium">{t("exams.allowRejoin")}</span>
+              <p class="text-xs font-normal text-muted-foreground">{t("exams.allowRejoinHelp")}</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-2 rounded-sm border bg-background/60 px-3 py-2 text-sm">
+            <input
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 shrink-0 rounded border-border"
+              checked={draft()}
+              onChange={(e) => setDraft(e.currentTarget.checked)}
+            />
+            <div>
+              <span class="font-medium">{t("exams.draft")}</span>
+              <p class="text-xs font-normal text-muted-foreground">{t("exams.draftHelp")}</p>
+            </div>
           </label>
         </div>
-        <Show when={hasRetakes()}>
-          <div class="space-y-1.5">
-            <Label for="exam-max-attempts">{t("exams.maxAttempts")}</Label>
-            <Input
-              id="exam-max-attempts"
-              class="h-10 rounded-sm bg-background/60"
-              type="number"
-              min={1}
-              step={1}
-              value={maxAttempts()}
-              required
-              onInput={(e) => setMaxAttempts(e.currentTarget.value)}
-            />
-          </div>
-        </Show>
-      </div>
-      <label class="flex items-start gap-2 rounded-sm border bg-background/60 px-3 py-2 text-sm">
-        <input
-          type="checkbox"
-          class="mt-0.5 h-4 w-4 rounded border-border"
-          checked={draft()}
-          onChange={(e) => setDraft(e.currentTarget.checked)}
-        />
-        <span>
-          <span class="block font-medium">{t("exams.draft")}</span>
-          <span class="block text-xs text-muted-foreground">{t("exams.draftHelp")}</span>
-        </span>
-      </label>
-      <div class="space-y-1.5">
-        <label class="flex h-10 items-center gap-2 rounded-sm border bg-background/60 px-3 text-sm">
-          <input
-            type="checkbox"
-            class="h-4 w-4 rounded border-border"
-            checked={allowRejoin()}
-            onChange={(e) => setAllowRejoin(e.currentTarget.checked)}
-          />
-          <span>{t("exams.allowRejoin")}</span>
-        </label>
-        <p class="text-xs text-muted-foreground">{t("exams.allowRejoinHelp")}</p>
-      </div>
-      <Show when={mode() === "sync" || mode() === "async"}>
-        <div class="grid gap-3">
-          <div class="space-y-1.5">
-            <Label for="exam-starts">{t("events.starts")}</Label>
-            <div class="grid grid-cols-2 gap-2">
-              <DatePicker
-                id="exam-starts"
-                class="h-10"
-                placeholder={t("form.datePlaceholder")}
-                value={startsDate()}
-                required
-                onChange={setStartsDate}
-              />
-              <Input
-                id="exam-starts-time"
-                class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
-                inputMode="numeric"
-                placeholder="14:30"
-                pattern="[0-2][0-9]:[0-5][0-9]"
-                value={startsTime()}
-                required
-                aria-label={t("exams.startTime")}
-                onInput={(e) => setStartsTime(e.currentTarget.value)}
-              />
-            </div>
-          </div>
-          <div class="space-y-1.5">
-            <Label for="exam-ends">{t("events.ends")}</Label>
-            <div class="grid grid-cols-2 gap-2">
-              <DatePicker
-                id="exam-ends"
-                class="h-10"
-                placeholder={t("form.datePlaceholder")}
-                value={endsDate()}
-                required
-                onChange={setEndsDate}
-              />
-              <Input
-                id="exam-ends-time"
-                class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
-                inputMode="numeric"
-                placeholder="15:30"
-                pattern="[0-2][0-9]:[0-5][0-9]"
-                value={endsTime()}
-                required
-                aria-label={t("exams.endTime")}
-                onInput={(e) => setEndsTime(e.currentTarget.value)}
-              />
-            </div>
-          </div>
-        </div>
-      </Show>
-      {error() && <p class="text-sm text-destructive">{error()}</p>}
-      <div class="flex flex-wrap items-center gap-2">
-        <Button type="submit" disabled={pending()}>
-          {props.submitLabel ?? t("common.save")}
-        </Button>
-        {props.onCancel && (
-          <Button type="button" variant="outline" onClick={props.onCancel}>
-            {t("common.cancel")}
+
+        {error() && <p class="text-sm text-destructive">{error()}</p>}
+
+        <div class="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2 border-t border-border bg-background px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
+          <Button type="submit" class="flex-1 sm:flex-none" disabled={pending()}>
+            {props.submitLabel ?? t("common.save")}
           </Button>
-        )}
-      </div>
-    </form>
-    <ConfirmDialog
-      open={confirmOpen()}
-      onOpenChange={setConfirmOpen}
-      title={t("confirm.updateTitle")}
-      summary={t("confirm.updateExam", { title: pendingValues()?.title ?? "" })}
-      onConfirm={async () => {
-        const values = pendingValues();
-        if (!values) return;
-        await save(values);
-      }}
-    />
+          {props.onCancel && (
+            <Button type="button" variant="outline" class="flex-1 sm:flex-none" onClick={props.onCancel}>
+              {t("common.cancel")}
+            </Button>
+          )}
+        </div>
+      </form>
+
+      <ConfirmDialog
+        open={confirmOpen()}
+        onOpenChange={setConfirmOpen}
+        title={t("confirm.updateTitle")}
+        summary={t("confirm.updateExam", { title: pendingValues()?.title ?? "" })}
+        onConfirm={async () => {
+          const values = pendingValues();
+          if (!values) return;
+          await save(values);
+        }}
+      />
     </>
   );
 }
