@@ -139,6 +139,17 @@ const HOME_ITEM: NavItem = {
   exact: true,
 };
 
+const PARENT_GROUP: NavGroup = {
+  id: "students",
+  labelKey: "nav.group.students",
+  Icon: IconUsers,
+  exactRole: "parent",
+  items: [
+    { to: "/students", labelKey: "nav.myStudents", Icon: IconUsers, exactRole: "parent" },
+    { to: "/messages", labelKey: "nav.messages", Icon: IconMessage, exactRole: "parent" },
+  ],
+};
+
 function pathActive(pathname: string, to: string, exact?: boolean) {
   if (exact) return pathname === to;
   return pathname === to || pathname.startsWith(`${to}/`);
@@ -182,17 +193,21 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
   const auth = useAuth();
   const t = useT();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const role = () => auth.user()?.role;
   const itemVisible = (item: NavItem) => {
-    const role = auth.user()?.role;
-    if (item.exactRole) return hasExactRole(role, item.exactRole);
-    if (item.minRole || item.maxRole) return roleInRange(role, item.minRole, item.maxRole);
+    const currentRole = role();
+    if (currentRole === "parent") return item.to === "/students" || item.to === "/messages";
+    if (item.exactRole) return hasExactRole(currentRole, item.exactRole);
+    if (item.minRole || item.maxRole) return roleInRange(currentRole, item.minRole, item.maxRole);
     return true;
   };
 
   const visibleGroups = createMemo(() =>
-    NAV_GROUPS
+    (role() === "parent"
+      ? [PARENT_GROUP]
+      : NAV_GROUPS
       .filter((group) => {
-        const r = auth.user()?.role;
+        const r = role();
         if (group.exactRole && !hasExactRole(r, group.exactRole)) return false;
         if (group.minRole && !hasMinRole(r, group.minRole)) return false;
         return true;
@@ -201,7 +216,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
         ...group,
         items: group.items.filter(itemVisible),
       }))
-      .filter((group) => group.items.length > 0),
+        .filter((group) => group.items.length > 0)),
   );
   const activeGroupId = createMemo(
     () =>
