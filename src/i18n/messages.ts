@@ -21,6 +21,7 @@ export type MessageKey =
   | "nav.messages"
   | "nav.pomodoro"
   | "nav.attendance"
+  | "nav.questions"
   | "nav.work"
   | "nav.staffWork"
   | "nav.users"
@@ -43,6 +44,10 @@ export type MessageKey =
   | "nav.group.grades"
   | "nav.group.reports"
   | "nav.group.settings"
+  | "nav.group.community"
+  | "nav.myStudents"
+  | "parents.title"
+  | "parents.subtitle"
   | "common.loading"
   | "common.cancel"
   | "common.save"
@@ -54,6 +59,9 @@ export type MessageKey =
   | "common.remove"
   | "common.back"
   | "common.view"
+  | "common.reply"
+  | "common.approve"
+  | "common.reject"
   | "common.actions"
   | "common.columns"
   | "common.moreFilters"
@@ -98,6 +106,19 @@ export type MessageKey =
   | "common.saved"
   | "common.createItem"
   | "common.countItem"
+  | "pool.title"
+  | "pool.subtitle"
+  | "pool.ask"
+  | "pool.subject"
+  | "pool.body"
+  | "pool.image"
+  | "pool.status"
+  | "pool.pending"
+  | "pool.approved"
+  | "pool.author"
+  | "pool.solutions"
+  | "pool.offerSolution"
+  | "pool.noQuestions"
   | "theme.light"
   | "theme.dark"
   | "theme.toggle"
@@ -445,6 +466,7 @@ export type MessageKey =
   | "auth.featurePrefs"
   | "app.workspace"
   | "role.student"
+  | "role.parent"
   | "role.teacher"
   | "role.manager"
   | "role.admin"
@@ -649,7 +671,8 @@ const en: Dict = {
   "nav.messages": "Messages",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
-  "nav.work": "Work logs",
+  "nav.questions": "Question Pool",
+  "nav.work": "Work Log",
   "nav.staffWork": "Staff work",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
@@ -668,9 +691,13 @@ const en: Dict = {
   "nav.preferences": "Preferences",
   "nav.group.students": "Students",
   "nav.group.classes": "Education",
-  "nav.group.grades": "My space",
+  "nav.group.grades": "Grades",
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
+  "nav.group.community": "Community",
+  "nav.myStudents": "My Students",
+  "parents.title": "My Students",
+  "parents.subtitle": "View records for your linked students.",
   "common.loading": "Loading…",
   "common.cancel": "Cancel",
   "common.save": "Save",
@@ -682,6 +709,9 @@ const en: Dict = {
   "common.remove": "Remove",
   "common.back": "Back",
   "common.view": "View",
+  "common.reply": "Reply",
+  "common.approve": "Approve",
+  "common.reject": "Reject",
   "common.actions": "Actions",
   "common.columns": "Columns",
   "common.moreFilters": "More filters",
@@ -694,7 +724,7 @@ const en: Dict = {
   "common.goHome": "Go home",
   "common.learnMore": "Learn more",
   "common.gotIt": "Got it",
-  "confirm.review": "Please review the details before continuing.",
+  "confirm.review": "Please review your changes before saving.",
   "confirm.summary": "Summary",
   "confirm.confirmDelete": "Yes, delete",
   "confirm.confirmUpdate": "Yes, update",
@@ -723,9 +753,22 @@ const en: Dict = {
   "common.saveAttendance": "Save my attendance",
   "common.created": "Created.",
   "common.deleted": "Deleted.",
-  "common.saved": "Saved.",
-  "common.createItem": "Create {item}",
+  "common.saved": "Saved successfully.",
+  "common.createItem": "Create new {item}",
   "common.countItem": "{count} {item}",
+  "pool.title": "Question Pool",
+  "pool.subtitle": "Ask questions and discuss solutions.",
+  "pool.ask": "Ask Question",
+  "pool.subject": "Subject",
+  "pool.body": "Question details",
+  "pool.image": "Attachment (Image)",
+  "pool.status": "Status",
+  "pool.pending": "Pending",
+  "pool.approved": "Approved",
+  "pool.author": "Author",
+  "pool.solutions": "Solutions",
+  "pool.offerSolution": "Offer a solution",
+  "pool.noQuestions": "No questions found.",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.toggle": "Toggle theme",
@@ -1086,6 +1129,7 @@ const en: Dict = {
   "auth.featurePrefs": "TR / EN · light / dark",
   "app.workspace": "@Hezarfen - 2026",
   "role.student": "Student",
+  "role.parent": "Parent",
   "role.teacher": "Teacher",
   "role.manager": "Manager",
   "role.admin": "ADMIN",
@@ -1288,8 +1332,9 @@ const tr: Dict = {
   "nav.marks": "Notlar",
   "nav.messages": "Mesajlar",
   "nav.pomodoro": "Pomodoro",
-  "nav.attendance": "Yoklamalar",
-  "nav.work": "Mesailer",
+  "nav.attendance": "Yoklama",
+  "nav.questions": "Soru Havuzu",
+  "nav.work": "Çalışma Kaydı",
   "nav.staffWork": "Mesailer",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Notlar",
@@ -1308,9 +1353,13 @@ const tr: Dict = {
   "nav.preferences": "Tercihler",
   "nav.group.students": "Öğrenciler",
   "nav.group.classes": "Eğitim",
-  "nav.group.grades": "Benim Alanım",
+  "nav.group.grades": "Notlar",
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
+  "nav.group.community": "Topluluk",
+  "nav.myStudents": "Öğrencilerim",
+  "parents.title": "Öğrencilerim",
+  "parents.subtitle": "Size bağlı öğrencilerin akademik kayıtlarını inceleyin.",
   "common.loading": "Yükleniyor…",
   "common.cancel": "Vazgeç",
   "common.save": "Kaydet",
@@ -1322,7 +1371,10 @@ const tr: Dict = {
   "common.remove": "Kaldır",
   "common.back": "Geri",
   "common.view": "Görüntüle",
-  "common.actions": "İşlem",
+  "common.reply": "Yanıtla",
+  "common.approve": "Onayla",
+  "common.reject": "Reddet",
+  "common.actions": "İşlemler",
   "common.columns": "Kolonlar",
   "common.moreFilters": "Daha fazla filtre",
   "common.lessFilters": "Daha az filtre",
@@ -1334,7 +1386,7 @@ const tr: Dict = {
   "common.goHome": "Ana sayfaya dön",
   "common.learnMore": "Daha fazla",
   "common.gotIt": "Anladım",
-  "confirm.review": "Devam etmeden önce işlem özetini kontrol edin.",
+  "confirm.review": "Lütfen kaydetmeden önce değişiklikleri gözden geçirin.",
   "confirm.summary": "İşlem özeti",
   "confirm.confirmDelete": "Evet, sil",
   "confirm.confirmUpdate": "Evet, güncelle",
@@ -1363,9 +1415,22 @@ const tr: Dict = {
   "common.saveAttendance": "Yoklamamı kaydet",
   "common.created": "Oluşturuldu.",
   "common.deleted": "Silindi.",
-  "common.saved": "Kaydedildi.",
-  "common.createItem": "{item} oluştur",
-  "common.countItem": "{count} Adet {item}",
+  "common.saved": "Başarıyla kaydedildi.",
+  "common.createItem": "Yeni {item} oluştur",
+  "common.countItem": "{count} {item}",
+  "pool.title": "Soru Havuzu",
+  "pool.subtitle": "Soru sorun ve çözümleri tartışın.",
+  "pool.ask": "Soru Sor",
+  "pool.subject": "Konu",
+  "pool.body": "Soru detayı",
+  "pool.image": "Görsel (İsteğe bağlı)",
+  "pool.status": "Durum",
+  "pool.pending": "Bekliyor",
+  "pool.approved": "Onaylandı",
+  "pool.author": "Yazar",
+  "pool.solutions": "Çözümler",
+  "pool.offerSolution": "Çözüm Gönder",
+  "pool.noQuestions": "Soru bulunamadı.",
   "theme.light": "Açık",
   "theme.dark": "Koyu",
   "theme.toggle": "Tema",
@@ -1726,6 +1791,7 @@ const tr: Dict = {
   "auth.featurePrefs": "TR / EN · açık / koyu",
   "app.workspace": "@Hezarfen - 2026",
   "role.student": "Öğrenci",
+  "role.parent": "Veli",
   "role.teacher": "Öğretmen",
   "role.manager": "Yönetici",
   "role.admin": "ADMIN",

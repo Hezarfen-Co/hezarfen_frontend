@@ -8,6 +8,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProfileForm } from "@/components/users/profile-form";
 import { UserTable } from "@/components/users/user-table";
+import { ParentStudentsPanel } from "@/components/users/parent-students-panel";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { DataTableEmpty, DataTableSkeleton } from "@/components/ui/data-table";
@@ -31,6 +32,7 @@ function AdminUsersContent() {
   const t = useT();
   const [error, setError] = createSignal("");
   const [editUser, setEditUser] = createSignal<User | null>(null);
+  const [selectedParent, setSelectedParent] = createSignal<User | null>(null);
 
   const [list, { refetch }] = createResource(async () => (await getUsers()).items);
   const visibleUsers = () => list() ?? [];
@@ -80,7 +82,13 @@ function AdminUsersContent() {
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list()}>
             <Show when={visibleUsers().length > 0} fallback={<DataTableEmpty>{t("admin.noUsers")}</DataTableEmpty>}>
-              <UserTable users={visibleUsers() as User[]} currentUserId={auth.user()!.id} onRoleChange={onRoleChange} onUserClick={setEditUser} />
+              <UserTable 
+                users={visibleUsers() as User[]} 
+                currentUserId={auth.user()!.id} 
+                onRoleChange={onRoleChange} 
+                onUserClick={setEditUser}
+                onParentClick={setSelectedParent}
+              />
             </Show>
           </Show>
         </Suspense>
@@ -98,6 +106,16 @@ function AdminUsersContent() {
               }}
             />
           </FormDialog>
+        )}
+      </Show>
+
+      <Show when={selectedParent()} keyed>
+        {(u) => (
+          <ParentStudentsPanel 
+            parent={{ id: u.id, username: u.username, display_name: u.name || u.username }} 
+            open 
+            onOpenChange={() => setSelectedParent(null)} 
+          />
         )}
       </Show>
     </div>

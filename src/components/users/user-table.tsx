@@ -27,6 +27,7 @@ function UserRoleActions(props: {
   user: User;
   currentUserId: string;
   onRoleChange: (userId: string, role: Role) => Promise<void>;
+  onParentClick?: (user: User) => void;
 }) {
   const t = useT();
   const isSelf = () => props.user.id === props.currentUserId;
@@ -48,9 +49,14 @@ function UserRoleActions(props: {
         ))}
       </Select>
       <Show when={!isSelf() && dirty()}>
-        <Button type="button" size="sm" class="mt-2 h-7 rounded-sm px-2" onClick={() => setConfirmOpen(true)}>
+        <Button type="button" size="sm" class="mt-2 h-7 rounded-sm px-2" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
           <IconCheck />
           {t("common.update")}
+        </Button>
+      </Show>
+      <Show when={props.user.role === "parent"}>
+        <Button variant="outline" size="sm" class="ml-2 h-7 rounded-sm px-2" onClick={(e) => { e.stopPropagation(); props.onParentClick?.(props.user); }}>
+          {t("nav.group.students")}
         </Button>
       </Show>
       <ConfirmDialog
@@ -75,6 +81,7 @@ export function UserTable(props: {
   currentUserId: string;
   onRoleChange: (userId: string, role: Role) => Promise<void>;
   onUserClick?: (user: User) => void;
+  onParentClick?: (user: User) => void;
 }) {
   const t = useT();
   const searchUser = (user: User, query: string) =>
@@ -120,7 +127,7 @@ export function UserTable(props: {
       header: t("common.update"),
       meta: { headerClass: "w-52", cellClass: "w-52" },
       cell: (cell) => (
-        <UserRoleActions user={cell.row.original} currentUserId={props.currentUserId} onRoleChange={props.onRoleChange} />
+        <UserRoleActions user={cell.row.original} currentUserId={props.currentUserId} onRoleChange={props.onRoleChange} onParentClick={props.onParentClick} />
       ),
     },
   ]);

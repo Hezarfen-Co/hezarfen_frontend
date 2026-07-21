@@ -5,6 +5,7 @@ import { useT } from "@/stores/preferences-context";
 
 const VARIANT: Record<Role, "default" | "secondary" | "outline" | "destructive"> = {
   student: "secondary",
+  parent: "secondary",
   teacher: "default",
   manager: "outline",
   admin: "destructive",

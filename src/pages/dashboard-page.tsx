@@ -65,6 +65,7 @@ type PortalCardDef = {
 
 const ROLE_KEY: Record<Role, MessageKey> = {
   student: "role.student",
+  parent: "role.parent",
   teacher: "role.teacher",
   manager: "role.manager",
   admin: "role.admin",

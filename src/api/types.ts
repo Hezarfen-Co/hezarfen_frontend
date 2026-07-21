@@ -1,6 +1,6 @@
 export type { Page, PageParams } from "./page";
 
-export type Role = "student" | "teacher" | "manager" | "admin";
+export type Role = "student" | "parent" | "teacher" | "manager" | "admin";
 export type UserTheme = "light" | "dark";
 export type UserLanguage = "tr" | "en";
 export type CourseKind = "course" | "study" | "club" | string;
