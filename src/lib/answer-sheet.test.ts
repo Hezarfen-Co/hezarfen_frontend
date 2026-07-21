@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import type { ExamQuestion, StudentAnswer } from "@/api/types";
 import { joinAnswerSheet } from "./answer-sheet";
 

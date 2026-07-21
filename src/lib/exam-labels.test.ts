@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { attemptLabel } from "./exam-labels";
 
 test("shows used/max when the exam caps attempts", () => {
