@@ -461,6 +461,7 @@ export type MessageKey =
   | "form.studentId"
   | "form.selectStudent"
   | "form.noStudents"
+  | "form.noTeachers"
   | "form.titleRequired"
   | "form.titleMax"
   | "form.contentMax"
@@ -511,6 +512,13 @@ export type MessageKey =
   | "courses.kind.club"
   | "courses.capacity"
   | "courses.capacityOptional"
+  | "courses.teachers"
+  | "courses.assignTeacher"
+  | "courses.unassignTeacher"
+  | "courses.confirmUnassignTeacher"
+  | "courses.teacherAssigned"
+  | "courses.teacherUnassigned"
+  | "courses.noTeachers"
   | "marks.title"
   | "marks.subtitle"
   | "marks.overall"
@@ -1155,6 +1163,7 @@ const en: Dict = {
   "form.studentId": "Student user id",
   "form.selectStudent": "Select student",
   "form.noStudents": "No available students",
+  "form.noTeachers": "No available teachers",
   "form.titleRequired": "Title is required",
   "form.titleMax": "Title must be at most 200 characters",
   "form.contentMax": "Content must be at most 10 000 characters",
@@ -1205,6 +1214,13 @@ const en: Dict = {
   "courses.kind.club": "Club",
   "courses.capacity": "Capacity",
   "courses.capacityOptional": "Optional seat cap",
+  "courses.teachers": "Teachers",
+  "courses.assignTeacher": "Assign teacher",
+  "courses.unassignTeacher": "Unassign teacher",
+  "courses.confirmUnassignTeacher": "Are you sure you want to remove this teacher from the course?",
+  "courses.teacherAssigned": "Teacher assigned successfully.",
+  "courses.teacherUnassigned": "Teacher unassigned successfully.",
+  "courses.noTeachers": "No assigned teachers.",
   "marks.title": "Report card",
   "marks.subtitle": "Weighted averages across enrolled courses.",
   "marks.overall": "Overall average",
@@ -1843,6 +1859,7 @@ const tr: Dict = {
   "form.studentId": "Öğrenci kullanıcı id",
   "form.selectStudent": "Öğrenci seç",
   "form.noStudents": "Uygun öğrenci yok",
+  "form.noTeachers": "Uygun öğretmen yok",
   "form.titleRequired": "Başlık gerekli",
   "form.titleMax": "Başlık en fazla 200 karakter olmalı",
   "form.contentMax": "İçerik en fazla 10 000 karakter olmalı",
@@ -1893,6 +1910,13 @@ const tr: Dict = {
   "courses.kind.club": "Kulüp",
   "courses.capacity": "Kapasite",
   "courses.capacityOptional": "İsteğe bağlı kontenjan",
+  "courses.teachers": "Öğretmenler",
+  "courses.assignTeacher": "Öğretmen ata",
+  "courses.unassignTeacher": "Öğretmeni çıkar",
+  "courses.confirmUnassignTeacher": "Bu öğretmeni dersten çıkarmak istediğinize emin misiniz?",
+  "courses.teacherAssigned": "Öğretmen başarıyla atandı.",
+  "courses.teacherUnassigned": "Öğretmen başarıyla çıkarıldı.",
+  "courses.noTeachers": "Atanmış öğretmen yok.",
   "marks.title": "Karnem",
   "marks.subtitle": "Kayıtlı derslerdeki ağırlıklı ortalamalar.",
   "marks.overall": "Genel ortalama",
