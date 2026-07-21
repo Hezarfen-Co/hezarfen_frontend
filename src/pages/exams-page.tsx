@@ -1,9 +1,8 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useNavigate } from "@tanstack/solid-router";
 import { getCourseById } from "@/api/courses";
 import { getCourses } from "@/api/courses";
-import { getExamAttempt } from "@/api/exams";
 import { getExams } from "@/api/exams";
 import { getMyCourses } from "@/api/reports";
 import { patchExamById } from "@/api/exams";
@@ -24,7 +23,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
+import { examDisplayStatus, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -57,7 +56,6 @@ function ExamsContent() {
   const [createOpen, setCreateOpen] = createSignal(false);
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
-  const [attemptStatuses, setAttemptStatuses] = createSignal<Record<string, ExamAttemptSummary>>({});
   const [flash, setFlash] = createFlash();
 
   const [createStep, setCreateStep] = createSignal<"details" | "questions">("details");
@@ -88,7 +86,7 @@ function ExamsContent() {
     return courseMap()[courseId] ?? courseId;
   };
 
-  const examStatus = (exam: Exam) => examDisplayStatus(exam, now(), attemptStatuses()[exam.id]);
+  const examStatus = (exam: Exam) => examDisplayStatus(exam, now());
 
   const filterExams = (items: Exam[]) => {
     const allowed = isStudent() ? new Set(visibleCourses().map((course) => course.id)) : null;
@@ -147,31 +145,6 @@ function ExamsContent() {
     return t("exams.active");
   };
   const rows = (): ExamRow[] => filterExams(list() ?? []).map((exam) => ({ ...exam, displayStatus: examStatus(exam) }));
-  createEffect(() => {
-    if (!isStudent()) return;
-    const exams = list();
-    if (!exams) return;
-    const allowed = new Set(visibleCourses().map((course) => course.id));
-    const refresh = () => {
-      for (const exam of exams) {
-        if (!allowed.has(exam.course) || !isSittableExam(exam)) continue;
-        const current = attemptStatuses()[exam.id];
-        if (current?.status === "submitted" || current?.status === "expired") continue;
-        if (current && current.max_attempts > 0 && current.attempts_used >= current.max_attempts) continue;
-        if (current != null && current.status !== "in_progress") continue;
-        void getExamAttempt(exam.id)
-          .then((attempt) => {
-            setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } }));
-          })
-          .catch(() => {
-            setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: "not_started", attempts_used: 0, max_attempts: exam.max_attempts } }));
-          });
-      }
-    };
-    refresh();
-    const interval = window.setInterval(refresh, 5000);
-    onCleanup(() => window.clearInterval(interval));
-  });
   const columns = createMemo<ColumnDef<ExamRow>[]>(() => [
     {
       accessorKey: "title",
