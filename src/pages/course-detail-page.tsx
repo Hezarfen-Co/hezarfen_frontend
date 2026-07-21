@@ -71,7 +71,10 @@ function CourseDetailContent() {
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
   const [terms] = createResource(async () => (await getTerms()).items);
   const [settings] = createResource(() => getSettings());
-  const [exams, { refetch: refetchExams }] = createResource(id, async (courseId) => (await getCourseExams(courseId)).items);
+  const [exams, { refetch: refetchExams }] = createResource(
+    () => (openSections().exams ? id() : null),
+    async (courseId) => (courseId ? (await getCourseExams(courseId)).items : []),
+  );
   const hasCourseManagementRights = () => {
     const c = course();
     const u = auth.user();
@@ -91,7 +94,7 @@ function CourseDetailContent() {
     return hasMinRole(u.role, "manager");
   };
   const [roster, { refetch: refetchRoster }] = createResource(
-    () => (hasCourseManagementRights() ? id() : null),
+    () => (hasCourseManagementRights() && openSections().roster ? id() : null),
     async (courseId) => (courseId ? (await getCourseEnrollments(courseId)).items : []),
   );
   const [mine] = createResource(

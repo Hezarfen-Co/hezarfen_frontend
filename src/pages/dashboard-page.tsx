@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, createResource, createSignal, onCleanup, type Component } from "solid-js";
+import { For, Show, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { formatApiError } from "@/api/client";
 import { getMyStudents } from "@/api/parents";
@@ -124,7 +124,7 @@ function DashboardContent() {
 
   const [courses] = createResource(
     () => (role() !== "student" && role() !== "parent" ? true : null),
-    async (enabled) => (enabled ? (await getCourses()).items : []),
+    async (enabled) => (enabled ? (await getCourses({ limit: 50 })).items : []),
     { initialValue: [] },
   );
   const [myCourses] = createResource(
@@ -132,7 +132,7 @@ function DashboardContent() {
     async (enabled) => {
       if (!enabled) return [];
       try {
-        return (await getMyCourses()).items;
+        return (await getMyCourses({ limit: 50 })).items;
       } catch {
         return [];
       }
@@ -141,17 +141,17 @@ function DashboardContent() {
   );
   const [events] = createResource(
     () => (role() === "parent" ? null : true),
-    async (enabled) => (enabled ? (await getEvents()).items : []),
+    async (enabled) => (enabled ? (await getEvents({ limit: 50 })).items : []),
     { initialValue: [] },
   );
   const [exams] = createResource(
     () => (role() === "parent" ? null : true),
-    async (enabled) => (enabled ? (await getExams()).items : []),
+    async (enabled) => (enabled ? (await getExams({ limit: 50 })).items : []),
     { initialValue: [] },
   );
   const [notes] = createResource(
     () => (role() === "parent" ? null : true),
-    async (enabled) => (enabled ? (await getNotes()).items : []),
+    async (enabled) => (enabled ? (await getNotes({ limit: 50 })).items : []),
     { initialValue: [] },
   );
   const [marks] = createResource(
@@ -201,21 +201,16 @@ function DashboardContent() {
   createEffect(() => {
     if (role() !== "student") return;
     const exams = visibleExams();
-    const refresh = () => {
-      for (const exam of exams) {
-        if (!isSittableExam(exam)) continue;
-        const current = attemptStatuses()[exam.id];
-        if (current?.status === "submitted" || current?.status === "expired") continue;
-        if (current && current.max_attempts > 0 && current.attempts_used >= current.max_attempts) continue;
-        if (current != null && current.status !== "in_progress") continue;
-        void getExamAttempt(exam.id)
-          .then((attempt) => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } })))
-          .catch(() => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: "not_started", attempts_used: 0, max_attempts: exam.max_attempts } })));
-      }
-    };
-    refresh();
-    const interval = window.setInterval(refresh, 5000);
-    onCleanup(() => window.clearInterval(interval));
+    for (const exam of exams) {
+      if (!isSittableExam(exam)) continue;
+      const current = attemptStatuses()[exam.id];
+      if (current?.status === "submitted" || current?.status === "expired") continue;
+      if (current && current.max_attempts > 0 && current.attempts_used >= current.max_attempts) continue;
+      if (current != null && current.status !== "in_progress") continue;
+      void getExamAttempt(exam.id)
+        .then((attempt) => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } })))
+        .catch(() => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: "not_started", attempts_used: 0, max_attempts: exam.max_attempts } })));
+    }
   });
 
   const countCoursesByKind = (kind: Course["kind"]) => scopedCourses().filter((course) => course.kind === kind).length;

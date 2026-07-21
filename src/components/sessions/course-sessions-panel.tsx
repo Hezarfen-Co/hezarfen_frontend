@@ -71,8 +71,8 @@ export function CourseSessionsPanel(props: {
   const t = useT();
   const { locale } = usePreferences();
   const [sessions, { refetch }] = createResource(
-    () => props.courseId,
-    async (courseId) => (await getCourseSessions(courseId)).items,
+    () => (props.active ? props.courseId : null),
+    async (courseId) => (courseId ? (await getCourseSessions(courseId)).items : []),
   );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
   const [editingSession, setEditingSession] = createSignal<CourseSession | null>(null);
