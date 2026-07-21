@@ -194,6 +194,7 @@ function ExamDetailContent() {
     if (status === "submitted") return t("attempt.submitted");
     if (status === "expired") return t("attempt.expired");
     if (status === "no_attempts_left") return t("attempt.noAttemptsLeft");
+    if (status === "draft") return t("exams.draft");
     if (status === "unscheduled") return t("exams.unscheduled");
     if (status === "finished") return t("exams.finished");
     if (status === "upcoming") return t("exams.upcoming");

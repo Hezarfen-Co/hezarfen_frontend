@@ -114,6 +114,13 @@ function CoursesContent() {
       cell: (cell) => personLabel(cell.row.original.creator),
     },
     {
+      id: "capacity",
+      accessorFn: (course) => course.capacity,
+      header: t("courses.capacity"),
+      meta: { headerClass: "text-right", cellClass: "text-right tabular-nums text-muted-foreground" },
+      cell: (cell) => cell.row.original.capacity ?? "—",
+    },
+    {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "text-center", cellClass: "px-1 text-center" },
