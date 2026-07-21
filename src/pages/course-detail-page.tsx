@@ -14,8 +14,10 @@ import { postCourseEnrollment } from "@/api/courses";
 import { postCourseExam } from "@/api/courses";
 import { formatApiError } from "@/api/client";
 import type { CourseKind, Enrollment, Exam } from "@/api/client";
+import { patchExamById } from "@/api/exams";
 import { ExamLink } from "@/components/exams/exam-link";
-import { ExamForm } from "@/components/exams/exam-form";
+import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
+import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
 import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -28,6 +30,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { createFlash } from "@/lib/flash";
+import { cn } from "@/lib/cn";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -90,6 +93,8 @@ function CourseDetailContent() {
   const [termId, setTermId] = createSignal("");
   const [capacity, setCapacity] = createSignal("");
   const [showExamForm, setShowExamForm] = createSignal(false);
+  const [examCreateStep, setExamCreateStep] = createSignal<"details" | "questions">("details");
+  const [createdCourseExam, setCreatedCourseExam] = createSignal<Exam | null>(null);
   const [showSubjectForm, setShowSubjectForm] = createSignal(false);
   const [showSessionForm, setShowSessionForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
@@ -401,20 +406,90 @@ function CourseDetailContent() {
               </form>
             </SidePanel>
 
-            <SidePanel open={showExamForm()} onOpenChange={setShowExamForm} title={t("courses.addExam")} description={c().title}>
-              <ExamForm
-                submitLabel={t("common.create")}
-                onCancel={() => setShowExamForm(false)}
-                onSubmit={async (values) => {
-                  await postCourseExam(id(), {
-                    ...values,
-                    description: values.description.trim() || undefined,
-                  });
-                  setShowExamForm(false);
-                  await refetchExams();
-                  setFlash(t("common.created"));
-                }}
-              />
+            <SidePanel
+              open={showExamForm()}
+              onOpenChange={(open) => {
+                setShowExamForm(open);
+                if (!open) {
+                  setCreatedCourseExam(null);
+                  setExamCreateStep("details");
+                }
+              }}
+              title={createdCourseExam() ? createdCourseExam()!.title : t("courses.addExam")}
+              description={createdCourseExam() ? t("exams.step2Questions") : c().title}
+              size={examCreateStep() === "questions" ? "wide" : "default"}
+            >
+              <div class="mb-4 flex border-b border-border/60 pb-2">
+                <button
+                  type="button"
+                  class={cn(
+                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    examCreateStep() === "details"
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "text-muted-foreground hover:bg-muted/50",
+                  )}
+                  onClick={() => setExamCreateStep("details")}
+                >
+                  {t("exams.step1Details")}
+                </button>
+                <button
+                  type="button"
+                  disabled={!createdCourseExam()}
+                  class={cn(
+                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    examCreateStep() === "questions"
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : createdCourseExam()
+                      ? "text-muted-foreground hover:bg-muted/50"
+                      : "opacity-40 cursor-not-allowed text-muted-foreground",
+                  )}
+                  onClick={() => createdCourseExam() && setExamCreateStep("questions")}
+                >
+                  {t("exams.step2Questions")}
+                </button>
+              </div>
+
+              <Show when={examCreateStep() === "details"}>
+                <ExamForm
+                  initial={createdCourseExam() ?? undefined}
+                  submitLabel={createdCourseExam() ? t("common.update") : t("exams.nextQuestions")}
+                  onCancel={() => setShowExamForm(false)}
+                  onSubmit={async (values: ExamFormValues) => {
+                    const existing = createdCourseExam();
+                    if (existing) {
+                      const updated = await patchExamById(existing.id, values);
+                      setCreatedCourseExam(updated);
+                      await refetchExams();
+                      setExamCreateStep("questions");
+                      setFlash(t("common.saved"));
+                    } else {
+                      const newExam = await postCourseExam(id(), {
+                        ...values,
+                        description: values.description.trim() || undefined,
+                      });
+                      setCreatedCourseExam(newExam);
+                      await refetchExams();
+                      setExamCreateStep("questions");
+                      setFlash(t("common.created"));
+                    }
+                  }}
+                />
+              </Show>
+
+              <Show when={examCreateStep() === "questions" && createdCourseExam()}>
+                <div class="space-y-4">
+                  <ExamQuestionsPanel
+                    examId={createdCourseExam()!.id}
+                    courseId={c().id}
+                    embedded
+                  />
+                  <div class="flex justify-end border-t pt-3">
+                    <Button type="button" variant="default" onClick={() => setShowExamForm(false)}>
+                      {t("exams.finishAndClose")}
+                    </Button>
+                  </div>
+                </div>
+              </Show>
             </SidePanel>
 
             <SidePanel open={showEnrollPanel()} onOpenChange={setShowEnrollPanel} title={t("courses.enroll")} description={c().title}>
