@@ -317,6 +317,7 @@ export type MessageKey =
   | "exams.maxAttemptsRange"
   | "exams.attemptsLeft"
   | "exams.retakes"
+  | "exams.retakesHelp"
   | "exams.allowRejoin"
   | "exams.allowRejoinHelp"
   | "exams.draft"
@@ -324,6 +325,20 @@ export type MessageKey =
   | "exams.startTime"
   | "exams.endTime"
   | "exams.scheduleRequired"
+  | "exams.step1Details"
+  | "exams.step2Questions"
+  | "exams.hasDuration"
+  | "exams.hasDurationHelp"
+  | "exams.accessAndAttempts"
+  | "exams.singleAttempt"
+  | "exams.multipleAttempts"
+  | "exams.finishAndClose"
+  | "exams.nextQuestions"
+  | "exams.sectionBasic"
+  | "exams.sectionSchedule"
+  | "exams.sectionDuration"
+  | "exams.sectionAccess"
+  | "exams.times"
   | "questions.title"
   | "questions.add"
   | "questions.edit"
@@ -974,13 +989,28 @@ const en: Dict = {
   "exams.maxAttemptsRange": "Max attempts must be 1 or higher",
   "exams.attemptsLeft": "Remaining",
   "exams.retakes": "Retakes",
+  "exams.retakesHelp": "Students can retake the exam this many times before the window closes.",
   "exams.allowRejoin": "Allow rejoin",
   "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
   "exams.draft": "Draft",
   "exams.draftHelp": "Keep hidden from students until published.",
   "exams.startTime": "Start time",
   "exams.endTime": "End time",
-  "exams.scheduleRequired": "Scheduled exams need start and end times",
+  "exams.scheduleRequired": "Sync/Async exams require a start and end time",
+  "exams.step1Details": "1. Exam Details",
+  "exams.step2Questions": "2. Questions",
+  "exams.hasDuration": "Enable Time Limit",
+  "exams.hasDurationHelp": "Sets how many minutes students get in the exam room.",
+  "exams.accessAndAttempts": "Access & Attempts",
+  "exams.singleAttempt": "Single Attempt (1)",
+  "exams.multipleAttempts": "Multiple Attempts",
+  "exams.finishAndClose": "Finish & Close",
+  "exams.nextQuestions": "Save & Add Questions",
+  "exams.sectionBasic": "Basic Information",
+  "exams.sectionSchedule": "Schedule & Mode",
+  "exams.sectionDuration": "Time Limit",
+  "exams.sectionAccess": "Participation & Attempts",
+  "exams.times": "times",
   "questions.title": "Questions",
   "questions.add": "Add question",
   "questions.edit": "Edit question",
@@ -1641,6 +1671,7 @@ const tr: Dict = {
   "exams.maxAttemptsRange": "Deneme hakkı 1 veya daha büyük olmalı",
   "exams.attemptsLeft": "Kalan",
   "exams.retakes": "Deneme hakkı",
+  "exams.retakesHelp": "Öğrenciler sınav bitmeden bu kadar kez deneme yapabilir.",
   "exams.allowRejoin": "Yeniden girişe izin ver",
   "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
   "exams.draft": "Taslak",
@@ -1648,6 +1679,20 @@ const tr: Dict = {
   "exams.startTime": "Başlangıç saati",
   "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",
+  "exams.step1Details": "1. Sınav Bilgileri",
+  "exams.step2Questions": "2. Sorular",
+  "exams.hasDuration": "Süre Sınırı Ekle",
+  "exams.hasDurationHelp": "Öğrencilerin sınav odasında kaç dakikası olacağını belirler.",
+  "exams.accessAndAttempts": "Erişim ve Haklar",
+  "exams.singleAttempt": "Tek Hak (1)",
+  "exams.multipleAttempts": "Çoklu Hak",
+  "exams.finishAndClose": "Tamamla ve Kapat",
+  "exams.nextQuestions": "Kaydet ve Sorulara Geç",
+  "exams.sectionBasic": "Temel Bilgiler",
+  "exams.sectionSchedule": "Mod ve Zamanlama",
+  "exams.sectionDuration": "Süre Sınırı",
+  "exams.sectionAccess": "Katılım ve Haklar",
+  "exams.times": "defa",
   "questions.title": "Sorular",
   "questions.add": "Soru ekle",
   "questions.edit": "Soruyu düzenle",
