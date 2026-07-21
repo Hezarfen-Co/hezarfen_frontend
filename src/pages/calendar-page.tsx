@@ -39,8 +39,8 @@ function CalendarContent() {
   const [viewMonth, setViewMonth] = createSignal(nowDate().getMonth());
   const [selected, setSelected] = createSignal(dateKey(nowDate()));
 
-  const [events] = createResource(async () => (await getEvents()).items, { initialValue: [] });
-  const [exams] = createResource(async () => (await getExams()).items, { initialValue: [] });
+  const [events] = createResource(async () => (await getEvents({ limit: 100 })).items, { initialValue: [] });
+  const [exams] = createResource(async () => (await getExams({ limit: 100 })).items, { initialValue: [] });
 
   const monthLabel = () => {
     const names = locale() === "tr" ? MONTH_NAMES_TR : MONTH_NAMES;
