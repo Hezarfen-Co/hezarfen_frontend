@@ -55,7 +55,7 @@ function CoursesContent() {
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
   const isStudent = () => auth.user()?.role === "student";
 
-  const [terms] = createResource(async () => (await getTerms()).items);
+  const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
 
   const termName = (id: string | null | undefined) => terms()?.find((term) => term.id === id)?.name ?? t("terms.unassigned");
   const courseKindLabel = (value: CourseKind | undefined) =>
