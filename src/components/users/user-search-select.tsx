@@ -41,7 +41,7 @@ export function UserSearchSelect(props: {
     if (q.length === 0) return "";
     if (loading()) return t("common.loading");
     if (selectedUser() && selectedUser()!.id === props.value) return "";
-    if (options().length === 0) return props.emptyMessage ?? t("form.noStudents");
+    if (options().length === 0) return props.emptyMessage ?? (props.role === "teacher" ? t("form.noTeachers") : t("form.noStudents"));
     return "";
   });
 
@@ -174,7 +174,7 @@ export function UserSearchSelect(props: {
         </div>
       </Show>
       <Show when={hintText()}>
-        <p class="text-xs text-muted-foreground">{hintText()}</p>
+        <p class={query().trim().length > 0 && options().length === 0 && !loading() ? "text-xs text-destructive font-medium mt-1" : "text-xs text-muted-foreground mt-1"}>{hintText()}</p>
       </Show>
     </div>
   );

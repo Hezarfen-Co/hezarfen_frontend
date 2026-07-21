@@ -1,10 +1,9 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
-import { getCourses } from "@/api/courses";
+import { getCourses, postCourse, postCourseTeacher } from "@/api/courses";
 import { getMyCourses } from "@/api/reports";
 import { getTerms } from "@/api/terms";
-import { postCourse } from "@/api/courses";
 import { formatApiError } from "@/api/client";
 import type { Course, CourseKind } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
@@ -20,6 +19,7 @@ import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
+import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
 import { personLabel } from "@/lib/person";
 import { useAuth } from "@/stores/auth-context";
@@ -46,6 +46,7 @@ function CoursesContent() {
   const [description, setDescription] = createSignal("");
   const [termId, setTermId] = createSignal("");
   const [capacity, setCapacity] = createSignal("");
+  const [teacherId, setTeacherId] = createSignal("");
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
@@ -143,17 +144,22 @@ function CoursesContent() {
     setPending(true);
     try {
       const cap = capacity().trim();
-      await postCourse({
+      const newCourse = await postCourse({
         title: title().trim(),
         description: description().trim() || undefined,
         kind: pageKind(),
         term_id: termId() || null,
         capacity: cap ? Number(cap) : null,
       });
+      const tid = teacherId();
+      if (tid && hasMinRole(auth.user()?.role, "manager")) {
+        await postCourseTeacher(newCourse.id, tid);
+      }
       setTitle("");
       setDescription("");
       setTermId("");
       setCapacity("");
+      setTeacherId("");
       setShowForm(false);
       await refetch();
       setFlash(t("common.created"));
@@ -204,6 +210,18 @@ function CoursesContent() {
             <Label for="course-capacity">{t("courses.capacity")}</Label>
             <Input id="course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
           </div>
+          <Show when={hasMinRole(auth.user()?.role, "manager")}>
+            <div class="space-y-1.5">
+              <UserSearchSelect
+                id="course-create-teacher"
+                role="teacher"
+                value={teacherId()}
+                onChange={setTeacherId}
+                placeholder={t("courses.assignTeacher")}
+                label={t("courses.teachers")}
+              />
+            </div>
+          </Show>
           {error() && <p class="text-sm text-destructive">{error()}</p>}
           <div class="flex flex-wrap gap-2">
             <Button type="submit" class="rounded-sm" disabled={pending()}>

@@ -13,12 +13,38 @@ import { getCourseSubjects } from "../../courses";
 import { postCourseSubject } from "../../courses";
 import { getCourseExams } from "../../courses";
 import { postCourseExam } from "../../courses";
+import { postCourseTeacher } from "../../courses";
+import { deleteCourseTeacherByUserId } from "../../courses";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("courses API", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
+
+  it("postCourseTeacher calls /courses/:id/teachers", async () => {
+    const mockCourse = { id: "c1", title: "Course", teachers: [{ id: "t1", username: "teacher1", display_name: "Teacher 1" }] };
+    mockFetchSuccess(mockCourse);
+
+    const result = await postCourseTeacher("c1", "t1");
+    expect(result).toEqual(mockCourse);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/courses/c1/teachers");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ user_id: "t1" }));
+  });
+
+  it("deleteCourseTeacherByUserId calls /courses/:id/teachers/:userId", async () => {
+    mockFetch204();
+
+    await deleteCourseTeacherByUserId("c1", "t1");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/courses/c1/teachers/t1");
+    expect(init?.method).toBe("DELETE");
+  });
+
 
   it("getCourses calls /courses with pagination", async () => {
     const mockPage = { items: [{ id: "c1" }], total: 1 };
