@@ -70,7 +70,7 @@ function CourseDetailContent() {
 
   const [openSections, setOpenSections] = createSignal({ teachers: false, subjects: false, exams: false, sessions: false, roster: false });
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
-  const [terms] = createResource(async () => (await getTerms()).items);
+  const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
   const [settings] = createResource(() => getSettings());
   const [exams, { refetch: refetchExams }] = createResource(
     () => (openSections().exams ? id() : null),
