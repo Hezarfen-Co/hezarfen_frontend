@@ -16,6 +16,7 @@ type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   signal?: AbortSignal;
+  cache?: RequestCache;
 };
 
 const API_PREFIX = "/api";
@@ -132,6 +133,7 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
     body,
     credentials: "same-origin",
     signal: options.signal,
+    cache: options.cache,
   });
 
   if (res.status === 204) {

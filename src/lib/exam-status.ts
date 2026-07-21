@@ -13,8 +13,13 @@ export function isSittableExam(exam: Exam): boolean {
 }
 
 export function examDisplayStatus(exam: Exam, now: number, attempt?: ExamAttemptSummary | null): ExamDisplayStatus {
-  if (attempt?.status === "submitted" || attempt?.status === "expired") return attempt.status;
-  if (attempt && attempt.status !== "in_progress" && attempt.max_attempts > 0 && attempt.attempts_used >= attempt.max_attempts) return "no_attempts_left";
+  const noAttemptsLeft = attempt && attempt.status !== "in_progress" && attempt.max_attempts > 0 && attempt.attempts_used >= attempt.max_attempts;
+
+  if (noAttemptsLeft) {
+    if (attempt.status === "submitted" || attempt.status === "expired") return attempt.status;
+    return "no_attempts_left";
+  }
+
   if (exam.draft) return "draft";
   if (!isSittableExam(exam)) return "unscheduled";
   if (exam.mode === "open") return "active";

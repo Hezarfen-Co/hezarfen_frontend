@@ -315,6 +315,7 @@ export type MessageKey =
   | "exams.durationRange"
   | "exams.maxAttempts"
   | "exams.maxAttemptsRange"
+  | "exams.attemptsLeft"
   | "exams.retakes"
   | "exams.allowRejoin"
   | "exams.allowRejoinHelp"
@@ -390,7 +391,11 @@ export type MessageKey =
   | "attempt.mark"
   | "attempt.saveAnswer"
   | "attempt.submitted"
-  | "attempt.submittedInfo"
+  | "attempt.submittedCanRetakeInfo"
+  | "attempt.submittedFinalInfo"
+  | "attempt.submittedAt"
+  | "exams.startsAt"
+  | "exams.endsAt"
   | "attempt.expired"
   | "attempt.expiredInfo"
   | "attempt.noAttemptsLeft"
@@ -967,6 +972,7 @@ const en: Dict = {
   "exams.durationRange": "Duration must be from 1 minute to 24 hours",
   "exams.maxAttempts": "Max attempts",
   "exams.maxAttemptsRange": "Max attempts must be 1 or higher",
+  "exams.attemptsLeft": "Remaining",
   "exams.retakes": "Retakes",
   "exams.allowRejoin": "Allow rejoin",
   "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
@@ -1042,7 +1048,11 @@ const en: Dict = {
   "attempt.mark": "Mark",
   "attempt.saveAnswer": "Save answer",
   "attempt.submitted": "Submitted",
-  "attempt.submittedInfo": "You have already submitted this exam. It cannot be reopened.",
+  "attempt.submittedCanRetakeInfo": "You have submitted this attempt. You can take the exam again using your remaining attempts.",
+  "attempt.submittedFinalInfo": "You have submitted this exam. It cannot be reopened.",
+  "attempt.submittedAt": "Submitted At",
+  "exams.startsAt": "Start Date",
+  "exams.endsAt": "End Date",
   "attempt.expired": "Expired",
   "attempt.expiredInfo": "The time for this exam has expired. It cannot be reopened.",
   "attempt.noAttemptsLeft": "No rights left",
@@ -1629,6 +1639,7 @@ const tr: Dict = {
   "exams.durationRange": "Süre 1 dakika ile 24 saat arasında olmalı",
   "exams.maxAttempts": "Deneme hakkı",
   "exams.maxAttemptsRange": "Deneme hakkı 1 veya daha büyük olmalı",
+  "exams.attemptsLeft": "Kalan",
   "exams.retakes": "Deneme hakkı",
   "exams.allowRejoin": "Yeniden girişe izin ver",
   "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
@@ -1704,7 +1715,11 @@ const tr: Dict = {
   "attempt.mark": "Not",
   "attempt.saveAnswer": "Cevabı kaydet",
   "attempt.submitted": "Teslim edildi",
-  "attempt.submittedInfo": "Bu sınavı zaten teslim ettin. Yeniden açılamaz.",
+  "attempt.submittedCanRetakeInfo": "Bu denemenizi teslim ettiniz. Kalan haklarınızı kullanarak sınava tekrardan başlayabilirsiniz.",
+  "attempt.submittedFinalInfo": "Bu sınavı zaten teslim ettin. Yeniden açılamaz.",
+  "attempt.submittedAt": "Teslim Tarihi",
+  "exams.startsAt": "Başlangıç Tarihi",
+  "exams.endsAt": "Bitiş Tarihi",
   "attempt.expired": "Süresi doldu",
   "attempt.expiredInfo": "Bu sınavın süresi doldu. Yeniden açılamaz.",
   "attempt.noAttemptsLeft": "Hak bitti",

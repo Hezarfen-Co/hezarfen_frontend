@@ -367,12 +367,12 @@ function ExamDetailContent() {
                     </Link>
                     <Show when={isStudent() && !isDraft() && isSittable()}>
                       <Show when={!isUpcoming() && !isFinished()}>
-                        <Show when={ownAttempt()?.status === "submitted" || ownAttempt()?.status === "expired" || noAttemptsLeft()}
+                        <Show when={noAttemptsLeft()}
                           fallback={
                             <Link to="/exam-room/$id" params={{ id: id() }}>
                               <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
                                 <IconExam class="h-4 w-4" />
-                                {ownAttempt() ? t("attempt.resume") : t("attempt.openRoom")}
+                                {ownAttempt()?.status === "in_progress" ? t("attempt.resume") : t("attempt.openRoom")}
                               </Button>
                             </Link>
                           }
@@ -430,8 +430,35 @@ function ExamDetailContent() {
                 </div>
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.maxAttempts")}</p>
-                  <p class="mono mt-1 font-medium tabular-nums">{ex().max_attempts}</p>
+                  <p class="mono mt-1 font-medium tabular-nums">
+                    <Show when={isStudent()} fallback={ex().max_attempts}>
+                      {ownAttemptSummary() ? `${ownAttemptSummary()!.attempts_used} / ${ex().max_attempts}` : `0 / ${ex().max_attempts}`}
+                      <span class="ml-1.5 text-xs text-muted-foreground font-sans tracking-normal">
+                        ({t("exams.attemptsLeft")}: {ex().max_attempts - (ownAttemptSummary()?.attempts_used ?? 0)})
+                      </span>
+                    </Show>
+                  </p>
                 </div>
+                <Show when={ex().starts_at}>
+                  <div class="detail-metric-card">
+                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.startsAt")}</p>
+                    <p class="mono mt-1 font-medium tabular-nums">{formatDateTime(ex().starts_at, locale())}</p>
+                  </div>
+                </Show>
+                <Show when={ex().ends_at}>
+                  <div class="detail-metric-card">
+                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.endsAt")}</p>
+                    <p class="mono mt-1 font-medium tabular-nums">{formatDateTime(ex().ends_at, locale())}</p>
+                  </div>
+                </Show>
+                <Show when={examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at)}>
+                  {(dur) => (
+                    <div class="detail-metric-card">
+                      <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.durationMinutes")}</p>
+                      <p class="mono mt-1 font-medium tabular-nums">{formatDurationMinutes(dur(), locale())}</p>
+                    </div>
+                  )}
+                </Show>
               </div>
             </div>
 
@@ -553,7 +580,16 @@ function ExamDetailContent() {
 
             <Show when={isStudent() && ownAttempt()?.status && (ownAttempt()!.status === "submitted" || ownAttempt()!.status === "expired")}>
               <Alert variant={ownAttempt()!.status === "submitted" ? "default" : "destructive"} class="border">
-                <p class="text-sm font-medium">{ownAttempt()!.status === "submitted" ? t("attempt.submittedInfo") : t("attempt.expiredInfo")}</p>
+                <p class="text-sm font-medium">
+                  {ownAttempt()!.status === "submitted" 
+                    ? (noAttemptsLeft() ? t("attempt.submittedFinalInfo") : t("attempt.submittedCanRetakeInfo"))
+                    : t("attempt.expiredInfo")}
+                </p>
+                <Show when={ownAttempt()?.finished_at}>
+                  <p class="text-sm mt-1 opacity-80">
+                    {t("attempt.submittedAt")}: {formatDateTime(ownAttempt()!.finished_at, locale())}
+                  </p>
+                </Show>
               </Alert>
             </Show>
 

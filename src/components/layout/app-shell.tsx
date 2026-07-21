@@ -26,6 +26,7 @@ export function AppShell(props: ParentProps) {
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
   const wide = () => location().pathname.startsWith("/exam-room/") || location().searchStr.includes("answerUser=") || location().pathname === "/messages";
+  const fullScreen = () => location().pathname.startsWith("/exam-room/");
   const routeLabel = createMemo(() => {
     const path = location().pathname;
     if (path === "/") return t("nav.home");
@@ -63,7 +64,7 @@ export function AppShell(props: ParentProps) {
         <NavBar />
       </Show>
       <div class="flex w-full">
-        <Show when={auth.user()}>
+        <Show when={auth.user() && !fullScreen()}>
           <aside
             class={cn(
               "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-border/80 bg-sidebar shadow-[inset_-1px_0_0_hsl(var(--border)/0.45)] transition-[width] duration-150 ease-out lg:flex lg:flex-col",
@@ -143,7 +144,7 @@ export function AppShell(props: ParentProps) {
         </Show>
 
         <main class="min-w-0 flex-1">
-          <Show when={auth.user()}>
+          <Show when={auth.user() && !fullScreen()}>
             <header class="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border/70 bg-background/95 px-4 backdrop-blur sm:px-6 lg:px-8">
               <div class="min-w-0 rounded-lg border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
                 <span class="block truncate">{routeLabel()}</span>
