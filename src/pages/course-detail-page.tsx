@@ -19,6 +19,7 @@ import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
+import { CourseTeachersPanel } from "@/components/courses/course-teachers-panel";
 import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -75,7 +76,19 @@ function CourseDetailContent() {
     const c = course();
     const u = auth.user();
     if (!c || !u) return false;
+    const isAssigned = (c.teachers ?? []).some((t) => t.id === u.id);
+    return c.creator.id === u.id || isAssigned || hasMinRole(u.role, "manager");
+  };
+  const canDeleteCourse = () => {
+    const c = course();
+    const u = auth.user();
+    if (!c || !u) return false;
     return c.creator.id === u.id || hasMinRole(u.role, "manager");
+  };
+  const canStaffCourse = () => {
+    const u = auth.user();
+    if (!u) return false;
+    return hasMinRole(u.role, "manager");
   };
   const [roster, { refetch: refetchRoster }] = createResource(
     () => (hasCourseManagementRights() ? id() : null),
@@ -98,7 +111,7 @@ function CourseDetailContent() {
   const [showSubjectForm, setShowSubjectForm] = createSignal(false);
   const [showSessionForm, setShowSessionForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
-  const [openSections, setOpenSections] = createSignal({ subjects: false, exams: false, sessions: false, roster: false });
+  const [openSections, setOpenSections] = createSignal({ teachers: false, subjects: false, exams: false, sessions: false, roster: false });
   const [subjectCount, setSubjectCount] = createSignal(0);
   const [sessionCount, setSessionCount] = createSignal(0);
   const [enrollUserId, setEnrollUserId] = createSignal("");
@@ -215,7 +228,7 @@ function CourseDetailContent() {
       ),
     },
   ]);
-  const toggleSection = (section: "subjects" | "exams" | "sessions" | "roster") => {
+  const toggleSection = (section: "teachers" | "subjects" | "exams" | "sessions" | "roster") => {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
 
@@ -279,10 +292,12 @@ function CourseDetailContent() {
                           <IconEdit class="h-4 w-4" />
                           {t("common.edit")}
                         </Button>
-                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setDeleteOpen(true)}>
-                          <IconTrash class="h-4 w-4" />
-                          {t("courses.delete")}
-                        </Button>
+                        <Show when={canDeleteCourse()}>
+                          <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setDeleteOpen(true)}>
+                            <IconTrash class="h-4 w-4" />
+                            {t("courses.delete")}
+                          </Button>
+                        </Show>
                       </div>
                     </Show>
                   </div>
@@ -532,6 +547,22 @@ function CourseDetailContent() {
             {error() && (
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
+
+            <Show when={hasCourseManagementRights()}>
+              <SectionDisclosure
+                open={openSections().teachers}
+                onToggle={() => toggleSection("teachers")}
+                title={t("courses.teachers")}
+                description={countDescription((c().teachers ?? []).length, t("courses.teachers"))}
+              >
+                <CourseTeachersPanel
+                  courseId={id()}
+                  teachers={c().teachers ?? []}
+                  canStaff={canStaffCourse()}
+                  onCourseUpdated={refetchCourse}
+                />
+              </SectionDisclosure>
+            </Show>
 
             <SectionDisclosure
               open={openSections().subjects}

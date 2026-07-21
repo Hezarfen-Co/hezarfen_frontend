@@ -91,6 +91,7 @@ export type EventRegistration = {
 export type Course = {
   id: string;
   creator: PersonRef;
+  teachers?: PersonRef[];
   title: string;
   description: string;
   kind: CourseKind;
