@@ -302,7 +302,7 @@ function RouterPending() {
 export const router = createRouter({
   routeTree,
   defaultPendingComponent: RouterPending,
-  defaultPreload: "intent",
+  defaultPreload: false,
   scrollRestoration: true,
 });
 

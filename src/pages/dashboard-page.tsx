@@ -3,7 +3,6 @@ import { Link } from "@tanstack/solid-router";
 import { formatApiError } from "@/api/client";
 import { getMyStudents } from "@/api/parents";
 import { getCourses } from "@/api/courses";
-import { getExamAttempt } from "@/api/exams";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import { getMyCourses } from "@/api/reports";
@@ -33,7 +32,7 @@ import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, isSittableExam, type ExamAttemptSummary } from "@/lib/exam-status";
+import { examDisplayStatus } from "@/lib/exam-status";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
@@ -73,8 +72,8 @@ const ROLE_KEY: Record<Role, MessageKey> = {
   admin: "role.admin",
 };
 
-function examWindow(exam: Exam, now: number, attempt?: ExamAttemptSummary | null): AttentionKind | "upcoming" | "past" | "unscheduled" {
-  const status = examDisplayStatus(exam, now, attempt);
+function examWindow(exam: Exam, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
+  const status = examDisplayStatus(exam, now);
   if (status === "active") return "active";
   if (status !== "upcoming") return status === "unscheduled" ? "unscheduled" : "past";
   if (exam.starts_at != null && exam.starts_at > now) {
@@ -120,39 +119,33 @@ function DashboardContent() {
   const [dragOverPortal, setDragOverPortal] = createSignal<string | null>(null);
   const [editingPortalOrder, setEditingPortalOrder] = createSignal(false);
   const [attentionPage, setAttentionPage] = createSignal(0);
-  const [attemptStatuses, setAttemptStatuses] = createSignal<Record<string, ExamAttemptSummary>>({});
 
   const [courses] = createResource(
     () => (role() !== "student" && role() !== "parent" ? true : null),
-    async (enabled) => (enabled ? (await getCourses({ limit: 50 })).items : []),
-    { initialValue: [] },
+    async (enabled) => (enabled ? getCourses({ limit: 1 }) : null),
   );
   const [myCourses] = createResource(
     () => (role() === "student" ? true : null),
     async (enabled) => {
-      if (!enabled) return [];
+      if (!enabled) return null;
       try {
-        return (await getMyCourses({ limit: 50 })).items;
+        return await getMyCourses({ limit: 1 });
       } catch {
-        return [];
+        return null;
       }
     },
-    { initialValue: [] },
   );
   const [events] = createResource(
     () => (role() === "parent" ? null : true),
-    async (enabled) => (enabled ? (await getEvents({ limit: 50 })).items : []),
-    { initialValue: [] },
+    async (enabled) => (enabled ? getEvents({ limit: 1 }) : null),
   );
   const [exams] = createResource(
     () => (role() === "parent" ? null : true),
-    async (enabled) => (enabled ? (await getExams({ limit: 50 })).items : []),
-    { initialValue: [] },
+    async (enabled) => (enabled ? getExams({ limit: 1 }) : null),
   );
   const [notes] = createResource(
     () => (role() === "parent" ? null : true),
-    async (enabled) => (enabled ? (await getNotes({ limit: 50 })).items : []),
-    { initialValue: [] },
+    async (enabled) => (enabled ? getNotes({ limit: 1 }) : null),
   );
   const [marks] = createResource(
     () => (role() === "student" ? true : null),
@@ -160,8 +153,7 @@ function DashboardContent() {
   );
   const [myStudents] = createResource(
     () => (role() === "parent" ? true : null),
-    async (enabled) => (enabled ? (await getMyStudents()).items : []),
-    { initialValue: [] },
+    async (enabled) => (enabled ? getMyStudents() : null),
   );
 
   const resourceError = createMemo(() => {
@@ -178,7 +170,7 @@ function DashboardContent() {
 
   const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
   const hasGlobalScope = createMemo(() => hasMinRole(role(), "admin"));
-  const scopedCourses = createMemo(() => (role() === "student" ? myCourses() : courses()));
+  const scopedCourses = createMemo(() => (role() === "student" ? (myCourses()?.items ?? []) : (courses()?.items ?? [])));
   const scopedCourseIds = createMemo(() => new Set(scopedCourses().map((c) => c.id)));
 
   const courseMap = createMemo(() => {
@@ -188,7 +180,7 @@ function DashboardContent() {
   });
 
   const visibleExams = createMemo(() => {
-    const all = exams();
+    const all = exams()?.items ?? [];
     if (hasGlobalScope()) return all;
     const allowed = scopedCourseIds();
     if (role() === "student" || role() === "teacher") {
@@ -198,29 +190,14 @@ function DashboardContent() {
     return all;
   });
 
-  createEffect(() => {
-    if (role() !== "student") return;
-    const exams = visibleExams();
-    for (const exam of exams) {
-      if (!isSittableExam(exam)) continue;
-      const current = attemptStatuses()[exam.id];
-      if (current?.status === "submitted" || current?.status === "expired") continue;
-      if (current && current.max_attempts > 0 && current.attempts_used >= current.max_attempts) continue;
-      if (current != null && current.status !== "in_progress") continue;
-      void getExamAttempt(exam.id)
-        .then((attempt) => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } })))
-        .catch(() => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: "not_started", attempts_used: 0, max_attempts: exam.max_attempts } })));
-    }
-  });
-
   const countCoursesByKind = (kind: Course["kind"]) => scopedCourses().filter((course) => course.kind === kind).length;
   const courseCount = createMemo(() => countCoursesByKind("course"));
   const studyCount = createMemo(() => countCoursesByKind("study"));
   const clubCount = createMemo(() => countCoursesByKind("club"));
-  const examCount = createMemo(() => visibleExams().length);
-  const eventCount = createMemo(() => events().length);
-  const noteCount = createMemo(() => notes().length);
-  const studentCount = createMemo(() => myStudents().length);
+  const examCount = createMemo(() => exams()?.total ?? visibleExams().length);
+  const eventCount = createMemo(() => events()?.total ?? 0);
+  const noteCount = createMemo(() => notes()?.total ?? 0);
+  const studentCount = createMemo(() => myStudents()?.total ?? 0);
   const overallAvg = createMemo(() => marks()?.overall_average ?? null);
   const avgLabel = createMemo(() =>
     overallAvg() == null ? "—" : (Math.round(overallAvg()! * 10) / 10).toString(),
@@ -347,7 +324,7 @@ function DashboardContent() {
     const items: AttentionItem[] = [];
 
     for (const exam of visibleExams()) {
-      const status = examWindow(exam, n, attemptStatuses()[exam.id]);
+      const status = examWindow(exam, n);
       if (status === "active" || status === "today" || status === "soon") {
         items.push({
           id: exam.id,
@@ -361,7 +338,7 @@ function DashboardContent() {
       }
     }
 
-    for (const event of events()) {
+    for (const event of events()?.items ?? []) {
       const status = eventWindow(event, n);
       if (status === "active" || status === "today" || status === "soon") {
         items.push({
