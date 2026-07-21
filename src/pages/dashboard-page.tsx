@@ -1,6 +1,7 @@
 import { For, Show, createEffect, createMemo, createResource, createSignal, onCleanup, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { formatApiError } from "@/api/client";
+import { getMyStudents } from "@/api/parents";
 import { getCourses } from "@/api/courses";
 import { getExamAttempt } from "@/api/exams";
 import { getEvents } from "@/api/events";
@@ -21,6 +22,7 @@ import {
   IconClock,
   IconClipboardCheck,
   IconExam,
+  IconMessage,
   IconNote,
   IconSettings,
   IconUsers,
@@ -57,7 +59,7 @@ type AttentionItem = {
 type PortalCardDef = {
   titleKey: MessageKey;
   to: string;
-  descKey: MessageKey;
+  descKey?: MessageKey;
   Icon: Component<{ class?: string }>;
   stat?: string;
   minRole?: Role;
@@ -121,7 +123,7 @@ function DashboardContent() {
   const [attemptStatuses, setAttemptStatuses] = createSignal<Record<string, ExamAttemptSummary>>({});
 
   const [courses] = createResource(
-    () => (role() !== "student" ? true : null),
+    () => (role() !== "student" && role() !== "parent" ? true : null),
     async (enabled) => (enabled ? (await getCourses()).items : []),
     { initialValue: [] },
   );
@@ -137,16 +139,33 @@ function DashboardContent() {
     },
     { initialValue: [] },
   );
-  const [events] = createResource(async () => (await getEvents()).items, { initialValue: [] });
-  const [exams] = createResource(async () => (await getExams()).items, { initialValue: [] });
-  const [notes] = createResource(async () => (await getNotes()).items, { initialValue: [] });
+  const [events] = createResource(
+    () => (role() === "parent" ? null : true),
+    async (enabled) => (enabled ? (await getEvents()).items : []),
+    { initialValue: [] },
+  );
+  const [exams] = createResource(
+    () => (role() === "parent" ? null : true),
+    async (enabled) => (enabled ? (await getExams()).items : []),
+    { initialValue: [] },
+  );
+  const [notes] = createResource(
+    () => (role() === "parent" ? null : true),
+    async (enabled) => (enabled ? (await getNotes()).items : []),
+    { initialValue: [] },
+  );
   const [marks] = createResource(
     () => (role() === "student" ? true : null),
     async (enabled) => (enabled ? getMyMarks() : null),
   );
+  const [myStudents] = createResource(
+    () => (role() === "parent" ? true : null),
+    async (enabled) => (enabled ? (await getMyStudents()).items : []),
+    { initialValue: [] },
+  );
 
   const resourceError = createMemo(() => {
-    const e = courses.error || myCourses.error || events.error || exams.error || notes.error || marks.error;
+    const e = courses.error || myCourses.error || events.error || exams.error || notes.error || marks.error || myStudents.error;
     return e ? formatApiError(e, locale()) : null;
   });
 
@@ -154,7 +173,8 @@ function DashboardContent() {
     (role() === "student" ? myCourses.loading : courses.loading) ||
     events.loading ||
     exams.loading ||
-    notes.loading;
+    notes.loading ||
+    myStudents.loading;
 
   const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
   const hasGlobalScope = createMemo(() => hasMinRole(role(), "admin"));
@@ -205,6 +225,7 @@ function DashboardContent() {
   const examCount = createMemo(() => visibleExams().length);
   const eventCount = createMemo(() => events().length);
   const noteCount = createMemo(() => notes().length);
+  const studentCount = createMemo(() => myStudents().length);
   const overallAvg = createMemo(() => marks()?.overall_average ?? null);
   const avgLabel = createMemo(() =>
     overallAvg() == null ? "—" : (Math.round(overallAvg()! * 10) / 10).toString(),
@@ -218,7 +239,16 @@ function DashboardContent() {
     const ec = String(examCount());
     const evc = String(eventCount());
     const nc = String(noteCount());
+    const stc = String(studentCount());
     const list: PortalCardDef[] = [];
+
+    if (r === "parent") {
+      list.push(
+        { Icon: IconUsers, titleKey: "nav.myStudents", to: "/students", stat: stc },
+        { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
+      );
+      return list;
+    }
 
     if (r === "student") {
       list.push(
@@ -434,6 +464,7 @@ function DashboardContent() {
           </div>
         </section>
 
+        <Show when={role() !== "parent"}>
         <div class="grid items-stretch gap-5">
           <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
@@ -488,6 +519,7 @@ function DashboardContent() {
             </Show>
           </section>
         </div>
+        </Show>
         </div>
       </Show>
     </div>
@@ -559,7 +591,9 @@ function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: bo
             </span>
           </Show>
         </div>
-        <p class="line-clamp-2 text-xs leading-5 text-muted-foreground">{t(props.card.descKey)}</p>
+        <Show when={props.card.descKey}>
+          <p class="line-clamp-2 text-xs leading-5 text-muted-foreground">{t(props.card.descKey!)}</p>
+        </Show>
       </div>
     </Link>
   );

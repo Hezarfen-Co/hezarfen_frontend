@@ -43,8 +43,17 @@ instructions. Always written and read in English.
   `src/api/exams/deleteExamResultByUserId.ts`). Each file exports exactly one function
   matching its filename. Each domain must have an `index.ts` re-exporting its endpoints.
   Only `src/api/client/client.ts` calls `fetch` directly. Pages/
-  components never call `fetch` — they call `src/api/<domain>` functions inside
+  components never call `fetch` — they call `src/api/<domain>` API functions inside
   `createResource`.
+- **API tests — mandatory:** Every new or modified API endpoint file must have a
+  corresponding test file under `src/api/__tests__/<domain>/<domain>.test.ts` (one
+  test file per domain, not per endpoint). Tests use **vitest** (globals enabled) and
+  the shared helpers from `src/api/__tests__/helpers/mock-fetch.ts` (`mockFetchSuccess`,
+  `mockFetch204`, `mockFetchError`, `lastFetchCall`). Each test asserts the correct
+  URL, HTTP method, and request body (when applicable). The `afterEach` hook must call
+  `vi.restoreAllMocks()`. Run all tests with `bun run test` before committing. Do not
+  skip or defer API tests — they are part of the definition of done for every API
+  change.
 
 ## SolidJS rules — do not write React patterns
 
