@@ -18,10 +18,11 @@ export function CourseTeachersPanel(props: {
   courseId: string;
   teachers: PersonRef[];
   canStaff: boolean;
+  assignOpen: boolean;
+  onAssignOpenChange: (open: boolean) => void;
   onCourseUpdated: () => void;
 }) {
   const t = useT();
-  const [showAssignPanel, setShowAssignPanel] = createSignal(false);
   const [selectedTeacherId, setSelectedTeacherId] = createSignal("");
   const [removeTarget, setRemoveTarget] = createSignal<PersonRef | null>(null);
   const [error, setError] = createSignal("");
@@ -79,7 +80,7 @@ export function CourseTeachersPanel(props: {
       await postCourseTeacher(props.courseId, teacherId);
       setFlash(t("courses.teacherAssigned"));
       setSelectedTeacherId("");
-      setShowAssignPanel(false);
+      props.onAssignOpenChange(false);
       props.onCourseUpdated();
     } catch (err) {
       setError(formatApiError(err));
@@ -116,16 +117,6 @@ export function CourseTeachersPanel(props: {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-semibold">{t("courses.teachers")}</h3>
-        <Show when={props.canStaff}>
-          <Button size="sm" onClick={() => setShowAssignPanel(true)}>
-            <IconPlus class="mr-1.5 h-4 w-4" />
-            {t("courses.assignTeacher")}
-          </Button>
-        </Show>
-      </div>
-
       <Show
         when={props.teachers.length > 0}
         fallback={
@@ -134,7 +125,7 @@ export function CourseTeachersPanel(props: {
             description=""
             action={
               props.canStaff ? (
-                <Button size="sm" onClick={() => setShowAssignPanel(true)}>
+                <Button size="sm" onClick={() => props.onAssignOpenChange(true)}>
                   <IconPlus class="mr-1.5 h-4 w-4" />
                   {t("courses.assignTeacher")}
                 </Button>
@@ -147,9 +138,9 @@ export function CourseTeachersPanel(props: {
       </Show>
 
       <SidePanel
-        open={showAssignPanel()}
+        open={props.assignOpen}
         onOpenChange={(open) => {
-          setShowAssignPanel(open);
+          props.onAssignOpenChange(open);
           if (!open) {
             setSelectedTeacherId("");
             setError("");
@@ -177,7 +168,7 @@ export function CourseTeachersPanel(props: {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setShowAssignPanel(false)}
+              onClick={() => props.onAssignOpenChange(false)}
               disabled={pending()}
             >
               {t("common.cancel")}

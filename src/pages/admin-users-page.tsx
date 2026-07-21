@@ -34,7 +34,7 @@ function AdminUsersContent() {
   const [editUser, setEditUser] = createSignal<User | null>(null);
   const [selectedParent, setSelectedParent] = createSignal<User | null>(null);
 
-  const [list, { refetch }] = createResource(async () => (await getUsers()).items);
+  const [list, { refetch }] = createResource(async () => (await getUsers({ limit: 200 })).items);
   const visibleUsers = () => list() ?? [];
   const roleCount = (role: Role) => visibleUsers().filter((user) => user.role === role).length;
 

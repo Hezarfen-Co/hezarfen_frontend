@@ -24,8 +24,8 @@ import { useT } from "@/stores/preferences-context";
 export function CourseSubjectsPanel(props: { courseId: string; canManage: boolean; active: boolean; createOpen: boolean; onCreateOpenChange: (open: boolean) => void; onCountChange: (count: number) => void }) {
   const t = useT();
   const [subjects, { refetch }] = createResource(
-    () => props.courseId,
-    async (courseId) => (await getCourseSubjects(courseId)).items,
+    () => (props.active ? props.courseId : null),
+    async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
   );
   const [editing, setEditing] = createSignal<Subject | null>(null);
   const [removeSubject, setRemoveSubject] = createSignal<Subject | null>(null);

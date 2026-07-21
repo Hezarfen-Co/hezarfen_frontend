@@ -55,7 +55,7 @@ function EventsContent() {
     });
   };
 
-  const [list, { refetch }] = createResource(async () => (await getEvents()).items);
+  const [list, { refetch }] = createResource(async () => (await getEvents({ limit: 100 })).items);
   const rows = () => filterEvents(list() ?? []);
   const eventStatus = (event: Event) => {
     const now = Date.now();

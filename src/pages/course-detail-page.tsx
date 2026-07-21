@@ -68,10 +68,14 @@ function CourseDetailContent() {
     return params().id;
   });
 
+  const [openSections, setOpenSections] = createSignal({ teachers: false, subjects: false, exams: false, sessions: false, roster: false });
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
   const [terms] = createResource(async () => (await getTerms()).items);
   const [settings] = createResource(() => getSettings());
-  const [exams, { refetch: refetchExams }] = createResource(id, async (courseId) => (await getCourseExams(courseId)).items);
+  const [exams, { refetch: refetchExams }] = createResource(
+    () => (openSections().exams ? id() : null),
+    async (courseId) => (courseId ? (await getCourseExams(courseId)).items : []),
+  );
   const hasCourseManagementRights = () => {
     const c = course();
     const u = auth.user();
@@ -91,7 +95,7 @@ function CourseDetailContent() {
     return hasMinRole(u.role, "manager");
   };
   const [roster, { refetch: refetchRoster }] = createResource(
-    () => (hasCourseManagementRights() ? id() : null),
+    () => (hasCourseManagementRights() && openSections().roster ? id() : null),
     async (courseId) => (courseId ? (await getCourseEnrollments(courseId)).items : []),
   );
   const [mine] = createResource(
@@ -110,8 +114,8 @@ function CourseDetailContent() {
   const [createdCourseExam, setCreatedCourseExam] = createSignal<Exam | null>(null);
   const [showSubjectForm, setShowSubjectForm] = createSignal(false);
   const [showSessionForm, setShowSessionForm] = createSignal(false);
+  const [showTeacherForm, setShowTeacherForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
-  const [openSections, setOpenSections] = createSignal({ teachers: false, subjects: false, exams: false, sessions: false, roster: false });
   const [subjectCount, setSubjectCount] = createSignal(0);
   const [sessionCount, setSessionCount] = createSignal(0);
   const [enrollUserId, setEnrollUserId] = createSignal("");
@@ -554,11 +558,21 @@ function CourseDetailContent() {
                 onToggle={() => toggleSection("teachers")}
                 title={t("courses.teachers")}
                 description={countDescription((c().teachers ?? []).length, t("courses.teachers"))}
+                actions={
+                  <Show when={canStaffCourse()}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowTeacherForm(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("courses.assignTeacher")}
+                    </Button>
+                  </Show>
+                }
               >
                 <CourseTeachersPanel
                   courseId={id()}
                   teachers={c().teachers ?? []}
                   canStaff={canStaffCourse()}
+                  assignOpen={showTeacherForm()}
+                  onAssignOpenChange={setShowTeacherForm}
                   onCourseUpdated={refetchCourse}
                 />
               </SectionDisclosure>
