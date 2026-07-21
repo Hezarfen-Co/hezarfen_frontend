@@ -1,8 +1,8 @@
-import { Show, createEffect, createSignal, onCleanup } from "solid-js";
+import { Match, Show, Switch, createEffect, createSignal, onCleanup } from "solid-js";
 import { formatApiError } from "@/api/client";
-import { getNoteFileBlob } from "@/api/getNoteFileBlob";
-import type { NoteFile } from "@/api/types";
-import { getNoteFileUrl } from "@/api/getNoteFileUrl";
+import { getNoteFileBlob } from "@/api/notes";
+import type { NoteFile } from "@/api/client";
+import { getNoteFileUrl } from "@/api/notes";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useT } from "@/stores/preferences-context";
 
@@ -77,20 +77,22 @@ export function NoteFilePreview(props: { noteId: string; file: NoteFile | null; 
                     fallback={<p class="mx-auto max-w-md rounded-md border border-dashed border-white/20 bg-white/5 px-4 py-8 text-center text-sm text-white/70">{t("notes.previewUnsupported")}</p>}
                   >
                     <Show when={!previewError()} fallback={<p class="mx-auto max-w-md rounded-md border border-dashed border-white/20 bg-white/5 px-4 py-8 text-center text-sm text-white/70">{previewError()}</p>}>
-                      <Show when={type().startsWith("image/") && previewUrl()} fallback={<p class="text-sm text-white/60">{t("common.loading")}</p>}>
-                        <img src={previewUrl()} alt={file().name} class="max-h-full max-w-full object-contain" />
-                      </Show>
-                      <Show when={type().startsWith("video/") && previewUrl()}>
-                        <video src={previewUrl()} controls class="max-h-full max-w-full" />
-                      </Show>
-                      <Show when={type().startsWith("audio/") && previewUrl()}>
-                        <div class="w-full max-w-2xl rounded-lg bg-background p-4 shadow-sm">
-                          <audio src={previewUrl()} controls class="w-full" />
-                        </div>
-                      </Show>
-                      <Show when={canFrame(type()) && previewUrl()}>
-                        <iframe title={file().name} src={previewUrl()} class="h-full w-full rounded-md border border-white/10 bg-background" />
-                      </Show>
+                      <Switch fallback={<p class="text-sm text-white/60">{t("common.loading")}</p>}>
+                        <Match when={type().startsWith("image/") && previewUrl()}>
+                          <img src={previewUrl()} alt={file().name} class="max-h-full max-w-full object-contain" />
+                        </Match>
+                        <Match when={type().startsWith("video/") && previewUrl()}>
+                          <video src={previewUrl()} controls class="max-h-full max-w-full" />
+                        </Match>
+                        <Match when={type().startsWith("audio/") && previewUrl()}>
+                          <div class="w-full max-w-2xl rounded-lg bg-background p-4 shadow-sm">
+                            <audio src={previewUrl()} controls class="w-full" />
+                          </div>
+                        </Match>
+                        <Match when={canFrame(type()) && previewUrl()}>
+                          <iframe title={file().name} src={previewUrl()} class="h-full w-full rounded-md border border-white/10 bg-background" />
+                        </Match>
+                      </Switch>
                     </Show>
                   </Show>
                 </div>

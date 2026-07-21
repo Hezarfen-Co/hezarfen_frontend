@@ -6,8 +6,8 @@ import {
   createSignal,
   useContext,
 } from "solid-js";
-import { patchMyPreferences } from "@/api/patchMyPreferences";
-import type { User } from "@/api/types";
+import { patchMyPreferences } from "@/api/users";
+import type { User } from "@/api/client";
 import { formatMessage, messages, type Locale, type MessageKey } from "@/i18n/messages";
 
 export type ThemeMode = "light" | "dark";

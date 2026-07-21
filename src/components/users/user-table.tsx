@@ -1,6 +1,6 @@
 import { createMemo, createSignal, Show } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import type { Role, User, UserLanguage, UserTheme } from "@/api/types";
+import type { Role, User } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { IconCheck } from "@/components/ui/icons";
-import { UserPreferencesActions } from "@/components/users/user-preferences-actions";
 import { ROLES } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
@@ -28,6 +27,7 @@ function UserRoleActions(props: {
   user: User;
   currentUserId: string;
   onRoleChange: (userId: string, role: Role) => Promise<void>;
+  onParentClick?: (user: User) => void;
 }) {
   const t = useT();
   const isSelf = () => props.user.id === props.currentUserId;
@@ -49,9 +49,14 @@ function UserRoleActions(props: {
         ))}
       </Select>
       <Show when={!isSelf() && dirty()}>
-        <Button type="button" size="sm" class="mt-2 h-7 rounded-sm px-2" onClick={() => setConfirmOpen(true)}>
+        <Button type="button" size="sm" class="mt-2 h-7 rounded-sm px-2" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
           <IconCheck />
           {t("common.update")}
+        </Button>
+      </Show>
+      <Show when={props.user.role === "parent"}>
+        <Button variant="outline" size="sm" class="ml-2 h-7 rounded-sm px-2" onClick={(e) => { e.stopPropagation(); props.onParentClick?.(props.user); }}>
+          {t("nav.group.students")}
         </Button>
       </Show>
       <ConfirmDialog
@@ -75,7 +80,8 @@ export function UserTable(props: {
   users: User[];
   currentUserId: string;
   onRoleChange: (userId: string, role: Role) => Promise<void>;
-  onPreferencesChange?: (userId: string, body: { theme?: UserTheme | ""; language?: UserLanguage | "" }) => Promise<void>;
+  onUserClick?: (user: User) => void;
+  onParentClick?: (user: User) => void;
 }) {
   const t = useT();
   const searchUser = (user: User, query: string) =>
@@ -117,24 +123,16 @@ export function UserTable(props: {
       meta: { cellClass: "mono truncate text-xs text-muted-foreground" },
     },
     {
-      id: "preferences",
-      header: t("nav.preferences"),
-      meta: { headerClass: "w-56", cellClass: "w-56" },
-      cell: (cell) => props.onPreferencesChange
-        ? <UserPreferencesActions user={cell.row.original} onPreferencesChange={props.onPreferencesChange} />
-        : "—",
-    },
-    {
       id: "update",
       header: t("common.update"),
       meta: { headerClass: "w-52", cellClass: "w-52" },
       cell: (cell) => (
-        <UserRoleActions user={cell.row.original} currentUserId={props.currentUserId} onRoleChange={props.onRoleChange} />
+        <UserRoleActions user={cell.row.original} currentUserId={props.currentUserId} onRoleChange={props.onRoleChange} onParentClick={props.onParentClick} />
       ),
     },
   ]);
 
   return (
-    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-[70rem]" searchPredicate={searchUser} enablePagination pageSize={20} />
+    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-[54rem]" searchPredicate={searchUser} enablePagination pageSize={20} onRowClick={props.onUserClick} />
   );
 }

@@ -41,12 +41,14 @@ const AttendancePage = lazyRoute(() => import("@/pages/attendance-page"));
 const StudentAttendancePage = lazyRoute(() => import("@/pages/student-attendance-page"));
 const WorkLogPage = lazyRoute(() => import("@/pages/work-log-page"));
 const StaffWorkPage = lazyRoute(() => import("@/pages/staff-work-page"));
-const ProfilePage = lazyRoute(() => import("@/pages/profile-page"));
 const LiveMonitorPage = lazyRoute(() => import("@/pages/live-monitor-page"));
 const AdminUsersPage = lazyRoute(() => import("@/pages/admin-users-page"));
 const SettingsPage = lazyRoute(() => import("@/pages/settings-page"));
 const TermsPage = lazyRoute(() => import("@/pages/terms-page"));
 const GuidePage = lazyRoute(() => import("@/pages/guide-page"));
+const MyStudentsPage = lazyRoute(() => import("@/pages/my-students-page"));
+const QuestionsPage = lazyRoute(() => import("@/pages/questions-page"));
+const QuestionDetailPage = lazyRoute(() => import("@/pages/question-detail-page"));
 
 function RootComponent() {
   return (
@@ -222,12 +224,6 @@ const liveMonitorRoute = createRoute({
   component: LiveMonitorPage,
 });
 
-const profileRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/profile",
-  component: ProfilePage,
-});
-
 const adminUsersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin/users",
@@ -238,6 +234,24 @@ const guideRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/guide",
   component: GuidePage,
+});
+
+const myStudentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/students",
+  component: MyStudentsPage,
+});
+
+const questionsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/questions",
+  component: QuestionsPage,
+});
+
+const questionDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/questions/$id",
+  component: QuestionDetailPage,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -266,9 +280,11 @@ const routeTree = rootRoute.addChildren([
   staffWorkRoute,
   settingsRoute,
   termsRoute,
-  profileRoute,
   adminUsersRoute,
   guideRoute,
+  myStudentsRoute,
+  questionsRoute,
+  questionDetailRoute,
 ]);
 
 function RouterPending() {

@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
-import type { Note } from "@/api/types";
+import type { Note } from "@/api/client";
 import { NoteForm } from "@/components/notes/note-form";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconEdit, IconTrash } from "@/components/ui/icons";

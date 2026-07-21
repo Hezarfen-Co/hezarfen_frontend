@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/solid-router";
 import { createSignal, Show } from "solid-js";
-import { postRegister } from "@/api/postRegister";
+import { postRegister } from "@/api/auth";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

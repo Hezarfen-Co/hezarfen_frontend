@@ -1,15 +1,18 @@
 import { For, Show, Suspense, createResource, createSignal } from "solid-js";
-import { getUsers } from "@/api/getUsers";
-import { patchUserPreferences } from "@/api/patchUserPreferences";
-import { patchUserRole } from "@/api/patchUserRole";
+import { getUsers } from "@/api/users";
+import { patchUserProfile } from "@/api/users";
+import { patchUserRole } from "@/api/users";
 import { formatApiError } from "@/api/client";
-import type { Role, User, UserLanguage, UserTheme } from "@/api/types";
+import type { Role, User } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { ProfileForm } from "@/components/users/profile-form";
 import { UserTable } from "@/components/users/user-table";
+import { ParentStudentsPanel } from "@/components/users/parent-students-panel";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { DataTableEmpty, DataTableSkeleton } from "@/components/ui/data-table";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { createFlash } from "@/lib/flash";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -28,6 +31,8 @@ function AdminUsersContent() {
   const auth = useAuth();
   const t = useT();
   const [error, setError] = createSignal("");
+  const [editUser, setEditUser] = createSignal<User | null>(null);
+  const [selectedParent, setSelectedParent] = createSignal<User | null>(null);
 
   const [list, { refetch }] = createResource(async () => (await getUsers()).items);
   const visibleUsers = () => list() ?? [];
@@ -39,17 +44,6 @@ function AdminUsersContent() {
     setError("");
     try {
       await patchUserRole(userId, role);
-      await refetch();
-      setFlash(t("common.saved"));
-    } catch (err) {
-      setError(formatApiError(err));
-    }
-  };
-
-  const onPreferencesChange = async (userId: string, body: { theme?: UserTheme | ""; language?: UserLanguage | "" }) => {
-    setError("");
-    try {
-      await patchUserPreferences(userId, body);
       await refetch();
       setFlash(t("common.saved"));
     } catch (err) {
@@ -88,11 +82,42 @@ function AdminUsersContent() {
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list()}>
             <Show when={visibleUsers().length > 0} fallback={<DataTableEmpty>{t("admin.noUsers")}</DataTableEmpty>}>
-              <UserTable users={visibleUsers() as User[]} currentUserId={auth.user()!.id} onRoleChange={onRoleChange} onPreferencesChange={onPreferencesChange} />
+              <UserTable 
+                users={visibleUsers() as User[]} 
+                currentUserId={auth.user()!.id} 
+                onRoleChange={onRoleChange} 
+                onUserClick={setEditUser}
+                onParentClick={setSelectedParent}
+              />
             </Show>
           </Show>
         </Suspense>
       </div>
+      <Show when={editUser()} keyed>
+        {(user) => (
+          <FormDialog open onOpenChange={(open) => !open && setEditUser(null)} title={user.username} description={t("profile.subtitle")}>
+            <ProfileForm
+              user={user}
+              onSave={(body) => patchUserProfile(user.id, body)}
+              onSaved={async () => {
+                await refetch();
+                setEditUser(null);
+                setFlash(t("common.saved"));
+              }}
+            />
+          </FormDialog>
+        )}
+      </Show>
+
+      <Show when={selectedParent()} keyed>
+        {(u) => (
+          <ParentStudentsPanel 
+            parent={{ id: u.id, username: u.username, display_name: u.name || u.username }} 
+            open 
+            onOpenChange={() => setSelectedParent(null)} 
+          />
+        )}
+      </Show>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { For, Show, createResource, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
-import { getSettings } from "@/api/getSettings";
-import type { Note } from "@/api/types";
+import { getSettings } from "@/api/settings";
+import type { Note } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconPlus, IconTrash } from "@/components/ui/icons";

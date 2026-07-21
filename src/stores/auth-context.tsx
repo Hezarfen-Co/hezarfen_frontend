@@ -7,9 +7,9 @@ import {
   createSignal,
   useContext,
 } from "solid-js";
-import { getMe } from "@/api/getMe";
-import { postLogout } from "@/api/postLogout";
-import type { User } from "@/api/types";
+import { getMe } from "@/api/users";
+import { postLogout } from "@/api/auth";
+import type { User } from "@/api/client";
 import { ApiError } from "@/api/client";
 import { usePreferences } from "@/stores/preferences-context";
 

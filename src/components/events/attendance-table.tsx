@@ -1,6 +1,6 @@
 import { Show, createMemo, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import type { Attendance } from "@/api/types";
+import type { Attendance } from "@/api/client";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { IconTrash } from "@/components/ui/icons";

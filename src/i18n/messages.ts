@@ -21,6 +21,7 @@ export type MessageKey =
   | "nav.messages"
   | "nav.pomodoro"
   | "nav.attendance"
+  | "nav.questions"
   | "nav.work"
   | "nav.staffWork"
   | "nav.users"
@@ -43,6 +44,10 @@ export type MessageKey =
   | "nav.group.grades"
   | "nav.group.reports"
   | "nav.group.settings"
+  | "nav.group.community"
+  | "nav.myStudents"
+  | "parents.title"
+  | "parents.subtitle"
   | "common.loading"
   | "common.cancel"
   | "common.save"
@@ -54,6 +59,9 @@ export type MessageKey =
   | "common.remove"
   | "common.back"
   | "common.view"
+  | "common.reply"
+  | "common.approve"
+  | "common.reject"
   | "common.actions"
   | "common.columns"
   | "common.moreFilters"
@@ -98,6 +106,19 @@ export type MessageKey =
   | "common.saved"
   | "common.createItem"
   | "common.countItem"
+  | "pool.title"
+  | "pool.subtitle"
+  | "pool.ask"
+  | "pool.subject"
+  | "pool.body"
+  | "pool.image"
+  | "pool.status"
+  | "pool.pending"
+  | "pool.approved"
+  | "pool.author"
+  | "pool.solutions"
+  | "pool.offerSolution"
+  | "pool.noQuestions"
   | "theme.light"
   | "theme.dark"
   | "theme.toggle"
@@ -294,6 +315,7 @@ export type MessageKey =
   | "exams.durationRange"
   | "exams.maxAttempts"
   | "exams.maxAttemptsRange"
+  | "exams.attemptsLeft"
   | "exams.retakes"
   | "exams.allowRejoin"
   | "exams.allowRejoinHelp"
@@ -369,7 +391,14 @@ export type MessageKey =
   | "attempt.mark"
   | "attempt.saveAnswer"
   | "attempt.submitted"
+  | "attempt.submittedCanRetakeInfo"
+  | "attempt.submittedFinalInfo"
+  | "attempt.submittedAt"
+  | "exams.startsAt"
+  | "exams.endsAt"
   | "attempt.expired"
+  | "attempt.expiredInfo"
+  | "attempt.noAttemptsLeft"
   | "attempt.closed"
   | "attempt.inProgress"
   | "attempt.absent"
@@ -442,6 +471,7 @@ export type MessageKey =
   | "auth.featurePrefs"
   | "app.workspace"
   | "role.student"
+  | "role.parent"
   | "role.teacher"
   | "role.manager"
   | "role.admin"
@@ -603,7 +633,25 @@ export type MessageKey =
   | "work.teacherIdentity"
   | "work.noTeachers"
   | "lookup.searchHint"
-  | "work.userNotFound";
+  | "work.userNotFound"
+  | "messages.inbox"
+  | "messages.sent"
+  | "messages.archive"
+  | "messages.trash"
+  | "messages.newMessage"
+  | "messages.recipient"
+  | "messages.recipientPlaceholder"
+  | "messages.search"
+  | "messages.noMessages"
+  | "messages.noSelection"
+  | "messages.reply"
+  | "messages.send"
+  | "messages.moveToArchive"
+  | "messages.moveToTrash"
+  | "messages.deleteForever"
+  | "messages.to"
+  | "messages.from"
+  | "messages.selectRecipient";
 
 type Dict = Record<MessageKey, string>;
 
@@ -628,7 +676,8 @@ const en: Dict = {
   "nav.messages": "Messages",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
-  "nav.work": "Work logs",
+  "nav.questions": "Question Pool",
+  "nav.work": "Work Log",
   "nav.staffWork": "Staff work",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
@@ -647,9 +696,13 @@ const en: Dict = {
   "nav.preferences": "Preferences",
   "nav.group.students": "Students",
   "nav.group.classes": "Education",
-  "nav.group.grades": "My space",
+  "nav.group.grades": "Grades",
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
+  "nav.group.community": "Community",
+  "nav.myStudents": "My Students",
+  "parents.title": "My Students",
+  "parents.subtitle": "View records for your linked students.",
   "common.loading": "Loading…",
   "common.cancel": "Cancel",
   "common.save": "Save",
@@ -661,6 +714,9 @@ const en: Dict = {
   "common.remove": "Remove",
   "common.back": "Back",
   "common.view": "View",
+  "common.reply": "Reply",
+  "common.approve": "Approve",
+  "common.reject": "Reject",
   "common.actions": "Actions",
   "common.columns": "Columns",
   "common.moreFilters": "More filters",
@@ -673,7 +729,7 @@ const en: Dict = {
   "common.goHome": "Go home",
   "common.learnMore": "Learn more",
   "common.gotIt": "Got it",
-  "confirm.review": "Please review the details before continuing.",
+  "confirm.review": "Please review your changes before saving.",
   "confirm.summary": "Summary",
   "confirm.confirmDelete": "Yes, delete",
   "confirm.confirmUpdate": "Yes, update",
@@ -702,9 +758,22 @@ const en: Dict = {
   "common.saveAttendance": "Save my attendance",
   "common.created": "Created.",
   "common.deleted": "Deleted.",
-  "common.saved": "Saved.",
-  "common.createItem": "Create {item}",
+  "common.saved": "Saved successfully.",
+  "common.createItem": "Create new {item}",
   "common.countItem": "{count} {item}",
+  "pool.title": "Question Pool",
+  "pool.subtitle": "Ask questions and discuss solutions.",
+  "pool.ask": "Ask Question",
+  "pool.subject": "Subject",
+  "pool.body": "Question details",
+  "pool.image": "Attachment (Image)",
+  "pool.status": "Status",
+  "pool.pending": "Pending",
+  "pool.approved": "Approved",
+  "pool.author": "Author",
+  "pool.solutions": "Solutions",
+  "pool.offerSolution": "Offer a solution",
+  "pool.noQuestions": "No questions found.",
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.toggle": "Toggle theme",
@@ -903,6 +972,7 @@ const en: Dict = {
   "exams.durationRange": "Duration must be from 1 minute to 24 hours",
   "exams.maxAttempts": "Max attempts",
   "exams.maxAttemptsRange": "Max attempts must be 1 or higher",
+  "exams.attemptsLeft": "Remaining",
   "exams.retakes": "Retakes",
   "exams.allowRejoin": "Allow rejoin",
   "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
@@ -978,7 +1048,14 @@ const en: Dict = {
   "attempt.mark": "Mark",
   "attempt.saveAnswer": "Save answer",
   "attempt.submitted": "Submitted",
+  "attempt.submittedCanRetakeInfo": "You have submitted this attempt. You can take the exam again using your remaining attempts.",
+  "attempt.submittedFinalInfo": "You have submitted this exam. It cannot be reopened.",
+  "attempt.submittedAt": "Submitted At",
+  "exams.startsAt": "Start Date",
+  "exams.endsAt": "End Date",
   "attempt.expired": "Expired",
+  "attempt.expiredInfo": "The time for this exam has expired. It cannot be reopened.",
+  "attempt.noAttemptsLeft": "No rights left",
   "attempt.closed": "This attempt is closed. Answers are read-only.",
   "attempt.inProgress": "In progress",
   "attempt.absent": "No-show",
@@ -1062,6 +1139,7 @@ const en: Dict = {
   "auth.featurePrefs": "TR / EN · light / dark",
   "app.workspace": "@Hezarfen - 2026",
   "role.student": "Student",
+  "role.parent": "Parent",
   "role.teacher": "Teacher",
   "role.manager": "Manager",
   "role.admin": "ADMIN",
@@ -1224,6 +1302,24 @@ const en: Dict = {
   "work.cannotEditOpen": "Open stints cannot be corrected. Check out or delete them first.",
   "work.timesRequired": "Enter check-in and check-out date and time.",
   "work.deleteSummary": "Delete work entry from {time}?",
+  "messages.inbox": "Inbox",
+  "messages.sent": "Sent",
+  "messages.archive": "Archive",
+  "messages.trash": "Trash",
+  "messages.newMessage": "New Message",
+  "messages.recipient": "Recipient",
+  "messages.recipientPlaceholder": "Search for name or username...",
+  "messages.search": "Search messages",
+  "messages.noMessages": "No messages found.",
+  "messages.noSelection": "No message selected.",
+  "messages.reply": "Reply",
+  "messages.send": "Send",
+  "messages.moveToArchive": "Archive",
+  "messages.moveToTrash": "Move to Trash",
+  "messages.deleteForever": "Delete Permanently",
+  "messages.to": "To: ",
+  "messages.from": "From: ",
+  "messages.selectRecipient": "Please select a recipient.",
 };
 
 const tr: Dict = {
@@ -1246,8 +1342,9 @@ const tr: Dict = {
   "nav.marks": "Notlar",
   "nav.messages": "Mesajlar",
   "nav.pomodoro": "Pomodoro",
-  "nav.attendance": "Yoklamalar",
-  "nav.work": "Mesailer",
+  "nav.attendance": "Yoklama",
+  "nav.questions": "Soru Havuzu",
+  "nav.work": "Çalışma Kaydı",
   "nav.staffWork": "Mesailer",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Notlar",
@@ -1266,9 +1363,13 @@ const tr: Dict = {
   "nav.preferences": "Tercihler",
   "nav.group.students": "Öğrenciler",
   "nav.group.classes": "Eğitim",
-  "nav.group.grades": "Benim Alanım",
+  "nav.group.grades": "Notlar",
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
+  "nav.group.community": "Topluluk",
+  "nav.myStudents": "Öğrencilerim",
+  "parents.title": "Öğrencilerim",
+  "parents.subtitle": "Size bağlı öğrencilerin akademik kayıtlarını inceleyin.",
   "common.loading": "Yükleniyor…",
   "common.cancel": "Vazgeç",
   "common.save": "Kaydet",
@@ -1280,7 +1381,10 @@ const tr: Dict = {
   "common.remove": "Kaldır",
   "common.back": "Geri",
   "common.view": "Görüntüle",
-  "common.actions": "İşlem",
+  "common.reply": "Yanıtla",
+  "common.approve": "Onayla",
+  "common.reject": "Reddet",
+  "common.actions": "İşlemler",
   "common.columns": "Kolonlar",
   "common.moreFilters": "Daha fazla filtre",
   "common.lessFilters": "Daha az filtre",
@@ -1292,7 +1396,7 @@ const tr: Dict = {
   "common.goHome": "Ana sayfaya dön",
   "common.learnMore": "Daha fazla",
   "common.gotIt": "Anladım",
-  "confirm.review": "Devam etmeden önce işlem özetini kontrol edin.",
+  "confirm.review": "Lütfen kaydetmeden önce değişiklikleri gözden geçirin.",
   "confirm.summary": "İşlem özeti",
   "confirm.confirmDelete": "Evet, sil",
   "confirm.confirmUpdate": "Evet, güncelle",
@@ -1321,9 +1425,22 @@ const tr: Dict = {
   "common.saveAttendance": "Yoklamamı kaydet",
   "common.created": "Oluşturuldu.",
   "common.deleted": "Silindi.",
-  "common.saved": "Kaydedildi.",
-  "common.createItem": "{item} oluştur",
-  "common.countItem": "{count} Adet {item}",
+  "common.saved": "Başarıyla kaydedildi.",
+  "common.createItem": "Yeni {item} oluştur",
+  "common.countItem": "{count} {item}",
+  "pool.title": "Soru Havuzu",
+  "pool.subtitle": "Soru sorun ve çözümleri tartışın.",
+  "pool.ask": "Soru Sor",
+  "pool.subject": "Konu",
+  "pool.body": "Soru detayı",
+  "pool.image": "Görsel (İsteğe bağlı)",
+  "pool.status": "Durum",
+  "pool.pending": "Bekliyor",
+  "pool.approved": "Onaylandı",
+  "pool.author": "Yazar",
+  "pool.solutions": "Çözümler",
+  "pool.offerSolution": "Çözüm Gönder",
+  "pool.noQuestions": "Soru bulunamadı.",
   "theme.light": "Açık",
   "theme.dark": "Koyu",
   "theme.toggle": "Tema",
@@ -1522,6 +1639,7 @@ const tr: Dict = {
   "exams.durationRange": "Süre 1 dakika ile 24 saat arasında olmalı",
   "exams.maxAttempts": "Deneme hakkı",
   "exams.maxAttemptsRange": "Deneme hakkı 1 veya daha büyük olmalı",
+  "exams.attemptsLeft": "Kalan",
   "exams.retakes": "Deneme hakkı",
   "exams.allowRejoin": "Yeniden girişe izin ver",
   "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
@@ -1597,7 +1715,14 @@ const tr: Dict = {
   "attempt.mark": "Not",
   "attempt.saveAnswer": "Cevabı kaydet",
   "attempt.submitted": "Teslim edildi",
+  "attempt.submittedCanRetakeInfo": "Bu denemenizi teslim ettiniz. Kalan haklarınızı kullanarak sınava tekrardan başlayabilirsiniz.",
+  "attempt.submittedFinalInfo": "Bu sınavı zaten teslim ettin. Yeniden açılamaz.",
+  "attempt.submittedAt": "Teslim Tarihi",
+  "exams.startsAt": "Başlangıç Tarihi",
+  "exams.endsAt": "Bitiş Tarihi",
   "attempt.expired": "Süresi doldu",
+  "attempt.expiredInfo": "Bu sınavın süresi doldu. Yeniden açılamaz.",
+  "attempt.noAttemptsLeft": "Hak bitti",
   "attempt.closed": "Bu oturum kapalı. Cevaplar salt okunur.",
   "attempt.inProgress": "Devam ediyor",
   "attempt.absent": "Katılmadı",
@@ -1681,6 +1806,7 @@ const tr: Dict = {
   "auth.featurePrefs": "TR / EN · açık / koyu",
   "app.workspace": "@Hezarfen - 2026",
   "role.student": "Öğrenci",
+  "role.parent": "Veli",
   "role.teacher": "Öğretmen",
   "role.manager": "Yönetici",
   "role.admin": "ADMIN",
@@ -1843,6 +1969,24 @@ const tr: Dict = {
   "work.cannotEditOpen": "Açık mesai düzeltilemez. Önce çıkış yapın veya silin.",
   "work.timesRequired": "Giriş ve çıkış tarih/saatini girin.",
   "work.deleteSummary": "{time} mesai kaydı silinsin mi?",
+  "messages.inbox": "Gelenler",
+  "messages.sent": "Gönderilenler",
+  "messages.archive": "Arşiv",
+  "messages.trash": "Çöp Kutusu",
+  "messages.newMessage": "Yeni Mesaj",
+  "messages.recipient": "Alıcı",
+  "messages.recipientPlaceholder": "İsim veya kullanıcı adı ara...",
+  "messages.search": "Mesajlarda ara...",
+  "messages.noMessages": "Mesaj bulunamadı.",
+  "messages.noSelection": "Mesaj seçilmedi.",
+  "messages.reply": "Yanıtla",
+  "messages.send": "Gönder",
+  "messages.moveToArchive": "Arşivle",
+  "messages.moveToTrash": "Çöp Kutusuna Taşı",
+  "messages.deleteForever": "Kalıcı Olarak Sil",
+  "messages.to": "Kime: ",
+  "messages.from": "Kimden: ",
+  "messages.selectRecipient": "Lütfen bir alıcı seçin.",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

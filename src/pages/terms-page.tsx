@@ -1,11 +1,11 @@
 import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { deleteTermById } from "@/api/deleteTermById";
-import { getTerms } from "@/api/getTerms";
-import { patchTermById } from "@/api/patchTermById";
-import { postTerm } from "@/api/postTerm";
+import { deleteTermById } from "@/api/terms";
+import { getTerms } from "@/api/terms";
+import { patchTermById } from "@/api/terms";
+import { postTerm } from "@/api/terms";
 import { formatApiError } from "@/api/client";
-import type { Term } from "@/api/types";
+import type { Term } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";

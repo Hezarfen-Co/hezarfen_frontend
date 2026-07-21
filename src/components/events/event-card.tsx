@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 import { Link } from "@tanstack/solid-router";
-import type { Event, EventAudience } from "@/api/types";
+import type { Event, EventAudience } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";

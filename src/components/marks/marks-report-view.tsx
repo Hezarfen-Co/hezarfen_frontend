@@ -1,8 +1,8 @@
 import { For, Show, createMemo, createResource } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { Link } from "@tanstack/solid-router";
-import { getSettings } from "@/api/getSettings";
-import type { MarksReport } from "@/api/types";
+import { getSettings } from "@/api/settings";
+import type { MarksReport } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { ExamLink } from "@/components/exams/exam-link";

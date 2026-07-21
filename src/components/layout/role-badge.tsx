@@ -1,10 +1,11 @@
-import type { Role } from "@/api/types";
+import type { Role } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { Badge } from "@/components/ui/badge";
 import { useT } from "@/stores/preferences-context";
 
 const VARIANT: Record<Role, "default" | "secondary" | "outline" | "destructive"> = {
   student: "secondary",
+  parent: "secondary",
   teacher: "default",
   manager: "outline",
   admin: "destructive",

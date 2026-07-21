@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test";
-import type { ExamQuestion, StudentAnswer } from "@/api/types";
+import { expect, test } from "vitest";
+import type { ExamQuestion, StudentAnswer } from "@/api/client";
 import { joinAnswerSheet } from "./answer-sheet";
 
 function question(id: string, overrides: Partial<ExamQuestion> = {}): ExamQuestion {

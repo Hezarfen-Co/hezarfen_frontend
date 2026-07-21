@@ -1,12 +1,12 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
-import { getCourses } from "@/api/getCourses";
-import { getMyCourses } from "@/api/getMyCourses";
-import { getTerms } from "@/api/getTerms";
-import { postCourse } from "@/api/postCourse";
+import { getCourses } from "@/api/courses";
+import { getMyCourses } from "@/api/reports";
+import { getTerms } from "@/api/terms";
+import { postCourse } from "@/api/courses";
 import { formatApiError } from "@/api/client";
-import type { Course, CourseKind } from "@/api/types";
+import type { Course, CourseKind } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -112,6 +112,13 @@ function CoursesContent() {
       header: t("common.creator"),
       meta: { cellClass: "truncate text-muted-foreground" },
       cell: (cell) => personLabel(cell.row.original.creator),
+    },
+    {
+      id: "capacity",
+      accessorFn: (course) => course.capacity,
+      header: t("courses.capacity"),
+      meta: { headerClass: "text-right", cellClass: "text-right tabular-nums text-muted-foreground" },
+      cell: (cell) => cell.row.original.capacity ?? "—",
     },
     {
       id: "actions",

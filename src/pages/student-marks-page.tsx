@@ -1,9 +1,9 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getUserMarks } from "@/api/getUserMarks";
-import { getUserSearch } from "@/api/getUserSearch";
+import { getUserMarks } from "@/api/reports";
+import { getUserSearch } from "@/api/users";
 import { ApiError, formatApiError } from "@/api/client";
-import type { PersonRef } from "@/api/types";
+import type { PersonRef } from "@/api/client";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";

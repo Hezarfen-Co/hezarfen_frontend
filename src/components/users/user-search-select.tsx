@@ -1,6 +1,6 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
-import { getUserSearch } from "@/api/getUserSearch";
-import type { PersonRef, Role } from "@/api/types";
+import { getUserSearch } from "@/api/users";
+import type { PersonRef, Role } from "@/api/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { personLabelWithId } from "@/lib/person";
@@ -40,7 +40,7 @@ export function UserSearchSelect(props: {
     const q = query().trim();
     if (q.length === 0) return "";
     if (loading()) return t("common.loading");
-    if (props.value.trim() && !options().some((u) => u.id === props.value.trim())) return props.value;
+    if (selectedUser() && selectedUser()!.id === props.value) return "";
     if (options().length === 0) return props.emptyMessage ?? t("form.noStudents");
     return "";
   });

@@ -17,7 +17,7 @@ export function DialogContent<T extends ValidComponent = "div">(
   ]);
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/40 dark:bg-black/60" />
+      <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] dark:bg-black/60" />
       {/* flex center — animate-fade-up must not own transform positioning */}
       <div class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
         <DialogPrimitive.Content
