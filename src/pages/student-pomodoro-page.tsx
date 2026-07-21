@@ -1,8 +1,8 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getPomodoroByUser } from "@/api/getPomodoroByUser";
-import { getUserSearch } from "@/api/getUserSearch";
-import type { PersonRef, PomodoroSession } from "@/api/types";
+import { getPomodoroByUser } from "@/api/pomodoro";
+import { getUserSearch } from "@/api/users";
+import type { PersonRef, PomodoroSession } from "@/api/client";
 import { ApiError, formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -12,7 +12,7 @@ import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { formatDateTime, formatDurationClock } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -118,7 +118,7 @@ function StudentPomodoroContent() {
     {
       accessorKey: "duration_ms",
       header: t("pomodoro.duration"),
-      cell: (cell) => formatDurationMinutes(cell.row.original.duration_ms, locale()),
+      cell: (cell) => <span class="mono tabular-nums">{formatDurationClock(cell.row.original.duration_ms)}</span>,
     },
   ]);
 
@@ -177,7 +177,7 @@ function StudentPomodoroContent() {
               <div class="space-y-4">
             <div class="detail-metric-card">
               <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.total")}</p>
-                  <p class="mono mt-2 text-3xl font-semibold tabular-nums">{formatDurationMinutes(p().total_focus_ms, locale())}</p>
+                  <p class="mono mt-2 text-3xl font-semibold tabular-nums">{formatDurationClock(p().total_focus_ms)}</p>
             </div>
                 <DataTable columns={logColumns()} data={p().items} empty={t("pomodoro.empty")} enablePagination pageSize={10} />
           </div>

@@ -53,6 +53,7 @@ export type DataTableProps<TData, TValue = unknown> = {
     total: number;
     onPageChange: (pageIndex: number) => void;
   };
+  onRowClick?: (row: TData) => void;
   onSearchInput?: (value: string) => void;
   pageSize?: number;
   searchPredicate?: (row: TData, query: string) => boolean;
@@ -125,6 +126,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     if (props.manualPagination) props.manualPagination.onPageChange(next);
     else table.setPageIndex(next);
   };
+  const isInteractiveTarget = (target: EventTarget | null) => target instanceof Element && target.closest("button,a,input,select,textarea,[role='button']") != null;
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
     if (!(props.enableSorting ?? true) || !header.column.getCanSort()) return content;
@@ -216,7 +218,20 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             >
               <For each={table.getRowModel().rows}>
                 {(row) => (
-                  <TableRow data-state={row.getIsSelected() ? "selected" : undefined}>
+                  <TableRow
+                    data-state={row.getIsSelected() ? "selected" : undefined}
+                    tabIndex={props.onRowClick ? 0 : undefined}
+                    class={props.onRowClick ? "cursor-pointer" : undefined}
+                    onClick={(event) => {
+                      if (!props.onRowClick || isInteractiveTarget(event.target)) return;
+                      props.onRowClick(row.original);
+                    }}
+                    onKeyDown={(event) => {
+                      if (!props.onRowClick || isInteractiveTarget(event.target) || (event.key !== "Enter" && event.key !== " ")) return;
+                      event.preventDefault();
+                      props.onRowClick(row.original);
+                    }}
+                  >
                     <For each={row.getVisibleCells()}>
                       {(cell) => (
                         <TableCell class={cn(actionColumnClass(cell.column.id), cell.column.columnDef.meta?.cellClass)}>

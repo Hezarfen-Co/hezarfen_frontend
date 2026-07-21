@@ -25,7 +25,8 @@ export function AppShell(props: ParentProps) {
   const [celebiOpen, setCelebiOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
-  const wide = () => location().pathname.startsWith("/exam-room/") || location().pathname === "/messages";
+  const wide = () => location().pathname.startsWith("/exam-room/") || location().searchStr.includes("answerUser=") || location().pathname === "/messages";
+  const fullScreen = () => location().pathname.startsWith("/exam-room/");
   const routeLabel = createMemo(() => {
     const path = location().pathname;
     if (path === "/") return t("nav.home");
@@ -39,6 +40,7 @@ export function AppShell(props: ParentProps) {
     if (path === "/clubs") return `${t("nav.group.classes")} / ${t("nav.clubs")}`;
     if (path === "/events" || path.startsWith("/events/")) return `${t("nav.group.classes")} / ${t("nav.events")}`;
     if (path === "/exams" || path.startsWith("/exams/")) return `${t("nav.group.classes")} / ${t("nav.exams")}`;
+    if (path === "/questions" || path.startsWith("/questions/")) return `${t("nav.group.community")} / ${t("pool.title")}`;
     if (path.startsWith("/exam-room/")) return t("nav.exams");
     if (path === "/work") return `${t("nav.group.reports")} / ${t("nav.work")}`;
     if (path === "/management/student-marks") return `${t("nav.group.reports")} / ${t("nav.studentMarks")}`;
@@ -48,7 +50,6 @@ export function AppShell(props: ParentProps) {
     if (path === "/management/settings") return `${t("nav.group.settings")} / ${t("nav.settings")}`;
     if (path === "/management/terms") return `${t("nav.group.settings")} / ${t("nav.terms")}`;
     if (path === "/admin/users") return `${t("nav.admin")} / ${t("nav.users")}`;
-    if (path === "/profile") return `${t("nav.account")} / ${t("nav.preferences")}`;
     if (path === "/guide") return t("nav.guide");
     return path;
   });
@@ -63,7 +64,7 @@ export function AppShell(props: ParentProps) {
         <NavBar />
       </Show>
       <div class="flex w-full">
-        <Show when={auth.user()}>
+        <Show when={auth.user() && !fullScreen()}>
           <aside
             class={cn(
               "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-border/80 bg-sidebar shadow-[inset_-1px_0_0_hsl(var(--border)/0.45)] transition-[width] duration-150 ease-out lg:flex lg:flex-col",
@@ -143,12 +144,12 @@ export function AppShell(props: ParentProps) {
         </Show>
 
         <main class="min-w-0 flex-1">
-          <Show when={auth.user()}>
+          <Show when={auth.user() && !fullScreen()}>
             <header class="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border/70 bg-background/95 px-4 backdrop-blur sm:px-6 lg:px-8">
               <div class="min-w-0 rounded-lg border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
                 <span class="block truncate">{routeLabel()}</span>
               </div>
-              <Button type="button" variant="outline" size="sm" class="rounded-lg border-sky-500/30 bg-sky-500/10 text-sky-700 shadow-sm hover:bg-sky-500/15 dark:text-sky-300" onClick={() => setCelebiOpen(true)}>
+              <Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 bg-primary/10 text-primary shadow-sm hover:bg-primary/15" onClick={() => setCelebiOpen(true)}>
                 <IconSparkles class="h-4 w-4" />
                 {t("ai.askCelebi")}
               </Button>
@@ -158,7 +159,7 @@ export function AppShell(props: ParentProps) {
             class={cn(
               "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-5",
               auth.user() && !wide() && "pb-24 lg:pb-5",
-              wide() ? "max-w-none" : "max-w-[1200px]",
+              wide() ? "max-w-none" : "max-w-[1280px] xl:max-w-[1600px] 2xl:max-w-none",
             )}
           >
             {props.children}

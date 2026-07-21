@@ -1,0 +1,322 @@
+import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { useParams, useRouter } from "@tanstack/solid-router";
+import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl } from "@/api/shared";
+import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl } from "@/api/shared";
+import type { SolutionResponse } from "@/api/shared";
+import { formatApiError } from "@/api/client";
+import { RouteGuard } from "@/components/layout/route-guard";
+import { PageSpinner } from "@/components/ui/page-spinner";
+import { Button } from "@/components/ui/button";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { IconTrash, IconCheck, IconX, IconEdit, IconMessage, IconPhoto } from "@/components/ui/icons";
+import { personLabel } from "@/lib/person";
+
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { showToast } from "@/components/ui/toast";
+import { useT } from "@/stores/preferences-context";
+import { useAuth } from "@/stores/auth-context";
+import { hasMinRole } from "@/lib/roles";
+
+export default function QuestionDetailPage() {
+  return (
+    <RouteGuard minRole="student">
+      <QuestionDetailContent />
+    </RouteGuard>
+  );
+}
+
+function QuestionDetailContent() {
+  const t = useT();
+  const auth = useAuth();
+  const router = useRouter();
+  const params = useParams({ from: "/questions/$id" });
+  const [error, setError] = createSignal("");
+
+  const [question, { refetch: refetchQ }] = createResource(() => params().id, getQuestionById);
+  const [solutions, { refetch: refetchS }] = createResource(
+    () => params().id,
+    async (id) => (await getSolutions(id, { limit: 100, offset: 0 })).items
+  );
+
+  const [offerOpen, setOfferOpen] = createSignal(false);
+  const [editSolution, setEditSolution] = createSignal<SolutionResponse | null>(null);
+  const [deleteConfirmQ, setDeleteConfirmQ] = createSignal(false);
+  const [deleteConfirmS, setDeleteConfirmS] = createSignal<SolutionResponse | null>(null);
+
+  const isModerator = () => hasMinRole(auth.user()?.role, "teacher");
+
+  const handleApprove = async () => {
+    setError("");
+    try {
+      await postQuestionApprove(params().id);
+      await refetchQ();
+      showToast({ title: t("common.saved") });
+    } catch (err) {
+      setError(formatApiError(err));
+    }
+  };
+
+  const handleDeleteQ = async () => {
+    setError("");
+    try {
+      await deleteQuestionById(params().id);
+      router.navigate({ to: "/questions" });
+    } catch (err) {
+      setError(formatApiError(err));
+      setDeleteConfirmQ(false);
+    }
+  };
+
+  const handleDeleteS = async (s: SolutionResponse) => {
+    setError("");
+    try {
+      await deleteSolutionById(params().id, s.id);
+      await refetchS();
+      setDeleteConfirmS(null);
+      showToast({ title: t("common.deleted") });
+    } catch (err) {
+      setError(formatApiError(err));
+      setDeleteConfirmS(null);
+    }
+  };
+
+  return (
+    <div class="space-y-6 max-w-4xl mx-auto">
+      <Suspense fallback={<PageSpinner />}>
+        <Show when={question()}>
+          {(q) => (
+            <>
+              <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <Button variant="link" class="px-0 h-auto text-muted-foreground mb-2" onClick={() => router.history.back()}>&larr; {t("common.back")}</Button>
+                  <h1 class="text-2xl font-bold font-display">{q().title}</h1>
+                  <div class="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{personLabel(q().asker)}</span>
+                    <span>&bull;</span>
+                    <span>{new Date(q().asked_at).toLocaleString()}</span>
+                  </div>
+                </div>
+                <Show when={q().status === "pending" && isModerator()}>
+                  <div class="flex gap-2">
+                    <Button variant="destructive" onClick={() => setDeleteConfirmQ(true)}>
+                      <IconX class="mr-2 h-4 w-4" />
+                      {t("common.reject")}
+                    </Button>
+                    <Button onClick={handleApprove}>
+                      <IconCheck class="mr-2 h-4 w-4" />
+                      {t("common.approve")}
+                    </Button>
+                  </div>
+                </Show>
+              </div>
+
+              {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+
+              <div class="rounded-xl border bg-card p-6 shadow-sm">
+                <p class="whitespace-pre-wrap text-foreground">{q().body}</p>
+                <Show when={q().image}>
+                  <div class="mt-4 overflow-hidden rounded-lg border bg-muted/30">
+                    <img src={getQuestionImageUrl(q().id)} alt="Question Attachment" class="max-h-[500px] w-auto object-contain mx-auto" />
+                  </div>
+                </Show>
+              </div>
+
+              <Show when={q().status === "approved"}>
+                <div class="mt-8">
+                  <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold font-display">{t("pool.solutions")}</h2>
+                    <Button variant="outline" onClick={() => setOfferOpen(true)}>
+                      <IconMessage class="mr-2 h-4 w-4" />
+                      {t("pool.offerSolution")}
+                    </Button>
+                  </div>
+
+                  <div class="space-y-4">
+                    <For each={solutions()}>
+                      {(sol) => {
+                        const isMine = sol.author.id === auth.user()?.id;
+                        return (
+                          <div class="rounded-xl border bg-card/50 p-5">
+                            <div class="flex items-center justify-between">
+                              <div class="flex items-center gap-2 text-sm font-medium">
+                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] text-primary">
+                                  {sol.author.display_name?.[0] || sol.author.username[0].toUpperCase()}
+                                </div>
+                                {personLabel(sol.author)}
+                                <span class="text-xs font-normal text-muted-foreground ml-2">{new Date(sol.offered_at).toLocaleString()}</span>
+                              </div>
+                              <Show when={isMine || isModerator()}>
+                                <div class="flex items-center gap-1">
+                                  <Show when={isMine}>
+                                    <Button variant="ghost" size="icon" class="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditSolution(sol)}>
+                                      <IconEdit class="h-4 w-4" />
+                                    </Button>
+                                  </Show>
+                                  <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteConfirmS(sol)}>
+                                    <IconTrash class="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </Show>
+                            </div>
+                            <p class="mt-3 whitespace-pre-wrap text-sm text-foreground">{sol.body}</p>
+                            <Show when={sol.image}>
+                              <div class="mt-3 overflow-hidden rounded-lg border border-border/50">
+                                <img src={getSolutionImageUrl(q().id, sol.id)} alt="Solution Attachment" class="max-h-[300px] w-auto object-contain mx-auto" />
+                              </div>
+                            </Show>
+                          </div>
+                        );
+                      }}
+                    </For>
+                  </div>
+                </div>
+              </Show>
+            </>
+          )}
+        </Show>
+      </Suspense>
+
+      <ConfirmDialog
+        open={deleteConfirmQ()}
+        onOpenChange={setDeleteConfirmQ}
+        title={t("confirm.deleteTitle")}
+        summary={t("confirm.confirmDelete")}
+        onConfirm={handleDeleteQ}
+        variant="destructive"
+      />
+
+      <Show when={deleteConfirmS()} keyed>
+        {(sol) => (
+          <ConfirmDialog
+            open
+            onOpenChange={(open) => !open && setDeleteConfirmS(null)}
+            title={t("confirm.deleteTitle")}
+            summary={t("confirm.confirmDelete")}
+            onConfirm={() => handleDeleteS(sol)}
+            variant="destructive"
+          />
+        )}
+      </Show>
+
+      <Show when={offerOpen()}>
+        <SolutionFormDialog
+          questionId={params().id}
+          onClose={() => setOfferOpen(false)}
+          onSuccess={() => {
+            setOfferOpen(false);
+            showToast({ title: t("common.saved") });
+            refetchS();
+          }}
+        />
+      </Show>
+
+      <Show when={editSolution()} keyed>
+        {(sol) => (
+          <SolutionFormDialog
+            questionId={params().id}
+            initialData={sol}
+            onClose={() => setEditSolution(null)}
+            onSuccess={() => {
+              setEditSolution(null);
+              showToast({ title: t("common.saved") });
+              refetchS();
+            }}
+          />
+        )}
+      </Show>
+    </div>
+  );
+}
+
+function SolutionFormDialog(props: { questionId: string; initialData?: SolutionResponse; onClose: () => void; onSuccess: () => void }) {
+  const t = useT();
+  const [error, setError] = createSignal("");
+  const [body, setBody] = createSignal(props.initialData?.body || "");
+  const [file, setFile] = createSignal<File | null>(null);
+
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    if (!body().trim()) return;
+    setError("");
+    try {
+      if (props.initialData) {
+        await patchSolutionById(props.questionId, props.initialData.id, { body: body().trim() });
+      } else {
+        await postSolution(props.questionId, { body: body().trim() }, file() || undefined);
+      }
+      props.onSuccess();
+    } catch (err) {
+      setError(formatApiError(err));
+    }
+  };
+
+  return (
+    <FormDialog open onOpenChange={(open) => !open && props.onClose()} title={props.initialData ? t("common.edit") : t("pool.offerSolution")} description="">
+      <form onSubmit={handleSubmit} class="space-y-4">
+        {error() && <ErrorAlert message={error()} />}
+        <div class="space-y-2">
+          <Label for="s-body">{t("pool.body")}</Label>
+          <Textarea id="s-body" value={body()} onInput={(e) => setBody(e.currentTarget.value)} required rows={5} />
+        </div>
+        <Show when={!props.initialData}>
+          <div class="space-y-2">
+            <Label>{t("pool.image")}</Label>
+            <div class="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-6 transition-colors hover:bg-muted/50 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
+              <Show
+                when={!file()}
+                fallback={
+                  <div class="flex flex-col items-center gap-2">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                      <IconPhoto class="h-6 w-6 text-primary" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-medium text-foreground">{file()?.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        class="h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive z-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setFile(null);
+                        }}
+                      >
+                        <IconX class="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                }
+              >
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <IconPhoto class="h-6 w-6 text-muted-foreground" />
+                </div>
+                <div class="mt-4 text-center">
+                  <p class="text-sm font-medium text-foreground">{t("pool.image")}</p>
+                  <p class="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF</p>
+                </div>
+              </Show>
+              <input
+                type="file"
+                accept="image/*"
+                class="absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0"
+                onChange={(e) => setFile(e.currentTarget.files?.[0] || null)}
+              />
+            </div>
+          </div>
+        </Show>
+        <div class="flex justify-end gap-3 pt-4">
+          <Button type="button" variant="outline" onClick={props.onClose}>
+            {t("common.cancel")}
+          </Button>
+          <Button type="submit" disabled={!body().trim()}>
+            {t("common.save")}
+          </Button>
+        </div>
+      </form>
+    </FormDialog>
+  );
+}

@@ -1,11 +1,11 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, type JSX } from "solid-js";
-import { deleteNoteFileById } from "@/api/deleteNoteFileById";
-import { getNoteFileUrl } from "@/api/getNoteFileUrl";
-import { getNoteFiles } from "@/api/getNoteFiles";
-import { getSettings } from "@/api/getSettings";
-import { postNoteFile } from "@/api/postNoteFile";
+import { deleteNoteFileById } from "@/api/notes";
+import { getNoteFileUrl } from "@/api/notes";
+import { getNoteFiles } from "@/api/notes";
+import { getSettings } from "@/api/settings";
+import { postNoteFile } from "@/api/notes";
 import { formatApiError } from "@/api/client";
-import type { NoteFile } from "@/api/types";
+import type { NoteFile } from "@/api/client";
 import { NoteFilePreview } from "@/components/notes/note-file-preview";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

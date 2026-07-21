@@ -1,6 +1,5 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { Portal } from "solid-js/web";
-import { Button } from "@/components/ui/button";
 import { IconCalendar, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
@@ -30,6 +29,10 @@ function sameDay(a: Date | null, b: Date): boolean {
   return !!a && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
 function monthDays(month: Date): Array<Date | null> {
   const year = month.getFullYear();
   const monthIndex = month.getMonth();
@@ -56,6 +59,7 @@ export function DatePicker(props: {
   const [position, setPosition] = createSignal({ left: 0, top: 0, width: 288 });
   const selected = createMemo(() => parseDate(props.value));
   const [month, setMonth] = createSignal(selected() ?? new Date());
+  const today = new Date();
   const days = createMemo(() => monthDays(month()));
   const monthLabel = createMemo(() =>
     new Intl.DateTimeFormat(locale(), { month: "long", year: "numeric" }).format(month()),
@@ -64,6 +68,7 @@ export function DatePicker(props: {
     const date = selected();
     return date ? new Intl.DateTimeFormat(locale(), { weekday: "long" }).format(date) : "";
   });
+  const todayLabel = createMemo(() => locale().startsWith("tr") ? "Bugün" : "Today");
   const dayHeaders = createMemo(() => {
     const base = new Date(2024, 0, 1);
     return Array.from({ length: 7 }, (_, i) => {
@@ -96,17 +101,16 @@ export function DatePicker(props: {
       setPosition({ left, top, width: panelWidth });
     };
     updatePosition();
-    const closeOnOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (root && !root.contains(target) && panel && !panel.contains(target)) setOpen(false);
+    const closeOnOutside = (event: PointerEvent) => {
+      if (root && !root.contains(event.target as Node) && panel && !panel.contains(event.target as Node)) setOpen(false);
     };
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
-    document.addEventListener("mousedown", closeOnOutside);
+    document.addEventListener("pointerdown", closeOnOutside);
     onCleanup(() => {
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
-      document.removeEventListener("mousedown", closeOnOutside);
+      document.removeEventListener("pointerdown", closeOnOutside);
     });
   });
 
@@ -143,17 +147,19 @@ export function DatePicker(props: {
         <Portal>
           <div
             ref={panel}
-            class="fixed z-[80] rounded-xl border border-border/80 bg-popover p-2.5 text-popover-foreground shadow-xl"
+            data-kb-top-layer=""
+            class="pointer-events-auto fixed z-[80] rounded-xl border border-border/80 bg-popover p-2.5 text-popover-foreground shadow-xl"
             style={{ left: `${position().left}px`, top: `${position().top}px`, width: `${position().width}px` }}
+            on:pointerdown={(e) => e.stopPropagation()}
           >
             <div class="mb-3 flex items-center justify-between gap-2">
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={() => moveMonth(-1)}>
+              <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground" onClick={() => moveMonth(-1)}>
                 <IconChevronLeft class="h-4 w-4" />
-              </Button>
+              </button>
               <p class="min-w-0 truncate px-2 text-sm font-semibold capitalize">{monthLabel()}</p>
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={() => moveMonth(1)}>
+              <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground" onClick={() => moveMonth(1)}>
                 <IconChevronRight class="h-4 w-4" />
-              </Button>
+              </button>
             </div>
             <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-muted-foreground">
               <For each={dayHeaders()}>{(day) => <span>{day}</span>}</For>
@@ -163,20 +169,35 @@ export function DatePicker(props: {
                 {(date) => (
                   <Show when={date} fallback={<span class="h-8" />}>
                     {(day) => (
-                      <Button
+                      <button
                         type="button"
-                        variant={sameDay(selected(), day()) ? "default" : "ghost"}
-                        size="sm"
-                        class="h-8 rounded-lg p-0 text-xs"
-                        onClick={() => pick(day())}
+                        class={cn(
+                          "inline-flex h-8 items-center justify-center rounded-lg border border-transparent p-0 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98]",
+                          isSameDay(today, day()) && "border-primary/50 text-primary",
+                          sameDay(selected(), day()) && "border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground",
+                        )}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          pick(day());
+                        }}
                       >
                         {day().getDate()}
-                      </Button>
+                      </button>
                     )}
                   </Show>
                 )}
               </For>
             </div>
+            <button
+              type="button"
+              class="mt-2 inline-flex h-8 w-full items-center justify-center rounded-lg border bg-background/80 px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              onClick={(event) => {
+                event.stopPropagation();
+                pick(today);
+              }}
+            >
+              {todayLabel()}
+            </button>
           </div>
         </Portal>
       </Show>

@@ -1,8 +1,8 @@
 import { createResource, createSignal, For, Show } from "solid-js";
 import { formatApiError } from "@/api/client";
-import { getCourses } from "@/api/getCourses";
-import { getTime } from "@/api/getTime";
-import type { Event, EventAudience, Role } from "@/api/types";
+import { getCourses } from "@/api/courses";
+import { getTime } from "@/api/time";
+import type { Event, EventAudience, Role } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";

@@ -1,7 +1,8 @@
-import { Show } from "solid-js";
+import { Show, createSignal } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import type { Locale, MessageKey } from "@/i18n/messages";
 import { RoleBadge } from "@/components/layout/role-badge";
+import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +17,7 @@ import { IconChevronDown, IconEdit, IconGlobe, IconLogout, IconMoon, IconSun } f
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
-import type { User } from "@/api/types";
+import type { User } from "@/api/client";
 
 function titleCase(value: string) {
   return value
@@ -70,6 +71,7 @@ export function UserMenu() {
   const prefs = usePreferences();
   const t = useT();
   const navigate = useNavigate();
+  const [profileOpen, setProfileOpen] = createSignal(false);
 
   const onLogout = async () => {
     await auth.logout();
@@ -77,9 +79,10 @@ export function UserMenu() {
   };
 
   return (
-    <Show when={auth.user()}>
-      {(u) => (
-        <DropdownMenu placement="bottom-end" gutter={8}>
+    <>
+      <Show when={auth.user()}>
+        {(u) => (
+          <DropdownMenu placement="bottom-end" gutter={8}>
           <DropdownMenuTrigger
             class={cn(
               "inline-flex h-11 max-w-[16rem] items-center gap-2.5 rounded-lg border border-input bg-background px-2.5 pr-3 text-sm shadow-sm outline-none transition-colors sm:max-w-[22rem]",
@@ -176,7 +179,7 @@ export function UserMenu() {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem onSelect={() => void navigate({ to: "/profile" })}>
+            <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
               <IconEdit class="h-4 w-4 shrink-0" />
               <span>{t("profile.edit")}</span>
             </DropdownMenuItem>
@@ -188,8 +191,10 @@ export function UserMenu() {
               <span>{t("nav.logout")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </Show>
+          </DropdownMenu>
+        )}
+      </Show>
+      <AccountProfileDialog open={profileOpen()} onOpenChange={setProfileOpen} />
+    </>
   );
 }

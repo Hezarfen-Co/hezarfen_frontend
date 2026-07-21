@@ -1,5 +1,5 @@
 import { For, Show, createMemo } from "solid-js";
-import type { Note } from "@/api/types";
+import type { Note } from "@/api/client";
 import { NoteFilesPanel } from "@/components/notes/note-files-panel";
 import { SidePanel } from "@/components/ui/side-panel";
 import { useT } from "@/stores/preferences-context";

@@ -1,6 +1,7 @@
-import type { Role } from "@/api/types";
+import type { Role } from "@/api/client";
 
 const RANK: Record<Role, number> = {
+  parent: -1,
   student: 0,
   teacher: 1,
   manager: 2,
@@ -33,4 +34,4 @@ export function roleInRange(
   return true;
 }
 
-export const ROLES: Role[] = ["student", "teacher", "manager", "admin"];
+export const ROLES: Role[] = ["student", "parent", "teacher", "manager", "admin"];

@@ -1,11 +1,11 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
-import { getExamAttempt } from "@/api/getExamAttempt";
-import { getExamAttemptQuestions } from "@/api/getExamAttemptQuestions";
-import { postExamAttempt } from "@/api/postExamAttempt";
-import { postExamAttemptAnswer } from "@/api/postExamAttemptAnswer";
-import { postExamAttemptFinish } from "@/api/postExamAttemptFinish";
+import { getExamAttempt } from "@/api/exams";
+import { getExamAttemptQuestions } from "@/api/exams";
+import { postExamAttempt } from "@/api/exams";
+import { postExamAttemptAnswer } from "@/api/exams";
+import { postExamAttemptFinish } from "@/api/exams";
 import { ApiError, formatApiError } from "@/api/client";
-import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/types";
+import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -259,8 +259,11 @@ function QuestionAnswerCard(props: {
       : props.question.answer?.text ?? "",
   );
   const [saved, setSaved] = createSignal(false);
+  let questionId = props.question.id;
 
   createEffect(() => {
+    if (props.question.id === questionId) return;
+    questionId = props.question.id;
     setValue(
       props.question.kind === "choice"
         ? props.question.answer?.selected != null
@@ -295,7 +298,7 @@ function QuestionAnswerCard(props: {
         <img
           src={`/api/exams/${props.question.exam}/questions/${props.question.id}/image`}
           alt={t("questions.image")}
-          class="mb-4 max-h-64 rounded-md border object-contain"
+          class="mb-4 h-64 w-full max-w-2xl rounded-md border bg-muted/20 object-contain"
         />
       </Show>
       <p class="mb-4 whitespace-pre-wrap text-sm font-medium">{props.question.text}</p>
@@ -326,16 +329,8 @@ function QuestionAnswerCard(props: {
                   setValue(String(choiceIndex()));
                 }}
               >
-                <span
-                  class={
-                    value() === String(choiceIndex())
-                      ? "flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-primary bg-primary"
-                      : "h-4 w-4 shrink-0 rounded-[3px] border border-input bg-background"
-                  }
-                >
-                  <span
-                    class={value() === String(choiceIndex()) ? "h-2 w-2 rounded-[1px] bg-primary-foreground" : "hidden"}
-                  />
+                <span class={value() === String(choiceIndex()) ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary bg-primary text-xs font-semibold text-primary-foreground" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input bg-background text-xs font-semibold text-foreground"}>
+                  {String.fromCharCode(65 + choiceIndex())}
                 </span>
                 <span class="min-w-0 space-y-2">
                   <span class="block whitespace-pre-wrap">{choice}</span>
@@ -343,7 +338,7 @@ function QuestionAnswerCard(props: {
                     <img
                       src={`/api/exams/${props.question.exam}/questions/${props.question.id}/choices/${choiceIndex()}/image`}
                       alt={t("questions.choiceImage")}
-                      class="max-h-40 rounded-md border object-contain"
+                      class="h-36 w-full max-w-md rounded-md border bg-muted/20 object-contain"
                     />
                   </Show>
                 </span>

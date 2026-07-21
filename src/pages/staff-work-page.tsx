@@ -1,11 +1,11 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { deleteWorkEntryById } from "@/api/deleteWorkEntryById";
-import { getUserSearch } from "@/api/getUserSearch";
-import { getUserWorkLog } from "@/api/getUserWorkLog";
-import { patchWorkEntryById } from "@/api/patchWorkEntryById";
+import { deleteWorkEntryById } from "@/api/work";
+import { getUserSearch } from "@/api/users";
+import { getUserWorkLog } from "@/api/work";
+import { patchWorkEntryById } from "@/api/work";
 import { ApiError, formatApiError } from "@/api/client";
-import type { PersonRef, WorkEntry } from "@/api/types";
+import type { PersonRef, WorkEntry } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";

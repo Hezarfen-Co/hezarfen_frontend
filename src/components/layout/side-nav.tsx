@@ -11,7 +11,7 @@ import { useT } from "@/stores/preferences-context";
 import { hasExactRole, hasMinRole, roleInRange } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import type { MessageKey } from "@/i18n/messages";
-import type { Role } from "@/api/types";
+import type { Role } from "@/api/client";
 import {
   IconBook,
   IconBriefcase,
@@ -22,6 +22,8 @@ import {
   IconClock,
   IconClipboardCheck,
   IconExam,
+  IconGlobe,
+  IconHelpCircle,
   IconHome,
   IconMessage,
   IconNote,
@@ -49,6 +51,7 @@ type NavGroup = {
   labelKey: MessageKey;
   Icon: Component<{ class?: string }>;
   minRole?: Role;
+  exactRole?: Role;
   items: NavItem[];
 };
 
@@ -63,6 +66,15 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/clubs", labelKey: "nav.clubs", Icon: IconUsers },
       { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
+    ],
+  },
+  {
+    id: "students",
+    labelKey: "nav.group.students",
+    Icon: IconUsers,
+    exactRole: "parent",
+    items: [
+      { to: "/students", labelKey: "nav.myStudents", Icon: IconUsers, exactRole: "parent" },
     ],
   },
   {
@@ -88,6 +100,14 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
       { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
       { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
+    ],
+  },
+  {
+    id: "community",
+    labelKey: "nav.group.community",
+    Icon: IconGlobe,
+    items: [
+      { to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
     ],
   },
   {
@@ -170,7 +190,12 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
 
   const visibleGroups = createMemo(() =>
     NAV_GROUPS
-      .filter((group) => !group.minRole || hasMinRole(auth.user()?.role, group.minRole))
+      .filter((group) => {
+        const r = auth.user()?.role;
+        if (group.exactRole && !hasExactRole(r, group.exactRole)) return false;
+        if (group.minRole && !hasMinRole(r, group.minRole)) return false;
+        return true;
+      })
       .map((group) => ({
         ...group,
         items: group.items.filter(itemVisible),

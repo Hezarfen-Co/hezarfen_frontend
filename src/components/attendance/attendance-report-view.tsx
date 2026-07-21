@@ -1,7 +1,7 @@
 import { For, Show, createMemo } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { Link } from "@tanstack/solid-router";
-import type { AttendanceCounts, AttendanceReport } from "@/api/types";
+import type { AttendanceCounts, AttendanceReport } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { ATTENDANCE_STATUSES } from "@/lib/attendance-status";

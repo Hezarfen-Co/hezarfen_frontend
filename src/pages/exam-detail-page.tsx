@@ -1,19 +1,19 @@
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { deleteExamById } from "@/api/deleteExamById";
-import { deleteExamResultByUserId } from "@/api/deleteExamResultByUserId";
-import { getExamById } from "@/api/getExamById";
-import { getExamResult } from "@/api/getExamResult";
-import { getExamResults } from "@/api/getExamResults";
-import { getExamStatistics } from "@/api/getExamStatistics";
-import { getCourseEnrollments } from "@/api/getCourseEnrollments";
-import { getMyCourses } from "@/api/getMyCourses";
-import { getSettings } from "@/api/getSettings";
-import { patchExamById } from "@/api/patchExamById";
-import { postExamResult } from "@/api/postExamResult";
+import { deleteExamById } from "@/api/exams";
+import { deleteExamResultByUserId } from "@/api/exams";
+import { getExamById } from "@/api/exams";
+import { getExamAttempt } from "@/api/exams";
+import { getExamResult } from "@/api/exams";
+import { getExamResults } from "@/api/exams";
+import { getExamStatistics } from "@/api/exams";
+import { getCourseEnrollments } from "@/api/courses";
+import { getMyCourses } from "@/api/reports";
+import { patchExamById } from "@/api/exams";
+import { postExamResult } from "@/api/exams";
 import { ApiError, formatApiError } from "@/api/client";
-import type { ExamResult } from "@/api/types";
+import type { ExamResult } from "@/api/client";
 import { ExamForm } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { AnswerSheetView } from "@/components/exams/answer-sheet-view";
@@ -26,7 +26,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
-import { IconChevronLeft, IconEdit, IconExam, IconEye, IconTrash } from "@/components/ui/icons";
+import { IconChevronDown, IconChevronLeft, IconEdit, IconExam, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
+import { Input } from "@/components/ui/input";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -34,7 +36,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
-import { examWeight } from "@/lib/exam-weight";
+import { examDisplayStatus, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
@@ -42,6 +44,8 @@ import { createFlash } from "@/lib/flash";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+const RESULT_PAGE_SIZE = 10;
 
 export default function ExamDetailPage() {
   return (
@@ -66,7 +70,6 @@ function ExamDetailContent() {
   }, "");
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
-  const [settings] = createResource(() => getSettings());
   const isStudent = createMemo(() => auth.user()?.role === "student");
 
   const hasCourseManagementRights = () => {
@@ -81,19 +84,29 @@ function ExamDetailContent() {
   const [pending, setPending] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
-  const [sheetUserId, setSheetUserId] = createSignal<string | null>(null);
   const [gradeOpen, setGradeOpen] = createSignal(false);
+  const [resultPage, setResultPage] = createSignal(0);
+  const [answerSheetUserId, setAnswerSheetUserId] = createSignal<string | null>(null);
+  const answerSheetOpen = () => answerSheetUserId() != null;
+  const [answerMark, setAnswerMark] = createSignal("0");
+  const [answerError, setAnswerError] = createSignal("");
+  const [answerPending, setAnswerPending] = createSignal(false);
+  const [questionCreateOpen, setQuestionCreateOpen] = createSignal(false);
   const [openSections, setOpenSections] = createSignal({
     schedule: false,
     ownResult: false,
-    answerSheet: false,
     statistics: false,
     questions: false,
     results: false,
   });
+  const isSittable = () => {
+    const e = exam();
+    return e ? isSittableExam(e) : false;
+  };
+  const isScheduled = () => isSittable();
 
   const [ownResult] = createResource(
-    () => (isStudent() ? id() : null),
+    () => (isStudent() && openSections().ownResult ? id() : null),
     async (examId) => {
       if (!examId) return null;
       try {
@@ -104,12 +117,40 @@ function ExamDetailContent() {
       }
     },
   );
+  const [ownAttempt] = createResource(
+    () => (isStudent() && isSittable() ? id() : null),
+    async (examId) => {
+      if (!examId) return null;
+      try {
+        return await getExamAttempt(examId);
+      } catch (err) {
+        if (err instanceof ApiError && (err.status === 404 || err.status === 409)) return null;
+        throw err;
+      }
+    },
+  );
 
   const [results, { refetch: refetchResults }] = createResource(
-    () => (hasCourseManagementRights() && (openSections().results || gradeOpen() || sheetUserId()) ? id() : null),
-    async (examId) => {
-      if (!examId) return [];
-      return (await getExamResults(examId)).items;
+    () => (hasCourseManagementRights() ? [id(), resultPage()] as const : null),
+    async (source) => {
+      if (!source) return { items: [], total: 0, limit: RESULT_PAGE_SIZE, offset: 0 };
+      const [examId, page] = source;
+      return getExamResults(examId, { limit: RESULT_PAGE_SIZE, offset: page * RESULT_PAGE_SIZE });
+    },
+  );
+  const [gradeResults, { refetch: refetchGradeResults }] = createResource(
+    () => (hasCourseManagementRights() && gradeOpen() ? id() : null),
+    async (examId) => examId ? getExamResults(examId, { limit: 500, offset: 0 }) : null,
+  );
+  const [answerResult, { refetch: refetchAnswerResult }] = createResource(
+    () => (hasCourseManagementRights() && answerSheetOpen() ? [id(), answerSheetUserId()!] as const : null),
+    async (source) => {
+      if (!source) return null;
+      const [examId, userId] = source;
+      const page = await getExamResults(examId, { limit: 500, offset: 0 });
+      const row = page.items.find((item) => personId(item.user) === userId) ?? null;
+      setAnswerMark(row ? String(row.mark) : "0");
+      return row;
     },
   );
   const [stats] = createResource(
@@ -142,6 +183,23 @@ function ExamDetailContent() {
   };
   const isFinished = () => examStatus().finished;
   const isUpcoming = () => examStatus().upcoming;
+  const ownAttemptSummary = (): ExamAttemptSummary | null => {
+    const attempt = ownAttempt();
+    return attempt ? { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } : null;
+  };
+  const noAttemptsLeft = () => detailStatus() === "no_attempts_left";
+  const detailStatus = (): ExamDisplayStatus => exam() ? examDisplayStatus(exam()!, now(), ownAttemptSummary()) : "unscheduled";
+  const detailStatusLabel = () => {
+    const status = detailStatus();
+    if (status === "submitted") return t("attempt.submitted");
+    if (status === "expired") return t("attempt.expired");
+    if (status === "no_attempts_left") return t("attempt.noAttemptsLeft");
+    if (status === "draft") return t("exams.draft");
+    if (status === "unscheduled") return t("exams.unscheduled");
+    if (status === "finished") return t("exams.finished");
+    if (status === "upcoming") return t("exams.upcoming");
+    return t("exams.active");
+  };
 
   const canManage = () => {
     if (isFinished()) return false;
@@ -163,11 +221,45 @@ function ExamDetailContent() {
     if (mode === "open") return t("exams.mode.open");
     return t("exams.unscheduled");
   };
-  const isSittable = () => exam()?.mode === "sync" || exam()?.mode === "async" || exam()?.mode === "open";
-  const isScheduled = () => isSittable();
   const isDraft = () => exam()?.draft === true;
+  const resultTotal = () => results()?.total ?? 0;
+  const resultTotalPages = () => Math.max(1, Math.ceil(resultTotal() / RESULT_PAGE_SIZE));
+  const setClampedAnswerMark = (value: string) => {
+    if (value === "") {
+      setAnswerMark(value);
+      return;
+    }
+    const next = Math.max(0, Math.min(100, Number(value)));
+    setAnswerMark(Number.isNaN(next) ? "" : String(Math.trunc(next)));
+  };
+  const submitAnswerMark = async (event: SubmitEvent) => {
+    event.preventDefault();
+    const userId = answerSheetUserId();
+    if (!userId) return;
+    const mark = Number(answerMark());
+    if (!Number.isInteger(mark) || mark < 0 || mark > 100) {
+      setAnswerError(t("form.markRange"));
+      return;
+    }
+    setAnswerError("");
+    setAnswerPending(true);
+    try {
+      await postExamResult(id(), { user_id: userId, mark });
+      await refetchAnswerResult();
+      await refetchResults();
+      setFlash(t("common.saved"));
+    } catch (err) {
+      setAnswerError(formatApiError(err));
+    } finally {
+      setAnswerPending(false);
+    }
+  };
+  createEffect(() => {
+    if (resultPage() >= resultTotalPages()) setResultPage(resultTotalPages() - 1);
+  });
   const gradeStudents = () => {
-    const graded = new Set((results() ?? []).map((row) => personId(row.user)));
+    if (gradeResults.loading) return [];
+    const graded = new Set((gradeResults()?.items ?? []).map((row) => personId(row.user)));
     return (roster() ?? [])
       .filter((row) => !graded.has(row.user.id))
       .map((row) => ({
@@ -206,10 +298,12 @@ function ExamDetailContent() {
             {
               label: t("exams.answerSheet"),
               icon: <IconEye class="h-4 w-4" />,
-              onSelect: () => {
-                const rowUserId = personId(cell.row.original.user);
-                setSheetUserId(sheetUserId() === rowUserId ? null : rowUserId);
-              },
+              onSelect: () => setAnswerSheetUserId(personId(cell.row.original.user)),
+            },
+            {
+              label: t("common.update"),
+              icon: <IconEdit class="h-4 w-4" />,
+              onSelect: () => setAnswerSheetUserId(personId(cell.row.original.user)),
             },
             ...(!isFinished()
               ? [{
@@ -239,7 +333,7 @@ function ExamDetailContent() {
       setPending(false);
     }
   };
-  const toggleSection = (section: "schedule" | "ownResult" | "answerSheet" | "statistics" | "questions" | "results") => {
+  const toggleSection = (section: "schedule" | "ownResult" | "statistics" | "questions" | "results") => {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
 
@@ -271,13 +365,23 @@ function ExamDetailContent() {
                         {t("common.back")}
                       </Button>
                     </Link>
-                    <Show when={isStudent() && !isDraft() && !isFinished() && !isUpcoming() && isSittable()}>
-                      <Link to="/exam-room/$id" params={{ id: id() }}>
-                        <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
-                          <IconExam class="h-4 w-4" />
-                          {t("attempt.openRoom")}
-                        </Button>
-                      </Link>
+                    <Show when={isStudent() && !isDraft() && isSittable()}>
+                      <Show when={!isUpcoming() && !isFinished()}>
+                        <Show when={noAttemptsLeft()}
+                          fallback={
+                            <Link to="/exam-room/$id" params={{ id: id() }}>
+                              <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
+                                <IconExam class="h-4 w-4" />
+                                {ownAttempt()?.status === "in_progress" ? t("attempt.resume") : t("attempt.openRoom")}
+                              </Button>
+                            </Link>
+                          }
+                        >
+                          <Badge variant="secondary" class="flex-1 rounded-sm px-3 py-2 text-center sm:flex-none">
+                            {ownAttempt()?.status === "submitted" ? t("attempt.submitted") : ownAttempt()?.status === "expired" ? t("attempt.expired") : t("attempt.noAttemptsLeft")}
+                          </Badge>
+                        </Show>
+                      </Show>
                     </Show>
                     <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
                       <Link to="/exams/$id/live" params={{ id: id() }}>
@@ -309,30 +413,111 @@ function ExamDetailContent() {
                     variant="outline"
                     class={cn(
                       "mt-2 w-fit rounded-sm capitalize",
-                      scheduleStatusClass(!isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active"),
+                      scheduleStatusClass(examStatusTone(detailStatus())),
                     )}
                   >
-                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(!isScheduled() ? "unscheduled" : isFinished() ? "finished" : isUpcoming() ? "upcoming" : "active"))} />
-                    {!isScheduled() ? t("exams.unscheduled") : isFinished() ? t("exams.finished") : isUpcoming() ? t("exams.upcoming") : t("exams.active")}
+                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(detailStatus())))} />
+                    {detailStatusLabel()}
                   </Badge>
                 </div>
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.kind")}</p>
                   <p class="mt-1 font-medium capitalize">{examKindLabel(String(ex().kind), t)}</p>
-                  <Show when={examWeight(ex(), settings()?.exam_kinds) != null}>
-                    {(weight) => <p class="mt-1 text-xs text-muted-foreground">{t("courses.weight")}: {weight()}</p>}
-                  </Show>
                 </div>
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
                   <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
                 </div>
                 <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.draft")}</p>
-                  <p class="mt-1 font-medium">{ex().draft ? t("exams.draft") : "—"}</p>
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.maxAttempts")}</p>
+                  <p class="mono mt-1 font-medium tabular-nums">
+                    <Show when={isStudent()} fallback={ex().max_attempts}>
+                      {ownAttemptSummary() ? `${ownAttemptSummary()!.attempts_used} / ${ex().max_attempts}` : `0 / ${ex().max_attempts}`}
+                      <span class="ml-1.5 text-xs text-muted-foreground font-sans tracking-normal">
+                        ({t("exams.attemptsLeft")}: {ex().max_attempts - (ownAttemptSummary()?.attempts_used ?? 0)})
+                      </span>
+                    </Show>
+                  </p>
                 </div>
+                <Show when={ex().starts_at}>
+                  <div class="detail-metric-card">
+                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.startsAt")}</p>
+                    <p class="mono mt-1 font-medium tabular-nums">{formatDateTime(ex().starts_at, locale())}</p>
+                  </div>
+                </Show>
+                <Show when={ex().ends_at}>
+                  <div class="detail-metric-card">
+                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.endsAt")}</p>
+                    <p class="mono mt-1 font-medium tabular-nums">{formatDateTime(ex().ends_at, locale())}</p>
+                  </div>
+                </Show>
+                <Show when={examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at)}>
+                  {(dur) => (
+                    <div class="detail-metric-card">
+                      <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.durationMinutes")}</p>
+                      <p class="mono mt-1 font-medium tabular-nums">{formatDurationMinutes(dur(), locale())}</p>
+                    </div>
+                  )}
+                </Show>
               </div>
             </div>
+
+            <SidePanel
+              open={answerSheetOpen()}
+              onOpenChange={(open) => { if (!open) setAnswerSheetUserId(null); }}
+              title={t("exams.answerSheet")}
+              size="wide"
+            >
+              <Show when={answerSheetUserId()}>
+                {(userId) => {
+                  const [markOpen, setMarkOpen] = createSignal(false);
+                  return (
+                  <div class="space-y-4">
+                    <button
+                      type="button"
+                      onClick={() => setMarkOpen((v) => !v)}
+                      class="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm shadow-sm transition-colors hover:bg-muted/40"
+                    >
+                      <span class="inline-flex items-center gap-2 font-medium">
+                        <IconEdit class="h-4 w-4" />
+                        <span>{t("form.mark")} {t("common.update")}</span>
+                      </span>
+                      <span class="inline-flex items-center gap-2">
+                        <Show when={answerResult()}>
+                          {(row) => <span class="tabular-nums font-semibold">{row().mark}/100</span>}
+                        </Show>
+                        <IconChevronDown class={cn("h-4 w-4 text-muted-foreground transition-transform", markOpen() && "rotate-180")} />
+                      </span>
+                    </button>
+                    <Show when={markOpen()}>
+                      <form class="space-y-3" onSubmit={submitAnswerMark}>
+                        <div class="flex items-end gap-2">
+                          <Input
+                            id="answer-sheet-mark"
+                            class="h-10 flex-1 rounded-lg"
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={answerMark()}
+                            onInput={(event) => setClampedAnswerMark(event.currentTarget.value)}
+                          />
+                          <span class="pb-2 text-sm text-muted-foreground">/ 100</span>
+                          <Button type="submit" class="h-10 rounded-lg shrink-0" disabled={answerPending() || answerResult.loading}>
+                            {t("common.save")}
+                          </Button>
+                        </div>
+                        <Show when={answerError()}>
+                          {(msg) => <p class="text-sm text-destructive">{msg()}</p>}
+                        </Show>
+                      </form>
+                    </Show>
+                    <AnswerSheetView examId={id()} userId={userId()} />
+                  </div>
+                  );
+                }}
+              </Show>
+            </SidePanel>
 
             <ConfirmDialog
               open={deleteOpen()}
@@ -393,6 +578,21 @@ function ExamDetailContent() {
               </div>
             </SectionDisclosure>
 
+            <Show when={isStudent() && ownAttempt()?.status && (ownAttempt()!.status === "submitted" || ownAttempt()!.status === "expired")}>
+              <Alert variant={ownAttempt()!.status === "submitted" ? "default" : "destructive"} class="border">
+                <p class="text-sm font-medium">
+                  {ownAttempt()!.status === "submitted" 
+                    ? (noAttemptsLeft() ? t("attempt.submittedFinalInfo") : t("attempt.submittedCanRetakeInfo"))
+                    : t("attempt.expiredInfo")}
+                </p>
+                <Show when={ownAttempt()?.finished_at}>
+                  <p class="text-sm mt-1 opacity-80">
+                    {t("attempt.submittedAt")}: {formatDateTime(ownAttempt()!.finished_at, locale())}
+                  </p>
+                </Show>
+              </Alert>
+            </Show>
+
             <Show when={isStudent() && !isScheduled()}>
               <SectionDisclosure
                 open={openSections().ownResult}
@@ -404,19 +604,6 @@ function ExamDetailContent() {
                   <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
                     {(r) => <ExamResultBadge mark={r().mark} />}
                   </Show>
-                </Suspense>
-              </SectionDisclosure>
-            </Show>
-
-            <Show when={hasCourseManagementRights() && sheetUserId()}>
-              <SectionDisclosure
-                open={openSections().answerSheet}
-                onToggle={() => toggleSection("answerSheet")}
-                title={t("exams.answerSheet")}
-                description={sheetUserId() ?? undefined}
-              >
-                <Suspense fallback={<PageSpinner />}>
-                  <AnswerSheetView examId={id()} userId={sheetUserId()!} />
                 </Suspense>
               </SectionDisclosure>
             </Show>
@@ -454,9 +641,27 @@ function ExamDetailContent() {
                 onToggle={() => toggleSection("questions")}
                 title={t("questions.title")}
                 description={t("exams.examQuestions")}
+                actions={
+                  <Show when={hasCourseManagementRights() && !isFinished()}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      class="rounded-lg"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenSections((current) => ({ ...current, questions: true }));
+                        setQuestionCreateOpen(true);
+                      }}
+                    >
+                      <IconPlus class="h-4 w-4" />
+                      {t("questions.add")}
+                    </Button>
+                  </Show>
+                }
               >
                 <Show when={openSections().questions}>
-                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished() || isUpcoming()} embedded />
+                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded createOpen={questionCreateOpen()} onCreateOpenChange={setQuestionCreateOpen} />
                 </Show>
               </SectionDisclosure>
 
@@ -470,6 +675,7 @@ function ExamDetailContent() {
                   onSubmit={async (values) => {
                     await postExamResult(id(), values);
                     await refetchResults();
+                    await refetchGradeResults();
                     setFlash(t("common.saved"));
                   }}
                 />
@@ -479,7 +685,7 @@ function ExamDetailContent() {
                 open={openSections().results}
                 onToggle={() => toggleSection("results")}
                 title={t("exams.results")}
-                description={`${(results() ?? []).length} ${t("exams.studentResults")}`}
+                description={`${resultTotal()} ${t("exams.studentResults")}`}
                 actions={
                   <Show when={hasCourseManagementRights()}>
                     <div class="flex items-center gap-2">
@@ -496,14 +702,17 @@ function ExamDetailContent() {
               >
                 <Suspense fallback={<PageSpinner />}>
                   <Show
-                    when={(results() ?? []).length > 0}
+                    when={(results()?.items ?? []).length > 0}
                     fallback={
                       <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
                         {t("exams.noResults")}
                       </p>
                     }
                   >
-                    <DataTable columns={resultColumns()} data={results() ?? []} filterColumn="user" enablePagination pageSize={10} />
+                    <DataTable columns={resultColumns()} data={results()?.items ?? []} filterColumn="user" />
+                    <Show when={resultTotal() > RESULT_PAGE_SIZE}>
+                      <PaginationControls page={Math.min(resultPage(), resultTotalPages() - 1)} totalPages={resultTotalPages()} onPageChange={setResultPage} />
+                    </Show>
                   </Show>
                 </Suspense>
               </SectionDisclosure>

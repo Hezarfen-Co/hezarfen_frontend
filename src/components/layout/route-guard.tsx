@@ -1,6 +1,6 @@
 import { Navigate } from "@tanstack/solid-router";
 import { type ParentProps, Show } from "solid-js";
-import type { Role } from "@/api/types";
+import type { Role } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { hasExactRole, roleInRange } from "@/lib/roles";

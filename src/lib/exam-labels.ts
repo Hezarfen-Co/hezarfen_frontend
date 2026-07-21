@@ -1,4 +1,4 @@
-import type { KnownExamKind } from "@/api/types";
+import type { KnownExamKind } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 
 type T = (key: MessageKey, vars?: Record<string, string | number>) => string;

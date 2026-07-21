@@ -1,10 +1,10 @@
 import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { Link, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getEvents } from "@/api/getEvents";
-import { postEvent } from "@/api/postEvent";
+import { getEvents } from "@/api/events";
+import { postEvent } from "@/api/events";
 import { formatApiError } from "@/api/client";
-import type { Event, EventAudience } from "@/api/types";
+import type { Event, EventAudience } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

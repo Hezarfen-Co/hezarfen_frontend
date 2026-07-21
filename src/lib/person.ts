@@ -1,4 +1,4 @@
-import type { PersonRef } from "@/api/types";
+import type { PersonRef } from "@/api/client";
 
 export type PersonLike = PersonRef | string | null | undefined;
 

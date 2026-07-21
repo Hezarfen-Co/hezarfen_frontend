@@ -1,13 +1,15 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useNavigate } from "@tanstack/solid-router";
-import { getCourses } from "@/api/getCourses";
-import { getExams } from "@/api/getExams";
-import { getMyCourses } from "@/api/getMyCourses";
-import { patchExamById } from "@/api/patchExamById";
-import { postCourseExam } from "@/api/postCourseExam";
+import { getCourseById } from "@/api/courses";
+import { getCourses } from "@/api/courses";
+import { getExamAttempt } from "@/api/exams";
+import { getExams } from "@/api/exams";
+import { getMyCourses } from "@/api/reports";
+import { patchExamById } from "@/api/exams";
+import { postCourseExam } from "@/api/courses";
 import { formatApiError } from "@/api/client";
-import type { Course, Exam } from "@/api/types";
+import type { Course, Exam } from "@/api/client";
 import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -21,6 +23,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examDisplayStatus, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -31,7 +34,7 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 
 const EXAM_PAGE_SIZE = 12;
 
-type ExamStatus = "draft" | "unscheduled" | "upcoming" | "active" | "finished";
+type ExamRow = Exam & { displayStatus: ExamDisplayStatus };
 
 export default function ExamsPage() {
   return (
@@ -47,12 +50,13 @@ function ExamsContent() {
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
-  const [statusFilter, setStatusFilter] = createSignal<ExamStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = createSignal<ExamDisplayStatus | "all">("all");
   const [courseFilter, setCourseFilter] = createSignal("all");
   const [showMoreFilters, setShowMoreFilters] = createSignal(false);
   const [createOpen, setCreateOpen] = createSignal(false);
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
+  const [attemptStatuses, setAttemptStatuses] = createSignal<Record<string, ExamAttemptSummary>>({});
   const [flash, setFlash] = createFlash();
 
   const [courses] = createResource(
@@ -72,18 +76,14 @@ function ExamsContent() {
     visibleCourses().filter((course) => course.creator.id === auth.user()?.id || hasMinRole(auth.user()?.role, "manager")),
   );
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher") && manageableCourses().length > 0;
-  const courseById = createMemo(() => new Map(visibleCourses().map((course) => [course.id, course])));
-  const courseTitle = (courseId: string) => courseById().get(courseId)?.title ?? courseId;
-
-  const examStatus = (exam: Exam): ExamStatus => {
-    if (exam.draft) return "draft";
-    if (exam.mode !== "sync" && exam.mode !== "async" && exam.mode !== "open") return "unscheduled";
-    if (exam.mode === "open") return "active";
-    const current = now();
-    if (exam.ends_at != null && exam.ends_at < current) return "finished";
-    if (exam.starts_at != null && exam.starts_at > current) return "upcoming";
-    return "active";
+  const [courseMap, setCourseMap] = createSignal<Record<string, string>>({});
+  const courseTitle = (courseId: string) => {
+    const cached = visibleCourses().find((c) => c.id === courseId);
+    if (cached) return cached.title;
+    return courseMap()[courseId] ?? courseId;
   };
+
+  const examStatus = (exam: Exam) => examDisplayStatus(exam, now(), attemptStatuses()[exam.id]);
 
   const filterExams = (items: Exam[]) => {
     const allowed = isStudent() ? new Set(visibleCourses().map((course) => course.id)) : null;
@@ -94,8 +94,8 @@ function ExamsContent() {
       return true;
     });
   };
-  const searchExam = (exam: Exam, query: string) =>
-    [exam.title, exam.description, courseTitle(exam.course), examKindLabel(String(exam.kind), t), statusLabel(examStatus(exam))]
+  const searchExam = (exam: ExamRow, query: string) =>
+    [exam.title, exam.description, courseTitle(exam.course), examKindLabel(String(exam.kind), t), statusLabel(exam.displayStatus)]
       .join(" ")
       .toLocaleLowerCase(locale())
       .includes(query.toLocaleLowerCase(locale()));
@@ -104,9 +104,21 @@ function ExamsContent() {
     () => {
       // Do not track now() here — it ticks every second and would re-fetch forever.
       if (isStudent() && mine() === undefined) return null;
+      if (!isStudent() && courses() === undefined) return null;
       return [isStudent() ? "s" : "t", (mine() ?? []).map((c) => c.id).join(",")].join("|");
     },
-    async () => (await getExams()).items,
+    async () => {
+      const items = (await getExams()).items;
+      const known = new Map(visibleCourses().map((c) => [c.id, c.title]));
+      const missing = [...new Set(items.map((e) => e.course))].filter((id) => !known.has(id));
+      if (missing.length > 0) {
+        await Promise.all(missing.map((id) =>
+          getCourseById(id).then((c) => known.set(id, c.title)).catch(() => {}),
+        ));
+      }
+      setCourseMap(Object.fromEntries(known));
+      return items;
+    },
   );
 
   createEffect(() => {
@@ -114,16 +126,43 @@ function ExamsContent() {
     setSelectedCourseId(manageableCourses()[0]?.id ?? "");
   });
 
-  const statusLabel = (status: ExamStatus) => {
+  const statusLabel = (status: ExamDisplayStatus) => {
+    if (status === "submitted") return t("attempt.submitted");
+    if (status === "expired") return t("attempt.expired");
+    if (status === "no_attempts_left") return t("attempt.noAttemptsLeft");
     if (status === "draft") return t("exams.draft");
     if (status === "unscheduled") return t("exams.unscheduled");
     if (status === "finished") return t("exams.finished");
     if (status === "upcoming") return t("exams.upcoming");
     return t("exams.active");
   };
-
-  const rows = () => filterExams(list() ?? []);
-  const columns = createMemo<ColumnDef<Exam>[]>(() => [
+  const rows = (): ExamRow[] => filterExams(list() ?? []).map((exam) => ({ ...exam, displayStatus: examStatus(exam) }));
+  createEffect(() => {
+    if (!isStudent()) return;
+    const exams = list();
+    if (!exams) return;
+    const allowed = new Set(visibleCourses().map((course) => course.id));
+    const refresh = () => {
+      for (const exam of exams) {
+        if (!allowed.has(exam.course) || !isSittableExam(exam)) continue;
+        const current = attemptStatuses()[exam.id];
+        if (current?.status === "submitted" || current?.status === "expired") continue;
+        if (current && current.max_attempts > 0 && current.attempts_used >= current.max_attempts) continue;
+        if (current != null && current.status !== "in_progress") continue;
+        void getExamAttempt(exam.id)
+          .then((attempt) => {
+            setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } }));
+          })
+          .catch(() => {
+            setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: "not_started", attempts_used: 0, max_attempts: exam.max_attempts } }));
+          });
+      }
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 5000);
+    onCleanup(() => window.clearInterval(interval));
+  });
+  const columns = createMemo<ColumnDef<ExamRow>[]>(() => [
     {
       accessorKey: "title",
       header: t("exams.title"),
@@ -149,14 +188,14 @@ function ExamsContent() {
     },
     {
       id: "status",
-      accessorFn: (exam) => statusLabel(examStatus(exam)),
+      accessorFn: (exam) => statusLabel(exam.displayStatus),
       header: t("attempt.status"),
       meta: { headerClass: "text-center", cellClass: "text-center" },
       cell: (cell) => {
-        const status = examStatus(cell.row.original);
+        const status = cell.row.original.displayStatus;
         return (
-          <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", scheduleStatusClass(status))}>
-            <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(status))} />
+          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap rounded-sm", scheduleStatusClass(examStatusTone(status)))}>
+            <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(status)))} />
             {statusLabel(status)}
           </Badge>
         );
@@ -249,8 +288,10 @@ function ExamsContent() {
             empty={t("exams.empty")}
             filters={
               <>
-                <Select class="h-9 w-full rounded-sm sm:w-40" value={statusFilter()} onChange={(event) => setStatusFilter(event.currentTarget.value as ExamStatus | "all")}>
+                <Select class="h-9 w-full rounded-sm sm:w-40" value={statusFilter()} onChange={(event) => setStatusFilter(event.currentTarget.value as ExamDisplayStatus | "all")}>
                   <option value="all">{t("common.all")}</option>
+                  <option value="submitted">{t("attempt.submitted")}</option>
+                  <option value="expired">{t("attempt.expired")}</option>
                   <option value="draft">{t("exams.draft")}</option>
                   <option value="upcoming">{t("exams.upcoming")}</option>
                   <option value="active">{t("exams.active")}</option>

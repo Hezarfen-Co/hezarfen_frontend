@@ -1,10 +1,10 @@
 import { createEffect, createMemo, createResource, createSignal, Show } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { For } from "solid-js";
-import { getSettings } from "@/api/getSettings";
-import { getTime } from "@/api/getTime";
-import type { Exam } from "@/api/types";
-import { EXAM_KINDS, EXAM_MODES } from "@/api/types";
+import { getSettings } from "@/api/settings";
+import { getTime } from "@/api/time";
+import type { Exam } from "@/api/client";
+import { EXAM_KINDS, EXAM_MODES } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";

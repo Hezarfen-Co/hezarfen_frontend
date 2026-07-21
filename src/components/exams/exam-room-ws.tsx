@@ -1,18 +1,19 @@
-import { For, Show, Suspense, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
-import { getExamAttempt } from "@/api/getExamAttempt";
-import { getExamAttemptQuestions } from "@/api/getExamAttemptQuestions";
-import { postExamAttempt } from "@/api/postExamAttempt";
-import { postExamAttemptAnswer } from "@/api/postExamAttemptAnswer";
-import { postExamAttemptFinish } from "@/api/postExamAttemptFinish";
+import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { getExamAttempt } from "@/api/exams";
+import { getExamAttemptQuestions } from "@/api/exams";
+import { postExamAttempt } from "@/api/exams";
+import { postExamAttemptAnswer } from "@/api/exams";
+import { postExamAttemptFinish } from "@/api/exams";
 import { formatApiError, formatApiErrorMessage } from "@/api/client";
-import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/types";
+import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
+import { IconAlert, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
+import { createNow } from "@/lib/create-now";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -47,8 +48,19 @@ export function ExamRoomWS(props: { exam: Exam }) {
   const [activeQuestionIndex, setActiveQuestionIndex] = createSignal(0);
   const [remainingMs, setRemainingMs] = createSignal<number | null>(0);
   const [wsState, setWsState] = createSignal<WsState>("disconnected");
+  const now = createNow();
   const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async" || props.exam.mode === "open");
-  const canWrite = createMemo(() => attempt()?.status === "in_progress" && (remainingMs() == null || remainingMs()! > 0));
+  const attemptStatus = createMemo(() => {
+    const current = attempt();
+    if (!current || current.status !== "in_progress") return current?.status;
+    const deadline = current.deadline ?? props.exam.ends_at;
+    return deadline != null && deadline <= now() ? "expired" : current.status;
+  });
+  const canWrite = createMemo(() => attemptStatus() === "in_progress" && (remainingMs() == null || remainingMs()! > 0));
+  const canStart = createMemo(() => {
+    const status = attemptStatus();
+    return status == null || status === "in_progress";
+  });
 
   let ws: WebSocket | null = null;
 
@@ -254,7 +266,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
               {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : props.exam.mode === "open" ? t("exams.mode.open") : t("attempt.unscheduled")}
             </p>
           </div>
-          <Show when={scheduled()} fallback={<Badge variant="outline" class="w-fit rounded-full px-3 py-1">{t("attempt.unscheduled")}</Badge>}>
+          <Show when={scheduled() && canStart()} fallback={<Badge variant="outline" class="w-fit rounded-full px-3 py-1">{t("attempt.unscheduled")}</Badge>}>
             <Show
               when={attempt()}
               fallback={
@@ -269,27 +281,71 @@ export function ExamRoomWS(props: { exam: Exam }) {
             </Show>
           </Show>
         </div>
+
+        <Show when={attempt()}>
+          {(att) => (
+            <Switch>
+              <Match when={att().status === "submitted"}>
+                <div class="rounded-lg border border-info/30 bg-info/10 px-4 py-3">
+                  <div class="flex items-start gap-3">
+                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-info" />
+                    <div class="min-w-0 space-y-1">
+                      <p class="text-sm font-semibold text-foreground">{t("attempt.submitted")}</p>
+                      <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>
+                    </div>
+                  </div>
+                </div>
+              </Match>
+              <Match when={att().status === "expired"}>
+                <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                  <div class="flex items-start gap-3">
+                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                    <div class="min-w-0 space-y-1">
+                      <p class="text-sm font-semibold text-foreground">{t("attempt.expired")}</p>
+                      <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>
+                    </div>
+                  </div>
+                </div>
+              </Match>
+            </Switch>
+          )}
+        </Show>
       </Show>
 
-      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      <Show when={error()}>
+        {(msg) => (
+          <div class="overflow-hidden rounded-lg border border-destructive/30 bg-destructive/10">
+            <div class="flex items-start gap-3 px-4 py-3">
+              <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+              <p class="min-w-0 text-sm text-destructive">{msg()}</p>
+            </div>
+          </div>
+        )}
+      </Show>
 
       <Suspense fallback={<PageSpinner />}>
-        <Show when={scheduled() && (!attempt() || !roomOpen())}>
+        <Show when={scheduled()}>
           <Show
             when={attempt()}
             fallback={
-              <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                {t("attempt.notStarted")}
-              </p>
+              <Show when={!roomOpen()}>
+                <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                  {t("attempt.notStarted")}
+                </p>
+              </Show>
             }
           >
-            {(a) => <AttemptSummaryWS attempt={a()} remainingMs={remainingMs()} wsState={wsState()} />}
+            {(a) => (
+              <Show when={!roomOpen() || a().status !== "in_progress"}>
+                <AttemptSummaryWS attempt={a()} status={attemptStatus()} remainingMs={remainingMs()} wsState={wsState()} />
+              </Show>
+            )}
           </Show>
         </Show>
 
         <Show when={attempt() && roomOpen()}>
           <div class="min-h-[calc(100vh-9rem)] space-y-3">
-            <AttemptFocusBar attempt={attempt()!} remainingMs={remainingMs()} wsState={wsState()} />
+            <AttemptFocusBar attempt={attempt()!} status={attemptStatus()} remainingMs={remainingMs()} wsState={wsState()} />
             <Show when={!canWrite()}>
               <p class="rounded-lg border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">{t("attempt.closed")}</p>
             </Show>
@@ -366,19 +422,20 @@ export function ExamRoomWS(props: { exam: Exam }) {
   );
 }
 
-function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | null; wsState: WsState; compact?: boolean }) {
+function AttemptSummaryWS(props: { attempt: ExamAttempt; status?: string; remainingMs: number | null; wsState: WsState; compact?: boolean }) {
   const t = useT();
   const { locale } = usePreferences();
   const progressPct = () =>
     props.attempt.question_count <= 0
       ? 0
       : Math.round((props.attempt.answered / props.attempt.question_count) * 100);
-  const remainingWarn = () => props.attempt.status === "in_progress" && props.remainingMs != null && props.remainingMs <= 5 * 60 * 1000;
+  const status = () => props.status ?? props.attempt.status;
+  const remainingWarn = () => status() === "in_progress" && props.remainingMs != null && props.remainingMs <= 5 * 60 * 1000;
   const statusLabel = () => {
-    if (props.attempt.status === "in_progress") return t("attempt.inProgress");
-    if (props.attempt.status === "submitted") return t("attempt.submitted");
-    if (props.attempt.status === "expired") return t("attempt.expired");
-    return props.attempt.status;
+    if (status() === "in_progress") return t("attempt.inProgress");
+    if (status() === "submitted") return t("attempt.submitted");
+    if (status() === "expired") return t("attempt.expired");
+    return status() ?? "—";
   };
   const wsLabel = () => {
     if (props.wsState === "connecting") return t("ws.connecting");
@@ -443,7 +500,7 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; remainingMs: number | n
   );
 }
 
-function AttemptFocusBar(props: { attempt: ExamAttempt; remainingMs: number | null; wsState: WsState }) {
+function AttemptFocusBar(props: { attempt: ExamAttempt; status?: string; remainingMs: number | null; wsState: WsState }) {
   const t = useT();
   const progressPct = () =>
     props.attempt.question_count <= 0
@@ -454,11 +511,12 @@ function AttemptFocusBar(props: { attempt: ExamAttempt; remainingMs: number | nu
     if (props.wsState === "connected") return t("ws.connected");
     return t("ws.disconnected");
   };
+  const statusLabel = () => props.status === "expired" ? t("attempt.expired") : props.status === "submitted" ? t("attempt.submitted") : t("attempt.inProgress");
 
   return (
     <div class="rounded-xl border bg-card px-3 py-2 shadow-sm">
       <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-        <span class="font-medium text-foreground">{t("attempt.inProgress")}</span>
+        <span class="font-medium text-foreground">{statusLabel()}</span>
         <span class="mono font-semibold tabular-nums text-foreground">{formatRemaining(props.remainingMs)}</span>
         <span>
           {props.attempt.answered} / {props.attempt.question_count} {t("attempt.progress").toLowerCase()}
@@ -492,8 +550,11 @@ function QuestionAnswerCardWS(props: {
       : props.question.answer?.text ?? "",
   );
   const [saved, setSaved] = createSignal(false);
+  let questionId = props.question.id;
 
   createEffect(() => {
+    if (props.question.id === questionId) return;
+    questionId = props.question.id;
     setValue(
       props.question.kind === "choice"
         ? props.question.answer?.selected != null
@@ -526,7 +587,7 @@ function QuestionAnswerCardWS(props: {
         <img
           src={`/api/exams/${props.question.exam}/questions/${props.question.id}/image`}
           alt={t("questions.image")}
-          class="mb-4 max-h-64 rounded-md border object-contain"
+          class="mb-4 h-64 w-full max-w-2xl rounded-md border bg-muted/20 object-contain"
         />
       </Show>
       <p class="mb-5 whitespace-pre-wrap text-base font-semibold leading-7 sm:text-lg">{props.question.text}</p>
@@ -558,16 +619,8 @@ function QuestionAnswerCardWS(props: {
                   setValue(String(choiceIndex()));
                 }}
               >
-                <span
-                  class={
-                    value() === String(choiceIndex())
-                      ? "flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-primary bg-primary"
-                      : "h-4 w-4 shrink-0 rounded-[3px] border border-input bg-background"
-                  }
-                >
-                  <span
-                    class={value() === String(choiceIndex()) ? "h-2 w-2 rounded-[1px] bg-primary-foreground" : "hidden"}
-                  />
+                <span class={value() === String(choiceIndex()) ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary bg-primary text-xs font-semibold text-primary-foreground" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input bg-background text-xs font-semibold text-foreground"}>
+                  {String.fromCharCode(65 + choiceIndex())}
                 </span>
                 <span class="min-w-0 space-y-2">
                   <span class="block whitespace-pre-wrap">{choice}</span>
@@ -575,7 +628,7 @@ function QuestionAnswerCardWS(props: {
                     <img
                       src={`/api/exams/${props.question.exam}/questions/${props.question.id}/choices/${choiceIndex()}/image`}
                       alt={t("questions.choiceImage")}
-                      class="max-h-40 rounded-md border object-contain"
+                      class="h-36 w-full max-w-md rounded-md border bg-muted/20 object-contain"
                     />
                   </Show>
                 </span>

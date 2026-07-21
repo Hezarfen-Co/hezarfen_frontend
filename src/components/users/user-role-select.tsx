@@ -1,4 +1,4 @@
-import type { Role } from "@/api/types";
+import type { Role } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { Select } from "@/components/ui/select";
 import { ROLES } from "@/lib/roles";

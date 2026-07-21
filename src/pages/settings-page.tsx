@@ -1,7 +1,7 @@
 import { For, Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
-import { getSettings } from "@/api/getSettings";
-import { patchSettings } from "@/api/patchSettings";
-import type { ExamKindSetting, GradeBand } from "@/api/types";
+import { getSettings } from "@/api/settings";
+import { patchSettings } from "@/api/settings";
+import type { ExamKindSetting, GradeBand } from "@/api/client";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";

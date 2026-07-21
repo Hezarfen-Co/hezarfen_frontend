@@ -1,5 +1,5 @@
 import { createSignal, onCleanup } from "solid-js";
-import { getTime } from "@/api/getTime";
+import { getTime } from "@/api/time";
 
 export function createNow(intervalMs = 30000) {
   let offset = 0;

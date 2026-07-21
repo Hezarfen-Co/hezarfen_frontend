@@ -1,11 +1,11 @@
 import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { deleteSubjectById } from "@/api/deleteSubjectById";
-import { getCourseSubjects } from "@/api/getCourseSubjects";
-import { patchSubjectById } from "@/api/patchSubjectById";
-import { postCourseSubject } from "@/api/postCourseSubject";
+import { deleteSubjectById } from "@/api/subjects";
+import { getCourseSubjects } from "@/api/courses";
+import { patchSubjectById } from "@/api/subjects";
+import { postCourseSubject } from "@/api/courses";
 import { formatApiError } from "@/api/client";
-import type { Subject } from "@/api/types";
+import type { Subject } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";

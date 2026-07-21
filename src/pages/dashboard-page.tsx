@@ -1,13 +1,14 @@
-import { For, Show, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
+import { For, Show, createEffect, createMemo, createResource, createSignal, onCleanup, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { formatApiError } from "@/api/client";
-import { getCourses } from "@/api/getCourses";
-import { getEvents } from "@/api/getEvents";
-import { getExams } from "@/api/getExams";
-import { getMyCourses } from "@/api/getMyCourses";
-import { getMyMarks } from "@/api/getMyMarks";
-import { getNotes } from "@/api/getNotes";
-import type { Course, Exam, Event, Role } from "@/api/types";
+import { getCourses } from "@/api/courses";
+import { getExamAttempt } from "@/api/exams";
+import { getEvents } from "@/api/events";
+import { getExams } from "@/api/exams";
+import { getMyCourses } from "@/api/reports";
+import { getMyMarks } from "@/api/reports";
+import { getNotes } from "@/api/notes";
+import type { Course, Exam, Event, Role } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -24,11 +25,13 @@ import {
   IconSettings,
   IconUsers,
 } from "@/components/ui/icons";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
+import { examDisplayStatus, isSittableExam, type ExamAttemptSummary } from "@/lib/exam-status";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
@@ -37,7 +40,6 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const ATTENTION_LIMIT = 8;
-const UPCOMING_LIMIT = 6;
 const PORTAL_ORDER_KEY = "hezarfen.dashboard.portalOrder";
 
 type AttentionKind = "active" | "soon" | "today";
@@ -63,22 +65,23 @@ type PortalCardDef = {
 
 const ROLE_KEY: Record<Role, MessageKey> = {
   student: "role.student",
+  parent: "role.parent",
   teacher: "role.teacher",
   manager: "role.manager",
   admin: "role.admin",
 };
 
-function examWindow(exam: Exam, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
-  if (exam.mode === "open") return "active";
-  if (exam.mode !== "sync" && exam.mode !== "async") return "unscheduled";
-  if (exam.ends_at != null && exam.ends_at < now) return "past";
+function examWindow(exam: Exam, now: number, attempt?: ExamAttemptSummary | null): AttentionKind | "upcoming" | "past" | "unscheduled" {
+  const status = examDisplayStatus(exam, now, attempt);
+  if (status === "active") return "active";
+  if (status !== "upcoming") return status === "unscheduled" ? "unscheduled" : "past";
   if (exam.starts_at != null && exam.starts_at > now) {
     const delta = exam.starts_at - now;
     if (delta <= 24 * 60 * 60 * 1000) return "today";
     if (delta <= WEEK_MS) return "soon";
     return "upcoming";
   }
-  return "active";
+  return "upcoming";
 }
 
 function eventWindow(event: Event, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
@@ -110,8 +113,12 @@ function DashboardContent() {
   const role = () => user().role;
   const now = createNow();
   const [portalOrder, setPortalOrder] = createSignal<string[]>([]);
+  const [previewPortalOrder, setPreviewPortalOrder] = createSignal<string[] | null>(null);
   const [draggingPortal, setDraggingPortal] = createSignal<string | null>(null);
+  const [dragOverPortal, setDragOverPortal] = createSignal<string | null>(null);
   const [editingPortalOrder, setEditingPortalOrder] = createSignal(false);
+  const [attentionPage, setAttentionPage] = createSignal(0);
+  const [attemptStatuses, setAttemptStatuses] = createSignal<Record<string, ExamAttemptSummary>>({});
 
   const [courses] = createResource(
     () => (role() !== "student" ? true : null),
@@ -169,6 +176,26 @@ function DashboardContent() {
       return all.filter((exam) => allowed.has(exam.course));
     }
     return all;
+  });
+
+  createEffect(() => {
+    if (role() !== "student") return;
+    const exams = visibleExams();
+    const refresh = () => {
+      for (const exam of exams) {
+        if (!isSittableExam(exam)) continue;
+        const current = attemptStatuses()[exam.id];
+        if (current?.status === "submitted" || current?.status === "expired") continue;
+        if (current && current.max_attempts > 0 && current.attempts_used >= current.max_attempts) continue;
+        if (current != null && current.status !== "in_progress") continue;
+        void getExamAttempt(exam.id)
+          .then((attempt) => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } })))
+          .catch(() => setAttemptStatuses((prev) => ({ ...prev, [exam.id]: { status: "not_started", attempts_used: 0, max_attempts: exam.max_attempts } })));
+      }
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 5000);
+    onCleanup(() => window.clearInterval(interval));
   });
 
   const countCoursesByKind = (kind: Course["kind"]) => scopedCourses().filter((course) => course.kind === kind).length;
@@ -247,13 +274,18 @@ function DashboardContent() {
     return list;
   });
   const portalOrderKey = () => `${PORTAL_ORDER_KEY}.${role()}`;
-  const orderedPortalCards = createMemo(() => {
-    const cards = portalCards();
+  const cardsFromOrder = (cards: PortalCardDef[], order: string[]) => {
     const byId = new Map(cards.map((card) => [card.to, card]));
-    if (portalOrder().some((id) => !byId.has(id)) || portalOrder().length !== cards.length) return cards;
-    const ordered = portalOrder().flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
+    if (order.some((id) => !byId.has(id)) || order.length !== cards.length) return cards;
+    const ordered = order.flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
     const seen = new Set(ordered.map((card) => card.to));
     return [...ordered, ...cards.filter((card) => !seen.has(card.to))];
+  };
+  const baseOrderedPortalCards = createMemo(() => cardsFromOrder(portalCards(), portalOrder()));
+  const orderedPortalCards = createMemo(() => {
+    const cards = portalCards();
+    const preview = previewPortalOrder();
+    return preview ? cardsFromOrder(cards, preview) : baseOrderedPortalCards();
   });
   createEffect(() => {
     try {
@@ -264,13 +296,25 @@ function DashboardContent() {
   });
   const movePortalCard = (from: string, to: string) => {
     if (from === to) return;
-    const ids = orderedPortalCards().map((card) => card.to);
+    const ids = (previewPortalOrder() ?? (() => {
+      const next = baseOrderedPortalCards().map((card) => card.to);
+      const fromIndex = next.indexOf(from);
+      const toIndex = next.indexOf(to);
+      if (fromIndex >= 0 && toIndex >= 0) next.splice(toIndex, 0, next.splice(fromIndex, 1)[0]);
+      return next;
+    })()).slice();
+    setPortalOrder(ids);
+    setPreviewPortalOrder(null);
+    window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
+  };
+  const previewMovePortalCard = (from: string, to: string) => {
+    if (from === to) return;
+    const ids = (previewPortalOrder() ?? baseOrderedPortalCards().map((card) => card.to)).slice();
     const fromIndex = ids.indexOf(from);
     const toIndex = ids.indexOf(to);
     if (fromIndex < 0 || toIndex < 0) return;
     ids.splice(toIndex, 0, ids.splice(fromIndex, 1)[0]);
-    setPortalOrder(ids);
-    window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
+    setPreviewPortalOrder(ids);
   };
 
   const attention = createMemo<AttentionItem[]>(() => {
@@ -278,7 +322,7 @@ function DashboardContent() {
     const items: AttentionItem[] = [];
 
     for (const exam of visibleExams()) {
-      const status = examWindow(exam, n);
+      const status = examWindow(exam, n, attemptStatuses()[exam.id]);
       if (status === "active" || status === "today" || status === "soon") {
         items.push({
           id: exam.id,
@@ -313,42 +357,17 @@ function DashboardContent() {
         const r = rank[a.status] - rank[b.status];
         if (r !== 0) return r;
         return (a.at ?? Number.MAX_SAFE_INTEGER) - (b.at ?? Number.MAX_SAFE_INTEGER);
-      })
-      .slice(0, ATTENTION_LIMIT);
+      });
   });
 
-  const upcoming = createMemo(() => {
-    const n = now();
-    const items: { id: string; kind: "exam" | "event"; title: string; at: number; subtitle: string }[] = [];
+  const attentionTotalPages = createMemo(() => Math.max(1, Math.ceil(attention().length / ATTENTION_LIMIT)));
+  const pagedAttention = createMemo(() => {
+    const start = attentionPage() * ATTENTION_LIMIT;
+    return attention().slice(start, start + ATTENTION_LIMIT);
+  });
 
-    for (const exam of visibleExams()) {
-      if (exam.starts_at != null && exam.starts_at > n && exam.starts_at <= n + WEEK_MS) {
-        const w = examWindow(exam, n);
-        if (w === "upcoming" || w === "soon" || w === "today") {
-          items.push({
-            id: exam.id,
-            kind: "exam",
-            title: exam.title,
-            at: exam.starts_at,
-            subtitle: courseMap().get(exam.course) ?? examKindLabel(String(exam.kind), t),
-          });
-        }
-      }
-    }
-
-    for (const event of events()) {
-      if (event.starts_at != null && event.starts_at > n && event.starts_at <= n + WEEK_MS) {
-        items.push({
-          id: event.id,
-          kind: "event",
-          title: event.title,
-          at: event.starts_at,
-          subtitle: event.description || t("nav.events"),
-        });
-      }
-    }
-
-    return items.sort((a, b) => a.at - b.at).slice(0, UPCOMING_LIMIT);
+  createEffect(() => {
+    if (attentionPage() >= attentionTotalPages()) setAttentionPage(attentionTotalPages() - 1);
   });
 
   return (
@@ -391,11 +410,22 @@ function DashboardContent() {
                   card={card}
                   editing={editingPortalOrder()}
                   dragging={draggingPortal() === card.to}
+                  preview={dragOverPortal() === card.to && draggingPortal() !== card.to}
                   onDragStart={() => setDraggingPortal(card.to)}
-                  onDragEnd={() => setDraggingPortal(null)}
+                  onDragEnd={() => {
+                    setDraggingPortal(null);
+                    setDragOverPortal(null);
+                    setPreviewPortalOrder(null);
+                  }}
+                  onDragOver={() => {
+                    const source = draggingPortal();
+                    setDragOverPortal(card.to);
+                    if (source) previewMovePortalCard(source, card.to);
+                  }}
                   onDrop={(target) => {
                     const source = draggingPortal();
                     setDraggingPortal(null);
+                    setDragOverPortal(null);
                     if (source) movePortalCard(source, target);
                   }}
                 />
@@ -404,7 +434,7 @@ function DashboardContent() {
           </div>
         </section>
 
-        <div class="grid items-stretch gap-5 lg:grid-cols-2">
+        <div class="grid items-stretch gap-5">
           <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
@@ -420,7 +450,7 @@ function DashboardContent() {
               fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
               <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                <For each={attention()}>
+                <For each={pagedAttention()}>
                   {(item) => (
                     <li>
                       <Link
@@ -452,44 +482,9 @@ function DashboardContent() {
                   )}
                 </For>
               </ul>
-            </Show>
-          </section>
-
-          <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-upcoming">
-            <h2 id="dash-upcoming" class="text-sm font-semibold tracking-tight text-foreground">
-              {t("dashboard.upcoming")}
-            </h2>
-            <Show
-              when={upcoming().length > 0}
-              fallback={<DashEmpty>{t("dashboard.upcomingEmpty")}</DashEmpty>}
-            >
-              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                <For each={upcoming()}>
-                  {(item) => (
-                    <li>
-                      <Link
-                        to={item.kind === "exam" ? "/exams/$id" : "/events/$id"}
-                        params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/45 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
-                      >
-                        <span class="mono w-24 shrink-0 text-[11px] tabular-nums text-muted-foreground sm:w-28 sm:text-xs">
-                          {formatDateTime(item.at, locale())}
-                        </span>
-                        <div class="min-w-0 flex-1">
-                          <p class="truncate font-medium text-foreground">{item.title}</p>
-                          <p class="truncate text-xs text-muted-foreground">
-                            {item.kind === "exam" ? t("nav.exams") : t("nav.events")}
-                            <Show when={item.subtitle}>
-                              {" · "}
-                              {item.subtitle}
-                            </Show>
-                          </p>
-                        </div>
-                      </Link>
-                    </li>
-                  )}
-                </For>
-              </ul>
+              <Show when={attentionTotalPages() > 1}>
+                <PaginationControls page={attentionPage()} totalPages={attentionTotalPages()} onPageChange={setAttentionPage} />
+              </Show>
             </Show>
           </section>
         </div>
@@ -507,7 +502,7 @@ function DashEmpty(props: { children: string }) {
   );
 }
 
-function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: boolean; onDragStart: () => void; onDragEnd: () => void; onDrop: (target: string) => void }) {
+function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: boolean; preview: boolean; onDragStart: () => void; onDragEnd: () => void; onDragOver: () => void; onDrop: (target: string) => void }) {
   const t = useT();
   const Icon = props.card.Icon;
   const hasStat = () => props.card.stat != null && props.card.stat !== "";
@@ -527,7 +522,9 @@ function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: bo
       }}
       onDragEnd={props.onDragEnd}
       onDragOver={(event) => {
-        if (props.editing) event.preventDefault();
+        if (!props.editing) return;
+        event.preventDefault();
+        props.onDragOver();
       }}
       onDrop={(event) => {
         if (!props.editing) return;
@@ -538,6 +535,7 @@ function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: bo
         "group relative flex min-h-[5.75rem] items-start gap-3 overflow-hidden rounded-xl border border-border bg-card px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/45 hover:bg-muted/30 hover:shadow-[0_16px_38px_rgba(15,23,42,0.11)] hover:before:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[6.25rem] sm:gap-3.5 sm:px-4 sm:py-3.5",
         props.editing && "cursor-move border-dashed",
         props.editing && !props.dragging && "dashboard-jiggle",
+        props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-[0_18px_42px_rgba(15,23,42,0.14)] before:opacity-100",
         props.dragging && "scale-[0.98] border-primary/50 opacity-60",
       )}
     >

@@ -1,5 +1,5 @@
 import { For, Show, createSignal, type JSX } from "solid-js";
-import type { Note } from "@/api/types";
+import type { Note } from "@/api/client";
 import { NoteCard } from "@/components/notes/note-card";
 import { NoteReaderPanel } from "@/components/notes/note-reader-panel";
 import { EmptyState } from "@/components/ui/empty-state";
