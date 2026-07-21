@@ -30,6 +30,7 @@ export type MessageKey =
   | "nav.studentPomodoro"
   | "nav.settings"
   | "nav.terms"
+  | "nav.calendar"
   | "nav.guide"
   | "nav.logout"
   | "nav.admin"
@@ -666,7 +667,12 @@ export type MessageKey =
   | "messages.deleteForever"
   | "messages.to"
   | "messages.from"
-  | "messages.selectRecipient";
+  | "messages.selectRecipient"
+  | "calendar.title"
+  | "calendar.today"
+  | "calendar.noEvents"
+  | "calendar.events"
+  | "calendar.exams";
 
 type Dict = Record<MessageKey, string>;
 
@@ -701,6 +707,7 @@ const en: Dict = {
   "nav.settings": "Settings",
   "nav.terms": "Terms",
   "nav.guide": "Guide",
+  "nav.calendar": "Calendar",
   "nav.admin": "Admin",
   "nav.logout": "Log out",
   "nav.menu": "Menu",
@@ -946,6 +953,11 @@ const en: Dict = {
   "events.helpTitle": "About events",
   "events.helpBody":
     "Teachers and managers record attendance for students only. Managers can edit any event.",
+  "calendar.title": "Calendar",
+  "calendar.today": "Today",
+  "calendar.noEvents": "No events or exams on this day.",
+  "calendar.events": "Events",
+  "calendar.exams": "Exams",
   "events.clearStart": "Will clear start time",
   "events.clearEnd": "Will clear end time",
   "events.upcoming": "Upcoming",
@@ -1383,6 +1395,7 @@ const tr: Dict = {
   "nav.settings": "Ayarlar",
   "nav.terms": "Dönemler",
   "nav.guide": "Rehber",
+  "nav.calendar": "Takvim",
   "nav.admin": "Yönetim",
   "nav.logout": "Çıkış yap",
   "nav.menu": "Menü",
@@ -1628,6 +1641,11 @@ const tr: Dict = {
   "events.helpTitle": "Etkinlikler hakkında",
   "events.helpBody":
     "Öğretmenler ve yöneticiler yalnız öğrenciler için yoklama kaydeder. Yöneticiler her etkinliği düzenleyebilir.",
+  "calendar.title": "Takvim",
+  "calendar.today": "Bugün",
+  "calendar.noEvents": "Bu günde etkinlik veya sınav yok.",
+  "calendar.events": "Etkinlikler",
+  "calendar.exams": "Sınavlar",
   "events.clearStart": "Başlangıç saati temizlenecek",
   "events.clearEnd": "Bitiş saati temizlenecek",
   "events.upcoming": "Yaklaşan",
