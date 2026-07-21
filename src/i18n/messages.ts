@@ -606,7 +606,25 @@ export type MessageKey =
   | "work.teacherIdentity"
   | "work.noTeachers"
   | "lookup.searchHint"
-  | "work.userNotFound";
+  | "work.userNotFound"
+  | "messages.inbox"
+  | "messages.sent"
+  | "messages.archive"
+  | "messages.trash"
+  | "messages.newMessage"
+  | "messages.recipient"
+  | "messages.recipientPlaceholder"
+  | "messages.search"
+  | "messages.noMessages"
+  | "messages.noSelection"
+  | "messages.reply"
+  | "messages.send"
+  | "messages.moveToArchive"
+  | "messages.moveToTrash"
+  | "messages.deleteForever"
+  | "messages.to"
+  | "messages.from"
+  | "messages.selectRecipient";
 
 type Dict = Record<MessageKey, string>;
 
@@ -1230,6 +1248,24 @@ const en: Dict = {
   "work.cannotEditOpen": "Open stints cannot be corrected. Check out or delete them first.",
   "work.timesRequired": "Enter check-in and check-out date and time.",
   "work.deleteSummary": "Delete work entry from {time}?",
+  "messages.inbox": "Inbox",
+  "messages.sent": "Sent",
+  "messages.archive": "Archive",
+  "messages.trash": "Trash",
+  "messages.newMessage": "New Message",
+  "messages.recipient": "Recipient",
+  "messages.recipientPlaceholder": "Search for name or username...",
+  "messages.search": "Search messages",
+  "messages.noMessages": "No messages found.",
+  "messages.noSelection": "No message selected.",
+  "messages.reply": "Reply",
+  "messages.send": "Send",
+  "messages.moveToArchive": "Archive",
+  "messages.moveToTrash": "Move to Trash",
+  "messages.deleteForever": "Delete Permanently",
+  "messages.to": "To: ",
+  "messages.from": "From: ",
+  "messages.selectRecipient": "Please select a recipient.",
 };
 
 const tr: Dict = {
@@ -1852,6 +1888,24 @@ const tr: Dict = {
   "work.cannotEditOpen": "Açık mesai düzeltilemez. Önce çıkış yapın veya silin.",
   "work.timesRequired": "Giriş ve çıkış tarih/saatini girin.",
   "work.deleteSummary": "{time} mesai kaydı silinsin mi?",
+  "messages.inbox": "Gelenler",
+  "messages.sent": "Gönderilenler",
+  "messages.archive": "Arşiv",
+  "messages.trash": "Çöp Kutusu",
+  "messages.newMessage": "Yeni Mesaj",
+  "messages.recipient": "Alıcı",
+  "messages.recipientPlaceholder": "İsim veya kullanıcı adı ara...",
+  "messages.search": "Mesajlarda ara...",
+  "messages.noMessages": "Mesaj bulunamadı.",
+  "messages.noSelection": "Mesaj seçilmedi.",
+  "messages.reply": "Yanıtla",
+  "messages.send": "Gönder",
+  "messages.moveToArchive": "Arşivle",
+  "messages.moveToTrash": "Çöp Kutusuna Taşı",
+  "messages.deleteForever": "Kalıcı Olarak Sil",
+  "messages.to": "Kime: ",
+  "messages.from": "Kimden: ",
+  "messages.selectRecipient": "Lütfen bir alıcı seçin.",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

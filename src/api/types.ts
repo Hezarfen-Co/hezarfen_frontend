@@ -371,3 +371,19 @@ export const EXAM_KINDS: KnownExamKind[] = [
 export const EXAM_MODES: ExamMode[] = ["sync", "async", "open"];
 
 export const QUESTION_KINDS: QuestionKind[] = ["choice", "text"];
+
+export type MessageFolder = "inbox" | "sent" | "archive" | "trash";
+
+export type Message = {
+  id: string;
+  sender: PersonRef;
+  sender_role: Role | null;
+  recipient: PersonRef;
+  recipient_role: Role | null;
+  subject: string;
+  body: string;
+  sent_at: number;
+  read: boolean;
+  folder: MessageFolder;
+  label: string | null;
+};

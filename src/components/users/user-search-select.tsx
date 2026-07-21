@@ -40,7 +40,7 @@ export function UserSearchSelect(props: {
     const q = query().trim();
     if (q.length === 0) return "";
     if (loading()) return t("common.loading");
-    if (props.value.trim() && !options().some((u) => u.id === props.value.trim())) return props.value;
+    if (selectedUser() && selectedUser()!.id === props.value) return "";
     if (options().length === 0) return props.emptyMessage ?? t("form.noStudents");
     return "";
   });
