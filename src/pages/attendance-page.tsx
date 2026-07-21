@@ -1,5 +1,5 @@
 import { Show, Suspense, createResource } from "solid-js";
-import { getMyAttendance } from "@/api/getMyAttendance";
+import { getMyAttendance } from "@/api/reports";
 import { formatApiError } from "@/api/client";
 import { AttendanceReportView } from "@/components/attendance/attendance-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";

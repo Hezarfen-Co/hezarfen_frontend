@@ -1,8 +1,8 @@
 import { Match, Show, Switch, createEffect, createSignal, onCleanup } from "solid-js";
 import { formatApiError } from "@/api/client";
-import { getNoteFileBlob } from "@/api/getNoteFileBlob";
-import type { NoteFile } from "@/api/types";
-import { getNoteFileUrl } from "@/api/getNoteFileUrl";
+import { getNoteFileBlob } from "@/api/notes";
+import type { NoteFile } from "@/api/client";
+import { getNoteFileUrl } from "@/api/notes";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useT } from "@/stores/preferences-context";
 

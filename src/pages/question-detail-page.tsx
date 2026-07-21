@@ -1,8 +1,8 @@
 import { For, Show, Suspense, createResource, createSignal } from "solid-js";
 import { useParams, useRouter } from "@tanstack/solid-router";
-import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl } from "@/api/questions";
-import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl } from "@/api/solutions";
-import type { SolutionResponse } from "@/api/solutions";
+import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl } from "@/api/shared";
+import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl } from "@/api/shared";
+import type { SolutionResponse } from "@/api/shared";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageSpinner } from "@/components/ui/page-spinner";

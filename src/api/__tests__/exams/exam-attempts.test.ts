@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getExamAttempt } from "../../getExamAttempt";
-import { postExamAttempt } from "../../postExamAttempt";
-import { postExamAttemptFinish } from "../../postExamAttemptFinish";
-import { getExamAttemptQuestions } from "../../getExamAttemptQuestions";
-import { postExamAttemptAnswer } from "../../postExamAttemptAnswer";
+import { getExamAttempt } from "../../exams";
+import { postExamAttempt } from "../../exams";
+import { postExamAttemptFinish } from "../../exams";
+import { getExamAttemptQuestions } from "../../exams";
+import { postExamAttemptAnswer } from "../../exams";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - attempts", () => {

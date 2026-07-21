@@ -1,7 +1,7 @@
 import { Link, useLocation } from "@tanstack/solid-router";
 import { Show, Suspense, createMemo, createResource } from "solid-js";
-import { getExamById } from "@/api/getExamById";
-import { getMyCourses } from "@/api/getMyCourses";
+import { getExamById } from "@/api/exams";
+import { getMyCourses } from "@/api/reports";
 import { formatApiError } from "@/api/client";
 import { ExamRoomWS } from "@/components/exams/exam-room-ws";
 import { RouteGuard } from "@/components/layout/route-guard";

@@ -1,4 +1,4 @@
-import type { CoreAttendanceStatus } from "@/api/types";
+import type { CoreAttendanceStatus } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 
 export const ATTENDANCE_STATUSES: { value: CoreAttendanceStatus; key: MessageKey; detailKey: MessageKey; class: string }[] = [

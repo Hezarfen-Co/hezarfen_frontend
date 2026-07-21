@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getMyCourses } from "../../getMyCourses";
-import { getMyAttendance } from "../../getMyAttendance";
-import { getMyMarks } from "../../getMyMarks";
-import { getUserAttendance } from "../../getUserAttendance";
-import { getUserMarks } from "../../getUserMarks";
+import { getMyCourses } from "../../reports";
+import { getMyAttendance } from "../../reports";
+import { getMyMarks } from "../../reports";
+import { getUserAttendance } from "../../reports";
+import { getUserMarks } from "../../reports";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("reports API", () => {

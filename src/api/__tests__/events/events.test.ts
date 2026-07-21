@@ -1,15 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getEvents } from "../../getEvents";
-import { getEventById } from "../../getEventById";
-import { postEvent } from "../../postEvent";
-import { patchEventById } from "../../patchEventById";
-import { deleteEventById } from "../../deleteEventById";
-import { getEventAttendance } from "../../getEventAttendance";
-import { postEventAttendance } from "../../postEventAttendance";
-import { getEventRoster } from "../../getEventRoster";
-import { postEventRegister } from "../../postEventRegister";
-import { deleteEventRegisterByUserId } from "../../deleteEventRegisterByUserId";
-import { deleteEventAttendanceByUserId } from "../../deleteEventAttendanceByUserId";
+import { getEvents } from "../../events";
+import { getEventById } from "../../events";
+import { postEvent } from "../../events";
+import { patchEventById } from "../../events";
+import { deleteEventById } from "../../events";
+import { getEventAttendance } from "../../events";
+import { postEventAttendance } from "../../events";
+import { getEventRoster } from "../../events";
+import { postEventRegister } from "../../events";
+import { deleteEventRegisterByUserId } from "../../events";
+import { deleteEventAttendanceByUserId } from "../../events";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("events API", () => {

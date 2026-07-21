@@ -1,6 +1,6 @@
 import { For, Show, Suspense, createResource, createSignal } from "solid-js";
 import { Link, useSearch, useNavigate } from "@tanstack/solid-router";
-import { getQuestions, postQuestion } from "@/api/questions";
+import { getQuestions, postQuestion } from "@/api/shared";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";

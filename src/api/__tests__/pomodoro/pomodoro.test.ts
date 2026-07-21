@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getPomodoroMe } from "../../getPomodoroMe";
-import { getPomodoroByUser } from "../../getPomodoroByUser";
-import { postPomodoroStart } from "../../postPomodoroStart";
-import { postPomodoroFinish } from "../../postPomodoroFinish";
+import { getPomodoroMe } from "../../pomodoro";
+import { getPomodoroByUser } from "../../pomodoro";
+import { postPomodoroStart } from "../../pomodoro";
+import { postPomodoroFinish } from "../../pomodoro";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("pomodoro API", () => {

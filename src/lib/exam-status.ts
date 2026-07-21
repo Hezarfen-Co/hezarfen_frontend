@@ -1,4 +1,4 @@
-import type { AttemptStatus, Exam } from "@/api/types";
+import type { AttemptStatus, Exam } from "@/api/client";
 
 export type ExamAttemptSummary = {
   status: AttemptStatus | "not_started";

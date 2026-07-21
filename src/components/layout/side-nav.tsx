@@ -11,7 +11,7 @@ import { useT } from "@/stores/preferences-context";
 import { hasExactRole, hasMinRole, roleInRange } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import type { MessageKey } from "@/i18n/messages";
-import type { Role } from "@/api/types";
+import type { Role } from "@/api/client";
 import {
   IconBook,
   IconBriefcase,

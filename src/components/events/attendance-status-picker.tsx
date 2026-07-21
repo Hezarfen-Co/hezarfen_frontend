@@ -1,6 +1,6 @@
 import { For, Show, createMemo, createResource } from "solid-js";
-import { getSettings } from "@/api/getSettings";
-import type { AttendanceStatus } from "@/api/types";
+import { getSettings } from "@/api/settings";
+import type { AttendanceStatus } from "@/api/client";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { ATTENDANCE_STATUSES, getAttendanceStatusMeta } from "@/lib/attendance-status";

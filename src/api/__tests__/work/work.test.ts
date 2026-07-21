@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getMyWorkLog } from "../../getMyWorkLog";
-import { getUserWorkLog } from "../../getUserWorkLog";
-import { postWorkCheckIn } from "../../postWorkCheckIn";
-import { postWorkCheckOut } from "../../postWorkCheckOut";
-import { patchWorkEntryById } from "../../patchWorkEntryById";
-import { deleteWorkEntryById } from "../../deleteWorkEntryById";
+import { getMyWorkLog } from "../../work";
+import { getUserWorkLog } from "../../work";
+import { postWorkCheckIn } from "../../work";
+import { postWorkCheckOut } from "../../work";
+import { patchWorkEntryById } from "../../work";
+import { deleteWorkEntryById } from "../../work";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("work API", () => {

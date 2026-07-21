@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getExamQuestions } from "../../getExamQuestions";
-import { postExamQuestion } from "../../postExamQuestion";
-import { patchExamQuestionById } from "../../patchExamQuestionById";
-import { deleteExamQuestionById } from "../../deleteExamQuestionById";
-import { postExamQuestionImage } from "../../postExamQuestionImage";
-import { deleteExamQuestionImage } from "../../deleteExamQuestionImage";
-import { postExamChoiceImage } from "../../postExamChoiceImage";
-import { deleteExamChoiceImage } from "../../deleteExamChoiceImage";
+import { getExamQuestions } from "../../exams";
+import { postExamQuestion } from "../../exams";
+import { patchExamQuestionById } from "../../exams";
+import { deleteExamQuestionById } from "../../exams";
+import { postExamQuestionImage } from "../../exams";
+import { deleteExamQuestionImage } from "../../exams";
+import { postExamChoiceImage } from "../../exams";
+import { deleteExamChoiceImage } from "../../exams";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - questions", () => {

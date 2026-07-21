@@ -1,7 +1,7 @@
 import { For, Index, Show, createEffect, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
-import type { ExamQuestion, QuestionKind, Subject } from "@/api/types";
-import { QUESTION_KINDS } from "@/api/types";
+import type { ExamQuestion, QuestionKind, Subject } from "@/api/client";
+import { QUESTION_KINDS } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { IconCheck, IconFileImage, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";

@@ -1,8 +1,8 @@
 import { For, Show, Suspense, createResource, createSignal } from "solid-js";
-import { getMyStudents } from "@/api/getMyStudents";
-import { getUserMarks } from "@/api/getUserMarks";
-import { getUserAttendance } from "@/api/getUserAttendance";
-import type { PersonRef } from "@/api/types";
+import { getMyStudents } from "@/api/parents";
+import { getUserMarks } from "@/api/reports";
+import { getUserAttendance } from "@/api/reports";
+import type { PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";

@@ -1,11 +1,11 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
-import { getExamAttempt } from "@/api/getExamAttempt";
-import { getExamAttemptQuestions } from "@/api/getExamAttemptQuestions";
-import { postExamAttempt } from "@/api/postExamAttempt";
-import { postExamAttemptAnswer } from "@/api/postExamAttemptAnswer";
-import { postExamAttemptFinish } from "@/api/postExamAttemptFinish";
+import { getExamAttempt } from "@/api/exams";
+import { getExamAttemptQuestions } from "@/api/exams";
+import { postExamAttempt } from "@/api/exams";
+import { postExamAttemptAnswer } from "@/api/exams";
+import { postExamAttemptFinish } from "@/api/exams";
 import { ApiError, formatApiError } from "@/api/client";
-import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/types";
+import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";

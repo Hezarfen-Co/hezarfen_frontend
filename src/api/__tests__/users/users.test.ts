@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getMe } from "../../getMe";
-import { patchMe } from "../../patchMe";
-import { getUsers } from "../../getUsers";
-import { getUserSearch } from "../../getUserSearch";
-import { patchUserProfile } from "../../patchUserProfile";
-import { patchUserRole } from "../../patchUserRole";
-import { patchMyPreferences } from "../../patchMyPreferences";
+import { getMe } from "../../users";
+import { patchMe } from "../../users";
+import { getUsers } from "../../users";
+import { getUserSearch } from "../../users";
+import { patchUserProfile } from "../../users";
+import { patchUserRole } from "../../users";
+import { patchMyPreferences } from "../../users";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("users API", () => {

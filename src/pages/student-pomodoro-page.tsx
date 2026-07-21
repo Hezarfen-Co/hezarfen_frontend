@@ -1,8 +1,8 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getPomodoroByUser } from "@/api/getPomodoroByUser";
-import { getUserSearch } from "@/api/getUserSearch";
-import type { PersonRef, PomodoroSession } from "@/api/types";
+import { getPomodoroByUser } from "@/api/pomodoro";
+import { getUserSearch } from "@/api/users";
+import type { PersonRef, PomodoroSession } from "@/api/client";
 import { ApiError, formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";

@@ -1,4 +1,4 @@
-import type { ExamQuestion, StudentAnswer } from "@/api/types";
+import type { ExamQuestion, StudentAnswer } from "@/api/client";
 
 export type AnswerSheetRow = {
   question: ExamQuestion;

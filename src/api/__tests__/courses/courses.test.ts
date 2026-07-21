@@ -1,18 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getCourses } from "../../getCourses";
-import { getCourseById } from "../../getCourseById";
-import { postCourse } from "../../postCourse";
-import { patchCourseById } from "../../patchCourseById";
-import { deleteCourseById } from "../../deleteCourseById";
-import { getCourseEnrollments } from "../../getCourseEnrollments";
-import { postCourseEnrollment } from "../../postCourseEnrollment";
-import { deleteCourseEnrollmentByUserId } from "../../deleteCourseEnrollmentByUserId";
-import { getCourseSessions } from "../../getCourseSessions";
-import { postCourseSession } from "../../postCourseSession";
-import { getCourseSubjects } from "../../getCourseSubjects";
-import { postCourseSubject } from "../../postCourseSubject";
-import { getCourseExams } from "../../getCourseExams";
-import { postCourseExam } from "../../postCourseExam";
+import { getCourses } from "../../courses";
+import { getCourseById } from "../../courses";
+import { postCourse } from "../../courses";
+import { patchCourseById } from "../../courses";
+import { deleteCourseById } from "../../courses";
+import { getCourseEnrollments } from "../../courses";
+import { postCourseEnrollment } from "../../courses";
+import { deleteCourseEnrollmentByUserId } from "../../courses";
+import { getCourseSessions } from "../../courses";
+import { postCourseSession } from "../../courses";
+import { getCourseSubjects } from "../../courses";
+import { postCourseSubject } from "../../courses";
+import { getCourseExams } from "../../courses";
+import { postCourseExam } from "../../courses";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("courses API", () => {

@@ -1,5 +1,5 @@
 import { Show, Suspense, createResource } from "solid-js";
-import { getMyMarks } from "@/api/getMyMarks";
+import { getMyMarks } from "@/api/reports";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { MarksReportView } from "@/components/marks/marks-report-view";

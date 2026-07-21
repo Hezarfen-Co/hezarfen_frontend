@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getTerms } from "../../getTerms";
-import { postTerm } from "../../postTerm";
-import { patchTermById } from "../../patchTermById";
-import { deleteTermById } from "../../deleteTermById";
+import { getTerms } from "../../terms";
+import { postTerm } from "../../terms";
+import { patchTermById } from "../../terms";
+import { deleteTermById } from "../../terms";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("terms API", () => {

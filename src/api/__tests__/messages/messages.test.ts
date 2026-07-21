@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getMessages } from "../../getMessages";
-import { postMessage } from "../../postMessage";
-import { patchMessageById } from "../../patchMessageById";
-import { deleteMessageById } from "../../deleteMessageById";
+import { getMessages } from "../../messages";
+import { postMessage } from "../../messages";
+import { patchMessageById } from "../../messages";
+import { deleteMessageById } from "../../messages";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("messages API", () => {

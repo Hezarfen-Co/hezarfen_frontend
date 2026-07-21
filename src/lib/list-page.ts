@@ -1,4 +1,4 @@
-import type { Page, PageParams } from "@/api/page";
+import type { Page, PageParams } from "@/api/client";
 
 export type ListPageState<T> = {
   items: T[];

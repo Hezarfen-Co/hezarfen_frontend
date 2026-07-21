@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { patchSubjectById } from "../../patchSubjectById";
-import { deleteSubjectById } from "../../deleteSubjectById";
+import { patchSubjectById } from "../../subjects";
+import { deleteSubjectById } from "../../subjects";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("subjects API", () => {

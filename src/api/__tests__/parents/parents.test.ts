@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getParentStudents } from "../../getParentStudents";
-import { postParentStudent } from "../../postParentStudent";
-import { deleteParentStudent } from "../../deleteParentStudent";
-import { getMyStudents } from "../../getMyStudents";
+import { getParentStudents } from "../../parents";
+import { postParentStudent } from "../../parents";
+import { deleteParentStudent } from "../../parents";
+import { getMyStudents } from "../../parents";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("parents API", () => {

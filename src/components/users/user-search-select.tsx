@@ -1,6 +1,6 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
-import { getUserSearch } from "@/api/getUserSearch";
-import type { PersonRef, Role } from "@/api/types";
+import { getUserSearch } from "@/api/users";
+import type { PersonRef, Role } from "@/api/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { personLabelWithId } from "@/lib/person";

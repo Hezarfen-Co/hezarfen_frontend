@@ -1,6 +1,6 @@
 import { createMemo, createSignal, Show } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import type { Role, User } from "@/api/types";
+import type { Role, User } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";

@@ -1,8 +1,8 @@
 import { For, Show, Suspense, createResource } from "solid-js";
 import { ApiError } from "@/api/client";
-import { getExamQuestions } from "@/api/getExamQuestions";
-import { getStudentAnswers } from "@/api/getStudentAnswers";
-import type { StudentAnswerSheet } from "@/api/types";
+import { getExamQuestions } from "@/api/exams";
+import { getStudentAnswers } from "@/api/exams";
+import type { StudentAnswerSheet } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { IconCheck, IconX } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";

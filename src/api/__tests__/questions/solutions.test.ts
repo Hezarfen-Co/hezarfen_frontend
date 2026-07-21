@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl } from "../../solutions";
+import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl } from "../../shared";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("solutions API", () => {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getTime } from "../../getTime";
+import { getTime } from "../../time";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("time API", () => {

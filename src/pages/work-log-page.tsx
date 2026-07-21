@@ -1,8 +1,8 @@
 import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getMyWorkLog } from "@/api/getMyWorkLog";
-import { postWorkCheckIn } from "@/api/postWorkCheckIn";
-import { postWorkCheckOut } from "@/api/postWorkCheckOut";
+import { getMyWorkLog } from "@/api/work";
+import { postWorkCheckIn } from "@/api/work";
+import { postWorkCheckOut } from "@/api/work";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -16,7 +16,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
-import type { WorkEntry } from "@/api/types";
+import type { WorkEntry } from "@/api/client";
 
 const WORK_PAGE_SIZE = 15;
 

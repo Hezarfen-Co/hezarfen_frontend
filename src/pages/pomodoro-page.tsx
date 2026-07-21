@@ -1,8 +1,8 @@
 import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getPomodoroMe } from "@/api/getPomodoroMe";
-import { postPomodoroFinish } from "@/api/postPomodoroFinish";
-import { postPomodoroStart } from "@/api/postPomodoroStart";
+import { getPomodoroMe } from "@/api/pomodoro";
+import { postPomodoroFinish } from "@/api/pomodoro";
+import { postPomodoroStart } from "@/api/pomodoro";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";

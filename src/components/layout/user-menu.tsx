@@ -17,7 +17,7 @@ import { IconChevronDown, IconEdit, IconGlobe, IconLogout, IconMoon, IconSun } f
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
-import type { User } from "@/api/types";
+import type { User } from "@/api/client";
 
 function titleCase(value: string) {
   return value

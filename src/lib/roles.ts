@@ -1,4 +1,4 @@
-import type { Role } from "@/api/types";
+import type { Role } from "@/api/client";
 
 const RANK: Record<Role, number> = {
   parent: -1,

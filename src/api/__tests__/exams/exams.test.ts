@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getExams } from "../../getExams";
-import { getExamById } from "../../getExamById";
-import { patchExamById } from "../../patchExamById";
-import { deleteExamById } from "../../deleteExamById";
+import { getExams } from "../../exams";
+import { getExamById } from "../../exams";
+import { patchExamById } from "../../exams";
+import { deleteExamById } from "../../exams";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - core", () => {

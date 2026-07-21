@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { patchSessionById } from "../../patchSessionById";
-import { deleteSessionById } from "../../deleteSessionById";
-import { getSessionAttendance } from "../../getSessionAttendance";
-import { postSessionAttendance } from "../../postSessionAttendance";
+import { patchSessionById } from "../../sessions";
+import { deleteSessionById } from "../../sessions";
+import { getSessionAttendance } from "../../sessions";
+import { postSessionAttendance } from "../../sessions";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("sessions API", () => {

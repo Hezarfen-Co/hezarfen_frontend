@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { postLogin } from "../../postLogin";
-import { postLogout } from "../../postLogout";
-import { postRegister } from "../../postRegister";
+import { postLogin } from "../../auth";
+import { postLogout } from "../../auth";
+import { postRegister } from "../../auth";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("auth API", () => {

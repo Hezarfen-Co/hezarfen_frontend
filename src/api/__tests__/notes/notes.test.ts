@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getNotes } from "../../getNotes";
-import { postNote } from "../../postNote";
-import { patchNoteById } from "../../patchNoteById";
-import { deleteNoteById } from "../../deleteNoteById";
-import { getNoteFiles } from "../../getNoteFiles";
-import { postNoteFile } from "../../postNoteFile";
-import { deleteNoteFileById } from "../../deleteNoteFileById";
-import { getNoteFileUrl } from "../../getNoteFileUrl";
-import { getNoteFileBlob } from "../../getNoteFileBlob";
+import { getNotes } from "../../notes";
+import { postNote } from "../../notes";
+import { patchNoteById } from "../../notes";
+import { deleteNoteById } from "../../notes";
+import { getNoteFiles } from "../../notes";
+import { postNoteFile } from "../../notes";
+import { deleteNoteFileById } from "../../notes";
+import { getNoteFileUrl } from "../../notes";
+import { getNoteFileBlob } from "../../notes";
 import { lastFetchCall, mockFetch204, mockFetchBlob, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("notes API", () => {

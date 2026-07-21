@@ -1,11 +1,11 @@
 import { Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup, untrack } from "solid-js";
 import { Link, useLocation, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getExamLive } from "@/api/getExamLive";
-import { getExamLiveStreamUrl } from "@/api/getExamLiveStreamUrl";
-import { getExamById } from "@/api/getExamById";
+import { getExamLive } from "@/api/exams";
+import { getExamLiveStreamUrl } from "@/api/exams";
+import { getExamById } from "@/api/exams";
 import { formatApiError } from "@/api/client";
-import type { LiveMonitor, LiveRosterEntry } from "@/api/types";
+import type { LiveMonitor, LiveRosterEntry } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";

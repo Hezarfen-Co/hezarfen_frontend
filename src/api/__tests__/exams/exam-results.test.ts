@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getExamResults } from "../../getExamResults";
-import { getExamResult } from "../../getExamResult";
-import { postExamResult } from "../../postExamResult";
-import { deleteExamResultByUserId } from "../../deleteExamResultByUserId";
-import { getExamStatistics } from "../../getExamStatistics";
-import { getStudentAnswers } from "../../getStudentAnswers";
+import { getExamResults } from "../../exams";
+import { getExamResult } from "../../exams";
+import { postExamResult } from "../../exams";
+import { deleteExamResultByUserId } from "../../exams";
+import { getExamStatistics } from "../../exams";
+import { getStudentAnswers } from "../../exams";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - results", () => {

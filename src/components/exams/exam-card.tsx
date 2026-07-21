@@ -1,6 +1,6 @@
 import { Show, createResource } from "solid-js";
-import { getSettings } from "@/api/getSettings";
-import type { Exam } from "@/api/types";
+import { getSettings } from "@/api/settings";
+import type { Exam } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { ExamLink } from "@/components/exams/exam-link";
 import { cn } from "@/lib/cn";

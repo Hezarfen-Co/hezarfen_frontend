@@ -1,9 +1,9 @@
 import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
-import { deleteNoteById } from "@/api/deleteNoteById";
-import { getNotes } from "@/api/getNotes";
-import { patchNoteById } from "@/api/patchNoteById";
-import { postNote } from "@/api/postNote";
-import { postNoteFile } from "@/api/postNoteFile";
+import { deleteNoteById } from "@/api/notes";
+import { getNotes } from "@/api/notes";
+import { patchNoteById } from "@/api/notes";
+import { postNote } from "@/api/notes";
+import { postNoteFile } from "@/api/notes";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";

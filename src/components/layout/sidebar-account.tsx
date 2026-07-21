@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
 import { Show, createSignal } from "solid-js";
-import type { User } from "@/api/types";
+import type { User } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
 import {

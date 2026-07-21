@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getExamLive } from "../../getExamLive";
-import { getExamLiveStreamUrl } from "../../getExamLiveStreamUrl";
+import { getExamLive } from "../../exams";
+import { getExamLiveStreamUrl } from "../../exams";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - live", () => {

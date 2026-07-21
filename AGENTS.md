@@ -37,11 +37,13 @@ instructions. Always written and read in English.
 - Components in the same domain live in the same folder: `components/notes/`,
   `components/events/`, `components/exams/`, `components/users/`,
   `components/layout/`, `components/ui/`.
-- **API layer:** one file per request under `src/api/`, camelCase and verb-first,
-  mirroring the endpoint exactly (`getNoteById.ts`, `patchEventById.ts`,
-  `deleteExamResultByUserId.ts`). Each file exports exactly one function
-  matching its filename. Only `client.ts` calls `fetch` directly. Pages/
-  components never call `fetch` — they call `src/api/*` functions inside
+- **API layer:** Domain-based folders under `src/api/` (e.g., `src/api/notes/`,
+  `src/api/exams/`). One file per request under its domain folder, camelCase and verb-first,
+  mirroring the endpoint exactly (`src/api/notes/getNoteById.ts`,
+  `src/api/exams/deleteExamResultByUserId.ts`). Each file exports exactly one function
+  matching its filename. Each domain must have an `index.ts` re-exporting its endpoints.
+  Only `src/api/client/client.ts` calls `fetch` directly. Pages/
+  components never call `fetch` — they call `src/api/<domain>` functions inside
   `createResource`.
 
 ## SolidJS rules — do not write React patterns

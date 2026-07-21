@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getSettings, setCachedSettings } from "../../getSettings";
-import { patchSettings } from "../../patchSettings";
+import { getSettings, setCachedSettings } from "../../settings";
+import { patchSettings } from "../../settings";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("settings API", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendPageParams, normalizePage, pageQuery } from "../../page";
+import { appendPageParams, normalizePage, pageQuery } from "../../client";
 
 describe("page helpers", () => {
   describe("pageQuery", () => {

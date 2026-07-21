@@ -1,9 +1,9 @@
 import { For, Show, Suspense, createResource, createSignal } from "solid-js";
-import { getUsers } from "@/api/getUsers";
-import { patchUserProfile } from "@/api/patchUserProfile";
-import { patchUserRole } from "@/api/patchUserRole";
+import { getUsers } from "@/api/users";
+import { patchUserProfile } from "@/api/users";
+import { patchUserRole } from "@/api/users";
 import { formatApiError } from "@/api/client";
-import type { Role, User } from "@/api/types";
+import type { Role, User } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { ProfileForm } from "@/components/users/profile-form";

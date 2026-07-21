@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getQuestions, getQuestionById, postQuestion, postQuestionApprove, deleteQuestionById, getQuestionImageUrl } from "../../questions";
+import { getQuestions, getQuestionById, postQuestion, postQuestionApprove, deleteQuestionById, getQuestionImageUrl } from "../../shared";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("questions API", () => {

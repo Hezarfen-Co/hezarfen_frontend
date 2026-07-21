@@ -1,9 +1,9 @@
 import { For, Show, Suspense, createResource, createSignal } from "solid-js";
-import { getParentStudents } from "@/api/getParentStudents";
-import { postParentStudent } from "@/api/postParentStudent";
-import { deleteParentStudent } from "@/api/deleteParentStudent";
+import { getParentStudents } from "@/api/parents";
+import { postParentStudent } from "@/api/parents";
+import { deleteParentStudent } from "@/api/parents";
 import { formatApiError } from "@/api/client";
-import type { PersonRef } from "@/api/types";
+import type { PersonRef } from "@/api/client";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Button } from "@/components/ui/button";
 import { IconTrash, IconPlus } from "@/components/ui/icons";

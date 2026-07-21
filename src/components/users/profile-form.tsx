@@ -1,6 +1,6 @@
 import { Show, createSignal } from "solid-js";
-import { patchMe } from "@/api/patchMe";
-import type { ProfileUpdate, User } from "@/api/types";
+import { patchMe } from "@/api/users";
+import type { ProfileUpdate, User } from "@/api/client";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
