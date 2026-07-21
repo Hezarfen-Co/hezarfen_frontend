@@ -286,9 +286,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
           {(att) => (
             <Switch>
               <Match when={att().status === "submitted"}>
-                <div class="rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-3">
+                <div class="rounded-lg border border-info/30 bg-info/10 px-4 py-3">
                   <div class="flex items-start gap-3">
-                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-sky-500" />
+                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-info" />
                     <div class="min-w-0 space-y-1">
                       <p class="text-sm font-semibold text-foreground">{t("attempt.submitted")}</p>
                       <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>

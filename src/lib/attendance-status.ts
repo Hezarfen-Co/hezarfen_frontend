@@ -6,25 +6,25 @@ export const ATTENDANCE_STATUSES: { value: CoreAttendanceStatus; key: MessageKey
     value: "present",
     key: "status.present",
     detailKey: "status.presentDetail",
-    class: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    class: "border-success/30 bg-success/10 text-success",
   },
   {
     value: "absent",
     key: "status.absent",
     detailKey: "status.absentDetail",
-    class: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+    class: "border-destructive/30 bg-destructive/10 text-destructive",
   },
   {
     value: "late",
     key: "status.late",
     detailKey: "status.lateDetail",
-    class: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    class: "border-warning/30 bg-warning/10 text-warning",
   },
   {
     value: "excused",
     key: "status.excused",
     detailKey: "status.excusedDetail",
-    class: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    class: "border-info/30 bg-info/10 text-info",
   },
 ];
 

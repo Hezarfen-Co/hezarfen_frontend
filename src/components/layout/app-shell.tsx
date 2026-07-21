@@ -147,7 +147,7 @@ export function AppShell(props: ParentProps) {
               <div class="min-w-0 rounded-lg border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
                 <span class="block truncate">{routeLabel()}</span>
               </div>
-              <Button type="button" variant="outline" size="sm" class="rounded-lg border-sky-500/30 bg-sky-500/10 text-sky-700 shadow-sm hover:bg-sky-500/15 dark:text-sky-300" onClick={() => setCelebiOpen(true)}>
+              <Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 bg-primary/10 text-primary shadow-sm hover:bg-primary/15" onClick={() => setCelebiOpen(true)}>
                 <IconSparkles class="h-4 w-4" />
                 {t("ai.askCelebi")}
               </Button>

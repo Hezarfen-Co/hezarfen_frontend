@@ -59,7 +59,7 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                     <Show when={row.answer?.is_correct != null}>
                       <Badge variant="outline" class={cn(
                         "size-[22px] p-0 flex items-center justify-center",
-                        row.answer?.is_correct ? "border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950/30 dark:text-green-400" : "border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/30 dark:text-red-400",
+                        row.answer?.is_correct ? "border-success/50 bg-success/10 text-success" : "border-destructive/50 bg-destructive/10 text-destructive",
                       )}>
                         <Show when={row.answer?.is_correct} fallback={<IconX class="h-3 w-3" />}>
                           <IconCheck class="h-3 w-3" />
@@ -90,9 +90,9 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                           <div
                             class={`flex items-center gap-2 rounded-sm border px-3 py-2 text-sm ${
                               ci() === row.question.correct && ci() === row.answer?.selected
-                                ? "border-green-500 bg-green-50 dark:bg-green-950/30"
+                                ? "border-success bg-success/10"
                                 : ci() === row.question.correct
-                                  ? "border-green-300 bg-green-50/50 dark:bg-green-950/20"
+                                  ? "border-success/50 bg-success/5"
                                   : ci() === row.answer?.selected
                                     ? "border-destructive bg-destructive/10"
                                     : "border-border"
@@ -106,7 +106,7 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                               <Badge variant="destructive" class="ml-auto text-[10px]">✗</Badge>
                             </Show>
                             {ci() === row.question.correct && (
-                              <Badge variant="outline" class="ml-auto border-green-300 bg-green-50 text-green-700 text-[10px] dark:border-green-700 dark:bg-green-950/30 dark:text-green-400">
+                              <Badge variant="outline" class="ml-auto border-success/50 bg-success/10 text-success text-[10px]">
                                 <IconCheck class="h-3 w-3" />
                               </Badge>
                             )}

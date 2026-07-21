@@ -123,7 +123,7 @@ export default function MessagesPage() {
                           <div class="flex items-center gap-2">
                             <span class="truncate font-semibold">{message.from}</span>
                             <Show when={message.unread}>
-                              <span class="h-2 w-2 rounded-full bg-sky-500" />
+                              <span class="h-2 w-2 rounded-full bg-primary" />
                             </Show>
                           </div>
                           <p class="mt-1 truncate text-xs font-medium">{message.subject}</p>
