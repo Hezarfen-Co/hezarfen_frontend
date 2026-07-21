@@ -66,6 +66,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/clubs", labelKey: "nav.clubs", Icon: IconUsers },
       { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
+      { to: "/calendar", labelKey: "nav.calendar", Icon: IconCalendarDays },
     ],
   },
   {

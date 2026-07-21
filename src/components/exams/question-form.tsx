@@ -126,17 +126,17 @@ export function QuestionForm(props: {
   };
 
   return (
-    <form class="mx-auto max-w-5xl space-y-3 rounded-md border bg-muted/20 p-3" onSubmit={(e) => void submit(e)}>
-      <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-stretch">
-        <div class="space-y-1.5">
+    <form class="space-y-3" onSubmit={(e) => void submit(e)}>
+      <div class="rounded-lg border bg-card p-3.5 shadow-sm">
+        <div class="space-y-2">
           <Label for="question-text" class="text-sm font-semibold">{t("questions.text")}</Label>
           <Textarea
             id="question-text"
             ref={textAreaRef}
-            class="min-h-[10rem] resize-none overflow-hidden bg-background text-base"
+            class="min-h-[7rem] resize-none overflow-hidden bg-background text-base"
             value={text()}
             maxlength={2000}
-            rows={5}
+            rows={3}
             required
             placeholder={t("questions.text")}
             onInput={(e) => {
@@ -144,159 +144,164 @@ export function QuestionForm(props: {
               resizeTextArea();
             }}
           />
-          <div class="mt-2 rounded-lg border bg-background p-3 shadow-sm">
-            <Label for="question-image" class="text-xs font-semibold text-muted-foreground">{t("questions.image")}</Label>
+          <div class="flex items-center gap-3">
             <Show when={props.initial?.image}>
-              <img
-                src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/image`}
-                alt={t("questions.image")}
-                class="mt-2 h-40 w-full max-w-md rounded-md border bg-muted/20 object-contain"
-              />
+              <div class="relative shrink-0">
+                <img
+                  src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/image`}
+                  alt={t("questions.image")}
+                  class="h-14 w-24 rounded border bg-muted/20 object-contain"
+                />
+              </div>
             </Show>
-            <input
-              id="question-image"
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              class="sr-only"
-              onChange={(event) => setImage(event.currentTarget.files?.[0] ?? null)}
-            />
-            <label for="question-image" class="mt-2 flex cursor-pointer items-center gap-2 rounded-md border border-dashed bg-muted/30 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
-              <IconFileImage class="h-4 w-4" />
-              <span class="truncate">{image()?.name ?? t("common.createItem", { item: t("questions.image") })}</span>
-            </label>
-          </div>
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <Label class="text-sm font-semibold">{t("questions.kind")}</Label>
-          <div class="flex flex-1 flex-col gap-3 rounded-lg border bg-background p-3 shadow-sm">
-            <div class="space-y-1.5">
-              <Label for="question-subject">{t("subjects.subject")}</Label>
-              <Select id="question-subject" class="h-10 py-2" value={subjectId()} required onChange={(e) => setSubjectId(e.currentTarget.value)}>
-                <option value="">{t("subjects.select")}</option>
-                <For each={props.subjects}>{(subject) => <option value={subject.id}>{subject.name}</option>}</For>
-              </Select>
-            </div>
-            <div class="mt-3 grid grid-cols-2 gap-1 rounded-lg border bg-muted/40 p-1 pt-2">
-              <For each={QUESTION_KINDS}>
-                {(k) => (
-                  <button
-                    type="button"
-                    class={cn(
-                      "h-9 rounded-md border text-xs font-semibold transition-colors",
-                      kind() === k
-                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                        : "border-transparent text-muted-foreground hover:bg-background/70 hover:text-foreground",
-                    )}
-                    onClick={() => setKind(k)}
-                  >
-                    {k === "choice" ? t("questions.kind.choice") : t("questions.kind.text")}
-                  </button>
-                )}
-              </For>
-              <Select id="question-kind" value={kind()} class="sr-only" onChange={(e) => setKind(e.currentTarget.value as QuestionKind)}>
-                <For each={QUESTION_KINDS}>
-                  {(k) => <option value={k}>{k === "choice" ? t("questions.kind.choice") : t("questions.kind.text")}</option>}
-                </For>
-              </Select>
-            </div>
-            <div class="space-y-1.5">
-              <Label for="question-points">{t("questions.points")}</Label>
-              <Input
-                id="question-points"
-                type="number"
-                min={1}
-                max={100}
-                value={points()}
-                class="h-10"
-                required
-                onInput={(e) => setPoints(e.currentTarget.value)}
+            <div class="flex items-center gap-2">
+              <input
+                id="question-image"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                class="sr-only"
+                onChange={(event) => setImage(event.currentTarget.files?.[0] ?? null)}
               />
+              <label for="question-image" class="flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
+                <IconFileImage class="h-3.5 w-3.5" />
+                <span class="truncate">{image()?.name ?? t("questions.image")}</span>
+              </label>
             </div>
           </div>
         </div>
       </div>
+
+      <div class="flex flex-wrap items-end gap-3 rounded-lg border bg-card px-3.5 py-3 shadow-sm">
+        <div class="min-w-0 flex-1 basis-[10rem]">
+          <Label for="question-subject" class="mb-1 block text-xs font-semibold text-muted-foreground">{t("subjects.subject")}</Label>
+          <Select id="question-subject" class="h-9 py-1.5 text-sm" value={subjectId()} required onChange={(e) => setSubjectId(e.currentTarget.value)}>
+            <option value="">{t("subjects.select")}</option>
+            <For each={props.subjects}>{(subject) => <option value={subject.id}>{subject.name}</option>}</For>
+          </Select>
+        </div>
+        <div>
+          <Label class="mb-1 block text-xs font-semibold text-muted-foreground">{t("questions.kind")}</Label>
+          <div class="flex gap-0.5 rounded-md border bg-muted/40 p-0.5">
+            <For each={QUESTION_KINDS}>
+              {(k) => (
+                <button
+                  type="button"
+                  class={cn(
+                    "h-7 rounded-sm px-2.5 text-xs font-semibold transition-colors",
+                    kind() === k
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  onClick={() => setKind(k)}
+                >
+                  {k === "choice" ? t("questions.kind.choice") : t("questions.kind.text")}
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+        <div class="w-20">
+          <Label for="question-points" class="mb-1 block text-xs font-semibold text-muted-foreground">{t("questions.points")}</Label>
+          <Input
+            id="question-points"
+            type="number"
+            min={1}
+            max={100}
+            value={points()}
+            class="h-9 text-sm"
+            required
+            onInput={(e) => setPoints(e.currentTarget.value)}
+          />
+        </div>
+      </div>
+
       <Show when={kind() === "choice"}>
-        <div class="space-y-2">
-          <div class="flex items-center justify-between gap-2">
-            <div>
-              <Label class="text-sm font-semibold">{t("questions.choices")}</Label>
-              <p class="text-xs text-muted-foreground">{t("questions.correctAnswer")}: {String.fromCharCode(65 + correct())}</p>
-            </div>
-            <Button type="button" variant="outline" size="sm" disabled={choices().length >= 10} onClick={addChoice}>
-              <IconPlus class="h-4 w-4" />
+        <div class="rounded-lg border bg-card p-3.5 shadow-sm">
+          <div class="mb-3 flex items-center justify-between gap-2 border-b border-border/50 pb-2">
+            <Label class="text-sm font-semibold">{t("questions.choices")}</Label>
+            <Button type="button" variant="outline" size="sm" class="h-7 gap-1 text-xs" disabled={choices().length >= 10} onClick={addChoice}>
+              <IconPlus class="h-3.5 w-3.5" />
               {t("questions.addChoice")}
             </Button>
           </div>
-          <div class="grid gap-3 xl:grid-cols-2">
+          <div class="space-y-2">
             <Index each={choices()}>
-              {(choice, index) => (
-                <div class="min-h-28 rounded-md border bg-background p-3">
-                  <div class="mb-2 flex items-center justify-between gap-2">
+              {(choice, index) => {
+                const isCorrect = () => correct() === index;
+                return (
+                  <div
+                    class={cn(
+                      "flex items-start gap-2 rounded-md border p-2 transition-colors",
+                      isCorrect() ? "border-emerald-400/60 bg-emerald-50/60" : "border-border bg-background",
+                    )}
+                  >
                     <button
                       type="button"
-                      class={
-                        correct() === index
-                          ? "inline-flex h-8 items-center gap-2 rounded-sm bg-primary px-2 text-xs font-medium text-primary-foreground"
-                          : "inline-flex h-8 items-center gap-2 rounded-sm border px-2 text-xs font-medium text-muted-foreground hover:bg-accent"
-                      }
+                      class={cn(
+                        "mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold transition-colors",
+                        isCorrect()
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "border bg-background text-muted-foreground hover:border-emerald-400 hover:text-emerald-600",
+                      )}
                       onClick={() => setCorrect(index)}
+                      title={t("questions.correct")}
                     >
-                      <span class="inline-flex h-5 w-5 items-center justify-center rounded-[3px] border bg-background text-foreground">
-                        {String.fromCharCode(65 + index)}
-                      </span>
-                      {correct() === index ? <IconCheck class="h-3.5 w-3.5" /> : t("questions.correct")}
+                      {isCorrect() ? <IconCheck class="h-3.5 w-3.5" /> : String.fromCharCode(65 + index)}
                     </button>
+                    <div class="min-w-0 flex-1 space-y-1.5">
+                      <Input
+                        class="h-8 text-sm"
+                        value={choice()}
+                        maxlength={500}
+                        placeholder={t("questions.choicePlaceholder", { index: String.fromCharCode(65 + index) })}
+                        onInput={(e) => setChoice(index, e.currentTarget.value)}
+                      />
+                      <div class="flex items-center gap-2">
+                        <input
+                          id={`choice-image-${index}`}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/gif"
+                          class="sr-only"
+                          onChange={(event) => setChoiceImage(index, event.currentTarget.files?.[0] ?? null)}
+                        />
+                        <label for={`choice-image-${index}`} class="flex cursor-pointer items-center gap-1 rounded-md border border-dashed bg-muted/20 px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
+                          <IconFileImage class="h-3 w-3" />
+                          {choiceImages()[index]?.name ?? t("questions.choiceImage")}
+                        </label>
+                        <Show when={props.initial?.choice_images?.[index]}>
+                          <img
+                            src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/choices/${index}/image`}
+                            alt={t("questions.choiceImage")}
+                            class="h-8 w-12 rounded border bg-muted/20 object-contain"
+                          />
+                        </Show>
+                      </div>
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       disabled={choices().length <= 2}
-                      class="h-8 px-2 text-destructive"
+                      class="mt-0.5 h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                       onClick={() => removeChoice(index)}
                     >
                       <IconTrash class="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                  <Input
-                    class="h-10"
-                    value={choice()}
-                    maxlength={500}
-                    placeholder={t("questions.choicePlaceholder", { index: String.fromCharCode(65 + index) })}
-                    onInput={(e) => setChoice(index, e.currentTarget.value)}
-                  />
-                  <Show when={props.initial?.choice_images?.[index]}>
-                    <img
-                      src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/choices/${index}/image`}
-                      alt={t("questions.choiceImage")}
-                      class="mt-2 h-32 w-full max-w-sm rounded-md border bg-muted/20 object-contain"
-                    />
-                  </Show>
-                  <div class="mt-2">
-                    <Label for={`choice-image-${index}`} class="text-xs font-semibold text-muted-foreground">{t("questions.choiceImage")}</Label>
-                    <input
-                      id={`choice-image-${index}`}
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif"
-                      class="sr-only"
-                      onChange={(event) => setChoiceImage(index, event.currentTarget.files?.[0] ?? null)}
-                    />
-                    <label for={`choice-image-${index}`} class="mt-1 flex cursor-pointer items-center gap-2 rounded-md border border-dashed bg-muted/30 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
-                      <IconFileImage class="h-4 w-4" />
-                      <span class="truncate">{choiceImages()[index]?.name ?? t("common.createItem", { item: t("questions.choiceImage") })}</span>
-                    </label>
-                  </div>
-                </div>
-              )}
+                );
+              }}
             </Index>
           </div>
         </div>
       </Show>
-      {error() && <p class="text-sm text-destructive">{error()}</p>}
-      <div class="flex flex-wrap items-center gap-2">
-        <Button type="submit" disabled={pending()}>
+
+      {error() && <p class="rounded-sm bg-destructive/10 px-3 py-1.5 text-sm text-destructive">{error()}</p>}
+
+      <div class="flex flex-wrap items-center gap-2 pt-1">
+        <Button type="submit" class="h-8 text-xs font-semibold" disabled={pending()}>
           {props.initial ? t("common.update") : t("common.create")}
         </Button>
-        <Button type="button" variant="outline" onClick={props.onCancel}>
+        <Button type="button" variant="outline" class="h-8 text-xs font-semibold" onClick={props.onCancel}>
           {t("common.cancel")}
         </Button>
       </div>

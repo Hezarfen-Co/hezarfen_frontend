@@ -11,6 +11,7 @@ import { postCourseExam } from "@/api/courses";
 import { formatApiError } from "@/api/client";
 import type { Course, Exam } from "@/api/client";
 import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
+import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -59,6 +60,10 @@ function ExamsContent() {
   const [attemptStatuses, setAttemptStatuses] = createSignal<Record<string, ExamAttemptSummary>>({});
   const [flash, setFlash] = createFlash();
 
+  const [createStep, setCreateStep] = createSignal<"details" | "questions">("details");
+  const [createdExam, setCreatedExam] = createSignal<Exam | null>(null);
+  const [editTab, setEditTab] = createSignal<"details" | "questions">("details");
+
   const [courses] = createResource(
     () => (auth.user()?.role && auth.user()?.role !== "student" ? true : null),
     async (enabled) => (enabled ? (await getCourses()).items : []),
@@ -102,7 +107,6 @@ function ExamsContent() {
 
   const [list, { refetch: refetchExams }] = createResource(
     () => {
-      // Do not track now() here — it ticks every second and would re-fetch forever.
       if (isStudent() && mine() === undefined) return null;
       if (!isStudent() && courses() === undefined) return null;
       return [isStudent() ? "s" : "t", (mine() ?? []).map((c) => c.id).join(",")].join("|");
@@ -125,6 +129,12 @@ function ExamsContent() {
     if (!createOpen() || selectedCourseId()) return;
     setSelectedCourseId(manageableCourses()[0]?.id ?? "");
   });
+
+  const openCreateModal = () => {
+    setCreatedExam(null);
+    setCreateStep("details");
+    setCreateOpen(true);
+  };
 
   const statusLabel = (status: ExamDisplayStatus) => {
     if (status === "submitted") return t("attempt.submitted");
@@ -221,7 +231,7 @@ function ExamsContent() {
               onSelect: () => void navigate({ to: "/exams/$id", params: { id: cell.row.original.id } }),
             },
             ...(isTeacherPlus() && canEditExam(cell.row.original)
-              ? [{ label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => setEditingExam(cell.row.original) }]
+              ? [{ label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => { setEditingExam(cell.row.original); setEditTab("details"); } }]
               : []),
           ]}
         />
@@ -229,23 +239,33 @@ function ExamsContent() {
     },
   ]);
 
-  const createExam = async (values: ExamFormValues) => {
-    const courseId = selectedCourseId();
-    if (!courseId) throw new Error(t("exams.selectCourse"));
-    await postCourseExam(courseId, {
-      ...values,
-      description: values.description.trim() || undefined,
-    });
-    setCreateOpen(false);
-    await refetchExams();
-    setFlash(t("common.created"));
+  const saveOrCreateExam = async (values: ExamFormValues) => {
+    const existing = createdExam();
+    if (existing) {
+      const updated = await patchExamById(existing.id, values);
+      setCreatedExam(updated);
+      await refetchExams();
+      setCreateStep("questions");
+      setFlash(t("common.saved"));
+    } else {
+      const courseId = selectedCourseId();
+      if (!courseId) throw new Error(t("exams.selectCourse"));
+      const newExam = await postCourseExam(courseId, {
+        ...values,
+        description: values.description.trim() || undefined,
+      });
+      setCreatedExam(newExam);
+      await refetchExams();
+      setCreateStep("questions");
+      setFlash(t("common.created"));
+    }
   };
 
   const updateExam = async (values: ExamFormValues) => {
     const exam = editingExam();
     if (!exam) return;
-    await patchExamById(exam.id, values);
-    setEditingExam(null);
+    const updated = await patchExamById(exam.id, values);
+    setEditingExam(updated);
     await refetchExams();
     setFlash(t("common.saved"));
   };
@@ -260,7 +280,7 @@ function ExamsContent() {
           description={t("exams.subtitle")}
           actions={
             canCreate() ? (
-              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreateModal}>
                 <IconPlus class="h-4 w-4" />
                 {t("exams.create")}
               </Button>
@@ -313,22 +333,145 @@ function ExamsContent() {
         </Suspense>
       </section>
 
-      <SidePanel open={createOpen()} onOpenChange={setCreateOpen} title={t("exams.create")} description={t("exams.subtitle")}>
-        <div class="mb-4 space-y-1.5">
-          <label class="text-sm font-medium" for="exam-course">
-            {t("exams.selectCourse")}
-          </label>
-          <Select id="exam-course" class="rounded-sm" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
-            <option value="">{t("exams.selectCourse")}</option>
-            <For each={manageableCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>
-          </Select>
+      <SidePanel
+        open={createOpen()}
+        onOpenChange={(open) => {
+          setCreateOpen(open);
+          if (!open) {
+            setCreatedExam(null);
+            setCreateStep("details");
+          }
+        }}
+        title={createdExam() ? createdExam()!.title : t("exams.create")}
+        description={createdExam() ? t("exams.step2Questions") : t("exams.subtitle")}
+        size={createStep() === "questions" ? "wide" : "default"}
+      >
+        <div class="mb-4 flex border-b border-border/60 pb-2">
+          <button
+            type="button"
+            class={cn(
+              "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+              createStep() === "details"
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:bg-muted/50",
+            )}
+            onClick={() => setCreateStep("details")}
+          >
+            {t("exams.step1Details")}
+          </button>
+          <button
+            type="button"
+            disabled={!createdExam()}
+            class={cn(
+              "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+              createStep() === "questions"
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : createdExam()
+                ? "text-muted-foreground hover:bg-muted/50"
+                : "opacity-40 cursor-not-allowed text-muted-foreground",
+            )}
+            onClick={() => createdExam() && setCreateStep("questions")}
+          >
+            {t("exams.step2Questions")}
+          </button>
         </div>
-        <ExamForm submitLabel={t("common.create")} onCancel={() => setCreateOpen(false)} onSubmit={createExam} />
+
+        <Show when={createStep() === "details"}>
+          <Show when={!createdExam()}>
+            <div class="mb-4 space-y-1.5">
+              <label class="text-sm font-medium" for="exam-course">
+                {t("exams.selectCourse")}
+              </label>
+              <Select id="exam-course" class="rounded-sm" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
+                <option value="">{t("exams.selectCourse")}</option>
+                <For each={manageableCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>
+              </Select>
+            </div>
+          </Show>
+          <ExamForm
+            initial={createdExam() ?? undefined}
+            submitLabel={createdExam() ? t("common.update") : t("exams.nextQuestions")}
+            onCancel={() => setCreateOpen(false)}
+            onSubmit={saveOrCreateExam}
+          />
+        </Show>
+
+        <Show when={createStep() === "questions" && createdExam()}>
+          <div class="space-y-4">
+            <ExamQuestionsPanel
+              examId={createdExam()!.id}
+              courseId={createdExam()!.course}
+              embedded
+            />
+            <div class="flex justify-end border-t pt-3">
+              <Button type="button" variant="default" onClick={() => setCreateOpen(false)}>
+                {t("exams.finishAndClose")}
+              </Button>
+            </div>
+          </div>
+        </Show>
       </SidePanel>
 
-      <SidePanel open={editingExam() != null} onOpenChange={(open) => !open && setEditingExam(null)} title={t("common.edit")} description={editingExam()?.title}>
+      <SidePanel
+        open={editingExam() != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingExam(null);
+            setEditTab("details");
+          }
+        }}
+        title={t("common.edit")}
+        description={editingExam()?.title}
+        size={editTab() === "questions" ? "wide" : "default"}
+      >
         <Show when={editingExam()}>
-          {(exam) => <ExamForm initial={exam()} submitLabel={t("common.update")} onCancel={() => setEditingExam(null)} onSubmit={updateExam} />}
+          {(exam) => (
+            <div class="space-y-4">
+              <div class="flex border-b border-border/60 pb-2">
+                <button
+                  type="button"
+                  class={cn(
+                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    editTab() === "details"
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "text-muted-foreground hover:bg-muted/50",
+                  )}
+                  onClick={() => setEditTab("details")}
+                >
+                  {t("exams.step1Details")}
+                </button>
+                <button
+                  type="button"
+                  class={cn(
+                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    editTab() === "questions"
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "text-muted-foreground hover:bg-muted/50",
+                  )}
+                  onClick={() => setEditTab("questions")}
+                >
+                  {t("exams.step2Questions")}
+                </button>
+              </div>
+
+              <Show when={editTab() === "details"}>
+                <ExamForm
+                  initial={exam()}
+                  submitLabel={t("common.update")}
+                  onCancel={() => setEditingExam(null)}
+                  onSubmit={updateExam}
+                />
+              </Show>
+
+              <Show when={editTab() === "questions"}>
+                <ExamQuestionsPanel
+                  examId={exam().id}
+                  courseId={exam().course}
+                  embedded
+                />
+              </Show>
+            </div>
+          )}
         </Show>
       </SidePanel>
     </div>
