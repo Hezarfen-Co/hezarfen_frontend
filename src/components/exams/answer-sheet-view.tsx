@@ -81,6 +81,13 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                       <div class="rounded-sm bg-muted/40 p-3">
                         <p class="text-xs text-muted-foreground">{t("exams.textAnswer")}</p>
                         <p class="mt-1 whitespace-pre-wrap text-sm">{row.answer?.text || "—"}</p>
+                        <Show when={row.answer?.answer_image}>
+                          <img
+                            src={`/api/exams/${d().sheet.exam}/attempts/${d().sheet.user.id}/answers/${row.question.id}/image`}
+                            alt={t("exams.drawAnswer")}
+                            class="mt-3 h-64 w-full max-w-2xl rounded-md border bg-background object-contain"
+                          />
+                        </Show>
                       </div>
                     }
                   >

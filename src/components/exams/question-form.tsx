@@ -1,15 +1,20 @@
-import { For, Index, Show, createEffect, createSignal } from "solid-js";
+import { For, Index, Show, Suspense, createEffect, createSignal, lazy } from "solid-js";
 import { formatApiError } from "@/api/client";
 import type { ExamQuestion, QuestionKind, Subject } from "@/api/client";
 import { QUESTION_KINDS } from "@/api/client";
+import { getExamQuestionImageBlob } from "@/api/exams";
+import type { DrawScene } from "@/lib/draw-stroke";
 import { Button } from "@/components/ui/button";
-import { IconCheck, IconFileImage, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconCheck, IconEdit, IconFileImage, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
+
+// Lazy so the drawing pad rides its own chunk, off the exam editor's initial load.
+const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
 export type QuestionValues = {
   subject_id: string;
@@ -37,6 +42,8 @@ export function QuestionForm(props: {
   const [choices, setChoices] = createSignal<string[]>(props.initial?.choices ?? ["", "", "", ""]);
   const [correct, setCorrect] = createSignal(props.initial?.correct ?? 0);
   const [image, setImage] = createSignal<File | null>(null);
+  const [drawing, setDrawing] = createSignal(false);
+  const [editScene, setEditScene] = createSignal<DrawScene | null>(null);
   const [choiceImages, setChoiceImages] = createSignal<(File | null)[]>(choices().map(() => null));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -50,9 +57,32 @@ export function QuestionForm(props: {
     setChoices(initial?.choices ?? ["", "", "", ""]);
     setCorrect(initial?.correct ?? 0);
     setImage(null);
+    setDrawing(false);
+    setEditScene(null);
     setChoiceImages((initial?.choices ?? ["", "", "", ""]).map(() => null));
     setError("");
   });
+
+  // Blank pad for a fresh drawing; reload the stored scene to edit an existing one.
+  const startDrawing = () => {
+    setEditScene(null);
+    setDrawing((open) => !open);
+  };
+
+  const editDrawing = async () => {
+    const q = props.initial;
+    if (!q?.image) return;
+    setError("");
+    try {
+      const blob = await getExamQuestionImageBlob(q.exam, q.id);
+      const { pngBytesToScene } = await import("@/lib/drawing-file");
+      setEditScene(pngBytesToScene(new Uint8Array(await blob.arrayBuffer())));
+    } catch {
+      setEditScene(null); // plain image or fetch failed → start blank, never crash
+    } finally {
+      setDrawing(true);
+    }
+  };
 
   const resizeTextArea = () => {
     if (!textAreaRef) return;
@@ -166,8 +196,42 @@ export function QuestionForm(props: {
                 <IconFileImage class="h-3.5 w-3.5" />
                 <span class="truncate">{image()?.name ?? t("questions.image")}</span>
               </label>
+              <button
+                type="button"
+                aria-expanded={drawing()}
+                class="flex items-center gap-1.5 rounded-md border border-dashed bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                onClick={startDrawing}
+              >
+                <IconEdit class="h-3.5 w-3.5" />
+                {t("questions.draw")}
+              </button>
+              <Show when={props.initial?.image}>
+                <button
+                  type="button"
+                  class="flex items-center gap-1.5 rounded-md border border-dashed bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                  onClick={() => void editDrawing()}
+                >
+                  <IconEdit class="h-3.5 w-3.5" />
+                  {t("questions.editDrawing")}
+                </button>
+              </Show>
             </div>
           </div>
+          <Show when={drawing()}>
+            <div class="mt-3 border-t border-border/50 pt-3">
+              <Label class="mb-2 block text-xs font-semibold text-muted-foreground">{t("questions.drawTitle")}</Label>
+              <Suspense fallback={<div class="h-[22rem] animate-pulse rounded-lg border bg-muted/20" />}>
+                <DrawCanvas
+                  fileName="question.png"
+                  initialScene={editScene()}
+                  onSave={(file) => {
+                    setImage(file);
+                    setDrawing(false);
+                  }}
+                />
+              </Suspense>
+            </div>
+          </Show>
         </div>
       </div>
 

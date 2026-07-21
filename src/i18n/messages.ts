@@ -226,6 +226,18 @@ export type MessageKey =
   | "notes.files"
   | "notes.filesHelp"
   | "notes.addFile"
+  | "notes.draw"
+  | "notes.drawTitle"
+  | "draw.pen"
+  | "draw.eraser"
+  | "draw.color"
+  | "draw.width"
+  | "draw.undo"
+  | "draw.clear"
+  | "draw.save"
+  | "draw.hint"
+  | "draw.downloadPng"
+  | "draw.downloadJpeg"
   | "notes.downloadFile"
   | "notes.noFiles"
   | "notes.fileLimit"
@@ -357,6 +369,9 @@ export type MessageKey =
   | "questions.kind.choice"
   | "questions.kind.text"
   | "questions.image"
+  | "questions.draw"
+  | "questions.drawTitle"
+  | "questions.editDrawing"
   | "questions.choiceImage"
   | "questions.subjectRequired"
   | "questions.textRequired"
@@ -554,6 +569,9 @@ export type MessageKey =
   | "exams.possible"
   | "exams.isCorrect"
   | "exams.textAnswer"
+  | "exams.drawAnswer"
+  | "exams.editDrawing"
+  | "exams.removeDrawing"
   | "exams.nameless"
   | "exams.emptyRoster"
   | "exams.selectStudent"
@@ -910,6 +928,18 @@ const en: Dict = {
   "notes.files": "Attachments",
   "notes.filesHelp": "Up to 10 files. Max {size} each.",
   "notes.addFile": "Add file",
+  "notes.draw": "Draw",
+  "notes.drawTitle": "Draw a picture",
+  "draw.pen": "Pen",
+  "draw.eraser": "Eraser",
+  "draw.color": "Colour",
+  "draw.width": "Line thickness",
+  "draw.undo": "Undo",
+  "draw.clear": "Clear all",
+  "draw.save": "Save drawing",
+  "draw.hint": "Draw here with your finger, pen, or mouse.",
+  "draw.downloadPng": "Download PNG",
+  "draw.downloadJpeg": "Download JPEG",
   "notes.downloadFile": "Download",
   "notes.noFiles": "No files attached.",
   "notes.fileLimit": "This note already has 10 files.",
@@ -1048,6 +1078,9 @@ const en: Dict = {
   "questions.kind.choice": "Choice",
   "questions.kind.text": "Text",
   "questions.image": "Question image",
+  "questions.draw": "Draw the image",
+  "questions.drawTitle": "Draw the question image",
+  "questions.editDrawing": "Edit drawing",
   "questions.choiceImage": "Choice image",
   "questions.subjectRequired": "Select a subject for this question",
   "questions.textRequired": "Question text is required",
@@ -1256,6 +1289,9 @@ const en: Dict = {
   "exams.possible": "Possible",
   "exams.isCorrect": "Correct",
   "exams.textAnswer": "Text answer",
+  "exams.drawAnswer": "Draw answer",
+  "exams.editDrawing": "Edit drawing",
+  "exams.removeDrawing": "Remove drawing",
   "exams.nameless": "Unnamed",
   "exams.emptyRoster": "No enrolled students yet.",
   "exams.selectStudent": "Select a student from the roster",
@@ -1606,6 +1642,18 @@ const tr: Dict = {
   "notes.files": "Ekler",
   "notes.filesHelp": "En fazla 10 dosya. Dosya başına {size} sınırı.",
   "notes.addFile": "Dosya ekle",
+  "notes.draw": "Çiz",
+  "notes.drawTitle": "Resim çiz",
+  "draw.pen": "Kalem",
+  "draw.eraser": "Silgi",
+  "draw.color": "Renk",
+  "draw.width": "Çizgi kalınlığı",
+  "draw.undo": "Geri al",
+  "draw.clear": "Hepsini sil",
+  "draw.save": "Çizimi kaydet",
+  "draw.hint": "Parmağınla, kalemle ya da fareyle buraya çiz.",
+  "draw.downloadPng": "PNG indir",
+  "draw.downloadJpeg": "JPEG indir",
   "notes.downloadFile": "İndir",
   "notes.noFiles": "Henüz dosya eklenmemiş.",
   "notes.fileLimit": "Bu notta zaten 10 dosya var.",
@@ -1744,6 +1792,9 @@ const tr: Dict = {
   "questions.kind.choice": "Seçmeli",
   "questions.kind.text": "Metin",
   "questions.image": "Soru görseli",
+  "questions.draw": "Görseli çiz",
+  "questions.drawTitle": "Soru görselini çiz",
+  "questions.editDrawing": "Çizimi düzenle",
   "questions.choiceImage": "Seçenek görseli",
   "questions.subjectRequired": "Bu soru için konu seç",
   "questions.textRequired": "Soru metni gerekli",
@@ -1952,6 +2003,9 @@ const tr: Dict = {
   "exams.possible": "Mümkün",
   "exams.isCorrect": "Doğru",
   "exams.textAnswer": "Metin cevap",
+  "exams.drawAnswer": "Cevabı çiz",
+  "exams.editDrawing": "Çizimi düzenle",
+  "exams.removeDrawing": "Çizimi kaldır",
   "exams.nameless": "İsimsiz",
   "exams.emptyRoster": "Henüz kayıtlı öğrenci yok.",
   "exams.selectStudent": "Listeden bir öğrenci seç",

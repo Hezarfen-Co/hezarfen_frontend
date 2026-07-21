@@ -1,21 +1,29 @@
-import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createSignal, lazy, onCleanup } from "solid-js";
 import { getExamAttempt } from "@/api/exams";
 import { getExamAttemptQuestions } from "@/api/exams";
 import { postExamAttempt } from "@/api/exams";
 import { postExamAttemptAnswer } from "@/api/exams";
 import { postExamAttemptFinish } from "@/api/exams";
+import { postExamAttemptAnswerImage } from "@/api/exams";
+import { deleteExamAttemptAnswerImage } from "@/api/exams";
+import { getExamAnswerImageBlob } from "@/api/exams";
 import { formatApiError, formatApiErrorMessage } from "@/api/client";
 import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/client";
+import type { DrawScene } from "@/lib/draw-stroke";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconAlert, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { IconAlert, IconChevronLeft, IconChevronRight, IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+// Lazy so the drawing pad rides its own chunk, off the exam room's initial load.
+const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
 type WsState = "connecting" | "connected" | "disconnected";
 type WsMessage =
@@ -207,6 +215,41 @@ export function ExamRoomWS(props: { exam: Exam }) {
     }
   };
 
+  // A drawing is binary, so it skips the JSON WS/REST autosave: upload out-of-band,
+  // then refetch so the answer's answer_image and updated_at badge catch up.
+  const refreshAnswers = async () => {
+    const next = await getExamAttempt(props.exam.id);
+    setAttempt(next);
+    const qs = await getExamAttemptQuestions(props.exam.id);
+    setQuestions(qs);
+  };
+
+  const saveAnswerImage = async (question: AttemptQuestion, file: File) => {
+    setError("");
+    setPending(true);
+    try {
+      await postExamAttemptAnswerImage(props.exam.id, question.id, file);
+      await refreshAnswers();
+    } catch (err) {
+      setError(formatApiError(err, locale()));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const removeAnswerImage = async (question: AttemptQuestion) => {
+    setError("");
+    setPending(true);
+    try {
+      await deleteExamAttemptAnswerImage(props.exam.id, question.id);
+      await refreshAnswers();
+    } catch (err) {
+      setError(formatApiError(err, locale()));
+    } finally {
+      setPending(false);
+    }
+  };
+
   const finish = async () => {
     setPending(true);
     setError("");
@@ -359,6 +402,8 @@ export function ExamRoomWS(props: { exam: Exam }) {
                       disabled={!canWrite() || pending()}
                       onSave={(value) => saveAnswer(question(), value)}
                       onSaved={goNext}
+                      onSaveImage={(file) => saveAnswerImage(question(), file)}
+                      onRemoveImage={() => removeAnswerImage(question())}
                     />
                     <div class="flex items-center justify-between gap-2">
                       <Button type="button" variant="outline" class="rounded-lg" disabled={activeQuestionIndex() === 0} onClick={goPrevious}>
@@ -539,6 +584,8 @@ function QuestionAnswerCardWS(props: {
   disabled: boolean;
   onSave: (value: string) => Promise<void>;
   onSaved?: () => void;
+  onSaveImage: (file: File) => Promise<void>;
+  onRemoveImage: () => Promise<void>;
 }) {
   const t = useT();
   const { locale } = usePreferences();
@@ -550,6 +597,8 @@ function QuestionAnswerCardWS(props: {
       : props.question.answer?.text ?? "",
   );
   const [saved, setSaved] = createSignal(false);
+  const [drawOpen, setDrawOpen] = createSignal(false);
+  const [editScene, setEditScene] = createSignal<DrawScene | null>(null);
   let questionId = props.question.id;
 
   createEffect(() => {
@@ -563,12 +612,38 @@ function QuestionAnswerCardWS(props: {
         : props.question.answer?.text ?? "",
     );
     setSaved(false);
+    setDrawOpen(false);
+    setEditScene(null);
   });
 
   const save = async () => {
     await props.onSave(value());
     setSaved(true);
     props.onSaved?.();
+  };
+
+  const openNewDrawing = () => {
+    setEditScene(null);
+    setDrawOpen(true);
+  };
+
+  // Reload the stored PNG's embedded scene so the pad reopens on the saved drawing.
+  const openEditDrawing = async () => {
+    try {
+      const blob = await getExamAnswerImageBlob(props.question.exam, props.question.id);
+      const { pngBytesToScene } = await import("@/lib/drawing-file");
+      setEditScene(pngBytesToScene(new Uint8Array(await blob.arrayBuffer())));
+    } catch {
+      setEditScene(null); // plain image or fetch failed → start blank, never crash
+    } finally {
+      setDrawOpen(true);
+    }
+  };
+
+  const saveDrawing = async (file: File) => {
+    await props.onSaveImage(file);
+    setEditScene(null);
+    setDrawOpen(false);
   };
 
   return (
@@ -594,17 +669,48 @@ function QuestionAnswerCardWS(props: {
       <Show
         when={props.question.kind === "choice"}
         fallback={
-           <Textarea
-             class="min-h-32"
-             value={value()}
-            rows={4}
-            disabled={props.disabled}
-            maxlength={10000}
-            onInput={(e) => {
-              setSaved(false);
-              setValue(e.currentTarget.value);
-            }}
-          />
+          <div class="space-y-3">
+            <Textarea
+              class="min-h-32"
+              value={value()}
+              rows={4}
+              disabled={props.disabled}
+              maxlength={10000}
+              onInput={(e) => {
+                setSaved(false);
+                setValue(e.currentTarget.value);
+              }}
+            />
+            <Show when={props.question.answer?.answer_image}>
+              <img
+                src={`/api/exams/${props.question.exam}/attempt/answers/${props.question.id}/image`}
+                alt={t("exams.drawAnswer")}
+                class="h-64 w-full max-w-2xl rounded-md border bg-muted/20 object-contain"
+              />
+            </Show>
+            <Show when={!props.disabled}>
+              <div class="flex flex-wrap items-center gap-2">
+                <Show
+                  when={props.question.answer?.answer_image}
+                  fallback={
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={openNewDrawing}>
+                      <IconEdit class="h-4 w-4" />
+                      {t("exams.drawAnswer")}
+                    </Button>
+                  }
+                >
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => void openEditDrawing()}>
+                    <IconEdit class="h-4 w-4" />
+                    {t("exams.editDrawing")}
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={() => void props.onRemoveImage()}>
+                    <IconTrash class="h-4 w-4" />
+                    {t("exams.removeDrawing")}
+                  </Button>
+                </Show>
+              </div>
+            </Show>
+          </div>
         }
       >
         <div class="space-y-2">
@@ -646,6 +752,24 @@ function QuestionAnswerCardWS(props: {
       >
         {t("attempt.saveAnswer")}
       </Button>
+      <FormDialog
+        open={drawOpen()}
+        onOpenChange={(open) => {
+          setDrawOpen(open);
+          if (!open) setEditScene(null);
+        }}
+        title={t("exams.drawAnswer")}
+        class="sm:max-w-3xl"
+      >
+        <Suspense fallback={<PageSpinner />}>
+          <DrawCanvas
+            pending={props.disabled}
+            initialScene={editScene()}
+            fileName="answer.png"
+            onSave={(file) => void saveDrawing(file)}
+          />
+        </Suspense>
+      </FormDialog>
     </article>
   );
 }

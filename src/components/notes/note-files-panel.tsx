@@ -1,18 +1,22 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, type JSX } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, lazy, type JSX } from "solid-js";
 import { deleteNoteFileById } from "@/api/notes";
+import { getNoteFileBlob } from "@/api/notes";
 import { getNoteFileUrl } from "@/api/notes";
 import { getNoteFiles } from "@/api/notes";
 import { getSettings } from "@/api/settings";
 import { postNoteFile } from "@/api/notes";
 import { formatApiError } from "@/api/client";
 import type { NoteFile } from "@/api/client";
+import type { DrawScene } from "@/lib/draw-stroke";
 import { NoteFilePreview } from "@/components/notes/note-file-preview";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { createFlash } from "@/lib/flash";
 import {
   IconDownload,
+  IconEdit,
   IconEye,
   IconFileAudio,
   IconFileImage,
@@ -29,8 +33,15 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
 
+// Lazy so the drawing pad rides its own chunk, off the notes page's initial load.
+const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
+
 const MAX_NOTE_FILES = 10;
 const FILE_PAGE_SIZE = 4;
+
+/** Drawings are saved with this suffix so the grid can offer "Edit" without fetching every blob. */
+const DRAWING_SUFFIX = ".hzdraw.png";
+const isDrawing = (file: NoteFile) => file.name.toLowerCase().endsWith(DRAWING_SUFFIX);
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -62,6 +73,9 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
   const [filePage, setFilePage] = createSignal(0);
+  const [drawOpen, setDrawOpen] = createSignal(false);
+  const [editScene, setEditScene] = createSignal<DrawScene | null>(null);
+  const [editTarget, setEditTarget] = createSignal<NoteFile | null>(null);
   const [previewFile, setPreviewFile] = createSignal<NoteFile | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<NoteFile | null>(null);
   const [files, { refetch }] = createResource(
@@ -90,12 +104,12 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
     if (filePage() >= totalPages()) setFilePage(totalPages() - 1);
   });
 
-  const upload = async (file: File | undefined) => {
-    if (!file) return;
+  const upload = async (file: File | undefined): Promise<boolean> => {
+    if (!file) return false;
     setError("");
     if (file.size > maxFileBytes()) {
       setError(t("notes.fileTooLarge", { size: formatBytes(maxFileBytes()) }));
-      return;
+      return false;
     }
     setPending(true);
     try {
@@ -103,8 +117,10 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
       await refetch();
       if (input) input.value = "";
       setFlash(t("common.created"));
+      return true;
     } catch (err) {
       setError(formatApiError(err));
+      return false;
     } finally {
       setPending(false);
     }
@@ -115,6 +131,44 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
     link.href = getNoteFileUrl(props.noteId, file.id);
     link.download = file.name;
     link.click();
+  };
+
+  const openNewDrawing = () => {
+    setEditScene(null);
+    setEditTarget(null);
+    setDrawOpen(true);
+  };
+
+  const openEditDrawing = async (file: NoteFile) => {
+    setError("");
+    try {
+      const blob = await getNoteFileBlob(props.noteId, file.id);
+      const { pngBytesToScene } = await import("@/lib/drawing-file");
+      setEditScene(pngBytesToScene(new Uint8Array(await blob.arrayBuffer())));
+      setEditTarget(file);
+      setDrawOpen(true);
+    } catch (err) {
+      setError(formatApiError(err));
+    }
+  };
+
+  // Create-new-then-delete-old: the replacement must be safely stored before the
+  // original is removed, so a failed upload never loses the existing drawing.
+  const saveDrawing = async (file: File) => {
+    const target = editTarget();
+    if (!(await upload(file))) return;
+    if (target) {
+      try {
+        await deleteNoteFileById(props.noteId, target.id);
+        await refetch();
+      } catch {
+        // New drawing is saved; deleting the old copy failed — a stale duplicate
+        // remains, but nothing is lost. Leave it rather than risk the new one.
+      }
+    }
+    setEditScene(null);
+    setEditTarget(null);
+    setDrawOpen(false);
   };
 
   return (
@@ -136,10 +190,16 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           disabled={pending() || atLimit()}
           onChange={(event) => void upload(event.currentTarget.files?.[0])}
         />
-        <Button type="button" size="sm" class="rounded-md" disabled={pending() || atLimit()} onClick={() => input?.click()}>
-          <IconPlus class="h-4 w-4" />
-          {t("notes.addFile")}
-        </Button>
+        <div class="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" size="sm" class="rounded-md" disabled={pending() || atLimit()} onClick={openNewDrawing}>
+            <IconEdit class="h-4 w-4" />
+            {t("notes.draw")}
+          </Button>
+          <Button type="button" size="sm" class="rounded-md" disabled={pending() || atLimit()} onClick={() => input?.click()}>
+            <IconPlus class="h-4 w-4" />
+            {t("notes.addFile")}
+          </Button>
+        </div>
       </div>
 
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
@@ -175,6 +235,15 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
                         <TableRowActions
                           label={t("common.actions")}
                           actions={[
+                            ...(isDrawing(file)
+                              ? [
+                                  {
+                                    label: t("common.edit"),
+                                    icon: <IconEdit class="h-4 w-4" />,
+                                    onSelect: () => void openEditDrawing(file),
+                                  },
+                                ]
+                              : []),
                             {
                               label: t("common.view"),
                               icon: <IconEye class="h-4 w-4" />,
@@ -210,6 +279,31 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           <NoteFilePreview noteId={props.noteId} file={previewFile()} onClose={() => setPreviewFile(null)} />
         </Show>
       </Suspense>
+
+      <FormDialog
+        open={drawOpen()}
+        onOpenChange={(open) => {
+          setDrawOpen(open);
+          if (!open) {
+            setEditScene(null);
+            setEditTarget(null);
+          }
+        }}
+        title={t("notes.drawTitle")}
+        class="sm:max-w-3xl"
+      >
+        <Show when={error()}>
+          <p class="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+        </Show>
+        <Suspense fallback={<PageSpinner />}>
+          <DrawCanvas
+            pending={pending()}
+            initialScene={editScene()}
+            fileName={editTarget()?.name ?? `drawing-${(files() ?? []).length + 1}${DRAWING_SUFFIX}`}
+            onSave={(file) => void saveDrawing(file)}
+          />
+        </Suspense>
+      </FormDialog>
 
       <ConfirmDialog
         open={deleteTarget() != null}
