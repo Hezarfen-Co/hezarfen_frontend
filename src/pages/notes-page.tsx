@@ -79,7 +79,7 @@ function NotesContent() {
                 <IconPlus class="h-4 w-4" />
                 {t("notes.new")}
               </Button>
-              <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setImportOpen(true)}>
+              <Button type="button" variant="outline" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setImportOpen(true)}>
                 <IconUploadCloud class="h-4 w-4" />
                 İçe Aktar
               </Button>

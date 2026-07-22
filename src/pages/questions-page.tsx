@@ -50,15 +50,20 @@ function QuestionsContent() {
 
   return (
     <div class="space-y-6">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader accent="violet" eyebrow={t("nav.group.community")} title={t("pool.title")} description={t("pool.subtitle")} />
-        <Show when={auth.user()?.role === "student"}>
-          <Button onClick={() => setAskOpen(true)}>
-            <IconPlus class="mr-2 h-4 w-4" />
-            {t("pool.ask")}
-          </Button>
-        </Show>
-      </div>
+      <PageHeader
+        accent="violet"
+        eyebrow={t("nav.group.community")}
+        title={t("pool.title")}
+        description={t("pool.subtitle")}
+        actions={
+          <Show when={auth.user()?.role === "student"}>
+            <Button type="button" size="sm" class="rounded-lg" onClick={() => setAskOpen(true)}>
+              <IconPlus class="h-4 w-4" />
+              {t("pool.ask")}
+            </Button>
+          </Show>
+        }
+      />
 
       <div class="flex gap-2 border-b">
         <Link
