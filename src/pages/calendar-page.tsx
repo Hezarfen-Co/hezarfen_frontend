@@ -172,22 +172,22 @@ function CalendarContent() {
                           {/* ponytail: month cells show one badge per type; selected list has full detail. */}
                           <Show when={dayItems().events[0]}>
                             {(event) => (
-                              <span class="inline-flex min-w-0 items-center gap-1 rounded bg-sky-100 dark:bg-sky-950/60 dark:border dark:border-sky-800/50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-sky-700 dark:text-sky-300">
-                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
+                              <span class="inline-flex min-w-0 items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950/60 dark:border dark:border-emerald-800/50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-emerald-700 dark:text-emerald-300">
+                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                                 <span class="truncate">{event().title}</span>
                                 <Show when={dayItems().events.length > 1}>
-                                  <span class="shrink-0 text-sky-600 dark:text-sky-400">+{dayItems().events.length - 1}</span>
+                                  <span class="shrink-0 text-emerald-600 dark:text-emerald-400">+{dayItems().events.length - 1}</span>
                                 </Show>
                               </span>
                             )}
                           </Show>
                           <Show when={dayItems().exams[0]}>
                             {(exam) => (
-                              <span class="inline-flex min-w-0 items-center gap-1 rounded bg-amber-100 dark:bg-amber-950/60 dark:border dark:border-amber-800/50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-700 dark:text-amber-300">
-                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                              <span class="inline-flex min-w-0 items-center gap-1 rounded bg-rose-100 dark:bg-rose-950/60 dark:border dark:border-rose-800/50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-rose-700 dark:text-rose-300">
+                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
                                 <span class="truncate">{exam().title}</span>
                                 <Show when={dayItems().exams.length > 1}>
-                                  <span class="shrink-0 text-amber-600 dark:text-amber-400">+{dayItems().exams.length - 1}</span>
+                                  <span class="shrink-0 text-rose-600 dark:text-rose-400">+{dayItems().exams.length - 1}</span>
                                 </Show>
                               </span>
                             )}
@@ -205,11 +205,11 @@ function CalendarContent() {
           <div class="space-y-3 xl:sticky xl:top-20 xl:self-start">
             <div class="flex items-center gap-3 text-xs text-muted-foreground">
               <span class="inline-flex items-center gap-1.5">
-                <span class="inline-flex h-2 w-2 rounded-full bg-sky-500" />
+                <span class="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                 {t("calendar.events")}
               </span>
               <span class="inline-flex items-center gap-1.5">
-                <span class="inline-flex h-2 w-2 rounded-full bg-amber-500" />
+                <span class="inline-flex h-2 w-2 rounded-full bg-rose-500" />
                 {t("calendar.exams")}
               </span>
             </div>
@@ -226,8 +226,8 @@ function CalendarContent() {
                 </p>
                 <For each={selectedItems().events}>
                   {(event) => (
-                    <a href={`/events/${event.id}`} class="flex items-start gap-3 rounded-lg border border-sky-200/60 bg-sky-50/50 p-3 transition-colors hover:bg-sky-100/50 dark:border-sky-800/50 dark:bg-sky-950/30 dark:hover:bg-sky-900/40">
-                      <span class="mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-sky-500" />
+                    <a href={`/events/${event.id}`} class="flex items-start gap-3 rounded-lg border border-emerald-200/60 bg-emerald-50/50 p-3 transition-colors hover:bg-emerald-100/50 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40">
+                      <span class="mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
                       <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium text-foreground">{event.title}</p>
                         <p class="text-xs text-muted-foreground">
@@ -241,8 +241,8 @@ function CalendarContent() {
                 </For>
                 <For each={selectedItems().exams}>
                   {(exam) => (
-                    <a href={`/exams/${exam.id}`} class="flex items-start gap-3 rounded-lg border border-amber-200/60 bg-amber-50/50 p-3 transition-colors hover:bg-amber-100/50 dark:border-amber-800/50 dark:bg-amber-950/30 dark:hover:bg-amber-900/40">
-                      <span class="mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+                    <a href={`/exams/${exam.id}`} class="flex items-start gap-3 rounded-lg border border-rose-200/60 bg-rose-50/50 p-3 transition-colors hover:bg-rose-100/50 dark:border-rose-800/50 dark:bg-rose-950/30 dark:hover:bg-rose-900/40">
+                      <span class="mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-rose-500" />
                       <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium text-foreground">{exam.title}</p>
                         <p class="text-xs text-muted-foreground">
