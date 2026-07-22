@@ -4,8 +4,8 @@ import { getExamResult } from "../../exams";
 import { postExamResult } from "../../exams";
 import { deleteExamResultByUserId } from "../../exams";
 import { getExamStatistics } from "../../exams";
-import { getStudentAnswers } from "../../exams";
-import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
+import { getStudentAnswers, getStudentAnswerImage } from "../../exams";
+import { lastFetchCall, mockFetch204, mockFetchBlob, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - results", () => {
   afterEach(() => {
@@ -82,5 +82,17 @@ describe("exams API - results", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/exams/ex1/attempts/u1/answers");
     expect(init?.method).toBe("GET");
+  });
+
+  it("getStudentAnswerImage calls the grader answer-image URL with the API prefix applied once", async () => {
+    mockFetchBlob(new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], { type: "image/png" }));
+
+    const result = await getStudentAnswerImage("ex1", "u1", "q1");
+    expect(result).toBeInstanceOf(Blob);
+
+    // Must match the hardcoded <img src> template in answer-sheet-view.tsx exactly, or
+    // "Play drawing" fetches different bytes than the static image already on screen.
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/exams/ex1/attempts/u1/answers/q1/image");
   });
 });

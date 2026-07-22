@@ -1,7 +1,8 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createResource, createSignal, lazy } from "solid-js";
 import { useParams, useRouter } from "@tanstack/solid-router";
-import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl } from "@/api/shared";
-import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl } from "@/api/shared";
+import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl, getQuestionImageBlob } from "@/api/shared";
+import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl, getSolutionImageBlob } from "@/api/shared";
+import { getSettings } from "@/api/settings";
 import type { SolutionResponse } from "@/api/shared";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -12,6 +13,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { IconTrash, IconCheck, IconX, IconEdit, IconMessage, IconPhoto } from "@/components/ui/icons";
+import { ReplayableImage } from "@/components/ui/replayable-image";
 import { personLabel } from "@/lib/person";
 
 import { ErrorAlert } from "@/components/ui/error-alert";
@@ -19,6 +21,10 @@ import { showToast } from "@/components/ui/toast";
 import { useT } from "@/stores/preferences-context";
 import { useAuth } from "@/stores/auth-context";
 import { hasMinRole } from "@/lib/roles";
+import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
+
+// Lazy so the drawing pad rides its own chunk, off the question detail's initial load.
+const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
 export default function QuestionDetailPage() {
   return (
@@ -118,8 +124,13 @@ function QuestionDetailContent() {
               <div class="rounded-xl border bg-card p-6 shadow-sm">
                 <p class="whitespace-pre-wrap text-foreground">{q().body}</p>
                 <Show when={q().image}>
-                  <div class="mt-4 overflow-hidden rounded-lg border bg-muted/30">
-                    <img src={getQuestionImageUrl(q().id)} alt="Question Attachment" class="max-h-[500px] w-auto object-contain mx-auto" />
+                  <div class="mt-4 overflow-hidden rounded-lg border bg-muted/30 p-2">
+                    <ReplayableImage
+                      fetchBlob={() => getQuestionImageBlob(q().id)}
+                      src={getQuestionImageUrl(q().id)}
+                      alt="Question Attachment"
+                      imgClass="max-h-[500px] w-auto object-contain mx-auto"
+                    />
                   </div>
                 </Show>
               </div>
@@ -163,8 +174,13 @@ function QuestionDetailContent() {
                             </div>
                             <p class="mt-3 whitespace-pre-wrap text-sm text-foreground">{sol.body}</p>
                             <Show when={sol.image}>
-                              <div class="mt-3 overflow-hidden rounded-lg border border-border/50">
-                                <img src={getSolutionImageUrl(q().id, sol.id)} alt="Solution Attachment" class="max-h-[300px] w-auto object-contain mx-auto" />
+                              <div class="mt-3 overflow-hidden rounded-lg border border-border/50 p-2">
+                                <ReplayableImage
+                                  fetchBlob={() => getSolutionImageBlob(q().id, sol.id)}
+                                  src={getSolutionImageUrl(q().id, sol.id)}
+                                  alt="Solution Attachment"
+                                  imgClass="max-h-[300px] w-auto object-contain mx-auto"
+                                />
                               </div>
                             </Show>
                           </div>
@@ -236,6 +252,28 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
   const [error, setError] = createSignal("");
   const [body, setBody] = createSignal(props.initialData?.body || "");
   const [file, setFile] = createSignal<File | null>(null);
+  const [drawing, setDrawing] = createSignal(false);
+  const [settings] = createResource(async () => {
+    try {
+      return await getSettings();
+    } catch {
+      return null;
+    }
+  });
+  const maxFileBytes = () => maxUploadBytes(settings());
+
+  const setImageFile = (next: File | null) => {
+    if (!next) {
+      setFile(null);
+      return;
+    }
+    setError("");
+    if (next.size > maxFileBytes()) {
+      setError(t("notes.fileTooLarge", { size: formatBytes(maxFileBytes()) }));
+      return;
+    }
+    setFile(next);
+  };
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
@@ -296,16 +334,32 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
                 </div>
                 <div class="mt-4 text-center">
                   <p class="text-sm font-medium text-foreground">{t("pool.image")}</p>
-                  <p class="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF</p>
+                  <p class="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF · {formatBytes(maxFileBytes())}</p>
                 </div>
               </Show>
               <input
                 type="file"
                 accept="image/*"
                 class="absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0"
-                onChange={(e) => setFile(e.currentTarget.files?.[0] || null)}
+                onChange={(e) => setImageFile(e.currentTarget.files?.[0] || null)}
               />
             </div>
+            {/* Draw instead of upload: the pad saves a PNG File, so it rides the same upload. */}
+            <Button type="button" variant="outline" size="sm" aria-expanded={drawing()} onClick={() => setDrawing((open) => !open)}>
+              <IconEdit class="mr-2 h-4 w-4" />
+              {t("questions.draw")}
+            </Button>
+            <Show when={drawing()}>
+              <Suspense fallback={<div class="h-[22rem] animate-pulse rounded-lg border bg-muted/20" />}>
+                <DrawCanvas
+                  fileName="solution.png"
+                  onSave={(drawn) => {
+                    setImageFile(drawn);
+                    if (drawn.size <= maxFileBytes()) setDrawing(false);
+                  }}
+                />
+              </Suspense>
+            </Show>
           </div>
         </Show>
         <div class="flex justify-end gap-3 pt-4">

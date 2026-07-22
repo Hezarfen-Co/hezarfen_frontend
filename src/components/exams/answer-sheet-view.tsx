@@ -1,11 +1,12 @@
 import { For, Show, Suspense, createResource } from "solid-js";
 import { ApiError } from "@/api/client";
 import { getExamQuestions } from "@/api/exams";
-import { getStudentAnswers } from "@/api/exams";
+import { getStudentAnswers, getStudentAnswerImage } from "@/api/exams";
 import type { StudentAnswerSheet } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { IconCheck, IconX } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { ReplayableImage } from "@/components/ui/replayable-image";
 import { cn } from "@/lib/cn";
 import { joinAnswerSheet } from "@/lib/answer-sheet";
 import { personLabelWithId } from "@/lib/person";
@@ -81,6 +82,15 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                       <div class="rounded-sm bg-muted/40 p-3">
                         <p class="text-xs text-muted-foreground">{t("exams.textAnswer")}</p>
                         <p class="mt-1 whitespace-pre-wrap text-sm">{row.answer?.text || "—"}</p>
+                        <Show when={row.answer?.answer_image}>
+                          <ReplayableImage
+                            class="mt-3"
+                            fetchBlob={() => getStudentAnswerImage(d().sheet.exam, d().sheet.user.id, row.question.id)}
+                            src={`/api/exams/${d().sheet.exam}/attempts/${d().sheet.user.id}/answers/${row.question.id}/image`}
+                            alt={t("exams.drawAnswer")}
+                            imgClass="h-64 w-full max-w-2xl rounded-md border bg-background object-contain"
+                          />
+                        </Show>
                       </div>
                     }
                   >

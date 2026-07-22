@@ -93,6 +93,18 @@
     @apply scroll-smooth;
   }
 
+  @media (min-width: 1800px) {
+    html {
+      font-size: 17px;
+    }
+  }
+
+  @media (min-width: 2300px) {
+    html {
+      font-size: 18px;
+    }
+  }
+
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
   }
@@ -173,7 +185,7 @@
   }
 
   .data-table {
-    @apply w-full caption-bottom text-[13px];
+    @apply w-full caption-bottom text-[0.8125rem];
   }
 
   .data-table thead {
@@ -181,7 +193,7 @@
   }
 
   .data-table th {
-    @apply h-9 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/50 px-3 text-left text-[10px] font-semibold uppercase tracking-[0.11em] last:border-r-0;
+    @apply h-9 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/50 px-3 text-left text-[0.625rem] font-semibold uppercase tracking-[0.11em] last:border-r-0;
   }
 
   .data-table td {

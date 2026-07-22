@@ -196,6 +196,7 @@ export type AttemptAnswer = {
   selected?: number | null;
   text?: string | null;
   updated_at?: number;
+  answer_image?: ImageMeta | null;
 };
 
 export type AttemptQuestionResponse = {
@@ -303,6 +304,7 @@ export type StudentAnswer = {
   text: string | null;
   updated_at: number;
   is_correct: boolean | null;
+  answer_image?: ImageMeta | null;
 };
 
 export type StudentAnswerSheet = {

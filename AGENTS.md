@@ -36,7 +36,12 @@ instructions. Always written and read in English.
   `note-card.test.tsx`.
 - Components in the same domain live in the same folder: `components/notes/`,
   `components/events/`, `components/exams/`, `components/users/`,
-  `components/layout/`, `components/ui/`.
+  `components/attendance/`, `components/courses/`, `components/marks/`,
+  `components/sessions/`, `components/layout/`, `components/ui/`.
+- Cross-cutting app state lives in `src/stores/` (`auth-context.tsx`,
+  `preferences-context.tsx`) — context providers only, never domain components.
+  School-policy lists (exam kinds, attendance statuses, grade bands) come from
+  `getSettings()` in a `createResource`, never hardcoded in components.
 - **API layer:** Domain-based folders under `src/api/` (e.g., `src/api/notes/`,
   `src/api/exams/`). One file per request under its domain folder, camelCase and verb-first,
   mirroring the endpoint exactly (`src/api/notes/getNoteById.ts`,

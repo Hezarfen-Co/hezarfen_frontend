@@ -133,6 +133,10 @@ function StudentAttendanceContent() {
             searchPredicate={searchPerson}
             enablePagination
             pageSize={PAGE_SIZE}
+            onRowClick={(person) => {
+              setError("");
+              setViewUser(person);
+            }}
           />
         </Show>
       </section>

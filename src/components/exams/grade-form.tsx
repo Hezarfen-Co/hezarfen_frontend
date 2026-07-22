@@ -1,8 +1,8 @@
-import { For, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconCheck } from "@/components/ui/icons";
+import { IconCheck, IconEye } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -16,6 +16,7 @@ export type GradeFormValues = {
 export function GradeForm(props: {
   students: { id: string; label: string }[];
   onSubmit: (values: GradeFormValues) => Promise<void>;
+  onViewAnswers?: (userId: string) => void;
 }) {
   const t = useT();
   const [userId, setUserId] = createSignal("");
@@ -87,10 +88,18 @@ export function GradeForm(props: {
             />
           </div>
         </div>
-        <Button type="submit" disabled={pending()}>
-          <IconCheck />
-          {t("exams.gradeStudent")}
-        </Button>
+        <div class="flex flex-wrap gap-2">
+          <Show when={props.onViewAnswers}>
+            <Button type="button" variant="outline" disabled={!userId()} onClick={() => props.onViewAnswers?.(userId())}>
+              <IconEye />
+              {t("exams.answerSheet")}
+            </Button>
+          </Show>
+          <Button type="submit" disabled={pending()}>
+            <IconCheck />
+            {t("exams.gradeStudent")}
+          </Button>
+        </div>
         {error() && <p class="text-sm text-destructive">{error()}</p>}
       </form>
 

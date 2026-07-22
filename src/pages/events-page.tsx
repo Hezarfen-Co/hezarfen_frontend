@@ -206,6 +206,7 @@ function EventsContent() {
             enablePagination
             pageSize={EVENT_PAGE_SIZE}
             empty={t("events.empty")}
+            onRowClick={(event) => void navigate({ to: "/events/$id", params: { id: event.id } })}
             filters={
               <Select class="h-9 w-full rounded-sm sm:w-44" value={timeFilter()} aria-label={t("events.title")} onChange={(event) => setTimeFilter(event.currentTarget.value)}>
                 <option value="all">{t("common.all")}</option>

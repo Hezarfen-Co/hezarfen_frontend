@@ -21,7 +21,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { createFlash } from "@/lib/flash";
 import { useT } from "@/stores/preferences-context";
 
-const QUESTION_PAGE_SIZE = 5;
+const QUESTION_PAGE_SIZE = 1;
 
 export function ExamQuestionsPanel(props: {
   examId: string;
@@ -100,7 +100,7 @@ export function ExamQuestionsPanel(props: {
       await refetch();
       if (isNewQuestion) setPage(Math.max(0, Math.ceil(questionList().length / QUESTION_PAGE_SIZE) - 1));
     } catch (err) {
-      setError(formatApiError(err));
+      throw err;
     }
   };
 

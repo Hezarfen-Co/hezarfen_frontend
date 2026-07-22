@@ -259,6 +259,7 @@ function CoursesContent() {
               enablePagination
               pageSize={COURSE_PAGE_SIZE}
               empty={t("courses.empty", { item: pageLabel() })}
+              onRowClick={(course) => void navigate({ to: "/courses/$id", params: { id: course.id } })}
               filters={
                 <Select
                   class="h-9 w-full rounded-sm sm:w-44"

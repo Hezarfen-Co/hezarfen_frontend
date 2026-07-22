@@ -67,6 +67,10 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
       { to: "/calendar", labelKey: "nav.calendar", Icon: IconCalendarDays },
+      { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
+      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
+      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
+      { to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
     ],
   },
   {
@@ -83,10 +87,6 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.grades",
     Icon: IconChart,
     items: [
-      { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
-      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
-      { to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
-      { to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
       { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
     ],
   },
@@ -96,7 +96,6 @@ const NAV_GROUPS: NavGroup[] = [
     Icon: IconReportAnalytics,
     minRole: "teacher",
     items: [
-      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
       { to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
       { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
@@ -108,6 +107,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.community",
     Icon: IconGlobe,
     items: [
+      { to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
       { to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
     ],
   },
