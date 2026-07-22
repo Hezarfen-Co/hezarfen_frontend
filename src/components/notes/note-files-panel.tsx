@@ -31,6 +31,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { cn } from "@/lib/cn";
+import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
 
 // Lazy so the drawing pad rides its own chunk, off the notes page's initial load.
@@ -42,12 +43,6 @@ const FILE_PAGE_SIZE = 4;
 /** Drawings are saved with this suffix so the grid can offer "Edit" without fetching every blob. */
 const DRAWING_SUFFIX = ".hzdraw.png";
 const isDrawing = (file: NoteFile) => file.name.toLowerCase().endsWith(DRAWING_SUFFIX);
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
 
 function extension(name: string): string {
   const ext = name.split(".").pop()?.toLowerCase();
@@ -92,7 +87,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
       return null;
     }
   });
-  const maxFileBytes = () => settings()?.max_file_bytes ?? 5 * 1024 * 1024;
+  const maxFileBytes = () => maxUploadBytes(settings());
   const atLimit = () => (files() ?? []).length >= MAX_NOTE_FILES;
   const totalPages = createMemo(() => Math.max(1, Math.ceil((files() ?? []).length / FILE_PAGE_SIZE)));
   const pageFiles = createMemo(() => {

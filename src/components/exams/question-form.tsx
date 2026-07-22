@@ -1,8 +1,9 @@
-import { For, Index, Show, Suspense, createEffect, createSignal, lazy } from "solid-js";
+import { For, Index, Show, Suspense, createEffect, createResource, createSignal, lazy } from "solid-js";
 import { formatApiError } from "@/api/client";
 import type { ExamQuestion, QuestionKind, Subject } from "@/api/client";
 import { QUESTION_KINDS } from "@/api/client";
 import { getExamQuestionImageBlob } from "@/api/exams";
+import { getSettings } from "@/api/settings";
 import type { DrawScene } from "@/lib/draw-stroke";
 import { Button } from "@/components/ui/button";
 import { IconCheck, IconEdit, IconFileImage, IconPlus, IconTrash } from "@/components/ui/icons";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
+import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
 
 // Lazy so the drawing pad rides its own chunk, off the exam editor's initial load.
@@ -47,6 +49,14 @@ export function QuestionForm(props: {
   const [choiceImages, setChoiceImages] = createSignal<(File | null)[]>(choices().map(() => null));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  const [settings] = createResource(async () => {
+    try {
+      return await getSettings();
+    } catch {
+      return null;
+    }
+  });
+  const maxFileBytes = () => maxUploadBytes(settings());
 
   createEffect(() => {
     const initial = props.initial;
@@ -99,7 +109,27 @@ export function QuestionForm(props: {
     setChoices((current) => current.map((choice, i) => (i === index ? value : choice)));
   };
 
+  const validImage = (file: File | null): file is File => {
+    if (!file) return false;
+    if (file.size <= maxFileBytes()) return true;
+    setError(t("notes.fileTooLarge", { size: formatBytes(maxFileBytes()) }));
+    return false;
+  };
+
+  const setQuestionImage = (file: File | null) => {
+    if (!file) {
+      setImage(null);
+      return;
+    }
+    setError("");
+    if (validImage(file)) setImage(file);
+  };
+
   const setChoiceImage = (index: number, file: File | null) => {
+    if (file) {
+      setError("");
+      if (!validImage(file)) return;
+    }
     setChoiceImages((current) => choices().map((_, i) => (i === index ? file : current[i] ?? null)));
   };
 
@@ -190,7 +220,7 @@ export function QuestionForm(props: {
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/gif"
                 class="sr-only"
-                onChange={(event) => setImage(event.currentTarget.files?.[0] ?? null)}
+                onChange={(event) => setQuestionImage(event.currentTarget.files?.[0] ?? null)}
               />
               <label for="question-image" class="flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
                 <IconFileImage class="h-3.5 w-3.5" />
@@ -225,8 +255,10 @@ export function QuestionForm(props: {
                   fileName="question.png"
                   initialScene={editScene()}
                   onSave={(file) => {
-                    setImage(file);
-                    setDrawing(false);
+                    if (validImage(file)) {
+                      setImage(file);
+                      setDrawing(false);
+                    }
                   }}
                 />
               </Suspense>

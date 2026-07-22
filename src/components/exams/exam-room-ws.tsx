@@ -1,6 +1,7 @@
-import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createSignal, lazy, onCleanup } from "solid-js";
+import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, lazy, onCleanup } from "solid-js";
 import { getExamAttempt } from "@/api/exams";
 import { getExamAttemptQuestions } from "@/api/exams";
+import { getSettings } from "@/api/settings";
 import { postExamAttempt } from "@/api/exams";
 import { postExamAttemptAnswer } from "@/api/exams";
 import { postExamAttemptFinish } from "@/api/exams";
@@ -20,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { formatDateTime } from "@/lib/format";
+import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 // Lazy so the drawing pad rides its own chunk, off the exam room's initial load.
@@ -56,7 +58,15 @@ export function ExamRoomWS(props: { exam: Exam }) {
   const [activeQuestionIndex, setActiveQuestionIndex] = createSignal(0);
   const [remainingMs, setRemainingMs] = createSignal<number | null>(0);
   const [wsState, setWsState] = createSignal<WsState>("disconnected");
+  const [settings] = createResource(async () => {
+    try {
+      return await getSettings();
+    } catch {
+      return null;
+    }
+  });
   const now = createNow();
+  const maxFileBytes = () => maxUploadBytes(settings());
   const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async" || props.exam.mode === "open");
   const attemptStatus = createMemo(() => {
     const current = attempt();
@@ -238,6 +248,10 @@ export function ExamRoomWS(props: { exam: Exam }) {
 
   const saveAnswerImage = async (question: AttemptQuestion, file: File) => {
     setError("");
+    if (file.size > maxFileBytes()) {
+      setError(t("notes.fileTooLarge", { size: formatBytes(maxFileBytes()) }));
+      return;
+    }
     setPending(true);
     try {
       await postExamAttemptAnswerImage(props.exam.id, question.id, file);

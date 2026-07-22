@@ -1,6 +1,7 @@
 import { For, Show, Suspense, createResource, createSignal, lazy } from "solid-js";
 import { Link, useSearch, useNavigate } from "@tanstack/solid-router";
 import { getQuestions, postQuestion } from "@/api/shared";
+import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -19,6 +20,7 @@ import { showToast } from "@/components/ui/toast";
 import { useT } from "@/stores/preferences-context";
 import { useAuth } from "@/stores/auth-context";
 import { cn } from "@/lib/cn";
+import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 
 // Lazy so the drawing pad rides its own chunk, off the question list's initial load.
 const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
@@ -141,6 +143,27 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
   const [body, setBody] = createSignal("");
   const [file, setFile] = createSignal<File | null>(null);
   const [drawing, setDrawing] = createSignal(false);
+  const [settings] = createResource(async () => {
+    try {
+      return await getSettings();
+    } catch {
+      return null;
+    }
+  });
+  const maxFileBytes = () => maxUploadBytes(settings());
+
+  const setImageFile = (next: File | null) => {
+    if (!next) {
+      setFile(null);
+      return;
+    }
+    setError("");
+    if (next.size > maxFileBytes()) {
+      setError(t("notes.fileTooLarge", { size: formatBytes(maxFileBytes()) }));
+      return;
+    }
+    setFile(next);
+  };
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
@@ -200,14 +223,14 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
               </div>
               <div class="mt-4 text-center">
                 <p class="text-sm font-medium text-foreground">{t("pool.image")}</p>
-                <p class="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF</p>
+                <p class="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF · {formatBytes(maxFileBytes())}</p>
               </div>
             </Show>
             <input
               type="file"
               accept="image/*"
               class="absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0"
-              onChange={(e) => setFile(e.currentTarget.files?.[0] || null)}
+              onChange={(e) => setImageFile(e.currentTarget.files?.[0] || null)}
             />
           </div>
           {/* Draw instead of upload: the pad saves a PNG File, so it rides the same upload. */}
@@ -220,8 +243,8 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
               <DrawCanvas
                 fileName="question.png"
                 onSave={(drawn) => {
-                  setFile(drawn);
-                  setDrawing(false);
+                  setImageFile(drawn);
+                  if (drawn.size <= maxFileBytes()) setDrawing(false);
                 }}
               />
             </Suspense>

@@ -46,6 +46,38 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     en: "This username is already in use.",
     tr: "Bu kullanıcı adı zaten kullanılıyor.",
   },
+  "file too large": {
+    en: "This file is larger than the allowed upload limit.",
+    tr: "Bu dosya izin verilen yükleme sınırından büyük.",
+  },
+  "payload too large": {
+    en: "This upload is too large. Choose a smaller file and try again.",
+    tr: "Bu yükleme çok büyük. Daha küçük bir dosya seçip tekrar dene.",
+  },
+  "request entity too large": {
+    en: "This upload is too large. Choose a smaller file and try again.",
+    tr: "Bu yükleme çok büyük. Daha küçük bir dosya seçip tekrar dene.",
+  },
+  "unsupported file type": {
+    en: "This file type is not supported.",
+    tr: "Bu dosya türü desteklenmiyor.",
+  },
+  "unsupported image type": {
+    en: "This image type is not supported. Use PNG, JPEG, WebP, or GIF.",
+    tr: "Bu görsel türü desteklenmiyor. PNG, JPEG, WebP veya GIF kullan.",
+  },
+  "invalid image": {
+    en: "The image could not be read. Choose another image and try again.",
+    tr: "Görsel okunamadı. Başka bir görsel seçip tekrar dene.",
+  },
+  "too many files": {
+    en: "This note already has the maximum number of files.",
+    tr: "Bu notta en fazla dosya sayısına ulaşılmış.",
+  },
+  "note file limit reached": {
+    en: "This note already has the maximum number of files.",
+    tr: "Bu notta en fazla dosya sayısına ulaşılmış.",
+  },
   "course not found": {
     en: "Course not found.",
     tr: "Ders bulunamadı.",
@@ -74,6 +106,22 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     en: "This attempt is closed. Answers are read-only.",
     tr: "Bu oturum kapalı. Cevaplar salt okunur.",
   },
+  "exam has not started": {
+    en: "This exam has not started yet.",
+    tr: "Bu sınav henüz başlamadı.",
+  },
+  "exam has ended": {
+    en: "This exam has ended.",
+    tr: "Bu sınav sona erdi.",
+  },
+  "no attempts left": {
+    en: "No attempts left for this exam.",
+    tr: "Bu sınav için deneme hakkı kalmadı.",
+  },
+  "answer is required": {
+    en: "Enter an answer before saving.",
+    tr: "Kaydetmeden önce cevap gir.",
+  },
   "only students can sit exams": {
     en: "Only students can take exams.",
     tr: "Sınava yalnızca öğrenciler girebilir.",
@@ -89,6 +137,30 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
   "user_id: only students can be marked present in a lesson": {
     en: "Only students can be marked on a lesson roll call.",
     tr: "Ders yoklamasında yalnızca öğrenciler işaretlenebilir.",
+  },
+  "event is full": {
+    en: "This event is full.",
+    tr: "Bu etkinlik dolu.",
+  },
+  "registration is closed": {
+    en: "Registration is closed for this event.",
+    tr: "Bu etkinlik için kayıt kapalı.",
+  },
+  "already registered": {
+    en: "This student is already registered.",
+    tr: "Bu öğrenci zaten kayıtlı.",
+  },
+  "already enrolled": {
+    en: "This student is already enrolled.",
+    tr: "Bu öğrenci zaten kayıtlı.",
+  },
+  "active pomodoro session already exists": {
+    en: "You already have a focus session running.",
+    tr: "Zaten devam eden bir odak oturumun var.",
+  },
+  "no active pomodoro session": {
+    en: "There is no active focus session to finish.",
+    tr: "Bitirilecek aktif odak oturumu yok.",
   },
 };
 
@@ -116,6 +188,28 @@ function sentenceCase(message: string): string {
   const trimmed = message.trim();
   if (!trimmed) return trimmed;
   return trimmed[0].toLocaleUpperCase("en-US") + trimmed.slice(1);
+}
+
+function errorMessageFromPayload(data: unknown, fallback: string): string {
+  if (!data || typeof data !== "object") return fallback;
+  const record = data as Record<string, unknown>;
+  if (typeof record.error === "string") return record.error;
+  if (typeof record.message === "string") return record.message;
+  const detail = record.detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (!item || typeof item !== "object") return "";
+        const row = item as Record<string, unknown>;
+        const loc = Array.isArray(row.loc) ? row.loc.map(String).join(".") : "";
+        const msg = typeof row.msg === "string" ? row.msg : "";
+        return loc && msg ? `${loc}: ${msg}` : msg;
+      })
+      .filter(Boolean)
+      .join("; ") || fallback;
+  }
+  return fallback;
 }
 
 export async function client<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -151,12 +245,7 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
   }
 
   if (!res.ok) {
-    const message =
-      data && typeof data === "object" && "error" in data && typeof (data as { error: unknown }).error === "string"
-        ? (data as { error: string }).error
-        : data && typeof data === "object" && "message" in data && typeof (data as { message: unknown }).message === "string"
-          ? (data as { message: string }).message
-          : res.statusText || "Request failed";
+    const message = errorMessageFromPayload(data, res.statusText || "Request failed");
 
     let retryAfter: number | null = null;
     if (res.status === 429) {
@@ -192,12 +281,7 @@ export async function formClient<T>(path: string, body: FormData, signal?: Abort
   }
 
   if (!res.ok) {
-    const message =
-      data && typeof data === "object" && "error" in data && typeof (data as { error: unknown }).error === "string"
-        ? (data as { error: string }).error
-        : data && typeof data === "object" && "message" in data && typeof (data as { message: unknown }).message === "string"
-          ? (data as { message: string }).message
-          : res.statusText || "Request failed";
+    const message = errorMessageFromPayload(data, res.statusText || "Request failed");
     throw new ApiError(res.status, message);
   }
 
@@ -215,9 +299,7 @@ export async function blobClient(path: string, signal?: AbortSignal): Promise<Bl
     let message = res.statusText || "Request failed";
     if (text) {
       try {
-        const data = JSON.parse(text) as { error?: unknown; message?: unknown };
-        if (typeof data.error === "string") message = data.error;
-        else if (typeof data.message === "string") message = data.message;
+        message = errorMessageFromPayload(JSON.parse(text), message);
       } catch {
         message = text;
       }
@@ -232,7 +314,7 @@ export function formatApiErrorMessage(message: string, locale: Locale = currentL
   const normalized = normalizeApiMessage(message);
   const known = API_ERROR_MESSAGES[normalized]?.[locale];
   if (known) return known;
-  if (locale === "tr") return "İşlem tamamlanamadı. Lütfen tekrar dene.";
+  if (locale === "tr") return `İşlem tamamlanamadı: ${sentenceCase(message)}`;
   return sentenceCase(message);
 }
 
@@ -244,6 +326,9 @@ export function formatApiError(err: unknown, locale: Locale = currentLocale()): 
     if (err.status === 401) return API_ERROR_MESSAGES.unauthorized[locale];
     if (err.status === 403) return API_ERROR_MESSAGES.forbidden[locale];
     if (err.status === 404) return API_ERROR_MESSAGES["not found"][locale];
+    if (err.status === 409) return formatApiErrorMessage(err.message, locale);
+    if (err.status === 413) return API_ERROR_MESSAGES["payload too large"][locale];
+    if (err.status === 422) return formatApiErrorMessage(err.message, locale);
     if (err.status >= 500) return locale === "tr" ? "Sunucuda bir sorun oluştu. Lütfen tekrar dene." : "Server error. Please try again.";
     return formatApiErrorMessage(err.message, locale);
   }
