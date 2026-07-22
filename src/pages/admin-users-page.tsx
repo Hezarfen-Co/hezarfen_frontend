@@ -60,7 +60,7 @@ function AdminUsersContent() {
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
-      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      {error() && <Alert variant="destructive">{error()}</Alert>}
 
       <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <For each={ROLES}>{(role) => <Metric label={t(`role.${role}` as MessageKey)} value={roleCount(role)} />}</For>
@@ -74,7 +74,7 @@ function AdminUsersContent() {
               {visibleUsers().length}
             </p>
           </div>
-          <Badge variant="outline" class="mono rounded-sm uppercase tracking-[0.08em]">
+          <Badge variant="outline" class="mono rounded-full uppercase tracking-[0.08em]">
             {t("admin.directory")}
           </Badge>
         </div>

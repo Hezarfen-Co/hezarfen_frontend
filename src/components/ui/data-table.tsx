@@ -171,7 +171,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                 {t("common.columns")}
                 <IconChevronDown class="h-3.5 w-3.5 opacity-60" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent class="w-48 rounded-xl border border-black/[0.08] dark:border-white/[0.12] p-1.5 shadow-apple bg-popover/95 backdrop-blur-xl">
+              <DropdownMenuContent class="w-48 rounded-2xl border border-black/[0.08] bg-popover/95 p-1.5 shadow-apple backdrop-blur-xl dark:border-white/[0.12]">
                 <For each={hideableColumns()}>
                   {(column) => (
                     <DropdownMenuCheckboxItem

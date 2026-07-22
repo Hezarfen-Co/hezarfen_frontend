@@ -414,8 +414,8 @@ function DashboardContent() {
   });
 
   return (
-    <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_18px_55px_rgba(15,23,42,0.07)]">
-      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-border/80 bg-muted/30 px-4 py-4 sm:px-5">
+    <div class="overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-background/70 shadow-apple dark:border-white/[0.08]">
+      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-black/[0.06] bg-card/85 px-4 py-4 backdrop-blur-xl dark:border-white/[0.08] sm:px-5">
         <div class="min-w-0 space-y-1">
           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("dashboard.today")}</p>
           <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -424,10 +424,13 @@ function DashboardContent() {
           <p class="text-sm text-muted-foreground">{t("dashboard.observationOnly")}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span class="rounded-md border border-border bg-background px-2.5 py-1 font-semibold text-foreground shadow-sm">
+          <span class="rounded-full border border-border bg-background px-2.5 py-1 font-semibold text-foreground shadow-sm">
             {t(ROLE_KEY[role()])}
           </span>
-          <span class="rounded-md border border-border/70 bg-background/70 px-2.5 py-1 mono tabular-nums shadow-sm">{formatDateTime(now(), locale()).split(",")[0]}</span>
+          <span class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-2.5 py-1 mono tabular-nums shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.14)]" aria-hidden="true" />
+            {formatDateTime(now(), locale()).split(",")[0]}
+          </span>
         </div>
       </header>
 
@@ -436,7 +439,7 @@ function DashboardContent() {
       </Show>
 
       <Show when={!loading()} fallback={<div class="px-4 py-8"><PageSpinner /></div>}>
-        <div class="space-y-5 bg-background/50 px-4 py-4 sm:px-5 sm:py-5">
+        <div class="space-y-5 bg-muted/20 px-4 py-4 sm:px-5 sm:py-5">
         <section class="space-y-2.5" aria-labelledby="dash-sections">
           <div class="flex items-center justify-between gap-3">
             <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
@@ -444,11 +447,11 @@ function DashboardContent() {
             </h2>
             <div class="flex items-center gap-2">
               <Show when={editingPortalOrder()}>
-                <Button type="button" variant="ghost" size="sm" class="h-8 rounded-lg text-xs" onClick={resetPortalOrder}>
+                <Button type="button" variant="ghost" size="sm" class="h-10 rounded-xl text-xs" onClick={resetPortalOrder}>
                   {t("common.remove")}
                 </Button>
               </Show>
-              <Button type="button" variant="outline" size="sm" class="h-8 rounded-lg text-xs font-semibold" onClick={() => setEditingPortalOrder((value) => !value)}>
+              <Button type="button" variant="outline" size="sm" class="h-10 rounded-xl text-xs font-semibold" onClick={() => setEditingPortalOrder((value) => !value)}>
                 {editingPortalOrder() ? t("common.done") : t("common.edit")}
               </Button>
             </div>
@@ -580,7 +583,7 @@ function PortalCard(props: {
 
   const cardInner = () => (
     <>
-      <span class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/[0.05] dark:border-white/[0.08] bg-muted/30 text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:bg-primary/10 group-hover:text-primary">
+      <span class="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-black/[0.05] bg-muted/30 text-muted-foreground transition-colors group-hover:border-border group-hover:bg-muted/50 group-hover:text-foreground dark:border-white/[0.08]">
         <Icon class="h-5 w-5" />
       </span>
       <div class="min-w-0 flex-1 space-y-1">
@@ -610,7 +613,7 @@ function PortalCard(props: {
             type="button"
             variant="outline"
             size="sm"
-            class="h-7 w-7 p-0 rounded-lg border-primary/30 text-xs font-bold shadow-none hover:bg-primary/15 disabled:opacity-30"
+            class="h-10 w-10 rounded-xl p-0 text-xs font-bold shadow-none disabled:opacity-30"
             disabled={props.isFirst}
             onClick={(e) => {
               e.preventDefault();
@@ -625,7 +628,7 @@ function PortalCard(props: {
             type="button"
             variant="outline"
             size="sm"
-            class="h-7 w-7 p-0 rounded-lg border-primary/30 text-xs font-bold shadow-none hover:bg-primary/15 disabled:opacity-30"
+            class="h-10 w-10 rounded-xl p-0 text-xs font-bold shadow-none disabled:opacity-30"
             disabled={props.isLast}
             onClick={(e) => {
               e.preventDefault();
@@ -643,10 +646,9 @@ function PortalCard(props: {
 
   const cardClass = () =>
     cn(
-      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-4 shadow-apple card-lift hover:shadow-apple-hover hover:border-primary/40 sm:min-h-[6.5rem]",
+      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] bg-card p-4 shadow-apple transition-[background-color,border-color,box-shadow] duration-200 hover:bg-card/90 hover:border-border dark:border-white/[0.08] sm:min-h-[6.5rem]",
       !props.editing && "active:scale-[0.98]",
       props.editing && "cursor-grab select-none border-dashed border-primary/50 bg-primary/[0.03]",
-      props.editing && !props.dragging && "dashboard-jiggle",
       props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-apple-hover",
       props.dragging && "scale-[0.98] border-primary/50 opacity-50",
     );
@@ -717,7 +719,7 @@ function StatusLabel(props: {
   return (
     <span
       class={cn(
-        "inline-flex rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        "inline-flex rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
         scheduleStatusClass(props.status),
       )}
     >

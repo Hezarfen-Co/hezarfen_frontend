@@ -46,15 +46,15 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                   "flex w-full items-center text-left outline-none transition-colors",
                   "focus-visible:ring-2 focus-visible:ring-ring",
                   props.collapsed
-                    ? "h-9 justify-center rounded-lg px-0 hover:bg-muted/70 data-[expanded]:bg-muted/70"
-                    : "h-12 gap-2 rounded-lg border border-border/80 bg-card/70 px-2 shadow-sm hover:bg-muted/50 data-[expanded]:bg-muted/50",
+                    ? "h-11 justify-center rounded-xl px-0 hover:bg-muted/70 data-[expanded]:bg-muted/70"
+                    : "h-12 gap-2 rounded-xl border border-border/80 bg-card/70 px-2 shadow-sm hover:bg-muted/50 data-[expanded]:bg-muted/50",
                 )}
                 aria-label={t("nav.account")}
               >
                 <span
                   class={cn(
                     "flex shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground shadow-sm ring-1 ring-border/70",
-                    props.collapsed ? "h-8 w-8" : "h-8 w-8",
+                    props.collapsed ? "h-9 w-9" : "h-8 w-8",
                   )}
                 >
                   {initials(name())}
@@ -70,30 +70,30 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                 </Show>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent class="w-52 rounded-lg border-border/80 bg-popover p-1 shadow-soft">
-                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => setProfileOpen(true)}>
+              <DropdownMenuContent class="w-52 rounded-2xl border-black/[0.08] bg-popover/95 p-1.5 shadow-apple backdrop-blur-xl dark:border-white/[0.12]">
+                <DropdownMenuItem class="rounded-xl gap-2" onSelect={() => setProfileOpen(true)}>
                   <IconEdit class="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span>{t("profile.edit")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => prefs.toggleTheme()}>
+                <DropdownMenuItem class="rounded-xl gap-2" onSelect={() => prefs.toggleTheme()}>
                   <Show when={prefs.theme() === "dark"} fallback={<IconSun class="h-4 w-4 shrink-0 text-muted-foreground" />}>
                     <IconMoon class="h-4 w-4 shrink-0 text-muted-foreground" />
                   </Show>
                   <span class="min-w-0 flex-1">{t("theme.toggle")}</span>
                   <span class="text-xs text-muted-foreground">{prefs.theme() === "dark" ? t("theme.dark") : t("theme.light")}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => prefs.setLocale(prefs.locale() === "tr" ? "en" : "tr")}>
+                <DropdownMenuItem class="rounded-xl gap-2" onSelect={() => prefs.setLocale(prefs.locale() === "tr" ? "en" : "tr")}>
                   <IconGlobe class="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span class="min-w-0 flex-1">{t("lang.label")}</span>
                   <span class="text-xs text-muted-foreground">{prefs.locale() === "tr" ? "TR" : "EN"}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem class="rounded-md gap-2" onSelect={() => void navigate({ to: "/guide" })}>
+                <DropdownMenuItem class="rounded-xl gap-2" onSelect={() => void navigate({ to: "/guide" })}>
                   <IconGuide class="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span>{t("nav.guide")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem destructive class="rounded-md gap-2" onSelect={() => void props.onLogout()}>
+                <DropdownMenuItem destructive class="rounded-xl gap-2" onSelect={() => void props.onLogout()}>
                   <IconLogout class="h-4 w-4 shrink-0" />
                   <span>{t("nav.logout")}</span>
                 </DropdownMenuItem>

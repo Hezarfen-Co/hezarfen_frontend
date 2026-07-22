@@ -14,7 +14,7 @@ export function PaginationControls(props: {
         type="button"
         variant="outline"
         size="sm"
-        class="h-8 gap-1"
+        class="h-11 rounded-xl gap-1 px-4"
         disabled={props.page <= 0}
         onClick={() => props.onPageChange(Math.max(0, props.page - 1))}
       >
@@ -28,7 +28,7 @@ export function PaginationControls(props: {
         type="button"
         variant="outline"
         size="sm"
-        class="h-8 gap-1"
+        class="h-11 rounded-xl gap-1 px-4"
         disabled={props.page >= props.totalPages - 1}
         onClick={() => props.onPageChange(Math.min(props.totalPages - 1, props.page + 1))}
       >

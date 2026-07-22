@@ -160,7 +160,7 @@ export function AppShell(props: ParentProps) {
           <div
             class={cn(
               "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-6",
-              auth.user() && !wide() && "pb-24 lg:pb-6",
+              auth.user() && !wide() && "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-6",
               wide() ? "max-w-none" : "max-w-[1280px] xl:max-w-[1600px] 2xl:max-w-none",
             )}
           >
