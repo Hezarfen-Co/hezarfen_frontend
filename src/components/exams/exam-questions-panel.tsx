@@ -100,7 +100,7 @@ export function ExamQuestionsPanel(props: {
       await refetch();
       if (isNewQuestion) setPage(Math.max(0, Math.ceil(questionList().length / QUESTION_PAGE_SIZE) - 1));
     } catch (err) {
-      setError(formatApiError(err));
+      throw err;
     }
   };
 
