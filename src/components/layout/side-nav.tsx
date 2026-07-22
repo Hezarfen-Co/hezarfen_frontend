@@ -68,7 +68,6 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
       { to: "/calendar", labelKey: "nav.calendar", Icon: IconCalendarDays },
       { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
-      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
       { to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
     ],
@@ -85,21 +84,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "grades",
     labelKey: "nav.group.grades",
-    Icon: IconChart,
+    Icon: IconNote,
     items: [
       { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
-    ],
-  },
-  {
-    id: "reports",
-    labelKey: "nav.group.reports",
-    Icon: IconReportAnalytics,
-    minRole: "teacher",
-    items: [
-      { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
-      { to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
-      { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
-      { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
     ],
   },
   {
@@ -109,6 +96,19 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
       { to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
+    ],
+  },
+  {
+    id: "reports",
+    labelKey: "nav.group.reports",
+    Icon: IconReportAnalytics,
+    minRole: "teacher",
+    items: [
+      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
+      { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
+      { to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
+      { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
+      { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
     ],
   },
   {
