@@ -170,66 +170,70 @@ export function EventForm(props: {
 
   return (
     <>
-    <form class="space-y-3" onSubmit={handleSubmit}>
-      <div class="space-y-1.5 border-sky-500/15 bg-sky-500/[0.03]">
-        <Label for="event-title">{t("form.title")}</Label>
-        <Input
-          id="event-title"
-          class="h-11"
-          value={title()}
-          maxlength={200}
-          required
-          onInput={(e) => setTitle(e.currentTarget.value)}
-        />
-      </div>
-      <div class="space-y-1.5 border-sky-500/15 bg-sky-500/[0.03]">
-        <Label for="event-description">{t("form.description")}</Label>
-        <Textarea
-          id="event-description"
-          class="min-h-28"
-          value={description()}
-          maxlength={2000}
-          rows={3}
-          onInput={(e) => setDescription(e.currentTarget.value)}
-        />
-      </div>
-      <div class="space-y-1.5 border-violet-500/15 bg-violet-500/[0.03]">
-        <Label for="event-audience">{t("events.audience")}</Label>
-        <Select id="event-audience" value={audienceKind()} onChange={(e) => setAudienceKind(e.currentTarget.value as EventAudience["kind"])}>
-          <For each={AUDIENCE_KINDS}>{(kind) => <option value={kind}>{t(`events.audience.${kind}` as MessageKey)}</option>}</For>
-        </Select>
-      </div>
-      <Show when={audienceKind() === "role"}>
-        <div class="space-y-1.5 border-violet-500/15 bg-violet-500/[0.03]">
-          <Label for="event-audience-role">{t("admin.role")}</Label>
-          <Select id="event-audience-role" value={audienceRole()} onChange={(e) => setAudienceRole(e.currentTarget.value as Role)}>
-            <For each={AUDIENCE_ROLES}>{(role) => <option value={role}>{t(`role.${role}` as MessageKey)}</option>}</For>
-          </Select>
-        </div>
-      </Show>
-      <Show when={audienceKind() === "course"}>
-        <div class="space-y-1.5 border-violet-500/15 bg-violet-500/[0.03]">
-          <Label for="event-audience-course">{t("nav.courses")}</Label>
-          <Select id="event-audience-course" value={audienceCourse()} onChange={(e) => setAudienceCourse(e.currentTarget.value)}>
-            <option value="">{t("events.selectCourse")}</option>
-            <For each={courses() ?? []}>{(course) => <option value={course.id}>{course.title}</option>}</For>
-          </Select>
-        </div>
-      </Show>
-      <Show when={audienceKind() === "registration"}>
-        <div class="space-y-1.5 border-violet-500/15 bg-violet-500/[0.03]">
-          <Label for="event-audience-capacity">{t("events.capacity")}</Label>
+    <form class="space-y-4" onSubmit={handleSubmit}>
+      <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-1.5">
+          <Label for="event-title">{t("form.title")}</Label>
           <Input
-            id="event-audience-capacity"
-            type="number"
-            min="1"
-            inputMode="numeric"
-            placeholder={t("events.capacityOptional")}
-            value={capacity()}
-            onInput={(e) => setCapacity(e.currentTarget.value)}
+            id="event-title"
+            class="h-11"
+            value={title()}
+            maxlength={200}
+            required
+            onInput={(e) => setTitle(e.currentTarget.value)}
           />
         </div>
-      </Show>
+        <div class="space-y-1.5">
+          <Label for="event-description">{t("form.description")}</Label>
+          <Textarea
+            id="event-description"
+            class="min-h-28"
+            value={description()}
+            maxlength={2000}
+            rows={3}
+            onInput={(e) => setDescription(e.currentTarget.value)}
+          />
+        </div>
+      </div>
+      <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-1.5">
+          <Label for="event-audience">{t("events.audience")}</Label>
+          <Select id="event-audience" value={audienceKind()} onChange={(e) => setAudienceKind(e.currentTarget.value as EventAudience["kind"])}>
+            <For each={AUDIENCE_KINDS}>{(kind) => <option value={kind}>{t(`events.audience.${kind}` as MessageKey)}</option>}</For>
+          </Select>
+        </div>
+        <Show when={audienceKind() === "role"}>
+          <div class="space-y-1.5">
+            <Label for="event-audience-role">{t("admin.role")}</Label>
+            <Select id="event-audience-role" value={audienceRole()} onChange={(e) => setAudienceRole(e.currentTarget.value as Role)}>
+              <For each={AUDIENCE_ROLES}>{(role) => <option value={role}>{t(`role.${role}` as MessageKey)}</option>}</For>
+            </Select>
+          </div>
+        </Show>
+        <Show when={audienceKind() === "course"}>
+          <div class="space-y-1.5">
+            <Label for="event-audience-course">{t("nav.courses")}</Label>
+            <Select id="event-audience-course" value={audienceCourse()} onChange={(e) => setAudienceCourse(e.currentTarget.value)}>
+              <option value="">{t("events.selectCourse")}</option>
+              <For each={courses() ?? []}>{(course) => <option value={course.id}>{course.title}</option>}</For>
+            </Select>
+          </div>
+        </Show>
+        <Show when={audienceKind() === "registration"}>
+          <div class="space-y-1.5">
+            <Label for="event-audience-capacity">{t("events.capacity")}</Label>
+            <Input
+              id="event-audience-capacity"
+              type="number"
+              min="1"
+              inputMode="numeric"
+              placeholder={t("events.capacityOptional")}
+              value={capacity()}
+              onInput={(e) => setCapacity(e.currentTarget.value)}
+            />
+          </div>
+        </Show>
+      </div>
       <div class="grid gap-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-4">
         <div class="space-y-1.5">
           <Label for="event-starts">{t("events.starts")}</Label>
@@ -295,12 +299,12 @@ export function EventForm(props: {
         </div>
       </div>
       {error() && <p class="text-sm text-destructive">{error()}</p>}
-      <div class="flex flex-wrap items-center gap-2">
-        <Button type="submit" class="h-10" disabled={pending()}>
+      <div class="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2 border-t border-border bg-background px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
+        <Button type="submit" class="h-10 flex-1 sm:flex-none" disabled={pending()}>
           {props.submitLabel ?? t("common.save")}
         </Button>
         {props.onCancel && (
-          <Button type="button" variant="outline" class="h-10" onClick={props.onCancel}>
+          <Button type="button" variant="outline" class="h-10 flex-1 sm:flex-none" onClick={props.onCancel}>
             {t("common.cancel")}
           </Button>
         )}
