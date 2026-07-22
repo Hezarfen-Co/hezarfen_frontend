@@ -279,7 +279,7 @@ function ExamsContent() {
         <Show when={flash()}>
           <Alert variant="success">{flash()}</Alert>
         </Show>
-        <Show when={error()}>
+        <Show when={error() && !createOpen()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
