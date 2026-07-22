@@ -175,18 +175,18 @@ function EventDetailContent() {
                 actions={
                   <div class="detail-action-group">
                     <Link to="/events">
-                      <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
+                      <Button variant="ghost" size="sm" class="w-full rounded-xl sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
                         {t("common.back")}
                       </Button>
                     </Link>
                     <Show when={canManage()}>
                       <div class="detail-action-divider">
-                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setEditing(true)}>
+                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(true)}>
                           <IconEdit class="h-4 w-4" />
                           {t("common.edit")}
                         </Button>
-                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
+                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-xl sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
                           <IconTrash class="h-4 w-4" />
                           {t("common.delete")}
                         </Button>
@@ -290,7 +290,7 @@ function EventDetailContent() {
                     />
                     <Button
                       type="button"
-                      class="rounded-sm"
+                      class="rounded-xl"
                       disabled={pending()}
                       onClick={() => {
                         const uid = registrationUserId().trim();
@@ -349,7 +349,7 @@ function EventDetailContent() {
                   />
                   <Button
                     type="button"
-                    class="w-full rounded-sm sm:w-auto"
+                    class="w-full rounded-xl sm:w-auto"
                     disabled={pending()}
                     onClick={() => {
                       const uid = otherUserId().trim();

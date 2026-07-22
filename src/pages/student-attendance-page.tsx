@@ -110,7 +110,7 @@ function StudentAttendanceContent() {
         <PageHeader accent="sky" eyebrow={t("nav.admin")} title={t("nav.studentAttendance")} description={t("attendance.lookup")} />
       </div>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-amber-500/15 bg-amber-500/[0.025] p-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="font-display text-lg font-semibold">{t("nav.studentAttendance")}</h2>

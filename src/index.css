@@ -221,7 +221,28 @@
   }
 
   .detail-metric-card {
-    @apply rounded-xl border border-black/[0.05] dark:border-white/[0.06] bg-muted/30 p-4 shadow-sm;
+    @apply relative overflow-hidden rounded-xl border border-black/[0.05] dark:border-white/[0.06] bg-muted/30 p-4 shadow-sm;
+  }
+
+  .detail-metric-card::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-0.5 bg-primary/40;
+  }
+
+  .detail-metric-card:nth-child(4n+1)::before {
+    @apply bg-sky-500/50;
+  }
+
+  .detail-metric-card:nth-child(4n+2)::before {
+    @apply bg-emerald-500/50;
+  }
+
+  .detail-metric-card:nth-child(4n+3)::before {
+    @apply bg-amber-500/50;
+  }
+
+  .detail-metric-card:nth-child(4n+4)::before {
+    @apply bg-indigo-500/50;
   }
 
   .side-panel-body form {
@@ -255,17 +276,37 @@
     @apply rounded-xl h-11 px-5 font-medium active:scale-[0.97] transition-transform duration-150;
   }
 
-  @keyframes dashboard-jiggle {
-    0%, 100% { transform: rotate(-0.4deg) translateY(0); }
-    50% { transform: rotate(0.4deg) translateY(-1px); }
+  .tactile-press {
+    @apply active:scale-[0.97] transition-transform duration-150;
   }
 
-  .dashboard-jiggle {
-    animation: dashboard-jiggle 180ms ease-in-out infinite;
+  .card-lift {
+    @apply transition-shadow duration-200 ease-out hover:shadow-apple-hover;
+  }
+
+  .hig-grouped-card {
+    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-4 sm:p-5 shadow-apple transition-all;
+  }
+
+  .hig-translucent-bar {
+    @apply backdrop-blur-xl backdrop-saturate-150 bg-background/80 border-b border-black/[0.06] dark:border-white/[0.08];
+  }
+
+  .hig-popover-panel {
+    @apply backdrop-blur-xl backdrop-saturate-150 bg-popover/95 border border-black/[0.08] dark:border-white/[0.12] rounded-2xl shadow-apple p-1.5;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.9; transform: scale(1); filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.4)); }
+    50% { opacity: 1; transform: scale(1.02); filter: drop-shadow(0 0 24px rgba(59, 130, 246, 0.7)); }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .dashboard-jiggle {
+    .animate-pulse-glow {
       animation: none;
     }
   }

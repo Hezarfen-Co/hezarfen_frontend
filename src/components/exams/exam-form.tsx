@@ -203,13 +203,12 @@ export function ExamForm(props: {
     <>
       <form class="space-y-4" onSubmit={handleSubmit}>
         {/* Section 1: Basic Info */}
-        <div class="space-y-3 rounded-lg border bg-card p-3.5 shadow-sm">
+        <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionBasic")}</h3>
           <div class="space-y-1.5">
             <Label for="exam-title">{t("form.title")}</Label>
             <Input
               id="exam-title"
-              class="rounded-sm"
               value={title()}
               maxlength={200}
               required
@@ -220,7 +219,6 @@ export function ExamForm(props: {
             <Label for="exam-description">{t("form.description")}</Label>
             <Textarea
               id="exam-description"
-              class="rounded-sm"
               value={description()}
               maxlength={2000}
               rows={3}
@@ -231,7 +229,6 @@ export function ExamForm(props: {
             <Label for="exam-kind">{t("exams.kind")}</Label>
             <Select
               id="exam-kind"
-              class="rounded-sm"
               value={kind()}
               onChange={(e) => setKind(e.currentTarget.value)}
             >
@@ -241,13 +238,12 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 2: Mode & Schedule */}
-        <div class="space-y-3 rounded-lg border bg-card p-3.5 shadow-sm">
+        <div class="space-y-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-4 shadow-sm">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionSchedule")}</h3>
           <div class="space-y-1.5">
             <Label for="exam-mode">{t("exams.mode")}</Label>
             <Select
               id="exam-mode"
-              class="rounded-sm"
               value={mode()}
               onChange={(e) => {
                 const next = e.currentTarget.value;
@@ -272,7 +268,7 @@ export function ExamForm(props: {
                 <div class="grid grid-cols-2 gap-2">
                   <DatePicker
                     id="exam-starts"
-                    class="h-10"
+                    class="h-11"
                     placeholder={t("form.datePlaceholder")}
                     value={startsDate()}
                     required
@@ -280,7 +276,7 @@ export function ExamForm(props: {
                   />
                   <Input
                     id="exam-starts-time"
-                    class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
+                    class="h-11 font-mono placeholder:text-muted-foreground/45"
                     inputMode="numeric"
                     placeholder="14:30"
                     pattern="[0-2][0-9]:[0-5][0-9]"
@@ -296,7 +292,7 @@ export function ExamForm(props: {
                 <div class="grid grid-cols-2 gap-2">
                   <DatePicker
                     id="exam-ends"
-                    class="h-10"
+                    class="h-11"
                     placeholder={t("form.datePlaceholder")}
                     value={endsDate()}
                     required
@@ -304,7 +300,7 @@ export function ExamForm(props: {
                   />
                   <Input
                     id="exam-ends-time"
-                    class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/45"
+                    class="h-11 font-mono placeholder:text-muted-foreground/45"
                     inputMode="numeric"
                     placeholder="15:30"
                     pattern="[0-2][0-9]:[0-5][0-9]"
@@ -320,7 +316,7 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 3: Time Limit / Duration */}
-        <div class="space-y-3 rounded-lg border bg-card p-3.5 shadow-sm">
+        <div class="space-y-3 rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-4 shadow-sm">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionDuration")}</h3>
           <label class="flex items-center gap-2 text-sm font-medium">
             <input
@@ -340,7 +336,7 @@ export function ExamForm(props: {
                 type="number"
                 min={1}
                 max={1440}
-                class="mt-1.5 h-10 rounded-sm bg-background/60"
+                class="mt-1.5 h-11 bg-background/60"
                 placeholder="60"
                 value={durationMinutes()}
                 onInput={(e) => setDurationMinutes(e.currentTarget.value)}
@@ -350,10 +346,10 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 4: Participation & Attempts */}
-        <div class="space-y-3 rounded-lg border bg-card p-3.5 shadow-sm">
+        <div class="space-y-3 rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.03] p-4 shadow-sm">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionAccess")}</h3>
 
-          <div class="rounded-sm border bg-background/60 px-3 py-2">
+          <div class="rounded-xl border bg-background/60 px-3 py-2">
             <label class="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
@@ -373,7 +369,7 @@ export function ExamForm(props: {
               <div class="ml-6 mt-2 flex items-center gap-2">
                 <Input
                   id="exam-max-attempts"
-                  class="h-8 w-20 rounded-sm text-center"
+                  class="h-10 w-20 text-center"
                   type="number"
                   min={1}
                   step={1}
@@ -386,7 +382,7 @@ export function ExamForm(props: {
             </Show>
           </div>
 
-          <label class="flex items-start gap-2 rounded-sm border bg-background/60 px-3 py-2 text-sm">
+          <label class="flex items-start gap-2 rounded-xl border bg-background/60 px-3 py-2 text-sm">
             <input
               type="checkbox"
               class="mt-0.5 h-4 w-4 shrink-0 rounded border-border"
@@ -399,7 +395,7 @@ export function ExamForm(props: {
             </div>
           </label>
 
-          <label class="flex items-start gap-2 rounded-sm border bg-background/60 px-3 py-2 text-sm">
+          <label class="flex items-start gap-2 rounded-xl border bg-background/60 px-3 py-2 text-sm">
             <input
               type="checkbox"
               class="mt-0.5 h-4 w-4 shrink-0 rounded border-border"

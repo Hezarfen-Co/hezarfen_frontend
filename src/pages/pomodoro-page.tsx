@@ -14,6 +14,8 @@ import { IconCheck, IconClock } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { createFlash } from "@/lib/flash";
 import { createNow } from "@/lib/create-now";
+import { triggerConfetti } from "@/lib/confetti";
+import { cn } from "@/lib/cn";
 import { formatDateTime, formatDurationClock } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -76,12 +78,27 @@ function PomodoroContent() {
       await action();
       await refetch();
       setFlash(ok);
+      if (action === postPomodoroFinish) {
+        triggerConfetti();
+      }
     } catch (err) {
       setError(formatApiError(err));
     } finally {
       setPending(false);
     }
   };
+
+  const progressPercent = createMemo(() => {
+    const dur = runningDuration();
+    if (!dur) return 0;
+    const targetMs = 25 * 60 * 1000;
+    return Math.min(1, dur / targetMs);
+  });
+
+  const dashOffset = createMemo(() => {
+    const circumference = 339.29; // 2 * pi * 54
+    return circumference * (1 - progressPercent());
+  });
 
   return (
     <div class="space-y-6">
@@ -118,23 +135,46 @@ function PomodoroContent() {
             </Badge>
           </div>
 
-          <div class="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-            <div>
-              <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{running() ? t("pomodoro.current") : t("pomodoro.total")}</p>
-              <p class="mono mt-3 text-6xl font-semibold leading-none tracking-tight tabular-nums sm:text-7xl">
-                {formatDurationClock(running() ? runningDuration() : log()?.total_focus_ms)}
-              </p>
+          <div class="grid gap-6 p-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+            <div class="flex flex-col sm:flex-row items-center gap-6">
+              <div class="relative flex h-36 w-36 shrink-0 items-center justify-center">
+                <svg class="h-full w-full -rotate-90 transform" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="54" class="stroke-muted/40" stroke-width="8" fill="none" />
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="54"
+                    class={cn("stroke-primary transition-all duration-1000 ease-linear", running() && "animate-pulse-glow")}
+                    stroke-width="8"
+                    stroke-dasharray="339.29"
+                    stroke-dashoffset={running() ? dashOffset() : 0}
+                    stroke-linecap="round"
+                    fill="none"
+                  />
+                </svg>
+                <span class="absolute text-center">
+                  <IconClock class={cn("h-7 w-7 mx-auto text-primary", running() && "animate-pulse")} />
+                </span>
+              </div>
+
+              <div>
+                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{running() ? t("pomodoro.current") : t("pomodoro.total")}</p>
+                <p class="mono mt-2 text-5xl font-semibold leading-none tracking-tight tabular-nums sm:text-6xl">
+                  {formatDurationClock(running() ? runningDuration() : log()?.total_focus_ms)}
+                </p>
+              </div>
             </div>
+
             <Show
               when={running()}
               fallback={
-                <Button type="button" size="sm" class="h-12 min-w-[10rem] rounded-xl text-base" disabled={pending()} onClick={() => void run(postPomodoroStart, t("pomodoro.started"))}>
+                <Button type="button" size="sm" class="h-12 min-w-[10rem] rounded-xl text-base tactile-press" disabled={pending()} onClick={() => void run(postPomodoroStart, t("pomodoro.started"))}>
                   <IconClock class="h-4 w-4" />
                   {t("pomodoro.start")}
                 </Button>
               }
             >
-              <Button type="button" size="sm" variant="outline" class="h-12 min-w-[10rem] rounded-xl text-base" disabled={pending()} onClick={() => void run(postPomodoroFinish, t("pomodoro.finished"))}>
+              <Button type="button" size="sm" variant="outline" class="h-12 min-w-[10rem] rounded-xl text-base tactile-press" disabled={pending()} onClick={() => void run(postPomodoroFinish, t("pomodoro.finished"))}>
                 <IconCheck class="h-4 w-4" />
                 {t("pomodoro.finish")}
               </Button>
@@ -158,7 +198,7 @@ function PomodoroContent() {
         </div>
       </section>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-rose-500/15 bg-rose-500/[0.025] p-4">
         <div class="flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 class="font-display text-lg font-semibold">{t("pomodoro.history")}</h2>

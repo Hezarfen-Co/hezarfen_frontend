@@ -1,8 +1,85 @@
-import type { ComponentProps } from "solid-js";
-import { splitProps } from "solid-js";
+import { For, Show, type JSX, splitProps, type ComponentProps } from "solid-js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { IconCheck, IconChevronDown } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
-/** Native select styled to match shadcn — lighter than Kobalte Select. */
+export type SelectOption<T extends string | number = string> = {
+  value: T;
+  label: string;
+  icon?: JSX.Element;
+};
+
+export type DropdownSelectProps<T extends string | number = string> = {
+  options: SelectOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  placeholder?: string;
+  labelPrefix?: string;
+  class?: string;
+  triggerClass?: string;
+  disabled?: boolean;
+};
+
+export function DropdownSelect<T extends string | number = string>(props: DropdownSelectProps<T>) {
+  const selectedOption = () => props.options.find((opt) => opt.value === props.value);
+  const displayLabel = () => selectedOption()?.label ?? props.placeholder ?? "";
+
+  return (
+    <DropdownMenu placement="bottom-start" gutter={6}>
+      <DropdownMenuTrigger
+        disabled={props.disabled}
+        class={cn(
+          "inline-flex h-11 items-center justify-between gap-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-card px-3.5 text-xs font-medium text-foreground shadow-sm transition-all hover:bg-secondary active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+          props.triggerClass,
+          props.class,
+        )}
+      >
+        <div class="flex items-center gap-1.5 min-w-0 truncate">
+          <Show when={props.labelPrefix}>
+            <span class="font-semibold uppercase tracking-wider text-muted-foreground text-[11px] shrink-0">{props.labelPrefix}:</span>
+          </Show>
+          <Show when={selectedOption()?.icon}>
+            <span class="shrink-0">{selectedOption()!.icon}</span>
+          </Show>
+          <span class="truncate font-medium">{displayLabel()}</span>
+        </div>
+        <IconChevronDown class="h-3.5 w-3.5 shrink-0 opacity-60 transition-transform duration-200" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent class="min-w-[12rem] max-h-72 overflow-y-auto rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-1.5 shadow-apple">
+        <For each={props.options}>
+          {(option) => {
+            const isSelected = () => option.value === props.value;
+            return (
+              <DropdownMenuItem
+                class={cn(
+                  "flex h-10 items-center justify-between gap-2.5 rounded-xl px-3 text-xs font-medium cursor-pointer transition-colors",
+                  isSelected() && "bg-primary/10 text-primary font-semibold",
+                )}
+                onSelect={() => props.onChange(option.value)}
+              >
+                <div class="flex items-center gap-2 min-w-0 truncate">
+                  <Show when={option.icon}>
+                    <span class="shrink-0">{option.icon}</span>
+                  </Show>
+                  <span class="truncate">{option.label}</span>
+                </div>
+                <Show when={isSelected()}>
+                  <IconCheck class="h-3.5 w-3.5 shrink-0 text-primary" />
+                </Show>
+              </DropdownMenuItem>
+            );
+          }}
+        </For>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export type SelectProps = ComponentProps<"select">;
 
 export function Select(props: SelectProps) {
@@ -11,17 +88,15 @@ export function Select(props: SelectProps) {
     <div class="relative w-full">
       <select
         class={cn(
-          "flex h-11 w-full appearance-none rounded-xl border border-border/80 bg-muted/30 pl-3.5 pr-9 py-2 text-sm font-medium text-foreground transition-all duration-150",
-          "hover:bg-muted/50 hover:border-border focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2",
+          "flex h-11 w-full appearance-none rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-card pl-3.5 pr-9 py-2 text-xs font-medium text-foreground transition-all duration-150",
+          "hover:bg-secondary focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50 [&>option]:bg-popover [&>option]:text-popover-foreground [&>option]:py-1.5",
           local.class,
         )}
         {...rest}
       />
       <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">
-        <svg class="h-4 w-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
+        <IconChevronDown class="h-4 w-4" />
       </span>
     </div>
   );

@@ -123,7 +123,7 @@ function WorkLogContent() {
         </div>
       </section>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-emerald-500/15 bg-emerald-500/[0.025] p-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="font-display text-lg font-semibold">{t("work.entries")}</h2>
           <Badge variant="secondary" class="mono rounded-sm px-3 py-1">

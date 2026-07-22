@@ -39,7 +39,7 @@ function UserRoleActions(props: {
   return (
     <>
       <Select
-        class="h-8 rounded-sm text-xs"
+        class="h-11 rounded-xl text-xs"
         value={pendingRole()}
         disabled={isSelf()}
         onChange={(e) => setPendingRole(e.currentTarget.value as Role)}
@@ -50,7 +50,7 @@ function UserRoleActions(props: {
         ))}
       </Select>
       <Show when={!isSelf() && dirty()}>
-        <Button type="button" size="sm" class="mt-2 h-7 rounded-sm px-2" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
+        <Button type="button" size="sm" class="mt-2 h-10 rounded-xl px-3" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
           <IconCheck />
           {t("common.update")}
         </Button>

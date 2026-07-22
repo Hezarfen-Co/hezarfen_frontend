@@ -126,7 +126,7 @@ function StudentPomodoroContent() {
     <div class="space-y-6">
       <PageHeader accent="mint" eyebrow={t("nav.admin")} title={t("nav.studentPomodoro")} description={t("pomodoro.lookup")} />
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-rose-500/15 bg-rose-500/[0.025] p-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="font-display text-lg font-semibold">{t("nav.studentPomodoro")}</h2>

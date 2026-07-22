@@ -27,14 +27,14 @@ export function Toaster() {
       <div class="pointer-events-none fixed inset-x-3 top-4 z-[80] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:w-96">
         <For each={toasts()}>
           {(toast) => (
-            <div class="pointer-events-auto flex w-full items-start gap-3 rounded-xl border border-border bg-card px-3 py-3 text-card-foreground shadow-soft">
+            <div class="pointer-events-auto flex w-full items-start gap-3 rounded-2xl border border-black/[0.08] bg-card/95 px-3 py-3 text-card-foreground shadow-apple backdrop-blur-xl dark:border-white/[0.12]">
               <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                 <IconCheck class="h-3.5 w-3.5" />
               </span>
               <p class="min-w-0 flex-1 text-sm font-medium leading-5">{toast.title}</p>
               <button
                 type="button"
-                class={cn("rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground")}
+                class={cn("inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")}
                 aria-label="Dismiss"
                 onClick={() => dismissToast(toast.id)}
               >

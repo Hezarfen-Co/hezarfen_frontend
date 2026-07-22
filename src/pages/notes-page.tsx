@@ -139,11 +139,11 @@ function NotesContent() {
       </SidePanel>
 
       <div class="space-y-5">
-        <section class="min-w-0 space-y-4">
+        <section class="min-w-0 space-y-4 rounded-3xl border border-amber-500/15 bg-amber-500/[0.025] p-3 sm:p-4">
           <Show when={flash()}>
             <Alert variant="success">{flash()}</Alert>
           </Show>
-          {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+          {error() && <Alert variant="destructive">{error()}</Alert>}
           <Suspense fallback={<PageSpinner />}>
             <Show when={list.error}>
               <Alert variant="destructive">{formatApiError(list.error)}</Alert>

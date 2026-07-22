@@ -13,7 +13,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconEye, IconPlus } from "@/components/ui/icons";
-import { Select } from "@/components/ui/select";
+import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { cn } from "@/lib/cn";
@@ -106,7 +106,7 @@ function EventsContent() {
       id: "audience",
       accessorFn: (event) => audienceLabel(event.audience),
       header: t("events.audience"),
-      cell: (cell) => <Badge variant="outline" class="rounded-sm">{audienceLabel(cell.row.original.audience)}</Badge>,
+      cell: (cell) => <Badge variant="outline" class="rounded-full">{audienceLabel(cell.row.original.audience)}</Badge>,
     },
     {
       id: "status",
@@ -116,7 +116,7 @@ function EventsContent() {
       cell: (cell) => {
         const status = eventStatus(cell.row.original);
         return (
-          <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", scheduleStatusClass(status))}>
+          <Badge variant="outline" class={cn("w-28 justify-center rounded-full", scheduleStatusClass(status))}>
             <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(status))} />
             {statusLabel(status)}
           </Badge>
@@ -193,7 +193,7 @@ function EventsContent() {
       </Show>
       {error() && <p class="text-sm text-destructive">{error()}</p>}
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-amber-500/15 bg-amber-500/[0.025] p-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -208,11 +208,16 @@ function EventsContent() {
             empty={t("events.empty")}
             onRowClick={(event) => void navigate({ to: "/events/$id", params: { id: event.id } })}
             filters={
-              <Select class="h-9 w-full rounded-sm sm:w-44" value={timeFilter()} aria-label={t("events.title")} onChange={(event) => setTimeFilter(event.currentTarget.value)}>
-                <option value="all">{t("common.all")}</option>
-                <option value="upcoming">{t("events.upcoming")}</option>
-                <option value="past">{t("events.past")}</option>
-              </Select>
+              <DropdownSelect
+                labelPrefix={t("attempt.status")}
+                value={timeFilter()}
+                onChange={(val) => setTimeFilter(val)}
+                options={[
+                  { value: "all", label: t("common.all") },
+                  { value: "upcoming", label: t("events.upcoming") },
+                  { value: "past", label: t("events.past") },
+                ]}
+              />
             }
           />
         </Suspense>
