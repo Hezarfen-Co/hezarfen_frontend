@@ -73,7 +73,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
         <AlertDialogFooter>
           <AlertDialogCancel
             class={cn(
-              "inline-flex h-8 items-center justify-center rounded-sm border border-input bg-background px-3 text-xs font-medium shadow-sm",
+              "inline-flex h-11 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-background px-4 text-xs font-semibold shadow-sm tactile-press",
               "hover:bg-accent hover:text-accent-foreground disabled:opacity-50",
             )}
             disabled={pending()}
@@ -83,6 +83,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
           <Button
             type="button"
             size="sm"
+            class="h-11 rounded-xl px-5 text-xs font-semibold tactile-press"
             variant={destructive() ? "destructive" : "default"}
             disabled={pending()}
             onClick={() => void run()}

@@ -248,13 +248,13 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       </DataTableFrame>
       <Show when={props.enablePagination && pageCount() > 1}>
         <div class="flex items-center justify-end gap-2 py-3">
-          <span class="mr-auto text-xs tabular-nums text-muted-foreground">
+          <span class="mr-auto text-xs font-medium tabular-nums text-muted-foreground">
             {t("common.pageOf", { page: pageIndex() + 1, total: pageCount() })}
           </span>
-          <Button type="button" variant="outline" size="sm" disabled={pageIndex() <= 0} onClick={() => setPageIndex(Math.max(0, pageIndex() - 1))}>
+          <Button type="button" variant="outline" size="sm" class="h-11 rounded-xl px-4 text-xs font-semibold tactile-press" disabled={pageIndex() <= 0} onClick={() => setPageIndex(Math.max(0, pageIndex() - 1))}>
             {t("common.prev")}
           </Button>
-          <Button type="button" variant="outline" size="sm" disabled={pageIndex() >= pageCount() - 1} onClick={() => setPageIndex(Math.min(pageCount() - 1, pageIndex() + 1))}>
+          <Button type="button" variant="outline" size="sm" class="h-11 rounded-xl px-4 text-xs font-semibold tactile-press" disabled={pageIndex() >= pageCount() - 1} onClick={() => setPageIndex(Math.min(pageCount() - 1, pageIndex() + 1))}>
             {t("common.next")}
           </Button>
         </div>

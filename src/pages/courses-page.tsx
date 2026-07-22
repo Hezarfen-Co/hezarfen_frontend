@@ -15,7 +15,7 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconEye, IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { DropdownSelect, Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
@@ -261,16 +261,16 @@ function CoursesContent() {
               empty={t("courses.empty", { item: pageLabel() })}
               onRowClick={(course) => void navigate({ to: "/courses/$id", params: { id: course.id } })}
               filters={
-                <Select
-                  class="h-9 w-full rounded-sm sm:w-44"
+                <DropdownSelect
+                  labelPrefix={t("terms.term")}
                   value={termFilter()}
-                  aria-label={t("terms.term")}
-                  onChange={(event) => setTermFilter(event.currentTarget.value)}
-                >
-                  <option value="all">{t("common.all")}</option>
-                  <option value="unassigned">{t("terms.unassigned")}</option>
-                  <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
-                </Select>
+                  onChange={(val) => setTermFilter(val)}
+                  options={[
+                    { value: "all", label: t("common.all") },
+                    { value: "unassigned", label: t("terms.unassigned") },
+                    ...(terms() ?? []).map((term) => ({ value: term.id, label: term.name })),
+                  ]}
+                />
               }
             />
           </div>

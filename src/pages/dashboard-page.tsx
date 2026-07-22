@@ -506,7 +506,7 @@ function DashboardContent() {
               when={attention().length > 0}
               fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
-              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-apple">
                 <For each={pagedAttention()}>
                   {(item) => (
                     <li>

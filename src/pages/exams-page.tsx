@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconCheck, IconEdit, IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
-import { Select } from "@/components/ui/select";
+import { DropdownSelect, Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
@@ -298,35 +298,31 @@ function ExamsContent() {
             onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
             filters={
               <div class="flex flex-wrap items-center gap-2.5">
-                <div class="flex h-11 items-center gap-2 rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-card px-3 py-1.5 text-xs shadow-sm">
-                  <span class="font-semibold uppercase tracking-wider text-muted-foreground text-[11px]">{t("attempt.status")}:</span>
-                  <select
-                    class="bg-transparent font-medium text-foreground outline-none cursor-pointer text-xs"
-                    value={statusFilter()}
-                    onChange={(event) => setStatusFilter(event.currentTarget.value as ExamDisplayStatus | "all")}
-                  >
-                    <option value="all">{t("common.all")}</option>
-                    <option value="active">{t("exams.active")}</option>
-                    <option value="upcoming">{t("exams.upcoming")}</option>
-                    <option value="submitted">{t("attempt.submitted")}</option>
-                    <option value="expired">{t("attempt.expired")}</option>
-                    <option value="draft">{t("exams.draft")}</option>
-                    <option value="finished">{t("exams.finished")}</option>
-                    <option value="unscheduled">{t("exams.unscheduled")}</option>
-                  </select>
-                </div>
+                <DropdownSelect
+                  labelPrefix={t("attempt.status")}
+                  value={statusFilter()}
+                  onChange={(val) => setStatusFilter(val as ExamDisplayStatus | "all")}
+                  options={[
+                    { value: "all", label: t("common.all") },
+                    { value: "active", label: t("exams.active") },
+                    { value: "upcoming", label: t("exams.upcoming") },
+                    { value: "submitted", label: t("attempt.submitted") },
+                    { value: "expired", label: t("attempt.expired") },
+                    { value: "draft", label: t("exams.draft") },
+                    { value: "finished", label: t("exams.finished") },
+                    { value: "unscheduled", label: t("exams.unscheduled") },
+                  ]}
+                />
 
-                <div class="flex h-11 items-center gap-2 rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-card px-3 py-1.5 text-xs shadow-sm">
-                  <span class="font-semibold uppercase tracking-wider text-muted-foreground text-[11px]">{t("nav.courses")}:</span>
-                  <select
-                    class="max-w-[12rem] truncate bg-transparent font-medium text-foreground outline-none cursor-pointer text-xs"
-                    value={courseFilter()}
-                    onChange={(event) => setCourseFilter(event.currentTarget.value)}
-                  >
-                    <option value="all">{t("common.all")}</option>
-                    <For each={visibleCourses()}>{(course) => <option value={course.id}>{course.title}</option>}</For>
-                  </select>
-                </div>
+                <DropdownSelect
+                  labelPrefix={t("nav.courses")}
+                  value={courseFilter()}
+                  onChange={(val) => setCourseFilter(val)}
+                  options={[
+                    { value: "all", label: t("common.all") },
+                    ...visibleCourses().map((course) => ({ value: course.id, label: course.title })),
+                  ]}
+                />
 
                 <Show when={statusFilter() !== "all" || courseFilter() !== "all"}>
                   <Button

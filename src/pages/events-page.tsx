@@ -13,7 +13,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconEye, IconPlus } from "@/components/ui/icons";
-import { Select } from "@/components/ui/select";
+import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { cn } from "@/lib/cn";
@@ -208,11 +208,16 @@ function EventsContent() {
             empty={t("events.empty")}
             onRowClick={(event) => void navigate({ to: "/events/$id", params: { id: event.id } })}
             filters={
-              <Select class="h-9 w-full rounded-sm sm:w-44" value={timeFilter()} aria-label={t("events.title")} onChange={(event) => setTimeFilter(event.currentTarget.value)}>
-                <option value="all">{t("common.all")}</option>
-                <option value="upcoming">{t("events.upcoming")}</option>
-                <option value="past">{t("events.past")}</option>
-              </Select>
+              <DropdownSelect
+                labelPrefix={t("attempt.status")}
+                value={timeFilter()}
+                onChange={(val) => setTimeFilter(val)}
+                options={[
+                  { value: "all", label: t("common.all") },
+                  { value: "upcoming", label: t("events.upcoming") },
+                  { value: "past", label: t("events.past") },
+                ]}
+              />
             }
           />
         </Suspense>
