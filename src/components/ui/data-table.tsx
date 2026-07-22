@@ -222,7 +222,10 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                     data-state={row.getIsSelected() ? "selected" : undefined}
                     role={props.onRowClick ? "button" : undefined}
                     tabIndex={props.onRowClick ? 0 : undefined}
-                    class={props.onRowClick ? "cursor-pointer outline-none focus-visible:bg-primary/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:bg-primary/[0.08]" : undefined}
+                    class={cn(
+                      "group/row",
+                      props.onRowClick && "cursor-pointer outline-none focus-visible:bg-primary/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:bg-primary/[0.08]",
+                    )}
                     onClick={(event) => {
                       if (!props.onRowClick || isInteractiveTarget(event.target)) return;
                       props.onRowClick(row.original);
