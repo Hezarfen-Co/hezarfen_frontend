@@ -1,15 +1,78 @@
-import { For, Show, Suspense, createResource } from "solid-js";
+import { For, Show, Suspense, createResource, createSignal, lazy } from "solid-js";
 import { ApiError } from "@/api/client";
 import { getExamQuestions } from "@/api/exams";
-import { getStudentAnswers } from "@/api/exams";
+import { getStudentAnswers, getStudentAnswerImage } from "@/api/exams";
 import type { StudentAnswerSheet } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { IconCheck, IconX } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { cn } from "@/lib/cn";
 import { joinAnswerSheet } from "@/lib/answer-sheet";
+import { pngBytesToScene } from "@/lib/drawing-file";
+import type { DrawScene } from "@/lib/draw-stroke";
 import { personLabelWithId } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
+
+const DrawingPlayback = lazy(() => import("@/components/exams/drawing-playback").then((m) => ({ default: m.DrawingPlayback })));
+
+/**
+ * A student's answer image with optional stroke-by-stroke playback. Defaults to the
+ * static <img>; "Play drawing" fetches the PNG, recovers its embedded scene, and swaps
+ * in the replay. A plain image (no embedded strokes) falls back to the img and drops
+ * the button — nothing to replay.
+ */
+function AnswerDrawing(props: { examId: string; userId: string; questionId: string }) {
+  const t = useT();
+  const imgSrc = `/api/exams/${props.examId}/attempts/${props.userId}/answers/${props.questionId}/image`;
+  const [scene, setScene] = createSignal<DrawScene | null>(null);
+  const [mode, setMode] = createSignal<"image" | "loading" | "playback" | "plain">("image");
+
+  const enterPlayback = async () => {
+    if (scene()) {
+      setMode("playback");
+      return;
+    }
+    setMode("loading");
+    try {
+      const blob = await getStudentAnswerImage(props.examId, props.userId, props.questionId);
+      const parsed = pngBytesToScene(new Uint8Array(await blob.arrayBuffer()));
+      if (parsed && parsed.strokes.length > 0) {
+        setScene(parsed);
+        setMode("playback");
+      } else {
+        setMode("plain"); // plain image or no strokes → keep the img, hide Play
+      }
+    } catch {
+      setMode("image"); // fetch failed → keep the img, allow a retry
+    }
+  };
+
+  return (
+    <div class="mt-3 space-y-2">
+      {/* local boundary: the lazy playback chunk must not suspend the whole answer sheet */}
+      <Suspense fallback={<div class="h-64 w-full max-w-2xl rounded-md border bg-background" />}>
+        <Show
+          when={mode() === "playback" && scene()}
+          fallback={<img src={imgSrc} alt={t("exams.drawAnswer")} class="h-64 w-full max-w-2xl rounded-md border bg-background object-contain" />}
+        >
+          {(s) => <DrawingPlayback scene={s()} />}
+        </Show>
+      </Suspense>
+      <Show when={mode() !== "plain"}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={mode() === "loading"}
+          onClick={() => (mode() === "playback" ? setMode("image") : void enterPlayback())}
+        >
+          {mode() === "playback" ? t("exams.showImage") : t("exams.playDrawing")}
+        </Button>
+      </Show>
+    </div>
+  );
+}
 
 export function AnswerSheetView(props: { examId: string; userId: string }) {
   const t = useT();
@@ -82,11 +145,7 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                         <p class="text-xs text-muted-foreground">{t("exams.textAnswer")}</p>
                         <p class="mt-1 whitespace-pre-wrap text-sm">{row.answer?.text || "—"}</p>
                         <Show when={row.answer?.answer_image}>
-                          <img
-                            src={`/api/exams/${d().sheet.exam}/attempts/${d().sheet.user.id}/answers/${row.question.id}/image`}
-                            alt={t("exams.drawAnswer")}
-                            class="mt-3 h-64 w-full max-w-2xl rounded-md border bg-background object-contain"
-                          />
+                          <AnswerDrawing examId={d().sheet.exam} userId={d().sheet.user.id} questionId={row.question.id} />
                         </Show>
                       </div>
                     }

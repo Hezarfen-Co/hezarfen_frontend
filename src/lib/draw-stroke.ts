@@ -73,6 +73,28 @@ export function strokesBounds(strokes: Stroke[]): { x: number; y: number; w: num
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 }
 
+/**
+ * Split strokes at a reveal cut for order-only playback. Points are counted across
+ * strokes in drawn order; the first `revealCount` are "revealed". `full` = strokes
+ * shown in their entirety, `partial` = the stroke the cut lands inside, truncated to
+ * its revealed points (null when the cut sits on a stroke boundary). `revealCount` is
+ * clamped to [0, total points]; running out of strokes handles the upper bound.
+ */
+export function sliceStrokes(strokes: Stroke[], revealCount: number): { full: Stroke[]; partial: Stroke | null } {
+  let n = Math.max(0, Math.floor(revealCount));
+  const full: Stroke[] = [];
+  for (const s of strokes) {
+    if (n >= s.points.length) {
+      full.push(s);
+      n -= s.points.length;
+      continue;
+    }
+    // cut lands inside this stroke (0 <= n < points.length); n === 0 means it hasn't started
+    return { full, partial: n > 0 ? { ...s, points: s.points.slice(0, n) } : null };
+  }
+  return { full, partial: null };
+}
+
 function applyBrush(c: CanvasRenderingContext2D, stroke: Stroke) {
   // The eraser cuts through the transparent drawing layer rather than painting
   // over it, so a saved drawing keeps whatever the caller flattens it onto.

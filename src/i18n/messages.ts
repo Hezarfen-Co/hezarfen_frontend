@@ -578,6 +578,11 @@ export type MessageKey =
   | "exams.isCorrect"
   | "exams.textAnswer"
   | "exams.drawAnswer"
+  | "exams.playDrawing"
+  | "exams.showImage"
+  | "exams.play"
+  | "exams.pause"
+  | "exams.restart"
   | "exams.editDrawing"
   | "exams.removeDrawing"
   | "exams.nameless"
@@ -1306,6 +1311,11 @@ const en: Dict = {
   "exams.isCorrect": "Correct",
   "exams.textAnswer": "Text answer",
   "exams.drawAnswer": "Draw answer",
+  "exams.playDrawing": "Play drawing",
+  "exams.showImage": "Show image",
+  "exams.play": "Play",
+  "exams.pause": "Pause",
+  "exams.restart": "Restart",
   "exams.editDrawing": "Edit drawing",
   "exams.removeDrawing": "Remove drawing",
   "exams.nameless": "Unnamed",
@@ -2028,6 +2038,11 @@ const tr: Dict = {
   "exams.isCorrect": "Doğru",
   "exams.textAnswer": "Metin cevap",
   "exams.drawAnswer": "Cevabı çiz",
+  "exams.playDrawing": "Çizimi oynat",
+  "exams.showImage": "Görseli göster",
+  "exams.play": "Oynat",
+  "exams.pause": "Duraklat",
+  "exams.restart": "Baştan al",
   "exams.editDrawing": "Çizimi düzenle",
   "exams.removeDrawing": "Çizimi kaldır",
   "exams.nameless": "İsimsiz",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { paintPaper, paintStroke, paintTip, parseScene, strokesBounds, type DrawScene, type Stroke } from "./draw-stroke";
+import { paintPaper, paintStroke, paintTip, parseScene, sliceStrokes, strokesBounds, type DrawScene, type Stroke } from "./draw-stroke";
 
 /** Records every 2d-context call so the three geometry branches can be asserted without a DOM. */
 function stubContext() {
@@ -155,6 +155,44 @@ describe("strokesBounds", () => {
 
   it("is null when the scene has only eraser strokes", () => {
     expect(strokesBounds([stroke([{ x: 5, y: 5 }], { erase: true })])).toBeNull();
+  });
+});
+
+describe("sliceStrokes", () => {
+  const a = stroke([{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 2 }]); // 3 points
+  const b = stroke([{ x: 5, y: 5 }, { x: 6, y: 6 }, { x: 7, y: 7 }, { x: 8, y: 8 }]); // 4 points
+
+  it("reveals nothing at count 0", () => {
+    expect(sliceStrokes([a, b], 0)).toEqual({ full: [], partial: null });
+  });
+
+  it("reveals every stroke, no partial, at the total point count", () => {
+    expect(sliceStrokes([a, b], 7)).toEqual({ full: [a, b], partial: null });
+  });
+
+  it("clamps past the total to the whole drawing", () => {
+    expect(sliceStrokes([a, b], 999)).toEqual({ full: [a, b], partial: null });
+  });
+
+  it("truncates the stroke the cut lands inside", () => {
+    const { full, partial } = sliceStrokes([a, b], 5); // a whole (3) + first 2 of b
+    expect(full).toEqual([a]);
+    expect(partial).toEqual({ ...b, points: b.points.slice(0, 2) });
+  });
+
+  it("gives no partial when the cut sits on a stroke boundary", () => {
+    expect(sliceStrokes([a, b], 3)).toEqual({ full: [a], partial: null }); // a done, b not started
+  });
+
+  it("handles a single-point stroke on both sides of its one point", () => {
+    const dot = stroke([{ x: 9, y: 9 }]);
+    expect(sliceStrokes([dot], 0)).toEqual({ full: [], partial: null });
+    expect(sliceStrokes([dot], 1)).toEqual({ full: [dot], partial: null });
+  });
+
+  it("is empty for no strokes", () => {
+    expect(sliceStrokes([], 0)).toEqual({ full: [], partial: null });
+    expect(sliceStrokes([], 5)).toEqual({ full: [], partial: null });
   });
 });
 
