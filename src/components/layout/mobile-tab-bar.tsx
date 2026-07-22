@@ -61,8 +61,8 @@ export function MobileTabBar(props: { onMenu: () => void }) {
                     >
                       <span
                         class={cn(
-                          "flex h-8 w-12 items-center justify-center rounded-full transition-colors",
-                          active() ? "bg-primary/15 text-primary" : "text-muted-foreground",
+                          "flex h-8 w-12 items-center justify-center rounded-full transition-all",
+                          active() ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12),0_2px_8px_hsl(var(--primary)/0.12)]" : "text-muted-foreground",
                         )}
                       >
                         <tab.Icon class="h-5 w-5" />

@@ -176,12 +176,12 @@ function NavLink(props: {
         props.standalone ? "text-xs font-semibold" : "text-[13px] font-medium",
         props.collapsed ? "justify-center px-0 h-10 w-10 mx-auto" : props.standalone ? "gap-2.5 px-3" : "gap-2.5 pl-8 pr-3",
         active()
-          ? "bg-primary/12 text-primary font-semibold shadow-sm"
+          ? "bg-primary/12 text-primary font-semibold shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.14),0_1px_6px_hsl(var(--primary)/0.08)]"
           : "text-sidebar-foreground/80 hover:bg-secondary hover:text-foreground",
       )}
     >
       <Show when={active() && !props.collapsed}>
-        <span class="absolute left-1 top-1/2 h-4 w-1 -translate-y-1/2 rounded-full bg-primary" />
+        <span class="absolute left-1 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.35)]" />
       </Show>
       <props.item.Icon class={cn("h-4 w-4 shrink-0 transition-colors", active() ? "text-primary" : "text-muted-foreground")} />
       <span class={cn("truncate", props.collapsed ? "sr-only" : "block min-w-0 flex-1 text-left")}>{t(props.item.labelKey)}</span>
@@ -275,8 +275,8 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                         <button
                           type="button"
                           class={cn(
-                            "flex h-8 w-full items-center gap-2 rounded-md px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground",
-                            (open() || groupActive()) && "text-foreground",
+                            "flex h-8 w-full items-center gap-2 rounded-lg px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground",
+                            groupActive() ? "bg-primary/[0.06] text-foreground" : open() && "text-foreground",
                           )}
                           title={t(group.labelKey)}
                           aria-expanded={open()}
