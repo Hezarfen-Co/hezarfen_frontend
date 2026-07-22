@@ -20,6 +20,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
+import { triggerConfetti } from "@/lib/confetti";
 import { formatDateTime } from "@/lib/format";
 import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -287,6 +288,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
         const next = await getExamAttempt(props.exam.id);
         setAttempt(next);
       }
+      triggerConfetti();
     } catch (err) {
       setError(formatApiError(err, locale()));
     } finally {

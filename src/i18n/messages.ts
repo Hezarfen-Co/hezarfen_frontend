@@ -101,6 +101,7 @@ export type MessageKey =
   | "common.creator"
   | "common.searchPlaceholder"
   | "common.all"
+  | "common.resetFilters"
   | "common.saveAttendance"
   | "common.created"
   | "common.deleted"
@@ -833,6 +834,7 @@ const en: Dict = {
   "common.creator": "Created by",
   "common.searchPlaceholder": "Search…",
   "common.all": "All",
+  "common.resetFilters": "Reset filters",
   "common.saveAttendance": "Save my attendance",
   "common.created": "Created.",
   "common.deleted": "Deleted.",
@@ -1577,6 +1579,7 @@ const tr: Dict = {
   "common.creator": "Oluşturan",
   "common.searchPlaceholder": "Ara…",
   "common.all": "Tümü",
+  "common.resetFilters": "Sıfırla",
   "common.saveAttendance": "Yoklamamı kaydet",
   "common.created": "Oluşturuldu.",
   "common.deleted": "Silindi.",

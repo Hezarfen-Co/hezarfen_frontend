@@ -17,7 +17,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconCheck, IconEdit, IconEye, IconPlus } from "@/components/ui/icons";
+import { IconCheck, IconEdit, IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
@@ -52,7 +52,6 @@ function ExamsContent() {
   const now = createNow();
   const [statusFilter, setStatusFilter] = createSignal<ExamDisplayStatus | "all">("all");
   const [courseFilter, setCourseFilter] = createSignal("all");
-  const [showMoreFilters, setShowMoreFilters] = createSignal(false);
   const [createOpen, setCreateOpen] = createSignal(false);
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
@@ -298,27 +297,53 @@ function ExamsContent() {
             empty={t("exams.empty")}
             onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
             filters={
-              <>
-                <Select class="h-9 w-full rounded-sm sm:w-40" value={statusFilter()} onChange={(event) => setStatusFilter(event.currentTarget.value as ExamDisplayStatus | "all")}>
-                  <option value="all">{t("common.all")}</option>
-                  <option value="submitted">{t("attempt.submitted")}</option>
-                  <option value="expired">{t("attempt.expired")}</option>
-                  <option value="draft">{t("exams.draft")}</option>
-                  <option value="upcoming">{t("exams.upcoming")}</option>
-                  <option value="active">{t("exams.active")}</option>
-                  <option value="finished">{t("exams.finished")}</option>
-                  <option value="unscheduled">{t("exams.unscheduled")}</option>
-                </Select>
-                <Show when={showMoreFilters()}>
-                  <Select class="h-9 w-full rounded-sm sm:w-52" value={courseFilter()} onChange={(event) => setCourseFilter(event.currentTarget.value)}>
+              <div class="flex flex-wrap items-center gap-2.5">
+                <div class="flex h-11 items-center gap-2 rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-card px-3 py-1.5 text-xs shadow-sm">
+                  <span class="font-semibold uppercase tracking-wider text-muted-foreground text-[11px]">{t("attempt.status")}:</span>
+                  <select
+                    class="bg-transparent font-medium text-foreground outline-none cursor-pointer text-xs"
+                    value={statusFilter()}
+                    onChange={(event) => setStatusFilter(event.currentTarget.value as ExamDisplayStatus | "all")}
+                  >
+                    <option value="all">{t("common.all")}</option>
+                    <option value="active">{t("exams.active")}</option>
+                    <option value="upcoming">{t("exams.upcoming")}</option>
+                    <option value="submitted">{t("attempt.submitted")}</option>
+                    <option value="expired">{t("attempt.expired")}</option>
+                    <option value="draft">{t("exams.draft")}</option>
+                    <option value="finished">{t("exams.finished")}</option>
+                    <option value="unscheduled">{t("exams.unscheduled")}</option>
+                  </select>
+                </div>
+
+                <div class="flex h-11 items-center gap-2 rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-card px-3 py-1.5 text-xs shadow-sm">
+                  <span class="font-semibold uppercase tracking-wider text-muted-foreground text-[11px]">{t("nav.courses")}:</span>
+                  <select
+                    class="max-w-[12rem] truncate bg-transparent font-medium text-foreground outline-none cursor-pointer text-xs"
+                    value={courseFilter()}
+                    onChange={(event) => setCourseFilter(event.currentTarget.value)}
+                  >
                     <option value="all">{t("common.all")}</option>
                     <For each={visibleCourses()}>{(course) => <option value={course.id}>{course.title}</option>}</For>
-                  </Select>
+                  </select>
+                </div>
+
+                <Show when={statusFilter() !== "all" || courseFilter() !== "all"}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    class="h-11 rounded-xl px-3 text-xs font-medium text-muted-foreground hover:text-foreground tactile-press"
+                    onClick={() => {
+                      setStatusFilter("all");
+                      setCourseFilter("all");
+                    }}
+                  >
+                    <IconRotateCcw class="h-3.5 w-3.5 mr-1" />
+                    {t("common.resetFilters")}
+                  </Button>
                 </Show>
-                <Button type="button" variant="outline" size="sm" class="h-9 rounded-sm" onClick={() => setShowMoreFilters((value) => !value)}>
-                  {showMoreFilters() ? t("common.lessFilters") : t("common.moreFilters")}
-                </Button>
-              </>
+              </div>
             }
           />
         </Suspense>

@@ -643,7 +643,7 @@ function PortalCard(props: {
 
   const cardClass = () =>
     cn(
-      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-4 shadow-apple transition-all duration-200 hover:shadow-apple-hover hover:border-primary/40 sm:min-h-[6.5rem]",
+      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-4 shadow-apple card-lift hover:shadow-apple-hover hover:border-primary/40 sm:min-h-[6.5rem]",
       !props.editing && "active:scale-[0.98]",
       props.editing && "cursor-grab select-none border-dashed border-primary/50 bg-primary/[0.03]",
       props.editing && !props.dragging && "dashboard-jiggle",

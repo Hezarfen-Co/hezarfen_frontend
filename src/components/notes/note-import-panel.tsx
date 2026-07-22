@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { processImportedText } from "@/lib/note-importer";
+import { triggerConfetti } from "@/lib/confetti";
 import { formatBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
 
@@ -60,6 +61,7 @@ export function NoteImportPanel(props: {
   const handleApply = () => {
     const title = importedTitle().trim() || "Imported Note";
     const content = importedMarkdown();
+    triggerConfetti();
     props.onImport(title, content);
   };
 

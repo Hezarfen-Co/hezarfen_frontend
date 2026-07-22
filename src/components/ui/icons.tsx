@@ -623,3 +623,20 @@ export function IconUploadCloud(props: IconProps) {
     </Svg>
   );
 }
+
+export function IconFilter(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+    </Svg>
+  );
+}
+
+export function IconRotateCcw(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+    </Svg>
+  );
+}
