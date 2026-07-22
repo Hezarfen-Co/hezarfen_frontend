@@ -704,8 +704,12 @@ export type MessageKey =
   | "messages.reply"
   | "messages.send"
   | "messages.moveToArchive"
+  | "messages.moveOutOfArchive"
   | "messages.moveToTrash"
   | "messages.deleteForever"
+  | "messages.movedToast"
+  | "messages.deletedToast"
+  | "messages.sentToast"
   | "messages.to"
   | "messages.from"
   | "messages.selectRecipient"
@@ -1439,8 +1443,12 @@ const en: Dict = {
   "messages.reply": "Reply",
   "messages.send": "Send",
   "messages.moveToArchive": "Archive",
+  "messages.moveOutOfArchive": "Move out of Archive",
   "messages.moveToTrash": "Move to Trash",
   "messages.deleteForever": "Delete Permanently",
+  "messages.movedToast": "Message moved.",
+  "messages.deletedToast": "Message deleted.",
+  "messages.sentToast": "Message sent.",
   "messages.to": "To: ",
   "messages.from": "From: ",
   "messages.selectRecipient": "Please select a recipient.",
@@ -2168,8 +2176,12 @@ const tr: Dict = {
   "messages.reply": "Yanıtla",
   "messages.send": "Gönder",
   "messages.moveToArchive": "Arşivle",
+  "messages.moveOutOfArchive": "Arşivden çıkar",
   "messages.moveToTrash": "Çöp Kutusuna Taşı",
   "messages.deleteForever": "Kalıcı Olarak Sil",
+  "messages.movedToast": "Mesaj taşındı.",
+  "messages.deletedToast": "Mesaj silindi.",
+  "messages.sentToast": "Mesaj gönderildi.",
   "messages.to": "Kime: ",
   "messages.from": "Kimden: ",
   "messages.selectRecipient": "Lütfen bir alıcı seçin.",

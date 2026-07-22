@@ -19,9 +19,11 @@ import { formatApiError } from "@/api/client";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { personLabel } from "@/lib/person";
+import { createFlash } from "@/lib/flash";
 
 export default function MessagesPage() {
   const t = useT();
+  const auth = useAuth();
   const [folder, setFolder] = createSignal<MessageFolder>("inbox");
   const [page, setPage] = createSignal(1);
   const limit = 30;
@@ -30,6 +32,7 @@ export default function MessagesPage() {
   const [composeOpen, setComposeOpen] = createSignal(false);
   const [replyData, setReplyData] = createSignal<{ recipient: string; subject: string; body: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [, setFlash] = createFlash();
 
   const [messagePage, { refetch }] = createResource(
     () => ({ f: folder(), p: page() }),
@@ -52,6 +55,8 @@ export default function MessagesPage() {
   });
 
   const selected = createMemo(() => messages().find((m) => m.id === selectedId()) ?? null);
+  const isOwnSentMessage = (msg: Message) => msg.sender.id === auth.user()?.id;
+  const restoreFolder = (msg: Message): MessageFolder => isOwnSentMessage(msg) ? "sent" : "inbox";
 
   // Mark as read when selected
   createEffect(() => {
@@ -76,6 +81,7 @@ export default function MessagesPage() {
       if (selectedId() === msg.id) setSelectedId("");
       await refetch();
       if (action.folder === "inbox" || msg.folder === "inbox") await refetchUnread();
+      setFlash(action.delete ? t("messages.deletedToast") : t("messages.movedToast"));
     } catch (err) {
       console.error(err);
     }
@@ -149,7 +155,7 @@ export default function MessagesPage() {
                   <Show when={filtered().length > 0} fallback={<div class="p-4 text-center text-sm text-muted-foreground">{t("messages.noMessages")}</div>}>
                     <For each={filtered()}>
                       {(message) => {
-                        const isSent = folder() === "sent";
+                        const isSent = folder() === "sent" || isOwnSentMessage(message);
                         const peerName = isSent ? personLabel(message.recipient) : personLabel(message.sender);
                         const role = isSent ? message.recipient_role : message.sender_role;
                         const unread = !isSent && !message.read;
@@ -205,7 +211,7 @@ export default function MessagesPage() {
 
             <Show when={selected()} fallback={<div class="flex items-center justify-center p-8 text-sm text-muted-foreground">{t("messages.noSelection")}</div>}>
               {(message) => {
-                const isSent = folder() === "sent";
+                const isSent = folder() === "sent" || isOwnSentMessage(message());
                 const peerName = isSent ? personLabel(message().recipient) : personLabel(message().sender);
                 const role = isSent ? message().recipient_role : message().sender_role;
                 
@@ -234,6 +240,12 @@ export default function MessagesPage() {
                       <Show when={folder() !== "archive"}>
                         <Button variant="ghost" size="icon" class="h-8 w-8 rounded-md" onClick={() => handleAction(message(), { folder: "archive" })} title={t("messages.moveToArchive")}>
                           <IconArchive class="h-4 w-4" />
+                        </Button>
+                      </Show>
+                      <Show when={folder() === "archive"}>
+                        <Button variant="ghost" size="sm" class="h-8 rounded-md" onClick={() => handleAction(message(), { folder: restoreFolder(message()) })} title={t("messages.moveOutOfArchive")}>
+                          <IconMessage class="mr-2 h-4 w-4" />
+                          {t("messages.moveOutOfArchive")}
                         </Button>
                       </Show>
                       <Show when={folder() !== "trash"}>
@@ -283,6 +295,7 @@ export default function MessagesPage() {
           }} 
           onSuccess={() => {
             if (folder() === "sent") refetch();
+            setFlash(t("messages.sentToast"));
           }} 
           initialRecipient={replyData()?.recipient}
           initialSubject={replyData()?.subject}
