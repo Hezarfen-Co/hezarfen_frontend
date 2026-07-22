@@ -1,13 +1,27 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { getSessionById } from "../../sessions";
 import { patchSessionById } from "../../sessions";
 import { deleteSessionById } from "../../sessions";
 import { getSessionAttendance } from "../../sessions";
 import { postSessionAttendance } from "../../sessions";
+import { deleteSessionAttendanceByUserId } from "../../sessions";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("sessions API", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("getSessionById calls /sessions/:id", async () => {
+    const mockSession = { id: "s1", topic: "Topic" };
+    mockFetchSuccess(mockSession);
+
+    const result = await getSessionById("s1");
+    expect(result).toEqual(mockSession);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/sessions/s1");
+    expect(init?.method).toBe("GET");
   });
 
   it("patchSessionById calls /sessions/:id with updates", async () => {
@@ -58,5 +72,15 @@ describe("sessions API", () => {
     expect(url).toBe("/api/sessions/s1/attendance");
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe(JSON.stringify(data));
+  });
+
+  it("deleteSessionAttendanceByUserId calls /sessions/:id/attendance/:user", async () => {
+    mockFetch204();
+
+    await deleteSessionAttendanceByUserId("s1", "u1");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/sessions/s1/attendance/u1");
+    expect(init?.method).toBe("DELETE");
   });
 });

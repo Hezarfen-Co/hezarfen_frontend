@@ -173,13 +173,11 @@ Rules:
   agent shows the user the exact proposed commit message (title + all bullets)
   and asks for **explicit approval**. `git commit` never runs before approval
   is given. This applies to every commit, including small ones — no exceptions.
-- **Mandatory pre-commit check, every time:** once approved, right before
-  running the commit:
-  1. Run `bun run build` (`tsc --noEmit && vite build`) — the project already has
-     `noUnusedLocals` / `noUnusedParameters` enabled, so any unused import or
-     variable fails the build.
-  2. If the build fails, remove the unused imports/variables and re-run until
-     it passes.
-  3. Only commit once the build is green.
+- **Mandatory pre-commit check:** once approved, right before running the commit,
+  run `bun run build` (`tsc --noEmit && vite build`) unless a build has already
+  passed since the last code change. If the user explicitly says not to run a
+  build for the current action, do not run it. If the build fails, remove the
+  unused imports/variables and re-run until it passes. Only commit once the build
+  is green or the user explicitly waived the build for that action.
 - This workflow (format + approval + pre-commit check) applies always, without
   exception, to every commit in this repo.
