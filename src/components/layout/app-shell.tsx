@@ -31,10 +31,10 @@ export function AppShell(props: ParentProps) {
     const path = location().pathname;
     if (path === "/") return t("nav.home");
     if (path === "/notes") return `${t("nav.group.grades")} / ${t("nav.notes")}`;
-    if (path === "/messages") return `${t("nav.group.grades")} / ${t("nav.messages")}`;
-    if (path === "/marks") return `${t("nav.group.grades")} / ${t("nav.marks")}`;
-    if (path === "/attendance") return `${t("nav.group.grades")} / ${t("nav.attendance")}`;
-    if (path === "/pomodoro") return `${t("nav.group.grades")} / ${t("nav.pomodoro")}`;
+    if (path === "/messages") return `${t("nav.group.community")} / ${t("nav.messages")}`;
+    if (path === "/marks") return `${t("nav.group.classes")} / ${t("nav.marks")}`;
+    if (path === "/attendance") return `${t("nav.group.classes")} / ${t("nav.attendance")}`;
+    if (path === "/pomodoro") return `${t("nav.group.classes")} / ${t("nav.pomodoro")}`;
     if (path === "/courses" || path.startsWith("/courses/")) return `${t("nav.group.classes")} / ${t("nav.courses")}`;
     if (path === "/studies") return `${t("nav.group.classes")} / ${t("nav.studies")}`;
     if (path === "/clubs") return `${t("nav.group.classes")} / ${t("nav.clubs")}`;
@@ -45,7 +45,7 @@ export function AppShell(props: ParentProps) {
     if (path === "/questions" || path.startsWith("/questions/")) return `${t("nav.group.community")} / ${t("pool.title")}`;
     if (path.startsWith("/exam-room/")) return t("nav.exams");
     if (path === "/work") return `${t("nav.group.reports")} / ${t("nav.work")}`;
-    if (path === "/management/student-marks") return `${t("nav.group.reports")} / ${t("nav.studentMarks")}`;
+    if (path === "/management/student-marks") return `${t("nav.group.classes")} / ${t("nav.studentMarks")}`;
     if (path === "/management/student-attendance") return `${t("nav.group.reports")} / ${t("nav.studentAttendance")}`;
     if (path === "/management/pomodoros") return `${t("nav.group.reports")} / ${t("nav.studentPomodoro")}`;
     if (path === "/management/staff-work") return `${t("nav.group.reports")} / ${t("nav.staffWork")}`;
