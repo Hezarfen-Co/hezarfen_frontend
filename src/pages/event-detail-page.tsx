@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -306,7 +307,7 @@ function EventDetailContent() {
                     <Suspense fallback={<PageSpinner />}>
                       <Show when={roster()}>
                         {(rows) => (
-                          <Show when={rows().length > 0} fallback={<p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("events.noRoster")}</p>}>
+                          <Show when={rows().length > 0} fallback={<EmptyState kind="events" title={t("events.noRoster")} />}>
                             <DataTable columns={rosterColumns()} data={rows()} filterColumn="attendee" enablePagination pageSize={10} />
                           </Show>
                         )}

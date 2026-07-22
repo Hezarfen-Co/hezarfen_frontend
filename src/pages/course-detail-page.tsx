@@ -629,7 +629,7 @@ function CourseDetailContent() {
                     </Show>
                   </div>
                   <Suspense fallback={<PageSpinner />}>
-                    <Show when={(roster() ?? []).length > 0} fallback={<EmptyState title={t("exams.emptyRoster")} />}>
+                    <Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="courses" title={t("exams.emptyRoster")} />}>
                       <DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} />
                     </Show>
                   </Suspense>

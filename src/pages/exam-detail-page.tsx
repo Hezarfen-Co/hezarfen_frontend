@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronDown, IconChevronLeft, IconEdit, IconExam, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -688,11 +689,7 @@ function ExamDetailContent() {
                   <Suspense fallback={<PageSpinner />}>
                     <Show
                       when={(results()?.items ?? []).length > 0}
-                      fallback={
-                        <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                          {t("exams.noResults")}
-                        </p>
-                      }
+                      fallback={<EmptyState kind="exams" title={t("exams.noResults")} />}
                     >
                       <DataTable columns={resultColumns()} data={results()?.items ?? []} filterColumn="user" />
                       <Show when={resultTotal() > RESULT_PAGE_SIZE}>
