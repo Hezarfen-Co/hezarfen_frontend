@@ -61,14 +61,26 @@ export function ExamRoomWS(props: { exam: Exam }) {
   const attemptStatus = createMemo(() => {
     const current = attempt();
     if (!current || current.status !== "in_progress") return current?.status;
+    if (current.left_at != null) return "left";
     const deadline = current.deadline ?? props.exam.ends_at;
     return deadline != null && deadline <= now() ? "expired" : current.status;
   });
+  const canUseNewAttempt = (current: ExamAttempt | null) =>
+    !!current && current.status === "in_progress" && current.left_at != null && current.attempts_used < current.max_attempts;
   const canWrite = createMemo(() => attemptStatus() === "in_progress" && (remainingMs() == null || remainingMs()! > 0));
   const canStart = createMemo(() => {
+    if (canUseNewAttempt(attempt())) return true;
     const status = attemptStatus();
     return status == null || status === "in_progress";
   });
+  const canResume = createMemo(() => attempt() != null && attemptStatus() === "in_progress");
+  const blockedStartLabel = () => {
+    const status = attemptStatus();
+    if (status === "submitted") return t("attempt.submitted");
+    if (status === "expired") return t("attempt.expired");
+    if (status === "left") return t("attempt.noAttemptsLeft");
+    return t("attempt.unscheduled");
+  };
 
   let ws: WebSocket | null = null;
 
@@ -309,9 +321,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
               {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : props.exam.mode === "open" ? t("exams.mode.open") : t("attempt.unscheduled")}
             </p>
           </div>
-          <Show when={scheduled() && canStart()} fallback={<Badge variant="outline" class="w-fit rounded-full px-3 py-1">{t("attempt.unscheduled")}</Badge>}>
+          <Show when={scheduled() && canStart()} fallback={<Badge variant="outline" class="w-fit rounded-full px-3 py-1">{blockedStartLabel()}</Badge>}>
             <Show
-              when={attempt()}
+              when={canResume()}
               fallback={
                 <Button type="button" class="w-full sm:w-auto" disabled={pending()} onClick={() => void start()}>
                   {t("attempt.start")}
@@ -345,6 +357,17 @@ export function ExamRoomWS(props: { exam: Exam }) {
                     <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
                     <div class="min-w-0 space-y-1">
                       <p class="text-sm font-semibold text-foreground">{t("attempt.expired")}</p>
+                      <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>
+                    </div>
+                  </div>
+                </div>
+              </Match>
+              <Match when={attemptStatus() === "left"}>
+                <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                  <div class="flex items-start gap-3">
+                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                    <div class="min-w-0 space-y-1">
+                      <p class="text-sm font-semibold text-foreground">{t("attempt.left")}</p>
                       <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>
                     </div>
                   </div>
@@ -478,6 +501,7 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; status?: string; remain
   const remainingWarn = () => status() === "in_progress" && props.remainingMs != null && props.remainingMs <= 5 * 60 * 1000;
   const statusLabel = () => {
     if (status() === "in_progress") return t("attempt.inProgress");
+    if (status() === "left") return t("attempt.left");
     if (status() === "submitted") return t("attempt.submitted");
     if (status() === "expired") return t("attempt.expired");
     return status() ?? "—";

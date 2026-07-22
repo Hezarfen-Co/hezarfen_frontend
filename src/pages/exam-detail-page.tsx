@@ -187,6 +187,10 @@ function ExamDetailContent() {
     const attempt = ownAttempt();
     return attempt ? { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } : null;
   };
+  const ownAttemptClosedByExit = () => {
+    const attempt = ownAttempt();
+    return !!attempt && attempt.status === "in_progress" && attempt.left_at != null;
+  };
   const noAttemptsLeft = () => {
     const attempt = ownAttemptSummary();
     return detailStatus() === "no_attempts_left" || !!attempt && attempt.status !== "in_progress" && attempt.max_attempts > 0 && attempt.attempts_used >= attempt.max_attempts;
@@ -367,7 +371,7 @@ function ExamDetailContent() {
                             <Link to="/exam-room/$id" params={{ id: id() }}>
                               <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
                                 <IconExam class="h-4 w-4" />
-                                {ownAttempt()?.status === "in_progress" ? t("attempt.resume") : t("attempt.openRoom")}
+                                {ownAttempt()?.status === "in_progress" && !ownAttemptClosedByExit() ? t("attempt.resume") : t("attempt.openRoom")}
                               </Button>
                             </Link>
                           }
