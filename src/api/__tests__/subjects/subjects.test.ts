@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { getSubjectById } from "../../subjects";
 import { patchSubjectById } from "../../subjects";
 import { deleteSubjectById } from "../../subjects";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
@@ -6,6 +7,18 @@ import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-f
 describe("subjects API", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("getSubjectById calls /subjects/:id", async () => {
+    const mockSubject = { id: "sub1", name: "Subject" };
+    mockFetchSuccess(mockSubject);
+
+    const result = await getSubjectById("sub1");
+    expect(result).toEqual(mockSubject);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/subjects/sub1");
+    expect(init?.method).toBe("GET");
   });
 
   it("patchSubjectById calls /subjects/:id with updates", async () => {

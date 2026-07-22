@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getTerms } from "../../terms";
+import { getTermById } from "../../terms";
 import { postTerm } from "../../terms";
 import { patchTermById } from "../../terms";
 import { deleteTermById } from "../../terms";
@@ -34,6 +35,18 @@ describe("terms API", () => {
     expect(url).toBe("/api/terms");
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe(JSON.stringify(data));
+  });
+
+  it("getTermById calls /terms/:id", async () => {
+    const mockTerm = { id: "t1", name: "Term 1" };
+    mockFetchSuccess(mockTerm);
+
+    const result = await getTermById("t1");
+    expect(result).toEqual(mockTerm);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/terms/t1");
+    expect(init?.method).toBe("GET");
   });
 
   it("patchTermById calls /terms/:id with updates", async () => {

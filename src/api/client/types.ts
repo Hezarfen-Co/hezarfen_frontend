@@ -390,3 +390,64 @@ export type Message = {
   folder: MessageFolder;
   label: string | null;
 };
+
+export type Homework = {
+  id: string;
+  course: string;
+  subject: string;
+  title: string;
+  description: string | null;
+  due_at: number;
+  assigned: string[] | null;
+  created_by: string;
+  created_at: number;
+};
+
+export type HomeworkFile = {
+  id: string;
+  name: string;
+  content_type: string;
+  size: number;
+};
+
+export type HomeworkResultStatus = "done" | "incomplete" | "missing" | string;
+
+export type HomeworkResult = {
+  status: HomeworkResultStatus;
+  mark: number | null;
+  graded_by: string;
+  created_at: number;
+};
+
+export type HomeworkSubmission = {
+  user: string;
+  homework: string;
+  text: string | null;
+  submitted_at: number;
+  updated_at: number;
+  late: boolean;
+  files: HomeworkFile[];
+  result: HomeworkResult | null;
+};
+
+export type HomeworkRosterSubmission = Omit<HomeworkSubmission, "user" | "homework" | "result">;
+
+export type HomeworkRosterEntry = {
+  user: string;
+  submission: HomeworkRosterSubmission | null;
+  result: HomeworkResult | null;
+  missing: boolean;
+  unenrolled: boolean;
+};
+
+export type HomeworkReportEntry = {
+  course: string;
+  homework: string;
+  title: string;
+  subject: string;
+  due_at: number;
+  submitted: boolean;
+  late: boolean;
+  missing: boolean;
+  result: HomeworkResult | null;
+};

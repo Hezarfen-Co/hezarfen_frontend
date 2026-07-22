@@ -2,10 +2,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getMe } from "../../users";
 import { patchMe } from "../../users";
 import { getUsers } from "../../users";
+import { getUserById } from "../../users";
 import { getUserSearch } from "../../users";
 import { patchUserProfile } from "../../users";
 import { patchUserRole } from "../../users";
 import { patchMyPreferences } from "../../users";
+import { patchUserPreferences } from "../../users";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("users API", () => {
@@ -63,6 +65,18 @@ describe("users API", () => {
     expect(init?.method).toBe("GET");
   });
 
+  it("getUserById calls /users/:id", async () => {
+    const mockUser = { id: "u1", username: "test" };
+    mockFetchSuccess(mockUser);
+
+    const result = await getUserById("u1");
+    expect(result).toEqual(mockUser);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/users/u1");
+    expect(init?.method).toBe("GET");
+  });
+
   it("patchUserProfile calls /users/:id/profile", async () => {
     const mockUser = { id: "u1", name: "Updated" };
     mockFetchSuccess(mockUser);
@@ -100,6 +114,20 @@ describe("users API", () => {
 
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/users/me/preferences");
+    expect(init?.method).toBe("PATCH");
+    expect(init?.body).toBe(JSON.stringify(updates));
+  });
+
+  it("patchUserPreferences calls /users/:id/preferences", async () => {
+    const mockUser = { id: "u1", language: "tr" };
+    mockFetchSuccess(mockUser);
+
+    const updates = { language: "tr" as const };
+    const result = await patchUserPreferences("u1", updates);
+    expect(result).toEqual(mockUser);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/users/u1/preferences");
     expect(init?.method).toBe("PATCH");
     expect(init?.body).toBe(JSON.stringify(updates));
   });

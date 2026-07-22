@@ -1,4 +1,5 @@
 export * from "./getNotes";
+export * from "./getNoteById";
 export * from "./postNote";
 export * from "./patchNoteById";
 export * from "./deleteNoteById";

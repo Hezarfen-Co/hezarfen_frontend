@@ -15,6 +15,8 @@ import { getCourseExams } from "../../courses";
 import { postCourseExam } from "../../courses";
 import { postCourseTeacher } from "../../courses";
 import { deleteCourseTeacherByUserId } from "../../courses";
+import { getCourseHomework } from "../../courses";
+import { postCourseHomework } from "../../courses";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("courses API", () => {
@@ -217,6 +219,32 @@ describe("courses API", () => {
 
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/courses/c1/exams");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify(data));
+  });
+
+  it("getCourseHomework calls /courses/:id/homework", async () => {
+    const mockPage = { items: [{ id: "hw1" }], total: 1 };
+    mockFetchSuccess(mockPage);
+
+    const result = await getCourseHomework("c1", { limit: 5 });
+    expect(result).toEqual({ ...mockPage, limit: null, offset: 0 });
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/courses/c1/homework?limit=5");
+    expect(init?.method).toBe("GET");
+  });
+
+  it("postCourseHomework calls /courses/:id/homework", async () => {
+    const mockHomework = { id: "hw1", course: "c1" };
+    mockFetchSuccess(mockHomework);
+
+    const data = { title: "HW", subject_id: "sub1", due_at: 1900000000000, assigned: ["u1"] };
+    const result = await postCourseHomework("c1", data);
+    expect(result).toEqual(mockHomework);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/courses/c1/homework");
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe(JSON.stringify(data));
   });
