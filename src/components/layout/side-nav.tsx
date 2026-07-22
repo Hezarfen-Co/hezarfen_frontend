@@ -68,7 +68,6 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
       { to: "/calendar", labelKey: "nav.calendar", Icon: IconCalendarDays },
       { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
-      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
       { to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
     ],
@@ -85,21 +84,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "grades",
     labelKey: "nav.group.grades",
-    Icon: IconChart,
+    Icon: IconNote,
     items: [
       { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
-    ],
-  },
-  {
-    id: "reports",
-    labelKey: "nav.group.reports",
-    Icon: IconReportAnalytics,
-    minRole: "teacher",
-    items: [
-      { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
-      { to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
-      { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
-      { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
     ],
   },
   {
@@ -109,6 +96,19 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
       { to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
+    ],
+  },
+  {
+    id: "reports",
+    labelKey: "nav.group.reports",
+    Icon: IconReportAnalytics,
+    minRole: "teacher",
+    items: [
+      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
+      { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
+      { to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
+      { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
+      { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
     ],
   },
   {
@@ -172,18 +172,18 @@ function NavLink(props: {
       title={t(props.item.labelKey)}
       aria-current={active() ? "page" : undefined}
       class={cn(
-        "relative flex h-8 w-full items-center rounded-md outline-none transition-colors duration-150",
-        props.standalone ? "text-[11px] font-semibold uppercase tracking-[0.08em]" : "text-[13px] font-medium",
-        props.collapsed ? "justify-center px-0" : props.standalone ? "gap-2 px-2" : "gap-2 pl-7 pr-2",
+        "relative flex h-9 w-full items-center rounded-xl outline-none transition-all duration-200 ease-out active:scale-[0.97]",
+        props.standalone ? "text-xs font-semibold" : "text-[13px] font-medium",
+        props.collapsed ? "justify-center px-0 h-10 w-10 mx-auto" : props.standalone ? "gap-2.5 px-3" : "gap-2.5 pl-8 pr-3",
         active()
-          ? "bg-primary/10 text-foreground"
-          : "text-sidebar-foreground/75 hover:bg-muted hover:text-foreground",
+          ? "bg-primary/12 text-primary font-semibold shadow-sm"
+          : "text-sidebar-foreground/80 hover:bg-secondary hover:text-foreground",
       )}
     >
       <Show when={active() && !props.collapsed}>
-        <span class="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
+        <span class="absolute left-1 top-1/2 h-4 w-1 -translate-y-1/2 rounded-full bg-primary" />
       </Show>
-      <props.item.Icon class={cn("h-3.5 w-3.5 shrink-0", active() ? "text-primary" : "text-muted-foreground")} />
+      <props.item.Icon class={cn("h-4 w-4 shrink-0 transition-colors", active() ? "text-primary" : "text-muted-foreground")} />
       <span class={cn("truncate", props.collapsed ? "sr-only" : "block min-w-0 flex-1 text-left")}>{t(props.item.labelKey)}</span>
     </Link>
   );

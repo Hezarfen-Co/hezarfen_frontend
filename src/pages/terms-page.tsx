@@ -85,7 +85,7 @@ function TermsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-14 text-center" },
+      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -196,12 +196,6 @@ function TermsContent() {
             fallback={
               <EmptyState
                 title={t("terms.empty")}
-                action={
-                  <Button type="button" size="sm" class="rounded-lg" onClick={openCreate}>
-                    <IconPlus class="h-4 w-4" />
-                    {t("terms.create")}
-                  </Button>
-                }
               />
             }
           >

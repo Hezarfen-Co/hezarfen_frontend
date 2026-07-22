@@ -5,8 +5,25 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"DM Sans"', "system-ui", "sans-serif"],
-        display: ['"DM Sans"', "system-ui", "sans-serif"],
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"SF Pro Display"',
+          '"SF Pro Text"',
+          '"SF Pro"',
+          '"Helvetica Neue"',
+          "Helvetica",
+          "Arial",
+          "sans-serif",
+        ],
+        display: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"SF Pro Display"',
+          '"SF Pro Text"',
+          '"SF Pro"',
+          "sans-serif",
+        ],
       },
       container: {
         center: true,
@@ -58,12 +75,17 @@ export default {
         },
       },
       borderRadius: {
+        "3xl": "1.5rem",
+        "2xl": "1.25rem",
+        xl: "1rem",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 4px)",
         sm: "calc(var(--radius) - 8px)",
       },
       boxShadow: {
-        soft: "0 8px 30px hsl(168 30% 10% / 0.06)",
+        soft: "0 8px 30px hsl(0 0% 0% / 0.04)",
+        apple: "0 4px 24px -2px rgba(0, 0, 0, 0.04), 0 2px 8px -2px rgba(0, 0, 0, 0.02)",
+        "apple-hover": "0 12px 36px -4px rgba(0, 0, 0, 0.08), 0 4px 14px -2px rgba(0, 0, 0, 0.04)",
       },
       keyframes: {
         "fade-up": {
@@ -80,11 +102,12 @@ export default {
         },
       },
       animation: {
-        "fade-up": "fade-up 0.35s ease-out both",
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-up": "fade-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "accordion-down": "accordion-down 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+        "accordion-up": "accordion-up 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
 };
+

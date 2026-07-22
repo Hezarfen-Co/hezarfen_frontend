@@ -29,6 +29,11 @@ Active backend-refresh work is tracked in
 - Async exam duration is derived from start/end time instead of a separate duration input.
 - Exam room locally closes in-progress attempts when the countdown reaches zero, while the backend remains authoritative for final status.
 - Current design refresh is complete: icon system, shell/nav, dashboard, lists, detail pages, and forms/feedback all use shared primitives and token-derived radius/border/focus patterns.
+- Note Import Assistant (`src/lib/note-importer.ts`): PDF/TXT/MD file conversion with noise stripping (page numbers, watermarks, footers), PDF line-wrap joining, Markdown section formatting (`##`), bullet points, garbled OCR detection warning banners, and dedicated `SidePanel` triggered from the Notes page header.
+- Drawing Canvas (`DrawCanvas`): freehand drawing with pan/zoom, eraser, quadratic smoothing, grid ruling default, PNG scene embedding (`.hzdraw.png`), and stroke state preservation during active drawing.
+- Dashboard portal cards support drag-and-drop and 1-click `← / →` delta move reordering in edit mode with jiggle animations and role defaults.
+- Dropdown primitives (`DropdownMenu`, `Combobox`, `Popover`, `Select`) elevated with Apple HIG squircle containers (`rounded-2xl`), backdrop blur (`backdrop-blur-xl`), 44pt touch targets, and subtle tactile press feedback.
+- Application table action headers standardized to `w-28 min-w-[7rem] text-center whitespace-nowrap` across all report and management tables to ensure localized headers like `"İŞLEMLER"` fit without truncation.
 
 ## Role Audit Result
 

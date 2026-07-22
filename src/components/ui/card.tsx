@@ -6,7 +6,10 @@ export function Card(props: ParentProps<ComponentProps<"div">>) {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
     <div
-      class={cn("rounded-lg border bg-card text-card-foreground shadow-sm", local.class)}
+      class={cn(
+        "rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card text-card-foreground shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.25)] transition-all duration-200",
+        local.class,
+      )}
       {...rest}
     >
       {local.children}

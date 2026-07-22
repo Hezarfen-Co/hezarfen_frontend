@@ -110,7 +110,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     },
   });
   const hiddenLocked = (columnId: string) => columnId === "actions" || columnId === "update";
-  const actionColumnClass = (columnId: string) => hiddenLocked(columnId) ? "w-20 min-w-20 max-w-20 px-1 text-center" : undefined;
+  const actionColumnClass = (columnId: string) => hiddenLocked(columnId) ? "w-28 min-w-[7rem] px-2 text-center whitespace-nowrap" : undefined;
   const hideableColumns = () => table.getAllColumns().filter((column) => column.getCanHide() && !hiddenLocked(column.id));
   const columnLabel = (column: Column<TData, unknown>) => {
     const header = column.columnDef.header;
@@ -148,10 +148,10 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   return (
     <>
       <Show when={showToolbar()}>
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Show when={showSearch()}>
             <Input
-              class="max-w-sm rounded-sm"
+              class="max-w-sm rounded-xl"
               value={props.onSearchInput || props.searchPredicate ? searchValue() : ((props.filterColumn ? table.getColumn(props.filterColumn)?.getFilterValue() : "") as string) ?? ""}
               placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
               onInput={(event) => {
@@ -167,15 +167,15 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </Show>
           <Show when={showColumnMenu()}>
             <DropdownMenu placement="bottom-end" gutter={6}>
-              <DropdownMenuTrigger class="ml-auto inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-sm border border-input bg-background/80 px-3 text-xs font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <DropdownMenuTrigger class="ml-auto inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-background/80 px-4 text-xs font-semibold shadow-sm transition-all hover:bg-secondary active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 {t("common.columns")}
-                <IconChevronDown class="h-3.5 w-3.5" />
+                <IconChevronDown class="h-3.5 w-3.5 opacity-60" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent class="w-44 rounded-lg border-border/80 p-1 shadow-soft">
+              <DropdownMenuContent class="w-48 rounded-xl border border-black/[0.08] dark:border-white/[0.12] p-1.5 shadow-apple bg-popover/95 backdrop-blur-xl">
                 <For each={hideableColumns()}>
                   {(column) => (
                     <DropdownMenuCheckboxItem
-                      class="rounded-md"
+                      class="rounded-lg"
                       checked={column.getIsVisible()}
                       onChange={(value) => column.toggleVisibility(!!value)}
                     >

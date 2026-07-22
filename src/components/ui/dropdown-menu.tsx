@@ -21,9 +21,9 @@ export function DropdownMenuContent<T extends ValidComponent = "div">(
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         class={cn(
-          "z-50 min-w-[12rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-none",
+          "z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-none",
           "origin-[var(--kb-menu-content-transform-origin)]",
-          "animate-in fade-in-0 zoom-in-95",
+          "animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
           local.class,
         )}
         {...rest}
@@ -42,10 +42,10 @@ export function DropdownMenuItem<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.Item
       class={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors",
-        "focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
-        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        local.inset && "pl-8",
+        "relative flex min-h-[2.5rem] cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-none transition-all duration-150",
+        "focus:bg-primary/10 focus:text-primary data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary active:scale-[0.98]",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+        local.inset && "pl-9",
         local.destructive &&
           "text-destructive focus:bg-destructive/10 focus:text-destructive data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive",
         local.class,
@@ -62,16 +62,16 @@ export function DropdownMenuCheckboxItem<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.CheckboxItem
       class={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors",
-        "focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
-        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex min-h-[2.5rem] cursor-pointer select-none items-center rounded-xl py-2 pl-9 pr-3 text-sm font-medium outline-none transition-all duration-150",
+        "focus:bg-primary/10 focus:text-primary data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary active:scale-[0.98]",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
         local.class,
       )}
       {...rest}
     >
-      <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <span class="absolute left-2.5 flex h-4 w-4 items-center justify-center text-primary">
         <DropdownMenuPrimitive.ItemIndicator>
-          <IconCheck class="h-3.5 w-3.5" />
+          <IconCheck class="h-4 w-4 stroke-[2.5]" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {local.children}
@@ -82,7 +82,7 @@ export function DropdownMenuCheckboxItem<T extends ValidComponent = "div">(
 export function DropdownMenuLabel(props: ParentProps<{ class?: string }>) {
   return (
     <DropdownMenuPrimitive.GroupLabel
-      class={cn("px-2 py-1.5 text-xs font-medium text-muted-foreground", props.class)}
+      class={cn("px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70", props.class)}
     >
       {props.children}
     </DropdownMenuPrimitive.GroupLabel>
@@ -90,7 +90,7 @@ export function DropdownMenuLabel(props: ParentProps<{ class?: string }>) {
 }
 
 export function DropdownMenuSeparator(props: { class?: string }) {
-  return <DropdownMenuPrimitive.Separator class={cn("-mx-1 my-1 h-px bg-muted", props.class)} />;
+  return <DropdownMenuPrimitive.Separator class={cn("-mx-1 my-1.5 h-px bg-border/60", props.class)} />;
 }
 
 export function DropdownMenuRadioItem<T extends ValidComponent = "div">(
@@ -103,17 +103,17 @@ export function DropdownMenuRadioItem<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.RadioItem
       class={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors",
-        "focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
-        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex min-h-[2.5rem] cursor-pointer select-none items-center rounded-xl py-2 pl-9 pr-3 text-sm font-medium outline-none transition-all duration-150",
+        "focus:bg-primary/10 focus:text-primary data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary active:scale-[0.98]",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
         local.class,
       )}
       {...rest}
     >
-      <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <span class="absolute left-2.5 flex h-4 w-4 items-center justify-center text-primary">
         <DropdownMenuPrimitive.ItemIndicator>
-          <svg viewBox="0 0 8 8" class="h-2 w-2 fill-current" aria-hidden>
-            <circle cx="4" cy="4" r="4" />
+          <svg viewBox="0 0 8 8" class="h-2.5 w-2.5 fill-current" aria-hidden>
+            <circle cx="4" cy="4" r="3.5" />
           </svg>
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
@@ -129,15 +129,15 @@ export function DropdownMenuSubTrigger<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.SubTrigger
       class={cn(
-        "flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none",
-        "focus:bg-accent data-[highlighted]:bg-accent data-[expanded]:bg-accent",
-        local.inset && "pl-8",
+        "flex min-h-[2.5rem] w-full cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-none transition-all duration-150",
+        "focus:bg-primary/10 focus:text-primary data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary data-[expanded]:bg-primary/10 data-[expanded]:text-primary",
+        local.inset && "pl-9",
         local.class,
       )}
       {...rest}
     >
       {local.children}
-      <IconChevronRight class="ml-1 h-4 w-4 shrink-0 opacity-50" />
+      <IconChevronRight class="ml-auto h-4 w-4 shrink-0 opacity-50" />
     </DropdownMenuPrimitive.SubTrigger>
   );
 }
@@ -152,9 +152,9 @@ export function DropdownMenuSubContent<T extends ValidComponent = "div">(
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.SubContent
         class={cn(
-          "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-none",
+          "z-50 min-w-[9rem] overflow-hidden rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-none",
           "origin-[var(--kb-menu-content-transform-origin)]",
-          "animate-in fade-in-0 zoom-in-95",
+          "animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
           local.class,
         )}
         {...rest}

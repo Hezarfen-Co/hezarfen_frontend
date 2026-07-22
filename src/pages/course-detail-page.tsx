@@ -668,14 +668,6 @@ function CourseDetailContent() {
                     fallback={
                       <EmptyState
                         title={t("exams.emptyRoster")}
-                        action={
-                          canManage() ? (
-                            <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
-                              <IconPlus class="h-4 w-4" />
-                              {t("courses.enroll")}
-                            </Button>
-                          ) : undefined
-                        }
                       />
                     }
                   >

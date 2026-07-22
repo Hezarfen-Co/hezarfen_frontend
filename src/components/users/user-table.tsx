@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { IconCheck, IconEye, IconUsers } from "@/components/ui/icons";
+import { IconCheck, IconUsers } from "@/components/ui/icons";
 import { ROLES } from "@/lib/roles";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
@@ -128,13 +128,8 @@ export function UserTable(props: {
     },
     {
       id: "actions",
-      header: () => (
-        <span class="flex items-center justify-center" title={t("common.actions")}>
-          <IconEye class="h-4 w-4 text-muted-foreground" />
-          <span class="sr-only">{t("common.actions")}</span>
-        </span>
-      ),
-      meta: { headerClass: "w-14 text-center", cellClass: "w-14" },
+      header: t("common.actions"),
+      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap", cellClass: "w-28 text-center" },
       cell: (cell) => (
         <Show when={cell.row.original.role === "parent"} fallback={<span class="text-center text-muted-foreground/40">—</span>}>
           <TableRowActions
