@@ -33,7 +33,7 @@ export function TabsTrigger<T extends ValidComponent = "button">(
       )}
       {...rest}
     >
-      <span class="relative z-10 text-muted-foreground/75 transition-colors duration-200 group-data-[selected]:text-foreground">
+      <span class="relative z-10 inline-flex items-center gap-2 text-muted-foreground/75 transition-colors duration-200 group-data-[selected]:text-foreground">
         {local.children}
       </span>
       <span class="tab-indicator-line absolute bottom-0.5 left-3.5 right-3.5 h-0.5 origin-center scale-x-0 rounded-full opacity-0 transition-all duration-300 ease-out group-data-[selected]:scale-x-100 group-data-[selected]:opacity-100" />
