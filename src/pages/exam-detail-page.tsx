@@ -584,7 +584,7 @@ function ExamDetailContent() {
               </TabsList>
 
               <TabsContent value="schedule" forceMount>
-                <div class="mb-4 text-sm text-muted-foreground">{t("exams.details")}</div>
+                <div class="tab-panel-note mb-4">{t("exams.details")}</div>
                 <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                   <div class="detail-metric-card">
                     <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
@@ -607,7 +607,7 @@ function ExamDetailContent() {
 
               <Show when={isStudent() && !isScheduled()}>
                 <TabsContent value="ownResult" forceMount>
-                  <div class="mb-4 text-sm text-muted-foreground">{ownResult() ? `${t("form.mark")}: ${ownResult()!.mark}` : t("exams.notGraded")}</div>
+                  <div class="tab-panel-note mb-4">{ownResult() ? `${t("form.mark")}: ${ownResult()!.mark}` : t("exams.notGraded")}</div>
                   <Suspense fallback={<PageSpinner />}>
                     <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
                       {(r) => <ExamResultBadge mark={r().mark} />}
@@ -618,7 +618,7 @@ function ExamDetailContent() {
 
               <Show when={hasCourseManagementRights()}>
                 <TabsContent value="statistics" forceMount>
-                  <div class="mb-4 text-sm text-muted-foreground">{t("exams.examStatistics")}</div>
+                  <div class="tab-panel-note mb-4">{t("exams.examStatistics")}</div>
                   <Suspense fallback={<PageSpinner />}>
                     <Show when={stats()}>
                       {(s) => (
@@ -646,7 +646,7 @@ function ExamDetailContent() {
                 </TabsContent>
 
                 <TabsContent value="questions" forceMount class="space-y-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="tab-panel-header">
                     <p class="text-sm text-muted-foreground">{t("exams.examQuestions")}</p>
                     <Show when={hasCourseManagementRights() && !isFinished()}>
                       <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => { setExamTab("questions"); setQuestionCreateOpen(true); }}>
@@ -679,7 +679,7 @@ function ExamDetailContent() {
               </SidePanel>
 
                 <TabsContent value="results" forceMount class="space-y-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="tab-panel-header">
                     <p class="text-sm text-muted-foreground">{`${resultTotal()} ${t("exams.studentResults")}`}</p>
                     <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
                       <IconEdit class="h-4 w-4" />

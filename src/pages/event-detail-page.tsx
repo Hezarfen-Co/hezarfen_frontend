@@ -281,7 +281,7 @@ function EventDetailContent() {
 
                 <Show when={ev().audience.kind === "registration"}>
                   <TabsContent value="registration" forceMount class="space-y-3">
-                    <p class="text-sm text-muted-foreground">{t("events.registrationRosterHelp")}</p>
+                    <p class="tab-panel-note">{t("events.registrationRosterHelp")}</p>
                     <div class="grid gap-3 rounded-lg border bg-muted/20 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                       <UserSearchSelect id="registration-user" label={t("events.attendee")} value={registrationUserId()} placeholder={t("events.selectAttendee")} emptyMessage={t("events.noAttendees")} role="student" onChange={setRegistrationUserId} />
                       <Button
@@ -317,7 +317,7 @@ function EventDetailContent() {
                 </Show>
 
                 <TabsContent value="studentAttendance" forceMount class="space-y-3">
-                  <p class="text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
+                  <p class="tab-panel-note">{t("events.studentAttendanceHelp")}</p>
                   <div class="grid gap-3">
                     <UserSearchSelect id="other-user" label={t("events.attendee")} value={otherUserId()} placeholder={t("events.selectAttendee")} emptyMessage={t("events.noAttendees")} role="student" onChange={setOtherUserId} />
                     <AttendanceStatusPicker id="other-status" value={status()} onChange={setStatus} label={t("events.status")} />
@@ -344,7 +344,7 @@ function EventDetailContent() {
                 </TabsContent>
 
                 <TabsContent value="attendanceRecords" forceMount class="space-y-3">
-                  <p class="text-sm text-muted-foreground">{t("events.attendanceRecordsHelp")}</p>
+                  <p class="tab-panel-note">{t("events.attendanceRecordsHelp")}</p>
                   <Suspense fallback={<PageSpinner />}>
                     <Show when={attendance()}>
                       {(rows) => (

@@ -126,7 +126,11 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     if (props.manualPagination) props.manualPagination.onPageChange(next);
     else table.setPageIndex(next);
   };
-  const isInteractiveTarget = (target: EventTarget | null) => target instanceof Element && target.closest("button,a,input,select,textarea,[role='button']") != null;
+  const isInteractiveTarget = (target: EventTarget | null, row: EventTarget | null) => {
+    if (!(target instanceof Element)) return false;
+    const interactive = target.closest("button,a,input,select,textarea,[role='button']");
+    return interactive != null && interactive !== row;
+  };
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
     if (!(props.enableSorting ?? true) || !header.column.getCanSort()) return content;
@@ -227,11 +231,11 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                       props.onRowClick && "cursor-pointer outline-none focus-visible:bg-primary/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:bg-primary/[0.08]",
                     )}
                     onClick={(event) => {
-                      if (!props.onRowClick || isInteractiveTarget(event.target)) return;
+                      if (!props.onRowClick || isInteractiveTarget(event.target, event.currentTarget)) return;
                       props.onRowClick(row.original);
                     }}
                     onKeyDown={(event) => {
-                      if (!props.onRowClick || isInteractiveTarget(event.target) || (event.key !== "Enter" && event.key !== " ")) return;
+                      if (!props.onRowClick || isInteractiveTarget(event.target, event.currentTarget) || (event.key !== "Enter" && event.key !== " ")) return;
                       event.preventDefault();
                       props.onRowClick(row.original);
                     }}
