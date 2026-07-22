@@ -79,7 +79,7 @@ function NotesContent() {
                 <IconPlus class="h-4 w-4" />
                 {t("notes.new")}
               </Button>
-              <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setImportOpen(true)}>
+              <Button type="button" variant="outline" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setImportOpen(true)}>
                 <IconUploadCloud class="h-4 w-4" />
                 İçe Aktar
               </Button>
@@ -93,17 +93,13 @@ function NotesContent() {
           onCancel={() => setImportOpen(false)}
           onImport={async (importedTitle, importedMarkdown) => {
             setError("");
-            try {
-              await postNote({
-                title: importedTitle,
-                content: importedMarkdown || undefined,
-              });
-              await refetch();
-              setImportOpen(false);
-              setFlash(t("common.created"));
-            } catch (err) {
-              setError(formatApiError(err));
-            }
+            await postNote({
+              title: importedTitle,
+              content: importedMarkdown || undefined,
+            });
+            await refetch();
+            setImportOpen(false);
+            setFlash(t("common.created"));
           }}
         />
       </SidePanel>
@@ -139,11 +135,13 @@ function NotesContent() {
       </SidePanel>
 
       <div class="space-y-5">
-        <section class="min-w-0 space-y-4 rounded-3xl border border-amber-500/15 bg-amber-500/[0.025] p-3 sm:p-4">
+        <section class="min-w-0 space-y-4 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm">
           <Show when={flash()}>
             <Alert variant="success">{flash()}</Alert>
           </Show>
-          {error() && <Alert variant="destructive">{error()}</Alert>}
+          <Show when={error() && !createOpen() && !importOpen()}>
+            <Alert variant="destructive">{error()}</Alert>
+          </Show>
           <Suspense fallback={<PageSpinner />}>
             <Show when={list.error}>
               <Alert variant="destructive">{formatApiError(list.error)}</Alert>

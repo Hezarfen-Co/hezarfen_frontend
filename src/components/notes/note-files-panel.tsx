@@ -167,7 +167,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   };
 
   return (
-    <section class="space-y-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.025] p-4 shadow-sm">
+    <section class="space-y-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm dark:border-white/[0.08]">
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -185,14 +185,14 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           disabled={pending() || atLimit()}
           onChange={(event) => void upload(event.currentTarget.files?.[0])}
         />
-        <div class="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" size="sm" class="rounded-md" disabled={pending() || atLimit()} onClick={openNewDrawing}>
-            <IconEdit class="h-4 w-4" />
-            {t("notes.draw")}
+        <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+          <Button type="button" variant="outline" size="sm" class="w-full sm:w-32 rounded-lg" disabled={pending() || atLimit()} onClick={openNewDrawing}>
+            <IconEdit class="h-4 w-4 shrink-0" />
+            <span class="truncate">{t("notes.draw")}</span>
           </Button>
-          <Button type="button" size="sm" class="rounded-md" disabled={pending() || atLimit()} onClick={() => input?.click()}>
-            <IconPlus class="h-4 w-4" />
-            {t("notes.addFile")}
+          <Button type="button" size="sm" class="w-full sm:w-32 rounded-lg" disabled={pending() || atLimit()} onClick={() => input?.click()}>
+            <IconPlus class="h-4 w-4 shrink-0" />
+            <span class="truncate">{t("notes.addFile")}</span>
           </Button>
         </div>
       </div>
@@ -216,7 +216,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
               {(file) => {
                 const meta = fileMeta(file);
                 return (
-                  <li class="group overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-sm transition-colors hover:border-primary/30">
+                  <li class="group overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-sm transition-colors hover:border-amber-500/40">
                     <div class="relative h-28 bg-muted/25">
                       <button type="button" class="flex h-full w-full items-center justify-center rounded-t-xl transition-colors hover:bg-muted/40" onClick={() => setPreviewFile(file)}>
                         <span class={cn("flex h-16 w-16 items-center justify-center rounded-2xl border", meta.class)}>
@@ -226,7 +226,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
                       <span class={cn("absolute left-2 top-2 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide", meta.class)}>
                         {meta.label}
                       </span>
-                      <div class="absolute right-2 top-2 rounded-md bg-background/80 shadow-sm backdrop-blur">
+                      <div class="absolute right-2 top-2 z-10 rounded-xl border border-border/80 bg-card/90 shadow-md backdrop-blur-md dark:border-white/[0.15] dark:bg-card/95">
                         <TableRowActions
                           label={t("common.actions")}
                           actions={[

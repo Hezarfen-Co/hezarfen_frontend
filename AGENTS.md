@@ -90,7 +90,7 @@ Solid components run **once**, there is no re-render:
   - `docs/role-scope-matrix.md` — role access matrix for pages/nav/dashboard cards.
   - `docs/backend-ui-alignment-plan.md` — completed backend-alignment archive; do not treat it as active work unless backend scope changes.
 - Durable resources use full detail pages. Short create/edit/filter work uses `SidePanel`. Destructive actions use confirm dialogs.
-- Header create actions use compact icon+label buttons with consistent size and current radius (e.g. `variant="outline" size="sm" class="rounded-lg"` in `SectionDisclosure` header `actions`). Action buttons inside sub-panels must not duplicate section headers — primary create/add/assign actions must be placed in the header `actions` prop of the parent disclosure or page header.
+- Header create actions use compact icon+label buttons with consistent size and current radius. Page header primary create/add buttons use `size="sm" class="min-w-[7.5rem] rounded-lg"`; secondary/import buttons use `variant="outline"` with the same size/class. Section/sub-panel header actions use `variant="outline" size="sm" class="rounded-lg"` unless matching a page header button. Action buttons inside sub-panels must not duplicate section headers — primary create/add/assign actions must be placed in the header `actions` prop of the parent disclosure or page header.
 - Application tables must use `src/components/ui/data-table.tsx` `DataTable`. Actions columns must use `w-28 min-w-[7rem] text-center whitespace-nowrap` to prevent truncation of localized headers like `"İŞLEMLER"`.
 - Pages/domain components must not import or render `Table` primitives directly; only the `DataTable` wrapper and table primitive files may do that.
 - **Note Import Assistant**: Raw PDF/TXT/MD files are converted to structured Markdown notes using `src/lib/note-importer.ts`. Noise (page numbers, headers/footers, watermarks) is removed, PDF mid-sentence line wraps are re-joined, headings (`##`) and bullet lists are formatted, and OCR unreadable artifacts are flagged with `⚠️ Some content may be unreadable due to OCR/extraction issues`. Never invent content or fluff preamble. Note Import Assistant lives in a dedicated `SidePanel` triggered from the Notes page header to the right of the "Yeni Not" button.
@@ -173,13 +173,11 @@ Rules:
   agent shows the user the exact proposed commit message (title + all bullets)
   and asks for **explicit approval**. `git commit` never runs before approval
   is given. This applies to every commit, including small ones — no exceptions.
-- **Mandatory pre-commit check, every time:** once approved, right before
-  running the commit:
-  1. Run `bun run build` (`tsc --noEmit && vite build`) — the project already has
-     `noUnusedLocals` / `noUnusedParameters` enabled, so any unused import or
-     variable fails the build.
-  2. If the build fails, remove the unused imports/variables and re-run until
-     it passes.
-  3. Only commit once the build is green.
+- **Mandatory pre-commit check:** once approved, right before running the commit,
+  run `bun run build` (`tsc --noEmit && vite build`) unless a build has already
+  passed since the last code change. If the user explicitly says not to run a
+  build for the current action, do not run it. If the build fails, remove the
+  unused imports/variables and re-run until it passes. Only commit once the build
+  is green or the user explicitly waived the build for that action.
 - This workflow (format + approval + pre-commit check) applies always, without
   exception, to every commit in this repo.

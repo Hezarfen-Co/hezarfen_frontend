@@ -6,7 +6,6 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { IconCalendarDays, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
@@ -127,136 +126,144 @@ function CalendarContent() {
         </div>
       </PageHeader>
 
-      <Suspense fallback={<PageSpinner />}>
-        <div class="rounded-lg border bg-card shadow-sm">
-          <div class="grid grid-cols-7 border-b">
-            <For each={dayNames()}>
-              {(name) => (
-                <div class="border-r border-border/40 px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground last:border-r-0">
-                  {name}
-                </div>
-              )}
-            </For>
-          </div>
-          <div class="grid grid-cols-7">
-            <For each={grid()}>
-              {(cell) => {
-                const key = cell.other ? "" : dateKey(new Date(viewYear(), viewMonth(), cell.day));
-                const items = () => cell.other ? null : itemsByDay().get(key);
-                const cellToday = !cell.other && isToday(cell.day);
-                const cellSelected = () => !cell.other && key === selectedKey();
-                return (
-                  <button
-                    type="button"
-                    class={cn(
-                      "relative flex min-h-[4.5rem] flex-col border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40",
-                      cell.other && "pointer-events-none bg-muted/20",
-                      cellSelected() ? "bg-sky-50/60 ring-1 ring-inset ring-sky-400/50" : "",
-                    )}
-                    disabled={cell.other}
-                    onClick={() => key && setSelected(key)}
-                  >
-                    <span
-                      class={cn(
-                        "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium",
-                        cellToday ? "bg-primary text-primary-foreground font-semibold" : "",
-                        cell.other ? "text-muted-foreground/30" : "text-foreground",
-                      )}
-                    >
-                      {cell.day || ""}
-                    </span>
-                    <Show when={items()}>
-                      {(dayItems) => (
-                      <div class="mt-1 flex min-h-0 flex-1 flex-col justify-end gap-1 overflow-hidden">
-                        {/* ponytail: month cells show one badge per type; selected list has full detail. */}
-                        <Show when={dayItems().events[0]}>
-                          {(event) => (
-                            <span class="inline-flex min-w-0 items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium leading-none text-sky-700">
-                              <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
-                              <span class="truncate">{event().title}</span>
-                              <Show when={dayItems().events.length > 1}>
-                                <span class="shrink-0 text-sky-600">+{dayItems().events.length - 1}</span>
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+        <Suspense fallback={<PageSpinner />}>
+          <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+            <div class="rounded-lg border bg-card shadow-sm">
+              <div class="grid grid-cols-7 border-b">
+                <For each={dayNames()}>
+                  {(name) => (
+                    <div class="border-r border-border/40 px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground last:border-r-0">
+                      {name}
+                    </div>
+                  )}
+                </For>
+              </div>
+              <div class="grid grid-cols-7">
+                <For each={grid()}>
+                  {(cell) => {
+                    const key = cell.other ? "" : dateKey(new Date(viewYear(), viewMonth(), cell.day));
+                    const items = () => cell.other ? null : itemsByDay().get(key);
+                    const cellToday = !cell.other && isToday(cell.day);
+                    const cellSelected = () => !cell.other && key === selectedKey();
+                    return (
+                      <button
+                        type="button"
+                        class={cn(
+                          "relative flex min-h-[4.5rem] flex-col border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40 xl:min-h-28 2xl:min-h-32",
+                          cell.other && "pointer-events-none bg-muted/20",
+                          cellSelected() ? "bg-sky-50/60 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "",
+                          cellToday ? "font-bold text-sky-600 dark:text-sky-400" : ""
+                        )}
+                        disabled={cell.other}
+                        onClick={() => key && setSelected(key)}
+                      >
+                        <span
+                          class={cn(
+                            "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium",
+                            cellToday ? "bg-sky-500 text-white font-semibold" : "",
+                            cell.other ? "text-muted-foreground/30" : "text-foreground",
+                          )}
+                        >
+                          {cell.day || ""}
+                        </span>
+                        <Show when={items()}>
+                          {(dayItems) => (
+                            <div class="mt-1 flex min-h-0 flex-1 flex-col justify-end gap-1 overflow-hidden">
+                              <Show when={dayItems().events[0]}>
+                                {(event) => (
+                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950/60 dark:border dark:border-emerald-800/50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-emerald-700 dark:text-emerald-300">
+                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                                    <span class="truncate">{event().title}</span>
+                                    <Show when={dayItems().events.length > 1}>
+                                      <span class="shrink-0 opacity-70">+{dayItems().events.length - 1}</span>
+                                    </Show>
+                                  </span>
+                                )}
                               </Show>
-                            </span>
+                              <Show when={dayItems().exams[0]}>
+                                {(exam) => (
+                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-rose-100 dark:bg-rose-950/60 dark:border dark:border-rose-800/50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-rose-700 dark:text-rose-300">
+                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+                                    <span class="truncate">{exam().title}</span>
+                                    <Show when={dayItems().exams.length > 1}>
+                                      <span class="shrink-0 opacity-70">+{dayItems().exams.length - 1}</span>
+                                    </Show>
+                                  </span>
+                                )}
+                              </Show>
+                            </div>
                           )}
                         </Show>
-                        <Show when={dayItems().exams[0]}>
-                          {(exam) => (
-                            <span class="inline-flex min-w-0 items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-700">
-                              <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
-                              <span class="truncate">{exam().title}</span>
-                              <Show when={dayItems().exams.length > 1}>
-                                <span class="shrink-0 text-amber-600">+{dayItems().exams.length - 1}</span>
-                              </Show>
-                            </span>
-                          )}
-                        </Show>
-                      </div>
-                      )}
-                    </Show>
-                  </button>
-                );
-              }}
-            </For>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-          <div class="flex items-center gap-3 text-xs text-muted-foreground">
-            <span class="inline-flex items-center gap-1.5">
-              <span class="inline-flex h-2 w-2 rounded-full bg-sky-500" />
-              {t("calendar.events")}
-            </span>
-            <span class="inline-flex items-center gap-1.5">
-              <span class="inline-flex h-2 w-2 rounded-full bg-amber-500" />
-              {t("calendar.exams")}
-            </span>
-          </div>
-
-          <Show
-            when={selectedItems().events.length > 0 || selectedItems().exams.length > 0}
-            fallback={
-              <EmptyState title={t("calendar.noEvents")} />
-            }
-          >
-            <div class="space-y-2">
-              <p class="text-xs font-semibold text-muted-foreground">
-                {selectedDay().toLocaleDateString(locale() === "tr" ? "tr-TR" : "en-US", { weekday: "long", month: "long", day: "numeric" })}
-              </p>
-              <For each={selectedItems().events}>
-                {(event) => (
-                  <a href={`/events/${event.id}`} class="flex items-start gap-3 rounded-lg border border-sky-200/60 bg-sky-50/50 p-3 transition-colors hover:bg-sky-100/50">
-                    <span class="mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-sky-500" />
-                    <div class="min-w-0 flex-1">
-                      <p class="text-sm font-medium text-foreground">{event.title}</p>
-                      <p class="text-xs text-muted-foreground">
-                        {event.starts_at ? new Date(event.starts_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
-                        {event.ends_at ? ` — ${new Date(event.ends_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                      </p>
-                    </div>
-                    <Badge variant="outline" class="shrink-0 text-[10px]">{t("calendar.events")}</Badge>
-                  </a>
-                )}
-              </For>
-              <For each={selectedItems().exams}>
-                {(exam) => (
-                  <a href={`/exams/${exam.id}`} class="flex items-start gap-3 rounded-lg border border-amber-200/60 bg-amber-50/50 p-3 transition-colors hover:bg-amber-100/50">
-                    <span class="mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-amber-500" />
-                    <div class="min-w-0 flex-1">
-                      <p class="text-sm font-medium text-foreground">{exam.title}</p>
-                      <p class="text-xs text-muted-foreground">
-                        {exam.starts_at ? new Date(exam.starts_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
-                        {exam.ends_at ? ` — ${new Date(exam.ends_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                      </p>
-                    </div>
-                    <Badge variant="outline" class="shrink-0 text-[10px]">{t("calendar.exams")}</Badge>
-                  </a>
-                )}
-              </For>
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
             </div>
-          </Show>
-        </div>
-      </Suspense>
+
+            <div class="space-y-4">
+              <div class="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+                <h3 class="font-display text-sm font-semibold">
+                  {selectedDay().toLocaleDateString(locale() === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "long", year: "numeric" })}
+                </h3>
+
+                <div class="mt-3 space-y-3">
+                  <Show when={selectedItems().events.length === 0 && selectedItems().exams.length === 0}>
+                    <p class="text-xs text-muted-foreground">{t("calendar.noEvents")}</p>
+                  </Show>
+
+                  <Show when={selectedItems().events.length > 0}>
+                    <div class="space-y-2">
+                      <p class="text-[11px] font-semibold uppercase tracking-wider text-emerald-500">{t("calendar.events")}</p>
+                      <For each={selectedItems().events}>
+                        {(ev) => (
+                          <a
+                            href={`/events/${ev.id}`}
+                            class="group flex items-start justify-between gap-2 rounded-xl border border-emerald-500/40 bg-card p-3 shadow-sm transition-all hover:border-emerald-500/70 hover:shadow-md dark:border-emerald-500/30 dark:hover:border-emerald-500/70"
+                          >
+                            <div class="min-w-0">
+                              <p class="truncate text-xs font-semibold group-hover:text-emerald-500">{ev.title}</p>
+                              <p class="mt-0.5 text-[11px] text-muted-foreground">
+                                {ev.starts_at ? new Date(ev.starts_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
+                                {ev.ends_at ? ` — ${new Date(ev.ends_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })}` : ""}
+                              </p>
+                            </div>
+                            <Badge variant="outline" class="shrink-0 text-[10px]">{t("calendar.events")}</Badge>
+                          </a>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+
+                  <Show when={selectedItems().exams.length > 0}>
+                    <div class="space-y-2">
+                      <p class="text-[11px] font-semibold uppercase tracking-wider text-rose-500">{t("calendar.exams")}</p>
+                      <For each={selectedItems().exams}>
+                        {(exam) => (
+                          <a
+                            href={`/exams/${exam.id}`}
+                            class="group flex items-start justify-between gap-2 rounded-xl border border-rose-500/40 bg-card p-3 shadow-sm transition-all hover:border-rose-500/70 hover:shadow-md dark:border-rose-500/30 dark:hover:border-rose-500/70"
+                          >
+                            <div class="min-w-0">
+                              <p class="truncate text-xs font-semibold group-hover:text-rose-500">{exam.title}</p>
+                              <p class="mt-0.5 text-[11px] text-muted-foreground">
+                                {exam.starts_at ? new Date(exam.starts_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
+                                {exam.ends_at ? ` — ${new Date(exam.ends_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })}` : ""}
+                              </p>
+                            </div>
+                            <Badge variant="outline" class="shrink-0 text-[10px]">{t("calendar.exams")}</Badge>
+                          </a>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Suspense>
+      </section>
     </div>
   );
 }

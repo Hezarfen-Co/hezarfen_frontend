@@ -225,7 +225,9 @@ export function CourseSessionsPanel(props: {
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
-      {error() && <Alert variant="destructive">{error()}</Alert>}
+      <Show when={error() && !panelOpen()}>
+        <Alert variant="destructive">{error()}</Alert>
+      </Show>
 
       <Suspense fallback={<PageSpinner />}>
         <Show when={sessions.error}>
@@ -248,6 +250,9 @@ export function CourseSessionsPanel(props: {
         description={t("sessions.subtitle")}
       >
         <form class="space-y-4" onSubmit={saveSession}>
+          <Show when={error()}>
+            <Alert variant="destructive">{error()}</Alert>
+          </Show>
           <div class="space-y-1.5">
             <Label for="session-topic">{t("sessions.topic")}</Label>
             <Input id="session-topic" value={topic()} maxlength={200} onInput={(e) => setTopic(e.currentTarget.value)} />

@@ -23,11 +23,22 @@ Light palette is defined in `src/index.css` as `--ui-*` variables:
 - `--ui-accent`: Apple system blue (`211 100% 50%`)
 - semantic colors: success, warning, danger, info, each with muted pair
 
-Dark palette mirrors same token names with dark surfaces and brighter semantic
-foregrounds.
+Dark palette follows dark.design aesthetics (deep obsidian canvas, `#121318` card surfaces, crisp hairline borders, electric dark accent):
+
+- `--ui-bg`: `240 10% 3.9%` (`#09090b` canvas)
+- `--ui-surface-1`: `240 6% 7.5%` (`#121318` card surface)
+- `--ui-surface-2`: `240 6% 11.5%` (`#1b1c24` muted container / input)
+- `--ui-surface-3`: `240 5% 15.5%` (`#242531` elevated popover)
+- `--ui-border-1`: `240 5% 15%` (`#24252d` razor-sharp 1px border)
+- `--ui-border-2`: `240 4% 22%` (`#343644` active border)
+- `--ui-text-1`: `0 0% 98%` (`#fafafa` crisp heading text)
+- `--ui-text-2`: `240 5% 68%` (`#a1a1aa` secondary body text)
+- `--ui-text-3`: `240 4% 48%` (`#71717a` subtle label text)
+- `--ui-accent`: Electric dark blue (`217 91% 60%`)
+- semantic colors: luminous emerald, amber, rose, cyan
 
 Existing shadcn tokens (`--background`, `--card`, `--primary`, etc.) are mapped
-to these `--ui-*` variables so existing components keep working.
+to these `--ui-*` variables so existing components keep working seamlessly.
 
 ## Typography
 
@@ -128,6 +139,7 @@ Reference implementation: `src/pages/dashboard-page.tsx`.
 ## Current Implementation Notes
 
 - Data-heavy admin and management views should prefer `DataToolbar`, `DataTableFrame`, and `.data-table`.
+- Page header create/add buttons use compact icon + label controls with `size="sm" class="min-w-[7.5rem] rounded-lg"`; secondary header actions keep the same shape with `variant="outline"`.
 - Row-level table actions should use `TableRowActions`; avoid inline action button clusters in table rows.
 - Quick create/edit flows should use `SidePanel`; destructive actions stay in confirm dialogs.
 - Durable resources keep full detail pages with breadcrumbs.

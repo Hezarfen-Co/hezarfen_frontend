@@ -20,6 +20,7 @@ import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
 import { CourseTeachersPanel } from "@/components/courses/course-teachers-panel";
+import { CourseHomeworkPanel } from "@/components/homework/course-homework-panel";
 import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -114,10 +115,12 @@ function CourseDetailContent() {
   const [createdCourseExam, setCreatedCourseExam] = createSignal<Exam | null>(null);
   const [showSubjectForm, setShowSubjectForm] = createSignal(false);
   const [showSessionForm, setShowSessionForm] = createSignal(false);
+  const [showHomeworkForm, setShowHomeworkForm] = createSignal(false);
   const [showTeacherForm, setShowTeacherForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
   const [subjectCount, setSubjectCount] = createSignal(0);
   const [sessionCount, setSessionCount] = createSignal(0);
+  const [homeworkCount, setHomeworkCount] = createSignal(0);
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -559,6 +562,7 @@ function CourseDetailContent() {
                 </Show>
                 <TabsTrigger value="subjects">{t("subjects.title")}</TabsTrigger>
                 <TabsTrigger value="exams">{t("courses.exams")}</TabsTrigger>
+                <TabsTrigger value="homework">{t("homework.title")}</TabsTrigger>
                 <TabsTrigger value="sessions">{t("sessions.title")}</TabsTrigger>
                 <Show when={hasCourseManagementRights()}>
                   <TabsTrigger value="roster">{t("courses.roster")}</TabsTrigger>
@@ -606,6 +610,19 @@ function CourseDetailContent() {
                 <Suspense fallback={<DataTableSkeleton />}>
                   <DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })} />
                 </Suspense>
+              </TabsContent>
+
+              <TabsContent value="homework" forceMount class="space-y-4">
+                <div class="tab-panel-header">
+                  <p class="text-sm text-muted-foreground">{countDescription(homeworkCount(), t("homework.item"))}</p>
+                  <Show when={canManage()}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowHomeworkForm(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("homework.add")}
+                    </Button>
+                  </Show>
+                </div>
+                <CourseHomeworkPanel courseId={id()} canManage={canManage()} active={courseTab() === "homework"} createOpen={showHomeworkForm()} onCreateOpenChange={setShowHomeworkForm} onCountChange={setHomeworkCount} />
               </TabsContent>
 
               <TabsContent value="sessions" forceMount class="space-y-4">

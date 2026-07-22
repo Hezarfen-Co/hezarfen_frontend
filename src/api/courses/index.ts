@@ -14,4 +14,6 @@ export * from "./getCourseExams";
 export * from "./postCourseExam";
 export * from "./postCourseTeacher";
 export * from "./deleteCourseTeacherByUserId";
+export * from "./getCourseHomework";
+export * from "./postCourseHomework";
 

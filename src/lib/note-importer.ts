@@ -1,8 +1,53 @@
+import pdfWorkerUrl from "pdfjs-dist/legacy/build/pdf.worker.mjs?url";
+
 export type ImportResult = {
   title: string;
   markdown: string;
   hasGarbledWarning: boolean;
 };
+
+async function loadPdfJs() {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc =
+    typeof window === "undefined"
+      ? new URL("../../node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs", import.meta.url).href
+      : pdfWorkerUrl;
+  return pdfjs;
+}
+
+export async function extractImportedPdfText(file: Blob): Promise<string> {
+  const { getDocument } = await loadPdfJs();
+  const loadingTask = getDocument({
+    data: await file.arrayBuffer(),
+    useWorkerFetch: false,
+  });
+  const pdf = await loadingTask.promise;
+
+  try {
+    const pages: string[] = [];
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item) => {
+          if (!("str" in item)) return "";
+          return item.hasEOL ? `${item.str}\n` : `${item.str} `;
+        })
+        .join("")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/[ \t]{2,}/g, " ")
+        .trim();
+
+      if (pageText) pages.push(pageText);
+      page.cleanup();
+    }
+
+    return pages.join("\n\n");
+  } finally {
+    await loadingTask.destroy();
+  }
+}
 
 /**
  * Note Import Assistant

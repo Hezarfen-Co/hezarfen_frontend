@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { processImportedText } from "../note-importer";
+import { extractImportedPdfText, processImportedText } from "../note-importer";
 
 describe("processImportedText (Note Import Assistant)", () => {
   it("removes page numbers, watermarks, and noise lines", () => {
@@ -66,4 +66,35 @@ const x = 42;
     const result2 = processImportedText("Just plain text without heading", "my_study_notes.txt");
     expect(result2.title).toBe("my study notes");
   });
+
+  it("extracts text from a valid PDF through PDF.js", async () => {
+    const text = await extractImportedPdfText(makeTextPdf("Hello PDF"));
+    expect(text).toContain("Hello PDF");
+  });
 });
+
+function makeTextPdf(text: string): Blob {
+  const escaped = text.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  const stream = `BT /F1 24 Tf 100 700 Td (${escaped}) Tj ET`;
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+  ];
+  const offsets: number[] = [];
+  let pdf = "%PDF-1.4\n";
+
+  for (let index = 0; index < objects.length; index += 1) {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${objects[index]}\nendobj\n`;
+  }
+
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  pdf += offsets.map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`).join("");
+  pdf += `trailer\n<< /Root 1 0 R /Size ${objects.length + 1} >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+  return new Blob([pdf], { type: "application/pdf" });
+}

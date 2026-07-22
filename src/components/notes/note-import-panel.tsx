@@ -1,16 +1,17 @@
 import { Show, createSignal } from "solid-js";
+import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { IconFileText, IconUploadCloud } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { processImportedText } from "@/lib/note-importer";
+import { extractImportedPdfText, processImportedText } from "@/lib/note-importer";
 import { triggerConfetti } from "@/lib/confetti";
 import { formatBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
 
 export function NoteImportPanel(props: {
-  onImport: (title: string, content: string) => void;
+  onImport: (title: string, content: string) => Promise<void> | void;
   onCancel?: () => void;
 }) {
   const t = useT();
@@ -18,6 +19,7 @@ export function NoteImportPanel(props: {
 
   const [file, setFile] = createSignal<File | null>(null);
   const [processing, setProcessing] = createSignal(false);
+  const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal("");
   const [importedTitle, setImportedTitle] = createSignal("");
   const [importedMarkdown, setImportedMarkdown] = createSignal("");
@@ -42,34 +44,49 @@ export function NoteImportPanel(props: {
     try {
       let rawText = "";
       if (isPdf) {
-        rawText = await extractPdfText(selectedFile);
+        rawText = await extractImportedPdfText(selectedFile);
       } else {
         rawText = await selectedFile.text();
       }
+
+      if (!rawText.trim()) throw new Error("empty import");
 
       const result = processImportedText(rawText, selectedFile.name);
       setImportedTitle(result.title);
       setImportedMarkdown(result.markdown);
       setHasGarbled(result.hasGarbledWarning);
-    } catch (err) {
-      setError(t("notes.previewUnsupported"));
+    } catch {
+      setFile(null);
+      setImportedTitle("");
+      setImportedMarkdown("");
+      setHasGarbled(false);
+      setError(t("notes.importReadError"));
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     const title = importedTitle().trim() || "Imported Note";
     const content = importedMarkdown();
-    triggerConfetti();
-    props.onImport(title, content);
+    setError("");
+    setSubmitting(true);
+
+    try {
+      await props.onImport(title, content);
+      triggerConfetti();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div class="space-y-5">
       <Show when={!file()}>
         <div
-          class="flex min-h-[14rem] cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/[0.03] p-6 text-center transition-all hover:border-amber-500/70 hover:bg-amber-500/[0.06]"
+          class="flex min-h-[14rem] cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-amber-500/50 ring-1 ring-amber-500/25 bg-muted/30 p-6 text-center transition-all hover:border-amber-400 hover:ring-amber-400/40 hover:bg-muted/50"
           onClick={() => fileInput?.click()}
         >
           <input
@@ -81,7 +98,7 @@ export function NoteImportPanel(props: {
             class="hidden"
             onChange={(e) => void handleFileSelect(e.currentTarget.files?.[0])}
           />
-          <span class="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-700 shadow-sm dark:text-amber-300">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/50 ring-1 ring-amber-500/30 bg-muted/40 text-foreground shadow-sm">
             <IconUploadCloud class="h-6 w-6" />
           </span>
           <div class="space-y-1 max-w-sm mx-auto">
@@ -97,9 +114,9 @@ export function NoteImportPanel(props: {
 
       <Show when={file()}>
         <div class="space-y-4">
-          <div class="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/[0.04] px-4 py-3 text-xs">
+          <div class="flex items-center justify-between rounded-xl border border-amber-500/40 ring-1 ring-amber-500/25 bg-card px-4 py-3 text-xs">
             <div class="flex items-center gap-2.5 min-w-0">
-              <IconFileText class="h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
+              <IconFileText class="h-4 w-4 shrink-0 text-foreground" />
               <span class="truncate font-medium text-foreground">{file()?.name}</span>
               <span class="text-muted-foreground shrink-0">({formatBytes(file()?.size ?? 0)})</span>
             </div>
@@ -110,8 +127,10 @@ export function NoteImportPanel(props: {
               class="h-7 text-xs rounded-lg"
               onClick={() => {
                 setFile(null);
+                setError("");
                 setImportedTitle("");
                 setImportedMarkdown("");
+                setHasGarbled(false);
               }}
             >
               {t("common.edit")}
@@ -155,8 +174,8 @@ export function NoteImportPanel(props: {
             <Button
               type="button"
               class="h-10 rounded-lg px-5 font-semibold"
-              disabled={processing() || !importedMarkdown().trim()}
-              onClick={handleApply}
+              disabled={processing() || submitting() || !importedMarkdown().trim()}
+              onClick={() => void handleApply()}
             >
               {t("common.create")}
             </Button>
@@ -171,31 +190,4 @@ export function NoteImportPanel(props: {
       </Show>
     </div>
   );
-}
-
-/** Extract text content from PDF file */
-async function extractPdfText(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const bytes = new Uint8Array(arrayBuffer);
-  const decoder = new TextDecoder("utf-8");
-  const rawString = decoder.decode(bytes);
-
-  // Extract printable text streams from PDF brackets (Tj/TJ streams) or plain text blocks
-  const textMatches: string[] = [];
-  const textStreamRegex = /\(([^()]{2,})\)\s*T[jJ]/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = textStreamRegex.exec(rawString)) !== null) {
-    if (match[1]) {
-      textMatches.push(match[1]);
-    }
-  }
-
-  if (textMatches.length > 0) {
-    return textMatches.join(" ");
-  }
-
-  // Fallback: extract continuous ASCII/UTF8 character chunks
-  const asciiChunks = rawString.match(/[A-Za-z0-9çğıöşüÇĞİÖŞÜ \t\n.,:;!?(){}\[\]\-"'\/]{4,}/g) || [];
-  return asciiChunks.join("\n");
 }

@@ -191,9 +191,11 @@ function EventsContent() {
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
-      {error() && <p class="text-sm text-destructive">{error()}</p>}
+      <Show when={error() && !showForm()}>
+        <Alert variant="destructive">{error()}</Alert>
+      </Show>
 
-      <section class="data-shell space-y-4 border-amber-500/15 bg-amber-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>

@@ -128,6 +128,12 @@ describe("client", () => {
       expect(formatApiErrorMessage("custom error occurred", "en")).toBe("Custom error occurred");
       expect(formatApiErrorMessage("custom error occurred", "tr")).toBe("İşlem tamamlanamadı: Custom error occurred");
     });
+
+    it("localizes backend max-length validation messages", () => {
+      const message = "Content must be at most 10000 characters (got 220896)";
+      expect(formatApiErrorMessage(message, "en")).toBe("Content must be at most 10,000 characters. Currently 220,896 characters.");
+      expect(formatApiErrorMessage(message, "tr")).toBe("İçerik en fazla 10.000 karakter olmalı. Şu an 220.896 karakter.");
+    });
   });
 
   describe("formatApiError", () => {
@@ -146,6 +152,11 @@ describe("client", () => {
     it("formats 500+", () => {
       expect(formatApiError(new ApiError(500, ""), "en")).toBe("Server error. Please try again.");
       expect(formatApiError(new ApiError(503, ""), "tr")).toBe("Sunucuda bir sorun oluştu. Lütfen tekrar dene.");
+    });
+
+    it("formats 422 backend validation messages", () => {
+      const err = new ApiError(422, "Title must be at most 200 characters (got 250)");
+      expect(formatApiError(err, "tr")).toBe("Başlık en fazla 200 karakter olmalı. Şu an 250 karakter.");
     });
 
     it("formats generic Error", () => {
