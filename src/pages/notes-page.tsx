@@ -93,17 +93,13 @@ function NotesContent() {
           onCancel={() => setImportOpen(false)}
           onImport={async (importedTitle, importedMarkdown) => {
             setError("");
-            try {
-              await postNote({
-                title: importedTitle,
-                content: importedMarkdown || undefined,
-              });
-              await refetch();
-              setImportOpen(false);
-              setFlash(t("common.created"));
-            } catch (err) {
-              setError(formatApiError(err));
-            }
+            await postNote({
+              title: importedTitle,
+              content: importedMarkdown || undefined,
+            });
+            await refetch();
+            setImportOpen(false);
+            setFlash(t("common.created"));
           }}
         />
       </SidePanel>

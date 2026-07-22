@@ -164,6 +164,14 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
   },
 };
 
+const FIELD_LABELS: Record<string, Record<Locale, string>> = {
+  content: { en: "Content", tr: "İçerik" },
+  description: { en: "Description", tr: "Açıklama" },
+  password: { en: "Password", tr: "Şifre" },
+  title: { en: "Title", tr: "Başlık" },
+  username: { en: "Username", tr: "Kullanıcı adı" },
+};
+
 function currentLocale(): Locale {
   if (typeof window === "undefined") return "en";
   try {
@@ -188,6 +196,29 @@ function sentenceCase(message: string): string {
   const trimmed = message.trim();
   if (!trimmed) return trimmed;
   return trimmed[0].toLocaleUpperCase("en-US") + trimmed.slice(1);
+}
+
+function formatNumber(value: string, locale: Locale): string {
+  return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US").format(Number(value));
+}
+
+function fieldLabel(field: string, locale: Locale): string {
+  const normalized = field.trim().toLowerCase().replace(/[_.-]+/g, " ");
+  const known = FIELD_LABELS[normalized]?.[locale];
+  if (known) return known;
+  return sentenceCase(normalized);
+}
+
+function formatValidationMessage(message: string, locale: Locale): string | null {
+  const lengthMatch = message.match(/^([\w .-]+) must be at most (\d+) characters \(got (\d+)\)$/i);
+  if (!lengthMatch) return null;
+
+  const label = fieldLabel(lengthMatch[1], locale);
+  const max = formatNumber(lengthMatch[2], locale);
+  const got = formatNumber(lengthMatch[3], locale);
+
+  if (locale === "tr") return `${label} en fazla ${max} karakter olmalı. Şu an ${got} karakter.`;
+  return `${label} must be at most ${max} characters. Currently ${got} characters.`;
 }
 
 function errorMessageFromPayload(data: unknown, fallback: string): string {
@@ -314,6 +345,8 @@ export function formatApiErrorMessage(message: string, locale: Locale = currentL
   const normalized = normalizeApiMessage(message);
   const known = API_ERROR_MESSAGES[normalized]?.[locale];
   if (known) return known;
+  const validation = formatValidationMessage(message, locale);
+  if (validation) return validation;
   if (locale === "tr") return `İşlem tamamlanamadı: ${sentenceCase(message)}`;
   return sentenceCase(message);
 }

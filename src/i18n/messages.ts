@@ -229,6 +229,7 @@ export type MessageKey =
   | "notes.addFile"
   | "notes.import"
   | "notes.importHelp"
+  | "notes.importReadError"
   | "notes.draw"
   | "notes.drawTitle"
   | "draw.pen"
@@ -962,6 +963,7 @@ const en: Dict = {
   "notes.addFile": "Add file",
   "notes.import": "Import",
   "notes.importHelp": "Upload a PDF, TXT, or Markdown file. Line breaks, page numbers, and noise will be automatically cleaned into a structured note.",
+  "notes.importReadError": "Text could not be extracted from this file. If it is a scanned PDF, run OCR first.",
   "notes.draw": "Draw",
   "notes.drawTitle": "Draw a picture",
   "draw.pen": "Pen",
@@ -1707,6 +1709,7 @@ const tr: Dict = {
   "notes.addFile": "Dosya ekle",
   "notes.import": "İçe aktar",
   "notes.importHelp": "PDF, TXT veya Markdown dosyanızı yükleyin. Satır sonları, sayfa numaraları ve gürültüler temizlenip düzenli bir nota dönüştürülür.",
+  "notes.importReadError": "Bu dosyadan metin çıkarılamadı. Taranmış PDF ise önce OCR uygulayın.",
   "notes.draw": "Çiz",
   "notes.drawTitle": "Resim çiz",
   "draw.pen": "Kalem",
