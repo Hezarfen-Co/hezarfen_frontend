@@ -413,6 +413,15 @@ export type MessageKey =
   | "pomodoro.startedAt"
   | "pomodoro.finishedAt"
   | "pomodoro.duration"
+  | "pomodoro.focusConsole"
+  | "pomodoro.current"
+  | "pomodoro.today"
+  | "pomodoro.average"
+  | "pomodoro.sessions"
+  | "pomodoro.idleHelp"
+  | "pomodoro.runningSince"
+  | "pomodoro.lastSession"
+  | "pomodoro.noRecentSession"
   | "attempt.title"
   | "attempt.openRoom"
   | "attempt.start"
@@ -1141,6 +1150,15 @@ const en: Dict = {
   "pomodoro.startedAt": "Started",
   "pomodoro.finishedAt": "Finished",
   "pomodoro.duration": "Duration",
+  "pomodoro.focusConsole": "Focus console",
+  "pomodoro.current": "Current focus",
+  "pomodoro.today": "Today",
+  "pomodoro.average": "Average",
+  "pomodoro.sessions": "Sessions",
+  "pomodoro.idleHelp": "Ready when you are. Start one focused study block.",
+  "pomodoro.runningSince": "Started {time}",
+  "pomodoro.lastSession": "Last finished {time}",
+  "pomodoro.noRecentSession": "No completed session yet.",
   "attempt.title": "Exam room",
   "attempt.openRoom": "Open exam room",
   "attempt.start": "Start exam",
@@ -1874,6 +1892,15 @@ const tr: Dict = {
   "pomodoro.startedAt": "Başlangıç",
   "pomodoro.finishedAt": "Bitiş",
   "pomodoro.duration": "Süre",
+  "pomodoro.focusConsole": "Odak paneli",
+  "pomodoro.current": "Mevcut odak",
+  "pomodoro.today": "Bugün",
+  "pomodoro.average": "Ortalama",
+  "pomodoro.sessions": "Oturum",
+  "pomodoro.idleHelp": "Hazır olduğunda tek bir odaklı çalışma bloğu başlat.",
+  "pomodoro.runningSince": "Başlangıç: {time}",
+  "pomodoro.lastSession": "Son bitiş: {time}",
+  "pomodoro.noRecentSession": "Henüz tamamlanmış oturum yok.",
   "attempt.title": "Sınav odası",
   "attempt.openRoom": "Sınav odasını aç",
   "attempt.start": "Sınava başla",
