@@ -230,14 +230,22 @@ export type MessageKey =
   | "notes.drawTitle"
   | "draw.pen"
   | "draw.eraser"
+  | "draw.pan"
+  | "draw.zoomIn"
+  | "draw.zoomOut"
+  | "draw.resetZoom"
   | "draw.color"
   | "draw.width"
+  | "draw.paper"
   | "draw.undo"
   | "draw.clear"
   | "draw.save"
   | "draw.hint"
   | "draw.downloadPng"
   | "draw.downloadJpeg"
+  | "draw.bgNone"
+  | "draw.bgLines"
+  | "draw.bgGrid"
   | "notes.downloadFile"
   | "notes.noFiles"
   | "notes.fileLimit"
@@ -932,14 +940,22 @@ const en: Dict = {
   "notes.drawTitle": "Draw a picture",
   "draw.pen": "Pen",
   "draw.eraser": "Eraser",
+  "draw.pan": "Move around",
+  "draw.zoomIn": "Zoom in",
+  "draw.zoomOut": "Zoom out",
+  "draw.resetZoom": "Reset zoom",
   "draw.color": "Colour",
   "draw.width": "Line thickness",
+  "draw.paper": "Paper",
   "draw.undo": "Undo",
   "draw.clear": "Clear all",
   "draw.save": "Save drawing",
   "draw.hint": "Draw here with your finger, pen, or mouse.",
   "draw.downloadPng": "Download PNG",
   "draw.downloadJpeg": "Download JPEG",
+  "draw.bgNone": "Plain",
+  "draw.bgLines": "Lines",
+  "draw.bgGrid": "Grid",
   "notes.downloadFile": "Download",
   "notes.noFiles": "No files attached.",
   "notes.fileLimit": "This note already has 10 files.",
@@ -1646,14 +1662,22 @@ const tr: Dict = {
   "notes.drawTitle": "Resim çiz",
   "draw.pen": "Kalem",
   "draw.eraser": "Silgi",
+  "draw.pan": "Gezin",
+  "draw.zoomIn": "Yakınlaştır",
+  "draw.zoomOut": "Uzaklaştır",
+  "draw.resetZoom": "Sıfırla",
   "draw.color": "Renk",
   "draw.width": "Çizgi kalınlığı",
+  "draw.paper": "Kağıt",
   "draw.undo": "Geri al",
   "draw.clear": "Hepsini sil",
   "draw.save": "Çizimi kaydet",
   "draw.hint": "Parmağınla, kalemle ya da fareyle buraya çiz.",
   "draw.downloadPng": "PNG indir",
   "draw.downloadJpeg": "JPEG indir",
+  "draw.bgNone": "Düz",
+  "draw.bgLines": "Çizgili",
+  "draw.bgGrid": "Kareli",
   "notes.downloadFile": "İndir",
   "notes.noFiles": "Henüz dosya eklenmemiş.",
   "notes.fileLimit": "Bu notta zaten 10 dosya var.",

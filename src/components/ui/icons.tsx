@@ -128,6 +128,51 @@ export function IconEraser(props: IconProps) {
   );
 }
 
+export function IconMove(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M5 9l-3 3 3 3" />
+      <path d="M9 5l3-3 3 3" />
+      <path d="M15 19l-3 3-3-3" />
+      <path d="M19 9l3 3-3 3" />
+      <path d="M2 12h20" />
+      <path d="M12 2v20" />
+    </Svg>
+  );
+}
+
+export function IconGrid(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="M3 9h18" />
+      <path d="M3 15h18" />
+      <path d="M9 3v18" />
+      <path d="M15 3v18" />
+    </Svg>
+  );
+}
+
+export function IconRuled(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <line x1="4" y1="5" x2="20" y2="5" />
+      <line x1="4" y1="10" x2="20" y2="10" />
+      <line x1="4" y1="15" x2="20" y2="15" />
+      <line x1="4" y1="19" x2="20" y2="19" />
+    </Svg>
+  );
+}
+
+export function IconSquareOff(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="m3 21 18-18" />
+    </Svg>
+  );
+}
+
 export function IconUndo(props: IconProps) {
   return (
     <Svg {...props}>
@@ -186,6 +231,16 @@ export function IconZoomIn(props: IconProps) {
       <circle cx="11" cy="11" r="8" />
       <line x1="21" x2="16.65" y1="21" y2="16.65" />
       <line x1="11" x2="11" y1="8" y2="14" />
+      <line x1="8" x2="14" y1="11" y2="11" />
+    </Svg>
+  );
+}
+
+export function IconZoomOut(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" x2="16.65" y1="21" y2="16.65" />
       <line x1="8" x2="14" y1="11" y2="11" />
     </Svg>
   );

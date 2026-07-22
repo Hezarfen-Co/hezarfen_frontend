@@ -1,6 +1,12 @@
 export type Point = { x: number; y: number };
 export type Stroke = { color: string; width: number; erase: boolean; points: Point[] };
-export type DrawScene = { v: 1; w: number; h: number; strokes: Stroke[] };
+export type BgKind = "none" | "lines" | "grid";
+export type DrawScene = { v: 1; w: number; h: number; strokes: Stroke[]; bg?: BgKind };
+
+/** World px per notebook cell — shared by the live CSS paper and the baked export so both read as the same ruling. */
+export const PAPER_CELL = 24;
+/** Faint blue-gray ruling colour for both the live CSS paper and the baked export. */
+export const PAPER_LINE = "rgba(37, 99, 235, 0.14)";
 
 function isPoint(p: unknown): p is Point {
   return !!p && typeof p === "object" && typeof (p as Point).x === "number" && typeof (p as Point).y === "number";
@@ -37,7 +43,34 @@ export function parseScene(text: string | null): DrawScene | null {
     return null;
   }
   if (!scene.strokes.every(isStroke)) return null;
+  // bg is optional (old drawings lack it); reject only a present-but-bogus value.
+  if (scene.bg !== undefined && scene.bg !== "none" && scene.bg !== "lines" && scene.bg !== "grid") return null;
   return scene;
+}
+
+/**
+ * Tight bounding box over every ink (pen) stroke, padded by its half-width so a
+ * thick line isn't clipped at the edge. Null when there's nothing drawn. Used to
+ * export only the drawn region of an unbounded (pannable) pad instead of the
+ * viewport.
+ */
+export function strokesBounds(strokes: Stroke[]): { x: number; y: number; w: number; h: number } | null {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const s of strokes) {
+    if (s.erase) continue; // eraser cuts existing ink, adds none — must not expand the export box
+    const r = s.width / 2;
+    for (const p of s.points) {
+      minX = Math.min(minX, p.x - r);
+      minY = Math.min(minY, p.y - r);
+      maxX = Math.max(maxX, p.x + r);
+      maxY = Math.max(maxY, p.y + r);
+    }
+  }
+  if (!Number.isFinite(minX)) return null;
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 }
 
 function applyBrush(c: CanvasRenderingContext2D, stroke: Stroke) {
@@ -87,5 +120,29 @@ export function paintTip(c: CanvasRenderingContext2D, stroke: Stroke) {
   c.beginPath();
   c.moveTo(pts[pts.length - 2].x, pts[pts.length - 2].y);
   c.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+  c.stroke();
+}
+
+/**
+ * Paint ruled/grid paper across a device-pixel box, meant to sit UNDER the
+ * strokes. `step` is line spacing in device px. No-op for "none". Kept out of the
+ * live redraw() on purpose: the eraser (destination-out) would cut these lines, so
+ * the live pad rules itself with CSS and this only bakes the exported image.
+ */
+export function paintPaper(c: CanvasRenderingContext2D, bg: BgKind, width: number, height: number, step: number) {
+  if (bg === "none" || step <= 0) return;
+  c.strokeStyle = PAPER_LINE;
+  c.lineWidth = 1;
+  c.beginPath();
+  for (let y = step; y < height; y += step) {
+    c.moveTo(0, y);
+    c.lineTo(width, y);
+  }
+  if (bg === "grid") {
+    for (let x = step; x < width; x += step) {
+      c.moveTo(x, 0);
+      c.lineTo(x, height);
+    }
+  }
   c.stroke();
 }

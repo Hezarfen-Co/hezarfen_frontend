@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { paintStroke, paintTip, parseScene, type DrawScene, type Stroke } from "./draw-stroke";
+import { paintPaper, paintStroke, paintTip, parseScene, strokesBounds, type DrawScene, type Stroke } from "./draw-stroke";
 
 /** Records every 2d-context call so the three geometry branches can be asserted without a DOM. */
 function stubContext() {
@@ -127,5 +127,61 @@ describe("parseScene", () => {
   it("rejects garbage and null", () => {
     expect(parseScene("not json")).toBeNull();
     expect(parseScene(null)).toBeNull();
+  });
+});
+
+describe("strokesBounds", () => {
+  it("is null with nothing drawn", () => {
+    expect(strokesBounds([])).toBeNull();
+  });
+
+  it("wraps every point and pads by half the stroke width", () => {
+    const b = strokesBounds([
+      stroke([{ x: 10, y: 10 }, { x: 30, y: 20 }], { width: 4 }), // half-width 2
+      stroke([{ x: 50, y: 40 }], { width: 10 }), // half-width 5
+    ]);
+    // minX 10-2=8, minY 10-2=8, maxX 50+5=55, maxY 40+5=45
+    expect(b).toEqual({ x: 8, y: 8, w: 47, h: 37 });
+  });
+
+  it("ignores eraser strokes so a far erase doesn't pad the export box", () => {
+    const b = strokesBounds([
+      stroke([{ x: 10, y: 10 }, { x: 30, y: 20 }], { width: 4 }), // pen, half-width 2
+      stroke([{ x: 500, y: 500 }], { width: 10, erase: true }), // far eraser — must not count
+    ]);
+    // same box as the pen stroke alone: minX 10-2=8, minY 10-2=8, maxX 30+2=32, maxY 20+2=22
+    expect(b).toEqual({ x: 8, y: 8, w: 24, h: 14 });
+  });
+
+  it("is null when the scene has only eraser strokes", () => {
+    expect(strokesBounds([stroke([{ x: 5, y: 5 }], { erase: true })])).toBeNull();
+  });
+});
+
+describe("paintPaper", () => {
+  it("draws nothing for none", () => {
+    const c = stubContext();
+    paintPaper(c, "none", 100, 100, 24);
+    expect(c.calls).toEqual([]);
+  });
+
+  it("draws only horizontal rules for lines", () => {
+    const c = stubContext();
+    paintPaper(c, "lines", 100, 100, 24);
+    const moves = c.calls.filter((s) => s.startsWith("moveTo"));
+    expect(moves.length).toBeGreaterThan(0);
+    // every rule starts at the left edge (x=0) — no vertical segments
+    expect(moves.every((s) => s.startsWith("moveTo(0,"))).toBe(true);
+    expect(c.calls).toContain("stroke()");
+  });
+
+  it("draws both horizontal and vertical lines for grid", () => {
+    const c = stubContext();
+    paintPaper(c, "grid", 100, 100, 24);
+    const moves = c.calls.filter((s) => s.startsWith("moveTo"));
+    const horizontal = moves.filter((s) => s.startsWith("moveTo(0,"));
+    const vertical = moves.filter((s) => !s.startsWith("moveTo(0,"));
+    expect(horizontal.length).toBeGreaterThan(0);
+    expect(vertical.length).toBeGreaterThan(0);
   });
 });
