@@ -72,6 +72,24 @@ const ROLE_KEY: Record<Role, MessageKey> = {
   admin: "role.admin",
 };
 
+const ROLE_TONE: Record<Role, string> = {
+  student: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  parent: "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+  teacher: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  manager: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  admin: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+};
+
+function portalTone(to: string) {
+  if (to.includes("exam")) return "border-indigo-500/20 bg-indigo-500/10 text-indigo-700 group-hover:bg-indigo-500/15 dark:text-indigo-300";
+  if (to.includes("course") || to.includes("studies") || to.includes("clubs")) return "border-sky-500/20 bg-sky-500/10 text-sky-700 group-hover:bg-sky-500/15 dark:text-sky-300";
+  if (to.includes("event") || to.includes("calendar")) return "border-amber-500/20 bg-amber-500/10 text-amber-700 group-hover:bg-amber-500/15 dark:text-amber-300";
+  if (to.includes("mark") || to.includes("attendance")) return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 group-hover:bg-emerald-500/15 dark:text-emerald-300";
+  if (to.includes("message") || to.includes("student") || to.includes("users")) return "border-violet-500/20 bg-violet-500/10 text-violet-700 group-hover:bg-violet-500/15 dark:text-violet-300";
+  if (to.includes("work") || to.includes("settings")) return "border-slate-500/20 bg-slate-500/10 text-slate-700 group-hover:bg-slate-500/15 dark:text-slate-300";
+  return "border-primary/20 bg-primary/10 text-primary group-hover:bg-primary/15";
+}
+
 function examWindow(exam: Exam, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
   const status = examDisplayStatus(exam, now);
   if (status === "active") return "active";
@@ -424,7 +442,7 @@ function DashboardContent() {
           <p class="text-sm text-muted-foreground">{t("dashboard.observationOnly")}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span class="rounded-full border border-border bg-background px-2.5 py-1 font-semibold text-foreground shadow-sm">
+          <span class={cn("rounded-full border px-2.5 py-1 font-semibold shadow-sm", ROLE_TONE[role()])}>
             {t(ROLE_KEY[role()])}
           </span>
           <span class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-2.5 py-1 mono tabular-nums shadow-sm">
@@ -440,7 +458,7 @@ function DashboardContent() {
 
       <Show when={!loading()} fallback={<div class="px-4 py-8"><PageSpinner /></div>}>
         <div class="space-y-5 bg-muted/20 px-4 py-4 sm:px-5 sm:py-5">
-        <section class="space-y-2.5" aria-labelledby="dash-sections">
+        <section class="space-y-2.5 rounded-3xl border border-sky-500/10 bg-sky-500/[0.025] p-3 sm:p-4" aria-labelledby="dash-sections">
           <div class="flex items-center justify-between gap-3">
             <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
               {t("dashboard.roleLinks")}
@@ -495,7 +513,7 @@ function DashboardContent() {
 
         <Show when={role() !== "parent"}>
         <div class="grid items-stretch gap-5">
-          <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-attention">
+          <section class="flex min-h-[17rem] flex-col space-y-2.5 rounded-3xl border border-amber-500/10 bg-amber-500/[0.025] p-3 sm:p-4" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
                 {t("dashboard.attention")}
@@ -583,7 +601,7 @@ function PortalCard(props: {
 
   const cardInner = () => (
     <>
-      <span class="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-black/[0.05] bg-muted/30 text-muted-foreground transition-colors group-hover:border-border group-hover:bg-muted/50 group-hover:text-foreground dark:border-white/[0.08]">
+      <span class={cn("mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors", portalTone(props.card.to))}>
         <Icon class="h-5 w-5" />
       </span>
       <div class="min-w-0 flex-1 space-y-1">
@@ -593,7 +611,7 @@ function PortalCard(props: {
             <span class="hidden text-muted-foreground/40 sm:inline" aria-hidden="true">
               |
             </span>
-            <span class="mono shrink-0 text-sm font-semibold tabular-nums tracking-tight text-foreground sm:text-base">
+            <span class="mono shrink-0 rounded-full border border-black/[0.06] bg-background/80 px-2 py-0.5 text-xs font-semibold tabular-nums tracking-tight text-foreground shadow-sm dark:border-white/[0.08] sm:text-sm">
               {props.card.stat}
             </span>
           </Show>
