@@ -260,7 +260,7 @@ function ExamsContent() {
     <div class="space-y-6">
       <div class="space-y-2">
         <PageHeader
-          accent="rose"
+          accent="sky"
           eyebrow={t("nav.exams")}
           title={t("exams.title")}
           description={t("exams.subtitle")}
@@ -275,13 +275,14 @@ function ExamsContent() {
         />
       </div>
 
-      <section class="data-shell space-y-4 border-indigo-500/15 bg-indigo-500/[0.025] p-4">
-        <Show when={flash()}>
-          <Alert variant="success">{flash()}</Alert>
-        </Show>
-        <Show when={error() && !createOpen()}>
-          <Alert variant="destructive">{error()}</Alert>
-        </Show>
+      <Show when={flash()}>
+        <Alert variant="success">{flash()}</Alert>
+      </Show>
+      <Show when={error() && !createOpen()}>
+        <Alert variant="destructive">{error()}</Alert>
+      </Show>
+
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
