@@ -1,21 +1,31 @@
-import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, lazy, onCleanup } from "solid-js";
 import { getExamAttempt } from "@/api/exams";
 import { getExamAttemptQuestions } from "@/api/exams";
+import { getSettings } from "@/api/settings";
 import { postExamAttempt } from "@/api/exams";
 import { postExamAttemptAnswer } from "@/api/exams";
 import { postExamAttemptFinish } from "@/api/exams";
+import { postExamAttemptAnswerImage } from "@/api/exams";
+import { deleteExamAttemptAnswerImage } from "@/api/exams";
+import { getExamAnswerImageBlob } from "@/api/exams";
 import { formatApiError, formatApiErrorMessage } from "@/api/client";
 import type { AttemptQuestion, Exam, ExamAttempt } from "@/api/client";
+import type { DrawScene } from "@/lib/draw-stroke";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconAlert, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { IconAlert, IconChevronLeft, IconChevronRight, IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { formatDateTime } from "@/lib/format";
+import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+// Lazy so the drawing pad rides its own chunk, off the exam room's initial load.
+const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
 type WsState = "connecting" | "connected" | "disconnected";
 type WsMessage =
@@ -48,19 +58,39 @@ export function ExamRoomWS(props: { exam: Exam }) {
   const [activeQuestionIndex, setActiveQuestionIndex] = createSignal(0);
   const [remainingMs, setRemainingMs] = createSignal<number | null>(0);
   const [wsState, setWsState] = createSignal<WsState>("disconnected");
+  const [settings] = createResource(async () => {
+    try {
+      return await getSettings();
+    } catch {
+      return null;
+    }
+  });
   const now = createNow();
+  const maxFileBytes = () => maxUploadBytes(settings());
   const scheduled = createMemo(() => props.exam.mode === "sync" || props.exam.mode === "async" || props.exam.mode === "open");
   const attemptStatus = createMemo(() => {
     const current = attempt();
     if (!current || current.status !== "in_progress") return current?.status;
+    if (current.left_at != null) return "left";
     const deadline = current.deadline ?? props.exam.ends_at;
     return deadline != null && deadline <= now() ? "expired" : current.status;
   });
+  const canUseNewAttempt = (current: ExamAttempt | null) =>
+    !!current && current.status === "in_progress" && current.left_at != null && current.attempts_used < current.max_attempts;
   const canWrite = createMemo(() => attemptStatus() === "in_progress" && (remainingMs() == null || remainingMs()! > 0));
   const canStart = createMemo(() => {
+    if (canUseNewAttempt(attempt())) return true;
     const status = attemptStatus();
     return status == null || status === "in_progress";
   });
+  const canResume = createMemo(() => attempt() != null && attemptStatus() === "in_progress");
+  const blockedStartLabel = () => {
+    const status = attemptStatus();
+    if (status === "submitted") return t("attempt.submitted");
+    if (status === "expired") return t("attempt.expired");
+    if (status === "left") return t("attempt.noAttemptsLeft");
+    return t("attempt.unscheduled");
+  };
 
   let ws: WebSocket | null = null;
 
@@ -207,6 +237,45 @@ export function ExamRoomWS(props: { exam: Exam }) {
     }
   };
 
+  // A drawing is binary, so it skips the JSON WS/REST autosave: upload out-of-band,
+  // then refetch so the answer's answer_image and updated_at badge catch up.
+  const refreshAnswers = async () => {
+    const next = await getExamAttempt(props.exam.id);
+    setAttempt(next);
+    const qs = await getExamAttemptQuestions(props.exam.id);
+    setQuestions(qs);
+  };
+
+  const saveAnswerImage = async (question: AttemptQuestion, file: File) => {
+    setError("");
+    if (file.size > maxFileBytes()) {
+      setError(t("notes.fileTooLarge", { size: formatBytes(maxFileBytes()) }));
+      return;
+    }
+    setPending(true);
+    try {
+      await postExamAttemptAnswerImage(props.exam.id, question.id, file);
+      await refreshAnswers();
+    } catch (err) {
+      setError(formatApiError(err, locale()));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const removeAnswerImage = async (question: AttemptQuestion) => {
+    setError("");
+    setPending(true);
+    try {
+      await deleteExamAttemptAnswerImage(props.exam.id, question.id);
+      await refreshAnswers();
+    } catch (err) {
+      setError(formatApiError(err, locale()));
+    } finally {
+      setPending(false);
+    }
+  };
+
   const finish = async () => {
     setPending(true);
     setError("");
@@ -266,9 +335,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
               {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : props.exam.mode === "open" ? t("exams.mode.open") : t("attempt.unscheduled")}
             </p>
           </div>
-          <Show when={scheduled() && canStart()} fallback={<Badge variant="outline" class="w-fit rounded-full px-3 py-1">{t("attempt.unscheduled")}</Badge>}>
+          <Show when={scheduled() && canStart()} fallback={<Badge variant="outline" class="w-fit rounded-full px-3 py-1">{blockedStartLabel()}</Badge>}>
             <Show
-              when={attempt()}
+              when={canResume()}
               fallback={
                 <Button type="button" class="w-full sm:w-auto" disabled={pending()} onClick={() => void start()}>
                   {t("attempt.start")}
@@ -302,6 +371,17 @@ export function ExamRoomWS(props: { exam: Exam }) {
                     <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
                     <div class="min-w-0 space-y-1">
                       <p class="text-sm font-semibold text-foreground">{t("attempt.expired")}</p>
+                      <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>
+                    </div>
+                  </div>
+                </div>
+              </Match>
+              <Match when={attemptStatus() === "left"}>
+                <div class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                  <div class="flex items-start gap-3">
+                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                    <div class="min-w-0 space-y-1">
+                      <p class="text-sm font-semibold text-foreground">{t("attempt.left")}</p>
                       <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>
                     </div>
                   </div>
@@ -359,6 +439,8 @@ export function ExamRoomWS(props: { exam: Exam }) {
                       disabled={!canWrite() || pending()}
                       onSave={(value) => saveAnswer(question(), value)}
                       onSaved={goNext}
+                      onSaveImage={(file) => saveAnswerImage(question(), file)}
+                      onRemoveImage={() => removeAnswerImage(question())}
                     />
                     <div class="flex items-center justify-between gap-2">
                       <Button type="button" variant="outline" class="rounded-lg" disabled={activeQuestionIndex() === 0} onClick={goPrevious}>
@@ -433,6 +515,7 @@ function AttemptSummaryWS(props: { attempt: ExamAttempt; status?: string; remain
   const remainingWarn = () => status() === "in_progress" && props.remainingMs != null && props.remainingMs <= 5 * 60 * 1000;
   const statusLabel = () => {
     if (status() === "in_progress") return t("attempt.inProgress");
+    if (status() === "left") return t("attempt.left");
     if (status() === "submitted") return t("attempt.submitted");
     if (status() === "expired") return t("attempt.expired");
     return status() ?? "—";
@@ -539,6 +622,8 @@ function QuestionAnswerCardWS(props: {
   disabled: boolean;
   onSave: (value: string) => Promise<void>;
   onSaved?: () => void;
+  onSaveImage: (file: File) => Promise<void>;
+  onRemoveImage: () => Promise<void>;
 }) {
   const t = useT();
   const { locale } = usePreferences();
@@ -550,6 +635,8 @@ function QuestionAnswerCardWS(props: {
       : props.question.answer?.text ?? "",
   );
   const [saved, setSaved] = createSignal(false);
+  const [drawOpen, setDrawOpen] = createSignal(false);
+  const [editScene, setEditScene] = createSignal<DrawScene | null>(null);
   let questionId = props.question.id;
 
   createEffect(() => {
@@ -563,12 +650,38 @@ function QuestionAnswerCardWS(props: {
         : props.question.answer?.text ?? "",
     );
     setSaved(false);
+    setDrawOpen(false);
+    setEditScene(null);
   });
 
   const save = async () => {
     await props.onSave(value());
     setSaved(true);
     props.onSaved?.();
+  };
+
+  const openNewDrawing = () => {
+    setEditScene(null);
+    setDrawOpen(true);
+  };
+
+  // Reload the stored PNG's embedded scene so the pad reopens on the saved drawing.
+  const openEditDrawing = async () => {
+    try {
+      const blob = await getExamAnswerImageBlob(props.question.exam, props.question.id);
+      const { pngBytesToScene } = await import("@/lib/drawing-file");
+      setEditScene(pngBytesToScene(new Uint8Array(await blob.arrayBuffer())));
+    } catch {
+      setEditScene(null); // plain image or fetch failed → start blank, never crash
+    } finally {
+      setDrawOpen(true);
+    }
+  };
+
+  const saveDrawing = async (file: File) => {
+    await props.onSaveImage(file);
+    setEditScene(null);
+    setDrawOpen(false);
   };
 
   return (
@@ -594,17 +707,48 @@ function QuestionAnswerCardWS(props: {
       <Show
         when={props.question.kind === "choice"}
         fallback={
-           <Textarea
-             class="min-h-32"
-             value={value()}
-            rows={4}
-            disabled={props.disabled}
-            maxlength={10000}
-            onInput={(e) => {
-              setSaved(false);
-              setValue(e.currentTarget.value);
-            }}
-          />
+          <div class="space-y-3">
+            <Textarea
+              class="min-h-32"
+              value={value()}
+              rows={4}
+              disabled={props.disabled}
+              maxlength={10000}
+              onInput={(e) => {
+                setSaved(false);
+                setValue(e.currentTarget.value);
+              }}
+            />
+            <Show when={props.question.answer?.answer_image}>
+              <img
+                src={`/api/exams/${props.question.exam}/attempt/answers/${props.question.id}/image`}
+                alt={t("exams.drawAnswer")}
+                class="h-64 w-full max-w-2xl rounded-md border bg-muted/20 object-contain"
+              />
+            </Show>
+            <Show when={!props.disabled}>
+              <div class="flex flex-wrap items-center gap-2">
+                <Show
+                  when={props.question.answer?.answer_image}
+                  fallback={
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={openNewDrawing}>
+                      <IconEdit class="h-4 w-4" />
+                      {t("exams.drawAnswer")}
+                    </Button>
+                  }
+                >
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => void openEditDrawing()}>
+                    <IconEdit class="h-4 w-4" />
+                    {t("exams.editDrawing")}
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={() => void props.onRemoveImage()}>
+                    <IconTrash class="h-4 w-4" />
+                    {t("exams.removeDrawing")}
+                  </Button>
+                </Show>
+              </div>
+            </Show>
+          </div>
         }
       >
         <div class="space-y-2">
@@ -646,6 +790,24 @@ function QuestionAnswerCardWS(props: {
       >
         {t("attempt.saveAnswer")}
       </Button>
+      <FormDialog
+        open={drawOpen()}
+        onOpenChange={(open) => {
+          setDrawOpen(open);
+          if (!open) setEditScene(null);
+        }}
+        title={t("exams.drawAnswer")}
+        class="sm:max-w-3xl"
+      >
+        <Suspense fallback={<PageSpinner />}>
+          <DrawCanvas
+            pending={props.disabled}
+            initialScene={editScene()}
+            fileName="answer.png"
+            onSave={(file) => void saveDrawing(file)}
+          />
+        </Suspense>
+      </FormDialog>
     </article>
   );
 }

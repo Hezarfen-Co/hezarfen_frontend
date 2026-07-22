@@ -17,13 +17,13 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconEdit, IconEye, IconPlus } from "@/components/ui/icons";
+import { IconCheck, IconEdit, IconEye, IconPlus } from "@/components/ui/icons";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
+import { examDisplayStatus, examStatusMessageKey, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -57,6 +57,8 @@ function ExamsContent() {
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
   const [flash, setFlash] = createFlash();
+  const [error, setError] = createSignal("");
+  const [pending, setPending] = createSignal(false);
 
   const [createStep, setCreateStep] = createSignal<"details" | "questions">("details");
   const [createdExam, setCreatedExam] = createSignal<Exam | null>(null);
@@ -135,14 +137,7 @@ function ExamsContent() {
   };
 
   const statusLabel = (status: ExamDisplayStatus) => {
-    if (status === "submitted") return t("attempt.submitted");
-    if (status === "expired") return t("attempt.expired");
-    if (status === "no_attempts_left") return t("attempt.noAttemptsLeft");
-    if (status === "draft") return t("exams.draft");
-    if (status === "unscheduled") return t("exams.unscheduled");
-    if (status === "finished") return t("exams.finished");
-    if (status === "upcoming") return t("exams.upcoming");
-    return t("exams.active");
+    return t(examStatusMessageKey(status));
   };
   const rows = (): ExamRow[] => filterExams(list() ?? []).map((exam) => ({ ...exam, displayStatus: examStatus(exam) }));
   const columns = createMemo<ColumnDef<ExamRow>[]>(() => [
@@ -204,7 +199,12 @@ function ExamsContent() {
               onSelect: () => void navigate({ to: "/exams/$id", params: { id: cell.row.original.id } }),
             },
             ...(isTeacherPlus() && canEditExam(cell.row.original)
-              ? [{ label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => { setEditingExam(cell.row.original); setEditTab("details"); } }]
+              ? [
+                  ...(cell.row.original.draft
+                    ? [{ label: t("exams.publish"), icon: <IconCheck class="h-4 w-4" />, disabled: pending(), onSelect: () => void publishExam(cell.row.original) }]
+                    : []),
+                  { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => { setEditingExam(cell.row.original); setEditTab("details"); } },
+                ]
               : []),
           ]}
         />
@@ -243,6 +243,20 @@ function ExamsContent() {
     setFlash(t("common.saved"));
   };
 
+  const publishExam = async (exam: Exam) => {
+    setPending(true);
+    setError("");
+    try {
+      await patchExamById(exam.id, { draft: false });
+      await refetchExams();
+      setFlash(t("exams.published"));
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <div class="space-y-6">
       <div class="space-y-2">
@@ -266,6 +280,9 @@ function ExamsContent() {
         <Show when={flash()}>
           <Alert variant="success">{flash()}</Alert>
         </Show>
+        <Show when={error()}>
+          <Alert variant="destructive">{error()}</Alert>
+        </Show>
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -279,6 +296,7 @@ function ExamsContent() {
             enablePagination
             pageSize={EXAM_PAGE_SIZE}
             empty={t("exams.empty")}
+            onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
             filters={
               <>
                 <Select class="h-9 w-full rounded-sm sm:w-40" value={statusFilter()} onChange={(event) => setStatusFilter(event.currentTarget.value as ExamDisplayStatus | "all")}>

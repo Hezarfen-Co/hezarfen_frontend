@@ -8,6 +8,7 @@ import { IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
 
 export type NoteFormValues = {
@@ -17,12 +18,6 @@ export type NoteFormValues = {
 };
 
 const MAX_NOTE_FILES = 10;
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
 
 export function NoteForm(props: {
   initial?: Partial<Note>;
@@ -49,7 +44,7 @@ export function NoteForm(props: {
       return null;
     }
   });
-  const maxFileBytes = () => settings()?.max_file_bytes ?? 5 * 1024 * 1024;
+  const maxFileBytes = () => maxUploadBytes(settings());
   const showFiles = () => !!props.enableFiles && !isUpdate();
 
   const validate = (): string | null => {

@@ -5,6 +5,7 @@ import { deleteExamById } from "@/api/exams";
 import { deleteExamResultByUserId } from "@/api/exams";
 import { getExamById } from "@/api/exams";
 import { getExamAttempt } from "@/api/exams";
+import { getExamLive } from "@/api/exams";
 import { getExamResult } from "@/api/exams";
 import { getExamResults } from "@/api/exams";
 import { getExamStatistics } from "@/api/exams";
@@ -36,7 +37,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
+import { examDisplayStatus, examStatusMessageKey, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
@@ -187,18 +188,17 @@ function ExamDetailContent() {
     const attempt = ownAttempt();
     return attempt ? { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } : null;
   };
-  const noAttemptsLeft = () => detailStatus() === "no_attempts_left";
+  const ownAttemptClosedByExit = () => {
+    const attempt = ownAttempt();
+    return !!attempt && attempt.status === "in_progress" && attempt.left_at != null;
+  };
+  const noAttemptsLeft = () => {
+    const attempt = ownAttemptSummary();
+    return detailStatus() === "no_attempts_left" || !!attempt && attempt.status !== "in_progress" && attempt.max_attempts > 0 && attempt.attempts_used >= attempt.max_attempts;
+  };
   const detailStatus = (): ExamDisplayStatus => exam() ? examDisplayStatus(exam()!, now(), ownAttemptSummary()) : "unscheduled";
   const detailStatusLabel = () => {
-    const status = detailStatus();
-    if (status === "submitted") return t("attempt.submitted");
-    if (status === "expired") return t("attempt.expired");
-    if (status === "no_attempts_left") return t("attempt.noAttemptsLeft");
-    if (status === "draft") return t("exams.draft");
-    if (status === "unscheduled") return t("exams.unscheduled");
-    if (status === "finished") return t("exams.finished");
-    if (status === "upcoming") return t("exams.upcoming");
-    return t("exams.active");
+    return t(examStatusMessageKey(detailStatus()));
   };
 
   const canManage = () => {
@@ -222,6 +222,10 @@ function ExamDetailContent() {
     return t("exams.unscheduled");
   };
   const isDraft = () => exam()?.draft === true;
+  const [gradeLive] = createResource(
+    () => (hasCourseManagementRights() && gradeOpen() && !isFinished() ? id() : null),
+    async (examId) => examId ? getExamLive(examId) : null,
+  );
   const resultTotal = () => results()?.total ?? 0;
   const resultTotalPages = () => Math.max(1, Math.ceil(resultTotal() / RESULT_PAGE_SIZE));
   const setClampedAnswerMark = (value: string) => {
@@ -260,6 +264,14 @@ function ExamDetailContent() {
   const gradeStudents = () => {
     if (gradeResults.loading) return [];
     const graded = new Set((gradeResults()?.items ?? []).map((row) => personId(row.user)));
+    if (!isFinished()) {
+      return (gradeLive()?.students ?? [])
+        .filter((row) => (row.status === "submitted" || row.status === "expired") && !graded.has(personId(row.user)))
+        .map((row) => ({
+          id: personId(row.user),
+          label: personLabelWithId(row.user),
+        }));
+    }
     return (roster() ?? [])
       .filter((row) => !graded.has(row.user.id))
       .map((row) => ({
@@ -372,7 +384,7 @@ function ExamDetailContent() {
                             <Link to="/exam-room/$id" params={{ id: id() }}>
                               <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
                                 <IconExam class="h-4 w-4" />
-                                {ownAttempt()?.status === "in_progress" ? t("attempt.resume") : t("attempt.openRoom")}
+                                {ownAttempt()?.status === "in_progress" && !ownAttemptClosedByExit() ? t("attempt.resume") : t("attempt.openRoom")}
                               </Button>
                             </Link>
                           }
@@ -672,6 +684,10 @@ function ExamDetailContent() {
               >
                 <GradeForm
                   students={gradeStudents()}
+                  onViewAnswers={(userId) => {
+                    setGradeOpen(false);
+                    setAnswerSheetUserId(userId);
+                  }}
                   onSubmit={async (values) => {
                     await postExamResult(id(), values);
                     await refetchResults();
@@ -689,10 +705,7 @@ function ExamDetailContent() {
                 actions={
                   <Show when={hasCourseManagementRights()}>
                     <div class="flex items-center gap-2">
-                      <Show when={!isFinished()}>
-                        <span class="text-xs text-muted-foreground">{t("exams.gradeAfterExam")}</span>
-                      </Show>
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={!isFinished() || isDraft()} onClick={() => setGradeOpen(true)}>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
                         <IconEdit class="h-4 w-4" />
                         {t("exams.gradeStudent")}
                       </Button>

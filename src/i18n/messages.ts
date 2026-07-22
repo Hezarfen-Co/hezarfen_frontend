@@ -226,6 +226,26 @@ export type MessageKey =
   | "notes.files"
   | "notes.filesHelp"
   | "notes.addFile"
+  | "notes.draw"
+  | "notes.drawTitle"
+  | "draw.pen"
+  | "draw.eraser"
+  | "draw.pan"
+  | "draw.zoomIn"
+  | "draw.zoomOut"
+  | "draw.resetZoom"
+  | "draw.color"
+  | "draw.width"
+  | "draw.paper"
+  | "draw.undo"
+  | "draw.clear"
+  | "draw.save"
+  | "draw.hint"
+  | "draw.downloadPng"
+  | "draw.downloadJpeg"
+  | "draw.bgNone"
+  | "draw.bgLines"
+  | "draw.bgGrid"
   | "notes.downloadFile"
   | "notes.noFiles"
   | "notes.fileLimit"
@@ -323,6 +343,8 @@ export type MessageKey =
   | "exams.allowRejoinHelp"
   | "exams.draft"
   | "exams.draftHelp"
+  | "exams.publish"
+  | "exams.published"
   | "exams.startTime"
   | "exams.endTime"
   | "exams.scheduleRequired"
@@ -357,6 +379,9 @@ export type MessageKey =
   | "questions.kind.choice"
   | "questions.kind.text"
   | "questions.image"
+  | "questions.draw"
+  | "questions.drawTitle"
+  | "questions.editDrawing"
   | "questions.choiceImage"
   | "questions.subjectRequired"
   | "questions.textRequired"
@@ -388,6 +413,15 @@ export type MessageKey =
   | "pomodoro.startedAt"
   | "pomodoro.finishedAt"
   | "pomodoro.duration"
+  | "pomodoro.focusConsole"
+  | "pomodoro.current"
+  | "pomodoro.today"
+  | "pomodoro.average"
+  | "pomodoro.sessions"
+  | "pomodoro.idleHelp"
+  | "pomodoro.runningSince"
+  | "pomodoro.lastSession"
+  | "pomodoro.noRecentSession"
   | "attempt.title"
   | "attempt.openRoom"
   | "attempt.start"
@@ -554,6 +588,14 @@ export type MessageKey =
   | "exams.possible"
   | "exams.isCorrect"
   | "exams.textAnswer"
+  | "exams.drawAnswer"
+  | "exams.playDrawing"
+  | "exams.showImage"
+  | "exams.play"
+  | "exams.pause"
+  | "exams.restart"
+  | "exams.editDrawing"
+  | "exams.removeDrawing"
   | "exams.nameless"
   | "exams.emptyRoster"
   | "exams.selectStudent"
@@ -671,8 +713,12 @@ export type MessageKey =
   | "messages.reply"
   | "messages.send"
   | "messages.moveToArchive"
+  | "messages.moveOutOfArchive"
   | "messages.moveToTrash"
   | "messages.deleteForever"
+  | "messages.movedToast"
+  | "messages.deletedToast"
+  | "messages.sentToast"
   | "messages.to"
   | "messages.from"
   | "messages.selectRecipient"
@@ -910,6 +956,26 @@ const en: Dict = {
   "notes.files": "Attachments",
   "notes.filesHelp": "Up to 10 files. Max {size} each.",
   "notes.addFile": "Add file",
+  "notes.draw": "Draw",
+  "notes.drawTitle": "Draw a picture",
+  "draw.pen": "Pen",
+  "draw.eraser": "Eraser",
+  "draw.pan": "Move around",
+  "draw.zoomIn": "Zoom in",
+  "draw.zoomOut": "Zoom out",
+  "draw.resetZoom": "Reset zoom",
+  "draw.color": "Colour",
+  "draw.width": "Line thickness",
+  "draw.paper": "Paper",
+  "draw.undo": "Undo",
+  "draw.clear": "Clear all",
+  "draw.save": "Save drawing",
+  "draw.hint": "Draw here with your finger, pen, or mouse.",
+  "draw.downloadPng": "Download PNG",
+  "draw.downloadJpeg": "Download JPEG",
+  "draw.bgNone": "Plain",
+  "draw.bgLines": "Lines",
+  "draw.bgGrid": "Grid",
   "notes.downloadFile": "Download",
   "notes.noFiles": "No files attached.",
   "notes.fileLimit": "This note already has 10 files.",
@@ -1014,6 +1080,8 @@ const en: Dict = {
   "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
   "exams.draft": "Draft",
   "exams.draftHelp": "Keep hidden from students until published.",
+  "exams.publish": "Publish exam",
+  "exams.published": "Exam published",
   "exams.startTime": "Start time",
   "exams.endTime": "End time",
   "exams.scheduleRequired": "Sync/Async exams require a start and end time",
@@ -1048,6 +1116,9 @@ const en: Dict = {
   "questions.kind.choice": "Choice",
   "questions.kind.text": "Text",
   "questions.image": "Question image",
+  "questions.draw": "Draw the image",
+  "questions.drawTitle": "Draw the question image",
+  "questions.editDrawing": "Edit drawing",
   "questions.choiceImage": "Choice image",
   "questions.subjectRequired": "Select a subject for this question",
   "questions.textRequired": "Question text is required",
@@ -1079,6 +1150,15 @@ const en: Dict = {
   "pomodoro.startedAt": "Started",
   "pomodoro.finishedAt": "Finished",
   "pomodoro.duration": "Duration",
+  "pomodoro.focusConsole": "Focus console",
+  "pomodoro.current": "Current focus",
+  "pomodoro.today": "Today",
+  "pomodoro.average": "Average",
+  "pomodoro.sessions": "Sessions",
+  "pomodoro.idleHelp": "Ready when you are. Start one focused study block.",
+  "pomodoro.runningSince": "Started {time}",
+  "pomodoro.lastSession": "Last finished {time}",
+  "pomodoro.noRecentSession": "No completed session yet.",
   "attempt.title": "Exam room",
   "attempt.openRoom": "Open exam room",
   "attempt.start": "Start exam",
@@ -1256,6 +1336,14 @@ const en: Dict = {
   "exams.possible": "Possible",
   "exams.isCorrect": "Correct",
   "exams.textAnswer": "Text answer",
+  "exams.drawAnswer": "Draw answer",
+  "exams.playDrawing": "Play drawing",
+  "exams.showImage": "Show image",
+  "exams.play": "Play",
+  "exams.pause": "Pause",
+  "exams.restart": "Restart",
+  "exams.editDrawing": "Edit drawing",
+  "exams.removeDrawing": "Remove drawing",
   "exams.nameless": "Unnamed",
   "exams.emptyRoster": "No enrolled students yet.",
   "exams.selectStudent": "Select a student from the roster",
@@ -1373,8 +1461,12 @@ const en: Dict = {
   "messages.reply": "Reply",
   "messages.send": "Send",
   "messages.moveToArchive": "Archive",
+  "messages.moveOutOfArchive": "Move out of Archive",
   "messages.moveToTrash": "Move to Trash",
   "messages.deleteForever": "Delete Permanently",
+  "messages.movedToast": "Message moved.",
+  "messages.deletedToast": "Message deleted.",
+  "messages.sentToast": "Message sent.",
   "messages.to": "To: ",
   "messages.from": "From: ",
   "messages.selectRecipient": "Please select a recipient.",
@@ -1606,6 +1698,26 @@ const tr: Dict = {
   "notes.files": "Ekler",
   "notes.filesHelp": "En fazla 10 dosya. Dosya başına {size} sınırı.",
   "notes.addFile": "Dosya ekle",
+  "notes.draw": "Çiz",
+  "notes.drawTitle": "Resim çiz",
+  "draw.pen": "Kalem",
+  "draw.eraser": "Silgi",
+  "draw.pan": "Gezin",
+  "draw.zoomIn": "Yakınlaştır",
+  "draw.zoomOut": "Uzaklaştır",
+  "draw.resetZoom": "Sıfırla",
+  "draw.color": "Renk",
+  "draw.width": "Çizgi kalınlığı",
+  "draw.paper": "Kağıt",
+  "draw.undo": "Geri al",
+  "draw.clear": "Hepsini sil",
+  "draw.save": "Çizimi kaydet",
+  "draw.hint": "Parmağınla, kalemle ya da fareyle buraya çiz.",
+  "draw.downloadPng": "PNG indir",
+  "draw.downloadJpeg": "JPEG indir",
+  "draw.bgNone": "Düz",
+  "draw.bgLines": "Çizgili",
+  "draw.bgGrid": "Kareli",
   "notes.downloadFile": "İndir",
   "notes.noFiles": "Henüz dosya eklenmemiş.",
   "notes.fileLimit": "Bu notta zaten 10 dosya var.",
@@ -1710,6 +1822,8 @@ const tr: Dict = {
   "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
   "exams.draft": "Taslak",
   "exams.draftHelp": "Yayınlanana kadar öğrencilerden gizle.",
+  "exams.publish": "Sınavı yayınla",
+  "exams.published": "Sınav yayınlandı",
   "exams.startTime": "Başlangıç saati",
   "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",
@@ -1744,6 +1858,9 @@ const tr: Dict = {
   "questions.kind.choice": "Seçmeli",
   "questions.kind.text": "Metin",
   "questions.image": "Soru görseli",
+  "questions.draw": "Görseli çiz",
+  "questions.drawTitle": "Soru görselini çiz",
+  "questions.editDrawing": "Çizimi düzenle",
   "questions.choiceImage": "Seçenek görseli",
   "questions.subjectRequired": "Bu soru için konu seç",
   "questions.textRequired": "Soru metni gerekli",
@@ -1775,6 +1892,15 @@ const tr: Dict = {
   "pomodoro.startedAt": "Başlangıç",
   "pomodoro.finishedAt": "Bitiş",
   "pomodoro.duration": "Süre",
+  "pomodoro.focusConsole": "Odak paneli",
+  "pomodoro.current": "Mevcut odak",
+  "pomodoro.today": "Bugün",
+  "pomodoro.average": "Ortalama",
+  "pomodoro.sessions": "Oturum",
+  "pomodoro.idleHelp": "Hazır olduğunda tek bir odaklı çalışma bloğu başlat.",
+  "pomodoro.runningSince": "Başlangıç: {time}",
+  "pomodoro.lastSession": "Son bitiş: {time}",
+  "pomodoro.noRecentSession": "Henüz tamamlanmış oturum yok.",
   "attempt.title": "Sınav odası",
   "attempt.openRoom": "Sınav odasını aç",
   "attempt.start": "Sınava başla",
@@ -1952,6 +2078,14 @@ const tr: Dict = {
   "exams.possible": "Mümkün",
   "exams.isCorrect": "Doğru",
   "exams.textAnswer": "Metin cevap",
+  "exams.drawAnswer": "Cevabı çiz",
+  "exams.playDrawing": "Çizimi oynat",
+  "exams.showImage": "Görseli göster",
+  "exams.play": "Oynat",
+  "exams.pause": "Duraklat",
+  "exams.restart": "Baştan al",
+  "exams.editDrawing": "Çizimi düzenle",
+  "exams.removeDrawing": "Çizimi kaldır",
   "exams.nameless": "İsimsiz",
   "exams.emptyRoster": "Henüz kayıtlı öğrenci yok.",
   "exams.selectStudent": "Listeden bir öğrenci seç",
@@ -2069,8 +2203,12 @@ const tr: Dict = {
   "messages.reply": "Yanıtla",
   "messages.send": "Gönder",
   "messages.moveToArchive": "Arşivle",
+  "messages.moveOutOfArchive": "Arşivden çıkar",
   "messages.moveToTrash": "Çöp Kutusuna Taşı",
   "messages.deleteForever": "Kalıcı Olarak Sil",
+  "messages.movedToast": "Mesaj taşındı.",
+  "messages.deletedToast": "Mesaj silindi.",
+  "messages.sentToast": "Mesaj gönderildi.",
   "messages.to": "Kime: ",
   "messages.from": "Kimden: ",
   "messages.selectRecipient": "Lütfen bir alıcı seçin.",

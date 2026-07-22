@@ -126,7 +126,7 @@ describe("client", () => {
 
     it("handles unknown messages with sentence case", () => {
       expect(formatApiErrorMessage("custom error occurred", "en")).toBe("Custom error occurred");
-      expect(formatApiErrorMessage("custom error occurred", "tr")).toBe("İşlem tamamlanamadı. Lütfen tekrar dene.");
+      expect(formatApiErrorMessage("custom error occurred", "tr")).toBe("İşlem tamamlanamadı: Custom error occurred");
     });
   });
 
@@ -150,7 +150,7 @@ describe("client", () => {
 
     it("formats generic Error", () => {
       expect(formatApiError(new Error("generic"), "en")).toBe("Generic");
-      expect(formatApiError(new Error("generic"), "tr")).toBe("İşlem tamamlanamadı. Lütfen tekrar dene.");
+      expect(formatApiError(new Error("generic"), "tr")).toBe("İşlem tamamlanamadı: Generic");
     });
   });
 });

@@ -1,4 +1,4 @@
-import { client, formClient } from "../client";
+import { blobClient, client, formClient } from "../client";
 import type { Page, PageParams } from "../client";
 import type { PersonRef } from "../client";
 
@@ -69,4 +69,9 @@ export async function deleteSolutionById(id: string, sid: string): Promise<void>
 
 export function getSolutionImageUrl(id: string, sid: string): string {
   return `/api/questions/${id}/solutions/${sid}/image`;
+}
+
+/** Raw bytes of the same image — needed to recover an embedded drawing scene. */
+export function getSolutionImageBlob(id: string, sid: string, signal?: AbortSignal): Promise<Blob> {
+  return blobClient(`/questions/${id}/solutions/${sid}/image`, signal);
 }

@@ -610,7 +610,15 @@ function CourseDetailContent() {
               }
             >
               <Suspense fallback={<PageSpinner />}>
-                <DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} />
+                <DataTable
+                  columns={examColumns()}
+                  data={exams() ?? []}
+                  filterColumn="title"
+                  enablePagination
+                  pageSize={10}
+                  empty={t("exams.empty")}
+                  onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
+                />
               </Suspense>
             </SectionDisclosure>
 

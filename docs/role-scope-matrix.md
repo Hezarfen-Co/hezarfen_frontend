@@ -30,11 +30,11 @@
 
 | Sidebar group / item | Student | Teacher | Manager | Admin |
 |---|---|---|---|---|
-| **classes** — Courses / Exams / Events | ✅ | ✅ | ✅ | ✅ |
-| **grades** — Report card (`/marks`) | ✅ | ❌ | ❌ | ❌ |
-| **grades** — Notes | ✅ | ✅ | ✅ | ✅ |
+| **classes** — Courses / Exams / Events / exam grades | ✅ | ✅ | ✅ | ✅ |
+| **grades** — Defter (`/notes`) | ✅ | ✅ | ✅ | ✅ |
+| **community** — Messages / Question pool | ✅ | ✅ | ✅ | ✅ |
 | **students** — My attendance (`/attendance`) | ✅ | ✅ | ✅ | ✅ |
-| **reports** — Student marks / attendance / work | ❌ | ✅ | ✅ | ✅ |
+| **reports** — Student attendance / pomodoros / work | ❌ | ✅ | ✅ | ✅ |
 | **reports** — Staff work log | ❌ | ❌ | ✅ | ✅ |
 | **settings** — Settings / Terms | ❌ | ❌ | ✅ | ✅ |
 | **admin** — Users | ❌ | ❌ | ❌ | ✅ |
@@ -47,6 +47,7 @@
 | Exams | ✅ (enrolled scope) | ✅ | ✅ | ✅ |
 | Events | ✅ | ✅ (teacher badge) | ✅ | ✅ |
 | Report card | ✅ | ❌ | ❌ | ❌ |
+| Messages | ✅ | ✅ | ✅ | ✅ |
 | Notes | ✅ | ✅ | ✅ | ✅ |
 | Student marks | ❌ | ✅ (teacher badge) | ✅ (teacher badge) | ✅ (teacher badge) |
 | Student attendance | ❌ | ✅ (teacher badge) | ✅ (teacher badge) | ✅ (teacher badge) |

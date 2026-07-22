@@ -43,8 +43,8 @@ function LoginForm() {
     setError("");
     setPending(true);
     try {
-      const user = await postLogin({ username: u, password: p });
-      auth.setUser(user);
+      await postLogin({ username: u, password: p });
+      await auth.refresh();
       void navigate({ to: "/" });
     } catch (err) {
       setError(formatApiError(err));

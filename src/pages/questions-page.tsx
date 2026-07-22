@@ -1,6 +1,7 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createResource, createSignal, lazy } from "solid-js";
 import { Link, useSearch, useNavigate } from "@tanstack/solid-router";
 import { getQuestions, postQuestion } from "@/api/shared";
+import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -11,7 +12,7 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { IconPlus, IconClock, IconCheck, IconPhoto, IconX } from "@/components/ui/icons";
+import { IconPlus, IconClock, IconCheck, IconPhoto, IconX, IconEdit } from "@/components/ui/icons";
 import { personLabel } from "@/lib/person";
 
 import { ErrorAlert } from "@/components/ui/error-alert";
@@ -19,6 +20,10 @@ import { showToast } from "@/components/ui/toast";
 import { useT } from "@/stores/preferences-context";
 import { useAuth } from "@/stores/auth-context";
 import { cn } from "@/lib/cn";
+import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
+
+// Lazy so the drawing pad rides its own chunk, off the question list's initial load.
+const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
 export default function QuestionsPage() {
   return (
@@ -137,6 +142,28 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
   const [title, setTitle] = createSignal("");
   const [body, setBody] = createSignal("");
   const [file, setFile] = createSignal<File | null>(null);
+  const [drawing, setDrawing] = createSignal(false);
+  const [settings] = createResource(async () => {
+    try {
+      return await getSettings();
+    } catch {
+      return null;
+    }
+  });
+  const maxFileBytes = () => maxUploadBytes(settings());
+
+  const setImageFile = (next: File | null) => {
+    if (!next) {
+      setFile(null);
+      return;
+    }
+    setError("");
+    if (next.size > maxFileBytes()) {
+      setError(t("notes.fileTooLarge", { size: formatBytes(maxFileBytes()) }));
+      return;
+    }
+    setFile(next);
+  };
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
@@ -196,16 +223,32 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
               </div>
               <div class="mt-4 text-center">
                 <p class="text-sm font-medium text-foreground">{t("pool.image")}</p>
-                <p class="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF</p>
+                <p class="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF · {formatBytes(maxFileBytes())}</p>
               </div>
             </Show>
             <input
               type="file"
               accept="image/*"
               class="absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0"
-              onChange={(e) => setFile(e.currentTarget.files?.[0] || null)}
+              onChange={(e) => setImageFile(e.currentTarget.files?.[0] || null)}
             />
           </div>
+          {/* Draw instead of upload: the pad saves a PNG File, so it rides the same upload. */}
+          <Button type="button" variant="outline" size="sm" aria-expanded={drawing()} onClick={() => setDrawing((open) => !open)}>
+            <IconEdit class="mr-2 h-4 w-4" />
+            {t("questions.draw")}
+          </Button>
+          <Show when={drawing()}>
+            <Suspense fallback={<div class="h-[22rem] animate-pulse rounded-lg border bg-muted/20" />}>
+              <DrawCanvas
+                fileName="question.png"
+                onSave={(drawn) => {
+                  setImageFile(drawn);
+                  if (drawn.size <= maxFileBytes()) setDrawing(false);
+                }}
+              />
+            </Suspense>
+          </Show>
         </div>
         <div class="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={props.onClose}>

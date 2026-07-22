@@ -1,4 +1,5 @@
 import type { AttemptStatus, Exam } from "@/api/client";
+import type { MessageKey } from "@/i18n/messages";
 
 export type ExamAttemptSummary = {
   status: AttemptStatus | "not_started";
@@ -13,10 +14,11 @@ export function isSittableExam(exam: Exam): boolean {
 }
 
 export function examDisplayStatus(exam: Exam, now: number, attempt?: ExamAttemptSummary | null): ExamDisplayStatus {
+  if (attempt?.status === "submitted" || attempt?.status === "expired") return attempt.status;
+
   const noAttemptsLeft = attempt && attempt.status !== "in_progress" && attempt.max_attempts > 0 && attempt.attempts_used >= attempt.max_attempts;
 
   if (noAttemptsLeft) {
-    if (attempt.status === "submitted" || attempt.status === "expired") return attempt.status;
     return "no_attempts_left";
   }
 
@@ -32,4 +34,15 @@ export function examStatusTone(status: ExamDisplayStatus): string {
   if (status === "submitted") return "submitted";
   if (status === "expired" || status === "no_attempts_left") return "finished";
   return status;
+}
+
+export function examStatusMessageKey(status: ExamDisplayStatus): MessageKey {
+  if (status === "submitted") return "attempt.submitted";
+  if (status === "expired") return "attempt.expired";
+  if (status === "no_attempts_left") return "attempt.noAttemptsLeft";
+  if (status === "draft") return "exams.draft";
+  if (status === "unscheduled") return "exams.unscheduled";
+  if (status === "finished") return "exams.finished";
+  if (status === "upcoming") return "exams.upcoming";
+  return "exams.active";
 }
