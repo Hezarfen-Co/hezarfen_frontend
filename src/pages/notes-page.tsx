@@ -9,9 +9,10 @@ import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { NoteForm } from "@/components/notes/note-form";
+import { NoteImportPanel } from "@/components/notes/note-import-panel";
 import { NoteList } from "@/components/notes/note-list";
 import { Button } from "@/components/ui/button";
-import { IconPlus } from "@/components/ui/icons";
+import { IconPlus, IconUploadCloud } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -34,6 +35,7 @@ function NotesContent() {
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [createOpen, setCreateOpen] = createSignal(false);
+  const [importOpen, setImportOpen] = createSignal(false);
   const [page, setPage] = createSignal(0);
 
   const [list, { refetch }] = createResource(
@@ -72,13 +74,39 @@ function NotesContent() {
           title={t("notes.title")}
           description={t("notes.subtitle")}
           actions={
-            <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
-              <IconPlus class="h-4 w-4" />
-              {t("notes.new")}
-            </Button>
+            <div class="flex items-center gap-2">
+              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+                <IconPlus class="h-4 w-4" />
+                {t("notes.new")}
+              </Button>
+              <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setImportOpen(true)}>
+                <IconUploadCloud class="h-4 w-4" />
+                İçe Aktar
+              </Button>
+            </div>
           }
         />
       </div>
+
+      <SidePanel open={importOpen()} onOpenChange={setImportOpen} title="İçe Aktar">
+        <NoteImportPanel
+          onCancel={() => setImportOpen(false)}
+          onImport={async (importedTitle, importedMarkdown) => {
+            setError("");
+            try {
+              await postNote({
+                title: importedTitle,
+                content: importedMarkdown || undefined,
+              });
+              await refetch();
+              setImportOpen(false);
+              setFlash(t("common.created"));
+            } catch (err) {
+              setError(formatApiError(err));
+            }
+          }}
+        />
+      </SidePanel>
 
       <SidePanel open={createOpen()} onOpenChange={setCreateOpen} title={t("notes.new")}>
         <NoteForm

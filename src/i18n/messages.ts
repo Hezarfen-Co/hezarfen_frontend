@@ -226,6 +226,8 @@ export type MessageKey =
   | "notes.files"
   | "notes.filesHelp"
   | "notes.addFile"
+  | "notes.import"
+  | "notes.importHelp"
   | "notes.draw"
   | "notes.drawTitle"
   | "draw.pen"
@@ -956,6 +958,8 @@ const en: Dict = {
   "notes.files": "Attachments",
   "notes.filesHelp": "Up to 10 files. Max {size} each.",
   "notes.addFile": "Add file",
+  "notes.import": "Import",
+  "notes.importHelp": "Upload a PDF, TXT, or Markdown file. Line breaks, page numbers, and noise will be automatically cleaned into a structured note.",
   "notes.draw": "Draw",
   "notes.drawTitle": "Draw a picture",
   "draw.pen": "Pen",
@@ -1698,6 +1702,8 @@ const tr: Dict = {
   "notes.files": "Ekler",
   "notes.filesHelp": "En fazla 10 dosya. Dosya başına {size} sınırı.",
   "notes.addFile": "Dosya ekle",
+  "notes.import": "İçe aktar",
+  "notes.importHelp": "PDF, TXT veya Markdown dosyanızı yükleyin. Satır sonları, sayfa numaraları ve gürültüler temizlenip düzenli bir nota dönüştürülür.",
   "notes.draw": "Çiz",
   "notes.drawTitle": "Resim çiz",
   "draw.pen": "Kalem",
