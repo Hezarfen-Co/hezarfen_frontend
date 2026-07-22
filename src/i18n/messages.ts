@@ -14,6 +14,7 @@ export type MessageKey =
   | "nav.notes"
   | "nav.events"
   | "nav.exams"
+  | "nav.homework"
   | "nav.courses"
   | "nav.studies"
   | "nav.clubs"
@@ -557,6 +558,18 @@ export type MessageKey =
   | "courses.teacherAssigned"
   | "courses.teacherUnassigned"
   | "courses.noTeachers"
+  | "homework.title"
+  | "homework.item"
+  | "homework.add"
+  | "homework.edit"
+  | "homework.empty"
+  | "homework.help"
+  | "homework.listHelp"
+  | "homework.dueAt"
+  | "homework.assigned"
+  | "homework.wholeCourse"
+  | "homework.wholeCourseHelp"
+  | "homework.dueRequired"
   | "marks.title"
   | "marks.subtitle"
   | "marks.overall"
@@ -748,6 +761,7 @@ const en: Dict = {
   "nav.notes": "Notes",
   "nav.events": "Events",
   "nav.exams": "Exams",
+  "nav.homework": "Homework",
   "nav.courses": "Courses",
   "nav.studies": "Study sessions",
   "nav.clubs": "Clubs",
@@ -1309,6 +1323,18 @@ const en: Dict = {
   "courses.teacherAssigned": "Teacher assigned successfully.",
   "courses.teacherUnassigned": "Teacher unassigned successfully.",
   "courses.noTeachers": "No assigned teachers.",
+  "homework.title": "Homework",
+  "homework.item": "Homework",
+  "homework.add": "Add homework",
+  "homework.edit": "Edit homework",
+  "homework.empty": "No homework yet.",
+  "homework.help": "Assign homework for this course and track its due date.",
+  "homework.listHelp": "All visible homework. Open a row to manage it in its course.",
+  "homework.dueAt": "Due date",
+  "homework.assigned": "Assigned to",
+  "homework.wholeCourse": "Whole course",
+  "homework.wholeCourseHelp": "This first version assigns homework to the whole course. Use the backend API for student subsets until the multi-select UI exists.",
+  "homework.dueRequired": "Choose a valid due date and time.",
   "marks.title": "Report card",
   "marks.subtitle": "Weighted averages across enrolled courses.",
   "marks.overall": "Overall average",
@@ -1494,6 +1520,7 @@ const tr: Dict = {
   "nav.notes": "Defter",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
+  "nav.homework": "Ödevler",
   "nav.courses": "Ders",
   "nav.studies": "Etüt",
   "nav.clubs": "Kulüp",
@@ -2055,6 +2082,18 @@ const tr: Dict = {
   "courses.teacherAssigned": "Öğretmen başarıyla atandı.",
   "courses.teacherUnassigned": "Öğretmen başarıyla çıkarıldı.",
   "courses.noTeachers": "Atanmış öğretmen yok.",
+  "homework.title": "Ödevler",
+  "homework.item": "Ödev",
+  "homework.add": "Ödev ekle",
+  "homework.edit": "Ödevi düzenle",
+  "homework.empty": "Henüz ödev yok.",
+  "homework.help": "Bu ders için ödev ver ve son teslim tarihini takip et.",
+  "homework.listHelp": "Görebildiğin tüm ödevler. Yönetmek için satırı açıp dersine git.",
+  "homework.dueAt": "Son teslim",
+  "homework.assigned": "Atanan",
+  "homework.wholeCourse": "Tüm ders",
+  "homework.wholeCourseHelp": "İlk sürüm ödevi tüm derse atar. Öğrenci alt grupları için çoklu seçim arayüzü gelene kadar backend API kullanılabilir.",
+  "homework.dueRequired": "Geçerli bir son teslim tarihi ve saati seç.",
   "marks.title": "Karnem",
   "marks.subtitle": "Kayıtlı derslerdeki ağırlıklı ortalamalar.",
   "marks.overall": "Genel ortalama",
