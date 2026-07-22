@@ -255,6 +255,21 @@
     @apply rounded-xl h-11 px-5 font-medium active:scale-[0.97] transition-transform duration-150;
   }
 
+  @keyframes dashboard-jiggle {
+    0%, 100% { transform: rotate(-0.4deg) translateY(0); }
+    50% { transform: rotate(0.4deg) translateY(-1px); }
+  }
+
+  .dashboard-jiggle {
+    animation: dashboard-jiggle 180ms ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-jiggle {
+      animation: none;
+    }
+  }
+
   .num,
   .mono {
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
