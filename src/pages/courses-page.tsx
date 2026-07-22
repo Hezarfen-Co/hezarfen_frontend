@@ -190,44 +190,48 @@ function CoursesContent() {
       </div>
 
       <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: pageLabel() })} description={t("courses.subtitle", { item: pageLabel() })}>
-        <form class="space-y-3" onSubmit={onCreate}>
-          <div class="space-y-1.5">
-            <Label for="course-title">{t("form.title")}</Label>
-            <Input id="course-title" required maxlength={200} value={title()} onInput={(e) => setTitle(e.currentTarget.value)} />
-          </div>
-          <div class="space-y-1.5">
-            <Label for="course-desc">{t("form.description")}</Label>
-            <Textarea id="course-desc" maxlength={2000} rows={3} value={description()} onInput={(e) => setDescription(e.currentTarget.value)} />
-          </div>
-          <div class="space-y-1.5">
-            <Label for="course-term">{t("terms.term")}</Label>
-            <Select id="course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
-              <option value="">{t("terms.unassigned")}</option>
-              <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
-            </Select>
-          </div>
-          <div class="space-y-1.5">
-            <Label for="course-capacity">{t("courses.capacity")}</Label>
-            <Input id="course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
-          </div>
-          <Show when={hasMinRole(auth.user()?.role, "manager")}>
+        <form class="space-y-4" onSubmit={onCreate}>
+          <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
             <div class="space-y-1.5">
-              <UserSearchSelect
-                id="course-create-teacher"
-                role="teacher"
-                value={teacherId()}
-                onChange={setTeacherId}
-                placeholder={t("courses.assignTeacher")}
-                label={t("courses.teachers")}
-              />
+              <Label for="course-title">{t("form.title")}</Label>
+              <Input id="course-title" required maxlength={200} value={title()} onInput={(e) => setTitle(e.currentTarget.value)} />
             </div>
-          </Show>
+            <div class="space-y-1.5">
+              <Label for="course-desc">{t("form.description")}</Label>
+              <Textarea id="course-desc" maxlength={2000} rows={3} value={description()} onInput={(e) => setDescription(e.currentTarget.value)} />
+            </div>
+          </div>
+          <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/[0.03] p-4 shadow-sm">
+            <div class="space-y-1.5">
+              <Label for="course-term">{t("terms.term")}</Label>
+              <Select id="course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
+                <option value="">{t("terms.unassigned")}</option>
+                <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+              </Select>
+            </div>
+            <div class="space-y-1.5">
+              <Label for="course-capacity">{t("courses.capacity")}</Label>
+              <Input id="course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
+            </div>
+            <Show when={hasMinRole(auth.user()?.role, "manager")}>
+              <div class="space-y-1.5">
+                <UserSearchSelect
+                  id="course-create-teacher"
+                  role="teacher"
+                  value={teacherId()}
+                  onChange={setTeacherId}
+                  placeholder={t("courses.assignTeacher")}
+                  label={t("courses.teachers")}
+                />
+              </div>
+            </Show>
+          </div>
           {error() && <p class="text-sm text-destructive">{error()}</p>}
-          <div class="flex flex-wrap gap-2">
-            <Button type="submit" class="rounded-xl" disabled={pending()}>
+          <div class="sticky bottom-0 -mx-5 flex flex-wrap gap-2 border-t border-border bg-background px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
+            <Button type="submit" class="flex-1 rounded-xl sm:flex-none" disabled={pending()}>
               {t("common.create")}
             </Button>
-            <Button type="button" variant="outline" class="rounded-xl" onClick={() => setShowForm(false)}>
+            <Button type="button" variant="outline" class="flex-1 rounded-xl sm:flex-none" onClick={() => setShowForm(false)}>
               {t("common.cancel")}
             </Button>
           </div>

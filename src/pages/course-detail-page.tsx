@@ -373,48 +373,52 @@ function CourseDetailContent() {
                   }, t("common.saved"));
                 }}
               >
-                <div class="space-y-1.5">
-                  <Label for="edit-course-title">{t("form.title")}</Label>
-                  <Input
-                    id="edit-course-title"
-                    value={title()}
-                    required
-                    maxlength={200}
-                    onInput={(e) => setTitle(e.currentTarget.value)}
-                  />
+                <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
+                  <div class="space-y-1.5">
+                    <Label for="edit-course-title">{t("form.title")}</Label>
+                    <Input
+                      id="edit-course-title"
+                      value={title()}
+                      required
+                      maxlength={200}
+                      onInput={(e) => setTitle(e.currentTarget.value)}
+                    />
+                  </div>
+                  <div class="space-y-1.5">
+                    <Label for="edit-course-desc">{t("form.description")}</Label>
+                    <Textarea
+                      id="edit-course-desc"
+                      value={description()}
+                      rows={3}
+                      maxlength={2000}
+                      onInput={(e) => setDescription(e.currentTarget.value)}
+                    />
+                  </div>
                 </div>
-                <div class="space-y-1.5">
-                  <Label for="edit-course-desc">{t("form.description")}</Label>
-                  <Textarea
-                    id="edit-course-desc"
-                    value={description()}
-                    rows={3}
-                    maxlength={2000}
-                    onInput={(e) => setDescription(e.currentTarget.value)}
-                  />
+                <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/[0.03] p-4 shadow-sm">
+                  <div class="space-y-1.5">
+                    <Label for="edit-course-kind">{t("courses.kind")}</Label>
+                    <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
+                      <For each={COURSE_KINDS}>{(item) => <option value={item}>{courseKindLabel(item)}</option>}</For>
+                    </Select>
+                  </div>
+                  <div class="space-y-1.5">
+                    <Label for="edit-course-term">{t("terms.term")}</Label>
+                    <Select id="edit-course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
+                      <option value="">{t("terms.unassigned")}</option>
+                      <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+                    </Select>
+                  </div>
+                  <div class="space-y-1.5">
+                    <Label for="edit-course-capacity">{t("courses.capacity")}</Label>
+                    <Input id="edit-course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
+                  </div>
                 </div>
-                <div class="space-y-1.5">
-                  <Label for="edit-course-kind">{t("courses.kind")}</Label>
-                  <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
-                    <For each={COURSE_KINDS}>{(item) => <option value={item}>{courseKindLabel(item)}</option>}</For>
-                  </Select>
-                </div>
-                <div class="space-y-1.5">
-                  <Label for="edit-course-term">{t("terms.term")}</Label>
-                  <Select id="edit-course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
-                    <option value="">{t("terms.unassigned")}</option>
-                    <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
-                  </Select>
-                </div>
-                <div class="space-y-1.5">
-                  <Label for="edit-course-capacity">{t("courses.capacity")}</Label>
-                  <Input id="edit-course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
-                </div>
-                <div class="flex flex-wrap gap-2">
-                  <Button type="submit" class="rounded-xl" disabled={pending()}>
+                <div class="sticky bottom-0 -mx-5 flex flex-wrap gap-2 border-t border-border bg-background px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
+                  <Button type="submit" class="flex-1 rounded-xl sm:flex-none" disabled={pending()}>
                     {t("common.update")}
                   </Button>
-                  <Button type="button" variant="outline" class="rounded-xl" onClick={() => setEditing(false)}>
+                  <Button type="button" variant="outline" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(false)}>
                     {t("common.cancel")}
                   </Button>
                 </div>
