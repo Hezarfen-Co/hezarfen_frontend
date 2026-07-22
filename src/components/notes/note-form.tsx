@@ -1,15 +1,19 @@
-import { For, Show, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createResource, createSignal, lazy } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { getSettings } from "@/api/settings";
 import type { Note } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconPlus, IconTrash } from "@/components/ui/icons";
+import { FormDialog } from "@/components/ui/form-dialog";
+import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
+
+const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
 export type NoteFormValues = {
   title: string;
@@ -36,6 +40,7 @@ export function NoteForm(props: {
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
+  const [drawOpen, setDrawOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<NoteFormValues | null>(null);
   const [settings] = createResource(async () => {
     try {
@@ -147,17 +152,29 @@ export function NoteForm(props: {
                 disabled={pending() || files().length >= MAX_NOTE_FILES}
                 onChange={(event) => addFile(event.currentTarget.files?.[0])}
               />
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                class="rounded-md"
-                disabled={pending() || files().length >= MAX_NOTE_FILES}
-                onClick={() => fileInput?.click()}
-              >
-                <IconPlus class="h-4 w-4" />
-                {t("notes.addFile")}
-              </Button>
+              <div class="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  class="rounded-md"
+                  disabled={pending() || files().length >= MAX_NOTE_FILES}
+                  onClick={() => setDrawOpen(true)}
+                >
+                  <IconEdit class="h-4 w-4" />
+                  {t("notes.draw")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  class="rounded-md"
+                  disabled={pending() || files().length >= MAX_NOTE_FILES}
+                  onClick={() => fileInput?.click()}
+                >
+                  <IconPlus class="h-4 w-4" />
+                  {t("notes.addFile")}
+                </Button>
+              </div>
             </div>
             <Show
               when={files().length > 0}
@@ -206,6 +223,23 @@ export function NoteForm(props: {
           </Button>
         </div>
       </form>
+
+      <FormDialog
+        open={drawOpen()}
+        onOpenChange={setDrawOpen}
+        title={t("notes.draw")}
+        description={t("notes.filesHelp", { size: formatBytes(maxFileBytes()) })}
+        class="max-w-4xl"
+      >
+        <Suspense fallback={<PageSpinner />}>
+          <DrawCanvas
+            onSave={(file) => {
+              addFile(file);
+              setDrawOpen(false);
+            }}
+          />
+        </Suspense>
+      </FormDialog>
 
       <ConfirmDialog
         open={confirmOpen()}

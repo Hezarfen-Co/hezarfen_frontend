@@ -224,28 +224,48 @@ function DashboardContent() {
 
     if (r === "student") {
       list.push(
-        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
-        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
-        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
         { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
-        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
+        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
         { Icon: IconChart, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avgLabel() },
-        { Icon: IconClock, titleKey: "nav.pomodoro", to: "/pomodoro", descKey: "dashboard.portal.pomodoroDesc" },
-        { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
+        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
         { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
+        { Icon: IconClock, titleKey: "nav.pomodoro", to: "/pomodoro", descKey: "dashboard.portal.pomodoroDesc" },
+        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
+        { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
       );
       return list;
     }
 
     if (r === "teacher") {
       list.push(
-        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
-        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
-        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
-        { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
-        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, minRole: "teacher" },
         { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
         { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
+        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
+        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, minRole: "teacher" },
+        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+        { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
+        { Icon: IconBriefcase, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" },
+        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
+        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
+        { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
+      );
+      return list;
+    }
+
+    if (r === "manager") {
+      list.push(
+        { Icon: IconBriefcase, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", minRole: "manager" },
+        { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
+        { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
+        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+        { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
+        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
+        { Icon: IconCalendarDays, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
+        { Icon: IconSettings, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", minRole: "manager" },
+        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
         { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
         { Icon: IconBriefcase, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" },
         { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
@@ -254,37 +274,46 @@ function DashboardContent() {
       return list;
     }
 
-    // manager + admin
+    // admin
     list.push(
-      { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
-      { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
-      { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
-      { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
-      { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
+      { Icon: IconUsers, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", minRole: "admin" },
+      { Icon: IconSettings, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", minRole: "manager" },
+      { Icon: IconCalendarDays, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
+      { Icon: IconBriefcase, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", minRole: "manager" },
       { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
       { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
+      { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
+      { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
+      { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
+      { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
+      { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
       { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
       { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
       { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
-      { Icon: IconSettings, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", minRole: "manager" },
-      { Icon: IconCalendarDays, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
     );
-    if (r === "manager") {
-      list.push({ Icon: IconBriefcase, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" });
-    }
-    list.push({ Icon: IconBriefcase, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", minRole: "manager" });
-    if (r === "admin") {
-      list.push({ Icon: IconUsers, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", minRole: "admin" });
-    }
     return list;
   });
   const portalOrderKey = () => `${PORTAL_ORDER_KEY}.${role()}`;
   const cardsFromOrder = (cards: PortalCardDef[], order: string[]) => {
     const byId = new Map(cards.map((card) => [card.to, card]));
-    if (order.some((id) => !byId.has(id)) || order.length !== cards.length) return cards;
-    const ordered = order.flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
-    const seen = new Set(ordered.map((card) => card.to));
-    return [...ordered, ...cards.filter((card) => !seen.has(card.to))];
+    const ordered: PortalCardDef[] = [];
+    const seen = new Set<string>();
+
+    for (const id of order) {
+      const card = byId.get(id);
+      if (card && !seen.has(id)) {
+        ordered.push(card);
+        seen.add(id);
+      }
+    }
+
+    for (const card of cards) {
+      if (!seen.has(card.to)) {
+        ordered.push(card);
+      }
+    }
+
+    return ordered;
   };
   const baseOrderedPortalCards = createMemo(() => cardsFromOrder(portalCards(), portalOrder()));
   const orderedPortalCards = createMemo(() => {
@@ -301,25 +330,34 @@ function DashboardContent() {
   });
   const movePortalCard = (from: string, to: string) => {
     if (from === to) return;
-    const ids = (previewPortalOrder() ?? (() => {
-      const next = baseOrderedPortalCards().map((card) => card.to);
-      const fromIndex = next.indexOf(from);
-      const toIndex = next.indexOf(to);
-      if (fromIndex >= 0 && toIndex >= 0) next.splice(toIndex, 0, next.splice(fromIndex, 1)[0]);
-      return next;
-    })()).slice();
+    const current = baseOrderedPortalCards().map((card) => card.to);
+    const fromIndex = current.indexOf(from);
+    const toIndex = current.indexOf(to);
+    if (fromIndex >= 0 && toIndex >= 0) {
+      const ids = current.slice();
+      ids.splice(toIndex, 0, ids.splice(fromIndex, 1)[0]);
+      setPortalOrder(ids);
+      setPreviewPortalOrder(null);
+      window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
+    }
+  };
+  const moveCardByDelta = (cardTo: string, delta: number) => {
+    const current = baseOrderedPortalCards().map((card) => card.to);
+    const index = current.indexOf(cardTo);
+    if (index < 0) return;
+    const targetIndex = index + delta;
+    if (targetIndex < 0 || targetIndex >= current.length) return;
+    const ids = current.slice();
+    const [item] = ids.splice(index, 1);
+    ids.splice(targetIndex, 0, item);
     setPortalOrder(ids);
     setPreviewPortalOrder(null);
     window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
   };
-  const previewMovePortalCard = (from: string, to: string) => {
-    if (from === to) return;
-    const ids = (previewPortalOrder() ?? baseOrderedPortalCards().map((card) => card.to)).slice();
-    const fromIndex = ids.indexOf(from);
-    const toIndex = ids.indexOf(to);
-    if (fromIndex < 0 || toIndex < 0) return;
-    ids.splice(toIndex, 0, ids.splice(fromIndex, 1)[0]);
-    setPreviewPortalOrder(ids);
+  const resetPortalOrder = () => {
+    setPortalOrder([]);
+    setPreviewPortalOrder(null);
+    window.localStorage.removeItem(portalOrderKey());
   };
 
   const attention = createMemo<AttentionItem[]>(() => {
@@ -404,34 +442,47 @@ function DashboardContent() {
             <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
               {t("dashboard.roleLinks")}
             </h2>
-            <Button type="button" variant="outline" size="sm" class="h-8 rounded-md" onClick={() => setEditingPortalOrder((value) => !value)}>
-              {editingPortalOrder() ? t("common.done") : t("common.edit")}
-            </Button>
+            <div class="flex items-center gap-2">
+              <Show when={editingPortalOrder()}>
+                <Button type="button" variant="ghost" size="sm" class="h-8 rounded-lg text-xs" onClick={resetPortalOrder}>
+                  {t("common.remove")}
+                </Button>
+              </Show>
+              <Button type="button" variant="outline" size="sm" class="h-8 rounded-lg text-xs font-semibold" onClick={() => setEditingPortalOrder((value) => !value)}>
+                {editingPortalOrder() ? t("common.done") : t("common.edit")}
+              </Button>
+            </div>
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <For each={orderedPortalCards()}>
-              {(card) => (
+              {(card, index) => (
                 <PortalCard
                   card={card}
                   editing={editingPortalOrder()}
+                  isFirst={index() === 0}
+                  isLast={index() === orderedPortalCards().length - 1}
+                  onMoveLeft={() => moveCardByDelta(card.to, -1)}
+                  onMoveRight={() => moveCardByDelta(card.to, 1)}
                   dragging={draggingPortal() === card.to}
                   preview={dragOverPortal() === card.to && draggingPortal() !== card.to}
                   onDragStart={() => setDraggingPortal(card.to)}
                   onDragEnd={() => {
                     setDraggingPortal(null);
                     setDragOverPortal(null);
-                    setPreviewPortalOrder(null);
                   }}
                   onDragOver={() => {
-                    const source = draggingPortal();
-                    setDragOverPortal(card.to);
-                    if (source) previewMovePortalCard(source, card.to);
+                    if (draggingPortal() && draggingPortal() !== card.to) {
+                      setDragOverPortal(card.to);
+                    }
                   }}
-                  onDrop={(target) => {
+                  onDrop={() => {
                     const source = draggingPortal();
+                    const target = card.to;
                     setDraggingPortal(null);
                     setDragOverPortal(null);
-                    if (source) movePortalCard(source, target);
+                    if (source && target && source !== target) {
+                      movePortalCard(source, target);
+                    }
                   }}
                 />
               )}
@@ -509,51 +560,34 @@ function DashEmpty(props: { children: string }) {
   );
 }
 
-function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: boolean; preview: boolean; onDragStart: () => void; onDragEnd: () => void; onDragOver: () => void; onDrop: (target: string) => void }) {
+function PortalCard(props: {
+  card: PortalCardDef;
+  editing: boolean;
+  isFirst?: boolean;
+  isLast?: boolean;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
+  dragging: boolean;
+  preview: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onDragOver: () => void;
+  onDrop: (target: string) => void;
+}) {
   const t = useT();
   const Icon = props.card.Icon;
   const hasStat = () => props.card.stat != null && props.card.stat !== "";
 
-  return (
-    <Link
-      to={props.card.to}
-      draggable={props.editing}
-      onClick={(event) => {
-        if (props.editing) event.preventDefault();
-      }}
-      onDragStart={(event) => {
-        if (!props.editing) return;
-        event.dataTransfer?.setData("text/plain", props.card.to);
-        event.dataTransfer?.setDragImage(event.currentTarget, 12, 12);
-        props.onDragStart();
-      }}
-      onDragEnd={props.onDragEnd}
-      onDragOver={(event) => {
-        if (!props.editing) return;
-        event.preventDefault();
-        props.onDragOver();
-      }}
-      onDrop={(event) => {
-        if (!props.editing) return;
-        event.preventDefault();
-        props.onDrop(props.card.to);
-      }}
-      class={cn(
-        "group relative flex min-h-[5.75rem] items-start gap-3 overflow-hidden rounded-xl border border-border bg-card px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/45 hover:bg-muted/30 hover:shadow-[0_16px_38px_rgba(15,23,42,0.11)] hover:before:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[6.25rem] sm:gap-3.5 sm:px-4 sm:py-3.5",
-        props.editing && "cursor-move border-dashed",
-        props.editing && !props.dragging && "dashboard-jiggle",
-        props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-[0_18px_42px_rgba(15,23,42,0.14)] before:opacity-100",
-        props.dragging && "scale-[0.98] border-primary/50 opacity-60",
-      )}
-    >
-      <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm transition-colors group-hover:border-primary/40 group-hover:text-primary">
-        <Icon class="h-4 w-4" />
+  const cardInner = () => (
+    <>
+      <span class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/[0.05] dark:border-white/[0.08] bg-muted/30 text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:bg-primary/10 group-hover:text-primary">
+        <Icon class="h-5 w-5" />
       </span>
       <div class="min-w-0 flex-1 space-y-1">
         <div class="flex min-w-0 items-start gap-2">
           <h3 class="truncate text-sm font-semibold tracking-tight text-foreground">{t(props.card.titleKey)}</h3>
           <Show when={hasStat()}>
-            <span class="hidden text-muted-foreground/50 sm:inline" aria-hidden="true">
+            <span class="hidden text-muted-foreground/40 sm:inline" aria-hidden="true">
               |
             </span>
             <span class="mono shrink-0 text-sm font-semibold tabular-nums tracking-tight text-foreground sm:text-base">
@@ -561,16 +595,104 @@ function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: bo
             </span>
           </Show>
           <Show when={props.card.minRole && props.card.minRole !== "student"}>
-            <span class="ml-auto hidden shrink-0 rounded-md border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:inline">
+            <span class="ml-auto hidden shrink-0 rounded-full border border-black/[0.06] dark:border-white/[0.08] bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:inline">
               {t(ROLE_KEY[props.card.minRole!])}
             </span>
           </Show>
         </div>
         <Show when={props.card.descKey}>
-          <p class="line-clamp-2 text-xs leading-5 text-muted-foreground">{t(props.card.descKey!)}</p>
+          <p class="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{t(props.card.descKey!)}</p>
         </Show>
       </div>
-    </Link>
+      <Show when={props.editing}>
+        <div class="flex items-center gap-1 shrink-0 ml-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            class="h-7 w-7 p-0 rounded-lg border-primary/30 text-xs font-bold shadow-none hover:bg-primary/15 disabled:opacity-30"
+            disabled={props.isFirst}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              props.onMoveLeft?.();
+            }}
+            title="Move Earlier"
+          >
+            ←
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            class="h-7 w-7 p-0 rounded-lg border-primary/30 text-xs font-bold shadow-none hover:bg-primary/15 disabled:opacity-30"
+            disabled={props.isLast}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              props.onMoveRight?.();
+            }}
+            title="Move Later"
+          >
+            →
+          </Button>
+        </div>
+      </Show>
+    </>
+  );
+
+  const cardClass = () =>
+    cn(
+      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-4 shadow-apple transition-all duration-200 hover:shadow-apple-hover hover:border-primary/40 sm:min-h-[6.5rem]",
+      !props.editing && "active:scale-[0.98]",
+      props.editing && "cursor-grab select-none border-dashed border-primary/50 bg-primary/[0.03]",
+      props.editing && !props.dragging && "dashboard-jiggle",
+      props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-apple-hover",
+      props.dragging && "scale-[0.98] border-primary/50 opacity-50",
+    );
+
+  return (
+    <Show
+      when={props.editing}
+      fallback={
+        <Link to={props.card.to} class={cardClass()}>
+          {cardInner()}
+        </Link>
+      }
+    >
+      <div
+        draggable={true}
+        onDragStart={(event) => {
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", props.card.to);
+          }
+          props.onDragStart();
+        }}
+        onDragEnd={(event) => {
+          event.preventDefault();
+          props.onDragEnd();
+        }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "move";
+          }
+          props.onDragOver();
+        }}
+        onDragEnter={(event) => {
+          event.preventDefault();
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          props.onDrop(props.card.to);
+        }}
+        class={cardClass()}
+      >
+        {cardInner()}
+      </div>
+    </Show>
   );
 }
 

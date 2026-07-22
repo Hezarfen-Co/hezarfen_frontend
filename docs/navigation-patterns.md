@@ -53,14 +53,15 @@ Pagination and request rules:
 Table action rules:
 
 - Row actions use `TableRowActions` with a centered three-dot trigger.
-- Action columns stay narrow and fixed (`3.5rem` on main tables, about `w-14` on compact detail tables).
+- Action columns use fixed widths (`w-28 min-w-[7rem] text-center whitespace-nowrap`) to ensure localized headers like `İŞLEMLER` do not cut off.
 - Destructive row actions stay in the menu but still open a confirm dialog before mutation.
 - Date and numeric columns use stable alignment and tabular/mono text where useful.
 - Dense tables use subtle column separators so column boundaries stay visible.
 
 Delete or destructive confirmation stays in a confirm dialog, not a side panel.
 
-Header create actions should use a consistent compact button shape: icon plus label, `size="sm"`, equal min-width, and the current app radius (`rounded-lg` in course detail headers).
+Header create actions should use a consistent compact button shape: icon plus label, `size="sm"`, equal min-width, and the current app radius (`rounded-lg` in page headers).
+- On the Notes page header, the **"İçe Aktar"** button sits directly to the right of **"Yeni Not"** and opens a dedicated `SidePanel` for Note Import Assistant file conversion.
 
 Date picking should use the shared `DatePicker` plus a separate `HH:mm` input when time is needed. Avoid native `date` and `datetime-local` controls in product forms.
 

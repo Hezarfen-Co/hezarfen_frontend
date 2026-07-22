@@ -1,0 +1,199 @@
+import { Show, createSignal } from "solid-js";
+import { Button } from "@/components/ui/button";
+import { IconFileText, IconUploadCloud } from "@/components/ui/icons";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { processImportedText } from "@/lib/note-importer";
+import { formatBytes } from "@/lib/upload-limits";
+import { useT } from "@/stores/preferences-context";
+
+export function NoteImportPanel(props: {
+  onImport: (title: string, content: string) => void;
+  onCancel?: () => void;
+}) {
+  const t = useT();
+  let fileInput: HTMLInputElement | undefined;
+
+  const [file, setFile] = createSignal<File | null>(null);
+  const [processing, setProcessing] = createSignal(false);
+  const [error, setError] = createSignal("");
+  const [importedTitle, setImportedTitle] = createSignal("");
+  const [importedMarkdown, setImportedMarkdown] = createSignal("");
+  const [hasGarbled, setHasGarbled] = createSignal(false);
+
+  const handleFileSelect = async (selectedFile: File | undefined) => {
+    if (!selectedFile) return;
+    setError("");
+
+    const name = selectedFile.name.toLowerCase();
+    const isText = name.endsWith(".txt") || name.endsWith(".md") || selectedFile.type.startsWith("text/");
+    const isPdf = name.endsWith(".pdf") || selectedFile.type === "application/pdf";
+
+    if (!isText && !isPdf) {
+      setError(t("notes.previewUnsupported"));
+      return;
+    }
+
+    setFile(selectedFile);
+    setProcessing(true);
+
+    try {
+      let rawText = "";
+      if (isPdf) {
+        rawText = await extractPdfText(selectedFile);
+      } else {
+        rawText = await selectedFile.text();
+      }
+
+      const result = processImportedText(rawText, selectedFile.name);
+      setImportedTitle(result.title);
+      setImportedMarkdown(result.markdown);
+      setHasGarbled(result.hasGarbledWarning);
+    } catch (err) {
+      setError(t("notes.previewUnsupported"));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleApply = () => {
+    const title = importedTitle().trim() || "Imported Note";
+    const content = importedMarkdown();
+    props.onImport(title, content);
+  };
+
+  return (
+    <div class="space-y-5">
+      <Show when={!file()}>
+        <div
+          class="flex min-h-[14rem] cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary/[0.02] p-6 text-center transition-all hover:border-primary hover:bg-primary/[0.05]"
+          onClick={() => fileInput?.click()}
+        >
+          <input
+            ref={(el) => {
+              fileInput = el;
+            }}
+            type="file"
+            accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf"
+            class="hidden"
+            onChange={(e) => void handleFileSelect(e.currentTarget.files?.[0])}
+          />
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary shadow-sm">
+            <IconUploadCloud class="h-6 w-6" />
+          </span>
+          <div class="space-y-1 max-w-sm mx-auto">
+            <p class="text-sm font-semibold text-foreground">
+              {t("notes.import")} (PDF, TXT, Markdown)
+            </p>
+            <p class="text-xs leading-normal text-muted-foreground">
+              {t("notes.importHelp")}
+            </p>
+          </div>
+        </div>
+      </Show>
+
+      <Show when={file()}>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between rounded-xl border border-border/80 bg-muted/30 px-4 py-3 text-xs">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <IconFileText class="h-4 w-4 text-primary shrink-0" />
+              <span class="truncate font-medium text-foreground">{file()?.name}</span>
+              <span class="text-muted-foreground shrink-0">({formatBytes(file()?.size ?? 0)})</span>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              class="h-7 text-xs rounded-lg"
+              onClick={() => {
+                setFile(null);
+                setImportedTitle("");
+                setImportedMarkdown("");
+              }}
+            >
+              {t("common.edit")}
+            </Button>
+          </div>
+
+          <Show when={hasGarbled()}>
+            <p class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+              ⚠️ Some content may be unreadable due to OCR/extraction issues
+            </p>
+          </Show>
+
+          <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+            <Label for="import-title">{t("form.title")}</Label>
+            <Input
+              id="import-title"
+              class="h-10 rounded-lg bg-background/80"
+              value={importedTitle()}
+              maxlength={200}
+              onInput={(e) => setImportedTitle(e.currentTarget.value)}
+            />
+          </div>
+
+          <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+            <Label for="import-content">{t("form.content")} (Markdown)</Label>
+            <Textarea
+              id="import-content"
+              class="min-h-56 rounded-lg font-mono text-xs bg-background/80 leading-relaxed"
+              value={importedMarkdown()}
+              rows={10}
+              onInput={(e) => setImportedMarkdown(e.currentTarget.value)}
+            />
+          </div>
+
+          <div class="flex flex-wrap items-center justify-end gap-2 border-t border-border/80 pt-4">
+            <Show when={props.onCancel}>
+              <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={props.onCancel}>
+                {t("common.cancel")}
+              </Button>
+            </Show>
+            <Button
+              type="button"
+              class="h-10 rounded-lg px-5 font-semibold"
+              disabled={processing() || !importedMarkdown().trim()}
+              onClick={handleApply}
+            >
+              {t("common.create")}
+            </Button>
+          </div>
+        </div>
+      </Show>
+
+      <Show when={error()}>
+        <p class="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error()}
+        </p>
+      </Show>
+    </div>
+  );
+}
+
+/** Extract text content from PDF file */
+async function extractPdfText(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  const decoder = new TextDecoder("utf-8");
+  const rawString = decoder.decode(bytes);
+
+  // Extract printable text streams from PDF brackets (Tj/TJ streams) or plain text blocks
+  const textMatches: string[] = [];
+  const textStreamRegex = /\(([^()]{2,})\)\s*T[jJ]/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = textStreamRegex.exec(rawString)) !== null) {
+    if (match[1]) {
+      textMatches.push(match[1]);
+    }
+  }
+
+  if (textMatches.length > 0) {
+    return textMatches.join(" ");
+  }
+
+  // Fallback: extract continuous ASCII/UTF8 character chunks
+  const asciiChunks = rawString.match(/[A-Za-z0-9çğıöşüÇĞİÖŞÜ \t\n.,:;!?(){}\[\]\-"'\/]{4,}/g) || [];
+  return asciiChunks.join("\n");
+}

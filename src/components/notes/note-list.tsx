@@ -1,4 +1,4 @@
-import { For, Show, createSignal, type JSX } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import type { Note } from "@/api/client";
 import { NoteCard } from "@/components/notes/note-card";
 import { NoteReaderPanel } from "@/components/notes/note-reader-panel";
@@ -8,7 +8,6 @@ export function NoteList(props: {
   notes: Note[];
   emptyTitle: string;
   emptyDescription?: string;
-  emptyAction?: JSX.Element;
   onUpdate: (id: string, values: { title: string; content: string }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
@@ -22,7 +21,6 @@ export function NoteList(props: {
           <EmptyState
             title={props.emptyTitle}
             description={props.emptyDescription}
-            action={props.emptyAction}
           />
         }
       >

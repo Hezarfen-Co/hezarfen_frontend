@@ -4,14 +4,14 @@ import { splitProps } from "solid-js";
 import { cn } from "@/lib/cn";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-sm border px-2.5 py-0.5 text-xs font-semibold transition-colors",
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-tight transition-colors",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
+        default: "border-transparent bg-primary/90 text-primary-foreground shadow-sm",
         secondary: "border-transparent bg-secondary text-secondary-foreground",
-        outline: "text-foreground",
-        destructive: "border-transparent bg-destructive text-destructive-foreground",
+        outline: "border-black/[0.08] dark:border-white/[0.12] text-foreground bg-background/50",
+        destructive: "border-transparent bg-destructive/90 text-destructive-foreground",
       },
     },
     defaultVariants: {
