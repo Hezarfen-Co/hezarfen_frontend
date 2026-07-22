@@ -2,7 +2,7 @@ import { For, Match, Show, Switch, createEffect, createSignal, onCleanup, onMoun
 import { Button } from "@/components/ui/button";
 import { IconDownload, IconEdit, IconEraser, IconGrid, IconMove, IconRuled, IconSave, IconSquareOff, IconTrash, IconUndo, IconZoomIn, IconZoomOut } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import { PAPER_CELL, PAPER_LINE, paintStroke, paintTip, strokesBounds, type BgKind, type DrawScene, type Point, type Stroke } from "@/lib/draw-stroke";
+import { PAPER_CELL, PAPER_LINE, canvasPx, paintStroke, paintTip, strokesBounds, type BgKind, type DrawScene, type Point, type Stroke } from "@/lib/draw-stroke";
 import { canvasToImageBlob, sceneToPngFile } from "@/lib/drawing-file";
 import { useT } from "@/stores/preferences-context";
 
@@ -249,14 +249,16 @@ export function DrawCanvas(props: {
     const dx = EXPORT_MARGIN - b.x;
     const dy = EXPORT_MARGIN - b.y;
     const off = document.createElement("canvas");
-    off.width = Math.round(w * scale);
-    off.height = Math.round(h * scale);
+    off.width = canvasPx(w, scale);
+    off.height = canvasPx(h, scale);
     const oc = off.getContext("2d");
     if (!oc) return null;
     oc.setTransform(scale, 0, 0, scale, dx * scale, dy * scale);
     for (const s of list) paintStroke(oc, s);
     const shifted = list.map((s) => ({ ...s, points: s.points.map((p) => ({ x: p.x + dx, y: p.y + dy })) }));
-    const scene: DrawScene = { v: 1, w, h, strokes: shifted, bg: bg() };
+    // dpr rides along: the PNG is baked at this ratio, so a viewer on a different
+    // display can size the replay to the same pixels instead of its own ratio.
+    const scene: DrawScene = { v: 1, w, h, strokes: shifted, bg: bg(), dpr: scale };
     return { canvas: off, scene };
   };
 

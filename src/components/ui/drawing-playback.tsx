@@ -1,7 +1,7 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
-import { PAPER_CELL, paintPaper, paintStroke, sliceStrokes, type DrawScene } from "@/lib/draw-stroke";
+import { PAPER_CELL, canvasPx, paintPaper, paintStroke, sliceStrokes, type DrawScene } from "@/lib/draw-stroke";
 import { useT } from "@/stores/preferences-context";
 
 // ponytail: synthetic order-only pace — the drawing carries no per-point timing, so
@@ -15,7 +15,7 @@ const POINTS_PER_SECOND = 220;
  * transparent layer (erasers cut only ink), then that layer is composited over
  * white + paper ruling. No timestamps are read — order + a synthetic pace only.
  */
-export function DrawingPlayback(props: { scene: DrawScene; class?: string }) {
+export function DrawingPlayback(props: { scene: DrawScene; class?: string; canvasClass?: string }) {
   const t = useT();
   let canvas: HTMLCanvasElement | undefined;
   let layer: HTMLCanvasElement | undefined; // offscreen transparent stroke layer (the export's `source`)
@@ -23,8 +23,9 @@ export function DrawingPlayback(props: { scene: DrawScene; class?: string }) {
   let startedAt = 0; // performance.now() when the current run began
   let baseCount = 0; // points already revealed when the run began (so pause/resume continues)
   let revealed = 0;
-  // ponytail: DPR snapshotted at mount so the backing store and the paint transform can't
-  // drift apart when browser zoom changes mid-run; re-inits on remount (Show image → Play).
+  // The scene's own export DPR when it has one (older scenes fall back to this display's),
+  // so the canvas gets the saved PNG's exact pixels instead of the viewer's ratio. Snapshotted
+  // at mount so backing store and paint transform can't drift apart if zoom changes mid-run.
   let scale = 1;
 
   const total = () => props.scene.strokes.reduce((n, s) => n + s.points.length, 0);
@@ -81,9 +82,9 @@ export function DrawingPlayback(props: { scene: DrawScene; class?: string }) {
   };
 
   onMount(() => {
-    scale = window.devicePixelRatio || 1;
-    const w = Math.max(1, Math.round(props.scene.w * scale));
-    const h = Math.max(1, Math.round(props.scene.h * scale));
+    scale = props.scene.dpr ?? (window.devicePixelRatio || 1);
+    const w = canvasPx(props.scene.w, scale);
+    const h = canvasPx(props.scene.h, scale);
     if (canvas) {
       canvas.width = w;
       canvas.height = h;
@@ -98,7 +99,8 @@ export function DrawingPlayback(props: { scene: DrawScene; class?: string }) {
 
   return (
     <div class={cn("space-y-2", props.class)}>
-      <canvas ref={canvas} class="h-64 w-full max-w-2xl rounded-md border bg-background object-contain" />
+      {/* Sized by the caller so the replay matches the static image it replaces. */}
+      <canvas ref={canvas} class={props.canvasClass ?? "h-64 w-full max-w-2xl rounded-md border bg-background object-contain"} />
       <div class="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => (playing() ? pause() : play())}>
           {playing() ? t("exams.pause") : t("exams.play")}

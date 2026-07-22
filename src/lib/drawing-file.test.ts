@@ -16,13 +16,22 @@ function minimalPng(): Uint8Array {
 }
 
 describe("pngBytesToScene", () => {
-  it("round-trips a scene carried in the PNG's tEXt chunk", () => {
+  it("round-trips a scene carried in the PNG's tEXt chunk, every field intact", () => {
     const scene: DrawScene = {
       v: 1,
       w: 120,
       h: 90,
-      strokes: [{ color: "#1f2937", width: 6, erase: false, points: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }],
+      bg: "grid",
+      dpr: 2,
+      strokes: [
+        { color: "#1f2937", width: 6, erase: false, points: [{ x: 1, y: 2 }, { x: 3, y: 4 }] },
+        { color: "#dc2626", width: 14, erase: true, points: [{ x: 10, y: 10 }] },
+      ],
     };
+    // "hezarfen-drawing" here must match drawing-file.ts's private DRAWING_KEYWORD
+    // constant exactly — it's a wire format shared with every already-saved
+    // .hzdraw.png. If pngBytesToScene's own keyword ever drifted from this literal,
+    // extractPngText would find no chunk under it and this would come back null.
     const png = embedPngText(minimalPng(), "hezarfen-drawing", JSON.stringify(scene));
     expect(pngBytesToScene(png)).toEqual(scene);
   });

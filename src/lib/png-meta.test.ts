@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { DrawScene } from "./draw-stroke";
 import { embedPngText, extractPngText } from "./png-meta";
 
 const SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -59,5 +60,23 @@ describe("png-meta", () => {
     const crcAt = 37 + 4 + dataLen;
     const embedded = ((png[crcAt] << 24) | (png[crcAt + 1] << 16) | (png[crcAt + 2] << 8) | png[crcAt + 3]) >>> 0;
     expect(embedded).toBe(refCrc32(typeAndData));
+  });
+
+  it("round-trips a full drawing scene's JSON — strokes, points, colour, width, erase, bg, w/h, dpr — byte-for-byte", () => {
+    const scene: DrawScene = {
+      v: 1,
+      w: 120,
+      h: 80,
+      bg: "grid",
+      dpr: 2,
+      strokes: [
+        { color: "#1f2937", width: 6, erase: false, points: [{ x: 1, y: 2 }, { x: 3.5, y: 4 }] },
+        { color: "#dc2626", width: 14, erase: true, points: [{ x: 10, y: 10 }] },
+      ],
+    };
+    const json = JSON.stringify(scene);
+    const png = embedPngText(minimalPng(), "hezarfen-drawing", json);
+    expect(extractPngText(png, "hezarfen-drawing")).toBe(json);
+    expect(JSON.parse(extractPngText(png, "hezarfen-drawing")!)).toEqual(scene);
   });
 });

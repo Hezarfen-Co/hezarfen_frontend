@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl } from "../../shared";
-import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
+import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl, getSolutionImageBlob } from "../../shared";
+import { lastFetchCall, mockFetch204, mockFetchBlob, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("solutions API", () => {
   afterEach(() => {
@@ -60,5 +60,15 @@ describe("solutions API", () => {
   it("getSolutionImageUrl returns correct URL", () => {
     const url = getSolutionImageUrl("q1", "s1");
     expect(url).toBe("/api/questions/q1/solutions/s1/image");
+  });
+
+  it("getSolutionImageBlob fetches the image bytes from the same URL", async () => {
+    mockFetchBlob(new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], { type: "image/png" }));
+
+    const result = await getSolutionImageBlob("q1", "s1");
+    expect(result).toBeInstanceOf(Blob);
+
+    const [url] = lastFetchCall();
+    expect(url).toBe(getSolutionImageUrl("q1", "s1"));
   });
 });

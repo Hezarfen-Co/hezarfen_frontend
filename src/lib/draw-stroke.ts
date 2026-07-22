@@ -1,7 +1,8 @@
 export type Point = { x: number; y: number };
 export type Stroke = { color: string; width: number; erase: boolean; points: Point[] };
 export type BgKind = "none" | "lines" | "grid";
-export type DrawScene = { v: 1; w: number; h: number; strokes: Stroke[]; bg?: BgKind };
+/** `w`/`h` are DPR-free world px; `dpr` is the device ratio the PNG beside them was baked at. */
+export type DrawScene = { v: 1; w: number; h: number; strokes: Stroke[]; bg?: BgKind; dpr?: number };
 
 /** World px per notebook cell — shared by the live CSS paper and the baked export so both read as the same ruling. */
 export const PAPER_CELL = 24;
@@ -10,6 +11,18 @@ export const PAPER_LINE = "rgba(37, 99, 235, 0.14)";
 
 function isPoint(p: unknown): p is Point {
   return !!p && typeof p === "object" && typeof (p as Point).x === "number" && typeof (p as Point).y === "number";
+}
+
+/**
+ * Export-box side in world px: finite, positive, and no wider than the largest canvas a
+ * browser will make. A real export was itself rendered through a `w × dpr` canvas (dpr ≥ 1
+ * on any normal display), so nothing legitimate can exceed this — while an unbounded side
+ * both sizes the playback allocation and drives paintPaper's per-cell loop.
+ */
+const MAX_SIDE = 16384;
+
+function isSide(n: unknown): n is number {
+  return typeof n === "number" && n > 0 && n <= MAX_SIDE; // NaN/Infinity fail the comparisons
 }
 
 function isStroke(s: unknown): s is Stroke {
@@ -39,13 +52,28 @@ export function parseScene(text: string | null): DrawScene | null {
   }
   if (!data || typeof data !== "object") return null;
   const scene = data as DrawScene;
-  if (scene.v !== 1 || typeof scene.w !== "number" || typeof scene.h !== "number" || !Array.isArray(scene.strokes)) {
+  if (scene.v !== 1 || !isSide(scene.w) || !isSide(scene.h) || !Array.isArray(scene.strokes)) {
     return null;
   }
   if (!scene.strokes.every(isStroke)) return null;
   // bg is optional (old drawings lack it); reject only a present-but-bogus value.
   if (scene.bg !== undefined && scene.bg !== "none" && scene.bg !== "lines" && scene.bg !== "grid") return null;
+  // dpr likewise optional, but it multiplies a canvas allocation on the viewer's machine, so
+  // cap it at 8 — well past any real display (1–3), while browser zoom-out legitimately
+  // exports below 1. NaN/Infinity fail the comparisons.
+  if (scene.dpr !== undefined && !(typeof scene.dpr === "number" && scene.dpr > 0 && scene.dpr <= 8)) return null;
   return scene;
+}
+
+/**
+ * A parsed scene is only worth replaying if it has ink: a plain photo (parse failed,
+ * null) or an emptied drawing (parsed, zero strokes) both mean "nothing to play", so
+ * ReplayableImage falls back to the static image for either. Pulled out of that
+ * component (which has three call sites of its own) so the decision is unit-testable
+ * without mounting Solid.
+ */
+export function playableScene(parsed: DrawScene | null): DrawScene | null {
+  return parsed && parsed.strokes.length > 0 ? parsed : null;
 }
 
 /**
@@ -71,6 +99,17 @@ export function strokesBounds(strokes: Stroke[]): { x: number; y: number; w: num
   }
   if (!Number.isFinite(minX)) return null;
   return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+
+/**
+ * World px → device px for one canvas side, shared by the export (`renderBounds`,
+ * baking `scene.w`/`scene.h` at `scene.dpr`) and playback (`onMount`, replaying them at
+ * that same dpr) so the two can't round differently and size the replay canvas
+ * differently on screen than the static image it replaces. Floors at 1: a canvas side
+ * of 0 throws, which a tiny world side at a sub-1 dpr could otherwise round down to.
+ */
+export function canvasPx(worldSide: number, dpr: number): number {
+  return Math.max(1, Math.round(worldSide * dpr));
 }
 
 /**
