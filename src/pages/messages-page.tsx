@@ -118,47 +118,67 @@ export default function MessagesPage() {
       <div>
         <section class="data-shell overflow-hidden p-0">
           <div class="grid min-h-[calc(100vh-7rem)] lg:[grid-template-columns:var(--messages-cols)]" style={{ "--messages-cols": gridTemplate() }}>
-            <aside class="border-b border-border/80 bg-card/60 p-3 lg:border-b-0">
+            <aside class="border-b border-border/80 bg-card/70 p-3 lg:border-b-0 backdrop-blur-xl">
               <div class="space-y-3">
                 <Button class="w-full rounded-xl shadow-sm" onClick={() => { setSelectedId(""); setComposeOpen(true); }}>
                   <IconPlus class="h-4 w-4" />
                   {t("messages.newMessage")}
                 </Button>
-                <div class="space-y-1">
+                <div class="space-y-1.5">
                   <Button 
-                    variant={folder() === "inbox" ? "secondary" : "ghost"} 
-                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "inbox" && "text-muted-foreground", folder() === "inbox" && "border border-violet-500/50 bg-card text-foreground ring-1 ring-violet-500/30")}
+                    variant="ghost" 
+                    class={cn(
+                      "group/btn h-11 w-full justify-start gap-3 rounded-xl px-3.5 text-sm font-semibold transition-all duration-200 ease-out hover:scale-[1.01] active:scale-[0.98]",
+                      folder() === "inbox" 
+                        ? "border border-violet-500/50 bg-card text-foreground ring-1 ring-violet-500/30 shadow-sm" 
+                        : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                    )}
                     onClick={() => startTransition(() => { setFolder("inbox"); setPage(1); setSelectedId(""); })}
                   >
-                    <IconMessage class="h-4 w-4" />
-                    {t("messages.inbox")}
+                    <IconMessage class={cn("h-4 w-4 transition-colors duration-200", folder() === "inbox" ? "text-violet-400" : "text-muted-foreground group-hover/btn:text-violet-400")} />
+                    <span>{t("messages.inbox")}</span>
                     <Show when={unreadCount() ? unreadCount()! > 0 : false}>
-                      <Badge variant="default" class="ml-auto h-5 min-w-5 justify-center rounded-full px-1 text-[10px]">{unreadCount()}</Badge>
+                      <Badge variant="default" class="ml-auto h-5 min-w-5 justify-center rounded-full bg-violet-500 px-1.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(139,92,246,0.4)]">{unreadCount()}</Badge>
                     </Show>
                   </Button>
                   <Button 
-                    variant={folder() === "sent" ? "secondary" : "ghost"} 
-                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "sent" && "text-muted-foreground", folder() === "sent" && "border border-violet-500/50 bg-card text-foreground ring-1 ring-violet-500/30")}
+                    variant="ghost" 
+                    class={cn(
+                      "group/btn h-11 w-full justify-start gap-3 rounded-xl px-3.5 text-sm font-semibold transition-all duration-200 ease-out hover:scale-[1.01] active:scale-[0.98]",
+                      folder() === "sent" 
+                        ? "border border-cyan-500/50 bg-card text-foreground ring-1 ring-cyan-500/30 shadow-sm" 
+                        : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                    )}
                     onClick={() => startTransition(() => { setFolder("sent"); setPage(1); setSelectedId(""); })}
                   >
-                    <IconSend class="h-4 w-4" />
-                    {t("messages.sent")}
+                    <IconSend class={cn("h-4 w-4 transition-colors duration-200", folder() === "sent" ? "text-cyan-400" : "text-muted-foreground group-hover/btn:text-cyan-400")} />
+                    <span>{t("messages.sent")}</span>
                   </Button>
                   <Button 
-                    variant={folder() === "archive" ? "secondary" : "ghost"} 
-                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "archive" && "text-muted-foreground", folder() === "archive" && "border border-violet-500/50 bg-card text-foreground ring-1 ring-violet-500/30")}
+                    variant="ghost" 
+                    class={cn(
+                      "group/btn h-11 w-full justify-start gap-3 rounded-xl px-3.5 text-sm font-semibold transition-all duration-200 ease-out hover:scale-[1.01] active:scale-[0.98]",
+                      folder() === "archive" 
+                        ? "border border-amber-500/50 bg-card text-foreground ring-1 ring-amber-500/30 shadow-sm" 
+                        : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                    )}
                     onClick={() => startTransition(() => { setFolder("archive"); setPage(1); setSelectedId(""); })}
                   >
-                    <IconArchive class="h-4 w-4" />
-                    {t("messages.archive")}
+                    <IconArchive class={cn("h-4 w-4 transition-colors duration-200", folder() === "archive" ? "text-amber-400" : "text-muted-foreground group-hover/btn:text-amber-400")} />
+                    <span>{t("messages.archive")}</span>
                   </Button>
                   <Button 
-                    variant={folder() === "trash" ? "secondary" : "ghost"} 
-                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "trash" && "text-muted-foreground", folder() === "trash" && "border border-rose-500/50 bg-card text-foreground ring-1 ring-rose-500/30")}
+                    variant="ghost" 
+                    class={cn(
+                      "group/btn h-11 w-full justify-start gap-3 rounded-xl px-3.5 text-sm font-semibold transition-all duration-200 ease-out hover:scale-[1.01] active:scale-[0.98]",
+                      folder() === "trash" 
+                        ? "border border-rose-500/50 bg-card text-foreground ring-1 ring-rose-500/30 shadow-sm" 
+                        : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                    )}
                     onClick={() => startTransition(() => { setFolder("trash"); setPage(1); setSelectedId(""); })}
                   >
-                    <IconTrash class="h-4 w-4" />
-                    {t("messages.trash")}
+                    <IconTrash class={cn("h-4 w-4 transition-colors duration-200", folder() === "trash" ? "text-rose-400" : "text-muted-foreground group-hover/btn:text-rose-400")} />
+                    <span>{t("messages.trash")}</span>
                   </Button>
                 </div>
               </div>
@@ -167,7 +187,7 @@ export default function MessagesPage() {
             <div
               role="separator"
               aria-orientation="vertical"
-              class="hidden cursor-col-resize bg-border/60 transition-colors hover:bg-primary/50 lg:block"
+              class="hidden cursor-col-resize bg-border/60 transition-colors duration-200 hover:bg-violet-500/60 lg:block"
               onPointerDown={(event) => startResize("sidebar", event)}
             />
 
@@ -178,7 +198,7 @@ export default function MessagesPage() {
                   <Input class="h-11 rounded-xl pl-8" placeholder={t("messages.search")} value={query()} onInput={(event) => setQuery(event.currentTarget.value)} />
                 </div>
               </div>
-              <div class={cn("flex-1 space-y-2 overflow-auto p-3 transition-opacity", isPending() && "opacity-50 pointer-events-none")}>
+              <div class={cn("flex-1 space-y-2 overflow-auto p-3 transition-opacity duration-200", isPending() && "opacity-50 pointer-events-none")}>
                 <Suspense fallback={<div class="p-4 text-center text-sm text-muted-foreground">{t("common.loading")}</div>}>
                   <Show when={filtered().length > 0} fallback={<div class="p-4 text-center text-sm text-muted-foreground">{t("messages.noMessages")}</div>}>
                     <For each={filtered()}>
@@ -192,8 +212,8 @@ export default function MessagesPage() {
                           <button
                             type="button"
                             class={cn(
-                              "w-full rounded-2xl border bg-card p-3 text-left shadow-sm transition-all duration-200",
-                              selected()?.id === message.id ? "border-violet-500/60 ring-1 ring-violet-500/30 bg-card shadow-md" : "border-border/80 hover:border-violet-500/40 hover:bg-muted/30",
+                              "group/card w-full rounded-2xl border bg-card p-3 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0",
+                              selected()?.id === message.id ? "border-violet-500/60 ring-1 ring-violet-500/30 bg-card shadow-md" : "border-border/80 hover:border-violet-500/40 hover:bg-muted/30 hover:shadow-md",
                               unread && selected()?.id !== message.id && "border-violet-500/30 bg-muted/20"
                             )}
                             onClick={() => { setComposeOpen(false); setSelectedId(message.id); }}
