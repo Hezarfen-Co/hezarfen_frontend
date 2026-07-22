@@ -1,134 +1,130 @@
 # Hezarfen Frontend
 
-SolidJS + TypeScript frontend for the Hezarfen REST API.
+A modern, high-performance **SolidJS + TypeScript** web application for the Hezarfen Campus & Learning Management System. Built with Vite, TanStack Router, Tailwind CSS, and a rich, accessible dark mode design system.
 
-## Stack
+---
 
-- **SolidJS** + Vite
-- **TanStack Router** (code-based route tree, lazy pages)
-- **shadcn-solid style** UI primitives under `src/components/ui/`
-- Session cookie auth via Vite dev proxy (same-origin)
-- **bun** package manager
-- i18n with EN/TR locale switching
+## 🚀 Key Highlights & UI/UX Experience
 
-## Prerequisites
+- **Çelebi AI Assistant**: Top-bar instant AI study and campus guide accessible from every page (`IconSparkles`).
+- **Smart Notebook & Import Assistant**: Upload PDF, TXT, or MD files and automatically extract clean Markdown notes (OCR warning, split line joining, header stripping).
+- **Freehand Drawing Canvas (`.hzdraw`)**: Unbounded pannable/zoomable drawing canvas with stroke smoothing, dark mode grid paper, and PNG scene JSON metadata embedding.
+- **Question Bank & Verified Solutions**: Question repository (`/questions`) supporting written/multiple-choice answers, teacher verification badges, and subject taxonomy.
+- **Live Exam Room & Real-Time Monitor**: Server-clock-synchronized countdown timer (`GET /time`), WebSocket + REST autosave, teacher SSE live monitoring, and answer sheet grading.
+- **Unified Sky-Blue Container (`data-shell`)**: Cohesive, elegant dark mode surfaces (`border-sky-500/15 bg-sky-500/[0.025]`) across Courses, Exams, Events, Calendar, and Guide pages.
+- **Redesigned Tab System**: Stationary tab dimensions (zero layout shifts), glowing dark mode halo rings (`dark:shadow-[0_0_16px_rgba(255,255,255,0.08)]`), dynamic alternating accent lines, and perfectly aligned icon + text triggers.
+- **Çelebi Primary Button Styling**: Hairline borders, translucent fill (`bg-primary/15`), subtle rings, and clean hover micro-interactions.
 
-- Node.js 20+ (or bun)
-- Hezarfen backend running at `http://127.0.0.1:8080`
+---
 
-## Setup
+## 🛠️ Stack & Architecture
+
+- **Core**: SolidJS 1.8+ & TypeScript 5+ (scaffolded with Vite 6)
+- **Routing**: TanStack Router (`@tanstack/solid-router`, code-based route tree, route-level code splitting via `lazy()`)
+- **UI Primitives**: Custom **shadcn-solid** wrappers under `src/components/ui/` styled with Tailwind CSS (using `clsx` + `tailwind-merge` + `cva`)
+- **API Layer**: Domain-driven `src/api/<domain>/` functions using `fetch` inside SolidJS `createResource` boundaries. Pages never call `fetch` directly.
+- **Testing**: Vitest with 100% endpoint test coverage (`src/api/__tests__/`) and custom `mockFetch` utilities.
+- **Runtime Targets**: Under ~70KB gzipped bundle size for lightning-fast loads.
+
+---
+
+## 📦 Prerequisites & Setup
+
+- **Node.js** 20+ or **bun** (recommended)
+- Hezarfen backend running at `http://127.0.0.1:8080` (or proxied via Vite)
+
+### Installation & Development
 
 ```bash
+# Install dependencies
 bun install
+
+# Start Vite development server
 bun run dev
+
+# Run unit tests
+bun run test
+
+# Typecheck and build production bundle
+bun run build
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-The Vite server proxies `/api/*` to the backend so the HttpOnly session cookie stays same-origin while page URLs like `/notes` remain frontend routes on refresh.
+> **Proxy Note**: Vite server automatically proxies `/api/*` and WebSocket connections (`/ws/*`) to `http://127.0.0.1:8080`, preserving HttpOnly session cookies across same-origin calls.
 
-## Scripts
+---
 
-| Command | Description |
+## 👥 Role Scope Matrix
+
+`student < teacher < manager < admin` — Higher roles inherit lower capabilities. Public registration creates a `student`.
+
+| Role | Access & Capabilities |
 |---|---|
-| `bun run dev` | Start Vite dev server |
-| `bun run build` | Typecheck + production build |
-| `bun run preview` | Preview production build |
-| `bun run check` | Typecheck only |
+| **Student (`student`)** | Personal notebook, PDF import, drawing canvas, enrolled courses, live exam room, question bank, pomodoro focus log, personal report card & attendance history. |
+| **Teacher (`teacher`)** | Course/study creation, student enrollment, lesson session roll call, exam question authoring, live exam monitoring, answer sheet grading, and solution verification. |
+| **Manager (`manager`)** | Academic settings, term definitions, attendance reports, global course/exam oversight, and staff work logs. |
+| **Admin (`admin`)** | Global management scope across all users, role assignments, system policies, settings, and terms. |
 
-## Roles
+---
 
-`student < teacher < manager < admin` — higher roles inherit lower capabilities. Registration always creates a `student`.
+## 🗺️ Page Routes & System Navigation
 
-Role-based UI rules:
-
-- `student`: own/enrolled/related courses, exams, marks, attendance, and notes.
-- `teacher`: teaching, grading, session, attendance, event, and work-log controls where allowed.
-- `manager`: management pages such as settings, terms, reports, and broader school operations.
-- `admin`: global management scope for courses, exams, users, settings, and terms.
-
-Dashboard and table summaries must use the same role scope as the related page. Admin views global data; non-admin roles should not accidentally see global course/exam scope.
-
-## Pages
-
-| Path | Access | Description |
+| Path | Access Scope | Description |
 |---|---|---|
-| `/login`, `/register` | Guests | Authentication |
-| `/` | Authenticated | Role-scoped observation dashboard (portal cards + attention/upcoming) |
-| `/profile` | Authenticated | Edit personal info (name, email, phone, birth date) |
-| `/notes` | Student+ | Personal notebook CRUD with paper-style cards, side-panel create, reader panel, file attachments |
-| `/events`, `/events/:id` | Student+ | Event list & detail with search, time filters, and lazy attendance roster |
-| `/exams` | Student+ | Exam table with role-scoped course filtering |
-| `/exams/:id` | Student+ | Exam detail, draft/publish state, subject-tagged questions, grading, statistics (teacher+) |
-| `/exams/:id/live` | Teacher+ | Live monitor / final state roster with pagination & sorting |
-| `/exam-room/:id` | Student+ | WebSocket-based real-time exam room (auto-save, timer, local expiry close) |
-| `/courses` | Student+ | Course table with search and term filters; create/edit flows for teacher+ |
-| `/courses/:id` | Student+ | Course/study/club detail, capacity, subjects, exams, roster, lesson sessions, and roll call tools |
-| `/pomodoro` | Student | Server-stamped student focus log |
-| `/guide` | Authenticated | App usage guide |
-| `/admin/users` | Admin | User management |
+| `/login`, `/register` | Guests | Authentication with same-origin cookie management. |
+| `/` | Authenticated | Read-only observation dashboard with role-scoped portal cards, attention items, and upcoming events. |
+| `/guide` | Authenticated | Redesigned product guide featuring role scope matrix, 6 core feature cards, and pro tips. |
+| `/profile` | Authenticated | User profile management (display name, email, phone, birth date). |
+| `/notes` | Student+ | Personal notebook with paper-style cards, Note Import Assistant (PDF/TXT), reader drawer, file attachments, and `.hzdraw` live canvas. |
+| `/questions`, `/questions/:id` | Student+ | Community Question Bank with solution authoring and teacher verification. |
+| `/courses`, `/courses/:id` | Student+ | Course catalog, student enrollment, curriculum subjects, homework assignments, and lesson session roll call. |
+| `/exams`, `/exams/:id` | Student+ | Exam list and details, subject-tagged questions, draft/publish controls, and grading statistics. |
+| `/exam-room/:id` | Student+ | WebSocket real-time exam room with autosave, server timer (`/time`), and automatic turn-in on expiry. |
+| `/exams/:id/live` | Teacher+ | Live exam monitor over SSE/polling with answer sheets, auto-score suggestions, and inline grading. |
+| `/events`, `/events/:id` | Student+ | Campus event list and detail views with search filters and attendance roster. |
+| `/calendar` | Student+ | Full calendar view with sky-blue container, event & exam markers, and day detail inspection. |
+| `/marks` | Student+ | Report card with weighted exam average calculations and course breakdown. |
+| `/messages` | Student+ | Messaging portal with folder navigation, unread badges, and micro-animations. |
+| `/pomodoro` | Student | Student focus log with server-stamped session tracking. |
+| `/admin/users` | Admin | User account administration and role assignment. |
 
-## Features
+---
 
-- **Exam lifecycle**: create (scheduled/async/unscheduled), automatic async duration from start/end, subject-tagged questions (multiple-choice / text), real-time WebSocket exam room, auto-close on expiry, teacher grading
-- **Live monitor**: 2-second polling during active exams, static final state view after exam ends, pagination (10/page), column sorting
-- **Statistics**: graded count, average/min/max marks on exam detail
-- **Answer sheet**: teacher review of student answers with correct/wrong highlighting
-- **Profile editing**: update display name, email, phone, birth date
-- **Dense tables**: toolbar search/filter, subtle column separators, narrow centered three-dot row actions
-- **Side panels**: quick create/edit workflows without losing list context
-- **Course sessions**: right-panel session creation and paginated roll call panels
-- **Course subjects**: course/study curriculum topics managed on the detail page; every exam question must pick one
-- **Course capacity**: optional roster cap on course/study/club enrollment
-- **Pomodoro**: student-only server-stamped focus sessions with total focus history
-- **Schedule validation**: event, exam, and lesson-session forms use `GET /time` for server-clock-aware past-date warnings before submit
-- **Notebook**: paper-style note cards; create in `SidePanel`; read in reader panel with attachments; three-dot card actions for edit/delete
-- **Note Import Assistant**: convert uploaded PDF, TXT, or Markdown files into clean, structured notes ready for the notebook. Automatically strips page numbers and header noise, joins split PDF sentences, formats Markdown headings and bullet points, and flags OCR extraction issues
-- **Freehand Drawing Canvas (`DrawCanvas`)**: unbounded pannable/zoomable drawing canvas with pen, eraser, grid paper ruling, and PNG metadata JSON embedding (`.hzdraw.png`)
-- **Note files**: per-note upload/list/download/delete via native `FormData`; school `max_file_bytes` from settings
-- **Events and courses**: event cards with schedule status chips + toolbar search/time filters; courses table with search and term filters
-- **Attendance UI**: localized status labels with explanatory detail text and semantic colors
-- **Role-scoped dashboard**: monochrome observation board — portal cards (`Title | count`), drag-and-drop & delta move reordering in edit mode, needs-attention and upcoming lists only
-- **Empty states**: shared `EmptyState` with optional create CTA where the role can mutate
-- **Mutation feedback**: short auto-clear success flash (`createFlash` + success `Alert`) after create/save/delete; not used for exam-room autosave
-- **i18n**: full Turkish / English interface
+## 🎨 UI/UX Design System Tokens
 
-## UI Patterns
+- **Data Shell Surface**: Subtle sky-blue background container (`border-sky-500/15 bg-sky-500/[0.025]`) used across data-heavy views for visual cohesion.
+- **Domain Accent Colors**: Centralized single source of truth (`src/lib/domain-colors.ts`) mapping domain colors exclusively to hairline borders and ring highlights (amber for Notes, violet for Messages, rose for Exams, emerald for Events, sky for Courses, cyan for Questions, teal for Marks).
+- **Tab Indicators**: Recessed list tracks, stationary pill triggers, halo ring glow outlines, and alternating accent lines.
+- **Button Styling**: Çelebi-themed translucent fill (`bg-primary/15`), hairline borders, and subtle rings (`ring-1 ring-primary/25`).
+- **Invisible Scrollbars**: Functional scrolling without visible scrollbar clutter across all browsers (`scrollbar-width: none`).
 
-- Durable resources use full detail pages with breadcrumbs.
-- Short create/edit/filter work uses `SidePanel`.
-- Destructive actions use confirm dialogs.
-- Form dialogs dismiss with the header close control (outside click / ESC disabled to avoid click-through races).
-- Data-heavy views use `DataToolbar`, `DataTableFrame`, `.data-table`, and `TableRowActions`.
-- Large list pages should use server-side pagination/search/filtering when the backend supports it; client-side slicing is only acceptable for small or temporary datasets.
-- Date fields use the shared `DatePicker`; date-time flows pair it with an `HH:mm` input.
-- Start/end date-time rows use equal-width date and time controls.
-- Disclosure sections either defer hidden content for request savings or preserve mounted content when local state should not reset.
-- Event detail attendance roster is teacher-only and lazy-loaded when its disclosure opens.
-- Schedule status chips share `src/lib/schedule-status.ts` tones (active / upcoming / finished / muted).
-- Note attachments live in the note reader panel. Upload uses native `FormData`; downloads are same-origin links to `/api/notes/{id}/files/{file_id}`. Backend remains authoritative for the 10-file cap and payload validation.
-- App providers (`PreferencesProvider`, `AuthProvider`) wrap `RouterProvider` so every route and pending shell can use auth/preferences context.
+---
 
-## Docs
-
-- `docs/frontend-next-steps.md` — completed frontend audit summary and backend-dependent follow-ups.
-- `docs/navigation-patterns.md` — interaction, dashboard, role scope, and table action rules.
-- `docs/ui-redesign-tokens.md` — visual density, table, typography, and component conventions.
-- `docs/backend-ui-alignment-plan.md` — completed backend alignment archive.
-
-## Project Structure
+## 📁 Project Directory Structure
 
 ```
 src/
-├── api/           # API client, types, endpoint functions
-├── components/    # Reusable UI components
-│   ├── exams/     # Exam card, form, questions panel, answer sheet, WS room
-│   ├── layout/    # Side nav, page header, role guards
-│   ├── ui/        # Design system (Button, Badge, Table, SidePanel, row actions, etc.)
-│   └── users/     # Profile form, user table
-├── i18n/          # Message keys + EN/TR dictionaries
-├── lib/           # Utilities (format, cn, roles, exam-labels, flash, schedule-status)
-├── pages/         # Route-level page components
-├── routes/        # TanStack Router tree
-└── stores/        # Auth, preferences (locale, theme) contexts
+├── api/                # Endpoint functions organized by domain (notes, exams, courses, etc.)
+│   └── __tests__/      # Vitest endpoint tests (100% API coverage)
+├── components/         # Domain & UI components
+│   ├── exams/          # Exam cards, forms, live monitor, WS room
+│   ├── layout/         # AppShell, PageHeader, Sidebar, RouteGuard
+│   ├── notes/          # Note cards, reader panel, file attachment manager
+│   ├── ui/             # Design system (Button, Badge, DataTable, SidePanel, Tabs, etc.)
+│   └── users/          # User search, profile form, admin user table
+├── i18n/               # Localization dictionaries (TR / EN) and MessageKey types
+├── lib/                # Shared utilities (domain-colors, note-importer, stroke-smoothing, etc.)
+├── pages/              # Lazy-loaded page components for TanStack Router
+├── routes/             # TanStack Router route tree definition
+└── stores/             # Cross-cutting contexts (AuthContext, PreferencesContext)
 ```
+
+---
+
+## 📜 Commit & Quality Workflow
+
+All contributions adhere to the strict repository rulebook (`AGENTS.md`):
+
+1. **Pre-commit Check**: `bun run test` (35 test files, 238 tests) and `bun run build` (`tsc --noEmit && vite build`) must pass green before committing.
+2. **Conventional Commits**: Format `type: emoji short summary` with technical bullet details written in English.
