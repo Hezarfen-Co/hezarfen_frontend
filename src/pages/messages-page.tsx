@@ -118,7 +118,7 @@ export default function MessagesPage() {
       <div>
         <section class="data-shell overflow-hidden p-0">
           <div class="grid min-h-[calc(100vh-7rem)] lg:[grid-template-columns:var(--messages-cols)]" style={{ "--messages-cols": gridTemplate() }}>
-            <aside class="border-b border-primary/20 bg-primary/[0.07] p-3 lg:border-b-0">
+            <aside class="border-b border-border/80 bg-card/60 p-3 lg:border-b-0">
               <div class="space-y-3">
                 <Button class="w-full rounded-xl shadow-sm" onClick={() => { setSelectedId(""); setComposeOpen(true); }}>
                   <IconPlus class="h-4 w-4" />
@@ -127,7 +127,7 @@ export default function MessagesPage() {
                 <div class="space-y-1">
                   <Button 
                     variant={folder() === "inbox" ? "secondary" : "ghost"} 
-                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "inbox" && "text-muted-foreground", folder() === "inbox" && "bg-sky-500/10 text-sky-700 dark:text-sky-300")}
+                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "inbox" && "text-muted-foreground", folder() === "inbox" && "border border-violet-500/50 bg-card text-foreground ring-1 ring-violet-500/30")}
                     onClick={() => startTransition(() => { setFolder("inbox"); setPage(1); setSelectedId(""); })}
                   >
                     <IconMessage class="h-4 w-4" />
@@ -138,7 +138,7 @@ export default function MessagesPage() {
                   </Button>
                   <Button 
                     variant={folder() === "sent" ? "secondary" : "ghost"} 
-                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "sent" && "text-muted-foreground", folder() === "sent" && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300")}
+                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "sent" && "text-muted-foreground", folder() === "sent" && "border border-violet-500/50 bg-card text-foreground ring-1 ring-violet-500/30")}
                     onClick={() => startTransition(() => { setFolder("sent"); setPage(1); setSelectedId(""); })}
                   >
                     <IconSend class="h-4 w-4" />
@@ -146,7 +146,7 @@ export default function MessagesPage() {
                   </Button>
                   <Button 
                     variant={folder() === "archive" ? "secondary" : "ghost"} 
-                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "archive" && "text-muted-foreground", folder() === "archive" && "bg-violet-500/10 text-violet-700 dark:text-violet-300")}
+                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "archive" && "text-muted-foreground", folder() === "archive" && "border border-violet-500/50 bg-card text-foreground ring-1 ring-violet-500/30")}
                     onClick={() => startTransition(() => { setFolder("archive"); setPage(1); setSelectedId(""); })}
                   >
                     <IconArchive class="h-4 w-4" />
@@ -154,7 +154,7 @@ export default function MessagesPage() {
                   </Button>
                   <Button 
                     variant={folder() === "trash" ? "secondary" : "ghost"} 
-                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "trash" && "text-muted-foreground", folder() === "trash" && "bg-rose-500/10 text-rose-700 dark:text-rose-300")}
+                    class={cn("h-11 w-full justify-start rounded-xl", folder() !== "trash" && "text-muted-foreground", folder() === "trash" && "border border-rose-500/50 bg-card text-foreground ring-1 ring-rose-500/30")}
                     onClick={() => startTransition(() => { setFolder("trash"); setPage(1); setSelectedId(""); })}
                   >
                     <IconTrash class="h-4 w-4" />
@@ -192,19 +192,19 @@ export default function MessagesPage() {
                           <button
                             type="button"
                             class={cn(
-                              "w-full rounded-2xl border bg-card p-3 text-left shadow-sm transition-colors",
-                              selected()?.id === message.id ? "border-sky-500/35 bg-sky-500/[0.06]" : "border-border/80 hover:border-sky-500/25 hover:bg-muted/30",
-                              unread && selected()?.id !== message.id && "border-sky-500/20 bg-sky-500/[0.035]"
+                              "w-full rounded-2xl border bg-card p-3 text-left shadow-sm transition-all duration-200",
+                              selected()?.id === message.id ? "border-violet-500/60 ring-1 ring-violet-500/30 bg-card shadow-md" : "border-border/80 hover:border-violet-500/40 hover:bg-muted/30",
+                              unread && selected()?.id !== message.id && "border-violet-500/30 bg-muted/20"
                             )}
                             onClick={() => { setComposeOpen(false); setSelectedId(message.id); }}
                           >
                             <div class="flex items-start justify-between gap-2">
                               <span class={cn("truncate text-xs font-semibold uppercase tracking-wider text-muted-foreground")}>{peerName}</span>
-                              <span class={cn("mono shrink-0 text-[10px]", unread ? "font-medium text-primary" : "text-muted-foreground")}>{timeLabel(message.sent_at)}</span>
+                              <span class={cn("mono shrink-0 text-[10px]", unread ? "font-medium text-foreground" : "text-muted-foreground")}>{timeLabel(message.sent_at)}</span>
                             </div>
                             <div class="mt-1 flex items-center gap-2">
                               <Show when={unread}>
-                                <span class="h-2 w-2 shrink-0 rounded-full bg-sky-500 shadow-[0_0_0_3px_rgba(14,165,233,0.14)]" />
+                                <span class="h-2 w-2 shrink-0 rounded-full bg-violet-500 shadow-[0_0_0_3px_rgba(139,92,246,0.2)]" />
                               </Show>
                               <span class={cn("truncate text-sm", unread ? "font-bold text-foreground" : "font-medium text-foreground/90")}>{message.subject}</span>
                             </div>
@@ -265,7 +265,7 @@ export default function MessagesPage() {
                 </div>
               }
             >
-            <Show when={selected()} fallback={<div class="flex h-full flex-col items-center justify-center gap-3 p-8 text-center text-sm text-muted-foreground"><span class="flex h-14 w-14 items-center justify-center rounded-2xl border border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300"><IconMessage class="h-7 w-7" /></span><p>{t("messages.noSelection")}</p><Button type="button" size="sm" class="rounded-xl" onClick={() => setComposeOpen(true)}><IconPlus class="h-4 w-4" />{t("messages.newMessage")}</Button></div>}>
+            <Show when={selected()} fallback={<div class="flex h-full flex-col items-center justify-center gap-3 p-8 text-center text-sm text-muted-foreground"><span class="flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-500/50 ring-1 ring-violet-500/30 bg-muted/40 text-foreground"><IconMessage class="h-7 w-7" /></span><p>{t("messages.noSelection")}</p><Button type="button" size="sm" class="rounded-xl" onClick={() => setComposeOpen(true)}><IconPlus class="h-4 w-4" />{t("messages.newMessage")}</Button></div>}>
               {(message) => {
                 const isSent = folder() === "sent" || isOwnSentMessage(message());
                 const peerName = isSent ? personLabel(message().recipient) : personLabel(message().sender);
@@ -321,7 +321,7 @@ export default function MessagesPage() {
                     </div>
                     <div class="border-b p-5">
                       <div class="flex items-start gap-4">
-                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-500/20 bg-sky-500/10 text-lg font-bold uppercase text-sky-700 dark:text-sky-300">
+                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-violet-500/50 ring-1 ring-violet-500/30 bg-muted/40 text-lg font-bold uppercase text-foreground">
                           {peerName.charAt(0)}
                         </div>
                         <div class="min-w-0 flex-1">
@@ -416,7 +416,7 @@ function ComposePanel(props: {
           <h2 class="font-display text-2xl font-semibold tracking-tight">{t("messages.newMessage")}</h2>
           <p class="text-sm text-muted-foreground">{t("nav.messages")}</p>
         </div>
-        <div class="space-y-1.5 rounded-2xl border border-violet-500/15 bg-violet-500/[0.03] p-4">
+        <div class="space-y-1.5 rounded-2xl border border-border/80 bg-card p-4 dark:border-white/[0.08]">
           <Label for="msg-recipient">{t("messages.recipient")}</Label>
           <UserSearchSelect
             id="msg-recipient"
@@ -426,7 +426,7 @@ function ComposePanel(props: {
             excludeIds={auth.user()?.id ? [auth.user()!.id] : []}
           />
         </div>
-        <div class="space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4">
+        <div class="space-y-1.5 rounded-2xl border border-border/80 bg-card p-4 dark:border-white/[0.08]">
           <Label for="msg-subject">{t("form.title")}</Label>
           <Input 
             id="msg-subject" 
@@ -436,7 +436,7 @@ function ComposePanel(props: {
             onInput={(e) => setSubject(e.currentTarget.value)} 
           />
         </div>
-        <div class="space-y-1.5 rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.03] p-4">
+        <div class="space-y-1.5 rounded-2xl border border-border/80 bg-card p-4 dark:border-white/[0.08]">
           <Label for="msg-body">{t("form.description")}</Label>
           <Textarea 
             id="msg-body" 

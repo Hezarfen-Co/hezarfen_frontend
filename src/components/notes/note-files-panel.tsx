@@ -167,7 +167,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   };
 
   return (
-    <section class="space-y-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.025] p-4 shadow-sm">
+    <section class="space-y-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm dark:border-white/[0.08]">
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>

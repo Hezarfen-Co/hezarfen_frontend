@@ -1,14 +1,16 @@
 import { Show } from "solid-js";
 import { cn } from "@/lib/cn";
+import { DOMAIN_COLORS } from "@/lib/domain-colors";
 
-export type EmptyStateKind = "default" | "notes" | "exams" | "events" | "courses";
+export type EmptyStateKind = "default" | "notes" | "exams" | "events" | "courses" | "messages";
 
 const KIND_TONE: Record<EmptyStateKind, string> = {
-  default: "border-primary/20 bg-primary/10 text-primary",
-  notes: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-  exams: "border-indigo-500/20 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
-  events: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  courses: "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  default: "border-primary/40 ring-1 ring-primary/25 bg-muted/30 text-foreground",
+  notes: DOMAIN_COLORS.notes.emptyStateClass,
+  exams: DOMAIN_COLORS.exams.emptyStateClass,
+  events: DOMAIN_COLORS.events.emptyStateClass,
+  courses: DOMAIN_COLORS.courses.emptyStateClass,
+  messages: DOMAIN_COLORS.messages.emptyStateClass,
 };
 
 /** Clean dashed empty panel with animated vector illustrations. */
