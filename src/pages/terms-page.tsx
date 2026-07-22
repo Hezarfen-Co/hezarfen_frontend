@@ -186,7 +186,7 @@ function TermsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-violet-500/15 bg-violet-500/[0.025] p-4">
         <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />

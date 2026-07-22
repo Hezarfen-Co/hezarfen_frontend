@@ -73,7 +73,7 @@ function CourseDetailContent() {
   const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
   const [settings] = createResource(() => getSettings());
   const [exams, { refetch: refetchExams }] = createResource(
-    () => (openSections().exams ? id() : null),
+    () => id(),
     async (courseId) => (courseId ? (await getCourseExams(courseId)).items : []),
   );
   const hasCourseManagementRights = () => {
@@ -95,7 +95,7 @@ function CourseDetailContent() {
     return hasMinRole(u.role, "manager");
   };
   const [roster, { refetch: refetchRoster }] = createResource(
-    () => (hasCourseManagementRights() && openSections().roster ? id() : null),
+    () => (hasCourseManagementRights() ? id() : null),
     async (courseId) => (courseId ? (await getCourseEnrollments(courseId)).items : []),
   );
   const [mine] = createResource(
@@ -207,7 +207,7 @@ function CourseDetailContent() {
       accessorFn: (row) => examKindLabel(String(row.kind), t),
       header: t("exams.kind"),
       cell: (cell) => (
-        <Badge variant="outline" class="rounded-sm capitalize">
+        <Badge variant="outline" class="rounded-full capitalize">
           {examKindLabel(String(cell.row.original.kind), t)}
           <Show when={examWeight(cell.row.original, settings()?.exam_kinds) != null}>
             {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
@@ -219,7 +219,7 @@ function CourseDetailContent() {
       id: "mode",
       accessorFn: (row) => examModeLabel(row.mode),
       header: t("exams.mode"),
-      cell: (cell) => <Badge variant="secondary" class="rounded-sm">{examModeLabel(cell.row.original.mode)}</Badge>,
+      cell: (cell) => <Badge variant="secondary" class="rounded-full">{examModeLabel(cell.row.original.mode)}</Badge>,
     },
     {
       id: "status",
@@ -227,7 +227,7 @@ function CourseDetailContent() {
       header: t("events.status"),
       cell: (cell) => (
         <Show when={cell.row.original.draft} fallback="—">
-          <Badge variant="secondary" class="rounded-sm">{t("exams.draft")}</Badge>
+          <Badge variant="secondary" class="rounded-full">{t("exams.draft")}</Badge>
         </Show>
       ),
     },
@@ -285,19 +285,19 @@ function CourseDetailContent() {
                 actions={
                   <div class="detail-action-group">
                     <Link to={courseListPath(c().kind)}>
-                      <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
+                      <Button variant="ghost" size="sm" class="w-full rounded-xl sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
                         {t("common.back")}
                       </Button>
                     </Link>
                     <Show when={canManage()}>
                       <div class="detail-action-divider">
-                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={startEdit}>
+                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={startEdit}>
                           <IconEdit class="h-4 w-4" />
                           {t("common.edit")}
                         </Button>
                         <Show when={canDeleteCourse()}>
-                          <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setDeleteOpen(true)}>
+                          <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={() => setDeleteOpen(true)}>
                             <IconTrash class="h-4 w-4" />
                             {t("courses.delete")}
                           </Button>
@@ -415,10 +415,10 @@ function CourseDetailContent() {
                   <Input id="edit-course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
                 </div>
                 <div class="flex flex-wrap gap-2">
-                  <Button type="submit" class="rounded-sm" disabled={pending()}>
+                  <Button type="submit" class="rounded-xl" disabled={pending()}>
                     {t("common.update")}
                   </Button>
-                  <Button type="button" variant="outline" class="rounded-sm" onClick={() => setEditing(false)}>
+                  <Button type="button" variant="outline" class="rounded-xl" onClick={() => setEditing(false)}>
                     {t("common.cancel")}
                   </Button>
                 </div>
@@ -438,11 +438,11 @@ function CourseDetailContent() {
               description={createdCourseExam() ? t("exams.step2Questions") : c().title}
               size={examCreateStep() === "questions" ? "wide" : "default"}
             >
-              <div class="mb-4 flex border-b border-border/60 pb-2">
+              <div class="mb-4 flex rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-1">
                 <button
                   type="button"
                   class={cn(
-                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     examCreateStep() === "details"
                       ? "bg-primary text-primary-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",
@@ -455,7 +455,7 @@ function CourseDetailContent() {
                   type="button"
                   disabled={!createdCourseExam()}
                   class={cn(
-                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     examCreateStep() === "questions"
                       ? "bg-primary text-primary-foreground shadow-xs"
                       : createdCourseExam()
@@ -535,10 +535,10 @@ function CourseDetailContent() {
                   role="student"
                 />
                 <div class="flex flex-wrap gap-2">
-                  <Button type="submit" class="rounded-sm" disabled={pending()}>
+                  <Button type="submit" class="rounded-xl" disabled={pending()}>
                     {t("courses.enroll")}
                   </Button>
-                  <Button type="button" variant="outline" class="rounded-sm" onClick={() => setShowEnrollPanel(false)}>
+                  <Button type="button" variant="outline" class="rounded-xl" onClick={() => setShowEnrollPanel(false)}>
                     {t("common.cancel")}
                   </Button>
                 </div>
@@ -592,7 +592,7 @@ function CourseDetailContent() {
                 </Show>
               }
             >
-              <CourseSubjectsPanel courseId={id()} canManage={canManage()} active={openSections().subjects} createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
+              <CourseSubjectsPanel courseId={id()} canManage={canManage()} active createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
             </SectionDisclosure>
 
             <SectionDisclosure
@@ -640,7 +640,7 @@ function CourseDetailContent() {
                 courseId={id()}
                 roster={roster() ?? []}
                 canManage={canManage()}
-                active={openSections().sessions}
+                active
                 createOpen={showSessionForm()}
                 onCreateOpenChange={setShowSessionForm}
                 onCountChange={setSessionCount}

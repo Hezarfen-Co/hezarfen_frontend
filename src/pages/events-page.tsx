@@ -106,7 +106,7 @@ function EventsContent() {
       id: "audience",
       accessorFn: (event) => audienceLabel(event.audience),
       header: t("events.audience"),
-      cell: (cell) => <Badge variant="outline" class="rounded-sm">{audienceLabel(cell.row.original.audience)}</Badge>,
+      cell: (cell) => <Badge variant="outline" class="rounded-full">{audienceLabel(cell.row.original.audience)}</Badge>,
     },
     {
       id: "status",
@@ -116,7 +116,7 @@ function EventsContent() {
       cell: (cell) => {
         const status = eventStatus(cell.row.original);
         return (
-          <Badge variant="outline" class={cn("w-28 justify-center rounded-sm", scheduleStatusClass(status))}>
+          <Badge variant="outline" class={cn("w-28 justify-center rounded-full", scheduleStatusClass(status))}>
             <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(status))} />
             {statusLabel(status)}
           </Badge>
@@ -193,7 +193,7 @@ function EventsContent() {
       </Show>
       {error() && <p class="text-sm text-destructive">{error()}</p>}
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-amber-500/15 bg-amber-500/[0.025] p-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>

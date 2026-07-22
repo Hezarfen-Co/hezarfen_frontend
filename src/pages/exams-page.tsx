@@ -171,7 +171,7 @@ function ExamsContent() {
       cell: (cell) => {
         const status = cell.row.original.displayStatus;
         return (
-          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap rounded-sm", scheduleStatusClass(examStatusTone(status)))}>
+          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap rounded-full", scheduleStatusClass(examStatusTone(status)))}>
             <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(status)))} />
             {statusLabel(status)}
           </Badge>
@@ -275,7 +275,7 @@ function ExamsContent() {
         />
       </div>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-indigo-500/15 bg-indigo-500/[0.025] p-4">
         <Show when={flash()}>
           <Alert variant="success">{flash()}</Alert>
         </Show>
@@ -358,11 +358,11 @@ function ExamsContent() {
         description={createdExam() ? t("exams.step2Questions") : t("exams.subtitle")}
         size={createStep() === "questions" ? "wide" : "default"}
       >
-        <div class="mb-4 flex border-b border-border/60 pb-2">
+        <div class="mb-4 flex rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-1">
           <button
             type="button"
             class={cn(
-              "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
               createStep() === "details"
                 ? "bg-primary text-primary-foreground shadow-xs"
                 : "text-muted-foreground hover:bg-muted/50",
@@ -375,7 +375,7 @@ function ExamsContent() {
             type="button"
             disabled={!createdExam()}
             class={cn(
-              "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
               createStep() === "questions"
                 ? "bg-primary text-primary-foreground shadow-xs"
                 : createdExam()
@@ -390,11 +390,11 @@ function ExamsContent() {
 
         <Show when={createStep() === "details"}>
           <Show when={!createdExam()}>
-            <div class="mb-4 space-y-1.5">
+            <div class="mb-4 space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4">
               <label class="text-sm font-medium" for="exam-course">
                 {t("exams.selectCourse")}
               </label>
-              <Select id="exam-course" class="rounded-sm" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
+              <Select id="exam-course" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
                 <option value="">{t("exams.selectCourse")}</option>
                 <For each={manageableCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>
               </Select>
@@ -439,11 +439,11 @@ function ExamsContent() {
         <Show when={editingExam()}>
           {(exam) => (
             <div class="space-y-4">
-              <div class="flex border-b border-border/60 pb-2">
+              <div class="flex rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-1">
                 <button
                   type="button"
                   class={cn(
-                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     editTab() === "details"
                       ? "bg-primary text-primary-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",
@@ -455,7 +455,7 @@ function ExamsContent() {
                 <button
                   type="button"
                   class={cn(
-                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     editTab() === "questions"
                       ? "bg-primary text-primary-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",

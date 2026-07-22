@@ -221,7 +221,28 @@
   }
 
   .detail-metric-card {
-    @apply rounded-xl border border-black/[0.05] dark:border-white/[0.06] bg-muted/30 p-4 shadow-sm;
+    @apply relative overflow-hidden rounded-xl border border-black/[0.05] dark:border-white/[0.06] bg-muted/30 p-4 shadow-sm;
+  }
+
+  .detail-metric-card::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-0.5 bg-primary/40;
+  }
+
+  .detail-metric-card:nth-child(4n+1)::before {
+    @apply bg-sky-500/50;
+  }
+
+  .detail-metric-card:nth-child(4n+2)::before {
+    @apply bg-emerald-500/50;
+  }
+
+  .detail-metric-card:nth-child(4n+3)::before {
+    @apply bg-amber-500/50;
+  }
+
+  .detail-metric-card:nth-child(4n+4)::before {
+    @apply bg-indigo-500/50;
   }
 
   .side-panel-body form {
