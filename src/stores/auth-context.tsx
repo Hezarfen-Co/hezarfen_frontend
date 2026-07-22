@@ -16,7 +16,6 @@ import { usePreferences } from "@/stores/preferences-context";
 type AuthContextValue = {
   user: Accessor<User | null | undefined>;
   loading: Accessor<boolean>;
-  setUser: (user: User | null) => void;
   refresh: () => Promise<User | null | undefined>;
   logout: () => Promise<void>;
 };
@@ -41,8 +40,6 @@ export function AuthProvider(props: ParentProps) {
     return me();
   };
 
-  const setUser = (u: User | null) => setOverride(u);
-
   createEffect(() => {
     const u = user();
     if (u) prefs.hydratePreferences(u);
@@ -65,7 +62,6 @@ export function AuthProvider(props: ParentProps) {
   const value: AuthContextValue = {
     user,
     loading: () => me.loading && override() === undefined,
-    setUser,
     refresh,
     logout,
   };
