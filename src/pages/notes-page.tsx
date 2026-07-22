@@ -125,12 +125,6 @@ function NotesContent() {
                 notes={pageItems()}
                 emptyTitle={t("dashboard.emptyNotesTitle")}
                 emptyDescription={t("notes.empty")}
-                emptyAction={
-                  <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
-                    <IconPlus class="h-4 w-4" />
-                    {t("notes.new")}
-                  </Button>
-                }
                 onUpdate={(id, values) =>
                   wrap(async () => {
                     await patchNoteById(id, values);

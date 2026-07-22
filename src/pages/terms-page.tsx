@@ -196,12 +196,6 @@ function TermsContent() {
             fallback={
               <EmptyState
                 title={t("terms.empty")}
-                action={
-                  <Button type="button" size="sm" class="rounded-lg" onClick={openCreate}>
-                    <IconPlus class="h-4 w-4" />
-                    {t("terms.create")}
-                  </Button>
-                }
               />
             }
           >

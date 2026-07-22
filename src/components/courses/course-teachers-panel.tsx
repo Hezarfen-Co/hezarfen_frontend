@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconTrash } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
@@ -122,15 +122,6 @@ export function CourseTeachersPanel(props: {
         fallback={
           <EmptyState
             title={t("courses.noTeachers")}
-            description=""
-            action={
-              props.canStaff ? (
-                <Button size="sm" onClick={() => props.onAssignOpenChange(true)}>
-                  <IconPlus class="mr-1.5 h-4 w-4" />
-                  {t("courses.assignTeacher")}
-                </Button>
-              ) : undefined
-            }
           />
         }
       >
