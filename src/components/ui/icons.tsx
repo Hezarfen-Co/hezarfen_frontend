@@ -371,6 +371,18 @@ export function IconFileText(props: IconProps) {
   );
 }
 
+export function IconHomework(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M15 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h3" />
+      <path d="M8 13h5" />
+      <path d="M8 17h3" />
+      <path d="m15 16 4-4 2 2-4 4h-2z" />
+    </Svg>
+  );
+}
+
 export function IconFileSpreadsheet(props: IconProps) {
   return (
     <Svg {...props}>

@@ -139,6 +139,7 @@ Reference implementation: `src/pages/dashboard-page.tsx`.
 ## Current Implementation Notes
 
 - Data-heavy admin and management views should prefer `DataToolbar`, `DataTableFrame`, and `.data-table`.
+- Page header create/add buttons use compact icon + label controls with `size="sm" class="min-w-[7.5rem] rounded-lg"`; secondary header actions keep the same shape with `variant="outline"`.
 - Row-level table actions should use `TableRowActions`; avoid inline action button clusters in table rows.
 - Quick create/edit flows should use `SidePanel`; destructive actions stay in confirm dialogs.
 - Durable resources keep full detail pages with breadcrumbs.

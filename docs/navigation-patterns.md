@@ -60,7 +60,7 @@ Table action rules:
 
 Delete or destructive confirmation stays in a confirm dialog, not a side panel.
 
-Header create actions should use a consistent compact button shape: icon plus label, `size="sm"`, equal min-width, and the current app radius (`rounded-lg` in page headers).
+Header create actions should use a consistent compact button shape: icon plus label, `size="sm"`, equal min-width, and the current app radius. Page header primary create/add buttons use `class="min-w-[7.5rem] rounded-lg"`; secondary/import buttons add `variant="outline"` but keep the same size/class.
 - On the Notes page header, the **"İçe Aktar"** button sits directly to the right of **"Yeni Not"** and opens a dedicated `SidePanel` for Note Import Assistant file conversion.
 
 Date picking should use the shared `DatePicker` plus a separate `HH:mm` input when time is needed. Avoid native `date` and `datetime-local` controls in product forms.
