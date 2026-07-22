@@ -38,7 +38,7 @@ export function EventCard(props: { event: Event }) {
 
   return (
     <Link to="/events/$id" params={{ id: props.event.id }} class="group block h-full">
-      <article class="data-shell flex h-full min-h-40 flex-col overflow-hidden transition-colors group-hover:border-primary/35">
+      <article class="data-shell flex h-full min-h-40 flex-col overflow-hidden card-lift group-hover:border-primary/35">
         <div class="flex flex-1 flex-col p-3">
           <div class="mb-2 flex items-start justify-between gap-2">
             <h3 class="line-clamp-2 min-w-0 flex-1 font-display text-base font-semibold leading-snug group-hover:text-primary">

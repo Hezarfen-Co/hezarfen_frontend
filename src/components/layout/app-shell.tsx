@@ -147,7 +147,7 @@ export function AppShell(props: ParentProps) {
 
         <main class="min-w-0 flex-1">
           <Show when={auth.user() && !fullScreen()}>
-            <header class="glass-header flex h-14 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+            <header class="sticky top-0 z-30 hig-translucent-bar flex h-14 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
               <div class="min-w-0 rounded-full border border-black/[0.06] dark:border-white/[0.08] bg-card/80 px-3.5 py-1 text-xs font-semibold text-muted-foreground shadow-sm">
                 <span class="block truncate">{routeLabel()}</span>
               </div>
@@ -160,7 +160,7 @@ export function AppShell(props: ParentProps) {
           <div
             class={cn(
               "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-6",
-              auth.user() && !wide() && "pb-24 lg:pb-6",
+              auth.user() && !wide() && "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-6",
               wide() ? "max-w-none" : "max-w-[1280px] xl:max-w-[1600px] 2xl:max-w-none",
             )}
           >

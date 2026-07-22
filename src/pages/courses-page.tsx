@@ -15,7 +15,7 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconEye, IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { DropdownSelect, Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,7 +90,7 @@ function CoursesContent() {
         <div class="min-w-0 space-y-1">
           <p class="truncate font-medium">{cell.row.original.title}</p>
           <Show when={isStudent()}>
-            <Badge variant="secondary" class="rounded-sm">{t("courses.enrolled")}</Badge>
+            <Badge variant="secondary" class="rounded-full">{t("courses.enrolled")}</Badge>
           </Show>
         </div>
       ),
@@ -105,7 +105,7 @@ function CoursesContent() {
       id: "term",
       accessorFn: (course) => termName(course.term),
       header: t("terms.term"),
-      cell: (cell) => <Badge variant="outline" class="mono max-w-full rounded-sm text-[11px]"><span class="truncate">{termName(cell.row.original.term)}</span></Badge>,
+      cell: (cell) => <Badge variant="outline" class="mono max-w-full rounded-full text-[11px]"><span class="truncate">{termName(cell.row.original.term)}</span></Badge>,
     },
     {
       id: "creator",
@@ -224,17 +224,17 @@ function CoursesContent() {
           </Show>
           {error() && <p class="text-sm text-destructive">{error()}</p>}
           <div class="flex flex-wrap gap-2">
-            <Button type="submit" class="rounded-sm" disabled={pending()}>
+            <Button type="submit" class="rounded-xl" disabled={pending()}>
               {t("common.create")}
             </Button>
-            <Button type="button" variant="outline" class="rounded-sm" onClick={() => setShowForm(false)}>
+            <Button type="button" variant="outline" class="rounded-xl" onClick={() => setShowForm(false)}>
               {t("common.cancel")}
             </Button>
           </div>
         </form>
       </SidePanel>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
         <Show when={flash()}>
           <Alert variant="success">{flash()}</Alert>
         </Show>
@@ -261,16 +261,16 @@ function CoursesContent() {
               empty={t("courses.empty", { item: pageLabel() })}
               onRowClick={(course) => void navigate({ to: "/courses/$id", params: { id: course.id } })}
               filters={
-                <Select
-                  class="h-9 w-full rounded-sm sm:w-44"
+                <DropdownSelect
+                  labelPrefix={t("terms.term")}
                   value={termFilter()}
-                  aria-label={t("terms.term")}
-                  onChange={(event) => setTermFilter(event.currentTarget.value)}
-                >
-                  <option value="all">{t("common.all")}</option>
-                  <option value="unassigned">{t("terms.unassigned")}</option>
-                  <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
-                </Select>
+                  onChange={(val) => setTermFilter(val)}
+                  options={[
+                    { value: "all", label: t("common.all") },
+                    { value: "unassigned", label: t("terms.unassigned") },
+                    ...(terms() ?? []).map((term) => ({ value: term.id, label: term.name })),
+                  ]}
+                />
               }
             />
           </div>

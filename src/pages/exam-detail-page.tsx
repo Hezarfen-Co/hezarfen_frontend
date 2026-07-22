@@ -107,7 +107,7 @@ function ExamDetailContent() {
   const isScheduled = () => isSittable();
 
   const [ownResult] = createResource(
-    () => (isStudent() && openSections().ownResult ? id() : null),
+    () => (isStudent() ? id() : null),
     async (examId) => {
       if (!examId) return null;
       try {
@@ -132,7 +132,7 @@ function ExamDetailContent() {
   );
 
   const [results, { refetch: refetchResults }] = createResource(
-    () => (hasCourseManagementRights() && openSections().results ? [id(), resultPage()] as const : null),
+    () => (hasCourseManagementRights() ? [id(), resultPage()] as const : null),
     async (source) => {
       if (!source) return { items: [], total: 0, limit: RESULT_PAGE_SIZE, offset: 0 };
       const [examId, page] = source;
@@ -155,7 +155,7 @@ function ExamDetailContent() {
     },
   );
   const [stats] = createResource(
-    () => (hasCourseManagementRights() && openSections().statistics ? id() : null),
+    () => (hasCourseManagementRights() ? id() : null),
     async (examId) => {
       if (!examId) return null;
       try {
@@ -372,7 +372,7 @@ function ExamDetailContent() {
                 actions={
                   <div class="detail-action-group">
                     <Link to="/exams">
-                      <Button variant="ghost" size="sm" class="w-full rounded-sm sm:w-auto">
+                      <Button variant="ghost" size="sm" class="w-full rounded-xl sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
                         {t("common.back")}
                       </Button>
@@ -382,14 +382,14 @@ function ExamDetailContent() {
                         <Show when={noAttemptsLeft()}
                           fallback={
                             <Link to="/exam-room/$id" params={{ id: id() }}>
-                              <Button size="sm" class="flex-1 rounded-sm sm:flex-none">
+                              <Button size="sm" class="flex-1 rounded-xl sm:flex-none">
                                 <IconExam class="h-4 w-4" />
                                 {ownAttempt()?.status === "in_progress" && !ownAttemptClosedByExit() ? t("attempt.resume") : t("attempt.openRoom")}
                               </Button>
                             </Link>
                           }
                         >
-                          <Badge variant="secondary" class="flex-1 rounded-sm px-3 py-2 text-center sm:flex-none">
+                          <Badge variant="secondary" class="flex-1 rounded-xl px-3 py-2 text-center sm:flex-none">
                             {ownAttempt()?.status === "submitted" ? t("attempt.submitted") : ownAttempt()?.status === "expired" ? t("attempt.expired") : t("attempt.noAttemptsLeft")}
                           </Badge>
                         </Show>
@@ -397,7 +397,7 @@ function ExamDetailContent() {
                     </Show>
                     <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
                       <Link to="/exams/$id/live" params={{ id: id() }}>
-                        <Button variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none">
+                        <Button variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none">
                           <IconEye class="h-4 w-4" />
                           {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                         </Button>
@@ -405,11 +405,11 @@ function ExamDetailContent() {
                     </Show>
                     <Show when={canManage()}>
                       <div class="detail-action-divider">
-                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-sm sm:flex-none" onClick={() => setEditing(true)}>
+                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(true)}>
                           <IconEdit class="h-4 w-4" />
                           {t("common.edit")}
                         </Button>
-                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-sm sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
+                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-xl sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
                           <IconTrash class="h-4 w-4" />
                           {t("common.delete")}
                         </Button>
@@ -425,7 +425,7 @@ function ExamDetailContent() {
                   <Badge
                     variant="outline"
                     class={cn(
-                      "mt-2 w-fit rounded-sm capitalize",
+                      "mt-2 w-fit rounded-full capitalize",
                       scheduleStatusClass(examStatusTone(detailStatus())),
                     )}
                   >
@@ -672,9 +672,7 @@ function ExamDetailContent() {
                   </Show>
                 }
               >
-                <Show when={openSections().questions}>
-                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded createOpen={questionCreateOpen()} onCreateOpenChange={setQuestionCreateOpen} />
-                </Show>
+                <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded createOpen={questionCreateOpen()} onCreateOpenChange={setQuestionCreateOpen} />
               </SectionDisclosure>
 
               <SidePanel
@@ -704,12 +702,10 @@ function ExamDetailContent() {
                 description={`${resultTotal()} ${t("exams.studentResults")}`}
                 actions={
                   <Show when={hasCourseManagementRights()}>
-                    <div class="flex items-center gap-2">
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
-                        <IconEdit class="h-4 w-4" />
-                        {t("exams.gradeStudent")}
-                      </Button>
-                    </div>
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
+                      <IconEdit class="h-4 w-4" />
+                      {t("exams.gradeStudent")}
+                    </Button>
                   </Show>
                 }
               >

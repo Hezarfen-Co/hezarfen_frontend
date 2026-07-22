@@ -2,8 +2,8 @@
 
 ## Direction
 
-Dense school admin UI: Fintables-style tables, Cloudflare-style grouped sidebar
-and status boards, neutral surfaces, subtle borders, one blue accent for
+Dense school admin UI with Apple HIG-inspired grouped surfaces: neutral grouped
+backgrounds, subtle borders, translucent overlays, one blue accent for
 interactive chrome only. Dashboard and overview surfaces stay grayscale; color
 is reserved for semantic status (success / warning / danger / info).
 
@@ -11,16 +11,16 @@ is reserved for semantic status (success / warning / danger / info).
 
 Light palette is defined in `src/index.css` as `--ui-*` variables:
 
-- `--ui-bg`: `#f7f8f8`
-- `--ui-surface-1`: `#ffffff`
-- `--ui-surface-2`: `#f1f3f3`
-- `--ui-surface-3`: `#e7eaea`
-- `--ui-border-1`: `#d9dddd`
-- `--ui-border-2`: `#c7cccc`
-- `--ui-text-1`: `#101414`
-- `--ui-text-2`: `#4b5555`
-- `--ui-text-3`: `#788181`
-- `--ui-accent`: ice-blue / teal-blue (`204 86% 48%` in HSL tokens)
+- `--ui-bg`: `240 5% 96%`
+- `--ui-surface-1`: `0 0% 100%`
+- `--ui-surface-2`: `240 5% 92%`
+- `--ui-surface-3`: `240 5% 88%`
+- `--ui-border-1`: `240 5% 86%`
+- `--ui-border-2`: `240 4% 78%`
+- `--ui-text-1`: `240 10% 9%`
+- `--ui-text-2`: `240 5% 35%`
+- `--ui-text-3`: `240 4% 52%`
+- `--ui-accent`: Apple system blue (`211 100% 50%`)
 - semantic colors: success, warning, danger, info, each with muted pair
 
 Dark palette mirrors same token names with dark surfaces and brighter semantic
@@ -31,11 +31,11 @@ to these `--ui-*` variables so existing components keep working.
 
 ## Typography
 
-- UI face: `DM Sans`
+- UI face: system Apple stack (`-apple-system`, `BlinkMacSystemFont`, SF Pro,
+  Helvetica Neue fallback)
 - Data face: `.mono` / `.num`, using `ui-monospace, SFMono-Regular, Menlo,
   Monaco, Consolas`
-- Display serif removed from data/admin pages; `.font-display` now maps to UI
-  face for tighter dashboard hierarchy.
+- `.font-display` maps to the same system UI face with tighter letter spacing.
 
 Scale target:
 
@@ -62,7 +62,8 @@ Density defaults:
 - sidebar group/header row: 32px
 - table header/cell row: 36px
 - card padding: 16px
-- radius: 12px base token (`0.75rem`), with token-derived `rounded-md`/`rounded-lg`/`rounded-xl` used by form, feedback, card, and panel surfaces
+- radius: 16px base token (`1rem`), with `rounded-xl`/`rounded-2xl` used by form,
+  feedback, card, and panel surfaces
 - table numerals/IDs use tabular mono
 - table action column: narrow, centered, three-dot trigger
 - table column separators: subtle border between cells, no heavy gridlines
@@ -80,6 +81,8 @@ Implemented:
 - role pills with semantic tints
 - mono IDs and tabular metrics
 - neutral surfaces, subtle borders, no gradients or decorative cards
+- HIG shared primitives: rounded controls, frosted overlays, tactile press
+  feedback, and 44px targets where layout allows
 
 ## Dashboard (homepage)
 
@@ -158,5 +161,9 @@ Directory                                     [ Search... ]
 
 ## Dropdowns & Select Elevation
 
-- All dropdown menus (`DropdownMenu`), comboboxes (`Combobox`), popovers (`Popover`), and native selects (`Select`) use Apple HIG squircle containers (`rounded-2xl`), frosted glass backdrop blur (`backdrop-blur-xl`), tactile press feedback, and 44pt touch targets (`min-h-[2.5rem]`).
+- Dropdown menus (`DropdownMenu`), comboboxes (`Combobox`), popovers (`Popover`),
+  dialogs, side panels, and toasts use squircle containers (`rounded-2xl` /
+  `rounded-3xl`), frosted glass backdrop blur (`backdrop-blur-xl`), tactile
+  press feedback, and 44px targets where layout allows. Native selects keep the
+  same rounded 44px control shape; their option popup remains browser-owned.
 - Table actions headers use `w-28 min-w-[7rem] text-center whitespace-nowrap` to ensure localized labels (`İŞLEMLER`, `Actions`) render without text truncation or overflow.

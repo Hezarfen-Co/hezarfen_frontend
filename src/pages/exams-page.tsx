@@ -17,8 +17,8 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconCheck, IconEdit, IconEye, IconPlus } from "@/components/ui/icons";
-import { Select } from "@/components/ui/select";
+import { IconCheck, IconEdit, IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
+import { DropdownSelect, Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
@@ -52,7 +52,6 @@ function ExamsContent() {
   const now = createNow();
   const [statusFilter, setStatusFilter] = createSignal<ExamDisplayStatus | "all">("all");
   const [courseFilter, setCourseFilter] = createSignal("all");
-  const [showMoreFilters, setShowMoreFilters] = createSignal(false);
   const [createOpen, setCreateOpen] = createSignal(false);
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
@@ -172,7 +171,7 @@ function ExamsContent() {
       cell: (cell) => {
         const status = cell.row.original.displayStatus;
         return (
-          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap rounded-sm", scheduleStatusClass(examStatusTone(status)))}>
+          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap rounded-full", scheduleStatusClass(examStatusTone(status)))}>
             <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(status)))} />
             {statusLabel(status)}
           </Badge>
@@ -276,7 +275,7 @@ function ExamsContent() {
         />
       </div>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-indigo-500/15 bg-indigo-500/[0.025] p-4">
         <Show when={flash()}>
           <Alert variant="success">{flash()}</Alert>
         </Show>
@@ -298,27 +297,49 @@ function ExamsContent() {
             empty={t("exams.empty")}
             onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
             filters={
-              <>
-                <Select class="h-9 w-full rounded-sm sm:w-40" value={statusFilter()} onChange={(event) => setStatusFilter(event.currentTarget.value as ExamDisplayStatus | "all")}>
-                  <option value="all">{t("common.all")}</option>
-                  <option value="submitted">{t("attempt.submitted")}</option>
-                  <option value="expired">{t("attempt.expired")}</option>
-                  <option value="draft">{t("exams.draft")}</option>
-                  <option value="upcoming">{t("exams.upcoming")}</option>
-                  <option value="active">{t("exams.active")}</option>
-                  <option value="finished">{t("exams.finished")}</option>
-                  <option value="unscheduled">{t("exams.unscheduled")}</option>
-                </Select>
-                <Show when={showMoreFilters()}>
-                  <Select class="h-9 w-full rounded-sm sm:w-52" value={courseFilter()} onChange={(event) => setCourseFilter(event.currentTarget.value)}>
-                    <option value="all">{t("common.all")}</option>
-                    <For each={visibleCourses()}>{(course) => <option value={course.id}>{course.title}</option>}</For>
-                  </Select>
+              <div class="flex flex-wrap items-center gap-2.5">
+                <DropdownSelect
+                  labelPrefix={t("attempt.status")}
+                  value={statusFilter()}
+                  onChange={(val) => setStatusFilter(val as ExamDisplayStatus | "all")}
+                  options={[
+                    { value: "all", label: t("common.all") },
+                    { value: "active", label: t("exams.active") },
+                    { value: "upcoming", label: t("exams.upcoming") },
+                    { value: "submitted", label: t("attempt.submitted") },
+                    { value: "expired", label: t("attempt.expired") },
+                    { value: "draft", label: t("exams.draft") },
+                    { value: "finished", label: t("exams.finished") },
+                    { value: "unscheduled", label: t("exams.unscheduled") },
+                  ]}
+                />
+
+                <DropdownSelect
+                  labelPrefix={t("nav.courses")}
+                  value={courseFilter()}
+                  onChange={(val) => setCourseFilter(val)}
+                  options={[
+                    { value: "all", label: t("common.all") },
+                    ...visibleCourses().map((course) => ({ value: course.id, label: course.title })),
+                  ]}
+                />
+
+                <Show when={statusFilter() !== "all" || courseFilter() !== "all"}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    class="h-11 rounded-xl px-3 text-xs font-medium text-muted-foreground hover:text-foreground tactile-press"
+                    onClick={() => {
+                      setStatusFilter("all");
+                      setCourseFilter("all");
+                    }}
+                  >
+                    <IconRotateCcw class="h-3.5 w-3.5 mr-1" />
+                    {t("common.resetFilters")}
+                  </Button>
                 </Show>
-                <Button type="button" variant="outline" size="sm" class="h-9 rounded-sm" onClick={() => setShowMoreFilters((value) => !value)}>
-                  {showMoreFilters() ? t("common.lessFilters") : t("common.moreFilters")}
-                </Button>
-              </>
+              </div>
             }
           />
         </Suspense>
@@ -337,11 +358,11 @@ function ExamsContent() {
         description={createdExam() ? t("exams.step2Questions") : t("exams.subtitle")}
         size={createStep() === "questions" ? "wide" : "default"}
       >
-        <div class="mb-4 flex border-b border-border/60 pb-2">
+        <div class="mb-4 flex rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-1">
           <button
             type="button"
             class={cn(
-              "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
               createStep() === "details"
                 ? "bg-primary text-primary-foreground shadow-xs"
                 : "text-muted-foreground hover:bg-muted/50",
@@ -354,7 +375,7 @@ function ExamsContent() {
             type="button"
             disabled={!createdExam()}
             class={cn(
-              "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
               createStep() === "questions"
                 ? "bg-primary text-primary-foreground shadow-xs"
                 : createdExam()
@@ -369,11 +390,11 @@ function ExamsContent() {
 
         <Show when={createStep() === "details"}>
           <Show when={!createdExam()}>
-            <div class="mb-4 space-y-1.5">
+            <div class="mb-4 space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4">
               <label class="text-sm font-medium" for="exam-course">
                 {t("exams.selectCourse")}
               </label>
-              <Select id="exam-course" class="rounded-sm" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
+              <Select id="exam-course" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
                 <option value="">{t("exams.selectCourse")}</option>
                 <For each={manageableCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>
               </Select>
@@ -418,11 +439,11 @@ function ExamsContent() {
         <Show when={editingExam()}>
           {(exam) => (
             <div class="space-y-4">
-              <div class="flex border-b border-border/60 pb-2">
+              <div class="flex rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-1">
                 <button
                   type="button"
                   class={cn(
-                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     editTab() === "details"
                       ? "bg-primary text-primary-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",
@@ -434,7 +455,7 @@ function ExamsContent() {
                 <button
                   type="button"
                   class={cn(
-                    "px-3 py-1.5 text-xs font-semibold rounded-md transition-colors",
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     editTab() === "questions"
                       ? "bg-primary text-primary-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",

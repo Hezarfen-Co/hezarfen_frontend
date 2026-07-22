@@ -253,7 +253,7 @@ function StaffWorkContent() {
         <Alert variant="success">{flash()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-emerald-500/15 bg-emerald-500/[0.025] p-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="font-display text-lg font-semibold">{t("work.teacherIdentity")}</h2>

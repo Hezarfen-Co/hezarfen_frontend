@@ -20,7 +20,7 @@ export function DataToolbar(props: {
           <div class="relative w-full sm:max-w-72">
             <IconSearch class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              class="h-9 w-full rounded-md bg-background pl-8 text-[13px]"
+              class="h-11 w-full rounded-xl bg-background pl-8 text-[13px]"
               value={props.searchValue ?? ""}
               placeholder={props.searchPlaceholder}
               onInput={(e) => props.onSearchInput?.(e.currentTarget.value)}

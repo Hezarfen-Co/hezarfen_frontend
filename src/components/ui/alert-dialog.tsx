@@ -16,11 +16,11 @@ export function AlertDialogContent<T extends ValidComponent = "div">(
   ]);
   return (
     <AlertDialogPrimitive.Portal>
-      <AlertDialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/40 dark:bg-black/60" />
+      <AlertDialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/40 backdrop-blur-md transition-opacity" />
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <AlertDialogPrimitive.Content
           class={cn(
-            "w-full max-w-md rounded-sm border border-border bg-popover text-popover-foreground shadow-md outline-none animate-fade-up",
+            "w-full max-w-md overflow-hidden rounded-2xl sm:rounded-3xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-apple outline-none animate-fade-up",
             local.class,
           )}
           {...rest}

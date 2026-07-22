@@ -60,13 +60,13 @@ function AdminUsersContent() {
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
-      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      {error() && <Alert variant="destructive">{error()}</Alert>}
 
       <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <For each={ROLES}>{(role) => <Metric label={t(`role.${role}` as MessageKey)} value={roleCount(role)} />}</For>
+        <For each={ROLES}>{(role) => <Metric role={role} label={t(`role.${role}` as MessageKey)} value={roleCount(role)} />}</For>
       </section>
 
-      <div class="data-shell space-y-4 p-4">
+      <div class="data-shell space-y-4 border-violet-500/15 bg-violet-500/[0.025] p-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="font-display text-lg font-semibold">{t("nav.users")}</h2>
@@ -74,7 +74,7 @@ function AdminUsersContent() {
               {visibleUsers().length}
             </p>
           </div>
-          <Badge variant="outline" class="mono rounded-sm uppercase tracking-[0.08em]">
+          <Badge variant="outline" class="mono rounded-full uppercase tracking-[0.08em]">
             {t("admin.directory")}
           </Badge>
         </div>
@@ -121,9 +121,17 @@ function AdminUsersContent() {
   );
 }
 
-function Metric(props: { label: string; value: number }) {
+const ROLE_METRIC_TONE: Record<Role, string> = {
+  student: "border-sky-500/20 bg-sky-500/[0.03]",
+  parent: "border-violet-500/20 bg-violet-500/[0.03]",
+  teacher: "border-emerald-500/20 bg-emerald-500/[0.03]",
+  manager: "border-amber-500/20 bg-amber-500/[0.03]",
+  admin: "border-rose-500/20 bg-rose-500/[0.03]",
+};
+
+function Metric(props: { role: Role; label: string; value: number }) {
   return (
-    <article class="data-shell p-4">
+    <article class={`data-shell p-4 ${ROLE_METRIC_TONE[props.role]}`}>
       <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{props.label}</p>
       <p class="mono mt-2 text-2xl font-semibold tabular-nums">{props.value}</p>
     </article>

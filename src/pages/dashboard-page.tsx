@@ -72,6 +72,24 @@ const ROLE_KEY: Record<Role, MessageKey> = {
   admin: "role.admin",
 };
 
+const ROLE_TONE: Record<Role, string> = {
+  student: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  parent: "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+  teacher: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  manager: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  admin: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+};
+
+function portalTone(to: string) {
+  if (to.includes("exam")) return "border-indigo-500/20 bg-indigo-500/10 text-indigo-700 group-hover:bg-indigo-500/15 dark:text-indigo-300";
+  if (to.includes("course") || to.includes("studies") || to.includes("clubs")) return "border-sky-500/20 bg-sky-500/10 text-sky-700 group-hover:bg-sky-500/15 dark:text-sky-300";
+  if (to.includes("event") || to.includes("calendar")) return "border-amber-500/20 bg-amber-500/10 text-amber-700 group-hover:bg-amber-500/15 dark:text-amber-300";
+  if (to.includes("mark") || to.includes("attendance")) return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 group-hover:bg-emerald-500/15 dark:text-emerald-300";
+  if (to.includes("message") || to.includes("student") || to.includes("users")) return "border-violet-500/20 bg-violet-500/10 text-violet-700 group-hover:bg-violet-500/15 dark:text-violet-300";
+  if (to.includes("work") || to.includes("settings")) return "border-slate-500/20 bg-slate-500/10 text-slate-700 group-hover:bg-slate-500/15 dark:text-slate-300";
+  return "border-primary/20 bg-primary/10 text-primary group-hover:bg-primary/15";
+}
+
 function examWindow(exam: Exam, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
   const status = examDisplayStatus(exam, now);
   if (status === "active") return "active";
@@ -414,8 +432,8 @@ function DashboardContent() {
   });
 
   return (
-    <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_18px_55px_rgba(15,23,42,0.07)]">
-      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-border/80 bg-muted/30 px-4 py-4 sm:px-5">
+    <div class="overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-background/70 shadow-apple dark:border-white/[0.08]">
+      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-black/[0.06] bg-card/85 px-4 py-4 backdrop-blur-xl dark:border-white/[0.08] sm:px-5">
         <div class="min-w-0 space-y-1">
           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("dashboard.today")}</p>
           <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -424,10 +442,13 @@ function DashboardContent() {
           <p class="text-sm text-muted-foreground">{t("dashboard.observationOnly")}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span class="rounded-md border border-border bg-background px-2.5 py-1 font-semibold text-foreground shadow-sm">
+          <span class={cn("rounded-full border px-2.5 py-1 font-semibold shadow-sm", ROLE_TONE[role()])}>
             {t(ROLE_KEY[role()])}
           </span>
-          <span class="rounded-md border border-border/70 bg-background/70 px-2.5 py-1 mono tabular-nums shadow-sm">{formatDateTime(now(), locale()).split(",")[0]}</span>
+          <span class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-2.5 py-1 mono tabular-nums shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.14)]" aria-hidden="true" />
+            {formatDateTime(now(), locale()).split(",")[0]}
+          </span>
         </div>
       </header>
 
@@ -436,19 +457,19 @@ function DashboardContent() {
       </Show>
 
       <Show when={!loading()} fallback={<div class="px-4 py-8"><PageSpinner /></div>}>
-        <div class="space-y-5 bg-background/50 px-4 py-4 sm:px-5 sm:py-5">
-        <section class="space-y-2.5" aria-labelledby="dash-sections">
+        <div class="space-y-5 bg-muted/20 px-4 py-4 sm:px-5 sm:py-5">
+        <section class="space-y-2.5 rounded-3xl border border-sky-500/10 bg-sky-500/[0.025] p-3 sm:p-4" aria-labelledby="dash-sections">
           <div class="flex items-center justify-between gap-3">
             <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
               {t("dashboard.roleLinks")}
             </h2>
             <div class="flex items-center gap-2">
               <Show when={editingPortalOrder()}>
-                <Button type="button" variant="ghost" size="sm" class="h-8 rounded-lg text-xs" onClick={resetPortalOrder}>
+                <Button type="button" variant="ghost" size="sm" class="h-10 rounded-xl text-xs" onClick={resetPortalOrder}>
                   {t("common.remove")}
                 </Button>
               </Show>
-              <Button type="button" variant="outline" size="sm" class="h-8 rounded-lg text-xs font-semibold" onClick={() => setEditingPortalOrder((value) => !value)}>
+              <Button type="button" variant="outline" size="sm" class="h-10 rounded-xl text-xs font-semibold" onClick={() => setEditingPortalOrder((value) => !value)}>
                 {editingPortalOrder() ? t("common.done") : t("common.edit")}
               </Button>
             </div>
@@ -492,7 +513,7 @@ function DashboardContent() {
 
         <Show when={role() !== "parent"}>
         <div class="grid items-stretch gap-5">
-          <section class="flex min-h-[17rem] flex-col space-y-2.5" aria-labelledby="dash-attention">
+          <section class="flex min-h-[17rem] flex-col space-y-2.5 rounded-3xl border border-amber-500/10 bg-amber-500/[0.025] p-3 sm:p-4" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
                 {t("dashboard.attention")}
@@ -506,7 +527,7 @@ function DashboardContent() {
               when={attention().length > 0}
               fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
-              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-xl border border-border bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-apple">
                 <For each={pagedAttention()}>
                   {(item) => (
                     <li>
@@ -580,7 +601,7 @@ function PortalCard(props: {
 
   const cardInner = () => (
     <>
-      <span class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/[0.05] dark:border-white/[0.08] bg-muted/30 text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:bg-primary/10 group-hover:text-primary">
+      <span class={cn("mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors", portalTone(props.card.to))}>
         <Icon class="h-5 w-5" />
       </span>
       <div class="min-w-0 flex-1 space-y-1">
@@ -590,7 +611,7 @@ function PortalCard(props: {
             <span class="hidden text-muted-foreground/40 sm:inline" aria-hidden="true">
               |
             </span>
-            <span class="mono shrink-0 text-sm font-semibold tabular-nums tracking-tight text-foreground sm:text-base">
+            <span class="mono shrink-0 rounded-full border border-black/[0.06] bg-background/80 px-2 py-0.5 text-xs font-semibold tabular-nums tracking-tight text-foreground shadow-sm dark:border-white/[0.08] sm:text-sm">
               {props.card.stat}
             </span>
           </Show>
@@ -610,7 +631,7 @@ function PortalCard(props: {
             type="button"
             variant="outline"
             size="sm"
-            class="h-7 w-7 p-0 rounded-lg border-primary/30 text-xs font-bold shadow-none hover:bg-primary/15 disabled:opacity-30"
+            class="h-10 w-10 rounded-xl p-0 text-xs font-bold shadow-none disabled:opacity-30"
             disabled={props.isFirst}
             onClick={(e) => {
               e.preventDefault();
@@ -625,7 +646,7 @@ function PortalCard(props: {
             type="button"
             variant="outline"
             size="sm"
-            class="h-7 w-7 p-0 rounded-lg border-primary/30 text-xs font-bold shadow-none hover:bg-primary/15 disabled:opacity-30"
+            class="h-10 w-10 rounded-xl p-0 text-xs font-bold shadow-none disabled:opacity-30"
             disabled={props.isLast}
             onClick={(e) => {
               e.preventDefault();
@@ -643,10 +664,9 @@ function PortalCard(props: {
 
   const cardClass = () =>
     cn(
-      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-4 shadow-apple transition-all duration-200 hover:shadow-apple-hover hover:border-primary/40 sm:min-h-[6.5rem]",
+      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] bg-card p-4 shadow-apple transition-[background-color,border-color,box-shadow] duration-200 hover:bg-card/90 hover:border-border dark:border-white/[0.08] sm:min-h-[6.5rem]",
       !props.editing && "active:scale-[0.98]",
       props.editing && "cursor-grab select-none border-dashed border-primary/50 bg-primary/[0.03]",
-      props.editing && !props.dragging && "dashboard-jiggle",
       props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-apple-hover",
       props.dragging && "scale-[0.98] border-primary/50 opacity-50",
     );
@@ -717,7 +737,7 @@ function StatusLabel(props: {
   return (
     <span
       class={cn(
-        "inline-flex rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        "inline-flex rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
         scheduleStatusClass(props.status),
       )}
     >

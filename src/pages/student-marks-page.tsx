@@ -110,7 +110,7 @@ function StudentMarksContent() {
         <PageHeader accent="violet" eyebrow={t("nav.admin")} title={t("nav.studentMarks")} description={t("marks.lookup")} />
       </div>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="font-display text-lg font-semibold">{t("nav.studentMarks")}</h2>
