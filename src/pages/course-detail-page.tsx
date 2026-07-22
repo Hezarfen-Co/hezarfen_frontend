@@ -567,7 +567,7 @@ function CourseDetailContent() {
 
               <Show when={hasCourseManagementRights()}>
                 <TabsContent value="teachers" forceMount class="space-y-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="tab-panel-header">
                     <p class="text-sm text-muted-foreground">{countDescription((c().teachers ?? []).length, t("courses.teachers"))}</p>
                     <Show when={canStaffCourse()}>
                       <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowTeacherForm(true)}>
@@ -581,7 +581,7 @@ function CourseDetailContent() {
               </Show>
 
               <TabsContent value="subjects" forceMount class="space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="tab-panel-header">
                   <p class="text-sm text-muted-foreground">{countDescription(subjectCount(), t("subjects.item"))}</p>
                   <Show when={canManage()}>
                     <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSubjectForm(true)}>
@@ -594,7 +594,7 @@ function CourseDetailContent() {
               </TabsContent>
 
               <TabsContent value="exams" forceMount class="space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="tab-panel-header">
                   <p class="text-sm text-muted-foreground">{countDescription(examCount(), t("courses.examItem"))}</p>
                   <Show when={canManage()}>
                     <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
@@ -609,7 +609,7 @@ function CourseDetailContent() {
               </TabsContent>
 
               <TabsContent value="sessions" forceMount class="space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="tab-panel-header">
                   <p class="text-sm text-muted-foreground">{countDescription(sessionCount(), t("sessions.item"))}</p>
                   <Show when={canManage()}>
                     <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSessionForm(true)}>
@@ -623,7 +623,7 @@ function CourseDetailContent() {
 
               <Show when={hasCourseManagementRights()}>
                 <TabsContent value="roster" forceMount class="space-y-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="tab-panel-header">
                     <p class="text-sm text-muted-foreground">{countDescription(rosterCount(), t("courses.rosterItem"))}</p>
                     <Show when={canManage()}>
                       <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
