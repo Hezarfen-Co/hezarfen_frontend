@@ -142,16 +142,16 @@ function CalendarContent() {
             <For each={grid()}>
               {(cell) => {
                 const key = cell.other ? "" : dateKey(new Date(viewYear(), viewMonth(), cell.day));
-                const items = cell.other ? null : itemsByDay().get(key);
+                const items = () => cell.other ? null : itemsByDay().get(key);
                 const cellToday = !cell.other && isToday(cell.day);
-                const cellSelected = !cell.other && key === selectedKey();
+                const cellSelected = () => !cell.other && key === selectedKey();
                 return (
                   <button
                     type="button"
                     class={cn(
                       "relative flex min-h-[4.5rem] flex-col border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40",
                       cell.other && "pointer-events-none bg-muted/20",
-                      cellSelected ? "bg-sky-50/60 ring-1 ring-inset ring-sky-400/50" : "",
+                      cellSelected() ? "bg-sky-50/60 ring-1 ring-inset ring-sky-400/50" : "",
                     )}
                     disabled={cell.other}
                     onClick={() => key && setSelected(key)}
@@ -159,22 +159,40 @@ function CalendarContent() {
                     <span
                       class={cn(
                         "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium",
-                        cellToday && !cellSelected ? "bg-primary text-primary-foreground font-semibold" : "",
-                        cellSelected ? "bg-sky-600 text-white font-semibold" : "",
+                        cellToday ? "bg-primary text-primary-foreground font-semibold" : "",
                         cell.other ? "text-muted-foreground/30" : "text-foreground",
                       )}
                     >
                       {cell.day || ""}
                     </span>
-                    <Show when={items && (items.events.length > 0 || items.exams.length > 0)}>
-                      <div class="mt-auto flex flex-wrap gap-1">
-                        <Show when={items!.events.length > 0}>
-                          <span class="inline-flex h-1.5 w-1.5 rounded-full bg-sky-500" />
+                    <Show when={items()}>
+                      {(dayItems) => (
+                      <div class="mt-1 flex min-h-0 flex-1 flex-col justify-end gap-1 overflow-hidden">
+                        {/* ponytail: month cells show one badge per type; selected list has full detail. */}
+                        <Show when={dayItems().events[0]}>
+                          {(event) => (
+                            <span class="inline-flex min-w-0 items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium leading-none text-sky-700">
+                              <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
+                              <span class="truncate">{event().title}</span>
+                              <Show when={dayItems().events.length > 1}>
+                                <span class="shrink-0 text-sky-600">+{dayItems().events.length - 1}</span>
+                              </Show>
+                            </span>
+                          )}
                         </Show>
-                        <Show when={items!.exams.length > 0}>
-                          <span class="inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        <Show when={dayItems().exams[0]}>
+                          {(exam) => (
+                            <span class="inline-flex min-w-0 items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-700">
+                              <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                              <span class="truncate">{exam().title}</span>
+                              <Show when={dayItems().exams.length > 1}>
+                                <span class="shrink-0 text-amber-600">+{dayItems().exams.length - 1}</span>
+                              </Show>
+                            </span>
+                          )}
                         </Show>
                       </div>
+                      )}
                     </Show>
                   </button>
                 );
