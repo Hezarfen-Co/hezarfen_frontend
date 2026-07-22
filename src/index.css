@@ -66,30 +66,31 @@
   }
 
   [data-kb-theme="dark"] {
-    /* Pure iOS neutral dark palette (Background #000000 / Card #1C1C1E) */
-    --ui-bg: 0 0% 0%;
-    --ui-surface-1: 240 3% 11%;
-    --ui-surface-2: 240 3% 16%;
-    --ui-surface-3: 240 3% 22%;
-    --ui-border-1: 240 3% 18%;
-    --ui-border-2: 240 3% 26%;
+    /* Dark Design palette (Deep Obsidian #09090B / Card #121318 / Muted #1B1C24 / Border #24252D) */
+    --ui-bg: 240 10% 3.9%;
+    --ui-surface-1: 240 6% 7.5%;
+    --ui-surface-2: 240 6% 11.5%;
+    --ui-surface-3: 240 5% 15.5%;
+    --ui-border-1: 240 5% 15%;
+    --ui-border-2: 240 4% 22%;
     --ui-text-1: 0 0% 98%;
-    --ui-text-2: 240 5% 65%;
+    --ui-text-2: 240 5% 68%;
     --ui-text-3: 240 4% 48%;
     
-    --ui-accent: 211 100% 52%;
-    --ui-accent-muted: 211 60% 18%;
-    --ui-success: 142 69% 52%;
+    /* Electric Dark Accent */
+    --ui-accent: 217 91% 60%;
+    --ui-accent-muted: 217 60% 16%;
+    --ui-success: 142 71% 52%;
     --ui-success-muted: 142 40% 14%;
-    --ui-warning: 38 92% 52%;
+    --ui-warning: 38 92% 54%;
     --ui-warning-muted: 38 50% 14%;
     --ui-danger: 354 84% 62%;
     --ui-danger-muted: 354 50% 15%;
-    --ui-info: 199 89% 58%;
+    --ui-info: 199 89% 60%;
     --ui-info-muted: 199 50% 14%;
 
     --primary-foreground: 0 0% 100%;
-    --accent-foreground: 211 100% 80%;
+    --accent-foreground: 217 100% 85%;
     --destructive-foreground: 0 0% 100%;
   }
 
@@ -143,25 +144,25 @@
     letter-spacing: -0.015em;
   }
 
-  /* Apple HIG Frosted Glass Panels */
+  /* Dark Design Frosted Glass & Elevated Surfaces */
   .glass-header {
-    @apply sticky top-0 z-20 backdrop-blur-xl bg-background/80 border-b border-black/[0.06] dark:border-white/[0.08];
+    @apply sticky top-0 z-20 backdrop-blur-xl bg-background/80 border-b border-black/[0.06] dark:border-white/[0.08] dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)];
   }
 
   .glass-panel {
-    @apply backdrop-blur-xl bg-card/75 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)];
+    @apply backdrop-blur-xl bg-card/75 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_12px_36px_rgba(0,0,0,0.6)];
   }
 
   .apple-card {
-    @apply rounded-2xl bg-card border border-black/[0.06] dark:border-white/[0.08] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.25)] transition-all duration-200;
+    @apply rounded-2xl bg-card border border-black/[0.06] dark:border-white/[0.08] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-200 hover:dark:border-white/20;
   }
 
   .surface-card {
-    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card text-card-foreground shadow-[0_2px_12px_rgb(0,0,0,0.03)] dark:shadow-[0_2px_12px_rgb(0,0,0,0.2)];
+    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card text-card-foreground shadow-[0_2px_12px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_6px_24px_rgba(0,0,0,0.4)] transition-all duration-200;
   }
 
   .stat-tile {
-    @apply surface-card relative overflow-hidden p-5 transition-all duration-200 hover:shadow-[0_8px_24px_rgb(0,0,0,0.06)] hover:border-primary/30 active:scale-[0.985];
+    @apply surface-card relative overflow-hidden p-5 transition-all duration-200 hover:shadow-[0_8px_24px_rgb(0,0,0,0.06)] hover:border-primary/30 dark:hover:shadow-[0_0_24px_rgba(59,130,246,0.15)] dark:hover:border-primary/50 active:scale-[0.985];
   }
 
   .focus-ring {
@@ -169,11 +170,11 @@
   }
 
   .data-shell {
-    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)];
+    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)];
   }
 
   .data-table-wrap {
-    @apply max-h-[65vh] overflow-auto rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)];
+    @apply max-h-[65vh] overflow-auto rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)];
   }
 
   .data-table {
@@ -181,7 +182,7 @@
   }
 
   .data-table thead {
-    @apply sticky top-0 z-10 border-b border-border bg-muted/60 text-muted-foreground backdrop-blur-md;
+    @apply sticky top-0 z-10 border-b border-border bg-muted/60 text-muted-foreground backdrop-blur-md dark:bg-muted/80;
   }
 
   .data-table th {
@@ -193,7 +194,7 @@
   }
 
   .data-table tbody tr {
-    @apply border-b border-border/50 transition-colors hover:bg-primary/[0.035] active:bg-primary/[0.06];
+    @apply border-b border-border/50 transition-colors hover:bg-primary/[0.035] active:bg-primary/[0.06] dark:hover:bg-white/[0.03];
   }
 
   .data-table tbody tr:nth-child(even) {

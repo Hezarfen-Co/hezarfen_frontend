@@ -73,21 +73,34 @@ const ROLE_KEY: Record<Role, MessageKey> = {
 };
 
 const ROLE_TONE: Record<Role, string> = {
-  student: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300",
-  parent: "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300",
-  teacher: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  manager: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-  admin: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  student: "border border-cyan-500/50 bg-muted/40 text-foreground ring-1 ring-cyan-500/30",
+  parent: "border border-violet-500/50 bg-muted/40 text-foreground ring-1 ring-violet-500/30",
+  teacher: "border border-emerald-500/50 bg-muted/40 text-foreground ring-1 ring-emerald-500/30",
+  manager: "border border-amber-500/50 bg-muted/40 text-foreground ring-1 ring-amber-500/30",
+  admin: "border border-rose-500/50 bg-muted/40 text-foreground ring-1 ring-rose-500/30",
 };
 
 function portalTone(to: string) {
-  if (to.includes("exam")) return "border-indigo-500/20 bg-indigo-500/10 text-indigo-700 group-hover:bg-indigo-500/15 dark:text-indigo-300";
-  if (to.includes("course") || to.includes("studies") || to.includes("clubs")) return "border-sky-500/20 bg-sky-500/10 text-sky-700 group-hover:bg-sky-500/15 dark:text-sky-300";
-  if (to.includes("event") || to.includes("calendar")) return "border-amber-500/20 bg-amber-500/10 text-amber-700 group-hover:bg-amber-500/15 dark:text-amber-300";
-  if (to.includes("mark") || to.includes("attendance")) return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 group-hover:bg-emerald-500/15 dark:text-emerald-300";
-  if (to.includes("message") || to.includes("student") || to.includes("users")) return "border-violet-500/20 bg-violet-500/10 text-violet-700 group-hover:bg-violet-500/15 dark:text-violet-300";
-  if (to.includes("work") || to.includes("settings")) return "border-slate-500/20 bg-slate-500/10 text-slate-700 group-hover:bg-slate-500/15 dark:text-slate-300";
-  return "border-primary/20 bg-primary/10 text-primary group-hover:bg-primary/15";
+  const base = "bg-muted/40 text-muted-foreground shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:text-foreground dark:bg-muted/30";
+  if (to.includes("exam")) {
+    return cn(base, "border border-indigo-500/50 ring-1 ring-indigo-500/30 group-hover:border-indigo-400 group-hover:ring-indigo-400/60 group-hover:shadow-[0_0_14px_rgba(99,102,241,0.35)]");
+  }
+  if (to.includes("course") || to.includes("studies") || to.includes("clubs")) {
+    return cn(base, "border border-cyan-500/50 ring-1 ring-cyan-500/30 group-hover:border-cyan-400 group-hover:ring-cyan-400/60 group-hover:shadow-[0_0_14px_rgba(6,182,212,0.35)]");
+  }
+  if (to.includes("event") || to.includes("calendar")) {
+    return cn(base, "border border-emerald-500/50 ring-1 ring-emerald-500/30 group-hover:border-emerald-400 group-hover:ring-emerald-400/60 group-hover:shadow-[0_0_14px_rgba(16,185,129,0.35)]");
+  }
+  if (to.includes("mark") || to.includes("attendance")) {
+    return cn(base, "border border-teal-500/50 ring-1 ring-teal-500/30 group-hover:border-teal-400 group-hover:ring-teal-400/60 group-hover:shadow-[0_0_14px_rgba(20,184,166,0.35)]");
+  }
+  if (to.includes("message") || to.includes("student") || to.includes("users")) {
+    return cn(base, "border border-violet-500/50 ring-1 ring-violet-500/30 group-hover:border-violet-400 group-hover:ring-violet-400/60 group-hover:shadow-[0_0_14px_rgba(139,92,246,0.35)]");
+  }
+  if (to.includes("work") || to.includes("settings") || to.includes("terms")) {
+    return cn(base, "border border-blue-500/50 ring-1 ring-blue-500/30 group-hover:border-blue-400 group-hover:ring-blue-400/60 group-hover:shadow-[0_0_14px_rgba(59,130,246,0.35)]");
+  }
+  return cn(base, "border border-primary/50 ring-1 ring-primary/30 group-hover:border-primary group-hover:ring-primary/60 group-hover:shadow-[0_0_14px_rgba(59,130,246,0.35)]");
 }
 
 function examWindow(exam: Exam, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
@@ -432,7 +445,7 @@ function DashboardContent() {
   });
 
   return (
-    <div class="overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-background/70 shadow-apple dark:border-white/[0.08]">
+    <div class="overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-background shadow-apple dark:border-white/[0.08] dark:bg-background">
       <header class="flex flex-wrap items-end justify-between gap-3 border-b border-black/[0.06] bg-card/85 px-4 py-4 backdrop-blur-xl dark:border-white/[0.08] sm:px-5">
         <div class="min-w-0 space-y-1">
           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("dashboard.today")}</p>
@@ -457,8 +470,8 @@ function DashboardContent() {
       </Show>
 
       <Show when={!loading()} fallback={<div class="px-4 py-8"><PageSpinner /></div>}>
-        <div class="space-y-5 bg-muted/20 px-4 py-4 sm:px-5 sm:py-5">
-        <section class="space-y-2.5 rounded-3xl border border-sky-500/10 bg-sky-500/[0.025] p-3 sm:p-4" aria-labelledby="dash-sections">
+        <div class="space-y-5 bg-muted/10 px-4 py-4 sm:px-5 sm:py-5 dark:bg-black/40">
+        <section class="space-y-2.5 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm" aria-labelledby="dash-sections">
           <div class="flex items-center justify-between gap-3">
             <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
               {t("dashboard.roleLinks")}
@@ -513,7 +526,7 @@ function DashboardContent() {
 
         <Show when={role() !== "parent"}>
         <div class="grid items-stretch gap-5">
-          <section class="flex min-h-[17rem] flex-col space-y-2.5 rounded-3xl border border-amber-500/10 bg-amber-500/[0.025] p-3 sm:p-4" aria-labelledby="dash-attention">
+          <section class="flex min-h-[17rem] flex-col space-y-2.5 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm" aria-labelledby="dash-attention">
             <div class="flex items-baseline justify-between gap-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
                 {t("dashboard.attention")}
@@ -664,7 +677,7 @@ function PortalCard(props: {
 
   const cardClass = () =>
     cn(
-      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] bg-card p-4 shadow-apple transition-[background-color,border-color,box-shadow] duration-200 hover:bg-card/90 hover:border-border dark:border-white/[0.08] sm:min-h-[6.5rem]",
+      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] bg-card p-4 shadow-apple transition-all duration-200 hover:-translate-y-0.5 hover:shadow-apple-hover hover:border-border dark:border-white/[0.08] dark:hover:border-white/20 dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] sm:min-h-[6.5rem]",
       !props.editing && "active:scale-[0.98]",
       props.editing && "cursor-grab select-none border-dashed border-primary/50 bg-primary/[0.03]",
       props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-apple-hover",
