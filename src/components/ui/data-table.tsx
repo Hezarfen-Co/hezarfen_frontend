@@ -110,7 +110,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     },
   });
   const hiddenLocked = (columnId: string) => columnId === "actions" || columnId === "update";
-  const actionColumnClass = (columnId: string) => hiddenLocked(columnId) ? "w-20 min-w-20 max-w-20 px-1 text-center" : undefined;
+  const actionColumnClass = (columnId: string) => hiddenLocked(columnId) ? "w-28 min-w-[7rem] px-2 text-center whitespace-nowrap" : undefined;
   const hideableColumns = () => table.getAllColumns().filter((column) => column.getCanHide() && !hiddenLocked(column.id));
   const columnLabel = (column: Column<TData, unknown>) => {
     const header = column.columnDef.header;

@@ -134,7 +134,7 @@ function StaffWorkContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-14 text-center" },
+      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -179,7 +179,7 @@ function StaffWorkContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-14 text-center" },
+      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
