@@ -343,6 +343,8 @@ export type MessageKey =
   | "exams.allowRejoinHelp"
   | "exams.draft"
   | "exams.draftHelp"
+  | "exams.publish"
+  | "exams.published"
   | "exams.startTime"
   | "exams.endTime"
   | "exams.scheduleRequired"
@@ -1065,6 +1067,8 @@ const en: Dict = {
   "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
   "exams.draft": "Draft",
   "exams.draftHelp": "Keep hidden from students until published.",
+  "exams.publish": "Publish exam",
+  "exams.published": "Exam published",
   "exams.startTime": "Start time",
   "exams.endTime": "End time",
   "exams.scheduleRequired": "Sync/Async exams require a start and end time",
@@ -1792,6 +1796,8 @@ const tr: Dict = {
   "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
   "exams.draft": "Taslak",
   "exams.draftHelp": "Yayınlanana kadar öğrencilerden gizle.",
+  "exams.publish": "Sınavı yayınla",
+  "exams.published": "Sınav yayınlandı",
   "exams.startTime": "Başlangıç saati",
   "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",

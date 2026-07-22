@@ -17,7 +17,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconEdit, IconEye, IconPlus } from "@/components/ui/icons";
+import { IconCheck, IconEdit, IconEye, IconPlus } from "@/components/ui/icons";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
@@ -57,6 +57,8 @@ function ExamsContent() {
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
   const [flash, setFlash] = createFlash();
+  const [error, setError] = createSignal("");
+  const [pending, setPending] = createSignal(false);
 
   const [createStep, setCreateStep] = createSignal<"details" | "questions">("details");
   const [createdExam, setCreatedExam] = createSignal<Exam | null>(null);
@@ -197,7 +199,12 @@ function ExamsContent() {
               onSelect: () => void navigate({ to: "/exams/$id", params: { id: cell.row.original.id } }),
             },
             ...(isTeacherPlus() && canEditExam(cell.row.original)
-              ? [{ label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => { setEditingExam(cell.row.original); setEditTab("details"); } }]
+              ? [
+                  ...(cell.row.original.draft
+                    ? [{ label: t("exams.publish"), icon: <IconCheck class="h-4 w-4" />, disabled: pending(), onSelect: () => void publishExam(cell.row.original) }]
+                    : []),
+                  { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => { setEditingExam(cell.row.original); setEditTab("details"); } },
+                ]
               : []),
           ]}
         />
@@ -236,6 +243,20 @@ function ExamsContent() {
     setFlash(t("common.saved"));
   };
 
+  const publishExam = async (exam: Exam) => {
+    setPending(true);
+    setError("");
+    try {
+      await patchExamById(exam.id, { draft: false });
+      await refetchExams();
+      setFlash(t("exams.published"));
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <div class="space-y-6">
       <div class="space-y-2">
@@ -258,6 +279,9 @@ function ExamsContent() {
       <section class="data-shell space-y-4 p-4">
         <Show when={flash()}>
           <Alert variant="success">{flash()}</Alert>
+        </Show>
+        <Show when={error()}>
+          <Alert variant="destructive">{error()}</Alert>
         </Show>
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list.error}>
