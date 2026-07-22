@@ -31,7 +31,7 @@ import { IconChevronDown, IconChevronLeft, IconEdit, IconExam, IconEye, IconPlus
 import { Input } from "@/components/ui/input";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { SectionDisclosure } from "@/components/ui/section-disclosure";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
@@ -93,13 +93,7 @@ function ExamDetailContent() {
   const [answerError, setAnswerError] = createSignal("");
   const [answerPending, setAnswerPending] = createSignal(false);
   const [questionCreateOpen, setQuestionCreateOpen] = createSignal(false);
-  const [openSections, setOpenSections] = createSignal({
-    schedule: false,
-    ownResult: false,
-    statistics: false,
-    questions: false,
-    results: false,
-  });
+  const [examTab, setExamTab] = createSignal("schedule");
   const isSittable = () => {
     const e = exam();
     return e ? isSittableExam(e) : false;
@@ -345,10 +339,6 @@ function ExamDetailContent() {
       setPending(false);
     }
   };
-  const toggleSection = (section: "schedule" | "ownResult" | "statistics" | "questions" | "results") => {
-    setOpenSections((current) => ({ ...current, [section]: !current[section] }));
-  };
-
   return (
     <Suspense fallback={<PageSpinner />}>
       <Show
@@ -564,32 +554,6 @@ function ExamDetailContent() {
               />
             </SidePanel>
 
-            <SectionDisclosure
-              open={openSections().schedule}
-              onToggle={() => toggleSection("schedule")}
-              title={t("exams.schedule")}
-              description={t("exams.details")}
-            >
-              <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
-                  <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
-                </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</p>
-                  <p class="mono mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
-                </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.ends")}</p>
-                  <p class="mono mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
-                </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.durationMinutes")}</p>
-                  <p class="mono mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
-                </div>
-              </div>
-            </SectionDisclosure>
-
             <Show when={isStudent() && ownAttempt()?.status && (ownAttempt()!.status === "submitted" || ownAttempt()!.status === "expired")}>
               <Alert variant={ownAttempt()!.status === "submitted" ? "default" : "destructive"} class="border">
                 <p class="text-sm font-medium">
@@ -605,75 +569,93 @@ function ExamDetailContent() {
               </Alert>
             </Show>
 
-            <Show when={isStudent() && !isScheduled()}>
-              <SectionDisclosure
-                open={openSections().ownResult}
-                onToggle={() => toggleSection("ownResult")}
-                title={t("exams.yourResult")}
-                description={ownResult() ? `${t("form.mark")}: ${ownResult()!.mark}` : t("exams.notGraded")}
-              >
-                <Suspense fallback={<PageSpinner />}>
-                  <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
-                    {(r) => <ExamResultBadge mark={r().mark} />}
-                  </Show>
-                </Suspense>
-              </SectionDisclosure>
-            </Show>
+            <Tabs value={examTab()} onChange={setExamTab} class="space-y-3">
+              <TabsList>
+                <TabsTrigger value="schedule">{t("exams.schedule")}</TabsTrigger>
+                <Show when={isStudent() && !isScheduled()}>
+                  <TabsTrigger value="ownResult">{t("exams.yourResult")}</TabsTrigger>
+                </Show>
+                <Show when={hasCourseManagementRights()}>
+                  <TabsTrigger value="statistics">{t("exams.statistics")}</TabsTrigger>
+                  <TabsTrigger value="questions">{t("questions.title")}</TabsTrigger>
+                  <TabsTrigger value="results">{t("exams.results")}</TabsTrigger>
+                </Show>
+              </TabsList>
 
-            <Show when={hasCourseManagementRights()}>
-              <SectionDisclosure open={openSections().statistics} onToggle={() => toggleSection("statistics")} title={t("exams.statistics")} description={t("exams.examStatistics")}>
-                <Suspense fallback={<PageSpinner />}>
-                  <Show when={stats()}>
-                    {(s) => (
-                      <div class="grid gap-3 text-sm sm:grid-cols-4">
-                        <div class="detail-metric-card">
-                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.graded")}</p>
-                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().graded}</p>
-                        </div>
-                        <div class="detail-metric-card">
-                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.average")}</p>
-                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
-                        </div>
-                        <div class="detail-metric-card">
-                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.min")}</p>
-                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
-                        </div>
-                        <div class="detail-metric-card">
-                          <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.max")}</p>
-                          <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
-                        </div>
-                      </div>
-                    )}
-                  </Show>
-                </Suspense>
-              </SectionDisclosure>
+              <TabsContent value="schedule" forceMount>
+                <div class="mb-4 text-sm text-muted-foreground">{t("exams.details")}</div>
+                <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                  <div class="detail-metric-card">
+                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
+                    <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
+                  </div>
+                  <div class="detail-metric-card">
+                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</p>
+                    <p class="mono mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
+                  </div>
+                  <div class="detail-metric-card">
+                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.ends")}</p>
+                    <p class="mono mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
+                  </div>
+                  <div class="detail-metric-card">
+                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.durationMinutes")}</p>
+                    <p class="mono mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
+                  </div>
+                </div>
+              </TabsContent>
 
-              <SectionDisclosure
-                open={openSections().questions}
-                onToggle={() => toggleSection("questions")}
-                title={t("questions.title")}
-                description={t("exams.examQuestions")}
-                actions={
-                  <Show when={hasCourseManagementRights() && !isFinished()}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      class="rounded-lg"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setOpenSections((current) => ({ ...current, questions: true }));
-                        setQuestionCreateOpen(true);
-                      }}
-                    >
-                      <IconPlus class="h-4 w-4" />
-                      {t("questions.add")}
-                    </Button>
-                  </Show>
-                }
-              >
-                <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded createOpen={questionCreateOpen()} onCreateOpenChange={setQuestionCreateOpen} />
-              </SectionDisclosure>
+              <Show when={isStudent() && !isScheduled()}>
+                <TabsContent value="ownResult" forceMount>
+                  <div class="mb-4 text-sm text-muted-foreground">{ownResult() ? `${t("form.mark")}: ${ownResult()!.mark}` : t("exams.notGraded")}</div>
+                  <Suspense fallback={<PageSpinner />}>
+                    <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
+                      {(r) => <ExamResultBadge mark={r().mark} />}
+                    </Show>
+                  </Suspense>
+                </TabsContent>
+              </Show>
+
+              <Show when={hasCourseManagementRights()}>
+                <TabsContent value="statistics" forceMount>
+                  <div class="mb-4 text-sm text-muted-foreground">{t("exams.examStatistics")}</div>
+                  <Suspense fallback={<PageSpinner />}>
+                    <Show when={stats()}>
+                      {(s) => (
+                        <div class="grid gap-3 text-sm sm:grid-cols-4">
+                          <div class="detail-metric-card">
+                            <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.graded")}</p>
+                            <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().graded}</p>
+                          </div>
+                          <div class="detail-metric-card">
+                            <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.average")}</p>
+                            <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
+                          </div>
+                          <div class="detail-metric-card">
+                            <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.min")}</p>
+                            <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
+                          </div>
+                          <div class="detail-metric-card">
+                            <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.max")}</p>
+                            <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
+                          </div>
+                        </div>
+                      )}
+                    </Show>
+                  </Suspense>
+                </TabsContent>
+
+                <TabsContent value="questions" forceMount class="space-y-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm text-muted-foreground">{t("exams.examQuestions")}</p>
+                    <Show when={hasCourseManagementRights() && !isFinished()}>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => { setExamTab("questions"); setQuestionCreateOpen(true); }}>
+                        <IconPlus class="h-4 w-4" />
+                        {t("questions.add")}
+                      </Button>
+                    </Show>
+                  </div>
+                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded createOpen={questionCreateOpen()} onCreateOpenChange={setQuestionCreateOpen} />
+                </TabsContent>
 
               <SidePanel
                 open={gradeOpen()}
@@ -695,37 +677,32 @@ function ExamDetailContent() {
                 />
               </SidePanel>
 
-              <SectionDisclosure
-                open={openSections().results}
-                onToggle={() => toggleSection("results")}
-                title={t("exams.results")}
-                description={`${resultTotal()} ${t("exams.studentResults")}`}
-                actions={
-                  <Show when={hasCourseManagementRights()}>
+                <TabsContent value="results" forceMount class="space-y-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm text-muted-foreground">{`${resultTotal()} ${t("exams.studentResults")}`}</p>
                     <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
                       <IconEdit class="h-4 w-4" />
                       {t("exams.gradeStudent")}
                     </Button>
-                  </Show>
-                }
-              >
-                <Suspense fallback={<PageSpinner />}>
-                  <Show
-                    when={(results()?.items ?? []).length > 0}
-                    fallback={
-                      <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                        {t("exams.noResults")}
-                      </p>
-                    }
-                  >
-                    <DataTable columns={resultColumns()} data={results()?.items ?? []} filterColumn="user" />
-                    <Show when={resultTotal() > RESULT_PAGE_SIZE}>
-                      <PaginationControls page={Math.min(resultPage(), resultTotalPages() - 1)} totalPages={resultTotalPages()} onPageChange={setResultPage} />
+                  </div>
+                  <Suspense fallback={<PageSpinner />}>
+                    <Show
+                      when={(results()?.items ?? []).length > 0}
+                      fallback={
+                        <p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+                          {t("exams.noResults")}
+                        </p>
+                      }
+                    >
+                      <DataTable columns={resultColumns()} data={results()?.items ?? []} filterColumn="user" />
+                      <Show when={resultTotal() > RESULT_PAGE_SIZE}>
+                        <PaginationControls page={Math.min(resultPage(), resultTotalPages() - 1)} totalPages={resultTotalPages()} onPageChange={setResultPage} />
+                      </Show>
                     </Show>
-                  </Show>
-                </Suspense>
-              </SectionDisclosure>
-            </Show>
+                  </Suspense>
+                </TabsContent>
+              </Show>
+            </Tabs>
 
             <Show when={flash()}>
               <Alert variant="success">{flash()}</Alert>
