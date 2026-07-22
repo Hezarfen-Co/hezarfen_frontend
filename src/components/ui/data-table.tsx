@@ -220,8 +220,9 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                 {(row) => (
                   <TableRow
                     data-state={row.getIsSelected() ? "selected" : undefined}
+                    role={props.onRowClick ? "button" : undefined}
                     tabIndex={props.onRowClick ? 0 : undefined}
-                    class={props.onRowClick ? "cursor-pointer" : undefined}
+                    class={props.onRowClick ? "cursor-pointer outline-none focus-visible:bg-primary/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:bg-primary/[0.08]" : undefined}
                     onClick={(event) => {
                       if (!props.onRowClick || isInteractiveTarget(event.target)) return;
                       props.onRowClick(row.original);
@@ -269,7 +270,7 @@ export function DataTableFrame(props: ParentProps<{ class?: string }>) {
 
 export function DataTableEmpty(props: ParentProps<{ class?: string }>) {
   return (
-    <div class={cn("rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-10 text-center text-sm leading-6 text-muted-foreground", props.class)}>
+    <div class={cn("rounded-2xl border border-dashed border-border/70 bg-muted/15 px-6 py-10 text-center text-sm leading-6 text-muted-foreground", props.class)}>
       {props.children}
     </div>
   );
