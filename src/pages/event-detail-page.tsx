@@ -22,7 +22,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -304,7 +304,7 @@ function EventDetailContent() {
                         {t("events.registerStudent")}
                       </Button>
                     </div>
-                    <Suspense fallback={<PageSpinner />}>
+                    <Suspense fallback={<DataTableSkeleton columns={4} />}>
                       <Show when={roster()}>
                         {(rows) => (
                           <Show when={rows().length > 0} fallback={<EmptyState kind="events" title={t("events.noRoster")} />}>
@@ -345,7 +345,7 @@ function EventDetailContent() {
 
                 <TabsContent value="attendanceRecords" forceMount class="space-y-3">
                   <p class="tab-panel-note">{t("events.attendanceRecordsHelp")}</p>
-                  <Suspense fallback={<PageSpinner />}>
+                  <Suspense fallback={<DataTableSkeleton columns={4} />}>
                     <Show when={attendance()}>
                       {(rows) => (
                         <AttendanceTable

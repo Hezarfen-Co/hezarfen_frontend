@@ -172,8 +172,8 @@ function NavLink(props: {
       title={t(props.item.labelKey)}
       aria-current={active() ? "page" : undefined}
       class={cn(
-        "relative flex h-9 w-full items-center rounded-xl outline-none transition-all duration-200 ease-out active:scale-[0.97]",
-        props.standalone ? "text-xs font-semibold" : "text-[13px] font-medium",
+        "relative flex h-9 w-full items-center rounded-xl outline-none transition-all duration-200 ease-out active:scale-[0.97] 2xl:h-10",
+        props.standalone ? "text-xs font-semibold 2xl:text-[13px]" : "text-[13px] font-medium 2xl:text-sm",
         props.collapsed ? "justify-center px-0 h-10 w-10 mx-auto" : props.standalone ? "gap-2.5 px-3" : "gap-2.5 pl-8 pr-3",
         active()
           ? "bg-primary/12 text-primary font-semibold shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.14),0_1px_6px_hsl(var(--primary)/0.08)]"
@@ -183,7 +183,7 @@ function NavLink(props: {
       <Show when={active() && !props.collapsed}>
         <span class="absolute left-1 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.35)]" />
       </Show>
-      <props.item.Icon class={cn("h-4 w-4 shrink-0 transition-colors", active() ? "text-primary" : "text-muted-foreground")} />
+      <props.item.Icon class={cn("h-4 w-4 shrink-0 transition-colors 2xl:h-[18px] 2xl:w-[18px]", active() ? "text-primary" : "text-muted-foreground")} />
       <span class={cn("truncate", props.collapsed ? "sr-only" : "block min-w-0 flex-1 text-left")}>{t(props.item.labelKey)}</span>
     </Link>
   );
@@ -260,7 +260,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                   >
                     <div class="flex items-center gap-2 px-2 pb-1 pt-3">
                       <span class="h-px flex-1 bg-border" />
-                      <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                       <span class="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground 2xl:text-[11px]">
                         {t("nav.admin")}
                       </span>
                       <span class="h-px flex-1 bg-border" />
@@ -275,16 +275,16 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                         <button
                           type="button"
                           class={cn(
-                            "flex h-8 w-full items-center gap-2 rounded-lg px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground",
+                            "flex h-8 w-full items-center gap-2 rounded-lg px-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground 2xl:h-9 2xl:text-xs",
                             groupActive() ? "bg-primary/[0.06] text-foreground" : open() && "text-foreground",
                           )}
                           title={t(group.labelKey)}
                           aria-expanded={open()}
                           onClick={() => toggleGroup(group.id)}
                         >
-                          <group.Icon class="h-3.5 w-3.5" />
+                          <group.Icon class="h-3.5 w-3.5 2xl:h-4 2xl:w-4" />
                           <span class="min-w-0 flex-1 truncate text-left">{t(group.labelKey)}</span>
-                          <IconChevronRight class={cn("h-3.5 w-3.5 transition-transform duration-150", open() && "rotate-90")} />
+                          <IconChevronRight class={cn("h-3.5 w-3.5 transition-transform duration-150 2xl:h-4 2xl:w-4", open() && "rotate-90")} />
                         </button>
                         <Show when={open()}>
                           <div class="mt-1 grid gap-0.5 overflow-hidden transition-all duration-150">

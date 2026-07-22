@@ -287,8 +287,19 @@ export function DataTableSkeleton(props: { rows?: number; columns?: number }) {
   const rows = () => Array.from({ length: props.rows ?? 6 });
   const columns = () => Array.from({ length: props.columns ?? 5 });
   return (
-    <DataTableFrame>
+    <DataTableFrame class="animate-pulse">
       <table class="data-table">
+        <thead>
+          <tr>
+            <For each={columns()}>
+              {() => (
+                <th>
+                  <div class="h-2.5 w-20 rounded-full bg-muted" />
+                </th>
+              )}
+            </For>
+          </tr>
+        </thead>
         <tbody>
           <For each={rows()}>
             {() => (
@@ -296,7 +307,7 @@ export function DataTableSkeleton(props: { rows?: number; columns?: number }) {
                 <For each={columns()}>
                   {() => (
                     <td>
-                      <div class="h-3 w-full max-w-32 animate-pulse rounded-sm bg-muted" />
+                      <div class="h-3 w-full max-w-32 rounded-full bg-muted/80" />
                     </td>
                   )}
                 </For>
