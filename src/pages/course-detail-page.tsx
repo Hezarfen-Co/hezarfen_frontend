@@ -36,7 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
-import { SectionDisclosure } from "@/components/ui/section-disclosure";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,7 +68,7 @@ function CourseDetailContent() {
     return params().id;
   });
 
-  const [openSections, setOpenSections] = createSignal({ teachers: false, subjects: false, exams: false, sessions: false, roster: false });
+  const [courseTab, setCourseTab] = createSignal("subjects");
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
   const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
   const [settings] = createResource(() => getSettings());
@@ -232,10 +232,6 @@ function CourseDetailContent() {
       ),
     },
   ]);
-  const toggleSection = (section: "teachers" | "subjects" | "exams" | "sessions" | "roster") => {
-    setOpenSections((current) => ({ ...current, [section]: !current[section] }));
-  };
-
   const [flash, setFlash] = createFlash();
 
   const wrap = async (fn: () => Promise<void>, ok?: string) => {
@@ -552,130 +548,94 @@ function CourseDetailContent() {
               <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
-            <Show when={hasCourseManagementRights()}>
-              <SectionDisclosure
-                open={openSections().teachers}
-                onToggle={() => toggleSection("teachers")}
-                title={t("courses.teachers")}
-                description={countDescription((c().teachers ?? []).length, t("courses.teachers"))}
-                actions={
-                  <Show when={canStaffCourse()}>
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowTeacherForm(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("courses.assignTeacher")}
-                    </Button>
-                  </Show>
-                }
-              >
-                <CourseTeachersPanel
-                  courseId={id()}
-                  teachers={c().teachers ?? []}
-                  canStaff={canStaffCourse()}
-                  assignOpen={showTeacherForm()}
-                  onAssignOpenChange={setShowTeacherForm}
-                  onCourseUpdated={refetchCourse}
-                />
-              </SectionDisclosure>
-            </Show>
-
-            <SectionDisclosure
-              open={openSections().subjects}
-              onToggle={() => toggleSection("subjects")}
-              title={t("subjects.title")}
-              description={countDescription(subjectCount(), t("subjects.item"))}
-              actions={
-                <Show when={canManage()}>
-                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSubjectForm(true)}>
-                    <IconPlus class="h-4 w-4" />
-                    {t("subjects.add")}
-                  </Button>
+            <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-3">
+              <TabsList>
+                <Show when={hasCourseManagementRights()}>
+                  <TabsTrigger value="teachers">{t("courses.teachers")}</TabsTrigger>
                 </Show>
-              }
-            >
-              <CourseSubjectsPanel courseId={id()} canManage={canManage()} active createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
-            </SectionDisclosure>
-
-            <SectionDisclosure
-              open={openSections().exams}
-              onToggle={() => toggleSection("exams")}
-              title={t("courses.exams")}
-              description={countDescription(examCount(), t("courses.examItem"))}
-              actions={
-                <Show when={canManage()}>
-                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
-                    <IconPlus class="h-4 w-4" />
-                    {t("courses.addExam")}
-                  </Button>
+                <TabsTrigger value="subjects">{t("subjects.title")}</TabsTrigger>
+                <TabsTrigger value="exams">{t("courses.exams")}</TabsTrigger>
+                <TabsTrigger value="sessions">{t("sessions.title")}</TabsTrigger>
+                <Show when={hasCourseManagementRights()}>
+                  <TabsTrigger value="roster">{t("courses.roster")}</TabsTrigger>
                 </Show>
-              }
-            >
-              <Suspense fallback={<PageSpinner />}>
-                <DataTable
-                  columns={examColumns()}
-                  data={exams() ?? []}
-                  filterColumn="title"
-                  enablePagination
-                  pageSize={10}
-                  empty={t("exams.empty")}
-                  onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
-                />
-              </Suspense>
-            </SectionDisclosure>
+              </TabsList>
 
-            <SectionDisclosure
-              open={openSections().sessions}
-              onToggle={() => toggleSection("sessions")}
-              title={t("sessions.title")}
-              description={countDescription(sessionCount(), t("sessions.item"))}
-              actions={
-                <Show when={canManage()}>
-                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSessionForm(true)}>
-                    <IconPlus class="h-4 w-4" />
-                    {t("sessions.add")}
-                  </Button>
-                </Show>
-              }
-            >
-              <CourseSessionsPanel
-                courseId={id()}
-                roster={roster() ?? []}
-                canManage={canManage()}
-                active
-                createOpen={showSessionForm()}
-                onCreateOpenChange={setShowSessionForm}
-                onCountChange={setSessionCount}
-              />
-            </SectionDisclosure>
+              <Show when={hasCourseManagementRights()}>
+                <TabsContent value="teachers" forceMount class="space-y-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm text-muted-foreground">{countDescription((c().teachers ?? []).length, t("courses.teachers"))}</p>
+                    <Show when={canStaffCourse()}>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowTeacherForm(true)}>
+                        <IconPlus class="h-4 w-4" />
+                        {t("courses.assignTeacher")}
+                      </Button>
+                    </Show>
+                  </div>
+                  <CourseTeachersPanel courseId={id()} teachers={c().teachers ?? []} canStaff={canStaffCourse()} assignOpen={showTeacherForm()} onAssignOpenChange={setShowTeacherForm} onCourseUpdated={refetchCourse} />
+                </TabsContent>
+              </Show>
 
-            <Show when={hasCourseManagementRights()}>
-              <SectionDisclosure
-                open={openSections().roster}
-                onToggle={() => toggleSection("roster")}
-                title={t("courses.roster")}
-                description={countDescription(rosterCount(), t("courses.rosterItem"))}
-                actions={
+              <TabsContent value="subjects" forceMount class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <p class="text-sm text-muted-foreground">{countDescription(subjectCount(), t("subjects.item"))}</p>
                   <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSubjectForm(true)}>
                       <IconPlus class="h-4 w-4" />
-                      {t("courses.enroll")}
+                      {t("subjects.add")}
                     </Button>
                   </Show>
-                }
-              >
-                <Suspense fallback={<PageSpinner />}>
-                  <Show
-                    when={(roster() ?? []).length > 0}
-                    fallback={
-                      <EmptyState
-                        title={t("exams.emptyRoster")}
-                      />
-                    }
-                  >
-                    <DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} />
+                </div>
+                <CourseSubjectsPanel courseId={id()} canManage={canManage()} active createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
+              </TabsContent>
+
+              <TabsContent value="exams" forceMount class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <p class="text-sm text-muted-foreground">{countDescription(examCount(), t("courses.examItem"))}</p>
+                  <Show when={canManage()}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("courses.addExam")}
+                    </Button>
                   </Show>
+                </div>
+                <Suspense fallback={<PageSpinner />}>
+                  <DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })} />
                 </Suspense>
-              </SectionDisclosure>
-            </Show>
+              </TabsContent>
+
+              <TabsContent value="sessions" forceMount class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <p class="text-sm text-muted-foreground">{countDescription(sessionCount(), t("sessions.item"))}</p>
+                  <Show when={canManage()}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSessionForm(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("sessions.add")}
+                    </Button>
+                  </Show>
+                </div>
+                <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} active createOpen={showSessionForm()} onCreateOpenChange={setShowSessionForm} onCountChange={setSessionCount} />
+              </TabsContent>
+
+              <Show when={hasCourseManagementRights()}>
+                <TabsContent value="roster" forceMount class="space-y-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm text-muted-foreground">{countDescription(rosterCount(), t("courses.rosterItem"))}</p>
+                    <Show when={canManage()}>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
+                        <IconPlus class="h-4 w-4" />
+                        {t("courses.enroll")}
+                      </Button>
+                    </Show>
+                  </div>
+                  <Suspense fallback={<PageSpinner />}>
+                    <Show when={(roster() ?? []).length > 0} fallback={<EmptyState title={t("exams.emptyRoster")} />}>
+                      <DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} />
+                    </Show>
+                  </Suspense>
+                </TabsContent>
+              </Show>
+            </Tabs>
           </div>
             </Show>
           </Show>
