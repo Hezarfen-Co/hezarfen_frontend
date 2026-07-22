@@ -276,6 +276,10 @@ function StaffWorkContent() {
             searchPredicate={searchPerson}
             enablePagination
             pageSize={PEOPLE_PAGE_SIZE}
+            onRowClick={(person) => {
+              setError("");
+              setViewUser(person);
+            }}
           />
         </Show>
       </section>

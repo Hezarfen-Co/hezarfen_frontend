@@ -279,6 +279,7 @@ function ExamsContent() {
             enablePagination
             pageSize={EXAM_PAGE_SIZE}
             empty={t("exams.empty")}
+            onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
             filters={
               <>
                 <Select class="h-9 w-full rounded-sm sm:w-40" value={statusFilter()} onChange={(event) => setStatusFilter(event.currentTarget.value as ExamDisplayStatus | "all")}>
