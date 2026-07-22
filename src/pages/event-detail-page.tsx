@@ -25,8 +25,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { SectionDisclosure } from "@/components/ui/section-disclosure";
 import { SidePanel } from "@/components/ui/side-panel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { getAttendanceStatusMeta } from "@/lib/attendance-status";
@@ -70,10 +70,8 @@ function EventDetailContent() {
   const [registrationUserId, setRegistrationUserId] = createSignal("");
   const [editing, setEditing] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
-  const [registrationOpen, setRegistrationOpen] = createSignal(false);
   const [registrationTarget, setRegistrationTarget] = createSignal<string | null>(null);
-  const [studentAttendanceOpen, setStudentAttendanceOpen] = createSignal(false);
-  const [attendanceOpen, setAttendanceOpen] = createSignal(false);
+  const [eventTab, setEventTab] = createSignal("studentAttendance");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
 
@@ -81,11 +79,11 @@ function EventDetailContent() {
 
   const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
   const [roster, { refetch: refetchRoster }] = createResource(
-    () => (isTeacherPlus() && event()?.audience.kind === "registration" && registrationOpen() ? id() : null),
+    () => (isTeacherPlus() && event()?.audience.kind === "registration" ? id() : null),
     async (eventId) => (eventId ? (await getEventRoster(eventId)).items : []),
   );
   const [attendance, { refetch: refetchAttendance }] = createResource(
-    () => (isTeacherPlus() && attendanceOpen() ? id() : null),
+    () => (isTeacherPlus() ? id() : null),
     async (eventId) => (eventId ? (await getEventAttendance(eventId)).items : []),
   );
 
@@ -270,107 +268,101 @@ function EventDetailContent() {
               }}
             />
 
-            <Show when={isTeacherPlus() && ev().audience.kind === "registration"}>
-              <SectionDisclosure
-                open={registrationOpen()}
-                onToggle={() => setRegistrationOpen((open) => !open)}
-                title={t("events.registrationRoster")}
-                description={t("events.registrationRosterHelp")}
-              >
-                <div class="space-y-3">
-                  <div class="grid gap-3 rounded-lg border bg-muted/20 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-                    <UserSearchSelect
-                      id="registration-user"
-                      label={t("events.attendee")}
-                      value={registrationUserId()}
-                      placeholder={t("events.selectAttendee")}
-                      emptyMessage={t("events.noAttendees")}
-                      role="student"
-                      onChange={setRegistrationUserId}
-                    />
+            <Show when={isTeacherPlus()}>
+              <Tabs value={eventTab()} onChange={setEventTab} class="space-y-3">
+                <TabsList>
+                  <Show when={ev().audience.kind === "registration"}>
+                    <TabsTrigger value="registration">{t("events.registrationRoster")}</TabsTrigger>
+                  </Show>
+                  <TabsTrigger value="studentAttendance">{t("events.studentAttendance")}</TabsTrigger>
+                  <TabsTrigger value="attendanceRecords">{t("events.attendanceRecords")}</TabsTrigger>
+                </TabsList>
+
+                <Show when={ev().audience.kind === "registration"}>
+                  <TabsContent value="registration" forceMount class="space-y-3">
+                    <p class="text-sm text-muted-foreground">{t("events.registrationRosterHelp")}</p>
+                    <div class="grid gap-3 rounded-lg border bg-muted/20 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                      <UserSearchSelect id="registration-user" label={t("events.attendee")} value={registrationUserId()} placeholder={t("events.selectAttendee")} emptyMessage={t("events.noAttendees")} role="student" onChange={setRegistrationUserId} />
+                      <Button
+                        type="button"
+                        class="rounded-xl"
+                        disabled={pending()}
+                        onClick={() => {
+                          const uid = registrationUserId().trim();
+                          if (!uid) {
+                            setError(t("events.userIdRequired"));
+                            return;
+                          }
+                          void wrap(async () => {
+                            await postEventRegister(id(), { user_id: uid });
+                            setRegistrationUserId("");
+                            await refetchRoster();
+                          }, t("common.saved"));
+                        }}
+                      >
+                        {t("events.registerStudent")}
+                      </Button>
+                    </div>
+                    <Suspense fallback={<PageSpinner />}>
+                      <Show when={roster()}>
+                        {(rows) => (
+                          <Show when={rows().length > 0} fallback={<p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("events.noRoster")}</p>}>
+                            <DataTable columns={rosterColumns()} data={rows()} filterColumn="attendee" enablePagination pageSize={10} />
+                          </Show>
+                        )}
+                      </Show>
+                    </Suspense>
+                  </TabsContent>
+                </Show>
+
+                <TabsContent value="studentAttendance" forceMount class="space-y-3">
+                  <p class="text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
+                  <div class="grid gap-3">
+                    <UserSearchSelect id="other-user" label={t("events.attendee")} value={otherUserId()} placeholder={t("events.selectAttendee")} emptyMessage={t("events.noAttendees")} role="student" onChange={setOtherUserId} />
+                    <AttendanceStatusPicker id="other-status" value={status()} onChange={setStatus} label={t("events.status")} />
                     <Button
                       type="button"
-                      class="rounded-xl"
+                      class="w-full rounded-xl sm:w-auto"
                       disabled={pending()}
                       onClick={() => {
-                        const uid = registrationUserId().trim();
+                        const uid = otherUserId().trim();
                         if (!uid) {
                           setError(t("events.userIdRequired"));
                           return;
                         }
                         void wrap(async () => {
-                          await postEventRegister(id(), { user_id: uid });
-                          setRegistrationUserId("");
-                          await refetchRoster();
+                          await postEventAttendance(id(), { status: status(), user_id: uid });
+                          setOtherUserId("");
+                          await refetchAttendance();
                         }, t("common.saved"));
                       }}
                     >
-                      {t("events.registerStudent")}
+                      {t("events.saveStudentAttendance")}
                     </Button>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="attendanceRecords" forceMount class="space-y-3">
+                  <p class="text-sm text-muted-foreground">{t("events.attendanceRecordsHelp")}</p>
                   <Suspense fallback={<PageSpinner />}>
-                    <Show when={roster()}>
+                    <Show when={attendance()}>
                       {(rows) => (
-                        <Show
-                          when={rows().length > 0}
-                          fallback={<p class="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">{t("events.noRoster")}</p>}
-                        >
-                          <DataTable columns={rosterColumns()} data={rows()} filterColumn="attendee" enablePagination pageSize={10} />
-                        </Show>
+                        <AttendanceTable
+                          rows={rows()}
+                          emptyLabel={t("events.noAttendance")}
+                          canRemove={isTeacherPlus()}
+                          onRemove={async (userId) => {
+                            await wrap(async () => {
+                              await deleteEventAttendanceByUserId(id(), userId);
+                              await refetchAttendance();
+                            }, t("common.deleted"));
+                          }}
+                        />
                       )}
                     </Show>
                   </Suspense>
-                </div>
-              </SectionDisclosure>
-            </Show>
-
-            <Show when={isTeacherPlus()}>
-              <SectionDisclosure
-                open={studentAttendanceOpen()}
-                onToggle={() => setStudentAttendanceOpen((open) => !open)}
-                title={t("events.studentAttendance")}
-                description={t("events.studentAttendanceHelp")}
-              >
-                <div class="grid gap-3">
-                  <UserSearchSelect
-                    id="other-user"
-                    label={t("events.attendee")}
-                    value={otherUserId()}
-                    placeholder={t("events.selectAttendee")}
-                    emptyMessage={t("events.noAttendees")}
-                    role="student"
-                    onChange={setOtherUserId}
-                  />
-                  <AttendanceStatusPicker
-                    id="other-status"
-                    value={status()}
-                    onChange={setStatus}
-                    label={t("events.status")}
-                  />
-                  <Button
-                    type="button"
-                    class="w-full rounded-xl sm:w-auto"
-                    disabled={pending()}
-                    onClick={() => {
-                      const uid = otherUserId().trim();
-                      if (!uid) {
-                        setError(t("events.userIdRequired"));
-                        return;
-                      }
-                      void wrap(async () => {
-                        await postEventAttendance(id(), {
-                          status: status(),
-                          user_id: uid,
-                        });
-                        setOtherUserId("");
-                        if (attendanceOpen()) await refetchAttendance();
-                      }, t("common.saved"));
-                    }}
-                  >
-                    {t("events.saveStudentAttendance")}
-                  </Button>
-                </div>
-              </SectionDisclosure>
+                </TabsContent>
+              </Tabs>
             </Show>
 
             <Show when={flash()}>
@@ -379,33 +371,6 @@ function EventDetailContent() {
             {error() && (
               <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
-
-            <Show when={isTeacherPlus()}>
-              <SectionDisclosure
-                open={attendanceOpen()}
-                onToggle={() => setAttendanceOpen((open) => !open)}
-                title={t("events.attendanceRecords")}
-                description={t("events.attendanceRecordsHelp")}
-              >
-                <Suspense fallback={<PageSpinner />}>
-                  <Show when={attendance()}>
-                    {(rows) => (
-                      <AttendanceTable
-                        rows={rows()}
-                        emptyLabel={t("events.noAttendance")}
-                        canRemove={isTeacherPlus()}
-                        onRemove={async (userId) => {
-                          await wrap(async () => {
-                            await deleteEventAttendanceByUserId(id(), userId);
-                            await refetchAttendance();
-                          }, t("common.deleted"));
-                        }}
-                      />
-                    )}
-                  </Show>
-                </Suspense>
-              </SectionDisclosure>
-            </Show>
           </div>
         )}
       </Show>
