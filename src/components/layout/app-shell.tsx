@@ -13,7 +13,7 @@ import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 
-const SIDEBAR_EXPANDED = "w-56";
+const SIDEBAR_EXPANDED = "w-56 2xl:w-64";
 const SIDEBAR_COLLAPSED = "w-16";
 
 export function AppShell(props: ParentProps) {
@@ -88,7 +88,7 @@ export function AppShell(props: ParentProps) {
                   H
                 </span>
                 <Show when={!collapsed()}>
-                  <span class="truncate font-display text-base font-semibold tracking-tight text-foreground">{t("app.name")}</span>
+                  <span class="truncate font-display text-base font-semibold tracking-tight text-foreground 2xl:text-lg">{t("app.name")}</span>
                 </Show>
               </Link>
               <Button

@@ -27,7 +27,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { createFlash } from "@/lib/flash";
@@ -603,7 +603,7 @@ function CourseDetailContent() {
                     </Button>
                   </Show>
                 </div>
-                <Suspense fallback={<PageSpinner />}>
+                <Suspense fallback={<DataTableSkeleton />}>
                   <DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })} />
                 </Suspense>
               </TabsContent>
@@ -632,7 +632,7 @@ function CourseDetailContent() {
                       </Button>
                     </Show>
                   </div>
-                  <Suspense fallback={<PageSpinner />}>
+                  <Suspense fallback={<DataTableSkeleton />}>
                     <Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="courses" title={t("exams.emptyRoster")} />}>
                       <DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} />
                     </Show>

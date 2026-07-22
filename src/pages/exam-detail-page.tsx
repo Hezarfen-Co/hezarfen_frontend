@@ -26,7 +26,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronDown, IconChevronLeft, IconEdit, IconExam, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
@@ -619,7 +619,7 @@ function ExamDetailContent() {
               <Show when={hasCourseManagementRights()}>
                 <TabsContent value="statistics" forceMount>
                   <div class="tab-panel-note mb-4">{t("exams.examStatistics")}</div>
-                  <Suspense fallback={<PageSpinner />}>
+                  <Suspense fallback={<DataTableSkeleton columns={4} />}>
                     <Show when={stats()}>
                       {(s) => (
                         <div class="grid gap-3 text-sm sm:grid-cols-4">

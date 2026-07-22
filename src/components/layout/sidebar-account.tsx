@@ -61,8 +61,8 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                 </span>
                 <Show when={!props.collapsed}>
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate text-[13px] font-semibold leading-4">{name()}</span>
-                    <span class="block truncate text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                    <span class="block truncate text-[13px] font-semibold leading-4 2xl:text-sm">{name()}</span>
+                    <span class="block truncate text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground 2xl:text-[11px]">
                       {t(`role.${u().role}` as MessageKey)}
                     </span>
                   </span>
