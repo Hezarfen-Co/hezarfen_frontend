@@ -21,7 +21,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { createFlash } from "@/lib/flash";
 import { useT } from "@/stores/preferences-context";
 
-const QUESTION_PAGE_SIZE = 5;
+const QUESTION_PAGE_SIZE = 1;
 
 export function ExamQuestionsPanel(props: {
   examId: string;
