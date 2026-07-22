@@ -1,6 +1,6 @@
 import { For, Match, Show, Switch, createEffect, createSignal, onCleanup, onMount, untrack } from "solid-js";
 import { Button } from "@/components/ui/button";
-import { IconDownload, IconEdit, IconEraser, IconGrid, IconMove, IconRuled, IconSave, IconSquareOff, IconTrash, IconUndo, IconZoomIn, IconZoomOut } from "@/components/ui/icons";
+import { IconDownload, IconEdit, IconEraser, IconGrid, IconMove, IconRuled, IconSquareOff, IconTrash, IconUndo, IconZoomIn, IconZoomOut } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { PAPER_CELL, PAPER_LINE, canvasPx, paintStroke, paintTip, strokesBounds, type BgKind, type DrawScene, type Point, type Stroke } from "@/lib/draw-stroke";
 import { canvasToImageBlob, sceneToPngFile } from "@/lib/drawing-file";
@@ -618,8 +618,7 @@ export function DrawCanvas(props: {
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <Button type="button" class="h-10 gap-2" disabled={props.pending || !canSave()} onClick={() => void save()}>
-          <IconSave class="h-4 w-4" />
+        <Button type="button" class="h-10 px-5" disabled={props.pending || !canSave()} onClick={() => void save()}>
           {t("draw.save")}
         </Button>
         <Button type="button" variant="outline" class="h-10 gap-2" disabled={strokes().length === 0} onClick={() => void download("image/png", "png")}>
