@@ -125,12 +125,16 @@ export function DrawCanvas(props: {
   // shrinking a big drawing to fit we keep it 1:1 and pan its content into the
   // corner (you move around it from there). untrack keeps redraw's read of
   // strokes() from turning this into a self-triggering loop.
+  let lastLoadedScene: DrawScene | null | undefined = Symbol("uninitialized") as any;
+
   createEffect(() => {
     const scene = props.initialScene;
+    if (scene === lastLoadedScene) return;
+    lastLoadedScene = scene;
     untrack(() => {
       const next = scene ? scene.strokes : [];
       setStrokes(next);
-      setBg(scene?.bg ?? "none"); // old drawings lack bg → plain, preserving their original look
+      setBg(scene?.bg ?? "grid"); // default grid background for new/edited drawings
       setZoom(1); // a reopened drawing starts at 100%
       const b = strokesBounds(next);
       setPan(b ? { x: EXPORT_MARGIN - b.x, y: EXPORT_MARGIN - b.y } : { x: 0, y: 0 });
