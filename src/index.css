@@ -1,30 +1,34 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --ui-bg: 180 7% 97%;
+    /* Pure iOS neutral light palette (Grouped Background #F2F2F7, Card #FFFFFF) */
+    --ui-bg: 240 5% 96%;
     --ui-surface-1: 0 0% 100%;
-    --ui-surface-2: 180 8% 95%;
-    --ui-surface-3: 180 7% 91%;
-    --ui-border-1: 180 7% 86%;
-    --ui-border-2: 180 6% 79%;
-    --ui-text-1: 180 11% 7%;
-    --ui-text-2: 180 6% 31%;
-    --ui-text-3: 180 4% 49%;
-    --ui-accent: 204 86% 48%;
-    --ui-accent-muted: 204 88% 91%;
-    --ui-success: 142 72% 29%;
-    --ui-success-muted: 138 76% 97%;
-    --ui-warning: 32 95% 44%;
-    --ui-warning-muted: 48 96% 89%;
-    --ui-danger: 0 74% 42%;
-    --ui-danger-muted: 0 93% 94%;
-    --ui-info: 200 98% 33%;
-    --ui-info-muted: 204 94% 94%;
+    --ui-surface-2: 240 5% 92%;
+    --ui-surface-3: 240 5% 88%;
+    --ui-border-1: 240 5% 86%;
+    --ui-border-2: 240 4% 78%;
+    --ui-text-1: 240 10% 9%;
+    --ui-text-2: 240 5% 35%;
+    --ui-text-3: 240 4% 52%;
+    
+    /* Apple System SF Blue (#007AFF) */
+    --ui-accent: 211 100% 50%;
+    --ui-accent-muted: 211 90% 94%;
+    
+    /* Apple System Status Colors */
+    --ui-success: 142 71% 45%;
+    --ui-success-muted: 142 60% 94%;
+    --ui-warning: 38 92% 50%;
+    --ui-warning-muted: 38 85% 93%;
+    --ui-danger: 354 84% 57%;
+    --ui-danger-muted: 354 80% 94%;
+    --ui-info: 199 89% 48%;
+    --ui-info-muted: 199 80% 94%;
+
     --space-1: 0.25rem;
     --space-2: 0.5rem;
     --space-3: 0.75rem;
@@ -32,6 +36,7 @@
     --space-5: 1.25rem;
     --space-6: 1.5rem;
     --space-8: 2rem;
+
     --background: var(--ui-bg);
     --foreground: var(--ui-text-1);
     --card: var(--ui-surface-1);
@@ -45,13 +50,13 @@
     --muted: var(--ui-surface-2);
     --muted-foreground: var(--ui-text-2);
     --accent: var(--ui-accent-muted);
-    --accent-foreground: 204 86% 25%;
+    --accent-foreground: 211 100% 32%;
     --destructive: var(--ui-danger);
     --destructive-foreground: 0 0% 100%;
     --border: var(--ui-border-1);
     --input: var(--ui-border-1);
     --ring: var(--ui-accent);
-    --radius: 0.75rem;
+    --radius: 1rem;
     --success: var(--ui-success);
     --warning: var(--ui-warning);
     --info: var(--ui-info);
@@ -61,27 +66,30 @@
   }
 
   [data-kb-theme="dark"] {
-    --ui-bg: 210 12% 5%;
-    --ui-surface-1: 200 10% 8%;
-    --ui-surface-2: 200 10% 11%;
-    --ui-surface-3: 200 10% 16%;
-    --ui-border-1: 200 10% 18%;
-    --ui-border-2: 200 10% 24%;
-    --ui-text-1: 180 14% 94%;
-    --ui-text-2: 180 8% 67%;
-    --ui-text-3: 190 6% 48%;
-    --ui-accent: 199 92% 62%;
-    --ui-accent-muted: 199 48% 16%;
-    --ui-success: 142 69% 58%;
-    --ui-success-muted: 142 39% 10%;
-    --ui-warning: 38 92% 50%;
-    --ui-warning-muted: 35 64% 13%;
-    --ui-danger: 0 91% 71%;
-    --ui-danger-muted: 0 50% 14%;
-    --ui-info: 199 89% 63%;
-    --ui-info-muted: 200 50% 13%;
-    --primary-foreground: 210 20% 98%;
-    --accent-foreground: 199 92% 84%;
+    /* Pure iOS neutral dark palette (Background #000000 / Card #1C1C1E) */
+    --ui-bg: 0 0% 0%;
+    --ui-surface-1: 240 3% 11%;
+    --ui-surface-2: 240 3% 16%;
+    --ui-surface-3: 240 3% 22%;
+    --ui-border-1: 240 3% 18%;
+    --ui-border-2: 240 3% 26%;
+    --ui-text-1: 0 0% 98%;
+    --ui-text-2: 240 5% 65%;
+    --ui-text-3: 240 4% 48%;
+    
+    --ui-accent: 211 100% 52%;
+    --ui-accent-muted: 211 60% 18%;
+    --ui-success: 142 69% 52%;
+    --ui-success-muted: 142 40% 14%;
+    --ui-warning: 38 92% 52%;
+    --ui-warning-muted: 38 50% 14%;
+    --ui-danger: 354 84% 62%;
+    --ui-danger-muted: 354 50% 15%;
+    --ui-info: 199 89% 58%;
+    --ui-info-muted: 199 50% 14%;
+
+    --primary-foreground: 0 0% 100%;
+    --accent-foreground: 211 100% 80%;
     --destructive-foreground: 0 0% 100%;
   }
 
@@ -91,41 +99,28 @@
 
   html {
     @apply scroll-smooth;
-  }
-
-  @media (min-width: 1800px) {
-    html {
-      font-size: 17px;
-    }
-  }
-
-  @media (min-width: 2300px) {
-    html {
-      font-size: 18px;
-    }
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply min-h-screen bg-background font-sans text-foreground antialiased;
+    @apply min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary;
   }
 
-  ::selection {
-    background: hsl(var(--primary) / 0.2);
-  }
-
-  /* Custom modern theme-aware scrollbars */
+  /* Custom iOS-style smooth scrollbars */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--border) / 0.9) transparent;
+    scrollbar-color: hsl(var(--border) / 0.6) transparent;
   }
 
   *:hover {
-    scrollbar-color: hsl(var(--muted-foreground) / 0.4) transparent;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
   }
 
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -133,102 +128,84 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--border) / 0.8);
+    background-color: hsl(var(--border) / 0.7);
     border-radius: 9999px;
-    border: 2px solid transparent;
-    background-clip: content-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground) / 0.45);
-    background-clip: content-box;
-  }
-
-  ::-webkit-scrollbar-thumb:active {
-    background-color: hsl(var(--primary) / 0.7);
-    background-clip: content-box;
-  }
-
-  ::-webkit-scrollbar-corner {
-    background: transparent;
+    background-color: hsl(var(--muted-foreground) / 0.4);
   }
 }
 
 @layer components {
   .font-display {
-    font-family: "DM Sans", system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", sans-serif;
+    letter-spacing: -0.015em;
+  }
+
+  /* Apple HIG Frosted Glass Panels */
+  .glass-header {
+    @apply sticky top-0 z-20 backdrop-blur-xl bg-background/80 border-b border-black/[0.06] dark:border-white/[0.08];
+  }
+
+  .glass-panel {
+    @apply backdrop-blur-xl bg-card/75 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)];
+  }
+
+  .apple-card {
+    @apply rounded-2xl bg-card border border-black/[0.06] dark:border-white/[0.08] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.25)] transition-all duration-200;
   }
 
   .surface-card {
-    @apply rounded-md border bg-card text-card-foreground shadow-none;
-  }
-
-  [data-kb-theme="dark"] .surface-card {
-    @apply shadow-none;
-    border-color: hsl(var(--border));
+    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card text-card-foreground shadow-[0_2px_12px_rgb(0,0,0,0.03)] dark:shadow-[0_2px_12px_rgb(0,0,0,0.2)];
   }
 
   .stat-tile {
-    @apply surface-card relative overflow-hidden p-4 transition-colors duration-150 hover:border-primary/35;
+    @apply surface-card relative overflow-hidden p-5 transition-all duration-200 hover:shadow-[0_8px_24px_rgb(0,0,0,0.06)] hover:border-primary/30 active:scale-[0.985];
   }
 
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
   .data-shell {
-    @apply rounded-xl border border-border bg-card shadow-sm;
+    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)];
   }
 
   .data-table-wrap {
-    @apply max-h-[62vh] overflow-auto rounded-xl border border-border/80 bg-card shadow-sm;
+    @apply max-h-[65vh] overflow-auto rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)];
   }
 
   .data-table {
-    @apply w-full caption-bottom text-[0.8125rem];
+    @apply w-full caption-bottom text-[0.875rem];
   }
 
   .data-table thead {
-    @apply sticky top-0 z-10 border-b border-border bg-muted/80 text-muted-foreground backdrop-blur;
+    @apply sticky top-0 z-10 border-b border-border bg-muted/60 text-muted-foreground backdrop-blur-md;
   }
 
   .data-table th {
-    @apply h-9 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/50 px-3 text-left text-[0.625rem] font-semibold uppercase tracking-[0.11em] last:border-r-0;
+    @apply h-10 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/40 px-4 text-left text-[0.6875rem] font-semibold tracking-wider uppercase text-muted-foreground/80 last:border-r-0;
   }
 
   .data-table td {
-    @apply h-11 whitespace-nowrap border-r border-border/30 px-3 py-2 align-middle last:border-r-0;
+    @apply h-12 whitespace-nowrap border-r border-border/30 px-4 py-3 align-middle last:border-r-0 text-sm;
   }
 
   .data-table tbody tr {
-    @apply border-b border-border/60 transition-colors hover:bg-primary/[0.045];
+    @apply border-b border-border/50 transition-colors hover:bg-primary/[0.035] active:bg-primary/[0.06];
   }
 
   .data-table tbody tr:nth-child(even) {
-    background-color: hsl(var(--muted) / 0.18);
+    background-color: hsl(var(--muted) / 0.15);
   }
 
   .data-table tbody tr:hover:nth-child(even) {
-    background-color: hsl(var(--primary) / 0.045);
-  }
-
-  @keyframes dashboard-jiggle {
-    0%, 100% { transform: rotate(-0.35deg) translateY(0); }
-    50% { transform: rotate(0.35deg) translateY(-1px); }
-  }
-
-  .dashboard-jiggle {
-    animation: dashboard-jiggle 160ms ease-in-out infinite;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .dashboard-jiggle {
-      animation: none;
-    }
+    background-color: hsl(var(--primary) / 0.035);
   }
 
   .detail-breadcrumb {
-    @apply flex flex-wrap items-center gap-1 text-xs text-muted-foreground;
+    @apply flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground font-medium;
   }
 
   .detail-breadcrumb a {
@@ -236,51 +213,52 @@
   }
 
   .detail-action-group {
-    @apply flex w-full flex-wrap items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-sm sm:w-auto;
+    @apply flex w-full flex-wrap items-center gap-1.5 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-1.5 shadow-sm sm:w-auto;
   }
 
   .detail-action-divider {
-    @apply flex flex-1 items-center gap-1 border-t border-border pt-1 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1 sm:pt-0;
+    @apply flex flex-1 items-center gap-1.5 border-t border-border pt-1.5 sm:ml-1 sm:flex-none sm:border-l sm:border-t-0 sm:pl-1.5 sm:pt-0;
   }
 
   .detail-metric-card {
-    @apply rounded-lg border border-border bg-muted/25 p-3;
+    @apply rounded-xl border border-black/[0.05] dark:border-white/[0.06] bg-muted/30 p-4 shadow-sm;
   }
 
   .side-panel-body form {
-    @apply space-y-5 pb-5;
+    @apply space-y-6 pb-6;
   }
 
   .side-panel-body form > .space-y-3,
   .side-panel-body form > .space-y-4,
   .side-panel-body form > .space-y-1\.5,
   .side-panel-body form > .grid {
-    @apply rounded-xl border border-border/80 bg-card p-4 shadow-sm;
+    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-5 shadow-sm;
   }
 
   .side-panel-body label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground;
+    @apply text-xs font-semibold text-muted-foreground/90 tracking-tight;
   }
 
   .side-panel-body input,
   .side-panel-body textarea,
   .side-panel-body select {
-    @apply rounded-lg bg-background/80;
+    @apply rounded-xl bg-muted/30 border border-border/80 h-11 px-3.5 transition-colors focus:bg-background;
   }
 
   .side-panel-body form > .flex:last-child,
   .side-panel-body form > .flex.flex-wrap:last-child {
-    @apply sticky bottom-0 -mx-6 justify-end border-t border-border/80 bg-background/95 px-6 py-3 shadow-[0_-16px_32px_hsl(var(--background)/0.9)];
+    @apply sticky bottom-0 -mx-6 justify-end border-t border-border/80 bg-background/90 backdrop-blur-md px-6 py-4 shadow-[0_-16px_32px_hsl(var(--background)/0.8)];
   }
 
   .side-panel-body form > .flex:last-child button,
   .side-panel-body form > .flex.flex-wrap:last-child button {
-    @apply rounded-lg;
+    @apply rounded-xl h-11 px-5 font-medium active:scale-[0.97] transition-transform duration-150;
   }
 
   .num,
   .mono {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     font-variant-numeric: tabular-nums;
   }
 }
+

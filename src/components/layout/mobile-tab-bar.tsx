@@ -39,15 +39,15 @@ export function MobileTabBar(props: { onMenu: () => void }) {
 
   return (
     <nav
-      class="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_0_hsl(var(--border)/0.5)] backdrop-blur lg:hidden"
+      class="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.06] dark:border-white/[0.08] bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.04)] lg:hidden"
       aria-label={t("nav.menu")}
     >
-      <ul class="mx-auto grid h-14 max-w-[1200px] grid-cols-5">
+      <ul class="mx-auto grid h-16 max-w-[1200px] grid-cols-5">
         <For each={TABS}>
           {(tab) => {
             const active = () => (tab.action === "menu" ? false : pathActive(pathname(), tab.to, tab.exact));
             return (
-              <li class="min-w-0">
+              <li class="min-w-0 h-full">
                 <Show
                   when={tab.action === "menu"}
                   fallback={
@@ -55,20 +55,17 @@ export function MobileTabBar(props: { onMenu: () => void }) {
                       to={tab.to}
                       aria-current={active() ? "page" : undefined}
                       class={cn(
-                        "relative flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium transition-colors",
-                        active() ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                        "relative flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium transition-all duration-150 active:scale-[0.93]",
+                        active() ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      <Show when={active()}>
-                        <span class="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" />
-                      </Show>
                       <span
                         class={cn(
-                          "flex h-7 w-7 items-center justify-center rounded-lg transition-colors",
-                          active() && "bg-primary/10",
+                          "flex h-8 w-12 items-center justify-center rounded-full transition-colors",
+                          active() ? "bg-primary/15 text-primary" : "text-muted-foreground",
                         )}
                       >
-                        <tab.Icon class="h-4 w-4" />
+                        <tab.Icon class="h-5 w-5" />
                       </span>
                       <span class="truncate">{t(tab.labelKey)}</span>
                     </Link>
@@ -77,11 +74,11 @@ export function MobileTabBar(props: { onMenu: () => void }) {
                   <button
                     type="button"
                     aria-label={t(tab.labelKey)}
-                    class="flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    class="flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium text-muted-foreground transition-all duration-150 active:scale-[0.93] hover:text-foreground"
                     onClick={() => props.onMenu()}
                   >
-                    <span class="flex h-7 w-7 items-center justify-center rounded-lg">
-                      <tab.Icon class="h-4 w-4" />
+                    <span class="flex h-8 w-12 items-center justify-center rounded-full text-muted-foreground">
+                      <tab.Icon class="h-5 w-5" />
                     </span>
                     <span class="truncate">{t(tab.labelKey)}</span>
                   </button>

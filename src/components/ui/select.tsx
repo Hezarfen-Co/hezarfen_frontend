@@ -10,7 +10,7 @@ export function Select(props: SelectProps) {
   return (
     <select
       class={cn(
-        "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>option]:bg-popover [&>option]:text-popover-foreground",
+        "flex h-11 w-full rounded-xl border border-border/80 bg-muted/30 px-3.5 py-2 text-sm text-foreground transition-all duration-150 hover:bg-muted/50 hover:border-border focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>option]:bg-popover [&>option]:text-popover-foreground",
         local.class,
       )}
       {...rest}

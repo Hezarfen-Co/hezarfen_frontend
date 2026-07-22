@@ -539,21 +539,21 @@ function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: bo
         props.onDrop(props.card.to);
       }}
       class={cn(
-        "group relative flex min-h-[5.75rem] items-start gap-3 overflow-hidden rounded-xl border border-border bg-card px-3 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-primary/45 hover:bg-muted/30 hover:shadow-[0_16px_38px_rgba(15,23,42,0.11)] hover:before:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[6.25rem] sm:gap-3.5 sm:px-4 sm:py-3.5",
+        "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-4 shadow-apple transition-all duration-200 hover:shadow-apple-hover hover:border-primary/40 active:scale-[0.98] sm:min-h-[6.5rem]",
         props.editing && "cursor-move border-dashed",
         props.editing && !props.dragging && "dashboard-jiggle",
-        props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-[0_18px_42px_rgba(15,23,42,0.14)] before:opacity-100",
+        props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-apple-hover",
         props.dragging && "scale-[0.98] border-primary/50 opacity-60",
       )}
     >
-      <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-sm transition-colors group-hover:border-primary/40 group-hover:text-primary">
-        <Icon class="h-4 w-4" />
+      <span class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/[0.05] dark:border-white/[0.08] bg-muted/30 text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:bg-primary/10 group-hover:text-primary">
+        <Icon class="h-5 w-5" />
       </span>
       <div class="min-w-0 flex-1 space-y-1">
         <div class="flex min-w-0 items-start gap-2">
           <h3 class="truncate text-sm font-semibold tracking-tight text-foreground">{t(props.card.titleKey)}</h3>
           <Show when={hasStat()}>
-            <span class="hidden text-muted-foreground/50 sm:inline" aria-hidden="true">
+            <span class="hidden text-muted-foreground/40 sm:inline" aria-hidden="true">
               |
             </span>
             <span class="mono shrink-0 text-sm font-semibold tabular-nums tracking-tight text-foreground sm:text-base">
@@ -561,13 +561,13 @@ function PortalCard(props: { card: PortalCardDef; editing: boolean; dragging: bo
             </span>
           </Show>
           <Show when={props.card.minRole && props.card.minRole !== "student"}>
-            <span class="ml-auto hidden shrink-0 rounded-md border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:inline">
+            <span class="ml-auto hidden shrink-0 rounded-full border border-black/[0.06] dark:border-white/[0.08] bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:inline">
               {t(ROLE_KEY[props.card.minRole!])}
             </span>
           </Show>
         </div>
         <Show when={props.card.descKey}>
-          <p class="line-clamp-2 text-xs leading-5 text-muted-foreground">{t(props.card.descKey!)}</p>
+          <p class="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{t(props.card.descKey!)}</p>
         </Show>
       </div>
     </Link>

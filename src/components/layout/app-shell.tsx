@@ -67,40 +67,40 @@ export function AppShell(props: ParentProps) {
       </Show>
       <div class="flex w-full">
         <Show when={auth.user() && !fullScreen()}>
-          <aside
+            <aside
             class={cn(
-              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-border/80 bg-sidebar shadow-[inset_-1px_0_0_hsl(var(--border)/0.45)] transition-[width] duration-150 ease-out lg:flex lg:flex-col",
+              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-black/[0.06] dark:border-white/[0.08] bg-sidebar/95 backdrop-blur-md transition-[width] duration-200 ease-out lg:flex lg:flex-col",
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
             )}
           >
             <div
               class={cn(
-                "flex shrink-0 items-center gap-2 border-b border-border/70",
-                collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-14 px-2",
+                "flex shrink-0 items-center gap-2 border-b border-black/[0.05] dark:border-white/[0.06]",
+                collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-14 px-3",
               )}
             >
               <Link
                 to="/"
-                class={cn("flex min-w-0 items-center gap-2", collapsed() ? "justify-center" : "flex-1")}
+                class={cn("flex min-w-0 items-center gap-2.5", collapsed() ? "justify-center" : "flex-1")}
                 title={t("app.name")}
               >
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground shadow-sm">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-apple">
                   H
                 </span>
                 <Show when={!collapsed()}>
-                  <span class="truncate font-display text-base font-semibold tracking-tight">{t("app.name")}</span>
+                  <span class="truncate font-display text-base font-semibold tracking-tight text-foreground">{t("app.name")}</span>
                 </Show>
               </Link>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                class="h-8 w-8 shrink-0 justify-center rounded-lg px-0 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                class="h-8 w-8 shrink-0 justify-center rounded-lg px-0 text-muted-foreground hover:bg-secondary hover:text-foreground"
                 aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
                 title={collapsed() ? t("nav.expand") : t("nav.collapse")}
                 onClick={() => prefs.toggleSidebar()}
               >
-                <IconPanelLeft class={cn("h-4 w-4 shrink-0 transition-transform duration-150", collapsed() && "scale-x-[-1]")} />
+                <IconPanelLeft class={cn("h-4 w-4 shrink-0 transition-transform duration-200", collapsed() && "scale-x-[-1]")} />
               </Button>
             </div>
 
@@ -116,21 +116,21 @@ export function AppShell(props: ParentProps) {
           <div class="fixed inset-0 z-50 lg:hidden">
             <button
               type="button"
-              class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              class="absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity"
               aria-label={t("nav.close")}
               onClick={() => setMobileOpen(false)}
             />
-            <aside class="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-sidebar shadow-soft">
-              <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
-                <Link to="/" class="flex min-w-0 items-center gap-2" onClick={() => setMobileOpen(false)}>
-                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">H</span>
+            <aside class="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-black/[0.08] dark:border-white/[0.1] bg-sidebar/95 backdrop-blur-xl shadow-apple">
+              <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-black/[0.05] dark:border-white/[0.06] px-4">
+                <Link to="/" class="flex min-w-0 items-center gap-2.5" onClick={() => setMobileOpen(false)}>
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-apple">H</span>
                   <span class="truncate font-display text-base font-semibold">{t("app.name")}</span>
                 </Link>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  class="h-8 w-8 shrink-0 px-0"
+                  class="h-8 w-8 shrink-0 rounded-lg px-0"
                   aria-label={t("nav.close")}
                   onClick={() => setMobileOpen(false)}
                 >
@@ -147,11 +147,11 @@ export function AppShell(props: ParentProps) {
 
         <main class="min-w-0 flex-1">
           <Show when={auth.user() && !fullScreen()}>
-            <header class="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border/70 bg-background/95 px-4 backdrop-blur sm:px-6 lg:px-8">
-              <div class="min-w-0 rounded-lg border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
+            <header class="glass-header flex h-14 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+              <div class="min-w-0 rounded-full border border-black/[0.06] dark:border-white/[0.08] bg-card/80 px-3.5 py-1 text-xs font-semibold text-muted-foreground shadow-sm">
                 <span class="block truncate">{routeLabel()}</span>
               </div>
-              <Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 bg-primary/10 text-primary shadow-sm hover:bg-primary/15" onClick={() => setCelebiOpen(true)}>
+              <Button type="button" variant="outline" size="sm" class="h-9 rounded-full border-primary/30 bg-primary/10 text-primary shadow-sm hover:bg-primary/20 active:scale-[0.97]" onClick={() => setCelebiOpen(true)}>
                 <IconSparkles class="h-4 w-4" />
                 {t("ai.askCelebi")}
               </Button>
@@ -159,8 +159,8 @@ export function AppShell(props: ParentProps) {
           </Show>
           <div
             class={cn(
-              "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-5",
-              auth.user() && !wide() && "pb-24 lg:pb-5",
+              "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-6",
+              auth.user() && !wide() && "pb-24 lg:pb-6",
               wide() ? "max-w-none" : "max-w-[1280px] xl:max-w-[1600px] 2xl:max-w-none",
             )}
           >
