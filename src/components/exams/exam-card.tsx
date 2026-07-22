@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExamLink } from "@/components/exams/exam-link";
 import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, examStatusTone } from "@/lib/exam-status";
+import { examDisplayStatus, examStatusMessageKey, examStatusTone } from "@/lib/exam-status";
 import { examWeight } from "@/lib/exam-weight";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
@@ -27,15 +27,7 @@ export function ExamCard(props: { exam: Exam; courseTitle?: string; now?: number
   };
 
   const statusLabel = () => {
-    const s = status();
-    if (s === "draft") return t("exams.draft");
-    if (s === "unscheduled") return t("exams.unscheduled");
-    if (s === "submitted") return t("attempt.submitted");
-    if (s === "expired") return t("attempt.expired");
-    if (s === "no_attempts_left") return t("attempt.noAttemptsLeft");
-    if (s === "finished") return t("exams.finished");
-    if (s === "upcoming") return t("exams.upcoming");
-    return t("exams.active");
+    return t(examStatusMessageKey(status()));
   };
 
   return (

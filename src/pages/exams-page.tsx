@@ -23,7 +23,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
+import { examDisplayStatus, examStatusMessageKey, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -135,14 +135,7 @@ function ExamsContent() {
   };
 
   const statusLabel = (status: ExamDisplayStatus) => {
-    if (status === "submitted") return t("attempt.submitted");
-    if (status === "expired") return t("attempt.expired");
-    if (status === "no_attempts_left") return t("attempt.noAttemptsLeft");
-    if (status === "draft") return t("exams.draft");
-    if (status === "unscheduled") return t("exams.unscheduled");
-    if (status === "finished") return t("exams.finished");
-    if (status === "upcoming") return t("exams.upcoming");
-    return t("exams.active");
+    return t(examStatusMessageKey(status));
   };
   const rows = (): ExamRow[] => filterExams(list() ?? []).map((exam) => ({ ...exam, displayStatus: examStatus(exam) }));
   const columns = createMemo<ColumnDef<ExamRow>[]>(() => [

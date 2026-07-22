@@ -36,7 +36,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
+import { examDisplayStatus, examStatusMessageKey, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
@@ -187,18 +187,13 @@ function ExamDetailContent() {
     const attempt = ownAttempt();
     return attempt ? { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } : null;
   };
-  const noAttemptsLeft = () => detailStatus() === "no_attempts_left";
+  const noAttemptsLeft = () => {
+    const attempt = ownAttemptSummary();
+    return detailStatus() === "no_attempts_left" || !!attempt && attempt.status !== "in_progress" && attempt.max_attempts > 0 && attempt.attempts_used >= attempt.max_attempts;
+  };
   const detailStatus = (): ExamDisplayStatus => exam() ? examDisplayStatus(exam()!, now(), ownAttemptSummary()) : "unscheduled";
   const detailStatusLabel = () => {
-    const status = detailStatus();
-    if (status === "submitted") return t("attempt.submitted");
-    if (status === "expired") return t("attempt.expired");
-    if (status === "no_attempts_left") return t("attempt.noAttemptsLeft");
-    if (status === "draft") return t("exams.draft");
-    if (status === "unscheduled") return t("exams.unscheduled");
-    if (status === "finished") return t("exams.finished");
-    if (status === "upcoming") return t("exams.upcoming");
-    return t("exams.active");
+    return t(examStatusMessageKey(detailStatus()));
   };
 
   const canManage = () => {
