@@ -143,7 +143,9 @@ function NotesContent() {
           <Show when={flash()}>
             <Alert variant="success">{flash()}</Alert>
           </Show>
-          {error() && <Alert variant="destructive">{error()}</Alert>}
+          <Show when={error() && !createOpen() && !importOpen()}>
+            <Alert variant="destructive">{error()}</Alert>
+          </Show>
           <Suspense fallback={<PageSpinner />}>
             <Show when={list.error}>
               <Alert variant="destructive">{formatApiError(list.error)}</Alert>
