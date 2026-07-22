@@ -83,10 +83,12 @@ Dashboard and table summaries must use the same role scope as the related page. 
 - **Pomodoro**: student-only server-stamped focus sessions with total focus history
 - **Schedule validation**: event, exam, and lesson-session forms use `GET /time` for server-clock-aware past-date warnings before submit
 - **Notebook**: paper-style note cards; create in `SidePanel`; read in reader panel with attachments; three-dot card actions for edit/delete
+- **Note Import Assistant**: convert uploaded PDF, TXT, or Markdown files into clean, structured notes ready for the notebook. Automatically strips page numbers and header noise, joins split PDF sentences, formats Markdown headings and bullet points, and flags OCR extraction issues
+- **Freehand Drawing Canvas (`DrawCanvas`)**: unbounded pannable/zoomable drawing canvas with pen, eraser, grid paper ruling, and PNG metadata JSON embedding (`.hzdraw.png`)
 - **Note files**: per-note upload/list/download/delete via native `FormData`; school `max_file_bytes` from settings
 - **Events and courses**: event cards with schedule status chips + toolbar search/time filters; courses table with search and term filters
 - **Attendance UI**: localized status labels with explanatory detail text and semantic colors
-- **Role-scoped dashboard**: monochrome observation board — portal cards (`Title | count`), needs-attention and upcoming lists only
+- **Role-scoped dashboard**: monochrome observation board — portal cards (`Title | count`), drag-and-drop & delta move reordering in edit mode, needs-attention and upcoming lists only
 - **Empty states**: shared `EmptyState` with optional create CTA where the role can mutate
 - **Mutation feedback**: short auto-clear success flash (`createFlash` + success `Alert`) after create/save/delete; not used for exam-room autosave
 - **i18n**: full Turkish / English interface

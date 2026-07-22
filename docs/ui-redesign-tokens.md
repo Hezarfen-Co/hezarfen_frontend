@@ -148,10 +148,15 @@ People & roles
 
 Directory                                     [ Search... ]
 ┌──────────┬────────────┬──────────────┬─────────┬──────────────┬────────┐
-│ Username │ Name       │ Email        │ Role    │ ID           │ Update │
+│ Username │ Name       │ Email        │ Role    │ ID           │Update  │
 ├──────────┼────────────┼──────────────┼─────────┼──────────────┼────────┤
 │ ali      │ Ali Demir  │ ali@...      │ Student │ 01J...       │ select │
 │ ayse     │ Ayse Kaya  │ —            │ Student │ 01J...       │ select │
 │ mehmet   │ Mehmet Ar  │ mehmet@...   │ Teacher │ 01J...       │ select │
 └──────────┴────────────┴──────────────┴─────────┴──────────────┴────────┘
 ```
+
+## Dropdowns & Select Elevation
+
+- All dropdown menus (`DropdownMenu`), comboboxes (`Combobox`), popovers (`Popover`), and native selects (`Select`) use Apple HIG squircle containers (`rounded-2xl`), frosted glass backdrop blur (`backdrop-blur-xl`), tactile press feedback, and 44pt touch targets (`min-h-[2.5rem]`).
+- Table actions headers use `w-28 min-w-[7rem] text-center whitespace-nowrap` to ensure localized labels (`İŞLEMLER`, `Actions`) render without text truncation or overflow.
