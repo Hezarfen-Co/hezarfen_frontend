@@ -1,5 +1,5 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
-import { useNavigate } from "@tanstack/solid-router";
+import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import { getMessages, patchMessageById } from "@/api/messages";
@@ -29,7 +29,11 @@ const PAGE_SIZE = 5;
 export function RightNav() {
   const t = useT();
   const navigate = useNavigate();
+  const location = useLocation();
   const { locale } = usePreferences();
+
+  const isMessagesActive = () => location().pathname === "/messages";
+  const isCalendarActive = () => location().pathname === "/calendar";
 
   // Active drawer tab
   const [activeTab, setActiveTab] = createSignal<ActiveTab>(null);
@@ -145,18 +149,6 @@ export function RightNav() {
     return combinedCalendarItems().slice(start, start + PAGE_SIZE);
   });
 
-  // Toggle drawer tabs
-  const toggleTab = (tab: "messages" | "calendar") => {
-    if (activeTab() === tab) {
-      setActiveTab(null);
-    } else {
-      setActiveTab(tab);
-      // Reset preview state when switching tabs
-      setSelectedMessage(null);
-      setSelectedCalItem(null);
-    }
-  };
-
   const closePanel = () => {
     setActiveTab(null);
     setSelectedMessage(null);
@@ -199,41 +191,42 @@ export function RightNav() {
         class="sticky top-0 z-30 hidden h-screen w-14 shrink-0 flex-col items-center justify-between border-l border-black/[0.06] bg-sidebar py-3 text-sidebar-foreground dark:border-white/[0.08] dark:bg-[#070707] dark:text-white lg:flex"
       >
         <div class="flex flex-col items-center gap-3">
-          {/* Messages Icon Button */}
+          {/* Messages Icon Button - Direct Page Navigation */}
           <button
             type="button"
-            onClick={() => toggleTab("messages")}
+            onClick={() => goTo("/messages")}
             class={cn(
-              "relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200",
-              activeTab() === "messages"
+              "relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 cursor-pointer",
+              isMessagesActive()
                 ? "bg-primary text-primary-foreground shadow-md scale-105"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-white"
             )}
-            title={t("rightPanel.messagesTitle")}
-            aria-label={t("rightPanel.messagesTitle")}
+            title={t("nav.messages")}
+            aria-label={t("nav.messages")}
           >
             <IconMessage class="h-5 w-5" />
             <Show when={unreadCount() > 0}>
               <span
-                class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-xs animate-pulse ring-2 ring-sidebar dark:ring-[#070707]"
+                class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-xs ring-2 ring-sidebar dark:ring-[#070707]"
+                title={`${unreadCount()} ${t("rightPanel.unreadBadge")}`}
               >
                 {unreadCount() > 9 ? "9+" : unreadCount()}
               </span>
             </Show>
           </button>
 
-          {/* Calendar Icon Button with Overlapping Colored Indicators */}
+          {/* Calendar Icon Button - Direct Page Navigation */}
           <button
             type="button"
-            onClick={() => toggleTab("calendar")}
+            onClick={() => goTo("/calendar")}
             class={cn(
-              "relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200",
-              activeTab() === "calendar"
+              "relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 cursor-pointer",
+              isCalendarActive()
                 ? "bg-primary text-primary-foreground shadow-md scale-105"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-white"
             )}
-            title={t("rightPanel.calendarTitle")}
-            aria-label={t("rightPanel.calendarTitle")}
+            title={t("nav.calendar")}
+            aria-label={t("nav.calendar")}
           >
             <IconCalendarDays class="h-5 w-5" />
 

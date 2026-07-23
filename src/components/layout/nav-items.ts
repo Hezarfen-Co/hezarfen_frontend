@@ -13,6 +13,7 @@ import {
   IconHelpCircle,
   IconHomework,
   IconHome,
+  IconMessage,
   IconNote,
   IconReportAnalytics,
   IconSchool,
@@ -56,6 +57,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/homework", labelKey: "nav.homework", Icon: IconHomework },
       { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
+      { to: "/calendar", labelKey: "nav.calendar", Icon: IconCalendarDays },
       { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
       { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
       { to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
@@ -83,6 +85,7 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.community",
     Icon: IconGlobe,
     items: [
+      { to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
       { to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
     ],
   },
