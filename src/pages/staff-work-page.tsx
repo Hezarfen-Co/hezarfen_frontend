@@ -7,7 +7,6 @@ import { patchWorkEntryById } from "@/api/work";
 import { ApiError, formatApiError } from "@/api/client";
 import type { PersonRef, WorkEntry } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -245,30 +244,19 @@ function StaffWorkContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader accent="amber" eyebrow={t("nav.admin")} title={t("work.staffTitle")} description={t("work.staffSubtitle")} />
-      </div>
-
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-emerald-500/15 bg-emerald-500/[0.025] p-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="font-display text-lg font-semibold">{t("work.teacherIdentity")}</h2>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {peopleRows().length} / {peopleTotal()}
-            </p>
-          </div>
-        </div>
-
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
         <Show when={error() && !viewUser() && !editTarget()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
         <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <DataTable
+            title={t("work.staffTitle")}
+            description={`${t("work.staffSubtitle")} · ${peopleRows().length} / ${peopleTotal()}`}
             columns={peopleColumns()}
             data={peopleRows()}
             tableClass="min-w-[36rem]"

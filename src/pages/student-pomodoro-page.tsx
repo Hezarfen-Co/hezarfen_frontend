@@ -5,7 +5,6 @@ import { getUserSearch } from "@/api/users";
 import type { PersonRef, PomodoroSession } from "@/api/client";
 import { ApiError, formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
@@ -124,24 +123,15 @@ function StudentPomodoroContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader accent="mint" eyebrow={t("nav.admin")} title={t("nav.studentPomodoro")} description={t("pomodoro.lookup")} />
-
-      <section class="data-shell space-y-4 border-rose-500/15 bg-rose-500/[0.025] p-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="font-display text-lg font-semibold">{t("nav.studentPomodoro")}</h2>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {rows().length} / {total()}
-            </p>
-          </div>
-        </div>
-
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
         <Show when={error() && !viewUser()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
         <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <DataTable
+            title={t("nav.studentPomodoro")}
+            description={`${t("pomodoro.lookup")} · ${rows().length} / ${total()}`}
             columns={studentColumns()}
             data={rows()}
             tableClass="min-w-[36rem]"

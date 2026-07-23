@@ -6,7 +6,6 @@ import { ApiError, formatApiError } from "@/api/client";
 import type { PersonRef } from "@/api/client";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
@@ -106,26 +105,15 @@ function StudentMarksContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader accent="violet" eyebrow={t("nav.admin")} title={t("nav.studentMarks")} description={t("marks.lookup")} />
-      </div>
-
       <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="font-display text-lg font-semibold">{t("nav.studentMarks")}</h2>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {rows().length} / {total()}
-            </p>
-          </div>
-        </div>
-
         <Show when={error() && !viewUser()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
         <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <DataTable
+            title={t("nav.studentMarks")}
+            description={`${t("marks.lookup")} · ${rows().length} / ${total()}`}
             columns={columns()}
             data={rows()}
             tableClass="min-w-[36rem]"
