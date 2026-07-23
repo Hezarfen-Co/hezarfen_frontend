@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
@@ -99,22 +99,24 @@ export function RightNav() {
     return filteredMessages().slice(0, 5);
   });
 
-  // Computed calendar data
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  // Reactive clock so passed items clear without a remount.
+  const [nowMs, setNowMs] = createSignal(Date.now());
+  const clockTimer = setInterval(() => setNowMs(Date.now()), 60_000);
+  onCleanup(() => clearInterval(clockTimer));
+
+  // An item is still notifiable until it has ended (ends_at, else starts_at).
+  const notEnded = (starts?: number | null, ends?: number | null) => {
+    if (!starts) return false;
+    const end = ends ?? starts;
+    return end >= nowMs();
+  };
 
   const activeEvents = createMemo(() => {
-    return eventsRes().filter((e: Event) => {
-      if (!e.starts_at) return false;
-      return new Date(e.starts_at).getTime() >= startOfDay;
-    });
+    return eventsRes().filter((e: Event) => notEnded(e.starts_at, e.ends_at));
   });
 
   const activeExams = createMemo(() => {
-    return examsRes().filter((e: Exam) => {
-      if (!e.starts_at || e.draft) return false;
-      return new Date(e.starts_at).getTime() >= startOfDay;
-    });
+    return examsRes().filter((e: Exam) => !e.draft && notEnded(e.starts_at, e.ends_at));
   });
 
   const hasTodayEvents = createMemo(() => activeEvents().length > 0);

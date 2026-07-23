@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
@@ -66,8 +66,13 @@ export function NotificationCenter() {
     }
   });
 
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  // Reactive clock so passed items drop off without a remount.
+  const [nowMs, setNowMs] = createSignal(Date.now());
+  const clockTimer = setInterval(() => setNowMs(Date.now()), 60_000);
+  onCleanup(() => clearInterval(clockTimer));
+
+  // An item is still notifiable until it has ended (ends_at, else starts_at).
+  const notEnded = (starts: number, ends?: number | null) => (ends ?? starts) >= nowMs();
 
   // Combine notification items
   const allNotifications = createMemo<NotificationItem[]>(() => {
@@ -91,7 +96,7 @@ export function NotificationCenter() {
     for (const e of evts) {
       if (!e.starts_at) continue;
       const t = new Date(e.starts_at).getTime();
-      if (t >= startOfDay) {
+      if (notEnded(t, e.ends_at ? new Date(e.ends_at).getTime() : null)) {
         list.push({
           id: `evt_${e.id}`,
           type: "event",
@@ -115,7 +120,7 @@ export function NotificationCenter() {
     for (const ex of exms) {
       if (!ex.starts_at || ex.draft) continue;
       const t = new Date(ex.starts_at).getTime();
-      if (t >= startOfDay) {
+      if (notEnded(t, ex.ends_at ? new Date(ex.ends_at).getTime() : null)) {
         list.push({
           id: `ex_${ex.id}`,
           type: "exam",
@@ -138,7 +143,7 @@ export function NotificationCenter() {
     const hws = homeworkRes()?.items ?? [];
     for (const hw of hws) {
       if (!hw.due_at) continue;
-      if (hw.due_at >= startOfDay) {
+      if (hw.due_at >= nowMs()) {
         list.push({
           id: `hw_${hw.id}`,
           type: "homework",
