@@ -5,7 +5,6 @@ import { postWorkCheckIn } from "@/api/work";
 import { postWorkCheckOut } from "@/api/work";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -98,10 +97,6 @@ function WorkLogContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader accent="amber" eyebrow={t("nav.work")} title={t("work.title")} description={t("work.subtitle")} />
-      </div>
-
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -123,13 +118,7 @@ function WorkLogContent() {
         </div>
       </section>
 
-      <section class="data-shell space-y-4 border-emerald-500/15 bg-emerald-500/[0.025] p-4">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="font-display text-lg font-semibold">{t("work.entries")}</h2>
-          <Badge variant="secondary" class="mono rounded-sm px-3 py-1">
-            {total()}
-          </Badge>
-        </div>
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
         <Suspense fallback={<PageSpinner />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
@@ -138,7 +127,15 @@ function WorkLogContent() {
             when={pageItems().length > 0}
             fallback={<EmptyState title={t("work.empty")} description={t("work.ready")} />}
           >
-            <DataTable columns={columns()} data={pageItems()} enablePagination pageSize={WORK_PAGE_SIZE} />
+            <DataTable
+              title={t("work.entries")}
+              description={t("work.subtitle")}
+              actions={<Badge variant="secondary" class="mono rounded-lg px-3 py-1">{total()}</Badge>}
+              columns={columns()}
+              data={pageItems()}
+              enablePagination
+              pageSize={WORK_PAGE_SIZE}
+            />
           </Show>
         </Suspense>
       </section>

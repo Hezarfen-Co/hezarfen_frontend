@@ -72,6 +72,17 @@ export function IconMessage(props: IconProps) {
   );
 }
 
+export function IconBotSquare(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="4" y="6" width="16" height="12" rx="2" />
+      <path d="M8 10h1" />
+      <path d="M15 10h1" />
+      <path d="M9 14h6" />
+    </Svg>
+  );
+}
+
 export function IconCheck(props: IconProps) {
   return (
     <Svg {...props}>

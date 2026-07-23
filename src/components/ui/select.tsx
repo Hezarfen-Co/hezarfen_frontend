@@ -34,14 +34,14 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
       <DropdownMenuTrigger
         disabled={props.disabled}
         class={cn(
-          "inline-flex h-11 items-center justify-between gap-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-card px-3.5 text-xs font-medium text-foreground shadow-sm transition-all hover:bg-secondary active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex h-9 items-center justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/70 px-3 text-sm font-medium text-foreground shadow-none transition-all hover:bg-muted active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 dark:border-white/[0.08] dark:bg-[#222222] dark:text-white dark:hover:bg-white/[0.12]",
           props.triggerClass,
           props.class,
         )}
       >
         <div class="flex items-center gap-1.5 min-w-0 truncate">
           <Show when={props.labelPrefix}>
-            <span class="font-semibold uppercase tracking-wider text-muted-foreground text-[11px] shrink-0">{props.labelPrefix}:</span>
+            <span class="shrink-0 text-xs font-semibold text-muted-foreground">{props.labelPrefix}:</span>
           </Show>
           <Show when={selectedOption()?.icon}>
             <span class="shrink-0">{selectedOption()!.icon}</span>

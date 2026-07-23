@@ -8,17 +8,17 @@ import { getTime } from "@/api/time";
 import { formatApiError } from "@/api/client";
 import type { Course, Homework } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
-import { IconPlus } from "@/components/ui/icons";
+import { IconEye, IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -180,24 +180,25 @@ function HomeworkContent() {
       header: t("homework.assigned"),
       cell: (cell) => cell.row.original.assigned?.length ? t("common.countItem", { count: cell.row.original.assigned.length, item: t("courses.rosterItem") }) : t("homework.wholeCourse"),
     },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "text-center", cellClass: "px-1 text-center" },
+      cell: (cell) => (
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[{
+            label: t("common.view"),
+            icon: <IconEye class="h-4 w-4" />,
+            onSelect: () => void navigate({ to: "/homework/$id", params: { id: cell.row.original.id } }),
+          }]}
+        />
+      ),
+    },
   ]);
 
   return (
     <div class="space-y-6">
-      <PageHeader
-        accent="amber"
-        eyebrow={t("nav.group.classes")}
-        title={pageTitle()}
-        description={t("homework.listHelp")}
-        actions={
-          <Show when={canCreate()}>
-            <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
-              <IconPlus class="h-4 w-4" />
-              {t("homework.add")}
-            </Button>
-          </Show>
-        }
-      />
       <SidePanel open={createOpen()} onOpenChange={(open) => { setCreateOpen(open); if (!open) resetForm(); }} title={t("homework.add")} description={t("homework.help")}>
         <form class="space-y-4" onSubmit={(event) => void save(event)}>
           <Show when={error()}>
@@ -237,12 +238,33 @@ function HomeworkContent() {
           </div>
         </form>
       </SidePanel>
-      <Suspense fallback={<DataTableSkeleton />}>
-        <Show when={list.error}>
-          <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-        </Show>
-        <DataTable columns={columns()} data={list() ?? []} filterColumn="title" enablePagination pageSize={12} empty={t("homework.empty")} onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })} />
-      </Suspense>
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+          <Show when={list.error}>
+            <Alert variant="destructive">{formatApiError(list.error)}</Alert>
+          </Show>
+          <DataTable
+            title={pageTitle()}
+            description={t("homework.listHelp")}
+            actions={
+              <Show when={canCreate()}>
+                <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setCreateOpen(true)}>
+                  <IconPlus class="h-4 w-4" />
+                  {t("homework.add")}
+                </Button>
+              </Show>
+            }
+            columns={columns()}
+            data={list() ?? []}
+            tableClass="table-fixed min-w-[64rem]"
+            filterColumn="title"
+            enablePagination
+            pageSize={12}
+            empty={t("homework.empty")}
+            onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
+          />
+        </Suspense>
+      </section>
     </div>
   );
 }

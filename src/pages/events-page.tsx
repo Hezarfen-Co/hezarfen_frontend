@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EventForm } from "@/components/events/event-form";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconEye, IconPlus } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
@@ -147,23 +146,6 @@ function EventsContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader
-          accent="sky"
-          eyebrow={t("nav.events")}
-          title={t("events.title")}
-          description={t("events.subtitle")}
-          actions={
-            canCreate() ? (
-              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowForm(true)}>
-                <IconPlus class="h-4 w-4" />
-                {t("events.create")}
-              </Button>
-            ) : undefined
-          }
-        />
-      </div>
-
       <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("events.create")} description={t("events.subtitle")}>
         <EventForm
           submitLabel={t("common.create")}
@@ -207,6 +189,16 @@ function EventsContent() {
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
           <DataTable
+            title={t("events.title")}
+            description={t("events.subtitle")}
+            actions={
+              canCreate() ? (
+                <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowForm(true)}>
+                  <IconPlus class="h-4 w-4" />
+                  {t("events.create")}
+                </Button>
+              ) : undefined
+            }
             columns={columns()}
             data={rows()}
             tableClass="table-fixed min-w-[58rem]"

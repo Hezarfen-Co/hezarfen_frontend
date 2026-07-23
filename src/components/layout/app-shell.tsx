@@ -9,13 +9,13 @@ import { NavBar } from "@/components/layout/nav-bar";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconPanelLeft, IconSearch, IconSparkles, IconX } from "@/components/ui/icons";
+import { IconBotSquare, IconPanelLeft, IconSearch, IconX } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 
-const SIDEBAR_EXPANDED = "w-56 2xl:w-64";
+const SIDEBAR_EXPANDED = "w-52 2xl:w-56";
 const SIDEBAR_COLLAPSED = "w-16";
 
 export function AppShell(props: ParentProps) {
@@ -74,13 +74,13 @@ export function AppShell(props: ParentProps) {
         <Show when={auth.user() && !fullScreen()}>
             <aside
             class={cn(
-              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-black/[0.06] dark:border-white/[0.08] bg-sidebar/95 backdrop-blur-md transition-[width] duration-200 ease-out lg:flex lg:flex-col",
+              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-black/[0.06] bg-sidebar/95 text-sidebar-foreground backdrop-blur-md transition-[width] duration-200 ease-out dark:border-white/[0.08] dark:bg-[#070707] dark:text-white lg:flex lg:flex-col",
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
             )}
           >
             <div
               class={cn(
-                "flex shrink-0 items-center gap-2 border-b border-black/[0.05] dark:border-white/[0.06]",
+                "flex shrink-0 items-center gap-2 border-b border-black/[0.05] dark:border-white/[0.08]",
                 collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-14 px-3",
               )}
             >
@@ -93,14 +93,14 @@ export function AppShell(props: ParentProps) {
                   H
                 </span>
                 <Show when={!collapsed()}>
-                  <span class="truncate font-display text-base font-semibold tracking-tight text-foreground 2xl:text-lg">{t("app.name")}</span>
+                  <span class="truncate font-display text-base font-semibold tracking-tight text-foreground dark:text-white 2xl:text-lg">{t("app.name")}</span>
                 </Show>
               </Link>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                class="h-8 w-8 shrink-0 justify-center rounded-lg px-0 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                class="h-8 w-8 shrink-0 justify-center rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-white"
                 aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
                 title={collapsed() ? t("nav.expand") : t("nav.collapse")}
                 onClick={() => prefs.toggleSidebar()}
@@ -109,7 +109,7 @@ export function AppShell(props: ParentProps) {
               </Button>
             </div>
 
-            <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-4 pb-1">
+            <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-2.5">
               <SideNav collapsed={collapsed()} />
             </div>
 
@@ -125,24 +125,24 @@ export function AppShell(props: ParentProps) {
               aria-label={t("nav.close")}
               onClick={() => setMobileOpen(false)}
             />
-            <aside class="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-black/[0.08] dark:border-white/[0.1] bg-sidebar/95 backdrop-blur-xl shadow-apple">
-              <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-black/[0.05] dark:border-white/[0.06] px-4">
+            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-black/[0.08] bg-sidebar/95 text-sidebar-foreground shadow-apple backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#070707] dark:text-white">
+              <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-black/[0.05] px-3 dark:border-white/[0.08]">
                 <Link to="/" class="flex min-w-0 items-center gap-2.5" onClick={() => setMobileOpen(false)}>
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-apple">H</span>
-                  <span class="truncate font-display text-base font-semibold">{t("app.name")}</span>
+                  <span class="truncate font-display text-base font-semibold text-foreground dark:text-white">{t("app.name")}</span>
                 </Link>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  class="h-8 w-8 shrink-0 rounded-lg px-0"
+                  class="h-8 w-8 shrink-0 rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-white"
                   aria-label={t("nav.close")}
                   onClick={() => setMobileOpen(false)}
                 >
                   <IconX class="h-4 w-4" />
                 </Button>
               </div>
-              <div class="min-h-0 flex-1 overflow-y-auto py-3">
+              <div class="min-h-0 flex-1 overflow-y-auto px-1.5 py-2.5">
                 <SideNav onNavigate={() => setMobileOpen(false)} />
               </div>
               <SidebarAccount onLogout={logout} />
@@ -177,8 +177,8 @@ export function AppShell(props: ParentProps) {
               </div>
 
               <div class="flex flex-1 items-center justify-end min-w-0">
-                <Button type="button" variant="default" size="sm" class="h-9 rounded-full shrink-0" onClick={() => setCelebiOpen(true)}>
-                  <IconSparkles class="h-4 w-4" />
+                <Button type="button" variant="ghost" size="sm" class="h-9 shrink-0 rounded-full border border-border bg-transparent text-muted-foreground shadow-none hover:bg-muted hover:text-foreground" onClick={() => setCelebiOpen(true)}>
+                  <IconBotSquare class="h-4 w-4" />
                   <span class="hidden sm:inline">{t("ai.askCelebi")}</span>
                 </Button>
               </div>
