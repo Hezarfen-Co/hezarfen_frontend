@@ -65,8 +65,7 @@ export function CommandPalette(props: CommandPaletteProps) {
     const isTeacherPlus = hasMinRole(userRole, "teacher");
     const isStudent = userRole === "student";
 
-    const isMac = typeof navigator !== "undefined" && (navigator.userAgent.includes("Mac") || navigator.platform?.includes("Mac"));
-    const mod = isMac ? "⌘" : "Ctrl+";
+    const mod = "Ctrl/Cmd + ";
 
     // 1. Quick Actions (Hızlı İşlemler)
     const actionsCategoryLabel = t("command.group.actions");
