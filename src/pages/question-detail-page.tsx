@@ -105,18 +105,20 @@ function QuestionDetailContent() {
                     <span>{new Date(q().asked_at).toLocaleString()}</span>
                   </div>
                 </div>
-                <Show when={q().status === "pending" && isModerator()}>
-                  <div class="flex gap-2">
-                    <Button variant="destructive" onClick={() => setDeleteConfirmQ(true)}>
-                      <IconX class="mr-2 h-4 w-4" />
-                      {t("common.reject")}
-                    </Button>
+                <div class="flex flex-wrap items-center gap-2">
+                  <Show when={q().status === "pending" && isModerator()}>
                     <Button onClick={handleApprove}>
                       <IconCheck class="mr-2 h-4 w-4" />
                       {t("common.approve")}
                     </Button>
-                  </div>
-                </Show>
+                  </Show>
+                  <Show when={q().asker.id === auth.user()?.id || isModerator()}>
+                    <Button variant="destructive" onClick={() => setDeleteConfirmQ(true)}>
+                      <IconTrash class="mr-2 h-4 w-4" />
+                      {q().status === "pending" && isModerator() ? t("common.reject") : t("common.delete")}
+                    </Button>
+                  </Show>
+                </div>
               </div>
 
               {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
