@@ -1,7 +1,7 @@
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getCourseEnrollments } from "@/api/courses";
-import { deleteHomeworkResultByUserId, getHomeworkSubmissions, postHomeworkResult } from "@/api/homework";
+import { deleteHomeworkResultByUserId, getHomeworkRosterSubmissionFileUrl, getHomeworkSubmissions, postHomeworkResult } from "@/api/homework";
 import { formatApiError } from "@/api/client";
 import type { HomeworkRosterEntry } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconDownload, IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -17,12 +17,14 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
+import { formatBytes } from "@/lib/upload-limits";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: string }) {
   const t = useT();
   const { locale } = usePreferences();
   const [gradeTarget, setGradeTarget] = createSignal<HomeworkRosterEntry | null>(null);
+  const [viewTarget, setViewTarget] = createSignal<HomeworkRosterEntry | null>(null);
   const [removeTarget, setRemoveTarget] = createSignal<HomeworkRosterEntry | null>(null);
   const [status, setStatus] = createSignal("done");
   const [mark, setMark] = createSignal("");
@@ -125,6 +127,9 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
         <TableRowActions
           label={t("common.actions")}
           actions={[
+            ...(cell.row.original.submission
+              ? [{ label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setViewTarget(cell.row.original) }]
+              : []),
             { label: t("homework.grade"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => openGrade(cell.row.original) },
             ...(cell.row.original.result
               ? [{ label: t("homework.ungrade"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setRemoveTarget(cell.row.original) }]
@@ -167,6 +172,41 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
             <Button type="button" variant="outline" class="rounded-lg" onClick={closeGrade}>{t("common.cancel")}</Button>
           </div>
         </form>
+      </SidePanel>
+      <SidePanel open={viewTarget() != null} onOpenChange={(open) => !open && setViewTarget(null)} title={t("homework.submission")} description={viewTarget() ? studentLabel(viewTarget()!.user) : ""}>
+        <Show when={viewTarget()?.submission}>
+          {(submission) => (
+            <div class="space-y-4">
+              <div class="rounded-lg border bg-muted/20 p-3">
+                <p class="text-xs text-muted-foreground">{t("exams.textAnswer")}</p>
+                <p class="mt-2 whitespace-pre-wrap text-sm">{submission().text || t("homework.noAnswer")}</p>
+              </div>
+              <div class="space-y-2 rounded-lg border bg-background/70 p-3">
+                <p class="text-sm font-medium">{t("notes.files")}</p>
+                <Show when={submission().files.length > 0} fallback={<p class="text-sm text-muted-foreground">{t("notes.noFiles")}</p>}>
+                  <ul class="space-y-2">
+                    <For each={submission().files}>
+                      {(file) => (
+                        <li class="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-sm">
+                          <div class="min-w-0">
+                            <p class="truncate font-medium">{file.name}</p>
+                            <p class="text-xs text-muted-foreground">{formatBytes(file.size)}</p>
+                          </div>
+                          <a href={getHomeworkRosterSubmissionFileUrl(props.homeworkId, viewTarget()!.user, file.id)} download={file.name}>
+                            <Button type="button" size="sm" variant="ghost" class="rounded-lg">
+                              <IconDownload class="h-4 w-4" />
+                              {t("notes.downloadFile")}
+                            </Button>
+                          </a>
+                        </li>
+                      )}
+                    </For>
+                  </ul>
+                </Show>
+              </div>
+            </div>
+          )}
+        </Show>
       </SidePanel>
       <ConfirmDialog
         open={removeTarget() != null}
