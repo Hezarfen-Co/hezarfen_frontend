@@ -172,7 +172,7 @@ const FIELD_LABELS: Record<string, Record<Locale, string>> = {
   username: { en: "Username", tr: "Kullanıcı adı" },
 };
 
-function currentLocale(): Locale {
+export function currentLocale(): Locale {
   if (typeof window === "undefined") return "en";
   try {
     const saved = window.localStorage.getItem("hezarfen.locale");
