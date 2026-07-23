@@ -9,7 +9,7 @@ import { NavBar } from "@/components/layout/nav-bar";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconPanelLeft, IconSearch, IconSparkles, IconX } from "@/components/ui/icons";
+import { IconBotSquare, IconPanelLeft, IconSearch, IconX } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -177,8 +177,8 @@ export function AppShell(props: ParentProps) {
               </div>
 
               <div class="flex flex-1 items-center justify-end min-w-0">
-                <Button type="button" variant="default" size="sm" class="h-9 rounded-full shrink-0" onClick={() => setCelebiOpen(true)}>
-                  <IconSparkles class="h-4 w-4" />
+                <Button type="button" variant="ghost" size="sm" class="h-9 shrink-0 rounded-full border border-border bg-transparent text-muted-foreground shadow-none hover:bg-muted hover:text-foreground" onClick={() => setCelebiOpen(true)}>
+                  <IconBotSquare class="h-4 w-4" />
                   <span class="hidden sm:inline">{t("ai.askCelebi")}</span>
                 </Button>
               </div>

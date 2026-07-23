@@ -68,7 +68,7 @@
   [data-kb-theme="dark"] {
     /* Fintables-like dark palette: #0A0A0A shell/sidebar, #222222 cards. */
     --ui-bg: 0 0% 4%;
-    --ui-surface-1: 0 0% 13%;
+    --ui-surface-1: var(--ui-bg);
     --ui-surface-2: 0 0% 10%;
     --ui-surface-3: 0 0% 16%;
     --ui-border-1: 0 0% 20%;
@@ -251,28 +251,7 @@
   }
 
   .detail-metric-card {
-    @apply relative overflow-hidden rounded-xl border border-black/[0.05] dark:border-white/[0.06] bg-muted/30 p-4 shadow-sm;
-  }
-
-  .detail-metric-card::before {
-    content: "";
-    @apply absolute inset-x-0 top-0 h-0.5 bg-primary/40;
-  }
-
-  .detail-metric-card:nth-child(4n+1)::before {
-    @apply bg-sky-500/50;
-  }
-
-  .detail-metric-card:nth-child(4n+2)::before {
-    @apply bg-emerald-500/50;
-  }
-
-  .detail-metric-card:nth-child(4n+3)::before {
-    @apply bg-amber-500/50;
-  }
-
-  .detail-metric-card:nth-child(4n+4)::before {
-    @apply bg-indigo-500/50;
+    @apply rounded-xl border border-black/[0.05] bg-transparent px-4 py-4 shadow-sm dark:border-white/[0.06];
   }
 
   .side-panel-body form {
