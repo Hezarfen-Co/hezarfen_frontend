@@ -207,7 +207,7 @@ export function RightNav() {
             <IconMessage class="h-5 w-5" />
             <Show when={unreadCount() > 0}>
               <span
-                class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-xs animate-pulse ring-2 ring-sidebar dark:ring-[#070707]"
+                class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-xs ring-2 ring-sidebar dark:ring-[#070707]"
                 title={`${unreadCount()} ${t("rightPanel.unreadBadge")}`}
               >
                 {unreadCount() > 9 ? "9+" : unreadCount()}

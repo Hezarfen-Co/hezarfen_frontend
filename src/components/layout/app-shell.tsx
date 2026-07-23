@@ -5,6 +5,7 @@ import { CelebiPanel } from "@/components/layout/celebi-panel";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
+import { NotificationCenter } from "@/components/layout/notification-center";
 import { RightNav } from "@/components/layout/right-nav";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
@@ -176,7 +177,8 @@ export function AppShell(props: ParentProps) {
                 </button>
               </div>
 
-              <div class="flex flex-1 items-center justify-end min-w-0">
+              <div class="flex flex-1 items-center justify-end gap-2 min-w-0">
+                <NotificationCenter />
                 <Button type="button" variant="ghost" size="sm" class="h-9 shrink-0 rounded-full border border-border bg-transparent text-muted-foreground shadow-none hover:bg-muted hover:text-foreground" onClick={() => setCelebiOpen(true)}>
                   <IconBotSquare class="h-4 w-4" />
                   <span class="hidden sm:inline">{t("ai.askCelebi")}</span>
