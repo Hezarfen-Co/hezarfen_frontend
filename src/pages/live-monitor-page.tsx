@@ -19,7 +19,7 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 import { createNow } from "@/lib/create-now";
 import { cn } from "@/lib/cn";
 import { attemptLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
+import { examStatusTone, liveDisplayStatus, type LiveDisplayStatus } from "@/lib/exam-status";
 import { formatDateTime } from "@/lib/format";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 
@@ -43,7 +43,6 @@ const STATUS_KEY: Record<string, MessageKey> = {
   no_attempts_left: "attempt.noAttemptsLeft",
 };
 
-type LiveDisplayStatus = LiveRosterEntry["status"] | ExamDisplayStatus | "left";
 type LiveRosterRow = LiveRosterEntry & { displayStatus: LiveDisplayStatus };
 
 function labelFromStatus(status: string, t: (key: MessageKey) => string): string {
@@ -63,17 +62,6 @@ function liveTone(status: LiveDisplayStatus): string {
   if (status === "expired") return "finished";
   if (status === "absent" || status === "left" || status === "not_started") return statusTone(status);
   return examStatusTone(status);
-}
-
-function liveDisplayStatus(entry: LiveRosterEntry, exam: LiveMonitor["exam"], now: number): LiveDisplayStatus {
-  if (entry.status === "absent") return "absent";
-  if (entry.status === "not_started") return "not_started";
-  if (entry.status === "in_progress" && entry.left_at != null) {
-    return exam.max_attempts > 0 && entry.attempts_used >= exam.max_attempts ? "no_attempts_left" : "left";
-  }
-  if (entry.status !== "submitted" && entry.status !== "expired" && exam.max_attempts > 0 && entry.attempts_used >= exam.max_attempts) return "no_attempts_left";
-  const status = examDisplayStatus(exam, now, { status: entry.status, attempts_used: entry.attempts_used, max_attempts: exam.max_attempts });
-  return status === "active" ? "in_progress" : status;
 }
 
 function progressPercent(entry: LiveRosterEntry, questionCount: number): number {
