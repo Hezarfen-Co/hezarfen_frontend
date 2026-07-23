@@ -170,6 +170,35 @@ export type MessageKey =
   | "dashboard.stats.average"
   | "dashboard.stats.averageHint"
   | "dashboard.commandCenter"
+  | "command.group.actions"
+  | "command.group.navigation"
+  | "command.group.system"
+  | "command.action.createHomework"
+  | "command.action.createHomeworkDesc"
+  | "command.action.createCourse"
+  | "command.action.createCourseDesc"
+  | "command.action.createEvent"
+  | "command.action.createEventDesc"
+  | "command.action.createExam"
+  | "command.action.createExamDesc"
+  | "command.action.createNote"
+  | "command.action.createNoteDesc"
+  | "command.action.importNote"
+  | "command.action.importNoteDesc"
+  | "command.action.askQuestion"
+  | "command.action.askQuestionDesc"
+  | "command.action.askCelebi"
+  | "command.action.askCelebiDesc"
+  | "command.action.myProfile"
+  | "command.action.myProfileDesc"
+  | "command.action.themeDark"
+  | "command.action.themeLight"
+  | "command.action.themeSystem"
+  | "command.action.langTr"
+  | "command.action.langEn"
+  | "command.action.logout"
+  | "command.action.logoutDesc"
+  | "command.shortcutHint"
   | "dashboard.observationOnly"
   | "dashboard.today"
   | "dashboard.reportCard"
@@ -570,6 +599,26 @@ export type MessageKey =
   | "homework.wholeCourse"
   | "homework.wholeCourseHelp"
   | "homework.dueRequired"
+  | "homework.mineTitle"
+  | "homework.submit"
+  | "homework.submitHelp"
+  | "homework.answerPlaceholder"
+  | "homework.fileUploaded"
+  | "homework.submittedAt"
+  | "homework.late"
+  | "homework.submission"
+  | "homework.submissions"
+  | "homework.submissionsHelp"
+  | "homework.submitted"
+  | "homework.notSubmitted"
+  | "homework.result"
+  | "homework.grade"
+  | "homework.ungrade"
+  | "homework.student"
+  | "homework.noAnswer"
+  | "homework.status.done"
+  | "homework.status.incomplete"
+  | "homework.status.missing"
   | "marks.title"
   | "marks.subtitle"
   | "marks.overall"
@@ -606,6 +655,7 @@ export type MessageKey =
   | "exams.isCorrect"
   | "exams.textAnswer"
   | "exams.drawAnswer"
+  | "exams.uploadAnswerImage"
   | "exams.playDrawing"
   | "exams.showImage"
   | "exams.play"
@@ -917,6 +967,35 @@ const en: Dict = {
   "dashboard.stats.average": "Average",
   "dashboard.stats.averageHint": "Overall report card",
   "dashboard.commandCenter": "Command center",
+  "command.group.actions": "Quick actions",
+  "command.group.navigation": "Pages & navigation",
+  "command.group.system": "System & preferences",
+  "command.action.createHomework": "Create homework",
+  "command.action.createHomeworkDesc": "Assign new homework for a course",
+  "command.action.createCourse": "Create course",
+  "command.action.createCourseDesc": "Create a new course in system",
+  "command.action.createEvent": "Schedule event",
+  "command.action.createEventDesc": "Schedule event or lesson in calendar",
+  "command.action.createExam": "Create exam",
+  "command.action.createExamDesc": "Prepare new exam for students",
+  "command.action.createNote": "Create note",
+  "command.action.createNoteDesc": "Save a personal or class note",
+  "command.action.importNote": "Import note assistant",
+  "command.action.importNoteDesc": "Convert PDF or text files to note",
+  "command.action.askQuestion": "Ask / add question",
+  "command.action.askQuestionDesc": "Ask question or add to community pool",
+  "command.action.askCelebi": "Ask Çelebi AI",
+  "command.action.askCelebiDesc": "Chat with smart AI assistant",
+  "command.action.myProfile": "My profile",
+  "command.action.myProfileDesc": "User account and profile details",
+  "command.action.themeDark": "Dark theme",
+  "command.action.themeLight": "Light theme",
+  "command.action.themeSystem": "System theme",
+  "command.action.langTr": "Language: Türkçe",
+  "command.action.langEn": "Language: English",
+  "command.action.logout": "Log out",
+  "command.action.logoutDesc": "Sign out of your account",
+  "command.shortcutHint": "Use arrow keys to navigate, press Enter to select",
   "dashboard.observationOnly": "Read-only overview of what needs attention.",
   "dashboard.today": "Today",
   "dashboard.reportCard": "Report card",
@@ -1335,6 +1414,26 @@ const en: Dict = {
   "homework.wholeCourse": "Whole course",
   "homework.wholeCourseHelp": "This first version assigns homework to the whole course. Use the backend API for student subsets until the multi-select UI exists.",
   "homework.dueRequired": "Choose a valid due date and time.",
+  "homework.mineTitle": "My homework",
+  "homework.submit": "Submit homework",
+  "homework.submitHelp": "Save a text answer and attach files if needed.",
+  "homework.answerPlaceholder": "Write an optional answer...",
+  "homework.fileUploaded": "File uploaded.",
+  "homework.submittedAt": "Submitted at",
+  "homework.late": "Late",
+  "homework.submission": "Submission",
+  "homework.submissions": "Submissions",
+  "homework.submissionsHelp": "Review student submissions and record the result.",
+  "homework.submitted": "Submitted",
+  "homework.notSubmitted": "Not submitted",
+  "homework.result": "Result",
+  "homework.grade": "Grade",
+  "homework.ungrade": "Ungrade",
+  "homework.student": "Student",
+  "homework.noAnswer": "No text answer.",
+  "homework.status.done": "Done",
+  "homework.status.incomplete": "Incomplete",
+  "homework.status.missing": "Missing",
   "marks.title": "Report card",
   "marks.subtitle": "Weighted averages across enrolled courses.",
   "marks.overall": "Overall average",
@@ -1371,6 +1470,7 @@ const en: Dict = {
   "exams.isCorrect": "Correct",
   "exams.textAnswer": "Text answer",
   "exams.drawAnswer": "Draw answer",
+  "exams.uploadAnswerImage": "Upload image",
   "exams.playDrawing": "Play drawing",
   "exams.showImage": "Show image",
   "exams.play": "Play",
@@ -1676,6 +1776,35 @@ const tr: Dict = {
   "dashboard.stats.average": "Ortalama",
   "dashboard.stats.averageHint": "Genel karne",
   "dashboard.commandCenter": "Komuta merkezi",
+  "command.group.actions": "Hızlı işlemler",
+  "command.group.navigation": "Sayfalar & gezinme",
+  "command.group.system": "Sistem & tercihler",
+  "command.action.createHomework": "Yeni ödev ekle",
+  "command.action.createHomeworkDesc": "Ders için yeni ödev tanımla",
+  "command.action.createCourse": "Yeni ders / kurs oluştur",
+  "command.action.createCourseDesc": "Sisteme yeni ders kaydı ekle",
+  "command.action.createEvent": "Etkinlik planla",
+  "command.action.createEventDesc": "Takvime etkinlik veya ders ekle",
+  "command.action.createExam": "Yeni sınav hazırla",
+  "command.action.createExamDesc": "Öğrenciler için yeni sınav tanımla",
+  "command.action.createNote": "Ders notu ekle",
+  "command.action.createNoteDesc": "Kişisel veya ders notu kaydet",
+  "command.action.importNote": "Not içe aktar assistant",
+  "command.action.importNoteDesc": "PDF veya metin belgesini not haline getir",
+  "command.action.askQuestion": "Soru sor / havuza ekle",
+  "command.action.askQuestionDesc": "Soru havuzuna yeni soru ekle",
+  "command.action.askCelebi": "Çelebi AI ile konuş",
+  "command.action.askCelebiDesc": "Yapay zeka asistanı ile sohbet et",
+  "command.action.myProfile": "Profil bilgilerim",
+  "command.action.myProfileDesc": "Kullanıcı hesabı ve profil detayları",
+  "command.action.themeDark": "Koyu tema",
+  "command.action.themeLight": "Açık tema",
+  "command.action.themeSystem": "Sistem teması",
+  "command.action.langTr": "Dil: Türkçe",
+  "command.action.langEn": "Dil: English",
+  "command.action.logout": "Oturumu kapat",
+  "command.action.logoutDesc": "Mevcut oturumu sonlandır",
+  "command.shortcutHint": "Yön tuşlarıyla gezinebilir, Enter ile seçebilirsiniz",
   "dashboard.observationOnly": "Dikkat isteyenlerin salt okunur özeti.",
   "dashboard.today": "Bugün",
   "dashboard.reportCard": "Karne",
@@ -2094,6 +2223,26 @@ const tr: Dict = {
   "homework.wholeCourse": "Tüm ders",
   "homework.wholeCourseHelp": "İlk sürüm ödevi tüm derse atar. Öğrenci alt grupları için çoklu seçim arayüzü gelene kadar backend API kullanılabilir.",
   "homework.dueRequired": "Geçerli bir son teslim tarihi ve saati seç.",
+  "homework.mineTitle": "Ödevlerim",
+  "homework.submit": "Ödevi teslim et",
+  "homework.submitHelp": "İstersen yazılı cevap kaydet ve dosya ekle.",
+  "homework.answerPlaceholder": "İsteğe bağlı cevabını yaz...",
+  "homework.fileUploaded": "Dosya yüklendi.",
+  "homework.submittedAt": "Teslim zamanı",
+  "homework.late": "Geç",
+  "homework.submission": "Teslim",
+  "homework.submissions": "Teslimler",
+  "homework.submissionsHelp": "Öğrenci teslimlerini incele ve sonucu kaydet.",
+  "homework.submitted": "Teslim edildi",
+  "homework.notSubmitted": "Teslim edilmedi",
+  "homework.result": "Sonuç",
+  "homework.grade": "Notlandır",
+  "homework.ungrade": "Notu kaldır",
+  "homework.student": "Öğrenci",
+  "homework.noAnswer": "Yazılı cevap yok.",
+  "homework.status.done": "Tamamlandı",
+  "homework.status.incomplete": "Eksik",
+  "homework.status.missing": "Yok",
   "marks.title": "Karnem",
   "marks.subtitle": "Kayıtlı derslerdeki ağırlıklı ortalamalar.",
   "marks.overall": "Genel ortalama",
@@ -2130,6 +2279,7 @@ const tr: Dict = {
   "exams.isCorrect": "Doğru",
   "exams.textAnswer": "Metin cevap",
   "exams.drawAnswer": "Cevabı çiz",
+  "exams.uploadAnswerImage": "Görsel yükle",
   "exams.playDrawing": "Çizimi oynat",
   "exams.showImage": "Görseli göster",
   "exams.play": "Oynat",

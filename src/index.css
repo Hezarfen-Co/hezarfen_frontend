@@ -66,13 +66,13 @@
   }
 
   [data-kb-theme="dark"] {
-    /* Dark Design palette (Deep Obsidian #09090B / Card #121318 / Muted #1B1C24 / Border #24252D) */
-    --ui-bg: 240 10% 3.9%;
-    --ui-surface-1: 240 6% 7.5%;
-    --ui-surface-2: 240 6% 11.5%;
-    --ui-surface-3: 240 5% 15.5%;
-    --ui-border-1: 240 5% 15%;
-    --ui-border-2: 240 4% 22%;
+    /* Fintables-like dark palette: #0A0A0A shell/sidebar, #222222 cards. */
+    --ui-bg: 0 0% 4%;
+    --ui-surface-1: 0 0% 13%;
+    --ui-surface-2: 0 0% 10%;
+    --ui-surface-3: 0 0% 16%;
+    --ui-border-1: 0 0% 20%;
+    --ui-border-2: 0 0% 28%;
     --ui-text-1: 0 0% 98%;
     --ui-text-2: 240 5% 68%;
     --ui-text-3: 240 4% 48%;
@@ -92,6 +92,7 @@
     --primary-foreground: 0 0% 100%;
     --accent-foreground: 217 100% 85%;
     --destructive-foreground: 0 0% 100%;
+    --sidebar: var(--ui-bg);
   }
 
   * {

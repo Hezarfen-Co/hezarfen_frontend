@@ -1,5 +1,5 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
-import { useNavigate } from "@tanstack/solid-router";
+import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getCourseById, getCourseSubjects, getCourses, postCourseHomework } from "@/api/courses";
 import { getHomework } from "@/api/homework";
@@ -54,7 +54,13 @@ function HomeworkContent() {
   const auth = useAuth();
   const { locale } = usePreferences();
   const navigate = useNavigate();
-  const [createOpen, setCreateOpen] = createSignal(false);
+  const location = useLocation();
+  const [createOpen, setCreateOpen] = createSignal(location().searchStr.includes("action=new"));
+  createEffect(() => {
+    if (location().searchStr.includes("action=new")) {
+      setCreateOpen(true);
+    }
+  });
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
@@ -90,6 +96,7 @@ function HomeworkContent() {
   const courseName = (id: string) => courseNames()[id] ?? id;
   const subjectName = (id: string) => subjectNames()[id] ?? id;
   const canCreate = () => manageableCourses().length > 0;
+  const pageTitle = () => auth.user()?.role === "student" ? t("homework.mineTitle") : t("homework.title");
 
   createEffect(() => {
     if (!createOpen()) return;
@@ -180,7 +187,7 @@ function HomeworkContent() {
       <PageHeader
         accent="amber"
         eyebrow={t("nav.group.classes")}
-        title={t("homework.title")}
+        title={pageTitle()}
         description={t("homework.listHelp")}
         actions={
           <Show when={canCreate()}>
@@ -234,7 +241,7 @@ function HomeworkContent() {
         <Show when={list.error}>
           <Alert variant="destructive">{formatApiError(list.error)}</Alert>
         </Show>
-        <DataTable columns={columns()} data={list() ?? []} filterColumn="title" enablePagination pageSize={12} empty={t("homework.empty")} onRowClick={(item) => void navigate({ to: "/courses/$id", params: { id: item.course } })} />
+        <DataTable columns={columns()} data={list() ?? []} filterColumn="title" enablePagination pageSize={12} empty={t("homework.empty")} onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })} />
       </Suspense>
     </div>
   );

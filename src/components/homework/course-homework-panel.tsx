@@ -1,4 +1,5 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteHomeworkById, patchHomeworkById } from "@/api/homework";
 import { getCourseHomework, getCourseSubjects, postCourseHomework } from "@/api/courses";
@@ -62,6 +63,7 @@ export function CourseHomeworkPanel(props: {
 }) {
   const t = useT();
   const { locale } = usePreferences();
+  const navigate = useNavigate();
   const [homework, { refetch }] = createResource(
     () => (props.active ? props.courseId : null),
     async (courseId) => (courseId ? (await getCourseHomework(courseId)).items : []),
@@ -207,7 +209,7 @@ export function CourseHomeworkPanel(props: {
 
       <Suspense fallback={<PageSpinner />}>
         <Show when={(homework() ?? []).length > 0} fallback={<EmptyState title={t("homework.empty")} />}>
-          <DataTable columns={columns()} data={homework() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("homework.empty")} />
+          <DataTable columns={columns()} data={homework() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("homework.empty")} onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })} />
         </Show>
       </Suspense>
 

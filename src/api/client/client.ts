@@ -279,7 +279,7 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
     const message = errorMessageFromPayload(data, res.statusText || "Request failed");
 
     let retryAfter: number | null = null;
-    if (res.status === 429) {
+    if (res.status === 429 || res.status === 503) {
       const raw = res.headers.get("Retry-After");
       if (raw) {
         const n = Number(raw);
@@ -353,7 +353,7 @@ export function formatApiErrorMessage(message: string, locale: Locale = currentL
 
 export function formatApiError(err: unknown, locale: Locale = currentLocale()): string {
   if (err instanceof ApiError) {
-    if (err.status === 429 && err.retryAfter != null) {
+    if ((err.status === 429 || err.status === 503) && err.retryAfter != null) {
       return locale === "tr" ? `${err.retryAfter} sn sonra tekrar dene.` : `Try again in ${err.retryAfter}s.`;
     }
     if (err.status === 401) return API_ERROR_MESSAGES.unauthorized[locale];

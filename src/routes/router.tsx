@@ -28,6 +28,7 @@ const NotesPage = lazyRoute(() => import("@/pages/notes-page"));
 const EventsPage = lazyRoute(() => import("@/pages/events-page"));
 const EventDetailPage = lazyRoute(() => import("@/pages/event-detail-page"));
 const HomeworkPage = lazyRoute(() => import("@/pages/homework-page"));
+const HomeworkDetailPage = lazyRoute(() => import("@/pages/homework-detail-page"));
 const ExamsPage = lazyRoute(() => import("@/pages/exams-page"));
 const ExamDetailPage = lazyRoute(() => import("@/pages/exam-detail-page"));
 const ExamRoomPage = lazyRoute(() => import("@/pages/exam-room-page"));
@@ -122,6 +123,12 @@ const homeworkRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/homework",
   component: HomeworkPage,
+});
+
+const homeworkDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/homework/$id",
+  component: HomeworkDetailPage,
 });
 
 const examDetailRoute = createRoute({
@@ -276,6 +283,7 @@ const routeTree = rootRoute.addChildren([
   eventsRoute,
   eventDetailRoute,
   homeworkRoute,
+  homeworkDetailRoute,
   examDetailRoute,
   examRoomRoute,
   liveMonitorRoute,
