@@ -32,10 +32,17 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
   const role = () => (isSent() ? props.message.recipient_role : props.message.sender_role);
 
   const restoreFolder = (): MessageFolder => {
-    if (props.message.previous_folder && (props.message.previous_folder as string) !== "deleted") {
+    if (isSent()) {
+      return "sent";
+    }
+    if (
+      props.message.previous_folder &&
+      (props.message.previous_folder as string) !== "deleted" &&
+      (props.message.previous_folder as string) !== "archive"
+    ) {
       return props.message.previous_folder as MessageFolder;
     }
-    return isSent() ? "sent" : "inbox";
+    return "inbox";
   };
 
   const formattedDate = (ts: number) => {

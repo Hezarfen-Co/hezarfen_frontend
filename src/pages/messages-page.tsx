@@ -85,10 +85,17 @@ export default function MessagesPage() {
   const isOwnSentMessage = (msg: Message) => msg.sender.id === auth.user()?.id;
 
   const restoreFolder = (msg: Message): MessageFolder => {
-    if (msg.previous_folder && (msg.previous_folder as string) !== "deleted") {
+    if (isOwnSentMessage(msg)) {
+      return "sent";
+    }
+    if (
+      msg.previous_folder &&
+      (msg.previous_folder as string) !== "deleted" &&
+      (msg.previous_folder as string) !== "archive"
+    ) {
       return msg.previous_folder as MessageFolder;
     }
-    return isOwnSentMessage(msg) ? "sent" : "inbox";
+    return "inbox";
   };
 
   const handleRefresh = async () => {
