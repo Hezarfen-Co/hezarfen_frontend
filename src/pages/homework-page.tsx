@@ -90,6 +90,7 @@ function HomeworkContent() {
   const courseName = (id: string) => courseNames()[id] ?? id;
   const subjectName = (id: string) => subjectNames()[id] ?? id;
   const canCreate = () => manageableCourses().length > 0;
+  const pageTitle = () => auth.user()?.role === "student" ? t("homework.mineTitle") : t("homework.title");
 
   createEffect(() => {
     if (!createOpen()) return;
@@ -180,7 +181,7 @@ function HomeworkContent() {
       <PageHeader
         accent="amber"
         eyebrow={t("nav.group.classes")}
-        title={t("homework.title")}
+        title={pageTitle()}
         description={t("homework.listHelp")}
         actions={
           <Show when={canCreate()}>
@@ -234,7 +235,7 @@ function HomeworkContent() {
         <Show when={list.error}>
           <Alert variant="destructive">{formatApiError(list.error)}</Alert>
         </Show>
-        <DataTable columns={columns()} data={list() ?? []} filterColumn="title" enablePagination pageSize={12} empty={t("homework.empty")} onRowClick={(item) => void navigate({ to: "/courses/$id", params: { id: item.course } })} />
+        <DataTable columns={columns()} data={list() ?? []} filterColumn="title" enablePagination pageSize={12} empty={t("homework.empty")} onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })} />
       </Suspense>
     </div>
   );

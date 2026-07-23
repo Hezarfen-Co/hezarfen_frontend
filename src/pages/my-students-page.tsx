@@ -4,6 +4,7 @@ import { getMyStudents } from "@/api/parents";
 import { getUserMarks } from "@/api/reports";
 import { getUserAttendance } from "@/api/reports";
 import type { MarksReport, PersonRef } from "@/api/client";
+import { HomeworkReportView } from "@/components/homework/homework-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,13 +15,13 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
-import { IconBook, IconChart, IconChevronRight, IconClipboardCheck, IconExam } from "@/components/ui/icons";
+import { IconBook, IconChart, IconChevronRight, IconClipboardCheck, IconExam, IconHomework } from "@/components/ui/icons";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { AttendanceReportView } from "@/components/attendance/attendance-report-view";
 import { examKindLabel } from "@/lib/exam-labels";
 import { cn } from "@/lib/cn";
 
-type StudentTab = "overview" | "courses" | "exams" | "marks" | "attendance";
+type StudentTab = "overview" | "courses" | "exams" | "homework" | "marks" | "attendance";
 type CourseRow = MarksReport["courses"][number];
 type ExamRow = CourseRow["results"][number] & { courseTitle: string };
 
@@ -147,6 +148,7 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
     { key: "overview", icon: IconBook, label: t("dashboard.overview") },
     { key: "courses", icon: IconBook, label: t("nav.courses") },
     { key: "exams", icon: IconExam, label: t("nav.exams") },
+    { key: "homework", icon: IconHomework, label: t("nav.homework") },
     { key: "marks", icon: IconChart, label: t("nav.marks") },
     { key: "attendance", icon: IconClipboardCheck, label: t("nav.attendance") },
   ];
@@ -215,6 +217,12 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
               <Match when={activeTab() === "exams"}>
                 <Show when={examRows().length > 0} fallback={<DataTableEmpty>{t("exams.noResults")}</DataTableEmpty>}>
                   <DataTable class="min-w-0" columns={examColumns()} data={examRows()} tableClass="w-full min-w-[44rem] text-sm" enableSorting={false} />
+                </Show>
+              </Match>
+
+              <Match when={activeTab() === "homework"}>
+                <Show when={props.student?.id}>
+                  {(userId) => <HomeworkReportView userId={userId()} />}
                 </Show>
               </Match>
 
