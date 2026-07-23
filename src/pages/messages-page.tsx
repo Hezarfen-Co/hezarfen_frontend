@@ -17,6 +17,7 @@ import {
   IconSend,
   IconTrash,
   IconPlus,
+  IconRefresh,
 } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { GmailMailRow } from "@/components/messages/gmail-mail-row";
@@ -44,6 +45,7 @@ export default function MessagesPage() {
   const [selectedId, setSelectedId] = createSignal<string>("");
   const [query, setQuery] = createSignal("");
   const [composeOpen, setComposeOpen] = createSignal(false);
+  const [isRefreshing, setIsRefreshing] = createSignal(false);
   const [replyData, setReplyData] = createSignal<{
     recipient: string;
     subject: string;
@@ -87,6 +89,19 @@ export default function MessagesPage() {
       return msg.previous_folder as MessageFolder;
     }
     return isOwnSentMessage(msg) ? "sent" : "inbox";
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([refetch(), refetchUnread()]);
+      setFlash("Mesajlar güncellendi");
+    } catch (err: any) {
+      console.error("Refresh error:", err);
+      setFlash(formatApiError(err));
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleAction = async (
@@ -265,11 +280,29 @@ export default function MessagesPage() {
               {/* Top Header Toolbar */}
               <Show when={!selected()}>
                 <div class="flex items-center justify-between border-b px-4 py-3 bg-card/40">
-                  <div class="flex items-center gap-3 w-full max-w-xl">
+                  <div class="flex items-center gap-2 w-full max-w-xl">
+                    {/* Gmail Refresh Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      class="h-9 px-3 rounded-full text-xs font-semibold shrink-0"
+                      onClick={handleRefresh}
+                      disabled={isRefreshing()}
+                      title="Mesajları Yenile"
+                    >
+                      <IconRefresh
+                        class={cn(
+                          "h-3.5 w-3.5 mr-1.5 transition-transform duration-500",
+                          isRefreshing() && "animate-spin text-primary"
+                        )}
+                      />
+                      Yenile
+                    </Button>
+
                     <div class="relative w-full">
                       <IconSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        class="h-10 rounded-full bg-muted/40 pl-9 pr-4 text-xs border-none focus-visible:ring-1"
+                        class="h-9 rounded-full bg-muted/40 pl-9 pr-4 text-xs border-none focus-visible:ring-1"
                         placeholder={t("messages.search")}
                         value={query()}
                         onInput={(event) => setQuery(event.currentTarget.value)}
