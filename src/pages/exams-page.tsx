@@ -12,7 +12,6 @@ import type { Course, Exam } from "@/api/client";
 import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -264,23 +263,6 @@ function ExamsContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader
-          accent="sky"
-          eyebrow={t("nav.exams")}
-          title={t("exams.title")}
-          description={t("exams.subtitle")}
-          actions={
-            canCreate() ? (
-              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreateModal}>
-                <IconPlus class="h-4 w-4" />
-                {t("exams.create")}
-              </Button>
-            ) : undefined
-          }
-        />
-      </div>
-
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -294,6 +276,16 @@ function ExamsContent() {
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
           <DataTable
+            title={t("exams.title")}
+            description={t("exams.subtitle")}
+            actions={
+              canCreate() ? (
+                <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={openCreateModal}>
+                  <IconPlus class="h-4 w-4" />
+                  {t("exams.create")}
+                </Button>
+              ) : undefined
+            }
             columns={columns()}
             data={rows()}
             tableClass="table-fixed min-w-[64rem]"

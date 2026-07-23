@@ -16,7 +16,7 @@ export function Table(props: ParentProps<ComponentProps<"table">>) {
 export function TableHeader(props: ParentProps<ComponentProps<"thead">>) {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
-    <thead class={cn("bg-muted/45 [&_tr]:border-b", local.class)} {...rest}>
+    <thead class={cn("[&_tr]:border-b", local.class)} {...rest}>
       {local.children}
     </thead>
   );
@@ -35,7 +35,7 @@ export function TableRow(props: ParentProps<ComponentProps<"tr">>) {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
     <tr
-      class={cn("border-b border-border/70 transition-colors hover:bg-muted/45 data-[state=selected]:bg-muted", local.class)}
+      class={cn("border-b border-border/70 transition-colors data-[state=selected]:bg-muted", local.class)}
       {...rest}
     >
       {local.children}

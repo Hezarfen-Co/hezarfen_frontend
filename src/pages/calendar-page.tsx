@@ -3,7 +3,6 @@ import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import type { Event, Exam } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -102,38 +101,33 @@ function CalendarContent() {
   };
 
   return (
-    <div class="space-y-6">
-      <PageHeader
-        title={t("calendar.title")}
-        accent="sky"
-        actions={
-          <div class="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" class="h-8 gap-1 text-xs font-semibold" onClick={goToday}>
-              <IconCalendarDays class="h-3.5 w-3.5" />
-              {t("calendar.today")}
-            </Button>
+    <div class="space-y-4">
+      <section class="data-shell space-y-3 border-sky-500/15 bg-sky-500/[0.025] p-3">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground">{t("calendar.title")}</h1>
+            <div class="mt-1.5 flex items-center gap-2">
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={prevMonth}>
+                <IconChevronLeft class="h-4 w-4" />
+              </Button>
+              <span class="font-display text-base font-semibold tracking-tight">{monthLabel()}</span>
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={nextMonth}>
+                <IconChevronRight class="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        }
-      >
-        <div class="mt-2 flex items-center gap-3">
-          <Button type="button" variant="ghost" size="sm" class="h-7 w-7 p-0" onClick={prevMonth}>
-            <IconChevronLeft class="h-4 w-4" />
-          </Button>
-          <span class="font-display text-lg font-semibold tracking-tight">{monthLabel()}</span>
-          <Button type="button" variant="ghost" size="sm" class="h-7 w-7 p-0" onClick={nextMonth}>
-            <IconChevronRight class="h-4 w-4" />
+          <Button type="button" variant="outline" size="sm" class="h-9 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
+            <IconCalendarDays class="h-3.5 w-3.5" />
+            {t("calendar.today")}
           </Button>
         </div>
-      </PageHeader>
-
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
         <Suspense fallback={<PageSpinner />}>
-          <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+          <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
             <div class="rounded-lg border bg-card shadow-sm">
               <div class="grid grid-cols-7 border-b">
                 <For each={dayNames()}>
                   {(name) => (
-                    <div class="border-r border-border/40 px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground last:border-r-0">
+                    <div class="border-r border-border/40 px-2 py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground last:border-r-0">
                       {name}
                     </div>
                   )}
@@ -150,7 +144,7 @@ function CalendarContent() {
                       <button
                         type="button"
                         class={cn(
-                          "relative flex min-h-[4.5rem] flex-col border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40 xl:min-h-28 2xl:min-h-32",
+                          "relative flex min-h-[4.25rem] flex-col border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40 xl:min-h-[5.25rem] 2xl:min-h-24",
                           cell.other && "pointer-events-none bg-muted/20",
                           cellSelected() ? "bg-sky-50/60 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "",
                           cellToday ? "font-bold text-sky-600 dark:text-sky-400" : ""
@@ -160,7 +154,7 @@ function CalendarContent() {
                       >
                         <span
                           class={cn(
-                            "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium",
+                            "inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-medium",
                             cellToday ? "bg-sky-500 text-white font-semibold" : "",
                             cell.other ? "text-muted-foreground/30" : "text-foreground",
                           )}
@@ -169,10 +163,10 @@ function CalendarContent() {
                         </span>
                         <Show when={items()}>
                           {(dayItems) => (
-                            <div class="mt-1 flex min-h-0 flex-1 flex-col justify-end gap-1 overflow-hidden">
+                            <div class="mt-1 flex min-h-0 flex-1 flex-col justify-end gap-0.5 overflow-hidden">
                               <Show when={dayItems().events[0]}>
                                 {(event) => (
-                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950/60 dark:border dark:border-emerald-800/50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-emerald-700 dark:text-emerald-300">
+                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-medium leading-none text-emerald-700 dark:border dark:border-emerald-800/50 dark:bg-emerald-950/60 dark:text-emerald-300">
                                     <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                                     <span class="truncate">{event().title}</span>
                                     <Show when={dayItems().events.length > 1}>
@@ -183,7 +177,7 @@ function CalendarContent() {
                               </Show>
                               <Show when={dayItems().exams[0]}>
                                 {(exam) => (
-                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-rose-100 dark:bg-rose-950/60 dark:border dark:border-rose-800/50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-rose-700 dark:text-rose-300">
+                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-rose-100 px-1 py-0.5 text-[9px] font-medium leading-none text-rose-700 dark:border dark:border-rose-800/50 dark:bg-rose-950/60 dark:text-rose-300">
                                     <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
                                     <span class="truncate">{exam().title}</span>
                                     <Show when={dayItems().exams.length > 1}>
@@ -202,25 +196,25 @@ function CalendarContent() {
               </div>
             </div>
 
-            <div class="space-y-4">
-              <div class="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+            <div class="space-y-3">
+              <div class="rounded-xl border border-border/80 bg-card p-3 shadow-sm">
                 <h3 class="font-display text-sm font-semibold">
                   {selectedDay().toLocaleDateString(locale() === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "long", year: "numeric" })}
                 </h3>
 
-                <div class="mt-3 space-y-3">
+                <div class="mt-2 space-y-2.5">
                   <Show when={selectedItems().events.length === 0 && selectedItems().exams.length === 0}>
                     <p class="text-xs text-muted-foreground">{t("calendar.noEvents")}</p>
                   </Show>
 
                   <Show when={selectedItems().events.length > 0}>
                     <div class="space-y-2">
-                      <p class="text-[11px] font-semibold uppercase tracking-wider text-emerald-500">{t("calendar.events")}</p>
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-500">{t("calendar.events")}</p>
                       <For each={selectedItems().events}>
                         {(ev) => (
                           <a
                             href={`/events/${ev.id}`}
-                            class="group flex items-start justify-between gap-2 rounded-xl border border-emerald-500/40 bg-card p-3 shadow-sm transition-all hover:border-emerald-500/70 hover:shadow-md dark:border-emerald-500/30 dark:hover:border-emerald-500/70"
+                            class="group flex items-start justify-between gap-2 rounded-lg border border-emerald-500/40 bg-card p-2.5 shadow-sm transition-all hover:border-emerald-500/70 hover:shadow-md dark:border-emerald-500/30 dark:hover:border-emerald-500/70"
                           >
                             <div class="min-w-0">
                               <p class="truncate text-xs font-semibold group-hover:text-emerald-500">{ev.title}</p>
@@ -238,12 +232,12 @@ function CalendarContent() {
 
                   <Show when={selectedItems().exams.length > 0}>
                     <div class="space-y-2">
-                      <p class="text-[11px] font-semibold uppercase tracking-wider text-rose-500">{t("calendar.exams")}</p>
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-rose-500">{t("calendar.exams")}</p>
                       <For each={selectedItems().exams}>
                         {(exam) => (
                           <a
                             href={`/exams/${exam.id}`}
-                            class="group flex items-start justify-between gap-2 rounded-xl border border-rose-500/40 bg-card p-3 shadow-sm transition-all hover:border-rose-500/70 hover:shadow-md dark:border-rose-500/30 dark:hover:border-rose-500/70"
+                            class="group flex items-start justify-between gap-2 rounded-lg border border-rose-500/40 bg-card p-2.5 shadow-sm transition-all hover:border-rose-500/70 hover:shadow-md dark:border-rose-500/30 dark:hover:border-rose-500/70"
                           >
                             <div class="min-w-0">
                               <p class="truncate text-xs font-semibold group-hover:text-rose-500">{exam.title}</p>
