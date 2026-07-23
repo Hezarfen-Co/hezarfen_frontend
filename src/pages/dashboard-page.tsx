@@ -87,27 +87,58 @@ const ROLE_TONE: Record<Role, string> = {
 };
 
 function portalTone(to: string) {
-  const base = "bg-muted/40 text-muted-foreground shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:text-foreground dark:bg-muted/30";
-  if (to.includes("exam")) {
-    return cn(base, "border border-indigo-500/50 ring-1 ring-indigo-500/30 group-hover:border-indigo-400 group-hover:ring-indigo-400/60 group-hover:shadow-[0_0_14px_rgba(99,102,241,0.35)]");
+  const base = "bg-muted/40 text-muted-foreground shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:text-foreground dark:bg-muted/30 border";
+  if (to === "/exams") {
+    return cn(base, "border-indigo-500/50 dark:border-indigo-400/40 group-hover:border-indigo-500/90 dark:group-hover:border-indigo-400 group-hover:shadow-[0_0_12px_rgba(99,102,241,0.25)]");
   }
-  if (to.includes("course") || to.includes("studies") || to.includes("clubs")) {
-    return cn(base, "border border-cyan-500/50 ring-1 ring-cyan-500/30 group-hover:border-cyan-400 group-hover:ring-cyan-400/60 group-hover:shadow-[0_0_14px_rgba(6,182,212,0.35)]");
+  if (to === "/courses") {
+    return cn(base, "border-cyan-500/50 dark:border-cyan-400/40 group-hover:border-cyan-500/90 dark:group-hover:border-cyan-400 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.25)]");
   }
-  if (to.includes("event") || to.includes("calendar")) {
-    return cn(base, "border border-emerald-500/50 ring-1 ring-emerald-500/30 group-hover:border-emerald-400 group-hover:ring-emerald-400/60 group-hover:shadow-[0_0_14px_rgba(16,185,129,0.35)]");
+  if (to === "/marks" || to === "/management/student-marks") {
+    return cn(base, "border-amber-500/50 dark:border-amber-400/40 group-hover:border-amber-500/90 dark:group-hover:border-amber-400 group-hover:shadow-[0_0_12px_rgba(245,158,11,0.25)]");
   }
-  if (to.includes("mark") || to.includes("attendance")) {
-    return cn(base, "border border-teal-500/50 ring-1 ring-teal-500/30 group-hover:border-teal-400 group-hover:ring-teal-400/60 group-hover:shadow-[0_0_14px_rgba(20,184,166,0.35)]");
+  if (to === "/studies") {
+    return cn(base, "border-emerald-500/50 dark:border-emerald-400/40 group-hover:border-emerald-500/90 dark:group-hover:border-emerald-400 group-hover:shadow-[0_0_12px_rgba(16,185,129,0.25)]");
   }
-  if (to.includes("message") || to.includes("student") || to.includes("users")) {
-    return cn(base, "border border-violet-500/50 ring-1 ring-violet-500/30 group-hover:border-violet-400 group-hover:ring-violet-400/60 group-hover:shadow-[0_0_14px_rgba(139,92,246,0.35)]");
+  if (to === "/events") {
+    return cn(base, "border-rose-500/50 dark:border-rose-400/40 group-hover:border-rose-500/90 dark:group-hover:border-rose-400 group-hover:shadow-[0_0_12px_rgba(244,63,94,0.25)]");
   }
-  if (to.includes("work") || to.includes("settings") || to.includes("terms")) {
-    return cn(base, "border border-blue-500/50 ring-1 ring-blue-500/30 group-hover:border-blue-400 group-hover:ring-blue-400/60 group-hover:shadow-[0_0_14px_rgba(59,130,246,0.35)]");
+  if (to === "/notes") {
+    return cn(base, "border-purple-500/50 dark:border-purple-400/40 group-hover:border-purple-500/90 dark:group-hover:border-purple-400 group-hover:shadow-[0_0_12px_rgba(168,85,247,0.25)]");
   }
-  return cn(base, "border border-primary/50 ring-1 ring-primary/30 group-hover:border-primary group-hover:ring-primary/60 group-hover:shadow-[0_0_14px_rgba(59,130,246,0.35)]");
+  if (to === "/pomodoro" || to === "/management/pomodoros") {
+    return cn(base, "border-red-500/50 dark:border-red-400/40 group-hover:border-red-500/90 dark:group-hover:border-red-400 group-hover:shadow-[0_0_12px_rgba(239,68,68,0.25)]");
+  }
+  if (to === "/clubs") {
+    return cn(base, "border-fuchsia-500/50 dark:border-fuchsia-400/40 group-hover:border-fuchsia-500/90 dark:group-hover:border-fuchsia-400 group-hover:shadow-[0_0_12px_rgba(217,70,239,0.25)]");
+  }
+  if (to === "/messages") {
+    return cn(base, "border-sky-500/50 dark:border-sky-400/40 group-hover:border-sky-500/90 dark:group-hover:border-sky-400 group-hover:shadow-[0_0_12px_rgba(14,165,233,0.25)]");
+  }
+  if (to === "/students") {
+    return cn(base, "border-violet-500/50 dark:border-violet-400/40 group-hover:border-violet-500/90 dark:group-hover:border-violet-400 group-hover:shadow-[0_0_12px_rgba(139,92,246,0.25)]");
+  }
+  if (to === "/admin/users") {
+    return cn(base, "border-pink-500/50 dark:border-pink-400/40 group-hover:border-pink-500/90 dark:group-hover:border-pink-400 group-hover:shadow-[0_0_12px_rgba(236,72,153,0.25)]");
+  }
+  if (to === "/management/student-attendance") {
+    return cn(base, "border-teal-500/50 dark:border-teal-400/40 group-hover:border-teal-500/90 dark:group-hover:border-teal-400 group-hover:shadow-[0_0_12px_rgba(20,184,166,0.25)]");
+  }
+  if (to === "/work") {
+    return cn(base, "border-blue-500/50 dark:border-blue-400/40 group-hover:border-blue-500/90 dark:group-hover:border-blue-400 group-hover:shadow-[0_0_12px_rgba(59,130,246,0.25)]");
+  }
+  if (to === "/management/staff-work") {
+    return cn(base, "border-amber-400/60 dark:border-amber-300/40 group-hover:border-amber-400 dark:group-hover:border-amber-300 group-hover:shadow-[0_0_12px_rgba(251,191,36,0.25)]");
+  }
+  if (to === "/management/terms") {
+    return cn(base, "border-orange-500/50 dark:border-orange-400/40 group-hover:border-orange-500/90 dark:group-hover:border-orange-400 group-hover:shadow-[0_0_12px_rgba(249,115,22,0.25)]");
+  }
+  if (to === "/management/settings") {
+    return cn(base, "border-lime-500/50 dark:border-lime-400/40 group-hover:border-lime-500/90 dark:group-hover:border-lime-400 group-hover:shadow-[0_0_12px_rgba(132,204,22,0.25)]");
+  }
+  return cn(base, "border-primary/50 dark:border-primary/40 group-hover:border-primary");
 }
+
 
 function examWindow(exam: Exam, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
   const status = examDisplayStatus(exam, now);
@@ -752,8 +783,8 @@ function DashboardContent() {
   });
 
   return (
-    <div class="overflow-hidden rounded-[1.75rem] border border-black/[0.06] bg-background shadow-apple dark:border-white/[0.08] dark:bg-background">
-      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-black/[0.06] bg-card/85 px-4 py-4 backdrop-blur-xl dark:border-white/[0.08] sm:px-5">
+    <div class="overflow-hidden rounded-[1.75rem] border border-[#F2F2F3] bg-background shadow-apple dark:border-white/[0.08] dark:bg-background">
+      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-[#F2F2F3] bg-card/85 px-4 py-4 backdrop-blur-xl dark:border-white/[0.08] sm:px-5">
         <div class="min-w-0 space-y-1">
           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("dashboard.today")}</p>
           <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -922,7 +953,7 @@ function DashboardContent() {
         </Show>
 
         {/* Workspace Portal Cards (Expandable after 2 rows) */}
-        <section class="space-y-2.5 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm" aria-labelledby="dash-sections">
+        <section class="space-y-2.5 rounded-3xl border border-[#F2F2F3] bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm" aria-labelledby="dash-sections">
           <div class="flex items-center justify-between gap-3">
             <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
               {t("dashboard.roleLinks")}
@@ -994,7 +1025,7 @@ function DashboardContent() {
 
         <Show when={role() !== "parent"}>
         <div class="grid items-stretch gap-5">
-          <section class="flex min-h-[17rem] flex-col space-y-2.5 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm" aria-labelledby="dash-attention">
+          <section class="flex min-h-[17rem] flex-col space-y-2.5 rounded-3xl border border-[#F2F2F3] bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm" aria-labelledby="dash-attention">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
                 {t("dashboard.attention")}
@@ -1043,7 +1074,7 @@ function DashboardContent() {
               when={filteredAttention().length > 0}
               fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
-              <ul class="flex-1 divide-y divide-border/80 overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-apple">
+              <ul class="flex-1 divide-y divide-[#F2F2F3] overflow-hidden rounded-2xl border border-[#F2F2F3] dark:border-white/[0.08] bg-card shadow-apple">
                 <For each={pagedAttention()}>
                   {(item) => (
                     <li>
@@ -1117,7 +1148,8 @@ function PortalCard(props: {
 
   const cardInner = () => (
     <>
-      <span class={cn("mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors", portalTone(props.card.to))}>
+      <span class={cn("mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-200", portalTone(props.card.to))}>
+
         <Icon class="h-5 w-5" />
       </span>
       <div class="min-w-0 flex-1 space-y-1">
@@ -1180,7 +1212,7 @@ function PortalCard(props: {
 
   const cardClass = () =>
     cn(
-      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-black/[0.06] bg-card p-4 shadow-apple transition-all duration-200 hover:-translate-y-0.5 hover:shadow-apple-hover hover:border-border dark:border-white/[0.08] dark:hover:border-white/20 dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] sm:min-h-[6.5rem]",
+      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-[#F2F2F3] bg-card p-4 shadow-apple transition-all duration-200 hover:-translate-y-0.5 hover:shadow-apple-hover hover:border-border dark:border-white/[0.08] dark:hover:border-white/20 dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] sm:min-h-[6.5rem]",
       !props.editing && "active:scale-[0.98]",
       props.editing && "cursor-grab select-none border-dashed border-primary/50 bg-primary/[0.03]",
       props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-apple-hover",
