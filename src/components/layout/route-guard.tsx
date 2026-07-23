@@ -1,7 +1,9 @@
 import { Navigate } from "@tanstack/solid-router";
 import { type ParentProps, Show } from "solid-js";
 import type { Role } from "@/api/client";
+import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { hasExactRole, roleInRange } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -27,6 +29,16 @@ export function RouteGuard(
 
   return (
     <Show when={!auth.loading()} fallback={<PageSpinner />}>
+      <Show when={!auth.error()} fallback={
+        <Alert variant="destructive">
+          <div class="space-y-3">
+            <p>{formatApiError(auth.error())}</p>
+            <Button variant="outline" size="sm" onClick={() => void auth.refresh()}>
+              {t("common.tryAgain")}
+            </Button>
+          </div>
+        </Alert>
+      }>
       <Show when={auth.user()} fallback={<Navigate to="/login" />}>
         {(u) => (
           <Show
@@ -36,6 +48,7 @@ export function RouteGuard(
             {props.children}
           </Show>
         )}
+      </Show>
       </Show>
     </Show>
   );
