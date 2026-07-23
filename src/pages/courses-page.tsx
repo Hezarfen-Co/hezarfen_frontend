@@ -8,7 +8,6 @@ import { formatApiError } from "@/api/client";
 import type { Course, CourseKind } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
@@ -177,23 +176,6 @@ function CoursesContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader
-          accent="violet"
-          eyebrow={t("nav.group.classes")}
-          title={pageLabel()}
-          description={t("courses.subtitle", { item: pageLabel() })}
-          actions={
-            canCreate() ? (
-              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowForm(true)}>
-                <IconPlus class="h-4 w-4" />
-                {t("common.createItem", { item: pageLabel() })}
-              </Button>
-            ) : undefined
-          }
-        />
-      </div>
-
       <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: pageLabel() })} description={t("courses.subtitle", { item: pageLabel() })}>
         <form class="space-y-4" onSubmit={onCreate}>
           <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
@@ -252,15 +234,17 @@ function CoursesContent() {
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
           <div class="space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 class="font-display text-lg font-semibold">{t("courses.listTitle", { item: pageLabel() })}</h2>
-                <p class="mt-1 text-sm text-muted-foreground">
-                  {t("common.countItem", { count: rows().length, item: pageLabel() })}
-                </p>
-              </div>
-            </div>
             <DataTable
+              title={pageLabel()}
+              description={t("courses.subtitle", { item: pageLabel() })}
+              actions={
+                canCreate() ? (
+                  <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowForm(true)}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("common.createItem", { item: pageLabel() })}
+                  </Button>
+                ) : undefined
+              }
               columns={columns()}
               data={rows()}
               tableClass="table-fixed min-w-[44rem]"

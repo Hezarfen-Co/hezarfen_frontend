@@ -47,6 +47,9 @@ export type DataTableProps<TData, TValue = unknown> = {
   filters?: JSX.Element;
   filterColumn?: string;
   filterPlaceholder?: string;
+  title?: string;
+  description?: string;
+  actions?: JSX.Element;
   manualPagination?: {
     pageIndex: number;
     pageSize: number;
@@ -119,6 +122,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const colSpan = () => Math.max(1, table.getVisibleLeafColumns().length);
   const showColumnMenu = () => (props.enableColumnVisibility ?? true) && hideableColumns().length > 0;
   const showSearch = () => props.searchPredicate != null || props.filterColumn != null || props.onSearchInput != null;
+  const showHeader = () => props.title != null || props.description != null || props.actions != null;
   const showToolbar = () => showSearch() || props.filters != null || showColumnMenu();
   const pageCount = () => props.manualPagination ? Math.max(1, Math.ceil(props.manualPagination.total / props.manualPagination.pageSize)) : table.getPageCount();
   const pageIndex = () => props.manualPagination?.pageIndex ?? table.getState().pagination.pageIndex;
@@ -151,27 +155,44 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
 
   return (
     <>
-      <Show when={showToolbar()}>
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Show when={showSearch()}>
-            <Input
-              class="max-w-sm rounded-xl"
-              value={props.onSearchInput || props.searchPredicate ? searchValue() : ((props.filterColumn ? table.getColumn(props.filterColumn)?.getFilterValue() : "") as string) ?? ""}
-              placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
-              onInput={(event) => {
-                if (props.onSearchInput) props.onSearchInput(event.currentTarget.value);
-                else if (props.searchPredicate) setSearch(event.currentTarget.value);
-                else if (props.filterColumn) table.getColumn(props.filterColumn)?.setFilterValue(event.currentTarget.value);
-                setPageIndex(0);
-              }}
-            />
+      <Show when={showHeader() || showToolbar()}>
+        <div class="space-y-3">
+          <Show when={showHeader()}>
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <Show when={props.title}>
+                  <h2 class="truncate font-display text-2xl font-semibold tracking-tight text-foreground">{props.title}</h2>
+                </Show>
+                <Show when={props.description}>
+                  <p class="mt-1 text-sm text-muted-foreground">{props.description}</p>
+                </Show>
+              </div>
+              <Show when={props.actions}>
+                <div class="flex shrink-0 flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-lg">{props.actions}</div>
+              </Show>
+            </div>
           </Show>
-          <Show when={props.filters}>
-            <div class="flex flex-wrap items-center gap-2">{props.filters}</div>
-          </Show>
-          <Show when={showColumnMenu()}>
+          <Show when={showToolbar()}>
+            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <Show when={showSearch()}>
+                <Input
+                  class="h-9 max-w-sm rounded-lg border-transparent bg-muted/70 text-sm shadow-none focus-visible:ring-1 dark:bg-[#222222] dark:text-white dark:placeholder:text-white/40"
+                  value={props.onSearchInput || props.searchPredicate ? searchValue() : ((props.filterColumn ? table.getColumn(props.filterColumn)?.getFilterValue() : "") as string) ?? ""}
+                  placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
+                  onInput={(event) => {
+                    if (props.onSearchInput) props.onSearchInput(event.currentTarget.value);
+                    else if (props.searchPredicate) setSearch(event.currentTarget.value);
+                    else if (props.filterColumn) table.getColumn(props.filterColumn)?.setFilterValue(event.currentTarget.value);
+                    setPageIndex(0);
+                  }}
+                />
+              </Show>
+              <Show when={props.filters}>
+                <div class="flex flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-lg [&_select]:h-9 [&_select]:rounded-lg">{props.filters}</div>
+              </Show>
+              <Show when={showColumnMenu()}>
             <DropdownMenu placement="bottom-end" gutter={6}>
-              <DropdownMenuTrigger class="ml-auto inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-background/80 px-4 text-xs font-semibold shadow-sm transition-all hover:bg-secondary active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <DropdownMenuTrigger class="ml-auto inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border/70 bg-muted/70 px-3 text-sm font-semibold shadow-none transition-all hover:bg-muted active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/[0.08] dark:bg-[#222222] dark:text-white dark:hover:bg-white/[0.12]">
                 {t("common.columns")}
                 <IconChevronDown class="h-3.5 w-3.5 opacity-60" />
               </DropdownMenuTrigger>
@@ -189,6 +210,8 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                 </For>
               </DropdownMenuContent>
             </DropdownMenu>
+              </Show>
+            </div>
           </Show>
         </div>
       </Show>

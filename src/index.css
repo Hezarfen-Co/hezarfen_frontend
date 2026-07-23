@@ -168,35 +168,43 @@
   }
 
   .data-table-wrap {
-    @apply max-h-[65vh] overflow-auto rounded-2xl border border-[#F2F2F3] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)];
+    @apply max-h-[65vh] overflow-auto rounded-xl border border-border/70 bg-card shadow-none dark:border-white/[0.1] dark:bg-[#111111];
   }
 
   .data-table {
-    @apply w-full caption-bottom text-[0.875rem];
+    @apply w-full caption-bottom text-sm;
   }
 
   .data-table thead {
-    @apply sticky top-0 z-10 border-b border-border bg-muted/60 text-muted-foreground backdrop-blur-md dark:bg-muted/80;
+    @apply sticky top-0 z-10 border-b border-border bg-background text-muted-foreground dark:border-white/[0.1] dark:bg-[#050505];
   }
 
   .data-table th {
-    @apply h-10 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/40 px-4 text-left text-[0.6875rem] font-semibold tracking-wider uppercase text-muted-foreground/80 last:border-r-0;
+    @apply h-12 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/70 px-4 text-left text-sm font-semibold text-muted-foreground last:border-r-0 dark:border-white/[0.1] dark:text-white/70;
   }
 
   .data-table td {
-    @apply h-12 whitespace-nowrap border-r border-border/30 px-4 py-3 align-middle last:border-r-0 text-sm;
+    @apply h-[3.2rem] whitespace-nowrap border-r border-border/60 px-4 py-2.5 align-middle text-sm font-medium last:border-r-0 dark:border-white/[0.08];
   }
 
   .data-table tbody tr {
-    @apply border-b border-border/50 transition-colors hover:bg-primary/[0.035] active:bg-primary/[0.06] dark:hover:bg-white/[0.03];
+    @apply border-b border-border/70 transition-colors hover:bg-muted/70 active:bg-muted dark:border-white/[0.08] dark:hover:bg-white/[0.06] dark:active:bg-white/[0.08];
   }
 
   .data-table tbody tr:nth-child(even) {
-    background-color: hsl(var(--muted) / 0.15);
+    background-color: hsl(var(--muted) / 0.18);
   }
 
   .data-table tbody tr:hover:nth-child(even) {
-    background-color: hsl(var(--primary) / 0.035);
+    background-color: hsl(var(--muted) / 0.7);
+  }
+
+  [data-kb-theme="dark"] .data-table tbody tr:nth-child(even) {
+    background-color: #151515;
+  }
+
+  [data-kb-theme="dark"] .data-table tbody tr:hover:nth-child(even) {
+    background-color: rgb(255 255 255 / 0.06);
   }
 
   .detail-breadcrumb {
