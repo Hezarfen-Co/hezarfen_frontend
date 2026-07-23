@@ -1,5 +1,5 @@
-import { For, Show, Suspense, createResource, createSignal, lazy } from "solid-js";
-import { Link, useSearch, useNavigate } from "@tanstack/solid-router";
+import { For, Show, Suspense, createEffect, createResource, createSignal, lazy } from "solid-js";
+import { Link, useLocation, useNavigate, useSearch } from "@tanstack/solid-router";
 import { getQuestions, postQuestion } from "@/api/shared";
 import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
@@ -37,6 +37,7 @@ function QuestionsContent() {
   const t = useT();
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const searchParams = useSearch({ strict: false });
 
   const statusFilter = () => ((searchParams() as any).status === "pending" ? "pending" : "approved");
@@ -46,7 +47,12 @@ function QuestionsContent() {
     async (params) => (await getQuestions(params.status as "pending" | "approved", params)).items
   );
 
-  const [askOpen, setAskOpen] = createSignal(false);
+  const [askOpen, setAskOpen] = createSignal(location().searchStr.includes("action=new"));
+  createEffect(() => {
+    if (location().searchStr.includes("action=new")) {
+      setAskOpen(true);
+    }
+  });
 
   return (
     <div class="space-y-6">

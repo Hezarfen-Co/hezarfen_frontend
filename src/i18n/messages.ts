@@ -170,6 +170,35 @@ export type MessageKey =
   | "dashboard.stats.average"
   | "dashboard.stats.averageHint"
   | "dashboard.commandCenter"
+  | "command.group.actions"
+  | "command.group.navigation"
+  | "command.group.system"
+  | "command.action.createHomework"
+  | "command.action.createHomeworkDesc"
+  | "command.action.createCourse"
+  | "command.action.createCourseDesc"
+  | "command.action.createEvent"
+  | "command.action.createEventDesc"
+  | "command.action.createExam"
+  | "command.action.createExamDesc"
+  | "command.action.createNote"
+  | "command.action.createNoteDesc"
+  | "command.action.importNote"
+  | "command.action.importNoteDesc"
+  | "command.action.askQuestion"
+  | "command.action.askQuestionDesc"
+  | "command.action.askCelebi"
+  | "command.action.askCelebiDesc"
+  | "command.action.myProfile"
+  | "command.action.myProfileDesc"
+  | "command.action.themeDark"
+  | "command.action.themeLight"
+  | "command.action.themeSystem"
+  | "command.action.langTr"
+  | "command.action.langEn"
+  | "command.action.logout"
+  | "command.action.logoutDesc"
+  | "command.shortcutHint"
   | "dashboard.observationOnly"
   | "dashboard.today"
   | "dashboard.reportCard"
@@ -938,6 +967,35 @@ const en: Dict = {
   "dashboard.stats.average": "Average",
   "dashboard.stats.averageHint": "Overall report card",
   "dashboard.commandCenter": "Command center",
+  "command.group.actions": "Quick actions",
+  "command.group.navigation": "Pages & navigation",
+  "command.group.system": "System & preferences",
+  "command.action.createHomework": "Create homework",
+  "command.action.createHomeworkDesc": "Assign new homework for a course",
+  "command.action.createCourse": "Create course",
+  "command.action.createCourseDesc": "Create a new course in system",
+  "command.action.createEvent": "Schedule event",
+  "command.action.createEventDesc": "Schedule event or lesson in calendar",
+  "command.action.createExam": "Create exam",
+  "command.action.createExamDesc": "Prepare new exam for students",
+  "command.action.createNote": "Create note",
+  "command.action.createNoteDesc": "Save a personal or class note",
+  "command.action.importNote": "Import note assistant",
+  "command.action.importNoteDesc": "Convert PDF or text files to note",
+  "command.action.askQuestion": "Ask / add question",
+  "command.action.askQuestionDesc": "Ask question or add to community pool",
+  "command.action.askCelebi": "Ask Çelebi AI",
+  "command.action.askCelebiDesc": "Chat with smart AI assistant",
+  "command.action.myProfile": "My profile",
+  "command.action.myProfileDesc": "User account and profile details",
+  "command.action.themeDark": "Dark theme",
+  "command.action.themeLight": "Light theme",
+  "command.action.themeSystem": "System theme",
+  "command.action.langTr": "Language: Türkçe",
+  "command.action.langEn": "Language: English",
+  "command.action.logout": "Log out",
+  "command.action.logoutDesc": "Sign out of your account",
+  "command.shortcutHint": "Use arrow keys to navigate, press Enter to select",
   "dashboard.observationOnly": "Read-only overview of what needs attention.",
   "dashboard.today": "Today",
   "dashboard.reportCard": "Report card",
@@ -1718,6 +1776,35 @@ const tr: Dict = {
   "dashboard.stats.average": "Ortalama",
   "dashboard.stats.averageHint": "Genel karne",
   "dashboard.commandCenter": "Komuta merkezi",
+  "command.group.actions": "Hızlı işlemler",
+  "command.group.navigation": "Sayfalar & gezinme",
+  "command.group.system": "Sistem & tercihler",
+  "command.action.createHomework": "Yeni ödev ekle",
+  "command.action.createHomeworkDesc": "Ders için yeni ödev tanımla",
+  "command.action.createCourse": "Yeni ders / kurs oluştur",
+  "command.action.createCourseDesc": "Sisteme yeni ders kaydı ekle",
+  "command.action.createEvent": "Etkinlik planla",
+  "command.action.createEventDesc": "Takvime etkinlik veya ders ekle",
+  "command.action.createExam": "Yeni sınav hazırla",
+  "command.action.createExamDesc": "Öğrenciler için yeni sınav tanımla",
+  "command.action.createNote": "Ders notu ekle",
+  "command.action.createNoteDesc": "Kişisel veya ders notu kaydet",
+  "command.action.importNote": "Not içe aktar assistant",
+  "command.action.importNoteDesc": "PDF veya metin belgesini not haline getir",
+  "command.action.askQuestion": "Soru sor / havuza ekle",
+  "command.action.askQuestionDesc": "Soru havuzuna yeni soru ekle",
+  "command.action.askCelebi": "Çelebi AI ile konuş",
+  "command.action.askCelebiDesc": "Yapay zeka asistanı ile sohbet et",
+  "command.action.myProfile": "Profil bilgilerim",
+  "command.action.myProfileDesc": "Kullanıcı hesabı ve profil detayları",
+  "command.action.themeDark": "Koyu tema",
+  "command.action.themeLight": "Açık tema",
+  "command.action.themeSystem": "Sistem teması",
+  "command.action.langTr": "Dil: Türkçe",
+  "command.action.langEn": "Dil: English",
+  "command.action.logout": "Oturumu kapat",
+  "command.action.logoutDesc": "Mevcut oturumu sonlandır",
+  "command.shortcutHint": "Yön tuşlarıyla gezinebilir, Enter ile seçebilirsiniz",
   "dashboard.observationOnly": "Dikkat isteyenlerin salt okunur özeti.",
   "dashboard.today": "Bugün",
   "dashboard.reportCard": "Karne",

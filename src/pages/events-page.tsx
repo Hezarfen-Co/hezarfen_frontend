@@ -1,5 +1,5 @@
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
-import { Link, useNavigate } from "@tanstack/solid-router";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getEvents } from "@/api/events";
 import { postEvent } from "@/api/events";
@@ -37,11 +37,17 @@ export default function EventsPage() {
 function EventsContent() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { locale } = usePreferences();
   const t = useT();
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
-  const [showForm, setShowForm] = createSignal(false);
+  const [showForm, setShowForm] = createSignal(location().searchStr.includes("action=new"));
+  createEffect(() => {
+    if (location().searchStr.includes("action=new")) {
+      setShowForm(true);
+    }
+  });
   const [timeFilter, setTimeFilter] = createSignal("all");
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
 
