@@ -1624,7 +1624,7 @@ const tr: Dict = {
   "nav.courses": "Ders",
   "nav.studies": "Etüt",
   "nav.clubs": "Kulüp",
-  "nav.marks": "Notlar",
+  "nav.marks": "Karnem",
   "nav.messages": "Mesajlar",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Yoklama",
