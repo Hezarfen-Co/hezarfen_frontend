@@ -38,7 +38,7 @@ export function AppShell(props: ParentProps) {
     if (path === "/courses" || path.startsWith("/courses/")) return `${t("nav.group.classes")} / ${t("nav.courses")}`;
     if (path === "/studies") return `${t("nav.group.classes")} / ${t("nav.studies")}`;
     if (path === "/clubs") return `${t("nav.group.classes")} / ${t("nav.clubs")}`;
-    if (path === "/homework") return `${t("nav.group.classes")} / ${t("nav.homework")}`;
+    if (path === "/homework" || path.startsWith("/homework/")) return `${t("nav.group.classes")} / ${t("nav.homework")}`;
     if (path === "/events" || path.startsWith("/events/")) return `${t("nav.group.classes")} / ${t("nav.events")}`;
     if (path === "/exams" || path.startsWith("/exams/")) return `${t("nav.group.classes")} / ${t("nav.exams")}`;
     if (path === "/calendar") return `${t("nav.group.classes")} / ${t("nav.calendar")}`;

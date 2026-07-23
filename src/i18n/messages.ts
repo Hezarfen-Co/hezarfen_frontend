@@ -570,6 +570,25 @@ export type MessageKey =
   | "homework.wholeCourse"
   | "homework.wholeCourseHelp"
   | "homework.dueRequired"
+  | "homework.mineTitle"
+  | "homework.submit"
+  | "homework.submitHelp"
+  | "homework.answerPlaceholder"
+  | "homework.fileUploaded"
+  | "homework.submittedAt"
+  | "homework.late"
+  | "homework.submission"
+  | "homework.submissions"
+  | "homework.submissionsHelp"
+  | "homework.submitted"
+  | "homework.notSubmitted"
+  | "homework.result"
+  | "homework.grade"
+  | "homework.ungrade"
+  | "homework.student"
+  | "homework.status.done"
+  | "homework.status.incomplete"
+  | "homework.status.missing"
   | "marks.title"
   | "marks.subtitle"
   | "marks.overall"
@@ -1335,6 +1354,25 @@ const en: Dict = {
   "homework.wholeCourse": "Whole course",
   "homework.wholeCourseHelp": "This first version assigns homework to the whole course. Use the backend API for student subsets until the multi-select UI exists.",
   "homework.dueRequired": "Choose a valid due date and time.",
+  "homework.mineTitle": "My homework",
+  "homework.submit": "Submit homework",
+  "homework.submitHelp": "Save a text answer and attach files if needed.",
+  "homework.answerPlaceholder": "Write an optional answer...",
+  "homework.fileUploaded": "File uploaded.",
+  "homework.submittedAt": "Submitted at",
+  "homework.late": "Late",
+  "homework.submission": "Submission",
+  "homework.submissions": "Submissions",
+  "homework.submissionsHelp": "Review student submissions and record the result.",
+  "homework.submitted": "Submitted",
+  "homework.notSubmitted": "Not submitted",
+  "homework.result": "Result",
+  "homework.grade": "Grade",
+  "homework.ungrade": "Ungrade",
+  "homework.student": "Student",
+  "homework.status.done": "Done",
+  "homework.status.incomplete": "Incomplete",
+  "homework.status.missing": "Missing",
   "marks.title": "Report card",
   "marks.subtitle": "Weighted averages across enrolled courses.",
   "marks.overall": "Overall average",
@@ -2094,6 +2132,25 @@ const tr: Dict = {
   "homework.wholeCourse": "Tüm ders",
   "homework.wholeCourseHelp": "İlk sürüm ödevi tüm derse atar. Öğrenci alt grupları için çoklu seçim arayüzü gelene kadar backend API kullanılabilir.",
   "homework.dueRequired": "Geçerli bir son teslim tarihi ve saati seç.",
+  "homework.mineTitle": "Ödevlerim",
+  "homework.submit": "Ödevi teslim et",
+  "homework.submitHelp": "İstersen yazılı cevap kaydet ve dosya ekle.",
+  "homework.answerPlaceholder": "İsteğe bağlı cevabını yaz...",
+  "homework.fileUploaded": "Dosya yüklendi.",
+  "homework.submittedAt": "Teslim zamanı",
+  "homework.late": "Geç",
+  "homework.submission": "Teslim",
+  "homework.submissions": "Teslimler",
+  "homework.submissionsHelp": "Öğrenci teslimlerini incele ve sonucu kaydet.",
+  "homework.submitted": "Teslim edildi",
+  "homework.notSubmitted": "Teslim edilmedi",
+  "homework.result": "Sonuç",
+  "homework.grade": "Notlandır",
+  "homework.ungrade": "Notu kaldır",
+  "homework.student": "Öğrenci",
+  "homework.status.done": "Tamamlandı",
+  "homework.status.incomplete": "Eksik",
+  "homework.status.missing": "Yok",
   "marks.title": "Karnem",
   "marks.subtitle": "Kayıtlı derslerdeki ağırlıklı ortalamalar.",
   "marks.overall": "Genel ortalama",
