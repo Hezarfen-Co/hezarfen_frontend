@@ -9,8 +9,8 @@
     --ui-surface-1: 0 0% 100%;
     --ui-surface-2: 240 5% 92%;
     --ui-surface-3: 240 5% 88%;
-    --ui-border-1: 240 5% 86%;
-    --ui-border-2: 240 4% 78%;
+    --ui-border-1: 240 3% 95%; /* #F2F2F3 */
+    --ui-border-2: 240 3% 90%;
     --ui-text-1: 240 10% 9%;
     --ui-text-2: 240 5% 35%;
     --ui-text-3: 240 4% 52%;
@@ -140,19 +140,19 @@
 
   /* Dark Design Frosted Glass & Elevated Surfaces */
   .glass-header {
-    @apply sticky top-0 z-20 backdrop-blur-xl bg-background/80 border-b border-black/[0.06] dark:border-white/[0.08] dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)];
+    @apply sticky top-0 z-20 backdrop-blur-xl bg-background/80 border-b border-[#F2F2F3] dark:border-white/[0.08] dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)];
   }
 
   .glass-panel {
-    @apply backdrop-blur-xl bg-card/75 border border-black/[0.06] dark:border-white/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_12px_36px_rgba(0,0,0,0.6)];
+    @apply backdrop-blur-xl bg-card/75 border border-[#F2F2F3] dark:border-white/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_12px_36px_rgba(0,0,0,0.6)];
   }
 
   .apple-card {
-    @apply rounded-2xl bg-card border border-black/[0.06] dark:border-white/[0.08] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-200 hover:dark:border-white/20;
+    @apply rounded-2xl bg-card border border-[#F2F2F3] dark:border-white/[0.08] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)] transition-all duration-200 hover:dark:border-white/20;
   }
 
   .surface-card {
-    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card text-card-foreground shadow-[0_2px_12px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_6px_24px_rgba(0,0,0,0.4)] transition-all duration-200;
+    @apply rounded-2xl border border-[#F2F2F3] dark:border-white/[0.08] bg-card text-card-foreground shadow-[0_2px_12px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_6px_24px_rgba(0,0,0,0.4)] transition-all duration-200;
   }
 
   .stat-tile {
@@ -164,11 +164,11 @@
   }
 
   .data-shell {
-    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)];
+    @apply rounded-2xl border border-[#F2F2F3] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)];
   }
 
   .data-table-wrap {
-    @apply max-h-[65vh] overflow-auto rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)];
+    @apply max-h-[65vh] overflow-auto rounded-2xl border border-[#F2F2F3] dark:border-white/[0.08] bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)];
   }
 
   .data-table {
@@ -208,7 +208,7 @@
   }
 
   .detail-action-group {
-    @apply flex w-full flex-wrap items-center gap-1.5 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-1.5 shadow-sm sm:w-auto;
+    @apply flex w-full flex-wrap items-center gap-1.5 rounded-xl border border-[#F2F2F3] dark:border-white/[0.08] bg-card p-1.5 shadow-sm sm:w-auto;
   }
 
   .detail-action-divider {
@@ -275,7 +275,7 @@
   .side-panel-body form > .space-y-4,
   .side-panel-body form > .space-y-1\.5,
   .side-panel-body form > .grid {
-    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-5 shadow-sm;
+    @apply rounded-2xl border border-[#F2F2F3] dark:border-white/[0.08] bg-card p-5 shadow-sm;
   }
 
   .side-panel-body label {
@@ -307,11 +307,11 @@
   }
 
   .hig-grouped-card {
-    @apply rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card p-4 sm:p-5 shadow-apple transition-all;
+    @apply rounded-2xl border border-[#F2F2F3] dark:border-white/[0.08] bg-card p-4 sm:p-5 shadow-apple transition-all;
   }
 
   .hig-translucent-bar {
-    @apply backdrop-blur-xl backdrop-saturate-150 bg-background/80 border-b border-black/[0.06] dark:border-white/[0.08];
+    @apply backdrop-blur-xl backdrop-saturate-150 bg-background/80 border-b border-[#F2F2F3] dark:border-white/[0.08];
   }
 
   .hig-popover-panel {
@@ -339,4 +339,3 @@
     font-variant-numeric: tabular-nums;
   }
 }
-
