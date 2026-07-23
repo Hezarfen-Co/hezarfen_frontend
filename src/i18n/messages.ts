@@ -47,6 +47,13 @@ export type MessageKey =
   | "nav.group.reports"
   | "nav.group.settings"
   | "nav.group.community"
+  | "rightPanel.messagesTitle"
+  | "rightPanel.calendarTitle"
+  | "rightPanel.openFullMessages"
+  | "rightPanel.openFullCalendar"
+  | "rightPanel.noUnread"
+  | "rightPanel.noUpcoming"
+  | "rightPanel.unreadBadge"
   | "nav.myStudents"
   | "parents.title"
   | "parents.subtitle"
@@ -817,6 +824,13 @@ const en: Dict = {
   "nav.clubs": "Clubs",
   "nav.marks": "Report card",
   "nav.messages": "Messages",
+  "rightPanel.messagesTitle": "Messages",
+  "rightPanel.calendarTitle": "Calendar & Events",
+  "rightPanel.openFullMessages": "Open Full Messages",
+  "rightPanel.openFullCalendar": "Open Full Calendar",
+  "rightPanel.noUnread": "No unread messages",
+  "rightPanel.noUpcoming": "No upcoming events or exams",
+  "rightPanel.unreadBadge": "Unread",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
   "nav.questions": "Question Pool",
@@ -1626,6 +1640,13 @@ const tr: Dict = {
   "nav.clubs": "Kulüp",
   "nav.marks": "Karnem",
   "nav.messages": "Mesajlar",
+  "rightPanel.messagesTitle": "Mesajlar",
+  "rightPanel.calendarTitle": "Takvim & Etkinlikler",
+  "rightPanel.openFullMessages": "Tüm Mesajları Aç",
+  "rightPanel.openFullCalendar": "Tüm Takvimi Aç",
+  "rightPanel.noUnread": "Okunmamış mesaj yok",
+  "rightPanel.noUpcoming": "Yaklaşan etkinlik veya sınav yok",
+  "rightPanel.unreadBadge": "Okunmamış",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Yoklama",
   "nav.questions": "Soru Havuzu",

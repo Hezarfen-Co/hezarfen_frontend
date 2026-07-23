@@ -1,6 +1,6 @@
 import { For, Show, Suspense, createEffect, createResource, createSignal, lazy } from "solid-js";
 import { Link, useLocation, useNavigate, useSearch } from "@tanstack/solid-router";
-import { getQuestions, postQuestion } from "@/api/shared";
+import { getQuestions, postQuestion, deleteQuestionById } from "@/api/shared";
 import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -9,11 +9,13 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { IconPlus, IconClock, IconCheck, IconPhoto, IconX, IconEdit } from "@/components/ui/icons";
+import { IconPlus, IconClock, IconCheck, IconPhoto, IconX, IconEdit, IconTrash } from "@/components/ui/icons";
 import { personLabel } from "@/lib/person";
+import { hasMinRole } from "@/lib/roles";
 
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { showToast } from "@/components/ui/toast";
@@ -48,11 +50,30 @@ function QuestionsContent() {
   );
 
   const [askOpen, setAskOpen] = createSignal(location().searchStr.includes("action=new"));
+  const [questionToDelete, setQuestionToDelete] = createSignal<any | null>(null);
+
   createEffect(() => {
     if (location().searchStr.includes("action=new")) {
       setAskOpen(true);
     }
   });
+
+  const canDelete = (question: any) =>
+    question.asker.id === auth.user()?.id || hasMinRole(auth.user()?.role, "teacher");
+
+  const handleDeleteConfirmed = async () => {
+    const q = questionToDelete();
+    if (!q) return;
+    try {
+      await deleteQuestionById(q.id);
+      showToast({ title: t("common.deleted") });
+      setQuestionToDelete(null);
+      refetch();
+    } catch (err: unknown) {
+      showToast({ title: formatApiError(err) });
+      setQuestionToDelete(null);
+    }
+  };
 
   return (
     <div class="space-y-6">
@@ -95,8 +116,8 @@ function QuestionsContent() {
               <div class="divide-y divide-border">
                 <For each={list()}>
                   {(question) => (
-                    <Link to="/questions/$id" params={{ id: question.id }} class="group flex flex-col gap-2 p-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between">
-                      <div class="min-w-0 flex-1">
+                    <div class="group flex flex-col gap-2 p-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between">
+                      <Link to="/questions/$id" params={{ id: question.id }} class="min-w-0 flex-1">
                         <div class="flex items-center gap-2">
                           <h3 class="truncate text-base font-semibold text-foreground group-hover:text-primary transition-colors">{question.title}</h3>
                           <Show when={question.image}>
@@ -114,16 +135,34 @@ function QuestionsContent() {
                           <span>&bull;</span>
                           <span>{new Date(question.asked_at).toLocaleDateString()}</span>
                         </div>
-                      </div>
-                      <div class="mt-2 sm:mt-0 sm:pl-4">
+                      </Link>
+
+                      <div class="mt-2 flex items-center gap-3 sm:mt-0 sm:pl-4 shrink-0">
                         <Show
                           when={question.status === "approved"}
                           fallback={<span class="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400"><IconClock class="mr-1 h-3 w-3" /> {t("pool.pending")}</span>}
                         >
                           <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"><IconCheck class="mr-1 h-3 w-3" /> {t("pool.approved")}</span>
                         </Show>
+
+                        <Show when={canDelete(question)}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            class="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                            title={t("common.delete")}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setQuestionToDelete(question);
+                            }}
+                          >
+                            <IconTrash class="h-4 w-4" />
+                          </Button>
+                        </Show>
                       </div>
-                    </Link>
+                    </div>
                   )}
                 </For>
               </div>
@@ -143,6 +182,14 @@ function QuestionsContent() {
           }}
         />
       </Show>
+
+      <ConfirmDialog
+        open={!!questionToDelete()}
+        onOpenChange={(open) => !open && setQuestionToDelete(null)}
+        title={t("common.delete")}
+        summary="Bu soruyu silmek istediğinizden emin misiniz?"
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }
