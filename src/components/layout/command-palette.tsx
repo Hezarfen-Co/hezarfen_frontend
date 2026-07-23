@@ -1,7 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
 import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   IconBook,
   IconCalendar,
@@ -17,6 +16,7 @@ import {
   IconSparkles,
   IconSun,
   IconUsers,
+  IconX,
 } from "@/components/ui/icons";
 import { HOME_ITEM, visibleNavGroups } from "@/components/layout/nav-items";
 import { hasMinRole } from "@/lib/roles";
@@ -364,18 +364,30 @@ export function CommandPalette(props: CommandPaletteProps) {
         <DialogDescription class="sr-only">{t("common.searchPlaceholder")}</DialogDescription>
 
         {/* Search Bar Header */}
-        <div class="flex items-center gap-3 border-b border-border/80 px-4 py-3.5">
+        <div class="flex items-center gap-2.5 border-b border-border/80 px-4 py-3 pr-16 bg-muted/20">
           <IconSearch class="h-4 w-4 text-muted-foreground shrink-0" />
-          <Input
+          <input
             ref={inputRef}
+            type="text"
             value={query()}
             placeholder={t("common.searchPlaceholder")}
-            class="h-9 border-0 bg-transparent px-0 text-base font-medium shadow-none hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            class="flex-1 h-9 w-full bg-transparent px-1 text-sm sm:text-base font-medium text-foreground outline-none border-none shadow-none focus:outline-none focus:ring-0 placeholder:text-muted-foreground/60"
             onInput={(event) => setQuery(event.currentTarget.value)}
             onKeyDown={handleKeyDown}
           />
           <Show when={query()}>
-            <span class="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground shrink-0">
+            <button
+              type="button"
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              onClick={() => {
+                setQuery("");
+                inputRef?.focus();
+              }}
+              title="Aramayı Temizle"
+            >
+              <IconX class="h-3.5 w-3.5" />
+            </button>
+            <span class="rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground shrink-0 font-mono">
               {filteredItems().length} {t("dashboard.ready").toLowerCase()}
             </span>
           </Show>

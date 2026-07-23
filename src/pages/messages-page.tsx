@@ -117,10 +117,6 @@ export default function MessagesPage() {
         await deleteMessageById(msg.id);
         setFlash(t("messages.deletedToast"));
       } else if (action.folder) {
-        if (action.folder === "archive" && isOwnSentMessage(msg)) {
-          setFlash("Gönderilen mesajlar arşive taşınamaz");
-          return;
-        }
         await patchMessageById(msg.id, { folder: action.folder });
         setFlash(t("messages.movedToast"));
       } else if (action.read !== undefined) {
@@ -372,9 +368,7 @@ export default function MessagesPage() {
                                 onArchive={
                                   folder() === "archive"
                                     ? () => handleAction(message, { folder: restoreFolder(message) })
-                                    : !isOwnSentMessage(message)
-                                      ? () => handleAction(message, { folder: "archive" })
-                                      : undefined
+                                    : () => handleAction(message, { folder: "archive" })
                                 }
                                 onTrash={
                                   folder() === "trash"

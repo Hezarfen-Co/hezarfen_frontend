@@ -103,7 +103,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
           <div class="h-4 w-[1px] bg-border mx-1" />
 
           {/* Move to Archive Action */}
-          <Show when={!isSent() && props.folder !== "archive" && props.folder !== "trash"}>
+          <Show when={props.folder !== "archive" && props.folder !== "trash"}>
             <Button
               variant="ghost"
               size="sm"
