@@ -381,6 +381,11 @@ export default function MessagesPage() {
                                     ? () => handleAction(message, { folder: restoreFolder(message) })
                                     : () => handleAction(message, { folder: "trash" })
                                 }
+                                onDeleteForever={
+                                  folder() === "trash"
+                                    ? () => handleAction(message, { delete: true })
+                                    : undefined
+                                }
                                 onToggleRead={
                                   !isOwnSentMessage(message)
                                     ? () => handleAction(message, { read: !message.read })
