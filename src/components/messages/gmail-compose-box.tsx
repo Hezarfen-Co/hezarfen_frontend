@@ -1,0 +1,203 @@
+import { createSignal, createEffect, Show } from "solid-js";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { UserSearchSelect } from "@/components/users/user-search-select";
+import { IconSend, IconTrash, IconX } from "@/components/ui/icons";
+import { postMessage } from "@/api/messages";
+import { formatApiError } from "@/api/client";
+import { useAuth } from "@/stores/auth-context";
+import { useT } from "@/stores/preferences-context";
+
+interface GmailComposeBoxProps {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  initialRecipient?: string;
+  initialSubject?: string;
+  initialBody?: string;
+}
+
+export function GmailComposeBox(props: GmailComposeBoxProps) {
+  const t = useT();
+  const auth = useAuth();
+  const [recipient, setRecipient] = createSignal("");
+  const [subject, setSubject] = createSignal("");
+  const [body, setBody] = createSignal("");
+  const [label, setLabel] = createSignal("");
+  const [isMinimized, setIsMinimized] = createSignal(false);
+  const [pending, setPending] = createSignal(false);
+  const [error, setError] = createSignal("");
+
+  createEffect(() => {
+    if (props.open) {
+      setRecipient(props.initialRecipient ?? "");
+      setSubject(props.initialSubject ?? "");
+      setBody(props.initialBody ?? "");
+      setLabel("");
+      setIsMinimized(false);
+      setError("");
+    }
+  });
+
+  const reset = () => {
+    setRecipient("");
+    setSubject("");
+    setBody("");
+    setLabel("");
+    setError("");
+  };
+
+  const handleClose = () => {
+    reset();
+    props.onClose();
+  };
+
+  const handleSend = async (e: SubmitEvent) => {
+    e.preventDefault();
+    if (!recipient()) {
+      setError(t("messages.selectRecipient"));
+      return;
+    }
+    setError("");
+    setPending(true);
+
+    try {
+      await postMessage({
+        recipient_id: recipient(),
+        subject: subject().trim(),
+        body: body().trim() || undefined,
+        label: label().trim() || undefined,
+      });
+      props.onSuccess();
+      handleClose();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <Show when={props.open}>
+      <div
+        class="fixed bottom-0 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[560px] rounded-t-2xl border border-border/80 bg-card shadow-2xl transition-all duration-200"
+        style={{ "max-height": isMinimized() ? "44px" : "640px" }}
+      >
+        {/* Gmail Header */}
+        <div class="flex h-11 items-center justify-between border-b bg-muted/80 px-4 rounded-t-2xl">
+          <div class="flex items-center gap-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-primary" />
+            <h3 class="text-xs font-bold text-foreground truncate max-w-[340px]">
+              {subject() ? subject() : t("messages.newMessage")}
+            </h3>
+          </div>
+          <div class="flex items-center gap-1">
+            <button
+              type="button"
+              class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+              onClick={() => setIsMinimized(!isMinimized())}
+              title={isMinimized() ? "Genişlet" : "Simge durumuna küçült"}
+            >
+              <span class="text-xs font-bold">{isMinimized() ? "□" : "—"}</span>
+            </button>
+            <button
+              type="button"
+              class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              onClick={handleClose}
+              title={t("common.cancel")}
+            >
+              <IconX class="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Gmail Form Content */}
+        <Show when={!isMinimized()}>
+          <form class="flex flex-col h-[520px]" onSubmit={handleSend}>
+            {/* Recipient Line */}
+            <div class="flex items-center border-b px-3 py-1.5 gap-2 text-xs">
+              <span class="w-12 font-medium text-muted-foreground shrink-0">
+                {t("messages.recipient")}:
+              </span>
+              <div class="flex-1 min-w-0">
+                <UserSearchSelect
+                  id="gmail-compose-recipient"
+                  value={recipient()}
+                  onChange={setRecipient}
+                  placeholder={t("messages.recipientPlaceholder")}
+                  excludeIds={auth.user()?.id ? [auth.user()!.id] : []}
+                />
+              </div>
+            </div>
+
+            {/* Subject Line */}
+            <div class="flex items-center border-b px-3 py-1 gap-2 text-xs">
+              <span class="w-12 font-medium text-muted-foreground shrink-0">
+                {t("form.title")}:
+              </span>
+              <Input
+                required
+                maxlength={200}
+                placeholder="Konu"
+                class="h-8 border-none bg-transparent shadow-none focus-visible:ring-0 text-xs flex-1"
+                value={subject()}
+                onInput={(e) => setSubject(e.currentTarget.value)}
+              />
+            </div>
+
+            {/* Optional Label Tag Line */}
+            <div class="flex items-center border-b px-3 py-1 gap-2 text-xs">
+              <span class="w-12 font-medium text-muted-foreground shrink-0">
+                Etiket:
+              </span>
+              <Input
+                maxlength={50}
+                placeholder="ör. Etüt, Sınav (Opsiyonel)"
+                class="h-8 border-none bg-transparent shadow-none focus-visible:ring-0 text-xs flex-1"
+                value={label()}
+                onInput={(e) => setLabel(e.currentTarget.value)}
+              />
+            </div>
+
+            {/* Gmail Rich Text Editor Area */}
+            <div class="flex-1 p-2.5 flex flex-col min-h-0">
+              <RichTextEditor
+                value={body()}
+                onChange={setBody}
+                placeholder="Mesajınızı buraya yazın..."
+                class="flex-1 min-h-0"
+              />
+            </div>
+
+            <Show when={error()}>
+              <p class="px-3 text-xs font-medium text-destructive">{error()}</p>
+            </Show>
+
+            {/* Gmail Bottom Action Toolbar */}
+            <div class="flex items-center justify-between border-t bg-muted/30 px-3 py-2.5">
+              <Button
+                type="submit"
+                size="sm"
+                class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-xs hover:bg-primary/90"
+                disabled={pending()}
+              >
+                <IconSend class="mr-2 h-4 w-4" />
+                {t("messages.send")}
+              </Button>
+
+              <button
+                type="button"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                onClick={handleClose}
+                title="Taslağı Sil"
+              >
+                <IconTrash class="h-4 w-4" />
+              </button>
+            </div>
+          </form>
+        </Show>
+      </div>
+    </Show>
+  );
+}

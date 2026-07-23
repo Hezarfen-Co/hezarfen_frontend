@@ -10,10 +10,10 @@ export function Alert(
     <div
       role="alert"
       class={cn(
-        "relative w-full rounded-md border px-4 py-3 text-sm shadow-sm",
-        local.variant === "destructive" && "border-destructive/30 bg-destructive/10 text-destructive",
-        local.variant === "success" && "fixed right-4 top-4 z-50 w-[calc(100vw-2rem)] max-w-sm border-emerald-600/30 bg-background text-emerald-800 shadow-lg dark:text-emerald-300 sm:right-6 sm:top-6",
-        (!local.variant || local.variant === "default") && "bg-background text-foreground",
+        "relative w-full rounded-lg border px-3.5 py-2.5 text-xs shadow-xs transition-all",
+        local.variant === "destructive" && "border-destructive/30 bg-destructive/10 text-destructive font-medium",
+        local.variant === "success" && "border-emerald-600/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-medium",
+        (!local.variant || local.variant === "default") && "bg-muted/40 text-foreground border-border/80",
         local.class,
       )}
       {...rest}

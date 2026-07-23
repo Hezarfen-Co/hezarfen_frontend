@@ -388,6 +388,7 @@ export type Message = {
   sent_at: number;
   read: boolean;
   folder: MessageFolder;
+  previous_folder?: MessageFolder | string | null;
   label: string | null;
 };
 
