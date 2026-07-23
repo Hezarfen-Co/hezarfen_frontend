@@ -187,7 +187,7 @@ function QuestionsContent() {
         open={!!questionToDelete()}
         onOpenChange={(open) => !open && setQuestionToDelete(null)}
         title={t("common.delete")}
-        description="Bu soruyu silmek istediğinizden emin misiniz?"
+        summary="Bu soruyu silmek istediğinizden emin misiniz?"
         onConfirm={handleDeleteConfirmed}
       />
     </div>
