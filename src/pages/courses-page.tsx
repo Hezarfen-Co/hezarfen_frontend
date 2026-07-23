@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourses, postCourse, postCourseTeacher } from "@/api/courses";
@@ -41,7 +41,12 @@ function CoursesContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const t = useT();
-  const [showForm, setShowForm] = createSignal(false);
+  const [showForm, setShowForm] = createSignal(location().searchStr.includes("action=new"));
+  createEffect(() => {
+    if (location().searchStr.includes("action=new")) {
+      setShowForm(true);
+    }
+  });
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
   const [termId, setTermId] = createSignal("");

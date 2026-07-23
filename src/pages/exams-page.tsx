@@ -1,6 +1,6 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { useNavigate } from "@tanstack/solid-router";
+import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourseById } from "@/api/courses";
 import { getCourses } from "@/api/courses";
 import { getExams } from "@/api/exams";
@@ -47,12 +47,18 @@ export default function ExamsPage() {
 function ExamsContent() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
   const [statusFilter, setStatusFilter] = createSignal<ExamDisplayStatus | "all">("all");
   const [courseFilter, setCourseFilter] = createSignal("all");
-  const [createOpen, setCreateOpen] = createSignal(false);
+  const [createOpen, setCreateOpen] = createSignal(location().searchStr.includes("action=new"));
+  createEffect(() => {
+    if (location().searchStr.includes("action=new")) {
+      setCreateOpen(true);
+    }
+  });
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [editingExam, setEditingExam] = createSignal<Exam | null>(null);
   const [flash, setFlash] = createFlash();

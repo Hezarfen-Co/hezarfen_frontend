@@ -1,13 +1,15 @@
 import type { ParentProps } from "solid-js";
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
+import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
 import { CelebiPanel } from "@/components/layout/celebi-panel";
 import { Show, createMemo, createSignal } from "solid-js";
+import { CommandPalette } from "@/components/layout/command-palette";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconPanelLeft, IconSparkles, IconX } from "@/components/ui/icons";
+import { IconPanelLeft, IconSearch, IconSparkles, IconX } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -23,6 +25,8 @@ export function AppShell(props: ParentProps) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = createSignal(false);
   const [celebiOpen, setCelebiOpen] = createSignal(false);
+  const [commandOpen, setCommandOpen] = createSignal(false);
+  const [profileOpen, setProfileOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
   const wide = () => location().pathname.startsWith("/exam-room/") || location().searchStr.includes("answerUser=") || location().pathname === "/messages";
@@ -149,13 +153,35 @@ export function AppShell(props: ParentProps) {
         <main class="min-w-0 flex-1">
           <Show when={auth.user() && !fullScreen()}>
             <header class="sticky top-0 z-30 hig-translucent-bar flex h-14 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-              <div class="min-w-0 rounded-full border border-black/[0.06] dark:border-white/[0.08] bg-card/80 px-3.5 py-1 text-xs font-semibold text-muted-foreground shadow-sm">
-                <span class="block truncate">{routeLabel()}</span>
+              <div class="flex flex-1 items-center justify-start min-w-0">
+                <div class="rounded-full border border-black/[0.06] dark:border-white/[0.08] bg-card/80 px-3.5 py-1 text-xs font-semibold text-muted-foreground shadow-sm">
+                  <span class="block truncate max-w-[120px] sm:max-w-none">{routeLabel()}</span>
+                </div>
               </div>
-              <Button type="button" variant="default" size="sm" class="h-9 rounded-full" onClick={() => setCelebiOpen(true)}>
-                <IconSparkles class="h-4 w-4" />
-                {t("ai.askCelebi")}
-              </Button>
+
+              <div class="flex flex-1 items-center justify-center max-w-md min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setCommandOpen(true)}
+                  class="flex h-9 w-full items-center justify-between gap-2.5 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-secondary/60 px-3.5 text-xs font-medium text-muted-foreground shadow-2xs transition-all hover:bg-secondary hover:text-foreground hover:border-border/80"
+                  title={t("dashboard.commandCenter")}
+                >
+                  <div class="flex items-center gap-2 min-w-0">
+                    <IconSearch class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span class="truncate">{t("dashboard.commandCenter")}...</span>
+                  </div>
+                  <kbd class="hidden shrink-0 rounded-md border border-border/80 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline-block">
+                    Ctrl/Cmd K
+                  </kbd>
+                </button>
+              </div>
+
+              <div class="flex flex-1 items-center justify-end min-w-0">
+                <Button type="button" variant="default" size="sm" class="h-9 rounded-full shrink-0" onClick={() => setCelebiOpen(true)}>
+                  <IconSparkles class="h-4 w-4" />
+                  <span class="hidden sm:inline">{t("ai.askCelebi")}</span>
+                </Button>
+              </div>
             </header>
           </Show>
           <div
@@ -174,6 +200,13 @@ export function AppShell(props: ParentProps) {
       </Show>
       <Show when={auth.user()}>
         <CelebiPanel open={celebiOpen()} onOpenChange={setCelebiOpen} />
+        <CommandPalette
+          open={commandOpen()}
+          onOpenChange={setCommandOpen}
+          onOpenCelebi={() => setCelebiOpen(true)}
+          onOpenProfile={() => setProfileOpen(true)}
+        />
+        <AccountProfileDialog open={profileOpen()} onOpenChange={setProfileOpen} />
       </Show>
       <Toaster />
     </div>

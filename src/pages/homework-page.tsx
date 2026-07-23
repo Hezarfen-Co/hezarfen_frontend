@@ -1,5 +1,5 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
-import { useNavigate } from "@tanstack/solid-router";
+import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getCourseById, getCourseSubjects, getCourses, postCourseHomework } from "@/api/courses";
 import { getHomework } from "@/api/homework";
@@ -54,7 +54,13 @@ function HomeworkContent() {
   const auth = useAuth();
   const { locale } = usePreferences();
   const navigate = useNavigate();
-  const [createOpen, setCreateOpen] = createSignal(false);
+  const location = useLocation();
+  const [createOpen, setCreateOpen] = createSignal(location().searchStr.includes("action=new"));
+  createEffect(() => {
+    if (location().searchStr.includes("action=new")) {
+      setCreateOpen(true);
+    }
+  });
   const [selectedCourseId, setSelectedCourseId] = createSignal("");
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");

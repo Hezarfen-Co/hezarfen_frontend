@@ -1,4 +1,5 @@
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { useLocation } from "@tanstack/solid-router";
 import { deleteNoteById } from "@/api/notes";
 import { getNotes } from "@/api/notes";
 import { patchNoteById } from "@/api/notes";
@@ -32,10 +33,15 @@ export default function NotesPage() {
 
 function NotesContent() {
   const t = useT();
+  const location = useLocation();
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
-  const [createOpen, setCreateOpen] = createSignal(false);
-  const [importOpen, setImportOpen] = createSignal(false);
+  const [createOpen, setCreateOpen] = createSignal(location().searchStr.includes("action=new"));
+  const [importOpen, setImportOpen] = createSignal(location().searchStr.includes("action=import"));
+  createEffect(() => {
+    if (location().searchStr.includes("action=new")) setCreateOpen(true);
+    if (location().searchStr.includes("action=import")) setImportOpen(true);
+  });
   const [page, setPage] = createSignal(0);
 
   const [list, { refetch }] = createResource(
