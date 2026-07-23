@@ -18,6 +18,8 @@ import {
   IconCalendar,
   IconCalendarDays,
   IconChart,
+  IconChevronDown,
+  IconChevronUp,
   IconClock,
   IconClipboardCheck,
   IconExam,
@@ -28,6 +30,8 @@ import {
 } from "@/components/ui/icons";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { ChartBar, type ChartBarItem } from "@/components/ui/chart-bar";
+import { ChartProgressRing, type ProgressRingSegment } from "@/components/ui/chart-progress-ring";
 import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
@@ -440,8 +444,50 @@ function DashboardContent() {
     return attention().slice(start, start + ATTENTION_LIMIT);
   });
 
-  createEffect(() => {
-    if (attentionPage() >= attentionTotalPages()) setAttentionPage(attentionTotalPages() - 1);
+  const courseMarkItems = createMemo<ChartBarItem[]>(() => {
+    const list = marks()?.courses ?? [];
+    return list.map((c) => ({
+      id: c.course.id,
+      label: c.course.title,
+      value: c.average ?? 0,
+      max: 100,
+      formattedValue: c.average != null ? `${Math.round(c.average * 10) / 10}` : "—",
+      colorClass: (c.average ?? 0) >= 70 ? "bg-emerald-500" : (c.average ?? 0) >= 50 ? "bg-amber-500" : "bg-rose-500",
+    }));
+  });
+
+  const scheduleTimeItems = createMemo<ChartBarItem[]>(() => {
+    const items = attention();
+    const activeCount = items.filter((i) => i.status === "active").length;
+    const todayCount = items.filter((i) => i.status === "today").length;
+    const soonCount = items.filter((i) => i.status === "soon").length;
+    return [
+      { id: "active", label: "Aktif Program", value: activeCount, colorClass: "bg-emerald-500" },
+      { id: "today", label: "Bugünkü Sınav / Etkinlik", value: todayCount, colorClass: "bg-amber-500" },
+      { id: "soon", label: "Yakında (7 Gün İçi)", value: soonCount, colorClass: "bg-indigo-500" },
+    ];
+  });
+
+  const scheduleSegments = createMemo<ProgressRingSegment[]>(() => {
+    const items = attention();
+    const active = items.filter((i) => i.status === "active").length;
+    const today = items.filter((i) => i.status === "today").length;
+    const soon = items.filter((i) => i.status === "soon").length;
+    return [
+      { id: "active", label: "Aktif", value: active, colorClass: "bg-emerald-500" },
+      { id: "today", label: "Bugün", value: today, colorClass: "bg-amber-500" },
+      { id: "soon", label: "Yakında", value: soon, colorClass: "bg-indigo-500" },
+    ];
+  });
+
+  const [showAllPortals, setShowAllPortals] = createSignal(false);
+
+  const displayPortalCards = createMemo(() => {
+    const cards = orderedPortalCards();
+    if (editingPortalOrder() || showAllPortals() || cards.length <= 8) {
+      return cards;
+    }
+    return cards.slice(0, 8);
   });
 
   return (
@@ -471,6 +517,39 @@ function DashboardContent() {
 
       <Show when={!loading()} fallback={<div class="px-4 py-8"><PageSpinner /></div>}>
         <div class="space-y-5 bg-muted/10 px-4 py-4 sm:px-5 sm:py-5 dark:bg-black/40">
+        
+        {/* Visual Analytics Panel (Swapped to Top) */}
+        <Show when={role() !== "parent"}>
+          <section class="grid grid-cols-1 gap-5 lg:grid-cols-2" aria-label="Görsel Analiz ve Raporlar">
+            <Show
+              when={role() === "student" && courseMarkItems().length > 0}
+              fallback={
+                <ChartBar
+                  title="Sınav & Zaman Çizelgesi Dağılımı"
+                  subtitle="Aktif, bugün ve 7 gün içerisindeki program yoğunluğu"
+                  items={scheduleTimeItems()}
+                />
+              }
+            >
+              <ChartBar
+                title="Ders Başarı & Not Analizi"
+                subtitle="Kayıtlı ders bazında başarı puanları"
+                items={courseMarkItems()}
+                maxScale={100}
+              />
+            </Show>
+
+            <ChartProgressRing
+              title="Program & Takip Analizi"
+              valueText={`${attention().length}`}
+              subtext="yaklaşan ve aktif kayıt"
+              subtitle="Durum bazlı zaman çizelgesi oransal göstergesi"
+              segments={scheduleSegments()}
+            />
+          </section>
+        </Show>
+
+        {/* Workspace Portal Cards (Expandable after 2 rows) */}
         <section class="space-y-2.5 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm" aria-labelledby="dash-sections">
           <div class="flex items-center justify-between gap-3">
             <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
@@ -488,13 +567,13 @@ function DashboardContent() {
             </div>
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <For each={orderedPortalCards()}>
+            <For each={displayPortalCards()}>
               {(card, index) => (
                 <PortalCard
                   card={card}
                   editing={editingPortalOrder()}
                   isFirst={index() === 0}
-                  isLast={index() === orderedPortalCards().length - 1}
+                  isLast={index() === displayPortalCards().length - 1}
                   onMoveLeft={() => moveCardByDelta(card.to, -1)}
                   onMoveRight={() => moveCardByDelta(card.to, 1)}
                   dragging={draggingPortal() === card.to}
@@ -522,6 +601,23 @@ function DashboardContent() {
               )}
             </For>
           </div>
+
+          <Show when={orderedPortalCards().length > 8 && !editingPortalOrder()}>
+            <div class="flex justify-center pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                class="h-8 rounded-full border-border/70 bg-background/80 px-4 text-xs font-medium text-foreground shadow-sm transition-all duration-200 hover:border-primary/50 hover:bg-card hover:shadow"
+                onClick={() => setShowAllPortals((v) => !v)}
+              >
+                <span>{showAllPortals() ? "Daha az göster" : "Daha fazla göster"}</span>
+                <Show when={showAllPortals()} fallback={<IconChevronDown class="h-3.5 w-3.5 text-muted-foreground ml-1" />}>
+                  <IconChevronUp class="h-3.5 w-3.5 text-muted-foreground ml-1" />
+                </Show>
+              </Button>
+            </div>
+          </Show>
         </section>
 
         <Show when={role() !== "parent"}>
