@@ -37,7 +37,8 @@ instructions. Always written and read in English.
 - Components in the same domain live in the same folder: `components/notes/`,
   `components/events/`, `components/exams/`, `components/users/`,
   `components/attendance/`, `components/courses/`, `components/marks/`,
-  `components/sessions/`, `components/layout/`, `components/ui/`.
+  `components/sessions/`, `components/messages/`, `components/homework/`,
+  `components/layout/`, `components/ui/`.
 - Cross-cutting app state lives in `src/stores/` (`auth-context.tsx`,
   `preferences-context.tsx`) — context providers only, never domain components.
   School-policy lists (exam kinds, attendance statuses, grade bands) come from

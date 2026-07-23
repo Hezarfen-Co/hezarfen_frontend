@@ -468,6 +468,8 @@ export type MessageKey =
   | "attempt.start"
   | "attempt.resume"
   | "attempt.finish"
+  | "attempt.finishConfirm"
+  | "attempt.finishHint"
   | "attempt.status"
   | "attempt.remaining"
   | "attempt.attempt"
@@ -795,6 +797,8 @@ export type MessageKey =
   | "messages.sentToast"
   | "messages.to"
   | "messages.from"
+  | "messages.markAsRead"
+  | "messages.markAsUnread"
   | "messages.selectRecipient"
   | "calendar.title"
   | "calendar.today"
@@ -1279,6 +1283,8 @@ const en: Dict = {
   "attempt.start": "Start exam",
   "attempt.resume": "Resume exam",
   "attempt.finish": "Finish exam",
+  "attempt.finishConfirm": "Yes, finish exam",
+  "attempt.finishHint": "This ends the exam and turns in your answers. You can't change them afterwards.",
   "attempt.status": "Status",
   "attempt.remaining": "Remaining",
   "attempt.attempt": "Attempt",
@@ -1617,6 +1623,8 @@ const en: Dict = {
   "messages.sentToast": "Message sent.",
   "messages.to": "To: ",
   "messages.from": "From: ",
+  "messages.markAsRead": "Mark as read",
+  "messages.markAsUnread": "Mark as unread",
   "messages.selectRecipient": "Please select a recipient.",
 };
 
@@ -2095,6 +2103,8 @@ const tr: Dict = {
   "attempt.start": "Sınava başla",
   "attempt.resume": "Sınava devam et",
   "attempt.finish": "Sınavı bitir",
+  "attempt.finishConfirm": "Evet, sınavı bitir",
+  "attempt.finishHint": "Bu, sınavı bitirir ve cevaplarını teslim eder. Sonrasında cevaplarını değiştiremezsin.",
   "attempt.status": "Durum",
   "attempt.remaining": "Kalan süre",
   "attempt.attempt": "Deneme",
@@ -2433,6 +2443,8 @@ const tr: Dict = {
   "messages.sentToast": "Mesaj gönderildi.",
   "messages.to": "Kime: ",
   "messages.from": "Kimden: ",
+  "messages.markAsRead": "Okundu olarak işaretle",
+  "messages.markAsUnread": "Okunmadı olarak işaretle",
   "messages.selectRecipient": "Lütfen bir alıcı seçin.",
 };
 

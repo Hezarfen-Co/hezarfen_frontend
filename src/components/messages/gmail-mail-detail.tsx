@@ -1,9 +1,9 @@
-import { createSignal, Show } from "solid-js";
+import { createEffect, createSignal, Show, untrack } from "solid-js";
 import type { Message, MessageFolder } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { IconSend, IconTrash, IconMessage, IconArchive, IconChevronLeft } from "@/components/ui/icons";
+import { IconSend, IconTrash, IconMessage, IconArchive, IconChevronLeft, IconCheck } from "@/components/ui/icons";
 import { postMessage } from "@/api/messages";
 import { formatApiError } from "@/api/client";
 import { personLabel } from "@/lib/person";
@@ -14,7 +14,7 @@ interface GmailMailDetailProps {
   currentUserId?: string;
   folder: string;
   onBack: () => void;
-  onAction: (action: { folder?: MessageFolder; delete?: boolean }) => Promise<void>;
+  onAction: (action: { folder?: MessageFolder; delete?: boolean; read?: boolean }) => Promise<void>;
   onSuccess: () => void;
   setFlash: (text: string) => void;
 }
@@ -27,6 +27,21 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
   const [error, setError] = createSignal("");
 
   const isSent = () => props.folder === "sent" || props.message.sender.id === props.currentUserId;
+
+  // Auto-mark an opened received message as read, once per message. Gated on
+  // message id (not `read`) so a manual "mark as unread" is not undone.
+  let autoReadId: string | undefined;
+  createEffect(() => {
+    const id = props.message?.id;
+    if (!id || id === autoReadId) return;
+    autoReadId = id;
+    untrack(() => {
+      if (!isSent() && !props.message.read) {
+        void props.onAction({ read: true });
+      }
+    });
+  });
+
   const peer = () => (isSent() ? props.message.recipient : props.message.sender);
   const peerName = () => personLabel(peer());
   const role = () => (isSent() ? props.message.recipient_role : props.message.sender_role);
@@ -108,6 +123,25 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
           </Button>
 
           <div class="h-4 w-[1px] bg-border mx-1" />
+
+          {/* Mark as Read / Unread (received messages only) */}
+          <Show when={!isSent()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              class="h-8 rounded-lg text-xs"
+              onClick={() => props.onAction({ read: !props.message.read })}
+              title={props.message.read ? t("messages.markAsUnread") : t("messages.markAsRead")}
+            >
+              <Show
+                when={props.message.read}
+                fallback={<IconCheck class="mr-1.5 h-3.5 w-3.5" />}
+              >
+                <IconMessage class="mr-1.5 h-3.5 w-3.5" />
+              </Show>
+              {props.message.read ? t("messages.markAsUnread") : t("messages.markAsRead")}
+            </Button>
+          </Show>
 
           {/* Move to Archive Action */}
           <Show when={props.folder !== "archive" && props.folder !== "trash"}>

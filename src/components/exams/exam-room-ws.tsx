@@ -546,7 +546,10 @@ export function ExamRoomWS(props: { exam: Exam }) {
       <ConfirmDialog
         open={finishOpen()}
         onOpenChange={setFinishOpen}
+        variant="destructive"
         title={t("attempt.finish")}
+        description={t("attempt.finishHint")}
+        confirmLabel={t("attempt.finishConfirm")}
         summary={props.exam.title}
         onConfirm={finish}
       />

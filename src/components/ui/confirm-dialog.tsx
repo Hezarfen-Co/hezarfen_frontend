@@ -18,6 +18,7 @@ export type ConfirmDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  description?: string;
   summary: JSX.Element | string;
   confirmLabel?: string;
   cancelLabel?: string;
@@ -57,7 +58,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
           </span>
           <div class="min-w-0 space-y-1">
             <AlertDialogTitle>{props.title}</AlertDialogTitle>
-            <AlertDialogDescription>{t("confirm.review")}</AlertDialogDescription>
+            <AlertDialogDescription>{props.description ?? t("confirm.review")}</AlertDialogDescription>
           </div>
         </AlertDialogHeader>
 
