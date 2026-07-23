@@ -1,0 +1,317 @@
+import { createSignal, Show } from "solid-js";
+import type { Message, MessageFolder } from "@/api/client";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { IconSend, IconTrash, IconMessage, IconArchive, IconChevronLeft } from "@/components/ui/icons";
+import { postMessage } from "@/api/messages";
+import { formatApiError } from "@/api/client";
+import { personLabel } from "@/lib/person";
+import { useT } from "@/stores/preferences-context";
+
+interface GmailMailDetailProps {
+  message: Message;
+  currentUserId?: string;
+  folder: string;
+  onBack: () => void;
+  onAction: (action: { folder?: MessageFolder; delete?: boolean }) => Promise<void>;
+  onSuccess: () => void;
+  setFlash: (text: string) => void;
+}
+
+export function GmailMailDetail(props: GmailMailDetailProps) {
+  const t = useT();
+  const [isReplying, setIsReplying] = createSignal(false);
+  const [replyBody, setReplyBody] = createSignal("");
+  const [sending, setSending] = createSignal(false);
+  const [error, setError] = createSignal("");
+
+  const isSent = () => props.folder === "sent" || props.message.sender.id === props.currentUserId;
+  const peer = () => (isSent() ? props.message.recipient : props.message.sender);
+  const peerName = () => personLabel(peer());
+  const role = () => (isSent() ? props.message.recipient_role : props.message.sender_role);
+
+  const restoreFolder = (): MessageFolder => {
+    if (props.message.previous_folder && (props.message.previous_folder as string) !== "deleted") {
+      return props.message.previous_folder as MessageFolder;
+    }
+    return isSent() ? "sent" : "inbox";
+  };
+
+  const formattedDate = (ts: number) => {
+    const date = new Date(ts);
+    return date.toLocaleString([], {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleStartReply = () => {
+    setIsReplying(true);
+    setReplyBody("");
+    setError("");
+  };
+
+  const handleSendReply = async (e: Event) => {
+    e.preventDefault();
+    const content = replyBody().trim();
+    if (!content || sending()) return;
+
+    setError("");
+    setSending(true);
+
+    try {
+      const replySubject = props.message.subject.startsWith("Re:")
+        ? props.message.subject
+        : `Re: ${props.message.subject}`;
+
+      await postMessage({
+        recipient_id: peer().id,
+        subject: replySubject,
+        body: content,
+      });
+
+      props.setFlash(t("messages.sentToast"));
+      setIsReplying(false);
+      setReplyBody("");
+      props.onSuccess();
+    } catch (err: any) {
+      setError(formatApiError(err));
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div class="flex flex-col h-full bg-background overflow-auto">
+      {/* Top Gmail Navigation & Action Bar */}
+      <div class="sticky top-0 z-10 flex items-center justify-between border-b bg-card/90 px-4 py-2.5 backdrop-blur-xs">
+        <div class="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-8 rounded-lg text-xs"
+            onClick={props.onBack}
+          >
+            <IconChevronLeft class="mr-1 h-4 w-4" />
+            Gelen Kutusu
+          </Button>
+
+          <div class="h-4 w-[1px] bg-border mx-1" />
+
+          {/* Move to Archive Action */}
+          <Show when={!isSent() && props.folder !== "archive" && props.folder !== "trash"}>
+            <Button
+              variant="ghost"
+              size="sm"
+              class="h-8 rounded-lg text-xs"
+              onClick={() => props.onAction({ folder: "archive" })}
+              title={t("messages.moveToArchive")}
+            >
+              <IconArchive class="mr-1.5 h-3.5 w-3.5" />
+              {t("messages.moveToArchive")}
+            </Button>
+          </Show>
+
+          {/* Restore out of Archive */}
+          <Show when={props.folder === "archive"}>
+            <Button
+              variant="ghost"
+              size="sm"
+              class="h-8 rounded-lg text-xs"
+              onClick={() => props.onAction({ folder: restoreFolder() })}
+              title={t("messages.moveOutOfArchive")}
+            >
+              <IconArchive class="mr-1.5 h-3.5 w-3.5" />
+              {t("messages.moveOutOfArchive")}
+            </Button>
+          </Show>
+
+          {/* Restore out of Trash */}
+          <Show when={props.folder === "trash"}>
+            <Button
+              variant="ghost"
+              size="sm"
+              class="h-8 rounded-lg text-xs"
+              onClick={() => props.onAction({ folder: restoreFolder() })}
+              title="Çöp Kutusundan Çıkar"
+            >
+              <IconMessage class="mr-1.5 h-3.5 w-3.5" />
+              Çöp Kutusundan Çıkar
+            </Button>
+          </Show>
+
+          {/* Move to Trash Action */}
+          <Show when={props.folder !== "trash"}>
+            <Button
+              variant="ghost"
+              size="sm"
+              class="h-8 rounded-lg text-xs text-destructive hover:bg-destructive/10"
+              onClick={() => props.onAction({ folder: "trash" })}
+              title={t("messages.moveToTrash")}
+            >
+              <IconTrash class="mr-1.5 h-3.5 w-3.5" />
+              {t("messages.moveToTrash")}
+            </Button>
+          </Show>
+
+          {/* Permanent Delete Action */}
+          <Show when={props.folder === "trash"}>
+            <Button
+              variant="ghost"
+              size="sm"
+              class="h-8 rounded-lg text-xs text-destructive hover:bg-destructive/10"
+              onClick={() => props.onAction({ delete: true })}
+              title={t("messages.deleteForever")}
+            >
+              <IconTrash class="mr-1.5 h-3.5 w-3.5" />
+              {t("messages.deleteForever")}
+            </Button>
+          </Show>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+          <span>{formattedDate(props.message.sent_at)}</span>
+        </div>
+      </div>
+
+      {/* Main Mail Content View Container */}
+      <div class="flex-1 p-4 sm:p-6 max-w-4xl mx-auto w-full space-y-6">
+        {/* Email Subject Title Header */}
+        <div class="flex items-center justify-between gap-3 border-b pb-4">
+          <div class="flex items-center gap-3">
+            <h1 class="text-xl font-bold tracking-tight text-foreground">
+              {props.message.subject}
+            </h1>
+            <Show when={props.message.label}>
+              <Badge variant="secondary" class="text-xs">
+                {props.message.label}
+              </Badge>
+            </Show>
+          </div>
+        </div>
+
+        {/* Sender Info Card */}
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-sm text-primary-foreground shadow-xs">
+              {peerName().charAt(0).toUpperCase()}
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-sm text-foreground">
+                  {peerName()}
+                </span>
+                <Show when={role()}>
+                  <Badge variant="outline" class="text-[9px] font-mono uppercase">
+                    {t(`role.${role()}` as any)}
+                  </Badge>
+                </Show>
+              </div>
+              <p class="text-xs text-muted-foreground">
+                {isSent() ? `${t("messages.to")}: ` : `${t("messages.from")}: `}
+                <span class="font-medium text-foreground">{peerName()}</span>
+              </p>
+            </div>
+          </div>
+
+          <Show when={!isSent()}>
+            <Button
+              variant="outline"
+              size="sm"
+              class="h-8 rounded-lg text-xs"
+              onClick={handleStartReply}
+            >
+              <IconMessage class="mr-1.5 h-3.5 w-3.5" />
+              Yanıtla
+            </Button>
+          </Show>
+        </div>
+
+        {/* Email Body Card */}
+        <div class="rounded-2xl border border-border/80 bg-card p-6 shadow-xs leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
+          <div innerHTML={props.message.body} />
+        </div>
+
+        {/* Gmail Style Inline Reply Area */}
+        <Show when={!isSent()}>
+          <div class="pt-4 border-t">
+            <Show
+              when={isReplying()}
+              fallback={
+                /* Gmail Quick Action Pills */
+                <div class="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    class="rounded-xl px-5 h-9 text-xs font-semibold hover:bg-accent"
+                    onClick={handleStartReply}
+                  >
+                    <IconMessage class="mr-2 h-4 w-4" />
+                    Yanıtla
+                  </Button>
+                </div>
+              }
+            >
+              {/* Gmail Inline Reply Editor */}
+              <form
+                onSubmit={handleSendReply}
+                class="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-3"
+              >
+                <div class="flex items-center justify-between text-xs border-b pb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-foreground">Yanıtla:</span>
+                    <Badge variant="secondary" class="text-xs font-medium">
+                      {peerName()}
+                    </Badge>
+                  </div>
+                  <button
+                    type="button"
+                    class="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsReplying(false)}
+                  >
+                    Vazgeç
+                  </button>
+                </div>
+
+                <RichTextEditor
+                  value={replyBody()}
+                  onChange={setReplyBody}
+                  placeholder="Yanıtınızı yazın..."
+                  minHeight="min-h-[120px]"
+                />
+
+                <Show when={error()}>
+                  <p class="text-xs font-medium text-destructive">{error()}</p>
+                </Show>
+
+                <div class="flex items-center justify-between pt-1">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-xs hover:bg-primary/90"
+                    disabled={sending() || !replyBody().trim()}
+                  >
+                    <IconSend class="mr-2 h-4 w-4" />
+                    Gönder
+                  </Button>
+
+                  <button
+                    type="button"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setIsReplying(false)}
+                    title="Vazgeç"
+                  >
+                    <IconTrash class="h-4 w-4" />
+                  </button>
+                </div>
+              </form>
+            </Show>
+          </div>
+        </Show>
+      </div>
+    </div>
+  );
+}
