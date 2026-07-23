@@ -652,3 +652,11 @@ export function IconRotateCcw(props: IconProps) {
     </Svg>
   );
 }
+
+export function IconChevronUp(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="m18 15-6-6-6 6" />
+    </Svg>
+  );
+}
