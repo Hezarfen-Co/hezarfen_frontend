@@ -10,6 +10,10 @@ const RouterDevtools = import.meta.env.DEV ? lazy(() => import("@/router-devtool
 // instead of using t(...); a real message + reload beats a blank document.
 function RootErrorFallback(props: { error: unknown; reset: () => void }) {
   const tr = currentLocale() === "tr";
+  // Keep the raw error + stack in the console; the box only shows a friendly
+  // one-liner, so without this the actual throw (e.g. a transient render error)
+  // is lost and impossible to trace after the fact.
+  console.error("Uncaught render error:", props.error);
   return (
     <div class="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
       <div class="w-full max-w-md space-y-4 rounded-md border border-destructive/30 bg-destructive/10 p-6 text-center text-destructive">
