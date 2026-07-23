@@ -586,6 +586,7 @@ export type MessageKey =
   | "homework.grade"
   | "homework.ungrade"
   | "homework.student"
+  | "homework.noAnswer"
   | "homework.status.done"
   | "homework.status.incomplete"
   | "homework.status.missing"
@@ -625,6 +626,7 @@ export type MessageKey =
   | "exams.isCorrect"
   | "exams.textAnswer"
   | "exams.drawAnswer"
+  | "exams.uploadAnswerImage"
   | "exams.playDrawing"
   | "exams.showImage"
   | "exams.play"
@@ -1370,6 +1372,7 @@ const en: Dict = {
   "homework.grade": "Grade",
   "homework.ungrade": "Ungrade",
   "homework.student": "Student",
+  "homework.noAnswer": "No text answer.",
   "homework.status.done": "Done",
   "homework.status.incomplete": "Incomplete",
   "homework.status.missing": "Missing",
@@ -1409,6 +1412,7 @@ const en: Dict = {
   "exams.isCorrect": "Correct",
   "exams.textAnswer": "Text answer",
   "exams.drawAnswer": "Draw answer",
+  "exams.uploadAnswerImage": "Upload image",
   "exams.playDrawing": "Play drawing",
   "exams.showImage": "Show image",
   "exams.play": "Play",
@@ -2148,6 +2152,7 @@ const tr: Dict = {
   "homework.grade": "Notlandır",
   "homework.ungrade": "Notu kaldır",
   "homework.student": "Öğrenci",
+  "homework.noAnswer": "Yazılı cevap yok.",
   "homework.status.done": "Tamamlandı",
   "homework.status.incomplete": "Eksik",
   "homework.status.missing": "Yok",
@@ -2187,6 +2192,7 @@ const tr: Dict = {
   "exams.isCorrect": "Doğru",
   "exams.textAnswer": "Metin cevap",
   "exams.drawAnswer": "Cevabı çiz",
+  "exams.uploadAnswerImage": "Görsel yükle",
   "exams.playDrawing": "Çizimi oynat",
   "exams.showImage": "Görseli göster",
   "exams.play": "Oynat",

@@ -4,7 +4,8 @@ import { getExamQuestions } from "@/api/exams";
 import { getStudentAnswers, getStudentAnswerImage } from "@/api/exams";
 import type { StudentAnswerSheet } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
-import { IconCheck, IconX } from "@/components/ui/icons";
+import { Button } from "@/components/ui/button";
+import { IconCheck, IconDownload, IconX } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { ReplayableImage } from "@/components/ui/replayable-image";
 import { cn } from "@/lib/cn";
@@ -83,13 +84,20 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                         <p class="text-xs text-muted-foreground">{t("exams.textAnswer")}</p>
                         <p class="mt-1 whitespace-pre-wrap text-sm">{row.answer?.text || "—"}</p>
                         <Show when={row.answer?.answer_image}>
-                          <ReplayableImage
-                            class="mt-3"
-                            fetchBlob={() => getStudentAnswerImage(d().sheet.exam, d().sheet.user.id, row.question.id)}
-                            src={`/api/exams/${d().sheet.exam}/attempts/${d().sheet.user.id}/answers/${row.question.id}/image`}
-                            alt={t("exams.drawAnswer")}
-                            imgClass="h-64 w-full max-w-2xl rounded-md border bg-background object-contain"
-                          />
+                          <div class="mt-3 space-y-2">
+                            <ReplayableImage
+                              fetchBlob={() => getStudentAnswerImage(d().sheet.exam, d().sheet.user.id, row.question.id)}
+                              src={`/api/exams/${d().sheet.exam}/attempts/${d().sheet.user.id}/answers/${row.question.id}/image`}
+                              alt={t("exams.drawAnswer")}
+                              imgClass="h-64 w-full max-w-2xl rounded-md border bg-background object-contain"
+                            />
+                            <a href={`/api/exams/${d().sheet.exam}/attempts/${d().sheet.user.id}/answers/${row.question.id}/image`} download={`answer-${idx() + 1}.png`}>
+                              <Button type="button" size="sm" variant="outline" class="rounded-lg">
+                                <IconDownload class="h-4 w-4" />
+                                {t("notes.downloadFile")}
+                              </Button>
+                            </a>
+                          </div>
                         </Show>
                       </div>
                     }

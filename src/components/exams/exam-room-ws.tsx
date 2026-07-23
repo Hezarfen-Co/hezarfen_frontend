@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
-import { IconAlert, IconChevronLeft, IconChevronRight, IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconAlert, IconChevronLeft, IconChevronRight, IconEdit, IconTrash, IconUploadCloud } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
@@ -639,6 +639,7 @@ function QuestionAnswerCardWS(props: {
   const [saved, setSaved] = createSignal(false);
   const [drawOpen, setDrawOpen] = createSignal(false);
   const [editScene, setEditScene] = createSignal<DrawScene | null>(null);
+  let imageInput: HTMLInputElement | undefined;
   let questionId = props.question.id;
 
   createEffect(() => {
@@ -686,6 +687,12 @@ function QuestionAnswerCardWS(props: {
     setDrawOpen(false);
   };
 
+  const uploadImage = async (file: File | undefined) => {
+    if (!file) return;
+    await props.onSaveImage(file);
+    if (imageInput) imageInput.value = "";
+  };
+
   return (
     <article id={`question-${props.question.id}`} class="surface-card min-h-[calc(100vh-16rem)] p-5 sm:p-6 lg:p-8">
       <div class="mb-3 flex flex-wrap items-center gap-2">
@@ -730,18 +737,36 @@ function QuestionAnswerCardWS(props: {
             </Show>
             <Show when={!props.disabled}>
               <div class="flex flex-wrap items-center gap-2">
+                <input
+                  ref={(el) => { imageInput = el; }}
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  disabled={props.disabled}
+                  onChange={(event) => void uploadImage(event.currentTarget.files?.[0])}
+                />
                 <Show
                   when={props.question.answer?.answer_image}
                   fallback={
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={openNewDrawing}>
-                      <IconEdit class="h-4 w-4" />
-                      {t("exams.drawAnswer")}
-                    </Button>
+                    <>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={openNewDrawing}>
+                        <IconEdit class="h-4 w-4" />
+                        {t("exams.drawAnswer")}
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => imageInput?.click()}>
+                        <IconUploadCloud class="h-4 w-4" />
+                        {t("exams.uploadAnswerImage")}
+                      </Button>
+                    </>
                   }
                 >
                   <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => void openEditDrawing()}>
                     <IconEdit class="h-4 w-4" />
                     {t("exams.editDrawing")}
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => imageInput?.click()}>
+                    <IconUploadCloud class="h-4 w-4" />
+                    {t("exams.uploadAnswerImage")}
                   </Button>
                   <Button type="button" variant="outline" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={() => void props.onRemoveImage()}>
                     <IconTrash class="h-4 w-4" />
