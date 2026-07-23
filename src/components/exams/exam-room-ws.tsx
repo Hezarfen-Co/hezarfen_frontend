@@ -94,26 +94,72 @@ export function ExamRoomWS(props: { exam: Exam }) {
   };
 
   let ws: WebSocket | null = null;
+  // Auto-reconnect a socket that drops mid-sitting: a transient network blip
+  // shouldn't freeze the live countdown/state at "disconnected". Rejoining also
+  // clears the backend's `left_at` (which any socket close stamps) — so on an
+  // `allow_rejoin` exam a blip recovers cleanly; on a locked exam the rejoin
+  // 409s, which is the intended lockout. Backoff caps the churn; the counter
+  // resets on a successful open.
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let reconnectAttempts = 0;
+  let closedByUs = false;
+  const MAX_RECONNECT = 6;
+
+  const clearReconnect = () => {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+  };
 
   const wsUrl = () => {
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     return `${proto}//${window.location.host}/api/exams/${encodeURIComponent(props.exam.id)}/attempt/ws`;
   };
 
+  // Retry only while the sitting is genuinely live and we didn't close on
+  // purpose: a submitted/expired attempt (or a client-side expiry) is terminal,
+  // and reconnecting there would only 409.
+  const scheduleReconnect = () => {
+    if (closedByUs || reconnectTimer) return;
+    if (!roomOpen()) return;
+    if (attempt()?.status !== "in_progress" || attemptStatus() !== "in_progress") return;
+    if (reconnectAttempts >= MAX_RECONNECT) return;
+    const delay = Math.min(1000 * 2 ** reconnectAttempts, 15000);
+    reconnectAttempts += 1;
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      connectWs();
+    }, delay);
+  };
+
   const connectWs = () => {
-    if (ws) ws.close();
+    clearReconnect();
+    // Detach the old socket's handlers before closing it: an intentional close
+    // must not look like a drop and trigger a reconnect.
+    if (ws) {
+      ws.onclose = null;
+      ws.onerror = null;
+      ws.onmessage = null;
+      ws.close();
+    }
     setWsState("connecting");
     const socket = new WebSocket(wsUrl());
     ws = socket;
 
-    socket.onopen = () => setWsState("connected");
+    socket.onopen = () => {
+      reconnectAttempts = 0;
+      setWsState("connected");
+    };
     socket.onclose = () => {
       setWsState("disconnected");
       ws = null;
+      scheduleReconnect();
     };
     socket.onerror = () => {
       setWsState("disconnected");
       ws = null;
+      scheduleReconnect();
     };
 
     socket.onmessage = (event) => {
@@ -306,6 +352,8 @@ export function ExamRoomWS(props: { exam: Exam }) {
   const goNext = () => setActiveQuestionIndex((index) => Math.min(questions().length - 1, index + 1));
 
   onCleanup(() => {
+    closedByUs = true;
+    clearReconnect();
     if (ws) ws.close();
   });
 
