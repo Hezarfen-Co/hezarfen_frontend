@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getExamLive } from "../../exams";
-import { getExamLiveStreamUrl } from "../../exams";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - live", () => {
@@ -18,15 +17,5 @@ describe("exams API - live", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/exams/ex1/live");
     expect(init?.method).toBe("GET");
-  });
-
-  it("getExamLiveStreamUrl returns correct URL", () => {
-    const url = getExamLiveStreamUrl("ex1");
-    expect(url).toBe("/api/exams/ex1/live/stream");
-  });
-
-  it("getExamLiveStreamUrl encodes examId correctly", () => {
-    const url = getExamLiveStreamUrl("ex1/abc?xyz");
-    expect(url).toBe("/api/exams/ex1%2Fabc%3Fxyz/live/stream");
   });
 });

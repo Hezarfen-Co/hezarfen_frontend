@@ -2,7 +2,6 @@ import { Show, Suspense, createEffect, createMemo, createResource, createSignal,
 import { Link, useLocation, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getExamLive } from "@/api/exams";
-import { getExamLiveStreamUrl } from "@/api/exams";
 import { getExamById } from "@/api/exams";
 import { formatApiError } from "@/api/client";
 import type { LiveMonitor, LiveRosterEntry } from "@/api/client";
@@ -142,15 +141,6 @@ function LiveMonitorContent() {
     }
   };
 
-  const applyStreamEvent = (event: MessageEvent) => {
-    try {
-      setSnapshot(JSON.parse(event.data) as LiveMonitor);
-      setError("");
-    } catch (err) {
-      console.error("[live-monitor] stream parse error:", err);
-    }
-  };
-
   createEffect(() => {
     const eid = id();
     const e = exam();
@@ -158,45 +148,16 @@ function LiveMonitorContent() {
     void fetchSnapshot();
     if (e.ends_at != null && e.ends_at < untrack(now)) return;
 
-    let interval: ReturnType<typeof setInterval> | null = null;
-    const startPolling = () => {
-      if (interval) return;
-      interval = setInterval(() => {
-        if (e.ends_at != null && e.ends_at < untrack(now)) {
-          if (interval) clearInterval(interval);
-          interval = null;
-          void fetchSnapshot();
-          return;
-        }
-        void fetchSnapshot();
-      }, 2000);
-    };
-
-    // ponytail: keep polling even with SSE; some live proxies accept EventSource
-    // but never flush events. 2s GET is cheaper than stale teacher screen.
-    startPolling();
-
-    if (!("EventSource" in window)) {
-      onCleanup(() => {
-        if (interval) clearInterval(interval);
-      });
-      return;
-    }
-
-    const source = new EventSource(getExamLiveStreamUrl(eid), { withCredentials: true });
-    source.addEventListener("snapshot", applyStreamEvent);
-    source.onmessage = applyStreamEvent;
-    source.onerror = () => {
-      source.close();
-      startPolling();
-    };
-
-    onCleanup(() => {
-      source.close();
-      if (interval) {
+    const interval = setInterval(() => {
+      if (e.ends_at != null && e.ends_at < untrack(now)) {
         clearInterval(interval);
+        void fetchSnapshot();
+        return;
       }
-    });
+      void fetchSnapshot();
+    }, 2000);
+
+    onCleanup(() => clearInterval(interval));
   });
 
   const liveRows = createMemo<LiveRosterRow[]>(() => {

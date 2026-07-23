@@ -18,7 +18,6 @@ export * from "./deleteExamResultByUserId";
 export * from "./getExamStatistics";
 export * from "./getStudentAnswers";
 export * from "./getExamLive";
-export * from "./getExamLiveStreamUrl";
 export * from "./getExamAttempt";
 export * from "./postExamAttempt";
 export * from "./postExamAttemptFinish";
