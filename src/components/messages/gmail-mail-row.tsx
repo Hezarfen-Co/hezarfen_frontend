@@ -14,6 +14,7 @@ interface GmailMailRowProps {
   onSelect: () => void;
   onArchive?: () => void;
   onTrash?: () => void;
+  onDeleteForever?: () => void;
   onToggleRead?: () => void;
 }
 
@@ -88,15 +89,15 @@ export function GmailMailRow(props: GmailMailRowProps) {
         </Badge>
       </Show>
 
-      {/* Fixed-width & Fixed-height Right Action Area */}
-      <div class="shrink-0 w-24 h-full flex items-center justify-end">
-        {/* Time / Date (Default View) */}
-        <div class="font-mono text-[11px] text-muted-foreground text-right group-hover:hidden">
+      {/* Right Action & Date Area */}
+      <div class="shrink-0 flex items-center gap-2 justify-end min-w-fit">
+        {/* Time / Date */}
+        <span class="font-mono text-[11px] text-muted-foreground/80 shrink-0">
           {formattedTime(props.message.sent_at)}
-        </div>
+        </span>
 
-        {/* Gmail Hover Quick Action Bar (Hover View - Fixed h-6 buttons to fit h-10 row cleanly) */}
-        <div class="hidden items-center justify-end gap-1 group-hover:flex">
+        {/* Quick Actions (Always visible with opacity on mobile, group-hover visible on desktop) */}
+        <div class="flex items-center justify-end gap-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
           <Show when={props.onArchive}>
             <button
               type="button"
@@ -114,7 +115,7 @@ export function GmailMailRow(props: GmailMailRowProps) {
           <Show when={props.onTrash}>
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
               title={props.folder === "trash" ? "Çöp Kutusundan Çıkar" : t("messages.moveToTrash")}
               onClick={(e) => {
                 e.stopPropagation();
@@ -125,10 +126,24 @@ export function GmailMailRow(props: GmailMailRowProps) {
             </button>
           </Show>
 
+          <Show when={props.onDeleteForever}>
+            <button
+              type="button"
+              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              title={t("messages.deleteForever")}
+              onClick={(e) => {
+                e.stopPropagation();
+                props.onDeleteForever?.();
+              }}
+            >
+              <IconTrash class="h-3.5 w-3.5 text-destructive" />
+            </button>
+          </Show>
+
           <Show when={props.onToggleRead}>
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
               title={unread() ? "Okundu olarak işaretle" : "Okunmadı olarak işaretle"}
               onClick={(e) => {
                 e.stopPropagation();
