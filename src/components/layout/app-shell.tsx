@@ -1,11 +1,11 @@
-import type { ParentProps } from "solid-js";
+import { Show, createMemo, createSignal, type ParentProps } from "solid-js";
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
 import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
 import { CelebiPanel } from "@/components/layout/celebi-panel";
-import { Show, createMemo, createSignal } from "solid-js";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
+import { RightNav } from "@/components/layout/right-nav";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,7 @@ export function AppShell(props: ParentProps) {
       </Show>
       <div class="flex w-full">
         <Show when={auth.user() && !fullScreen()}>
-            <aside
+          <aside
             class={cn(
               "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-black/[0.06] bg-sidebar/95 text-sidebar-foreground backdrop-blur-md transition-[width] duration-200 ease-out dark:border-white/[0.08] dark:bg-[#070707] dark:text-white lg:flex lg:flex-col",
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
@@ -194,6 +194,10 @@ export function AppShell(props: ParentProps) {
             {props.children}
           </div>
         </main>
+
+        <Show when={auth.user() && !fullScreen()}>
+          <RightNav />
+        </Show>
       </div>
       <Show when={auth.user() && !wide()}>
         <MobileTabBar onMenu={() => setMobileOpen(true)} />
