@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal, onCleanup } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
@@ -60,7 +60,7 @@ export function RightNav() {
   );
 
   // Fetch events & exams
-  const [eventsRes] = createResource(
+  const [eventsRes, { refetch: refetchEvents }] = createResource(
     async () => {
       try {
         return (await getEvents({ limit: 100 })).items;
@@ -71,7 +71,7 @@ export function RightNav() {
     { initialValue: [] }
   );
 
-  const [examsRes] = createResource(
+  const [examsRes, { refetch: refetchExams }] = createResource(
     async () => {
       try {
         return (await getExams({ limit: 100 })).items;
@@ -81,6 +81,14 @@ export function RightNav() {
     },
     { initialValue: [] }
   );
+
+  // Revalidate every source so an item deleted on another page stops showing
+  // in the drawer/badge: on the periodic clock tick and whenever a drawer opens.
+  const refreshAll = () => {
+    void refetchMessages();
+    void refetchEvents();
+    void refetchExams();
+  };
 
   // Computed message data
   const allMessages = () => messagesRes().items;
@@ -101,8 +109,15 @@ export function RightNav() {
 
   // Reactive clock so passed items clear without a remount.
   const [nowMs, setNowMs] = createSignal(Date.now());
-  const clockTimer = setInterval(() => setNowMs(Date.now()), 60_000);
+  const clockTimer = setInterval(() => {
+    setNowMs(Date.now());
+    refreshAll();
+  }, 60_000);
   onCleanup(() => clearInterval(clockTimer));
+
+  createEffect(() => {
+    if (activeTab() !== null) refreshAll();
+  });
 
   // An item is still notifiable until it has ended (ends_at, else starts_at).
   const notEnded = (starts?: number | null, ends?: number | null) => {

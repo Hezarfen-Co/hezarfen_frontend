@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal, onCleanup } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
@@ -42,7 +42,7 @@ export function NotificationCenter() {
     }
   );
 
-  const [eventsRes] = createResource(async () => {
+  const [eventsRes, { refetch: refetchEvents }] = createResource(async () => {
     try {
       return await getEvents();
     } catch {
@@ -50,7 +50,7 @@ export function NotificationCenter() {
     }
   });
 
-  const [examsRes] = createResource(async () => {
+  const [examsRes, { refetch: refetchExams }] = createResource(async () => {
     try {
       return await getExams();
     } catch {
@@ -58,7 +58,7 @@ export function NotificationCenter() {
     }
   });
 
-  const [homeworkRes] = createResource(async () => {
+  const [homeworkRes, { refetch: refetchHomework }] = createResource(async () => {
     try {
       return await getHomework();
     } catch {
@@ -66,10 +66,27 @@ export function NotificationCenter() {
     }
   });
 
+  // Revalidate every source so an item deleted on another page stops
+  // notifying: on the periodic clock tick (badge self-heals) and whenever
+  // the panel is opened (list is fresh on interaction).
+  const refreshAll = () => {
+    void refetchMessages();
+    void refetchEvents();
+    void refetchExams();
+    void refetchHomework();
+  };
+
   // Reactive clock so passed items drop off without a remount.
   const [nowMs, setNowMs] = createSignal(Date.now());
-  const clockTimer = setInterval(() => setNowMs(Date.now()), 60_000);
+  const clockTimer = setInterval(() => {
+    setNowMs(Date.now());
+    refreshAll();
+  }, 60_000);
   onCleanup(() => clearInterval(clockTimer));
+
+  createEffect(() => {
+    if (open()) refreshAll();
+  });
 
   // An item is still notifiable until it has ended (ends_at, else starts_at).
   const notEnded = (starts: number, ends?: number | null) => (ends ?? starts) >= nowMs();
