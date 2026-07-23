@@ -12,6 +12,16 @@ export default defineConfig({
     },
   },
   server: {
+    // Chromium 150's HTTP cache deadlocks when a page that fans out to ~230
+    // separately-served, `no-cache`-revalidated dev modules (kobalte/corvu
+    // ship unbundled) is reloaded a handful of times in a row: after ~7
+    // reloads its cache entries wedge and every later request queues in the
+    // browser forever — no bytes ever reach vite. `no-store` stops Chromium
+    // from creating the cache entries at all. Dev-only; the production build
+    // is served by nginx with its own cache headers.
+    headers: {
+      "Cache-Control": "no-store",
+    },
     proxy: {
       "/api": {
         target,
