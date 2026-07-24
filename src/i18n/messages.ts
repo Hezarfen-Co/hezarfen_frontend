@@ -664,6 +664,10 @@ export type MessageKey =
   | "exams.isCorrect"
   | "exams.textAnswer"
   | "exams.drawAnswer"
+  | "exams.previousAttempts"
+  | "exams.attemptN"
+  | "exams.currentAttempt"
+  | "exams.pastAttemptReadOnly"
   | "exams.uploadAnswerImage"
   | "exams.playDrawing"
   | "exams.showImage"
@@ -1490,6 +1494,10 @@ const en: Dict = {
   "exams.isCorrect": "Correct",
   "exams.textAnswer": "Text answer",
   "exams.drawAnswer": "Draw answer",
+  "exams.previousAttempts": "Previous attempts",
+  "exams.attemptN": "Attempt {n}",
+  "exams.currentAttempt": "current",
+  "exams.pastAttemptReadOnly": "Viewing a previous attempt — read-only. Grading applies to the current attempt.",
   "exams.uploadAnswerImage": "Upload image",
   "exams.playDrawing": "Play drawing",
   "exams.showImage": "Show image",
@@ -2310,6 +2318,10 @@ const tr: Dict = {
   "exams.isCorrect": "Doğru",
   "exams.textAnswer": "Metin cevap",
   "exams.drawAnswer": "Cevabı çiz",
+  "exams.previousAttempts": "Önceki denemeler",
+  "exams.attemptN": "{n}. deneme",
+  "exams.currentAttempt": "güncel",
+  "exams.pastAttemptReadOnly": "Önceki bir deneme görüntüleniyor — salt okunur. Puanlama güncel denemeye uygulanır.",
   "exams.uploadAnswerImage": "Görsel yükle",
   "exams.playDrawing": "Çizimi oynat",
   "exams.showImage": "Görseli göster",

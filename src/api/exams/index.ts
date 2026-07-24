@@ -27,3 +27,7 @@ export * from "./postExamAttemptAnswerImage";
 export * from "./deleteExamAttemptAnswerImage";
 export * from "./getExamAnswerImageBlob";
 export * from "./getStudentAnswerImage";
+export * from "./getStudentAttempts";
+export * from "./getStudentAttemptAnswers";
+export * from "./getStudentAttemptAnswerImage";
+export * from "./getStudentMarksHistory";

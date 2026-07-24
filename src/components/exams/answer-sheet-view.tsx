@@ -1,7 +1,8 @@
-import { For, Show, Suspense, createResource } from "solid-js";
+import { For, Show, Suspense, createResource, createSignal } from "solid-js";
 import { ApiError } from "@/api/client";
 import { getExamQuestions } from "@/api/exams";
 import { getStudentAnswers, getStudentAnswerImage } from "@/api/exams";
+import { getStudentAttempts, getStudentAttemptAnswers, getStudentAttemptAnswerImage, getStudentMarksHistory } from "@/api/exams";
 import type { StudentAnswerSheet } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,13 +16,71 @@ import { useT } from "@/stores/preferences-context";
 
 export function AnswerSheetView(props: { examId: string; userId: string }) {
   const t = useT();
-  const [data] = createResource(
+
+  // Which sitting the grader is viewing. null = the latest (grade-of-record), the default.
+  const [selectedSeq, setSelectedSeq] = createSignal<number | null>(null);
+
+  // Attempt list + full mark history (oldest-first, index i = seq i+1). Both grader-only,
+  // both tolerate "student never sat" by degrading to empty.
+  const [attempts] = createResource(
     () => [props.examId, props.userId] as const,
     async ([examId, userId]) => {
+      try {
+        return await getStudentAttempts(examId, userId);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return [] as number[];
+        throw err;
+      }
+    },
+  );
+  const [marks] = createResource(
+    () => [props.examId, props.userId] as const,
+    async ([examId, userId]) => {
+      try {
+        return await getStudentMarksHistory(examId, userId);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return [];
+        throw err;
+      }
+    },
+  );
+
+  const latestSeq = () => {
+    const a = attempts();
+    return a && a.length ? a[a.length - 1] : null;
+  };
+  // Effective seq being shown, and whether it's the current (re-gradable) sitting.
+  const activeSeq = () => selectedSeq() ?? latestSeq();
+  const isLatest = () => {
+    const s = activeSeq();
+    return s == null || s === latestSeq();
+  };
+  const markForSeq = (seq: number) => marks()?.[seq - 1]?.mark ?? null;
+
+  const answerImageUrl = (questionId: string) => {
+    const seq = activeSeq();
+    return isLatest() || seq == null
+      ? `/api/exams/${props.examId}/attempts/${props.userId}/answers/${questionId}/image`
+      : `/api/exams/${props.examId}/students/${props.userId}/attempts/${seq}/answers/${questionId}/image`;
+  };
+  const fetchAnswerImage = (questionId: string) => {
+    const seq = activeSeq();
+    return isLatest() || seq == null
+      ? getStudentAnswerImage(props.examId, props.userId, questionId)
+      : getStudentAttemptAnswerImage(props.examId, props.userId, seq, questionId);
+  };
+
+  const [data] = createResource(
+    // Re-fetch when the grader switches attempt. Latest uses the current-attempt route
+    // (unchanged from before); an older seq uses the per-seq history route.
+    () => [props.examId, props.userId, activeSeq(), isLatest()] as const,
+    async ([examId, userId, seq, latest]) => {
       const questions = await getExamQuestions(examId);
       let sheet: StudentAnswerSheet;
       try {
-        sheet = await getStudentAnswers(examId, userId);
+        sheet = latest || seq == null
+          ? await getStudentAnswers(examId, userId)
+          : await getStudentAttemptAnswers(examId, userId, seq);
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           sheet = {
@@ -40,9 +99,36 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
 
   return (
     <Suspense fallback={<PageSpinner />}>
+      <Show when={(attempts() ?? []).length > 1}>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-medium text-muted-foreground">{t("exams.previousAttempts")}</span>
+          <For each={attempts()}>
+            {(seq) => (
+              <Button
+                type="button"
+                size="sm"
+                variant={activeSeq() === seq ? "secondary" : "outline"}
+                class="h-8 rounded-lg"
+                onClick={() => setSelectedSeq(seq)}
+              >
+                {t("exams.attemptN", { n: seq })}
+                <Show when={markForSeq(seq) != null}>
+                  <Badge variant="outline" class="ml-1.5 tabular-nums text-[10px]">{markForSeq(seq)}</Badge>
+                </Show>
+                <Show when={seq === latestSeq()}>
+                  <span class="ml-1 text-[10px] text-muted-foreground">({t("exams.currentAttempt")})</span>
+                </Show>
+              </Button>
+            )}
+          </For>
+        </div>
+      </Show>
       <Show when={data()}>
         {(d) => (
           <div class="space-y-4">
+            <Show when={!isLatest()}>
+              <p class="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">{t("exams.pastAttemptReadOnly")}</p>
+            </Show>
             <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-4 py-3">
               <p class="text-sm font-medium">{personLabelWithId(d().sheet.user)}</p>
               <Show when={d().sheet.answers.length > 0} fallback={<Badge variant="outline">{t("exams.notStarted")}</Badge>}>
@@ -86,12 +172,12 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
                         <Show when={row.answer?.answer_image}>
                           <div class="mt-3 space-y-2">
                             <ReplayableImage
-                              fetchBlob={() => getStudentAnswerImage(d().sheet.exam, d().sheet.user.id, row.question.id)}
-                              src={`/api/exams/${d().sheet.exam}/attempts/${d().sheet.user.id}/answers/${row.question.id}/image`}
+                              fetchBlob={() => fetchAnswerImage(row.question.id)}
+                              src={answerImageUrl(row.question.id)}
                               alt={t("exams.drawAnswer")}
                               imgClass="h-64 w-full max-w-2xl rounded-md border bg-background object-contain"
                             />
-                            <a href={`/api/exams/${d().sheet.exam}/attempts/${d().sheet.user.id}/answers/${row.question.id}/image`} download={`answer-${idx() + 1}.png`}>
+                            <a href={answerImageUrl(row.question.id)} download={`answer-${idx() + 1}.png`}>
                               <Button type="button" size="sm" variant="outline" class="rounded-lg">
                                 <IconDownload class="h-4 w-4" />
                                 {t("notes.downloadFile")}
