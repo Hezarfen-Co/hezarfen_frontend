@@ -149,7 +149,7 @@ function AppointmentsContent() {
     {
       id: "time",
       header: t("appointments.time"),
-      meta: { headerClass: "w-64", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
+      meta: { headerClass: "w-56", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
       cell: (cell) => timeWindow(cell.row.original.starts_at, cell.row.original.ends_at),
     },
     {
@@ -219,7 +219,7 @@ function AppointmentsContent() {
     {
       id: "time",
       header: t("appointments.time"),
-      meta: { headerClass: "w-64", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
+      meta: { headerClass: "w-56", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
       cell: (cell) => (
         <div>
           <div>{timeWindow(cell.row.original.starts_at, cell.row.original.ends_at)}</div>
@@ -249,9 +249,7 @@ function AppointmentsContent() {
         if (isLive(a.status) && !hasProposal(a)) {
           actions.push({ label: t("appointments.reschedule"), icon: <IconRefresh class="h-4 w-4" />, onSelect: () => setReschedAppt(a) });
         }
-        if (isLive(a.status)) {
-          actions.push({ label: t("appointments.cancel"), icon: <IconX class="h-4 w-4" />, destructive: true, onSelect: () => askCancel((reason) => patchCancelAppointment(a.id, reason ? { reason } : undefined)) });
-        }
+        // Staff never cancel — a booking is declined via reject (pending) or reschedule; only the requester cancels (their own bookings table).
         actions.push(...detailAction(a));
         return <Show when={actions.length > 0} fallback={<span class="text-muted-foreground">—</span>}><TableRowActions label={t("common.actions")} actions={actions} /></Show>;
       },
@@ -274,7 +272,7 @@ function AppointmentsContent() {
     {
       id: "time",
       header: t("appointments.time"),
-      meta: { headerClass: "w-64", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
+      meta: { headerClass: "w-56", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
       cell: (cell) => timeWindow(cell.row.original.starts_at, cell.row.original.ends_at),
     },
     {
@@ -285,7 +283,7 @@ function AppointmentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-40 text-center", cellClass: "w-40 min-w-[10rem] text-center whitespace-nowrap" },
       cell: (cell) => (
         <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setBookSlot(cell.row.original)}>
           <IconPlus class="h-4 w-4" />
@@ -307,7 +305,7 @@ function AppointmentsContent() {
     {
       id: "time",
       header: t("appointments.time"),
-      meta: { headerClass: "w-64", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
+      meta: { headerClass: "w-56", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
       cell: (cell) => (
         <div>
           <div>{timeWindow(cell.row.original.starts_at, cell.row.original.ends_at)}</div>
@@ -422,7 +420,7 @@ function AppointmentsContent() {
                 description={t("appointments.subtitle")}
                 columns={availableColumns()}
                 data={availableSlots()}
-                tableClass="table-fixed min-w-[52rem]"
+                tableClass="table-fixed min-w-[46rem]"
                 enablePagination
                 pageSize={PAGE_SIZE}
                 empty={t("appointments.noSlots")}
@@ -436,7 +434,7 @@ function AppointmentsContent() {
                 title={t("appointments.myBookings")}
                 columns={bookingColumns()}
                 data={myBookings()}
-                tableClass="table-fixed min-w-[52rem]"
+                tableClass="table-fixed min-w-[46rem]"
                 enablePagination
                 pageSize={PAGE_SIZE}
                 empty={t("appointments.noBookings")}
@@ -459,7 +457,7 @@ function AppointmentsContent() {
               }
               columns={slotColumns()}
               data={mySlots()}
-              tableClass="table-fixed min-w-[52rem]"
+              tableClass="table-fixed min-w-[46rem]"
               enablePagination
               pageSize={PAGE_SIZE}
               empty={t("appointments.noSlots")}
@@ -473,7 +471,7 @@ function AppointmentsContent() {
               title={t("appointments.requests")}
               columns={requestColumns()}
               data={requests()}
-              tableClass="table-fixed min-w-[52rem]"
+              tableClass="table-fixed min-w-[46rem]"
               enablePagination
               pageSize={PAGE_SIZE}
               empty={t("appointments.noRequests")}
