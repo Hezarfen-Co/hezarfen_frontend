@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { IconCheck, IconEye, IconPlus, IconRefresh, IconTrash, IconX } from "@/components/ui/icons";
+import { IconCalendarX, IconCheck, IconEye, IconPlus, IconRefresh, IconTrash, IconX } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
@@ -200,9 +200,12 @@ function AppointmentsContent() {
           onSelect: () => askConfirm(t("appointments.confirmDeleteSlot"), () => deleteSlotById(slot.id)),
         }];
         if (slot.series) {
+          // Distinct silhouette from the single-slot trash: a calendar-✕ signals
+          // this removes the WHOLE recurring series, not just this one time — the
+          // two menu items must not look identical.
           actions.push({
             label: t("appointments.deleteSeries"),
-            icon: <IconTrash class="h-4 w-4" />,
+            icon: <IconCalendarX class="h-4 w-4" />,
             destructive: true,
             onSelect: () => askConfirm(t("appointments.confirmDeleteSeries"), () => deleteSlotSeries(slot.series!)),
           });
