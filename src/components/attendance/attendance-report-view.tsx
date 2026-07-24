@@ -134,7 +134,7 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
           when={props.report.courses.length > 0}
           fallback={<DataTableEmpty class="py-6">{t("attendance.emptyCourses")}</DataTableEmpty>}
         >
-          <DataTable class="min-w-0" columns={columns()} data={props.report.courses} tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-[40rem]")} />
+          <DataTable class="min-w-0" columns={columns()} data={props.report.courses} tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-160")} />
         </Show>
       </section>
     </div>

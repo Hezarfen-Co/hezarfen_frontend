@@ -113,7 +113,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     },
   });
   const hiddenLocked = (columnId: string) => columnId === "actions" || columnId === "update";
-  const actionColumnClass = (columnId: string) => hiddenLocked(columnId) ? "w-28 min-w-[7rem] px-2 text-center whitespace-nowrap" : undefined;
+  const actionColumnClass = (columnId: string) => hiddenLocked(columnId) ? "w-28 min-w-28 px-2 text-center whitespace-nowrap" : undefined;
   const hideableColumns = () => table.getAllColumns().filter((column) => column.getCanHide() && !hiddenLocked(column.id));
   const columnLabel = (column: Column<TData, unknown>) => {
     const header = column.columnDef.header;
@@ -192,11 +192,11 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
               </Show>
               <Show when={showColumnMenu()}>
             <DropdownMenu placement="bottom-end" gutter={6}>
-              <DropdownMenuTrigger class="ml-auto inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border/70 bg-muted/70 px-3 text-sm font-semibold shadow-none transition-all hover:bg-muted active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/[0.08] dark:bg-[#222222] dark:text-white dark:hover:bg-white/[0.12]">
+              <DropdownMenuTrigger class="ml-auto inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border/70 bg-muted/70 px-3 text-sm font-semibold shadow-none transition-all hover:bg-muted active:scale-[0.97] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring dark:border-white/8 dark:bg-[#222222] dark:text-white dark:hover:bg-white/12">
                 {t("common.columns")}
                 <IconChevronDown class="h-3.5 w-3.5 opacity-60" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent class="w-48 rounded-2xl border border-black/[0.08] bg-popover/95 p-1.5 shadow-apple backdrop-blur-xl dark:border-white/[0.12]">
+              <DropdownMenuContent class="w-48 rounded-2xl border border-black/8 bg-popover/95 p-1.5 shadow-apple backdrop-blur-xl dark:border-white/12">
                 <For each={hideableColumns()}>
                   {(column) => (
                     <DropdownMenuCheckboxItem
@@ -251,7 +251,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                     tabIndex={props.onRowClick ? 0 : undefined}
                     class={cn(
                       "group/row",
-                      props.onRowClick && "cursor-pointer outline-none focus-visible:bg-primary/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:bg-primary/[0.08]",
+                      props.onRowClick && "cursor-pointer outline-hidden focus-visible:bg-primary/6 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:bg-primary/8",
                     )}
                     onClick={(event) => {
                       if (!props.onRowClick || isInteractiveTarget(event.target, event.currentTarget)) return;

@@ -21,9 +21,9 @@ export function DropdownMenuContent<T extends ValidComponent = "div">(
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         class={cn(
-          "z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-none",
-          "origin-[var(--kb-menu-content-transform-origin)]",
-          "animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
+          "z-50 min-w-48 overflow-hidden rounded-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-hidden",
+          "origin-(--kb-menu-content-transform-origin)",
+          "animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,
         )}
         {...rest}
@@ -42,12 +42,12 @@ export function DropdownMenuItem<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.Item
       class={cn(
-        "relative flex min-h-[2.5rem] cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-none transition-all duration-150",
-        "focus:bg-primary/10 focus:text-primary data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary active:scale-[0.98]",
-        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+        "relative flex min-h-10 cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-hidden transition-all duration-150",
+        "focus:bg-primary/10 focus:text-primary data-highlighted:bg-primary/10 data-highlighted:text-primary active:scale-[0.98]",
+        "data-disabled:pointer-events-none data-disabled:opacity-40",
         local.inset && "pl-9",
         local.destructive &&
-          "text-destructive focus:bg-destructive/10 focus:text-destructive data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive",
+          "text-destructive focus:bg-destructive/10 focus:text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive",
         local.class,
       )}
       {...rest}
@@ -62,9 +62,9 @@ export function DropdownMenuCheckboxItem<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.CheckboxItem
       class={cn(
-        "relative flex min-h-[2.5rem] cursor-pointer select-none items-center rounded-xl py-2 pl-9 pr-3 text-sm font-medium outline-none transition-all duration-150",
-        "focus:bg-primary/10 focus:text-primary data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary active:scale-[0.98]",
-        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+        "relative flex min-h-10 cursor-pointer select-none items-center rounded-xl py-2 pl-9 pr-3 text-sm font-medium outline-hidden transition-all duration-150",
+        "focus:bg-primary/10 focus:text-primary data-highlighted:bg-primary/10 data-highlighted:text-primary active:scale-[0.98]",
+        "data-disabled:pointer-events-none data-disabled:opacity-40",
         local.class,
       )}
       {...rest}
@@ -103,9 +103,9 @@ export function DropdownMenuRadioItem<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.RadioItem
       class={cn(
-        "relative flex min-h-[2.5rem] cursor-pointer select-none items-center rounded-xl py-2 pl-9 pr-3 text-sm font-medium outline-none transition-all duration-150",
-        "focus:bg-primary/10 focus:text-primary data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary active:scale-[0.98]",
-        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+        "relative flex min-h-10 cursor-pointer select-none items-center rounded-xl py-2 pl-9 pr-3 text-sm font-medium outline-hidden transition-all duration-150",
+        "focus:bg-primary/10 focus:text-primary data-highlighted:bg-primary/10 data-highlighted:text-primary active:scale-[0.98]",
+        "data-disabled:pointer-events-none data-disabled:opacity-40",
         local.class,
       )}
       {...rest}
@@ -129,8 +129,8 @@ export function DropdownMenuSubTrigger<T extends ValidComponent = "div">(
   return (
     <DropdownMenuPrimitive.SubTrigger
       class={cn(
-        "flex min-h-[2.5rem] w-full cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-none transition-all duration-150",
-        "focus:bg-primary/10 focus:text-primary data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary data-[expanded]:bg-primary/10 data-[expanded]:text-primary",
+        "flex min-h-10 w-full cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-hidden transition-all duration-150",
+        "focus:bg-primary/10 focus:text-primary data-highlighted:bg-primary/10 data-highlighted:text-primary data-expanded:bg-primary/10 data-expanded:text-primary",
         local.inset && "pl-9",
         local.class,
       )}
@@ -152,9 +152,9 @@ export function DropdownMenuSubContent<T extends ValidComponent = "div">(
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.SubContent
         class={cn(
-          "z-50 min-w-[9rem] overflow-hidden rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-none",
-          "origin-[var(--kb-menu-content-transform-origin)]",
-          "animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
+          "z-50 min-w-36 overflow-hidden rounded-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-hidden",
+          "origin-(--kb-menu-content-transform-origin)",
+          "animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,
         )}
         {...rest}

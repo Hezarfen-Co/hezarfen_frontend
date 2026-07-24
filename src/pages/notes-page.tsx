@@ -81,11 +81,11 @@ function NotesContent() {
           description={t("notes.subtitle")}
           actions={
             <div class="flex items-center gap-2">
-              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+              <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={() => setCreateOpen(true)}>
                 <IconPlus class="h-4 w-4" />
                 {t("notes.new")}
               </Button>
-              <Button type="button" variant="outline" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setImportOpen(true)}>
+              <Button type="button" variant="outline" size="sm" class="min-w-30 rounded-lg" onClick={() => setImportOpen(true)}>
                 <IconUploadCloud class="h-4 w-4" />
                 İçe Aktar
               </Button>
@@ -141,7 +141,7 @@ function NotesContent() {
       </SidePanel>
 
       <div class="space-y-5">
-        <section class="min-w-0 space-y-4 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm">
+        <section class="min-w-0 space-y-4 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs">
           <Show when={flash()}>
             <Alert variant="success">{flash()}</Alert>
           </Show>

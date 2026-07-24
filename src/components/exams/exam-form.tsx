@@ -203,7 +203,7 @@ export function ExamForm(props: {
     <>
       <form class="space-y-4" onSubmit={handleSubmit}>
         {/* Section 1: Basic Info */}
-        <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4 shadow-xs">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionBasic")}</h3>
           <div class="space-y-1.5">
             <Label for="exam-title">{t("form.title")}</Label>
@@ -238,7 +238,7 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 2: Mode & Schedule */}
-        <div class="space-y-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-3 rounded-2xl border border-amber-500/15 bg-amber-500/3 p-4 shadow-xs">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionSchedule")}</h3>
           <div class="space-y-1.5">
             <Label for="exam-mode">{t("exams.mode")}</Label>
@@ -316,7 +316,7 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 3: Time Limit / Duration */}
-        <div class="space-y-3 rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-3 rounded-2xl border border-indigo-500/15 bg-indigo-500/3 p-4 shadow-xs">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionDuration")}</h3>
           <label class="flex items-center gap-2 text-sm font-medium">
             <input
@@ -346,7 +346,7 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 4: Participation & Attempts */}
-        <div class="space-y-3 rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-3 rounded-2xl border border-emerald-500/15 bg-emerald-500/3 p-4 shadow-xs">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionAccess")}</h3>
 
           <div class="rounded-xl border bg-background/60 px-3 py-2">

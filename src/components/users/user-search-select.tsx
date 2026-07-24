@@ -153,7 +153,7 @@ export function UserSearchSelect(props: {
       <Show when={dropdownOpen()}>
         <div
           id={`${props.id}-results`}
-          class="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-none"
+          class="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden"
         >
           <ul role="listbox" class="space-y-1">
             <For each={options()}>
@@ -161,7 +161,7 @@ export function UserSearchSelect(props: {
                 <li role="option" aria-selected={props.value === user.id}>
                   <button
                     type="button"
-                    class="flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                    class="flex w-full items-center rounded-sm px-2 py-1.5 text-left text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => selectUser(user)}
                   >

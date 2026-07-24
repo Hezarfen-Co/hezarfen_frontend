@@ -65,7 +65,7 @@ export function NoteFilePreview(props: { noteId: string; file: NoteFile | null; 
                   <DialogTitle class="truncate text-base">{file().name}</DialogTitle>
                   <p class="mt-0.5 truncate text-xs text-muted-foreground">{type() || t("notes.unknownFileType")}</p>
                 </div>
-                <a class="absolute right-14 top-3 z-10 inline-flex h-8 items-center justify-center rounded-md border border-input bg-background/80 px-3 text-xs font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground" href={downloadUrl()} download={file().name}>
+                <a class="absolute right-14 top-3 z-10 inline-flex h-8 items-center justify-center rounded-md border border-input bg-background/80 px-3 text-xs font-medium shadow-xs transition-all hover:bg-accent hover:text-accent-foreground" href={downloadUrl()} download={file().name}>
                   {t("notes.downloadFile")}
                 </a>
               </div>
@@ -85,7 +85,7 @@ export function NoteFilePreview(props: { noteId: string; file: NoteFile | null; 
                           <video src={previewUrl()} controls class="max-h-full max-w-full" />
                         </Match>
                         <Match when={type().startsWith("audio/") && previewUrl()}>
-                          <div class="w-full max-w-2xl rounded-lg bg-background p-4 shadow-sm">
+                          <div class="w-full max-w-2xl rounded-lg bg-background p-4 shadow-xs">
                             <audio src={previewUrl()} controls class="w-full" />
                           </div>
                         </Match>

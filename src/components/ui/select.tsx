@@ -34,7 +34,7 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
       <DropdownMenuTrigger
         disabled={props.disabled}
         class={cn(
-          "inline-flex h-9 items-center justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/70 px-3 text-sm font-medium text-foreground shadow-none transition-all hover:bg-muted active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 dark:border-white/[0.08] dark:bg-[#222222] dark:text-white dark:hover:bg-white/[0.12]",
+          "inline-flex h-9 items-center justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/70 px-3 text-sm font-medium text-foreground shadow-none transition-all hover:bg-muted active:scale-[0.97] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 dark:border-white/8 dark:bg-[#222222] dark:text-white dark:hover:bg-white/12",
           props.triggerClass,
           props.class,
         )}
@@ -50,7 +50,7 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
         </div>
         <IconChevronDown class="h-3.5 w-3.5 shrink-0 opacity-60 transition-transform duration-200" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent class="min-w-[12rem] max-h-72 overflow-y-auto rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-1.5 shadow-apple">
+      <DropdownMenuContent class="min-w-48 max-h-72 overflow-y-auto rounded-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl p-1.5 shadow-apple">
         <For each={props.options}>
           {(option) => {
             const isSelected = () => option.value === props.value;
@@ -88,8 +88,8 @@ export function Select(props: SelectProps) {
     <div class="relative w-full">
       <select
         class={cn(
-          "flex h-11 w-full appearance-none rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-card pl-3.5 pr-9 py-2 text-xs font-medium text-foreground transition-all duration-150",
-          "hover:bg-secondary focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2",
+          "flex h-11 w-full appearance-none rounded-xl border border-black/8 dark:border-white/12 bg-card pl-3.5 pr-9 py-2 text-xs font-medium text-foreground transition-all duration-150",
+          "hover:bg-secondary focus:bg-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50 [&>option]:bg-popover [&>option]:text-popover-foreground [&>option]:py-1.5",
           local.class,
         )}

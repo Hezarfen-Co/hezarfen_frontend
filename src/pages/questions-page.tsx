@@ -297,7 +297,7 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
             {t("questions.draw")}
           </Button>
           <Show when={drawing()}>
-            <Suspense fallback={<div class="h-[22rem] animate-pulse rounded-lg border bg-muted/20" />}>
+            <Suspense fallback={<div class="h-88 animate-pulse rounded-lg border bg-muted/20" />}>
               <DrawCanvas
                 fileName="question.png"
                 onSave={(drawn) => {

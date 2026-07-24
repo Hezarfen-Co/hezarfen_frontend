@@ -216,7 +216,7 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
 
               <Match when={activeTab() === "exams"}>
                 <Show when={examRows().length > 0} fallback={<DataTableEmpty>{t("exams.noResults")}</DataTableEmpty>}>
-                  <DataTable class="min-w-0" columns={examColumns()} data={examRows()} tableClass="w-full min-w-[44rem] text-sm" enableSorting={false} />
+                  <DataTable class="min-w-0" columns={examColumns()} data={examRows()} tableClass="w-full min-w-176 text-sm" enableSorting={false} />
                 </Show>
               </Match>
 

@@ -270,7 +270,7 @@ function ExamsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -280,7 +280,7 @@ function ExamsContent() {
             description={t("exams.subtitle")}
             actions={
               canCreate() ? (
-                <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={openCreateModal}>
+                <Button type="button" size="sm" class="min-w-30" onClick={openCreateModal}>
                   <IconPlus class="h-4 w-4" />
                   {t("exams.create")}
                 </Button>
@@ -288,7 +288,7 @@ function ExamsContent() {
             }
             columns={columns()}
             data={rows()}
-            tableClass="table-fixed min-w-[64rem]"
+            tableClass="table-fixed min-w-5xl"
             filterPlaceholder={t("exams.searchPlaceholder")}
             searchPredicate={searchExam}
             enablePagination
@@ -357,13 +357,13 @@ function ExamsContent() {
         description={createdExam() ? t("exams.step2Questions") : t("exams.subtitle")}
         size={createStep() === "questions" ? "wide" : "default"}
       >
-        <div class="mb-4 flex rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-1">
+        <div class="mb-4 flex rounded-2xl border border-indigo-500/15 bg-indigo-500/3 p-1">
           <button
             type="button"
             class={cn(
               "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
               createStep() === "details"
-                ? "bg-primary text-primary-foreground shadow-xs"
+                ? "bg-primary text-primary-foreground shadow-2xs"
                 : "text-muted-foreground hover:bg-muted/50",
             )}
             onClick={() => setCreateStep("details")}
@@ -376,7 +376,7 @@ function ExamsContent() {
             class={cn(
               "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
               createStep() === "questions"
-                ? "bg-primary text-primary-foreground shadow-xs"
+                ? "bg-primary text-primary-foreground shadow-2xs"
                 : createdExam()
                 ? "text-muted-foreground hover:bg-muted/50"
                 : "opacity-40 cursor-not-allowed text-muted-foreground",
@@ -389,7 +389,7 @@ function ExamsContent() {
 
         <Show when={createStep() === "details"}>
           <Show when={!createdExam()}>
-            <div class="mb-4 space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4">
+            <div class="mb-4 space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4">
               <label class="text-sm font-medium" for="exam-course">
                 {t("exams.selectCourse")}
               </label>
@@ -438,13 +438,13 @@ function ExamsContent() {
         <Show when={editingExam()}>
           {(exam) => (
             <div class="space-y-4">
-              <div class="flex rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-1">
+              <div class="flex rounded-2xl border border-indigo-500/15 bg-indigo-500/3 p-1">
                 <button
                   type="button"
                   class={cn(
                     "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     editTab() === "details"
-                      ? "bg-primary text-primary-foreground shadow-xs"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
                       : "text-muted-foreground hover:bg-muted/50",
                   )}
                   onClick={() => setEditTab("details")}
@@ -456,7 +456,7 @@ function ExamsContent() {
                   class={cn(
                     "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     editTab() === "questions"
-                      ? "bg-primary text-primary-foreground shadow-xs"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
                       : "text-muted-foreground hover:bg-muted/50",
                   )}
                   onClick={() => setEditTab("questions")}

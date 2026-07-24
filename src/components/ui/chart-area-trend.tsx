@@ -63,7 +63,7 @@ export const ChartAreaTrend: Component<ChartAreaTrendProps> = (props) => {
   };
 
   return (
-    <div class={cn("flex flex-col space-y-3 rounded-2xl border border-border/60 bg-card p-4 shadow-sm dark:border-white/[0.08]", props.class)}>
+    <div class={cn("flex flex-col space-y-3 rounded-2xl border border-border/60 bg-card p-4 shadow-xs dark:border-white/8", props.class)}>
       <div class="flex items-start justify-between gap-2">
         <div class="space-y-0.5 min-w-0">
           <h3 class="truncate text-sm font-semibold tracking-tight text-foreground">{props.title}</h3>
@@ -140,7 +140,7 @@ export const ChartAreaTrend: Component<ChartAreaTrendProps> = (props) => {
                     r={hoverIndex() === p.index ? "5.5" : "3.5"}
                     class={cn(
                       "transition-all duration-200 fill-background stroke-primary stroke-[2.5]",
-                      hoverIndex() === p.index && "fill-primary stroke-background shadow-lg stroke-[3]",
+                      hoverIndex() === p.index && "fill-primary stroke-background shadow-lg stroke-3",
                     )}
                   />
                   <text

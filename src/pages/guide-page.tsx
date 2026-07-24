@@ -147,7 +147,7 @@ function GuideContent() {
       />
 
       {/* 1. ROL BAZLI YETKİ HARİTASI (TABS AT THE TOP) */}
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-6">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-6">
         <div>
           <h2 class="font-display text-lg font-semibold tracking-tight">Rol Bazlı Yetki Haritası</h2>
           <p class="mt-1 text-xs text-muted-foreground">Platformdaki her bir rolün erişebildiği ve yönetebildiği alanlar.</p>
@@ -174,7 +174,7 @@ function GuideContent() {
           </TabsList>
 
           <TabsContent value="student" class="space-y-3">
-            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
               <h3 class="font-display text-sm font-semibold text-foreground">Öğrenci Çalışma & Katılım Araçları</h3>
               <ul class="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                 <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
@@ -198,7 +198,7 @@ function GuideContent() {
           </TabsContent>
 
           <TabsContent value="teacher" class="space-y-3">
-            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
               <h3 class="font-display text-sm font-semibold text-foreground">Öğretmen Yönetim & Eğitici Paneli</h3>
               <ul class="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                 <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
@@ -222,7 +222,7 @@ function GuideContent() {
           </TabsContent>
 
           <TabsContent value="parent" class="space-y-3">
-            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
               <h3 class="font-display text-sm font-semibold text-foreground">Veli Takip & Bilgilendirme Portalı</h3>
               <ul class="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                 <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
@@ -246,7 +246,7 @@ function GuideContent() {
           </TabsContent>
 
           <TabsContent value="admin" class="space-y-3">
-            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
               <h3 class="font-display text-sm font-semibold text-foreground">Yönetici & Sistem Politikaları Paneli</h3>
               <ul class="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                 <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
@@ -272,7 +272,7 @@ function GuideContent() {
       </section>
 
       {/* 2. TEMEL AKIŞLAR & ÖZELLİKLER (MODÜL KARTLARI) */}
-      <section class="data-shell space-y-6 border-sky-500/15 bg-sky-500/[0.025] p-6">
+      <section class="data-shell space-y-6 border-sky-500/15 bg-sky-500/2.5 p-6">
         <div>
           <h2 class="font-display text-lg font-semibold tracking-tight">Temel Akışlar & Özellikler</h2>
           <p class="mt-1 text-xs text-muted-foreground">Hezarfen platformundaki ana modülleri ve kullanım adımlarını inceleyin.</p>
@@ -281,7 +281,7 @@ function GuideContent() {
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <For each={steps}>
             {(step) => (
-              <article class={cn("group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-card p-5 shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md", step.borderTone)}>
+              <article class={cn("group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-card p-5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md", step.borderTone)}>
                 <div class="space-y-3">
                   <div class="flex items-center justify-between gap-2">
                     <span class={cn("inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider", step.badgeTone)}>
@@ -321,14 +321,14 @@ function GuideContent() {
       </section>
 
       {/* 3. PRATİK İPUÇLARI & KISAYOLLAR */}
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-6">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-6">
         <div>
           <h2 class="font-display text-lg font-semibold tracking-tight">Pratik İpuçları & Kısayollar</h2>
           <p class="mt-1 text-xs text-muted-foreground">Hezarfen deneyimini en verimli şekilde kullanmanızı sağlayan püf noktaları.</p>
         </div>
 
         <ul class="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2">
-          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-xs">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-card text-violet-400">
               <IconGlobe class="h-4 w-4" />
             </span>
@@ -337,7 +337,7 @@ function GuideContent() {
               <p class="mt-1 leading-relaxed">Sağ üstteki profil avatarınıza tıklayarak Türkçe / İngilizce dillerini ve Dark / Light temalarını anında değiştirebilirsiniz.</p>
             </div>
           </li>
-          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-xs">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-card text-sky-400">
               <IconClock class="h-4 w-4" />
             </span>
@@ -346,7 +346,7 @@ function GuideContent() {
               <p class="mt-1 leading-relaxed">Sınav odasındaki yanıtlarınız ve çizim tuvalindeki taslaklarınız sunucu saati (`/time`) ile arka planda güvenle kaydedilir.</p>
             </div>
           </li>
-          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-xs">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-card text-amber-400">
               <IconFileText class="h-4 w-4" />
             </span>
@@ -355,7 +355,7 @@ function GuideContent() {
               <p class="mt-1 leading-relaxed">Notlar sayfasında "İçe Aktar" butonunu kullanarak PDF ve TXT ders dokümanlarınızı temiz Markdown metinlerine dönüştürebilirsiniz.</p>
             </div>
           </li>
-          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-xs">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-card text-emerald-400">
               <IconChart class="h-4 w-4" />
             </span>

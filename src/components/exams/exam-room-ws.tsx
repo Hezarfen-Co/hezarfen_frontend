@@ -508,7 +508,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
                   </div>
                 )}
               </Show>
-              <aside class="surface-card order-first space-y-3 p-3 lg:sticky lg:top-4 lg:order-none">
+              <aside class="surface-card order-first space-y-3 p-3 lg:sticky lg:top-4 lg:order-0">
               <div>
                 <h3 class="font-display text-sm font-semibold">{t("questions.title")}</h3>
                 <p class="mt-1 text-xs text-muted-foreground">
@@ -650,7 +650,7 @@ function AttemptFocusBar(props: { attempt: ExamAttempt; status?: string; remaini
   const statusLabel = () => props.status === "expired" ? t("attempt.expired") : props.status === "submitted" ? t("attempt.submitted") : t("attempt.inProgress");
 
   return (
-    <div class="rounded-xl border bg-card px-3 py-2 shadow-sm">
+    <div class="rounded-xl border bg-card px-3 py-2 shadow-xs">
       <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         <span class="font-medium text-foreground">{statusLabel()}</span>
         <span class="mono font-semibold tabular-nums text-foreground">{formatRemaining(props.remainingMs)}</span>

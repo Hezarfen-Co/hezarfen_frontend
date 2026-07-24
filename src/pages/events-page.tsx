@@ -185,7 +185,7 @@ function EventsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -195,7 +195,7 @@ function EventsContent() {
             description={t("events.subtitle")}
             actions={
               canCreate() ? (
-                <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowForm(true)}>
+                <Button type="button" size="sm" class="min-w-30" onClick={() => setShowForm(true)}>
                   <IconPlus class="h-4 w-4" />
                   {t("events.create")}
                 </Button>
@@ -203,7 +203,7 @@ function EventsContent() {
             }
             columns={columns()}
             data={rows()}
-            tableClass="table-fixed min-w-[58rem]"
+            tableClass="table-fixed min-w-232"
             searchPredicate={searchEvent}
             enablePagination
             pageSize={EVENT_PAGE_SIZE}

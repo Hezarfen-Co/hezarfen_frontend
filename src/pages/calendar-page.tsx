@@ -102,7 +102,7 @@ function CalendarContent() {
 
   return (
     <div class="space-y-4">
-      <section class="data-shell space-y-3 border-sky-500/15 bg-sky-500/[0.025] p-3">
+      <section class="data-shell space-y-3 border-sky-500/15 bg-sky-500/2.5 p-3">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
             <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground">{t("calendar.title")}</h1>
@@ -123,7 +123,7 @@ function CalendarContent() {
         </div>
         <Suspense fallback={<PageSpinner />}>
           <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-            <div class="rounded-lg border bg-card shadow-sm">
+            <div class="rounded-lg border bg-card shadow-xs">
               <div class="grid grid-cols-7 border-b">
                 <For each={dayNames()}>
                   {(name) => (
@@ -144,7 +144,7 @@ function CalendarContent() {
                       <button
                         type="button"
                         class={cn(
-                          "relative flex min-h-[4.25rem] flex-col border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40 xl:min-h-[5.25rem] 2xl:min-h-24",
+                          "relative flex min-h-17 flex-col border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40 xl:min-h-21 2xl:min-h-24",
                           cell.other && "pointer-events-none bg-muted/20",
                           cellSelected() ? "bg-sky-50/60 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "",
                           cellToday ? "font-bold text-sky-600 dark:text-sky-400" : ""
@@ -197,7 +197,7 @@ function CalendarContent() {
             </div>
 
             <div class="space-y-3">
-              <div class="rounded-xl border border-border/80 bg-card p-3 shadow-sm">
+              <div class="rounded-xl border border-border/80 bg-card p-3 shadow-xs">
                 <h3 class="font-display text-sm font-semibold">
                   {selectedDay().toLocaleDateString(locale() === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "long", year: "numeric" })}
                 </h3>
@@ -214,7 +214,7 @@ function CalendarContent() {
                         {(ev) => (
                           <a
                             href={`/events/${ev.id}`}
-                            class="group flex items-start justify-between gap-2 rounded-lg border border-emerald-500/40 bg-card p-2.5 shadow-sm transition-all hover:border-emerald-500/70 hover:shadow-md dark:border-emerald-500/30 dark:hover:border-emerald-500/70"
+                            class="group flex items-start justify-between gap-2 rounded-lg border border-emerald-500/40 bg-card p-2.5 shadow-xs transition-all hover:border-emerald-500/70 hover:shadow-md dark:border-emerald-500/30 dark:hover:border-emerald-500/70"
                           >
                             <div class="min-w-0">
                               <p class="truncate text-xs font-semibold group-hover:text-emerald-500">{ev.title}</p>
@@ -237,7 +237,7 @@ function CalendarContent() {
                         {(exam) => (
                           <a
                             href={`/exams/${exam.id}`}
-                            class="group flex items-start justify-between gap-2 rounded-lg border border-rose-500/40 bg-card p-2.5 shadow-sm transition-all hover:border-rose-500/70 hover:shadow-md dark:border-rose-500/30 dark:hover:border-rose-500/70"
+                            class="group flex items-start justify-between gap-2 rounded-lg border border-rose-500/40 bg-card p-2.5 shadow-xs transition-all hover:border-rose-500/70 hover:shadow-md dark:border-rose-500/30 dark:hover:border-rose-500/70"
                           >
                             <div class="min-w-0">
                               <p class="truncate text-xs font-semibold group-hover:text-rose-500">{exam.title}</p>

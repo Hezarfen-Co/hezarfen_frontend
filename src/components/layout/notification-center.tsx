@@ -229,7 +229,7 @@ export function NotificationCenter() {
     <Popover open={open()} onOpenChange={setOpen} placement="bottom-end" gutter={8}>
       <PopoverTrigger
         class={cn(
-          "relative flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/60 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground shrink-0 cursor-pointer outline-none",
+          "relative flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/60 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground shrink-0 cursor-pointer outline-hidden",
           open() && "bg-secondary text-foreground"
         )}
         title={t("rightPanel.messagesTitle")}
@@ -237,13 +237,13 @@ export function NotificationCenter() {
       >
         <IconBell class="h-4 w-4" />
         <Show when={unreadCount() > 0}>
-          <span class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-xs ring-2 ring-background">
+          <span class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-2xs ring-2 ring-background">
             {unreadCount() > 9 ? "9+" : unreadCount()}
           </span>
         </Show>
       </PopoverTrigger>
 
-      <PopoverContent class="w-80 sm:w-96 rounded-2xl p-0 shadow-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl overflow-hidden">
+      <PopoverContent class="w-80 sm:w-96 rounded-2xl p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl overflow-hidden">
         {/* Header */}
         <div class="flex items-center justify-between border-b border-border/80 px-4 py-3 bg-muted/40">
           <div class="flex items-center gap-2">

@@ -28,7 +28,7 @@ export const ChartBar: Component<ChartBarProps> = (props) => {
   };
 
   return (
-    <div class={cn("flex flex-col gap-3.5 rounded-3xl border border-border/60 bg-card/60 p-4 sm:p-5 dark:border-white/[0.08] dark:bg-card/40 shadow-sm backdrop-blur-sm", props.class)}>
+    <div class={cn("flex flex-col gap-3.5 rounded-3xl border border-border/60 bg-card/60 p-4 sm:p-5 dark:border-white/8 dark:bg-card/40 shadow-xs backdrop-blur-xs", props.class)}>
       <Show when={props.title}>
         <div class="flex items-center justify-between gap-2 border-b border-border/40 pb-3">
           <div>
@@ -80,7 +80,7 @@ export const ChartBar: Component<ChartBarProps> = (props) => {
                       class={cn(
                         "h-full rounded-full transition-all duration-500 ease-out",
                         item.colorClass ?? "bg-primary",
-                        isHovered() && "brightness-110 shadow-sm",
+                        isHovered() && "brightness-110 shadow-xs",
                       )}
                       style={{ width: `${pct()}%` }}
                     />

@@ -20,7 +20,7 @@ export type ChartMetricCardsProps = {
 
 export const ChartMetricCards: Component<ChartMetricCardsProps> = (props) => {
   return (
-    <div class={cn("flex flex-col space-y-3 rounded-2xl border border-border/60 bg-card p-4 shadow-sm dark:border-white/[0.08]", props.class)}>
+    <div class={cn("flex flex-col space-y-3 rounded-2xl border border-border/60 bg-card p-4 shadow-xs dark:border-white/8", props.class)}>
       <div class="space-y-0.5 min-w-0">
         <h3 class="truncate text-sm font-semibold tracking-tight text-foreground">{props.title}</h3>
         <Show when={props.subtitle}>

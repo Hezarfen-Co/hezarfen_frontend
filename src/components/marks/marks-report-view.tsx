@@ -102,7 +102,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
               </header>
 
               <Show when={block.results.length > 0} fallback={<DataTableEmpty class="py-6">{t("exams.noResults")}</DataTableEmpty>}>
-                <DataTable class="min-w-0" columns={columns()} data={block.results} tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-[36rem]")} />
+                <DataTable class="min-w-0" columns={columns()} data={block.results} tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-xl")} />
               </Show>
             </article>
           )}

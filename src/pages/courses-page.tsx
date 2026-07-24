@@ -178,7 +178,7 @@ function CoursesContent() {
     <div class="space-y-6">
       <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: pageLabel() })} description={t("courses.subtitle", { item: pageLabel() })}>
         <form class="space-y-4" onSubmit={onCreate}>
-          <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
+          <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4 shadow-xs">
             <div class="space-y-1.5">
               <Label for="course-title">{t("form.title")}</Label>
               <Input id="course-title" required maxlength={200} value={title()} onInput={(e) => setTitle(e.currentTarget.value)} />
@@ -188,7 +188,7 @@ function CoursesContent() {
               <Textarea id="course-desc" maxlength={2000} rows={3} value={description()} onInput={(e) => setDescription(e.currentTarget.value)} />
             </div>
           </div>
-          <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/[0.03] p-4 shadow-sm">
+          <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/3 p-4 shadow-xs">
             <div class="space-y-1.5">
               <Label for="course-term">{t("terms.term")}</Label>
               <Select id="course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
@@ -225,7 +225,7 @@ function CoursesContent() {
         </form>
       </SidePanel>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Show when={flash()}>
           <Alert variant="success">{flash()}</Alert>
         </Show>
@@ -239,7 +239,7 @@ function CoursesContent() {
               description={t("courses.subtitle", { item: pageLabel() })}
               actions={
                 canCreate() ? (
-                  <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowForm(true)}>
+                  <Button type="button" size="sm" class="min-w-30" onClick={() => setShowForm(true)}>
                     <IconPlus class="h-4 w-4" />
                     {t("common.createItem", { item: pageLabel() })}
                   </Button>
@@ -247,7 +247,7 @@ function CoursesContent() {
               }
               columns={columns()}
               data={rows()}
-              tableClass="table-fixed min-w-[44rem]"
+              tableClass="table-fixed min-w-176"
               searchPredicate={searchCourse}
               enablePagination
               pageSize={COURSE_PAGE_SIZE}

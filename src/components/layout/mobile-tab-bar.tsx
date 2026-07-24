@@ -39,7 +39,7 @@ export function MobileTabBar(props: { onMenu: () => void }) {
 
   return (
     <nav
-      class="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.06] bg-background/85 pt-1 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-4px_24px_rgba(0,0,0,0.04)] backdrop-blur-xl dark:border-white/[0.08] lg:hidden"
+      class="fixed inset-x-0 bottom-0 z-40 border-t border-black/6 bg-background/85 pt-1 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-4px_24px_rgba(0,0,0,0.04)] backdrop-blur-xl dark:border-white/8 lg:hidden"
       aria-label={t("nav.menu")}
     >
       <ul class="mx-auto grid h-16 max-w-[1200px] grid-cols-5">

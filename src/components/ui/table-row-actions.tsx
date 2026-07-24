@@ -21,12 +21,12 @@ export function TableRowActions(props: { label: string; actions: TableRowAction[
     <div class="flex justify-center">
       <DropdownMenu placement="bottom-end" gutter={6}>
         <DropdownMenuTrigger
-          class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-foreground/80 opacity-90 outline-none transition-all duration-150 hover:bg-secondary hover:text-foreground hover:opacity-100 active:scale-[0.96] focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring data-[expanded]:bg-secondary data-[expanded]:text-foreground data-[expanded]:opacity-100 sm:group-hover:opacity-100 sm:group-hover/row:opacity-100"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-foreground/80 opacity-90 outline-hidden transition-all duration-150 hover:bg-secondary hover:text-foreground hover:opacity-100 active:scale-[0.96] focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-secondary data-expanded:text-foreground data-expanded:opacity-100 sm:group-hover:opacity-100 sm:group-hover/row:opacity-100"
           aria-label={props.label}
         >
           <IconDotsVertical class="h-4 w-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent class="w-48 rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-1.5 shadow-apple">
+        <DropdownMenuContent class="w-48 rounded-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl p-1.5 shadow-apple">
           <For each={props.actions}>
             {(action) => (
               <DropdownMenuItem

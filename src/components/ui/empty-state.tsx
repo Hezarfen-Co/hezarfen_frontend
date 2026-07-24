@@ -25,7 +25,7 @@ export function EmptyState(props: {
   return (
     <div
       class={cn(
-        "flex min-h-[12rem] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/70 bg-muted/15 px-6 py-8 text-center transition-all duration-300",
+        "flex min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/70 bg-muted/15 px-6 py-8 text-center transition-all duration-300",
         props.class,
       )}
     >

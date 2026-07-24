@@ -111,7 +111,7 @@ export function NoteForm(props: {
   return (
     <>
       <form class="space-y-5" onSubmit={handleSubmit}>
-        <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+        <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-xs">
           <Label for="note-title">{t("form.title")}</Label>
           <Input
             id="note-title"
@@ -122,7 +122,7 @@ export function NoteForm(props: {
             onInput={(e) => setTitle(e.currentTarget.value)}
           />
         </div>
-        <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+        <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-xs">
           <Label for="note-content">{t("form.content")}</Label>
           <Textarea
             id="note-content"
@@ -135,7 +135,7 @@ export function NoteForm(props: {
         </div>
 
         <Show when={showFiles()}>
-          <section class="space-y-3 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+          <section class="space-y-3 rounded-xl border border-border/80 bg-card p-4 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 class="text-sm font-semibold">{t("notes.files")}</h3>

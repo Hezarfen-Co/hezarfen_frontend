@@ -15,7 +15,7 @@ const ZOOM_STEP = 1.25;
 const EXPORT_MARGIN = 8;
 // Floating glass overlays that live inside the canvas, matching the bottom-right
 // zoom control. Position/size utilities are appended per overlay via cn().
-const OVERLAY_CARD = "absolute z-10 flex gap-1.5 rounded-lg border bg-card/90 p-1.5 shadow-sm backdrop-blur-sm";
+const OVERLAY_CARD = "absolute z-10 flex gap-1.5 rounded-lg border bg-card/90 p-1.5 shadow-xs backdrop-blur-xs";
 const OVERLAY_BTN = "flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
 
 /**
@@ -324,7 +324,7 @@ export function DrawCanvas(props: {
     cn(
       "flex h-11 w-11 items-center justify-center rounded-lg border transition-colors",
       active
-        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+        ? "border-primary bg-primary text-primary-foreground shadow-xs"
         : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
     );
 
@@ -365,7 +365,7 @@ export function DrawCanvas(props: {
 
   return (
     <div class={cn("space-y-3", props.class)}>
-      <div ref={wrap} class="relative h-[26rem] overflow-hidden rounded-lg border bg-white shadow-inner sm:h-[30rem]" style={paperStyle()}>
+      <div ref={wrap} class="relative h-104 overflow-hidden rounded-lg border bg-white shadow-inner sm:h-120" style={paperStyle()}>
         <canvas
           ref={canvas}
           class="h-full w-full touch-none"
@@ -591,7 +591,7 @@ export function DrawCanvas(props: {
           </button>
         </div>
 
-        <div class="absolute bottom-2 right-2 z-10 flex flex-col divide-y divide-border overflow-hidden rounded-lg border bg-card/90 shadow-sm backdrop-blur-sm">
+        <div class="absolute bottom-2 right-2 z-10 flex flex-col divide-y divide-border overflow-hidden rounded-lg border bg-card/90 shadow-xs backdrop-blur-xs">
           <button
             type="button"
             class="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

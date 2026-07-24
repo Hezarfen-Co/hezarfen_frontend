@@ -67,7 +67,7 @@ function ExamRoomContent() {
                 title={ex().title}
                 description={ex().description || undefined}
                 actions={
-                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
+                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-xs sm:w-auto">
                     <Link to="/exams/$id" params={{ id: id() }}>
                       <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />

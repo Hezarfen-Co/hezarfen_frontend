@@ -87,7 +87,7 @@ const ROLE_TONE: Record<Role, string> = {
 };
 
 function portalTone(to: string) {
-  const base = "bg-muted/40 text-muted-foreground shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:text-foreground dark:bg-muted/30 border";
+  const base = "bg-muted/40 text-muted-foreground shadow-xs transition-all duration-200 group-hover:scale-105 group-hover:text-foreground dark:bg-muted/30 border";
   if (to === "/exams") {
     return cn(base, "border-indigo-500/50 dark:border-indigo-400/40 group-hover:border-indigo-500/90 dark:group-hover:border-indigo-400 group-hover:shadow-[0_0_12px_rgba(99,102,241,0.25)]");
   }
@@ -783,8 +783,8 @@ function DashboardContent() {
   });
 
   return (
-    <div class="overflow-hidden rounded-[1.75rem] border border-[#F2F2F3] bg-background shadow-apple dark:border-white/[0.08] dark:bg-background">
-      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-[#F2F2F3] bg-card/85 px-4 py-4 backdrop-blur-xl dark:border-white/[0.08] sm:px-5">
+    <div class="overflow-hidden rounded-[1.75rem] border border-[#F2F2F3] bg-background shadow-apple dark:border-white/8 dark:bg-background">
+      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-[#F2F2F3] bg-card/85 px-4 py-4 backdrop-blur-xl dark:border-white/8 sm:px-5">
         <div class="min-w-0 space-y-1">
           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("dashboard.today")}</p>
           <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -793,10 +793,10 @@ function DashboardContent() {
           <p class="text-sm text-muted-foreground">{t("dashboard.observationOnly")}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span class={cn("rounded-full border px-2.5 py-1 font-semibold shadow-sm", ROLE_TONE[role()])}>
+          <span class={cn("rounded-full border px-2.5 py-1 font-semibold shadow-xs", ROLE_TONE[role()])}>
             {t(ROLE_KEY[role()])}
           </span>
-          <span class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-2.5 py-1 mono tabular-nums shadow-sm">
+          <span class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-2.5 py-1 mono tabular-nums shadow-xs">
             <span class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.14)]" aria-hidden="true" />
             {formatDateTime(now(), locale()).split(",")[0]}
           </span>
@@ -953,7 +953,7 @@ function DashboardContent() {
         </Show>
 
         {/* Workspace Portal Cards (Expandable after 2 rows) */}
-        <section class="space-y-2.5 rounded-3xl border border-[#F2F2F3] bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm" aria-labelledby="dash-sections">
+        <section class="space-y-2.5 rounded-3xl border border-[#F2F2F3] bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs" aria-labelledby="dash-sections">
           <div class="flex items-center justify-between gap-3">
             <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
               {t("dashboard.roleLinks")}
@@ -1011,7 +1011,7 @@ function DashboardContent() {
                 type="button"
                 variant="outline"
                 size="sm"
-                class="h-8 rounded-full border-border/70 bg-background/80 px-4 text-xs font-medium text-foreground shadow-sm transition-all duration-200 hover:border-primary/50 hover:bg-card hover:shadow"
+                class="h-8 rounded-full border-border/70 bg-background/80 px-4 text-xs font-medium text-foreground shadow-xs transition-all duration-200 hover:border-primary/50 hover:bg-card hover:shadow-sm"
                 onClick={() => setShowAllPortals((v) => !v)}
               >
                 <span>{showAllPortals() ? "Daha az göster" : "Daha fazla göster"}</span>
@@ -1025,7 +1025,7 @@ function DashboardContent() {
 
         <Show when={role() !== "parent"}>
         <div class="grid items-stretch gap-5">
-          <section class="flex min-h-[17rem] flex-col space-y-2.5 rounded-3xl border border-[#F2F2F3] bg-card/60 p-3 sm:p-4 dark:border-white/[0.08] dark:bg-card/40 shadow-sm" aria-labelledby="dash-attention">
+          <section class="flex min-h-68 flex-col space-y-2.5 rounded-3xl border border-[#F2F2F3] bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs" aria-labelledby="dash-attention">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2">
               <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
                 {t("dashboard.attention")}
@@ -1036,7 +1036,7 @@ function DashboardContent() {
                   class={cn(
                     "rounded-md px-2.5 py-0.5 font-medium transition-all",
                     attentionFilter() === "all"
-                      ? "bg-background font-semibold text-foreground shadow-sm"
+                      ? "bg-background font-semibold text-foreground shadow-xs"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                   onClick={() => { setAttentionFilter("all"); setAttentionPage(0); }}
@@ -1048,7 +1048,7 @@ function DashboardContent() {
                   class={cn(
                     "rounded-md px-2.5 py-0.5 font-medium transition-all",
                     attentionFilter() === "exam"
-                      ? "bg-background font-semibold text-foreground shadow-sm"
+                      ? "bg-background font-semibold text-foreground shadow-xs"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                   onClick={() => { setAttentionFilter("exam"); setAttentionPage(0); }}
@@ -1060,7 +1060,7 @@ function DashboardContent() {
                   class={cn(
                     "rounded-md px-2.5 py-0.5 font-medium transition-all",
                     attentionFilter() === "event"
-                      ? "bg-background font-semibold text-foreground shadow-sm"
+                      ? "bg-background font-semibold text-foreground shadow-xs"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                   onClick={() => { setAttentionFilter("event"); setAttentionPage(0); }}
@@ -1074,14 +1074,14 @@ function DashboardContent() {
               when={filteredAttention().length > 0}
               fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
             >
-              <ul class="flex-1 divide-y divide-[#F2F2F3] overflow-hidden rounded-2xl border border-[#F2F2F3] dark:border-white/[0.08] bg-card shadow-apple">
+              <ul class="flex-1 divide-y divide-[#F2F2F3] overflow-hidden rounded-2xl border border-[#F2F2F3] dark:border-white/8 bg-card shadow-apple">
                 <For each={pagedAttention()}>
                   {(item) => (
                     <li>
                       <Link
                         to={item.to}
                         params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/45 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/45 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
                       >
                         <StatusDot status={item.status} />
                         <div class="min-w-0 flex-1">
@@ -1122,7 +1122,7 @@ function DashboardContent() {
 
 function DashEmpty(props: { children: string }) {
   return (
-    <div class="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-dashed border-border bg-card/80 px-4 py-8 text-center text-sm text-muted-foreground shadow-sm">
+    <div class="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-dashed border-border bg-card/80 px-4 py-8 text-center text-sm text-muted-foreground shadow-xs">
       {props.children}
     </div>
   );
@@ -1159,12 +1159,12 @@ function PortalCard(props: {
             <span class="hidden text-muted-foreground/40 sm:inline" aria-hidden="true">
               |
             </span>
-            <span class="mono shrink-0 rounded-full border border-black/[0.06] bg-background/80 px-2 py-0.5 text-xs font-semibold tabular-nums tracking-tight text-foreground shadow-sm dark:border-white/[0.08] sm:text-sm">
+            <span class="mono shrink-0 rounded-full border border-black/6 bg-background/80 px-2 py-0.5 text-xs font-semibold tabular-nums tracking-tight text-foreground shadow-xs dark:border-white/8 sm:text-sm">
               {props.card.stat}
             </span>
           </Show>
           <Show when={props.card.minRole && props.card.minRole !== "student"}>
-            <span class="ml-auto hidden shrink-0 rounded-full border border-black/[0.06] dark:border-white/[0.08] bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:inline">
+            <span class="ml-auto hidden shrink-0 rounded-full border border-black/6 dark:border-white/8 bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:inline">
               {t(ROLE_KEY[props.card.minRole!])}
             </span>
           </Show>
@@ -1212,9 +1212,9 @@ function PortalCard(props: {
 
   const cardClass = () =>
     cn(
-      "group relative flex min-h-[6rem] items-start gap-3.5 overflow-hidden rounded-2xl border border-[#F2F2F3] bg-card p-4 shadow-apple transition-all duration-200 hover:-translate-y-0.5 hover:shadow-apple-hover hover:border-border dark:border-white/[0.08] dark:hover:border-white/20 dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] sm:min-h-[6.5rem]",
+      "group relative flex min-h-24 items-start gap-3.5 overflow-hidden rounded-2xl border border-[#F2F2F3] bg-card p-4 shadow-apple transition-all duration-200 hover:-translate-y-0.5 hover:shadow-apple-hover hover:border-border dark:border-white/8 dark:hover:border-white/20 dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] sm:min-h-26",
       !props.editing && "active:scale-[0.98]",
-      props.editing && "cursor-grab select-none border-dashed border-primary/50 bg-primary/[0.03]",
+      props.editing && "cursor-grab select-none border-dashed border-primary/50 bg-primary/3",
       props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-apple-hover",
       props.dragging && "scale-[0.98] border-primary/50 opacity-50",
     );

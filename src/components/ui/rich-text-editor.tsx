@@ -87,7 +87,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           S
         </button>
 
-        <div class="mx-1 h-4 w-[1px] bg-border" />
+        <div class="mx-1 h-4 w-px bg-border" />
 
         <button
           type="button"
@@ -106,7 +106,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           1. Liste
         </button>
 
-        <div class="mx-1 h-4 w-[1px] bg-border" />
+        <div class="mx-1 h-4 w-px bg-border" />
 
         <button
           type="button"
@@ -124,7 +124,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           ref={editorRef}
           contentEditable
           class={cn(
-            "w-full h-full min-h-[140px] outline-none text-xs leading-relaxed text-foreground whitespace-pre-wrap overflow-auto",
+            "w-full h-full min-h-[140px] outline-hidden text-xs leading-relaxed text-foreground whitespace-pre-wrap overflow-auto",
             props.minHeight ? props.minHeight : "min-h-[140px]"
           )}
           onInput={handleInput}

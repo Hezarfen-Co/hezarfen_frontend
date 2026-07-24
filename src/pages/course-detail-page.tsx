@@ -376,7 +376,7 @@ function CourseDetailContent() {
                   }, t("common.saved"));
                 }}
               >
-                <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
+                <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4 shadow-xs">
                   <div class="space-y-1.5">
                     <Label for="edit-course-title">{t("form.title")}</Label>
                     <Input
@@ -398,7 +398,7 @@ function CourseDetailContent() {
                     />
                   </div>
                 </div>
-                <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/[0.03] p-4 shadow-sm">
+                <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/3 p-4 shadow-xs">
                   <div class="space-y-1.5">
                     <Label for="edit-course-kind">{t("courses.kind")}</Label>
                     <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
@@ -441,13 +441,13 @@ function CourseDetailContent() {
               description={createdCourseExam() ? t("exams.step2Questions") : c().title}
               size={examCreateStep() === "questions" ? "wide" : "default"}
             >
-              <div class="mb-4 flex rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-1">
+              <div class="mb-4 flex rounded-2xl border border-indigo-500/15 bg-indigo-500/3 p-1">
                 <button
                   type="button"
                   class={cn(
                     "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     examCreateStep() === "details"
-                      ? "bg-primary text-primary-foreground shadow-xs"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
                       : "text-muted-foreground hover:bg-muted/50",
                   )}
                   onClick={() => setExamCreateStep("details")}
@@ -460,7 +460,7 @@ function CourseDetailContent() {
                   class={cn(
                     "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
                     examCreateStep() === "questions"
-                      ? "bg-primary text-primary-foreground shadow-xs"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
                       : createdCourseExam()
                       ? "text-muted-foreground hover:bg-muted/50"
                       : "opacity-40 cursor-not-allowed text-muted-foreground",

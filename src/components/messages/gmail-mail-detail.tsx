@@ -122,7 +122,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
             Gelen Kutusu
           </Button>
 
-          <div class="h-4 w-[1px] bg-border mx-1" />
+          <div class="h-4 w-px bg-border mx-1" />
 
           {/* Mark as Read / Unread (received messages only) */}
           <Show when={!isSent()}>
@@ -238,7 +238,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
         {/* Sender Info Card */}
         <div class="flex items-start justify-between gap-4">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-sm text-primary-foreground shadow-xs">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-sm text-primary-foreground shadow-2xs">
               {peerName().charAt(0).toUpperCase()}
             </div>
             <div class="min-w-0">
@@ -273,7 +273,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
         </div>
 
         {/* Email Body Card */}
-        <div class="rounded-2xl border border-border/80 bg-card p-6 shadow-xs leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
+        <div class="rounded-2xl border border-border/80 bg-card p-6 shadow-2xs leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
           <div innerHTML={props.message.body} />
         </div>
 
@@ -299,7 +299,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               {/* Gmail Inline Reply Editor */}
               <form
                 onSubmit={handleSendReply}
-                class="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-3"
+                class="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-3"
               >
                 <div class="flex items-center justify-between text-xs border-b pb-2">
                   <div class="flex items-center gap-2">
@@ -332,7 +332,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                   <Button
                     type="submit"
                     size="sm"
-                    class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-xs hover:bg-primary/90"
+                    class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-2xs hover:bg-primary/90"
                     disabled={sending() || !replyBody().trim()}
                   >
                     <IconSend class="mr-2 h-4 w-4" />

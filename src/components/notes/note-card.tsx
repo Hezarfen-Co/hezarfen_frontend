@@ -24,7 +24,7 @@ export function NoteCard(props: {
       <article
         role="button"
         tabindex="0"
-        class="group flex h-full min-h-72 cursor-pointer flex-col overflow-hidden rounded-2xl border border-amber-500/40 bg-card shadow-sm card-lift hover:border-amber-400/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-amber-500/30 dark:hover:border-amber-400/60"
+        class="group flex h-full min-h-72 cursor-pointer flex-col overflow-hidden rounded-2xl border border-amber-500/40 bg-card shadow-xs card-lift hover:border-amber-400/60 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring dark:border-amber-500/30 dark:hover:border-amber-400/60"
         onClick={() => props.onOpen(props.note)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {

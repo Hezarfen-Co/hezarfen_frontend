@@ -129,7 +129,7 @@ export function UserTable(props: {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap", cellClass: "w-28 text-center" },
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap", cellClass: "w-28 text-center" },
       cell: (cell) => (
         <Show when={cell.row.original.role === "parent"} fallback={<span class="text-center text-muted-foreground/40">—</span>}>
           <TableRowActions
@@ -148,6 +148,6 @@ export function UserTable(props: {
   ]);
 
   return (
-    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-[58rem]" searchPredicate={searchUser} enablePagination pageSize={20} onRowClick={props.onUserClick} />
+    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-232" searchPredicate={searchUser} enablePagination pageSize={20} onRowClick={props.onUserClick} />
   );
 }

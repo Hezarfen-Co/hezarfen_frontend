@@ -7,7 +7,7 @@ export function Card(props: ParentProps<ComponentProps<"div">>) {
   return (
     <div
       class={cn(
-        "rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-card text-card-foreground shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.25)] transition-all duration-200",
+        "rounded-2xl border border-black/6 dark:border-white/8 bg-card text-card-foreground shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.25)] transition-all duration-200",
         local.class,
       )}
       {...rest}

@@ -14,7 +14,7 @@ export function ComboboxInput<T extends ValidComponent = "input">(
   return (
     <ComboboxPrimitive.Input
       class={cn(
-        "flex h-11 w-full rounded-xl border border-border/80 bg-muted/30 px-3.5 py-2 text-sm text-foreground shadow-sm outline-none transition-all duration-150",
+        "flex h-11 w-full rounded-xl border border-border/80 bg-muted/30 px-3.5 py-2 text-sm text-foreground shadow-xs outline-hidden transition-all duration-150",
         "placeholder:text-muted-foreground hover:bg-muted/50 hover:border-border focus:bg-background focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
         local.class,
       )}
@@ -34,8 +34,8 @@ export function ComboboxContent<T extends ValidComponent = "div">(
     <ComboboxPrimitive.Portal>
       <ComboboxPrimitive.Content
         class={cn(
-          "z-50 mt-1.5 max-h-72 min-w-[var(--kb-popper-anchor-width)] overflow-hidden rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-none",
-          "origin-[var(--kb-combobox-content-transform-origin)] animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
+          "z-50 mt-1.5 max-h-72 min-w-(--kb-popper-anchor-width) overflow-hidden rounded-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-hidden",
+          "origin-(--kb-combobox-content-transform-origin) animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,
         )}
         {...rest}
@@ -53,8 +53,8 @@ export function ComboboxItem<T extends ValidComponent = "li">(
   return (
     <ComboboxPrimitive.Item
       class={cn(
-        "relative flex min-h-[2.5rem] cursor-pointer select-none items-center rounded-xl px-3 py-2 text-sm font-medium outline-none transition-all duration-150",
-        "data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary active:scale-[0.98] data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+        "relative flex min-h-10 cursor-pointer select-none items-center rounded-xl px-3 py-2 text-sm font-medium outline-hidden transition-all duration-150",
+        "data-highlighted:bg-primary/10 data-highlighted:text-primary active:scale-[0.98] data-disabled:pointer-events-none data-disabled:opacity-40",
         local.class,
       )}
       {...rest}

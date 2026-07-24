@@ -74,7 +74,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
         <AlertDialogFooter>
           <AlertDialogCancel
             class={cn(
-              "inline-flex h-11 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-background px-4 text-xs font-semibold shadow-sm tactile-press",
+              "inline-flex h-11 items-center justify-center rounded-xl border border-black/8 dark:border-white/12 bg-background px-4 text-xs font-semibold shadow-xs tactile-press",
               "hover:bg-accent hover:text-accent-foreground disabled:opacity-50",
             )}
             disabled={pending()}

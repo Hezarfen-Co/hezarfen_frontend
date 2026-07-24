@@ -167,7 +167,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   };
 
   return (
-    <section class="space-y-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm dark:border-white/[0.08]">
+    <section class="space-y-3 rounded-2xl border border-border/80 bg-card p-4 shadow-xs dark:border-white/8">
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -216,7 +216,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
               {(file) => {
                 const meta = fileMeta(file);
                 return (
-                  <li class="group overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-sm transition-colors hover:border-amber-500/40">
+                  <li class="group overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-xs transition-colors hover:border-amber-500/40">
                     <div class="relative h-28 bg-muted/25">
                       <button type="button" class="flex h-full w-full items-center justify-center rounded-t-xl transition-colors hover:bg-muted/40" onClick={() => setPreviewFile(file)}>
                         <span class={cn("flex h-16 w-16 items-center justify-center rounded-2xl border", meta.class)}>
@@ -226,7 +226,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
                       <span class={cn("absolute left-2 top-2 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide", meta.class)}>
                         {meta.label}
                       </span>
-                      <div class="absolute right-2 top-2 z-10 rounded-xl border border-border/80 bg-card/90 shadow-md backdrop-blur-md dark:border-white/[0.15] dark:bg-card/95">
+                      <div class="absolute right-2 top-2 z-10 rounded-xl border border-border/80 bg-card/90 shadow-md backdrop-blur-md dark:border-white/15 dark:bg-card/95">
                         <TableRowActions
                           label={t("common.actions")}
                           actions={[

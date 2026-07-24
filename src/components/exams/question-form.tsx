@@ -187,13 +187,13 @@ export function QuestionForm(props: {
 
   return (
     <form class="space-y-3" onSubmit={(e) => void submit(e)}>
-      <div class="rounded-lg border bg-card p-3.5 shadow-sm">
+      <div class="rounded-lg border bg-card p-3.5 shadow-xs">
         <div class="space-y-2">
           <Label for="question-text" class="text-sm font-semibold">{t("questions.text")}</Label>
           <Textarea
             id="question-text"
             ref={textAreaRef}
-            class="min-h-[7rem] resize-none overflow-hidden bg-background text-base"
+            class="min-h-28 resize-none overflow-hidden bg-background text-base"
             value={text()}
             maxlength={2000}
             rows={3}
@@ -250,7 +250,7 @@ export function QuestionForm(props: {
           <Show when={drawing()}>
             <div class="mt-3 border-t border-border/50 pt-3">
               <Label class="mb-2 block text-xs font-semibold text-muted-foreground">{t("questions.drawTitle")}</Label>
-              <Suspense fallback={<div class="h-[22rem] animate-pulse rounded-lg border bg-muted/20" />}>
+              <Suspense fallback={<div class="h-88 animate-pulse rounded-lg border bg-muted/20" />}>
                 <DrawCanvas
                   fileName="question.png"
                   initialScene={editScene()}
@@ -267,8 +267,8 @@ export function QuestionForm(props: {
         </div>
       </div>
 
-      <div class="flex flex-wrap items-end gap-3 rounded-lg border bg-card px-3.5 py-3 shadow-sm">
-        <div class="min-w-0 flex-1 basis-[10rem]">
+      <div class="flex flex-wrap items-end gap-3 rounded-lg border bg-card px-3.5 py-3 shadow-xs">
+        <div class="min-w-0 flex-1 basis-40">
           <Label for="question-subject" class="mb-1 block text-xs font-semibold text-muted-foreground">{t("subjects.subject")}</Label>
           <Select id="question-subject" class="h-9 py-1.5 text-sm" value={subjectId()} required onChange={(e) => setSubjectId(e.currentTarget.value)}>
             <option value="">{t("subjects.select")}</option>
@@ -285,7 +285,7 @@ export function QuestionForm(props: {
                   class={cn(
                     "h-7 rounded-sm px-2.5 text-xs font-semibold transition-colors",
                     kind() === k
-                      ? "bg-primary text-primary-foreground shadow-xs"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                   onClick={() => setKind(k)}
@@ -312,7 +312,7 @@ export function QuestionForm(props: {
       </div>
 
       <Show when={kind() === "choice"}>
-        <div class="rounded-lg border bg-card p-3.5 shadow-sm">
+        <div class="rounded-lg border bg-card p-3.5 shadow-xs">
           <div class="mb-3 flex items-center justify-between gap-2 border-b border-border/50 pb-2">
             <Label class="text-sm font-semibold">{t("questions.choices")}</Label>
             <Button type="button" variant="outline" size="sm" class="h-7 gap-1 text-xs" disabled={choices().length >= 10} onClick={addChoice}>
@@ -336,7 +336,7 @@ export function QuestionForm(props: {
                       class={cn(
                         "mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold transition-colors",
                         isCorrect()
-                          ? "bg-emerald-600 text-white shadow-xs"
+                          ? "bg-emerald-600 text-white shadow-2xs"
                           : "border bg-background text-muted-foreground hover:border-emerald-400 hover:text-emerald-600",
                       )}
                       onClick={() => setCorrect(index)}

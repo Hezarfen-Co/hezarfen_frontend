@@ -20,7 +20,7 @@ export function AlertDialogContent<T extends ValidComponent = "div">(
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <AlertDialogPrimitive.Content
           class={cn(
-            "w-full max-w-md overflow-hidden rounded-2xl sm:rounded-3xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-apple outline-none animate-fade-up",
+            "w-full max-w-md overflow-hidden rounded-2xl sm:rounded-3xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-apple outline-hidden animate-fade-up",
             local.class,
           )}
           {...rest}

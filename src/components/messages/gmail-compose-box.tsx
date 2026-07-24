@@ -179,7 +179,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
               <Button
                 type="submit"
                 size="sm"
-                class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-xs hover:bg-primary/90"
+                class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-2xs hover:bg-primary/90"
                 disabled={pending()}
               >
                 <IconSend class="mr-2 h-4 w-4" />

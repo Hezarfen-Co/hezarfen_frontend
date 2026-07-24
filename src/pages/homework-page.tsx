@@ -238,7 +238,7 @@ function HomeworkContent() {
           </div>
         </form>
       </SidePanel>
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -248,7 +248,7 @@ function HomeworkContent() {
             description={t("homework.listHelp")}
             actions={
               <Show when={canCreate()}>
-                <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setCreateOpen(true)}>
+                <Button type="button" size="sm" class="min-w-30" onClick={() => setCreateOpen(true)}>
                   <IconPlus class="h-4 w-4" />
                   {t("homework.add")}
                 </Button>
@@ -256,7 +256,7 @@ function HomeworkContent() {
             }
             columns={columns()}
             data={list() ?? []}
-            tableClass="table-fixed min-w-[64rem]"
+            tableClass="table-fixed min-w-5xl"
             filterColumn="title"
             enablePagination
             pageSize={12}

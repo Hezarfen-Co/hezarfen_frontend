@@ -138,7 +138,7 @@ function SettingsContent() {
               <Button
                 type="button"
                 size="sm"
-                class="min-w-[7.5rem] rounded-lg"
+                class="min-w-30 rounded-lg"
                 disabled={pending() || !dirty()}
                 onClick={() => void save()}
               >
@@ -210,7 +210,7 @@ function SettingsContent() {
                 >
                   <For each={examKinds()}>
                     {(item, index) => (
-                      <div class="grid grid-cols-[minmax(0,1fr)_4.5rem_2.25rem] items-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-1.5 shadow-xs">
+                      <div class="grid grid-cols-[minmax(0,1fr)_4.5rem_2.25rem] items-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-1.5 shadow-2xs">
                         <Input
                           aria-label={t("settings.name")}
                           class="h-9 rounded-md border-0 bg-transparent shadow-none focus-visible:ring-1"
@@ -293,7 +293,7 @@ function SettingsContent() {
                     {(status, index) => {
                       const meta = () => getAttendanceStatusMeta(status);
                       return (
-                        <div class="grid grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-1.5 shadow-xs">
+                        <div class="grid grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-1.5 shadow-2xs">
                           <Show
                             when={isCoreAttendance(status)}
                             fallback={
@@ -378,7 +378,7 @@ function SettingsContent() {
                 <Show when={gradeBands().length > 0} fallback={<EmptyRows label={t("settings.empty")} />}>
                   <For each={gradeBands()}>
                     {(band, index) => (
-                      <div class="grid grid-cols-[4.5rem_minmax(0,1fr)_2.25rem] items-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-1.5 shadow-xs">
+                      <div class="grid grid-cols-[4.5rem_minmax(0,1fr)_2.25rem] items-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-1.5 shadow-2xs">
                         <Input
                           aria-label={t("settings.min")}
                           class="h-9 rounded-md border-0 bg-muted/40 text-center font-mono shadow-none focus-visible:ring-1"
@@ -445,7 +445,7 @@ function SettingsContent() {
 
 function Metric(props: { label: string; value: number | string }) {
   return (
-    <div class="rounded-xl border border-border/60 bg-card px-3 py-3 shadow-xs">
+    <div class="rounded-xl border border-border/60 bg-card px-3 py-3 shadow-2xs">
       <p class="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{props.label}</p>
       <p class="mt-1 font-display text-xl font-semibold tabular-nums tracking-tight">{props.value}</p>
     </div>

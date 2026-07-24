@@ -359,7 +359,7 @@ export function CommandPalette(props: CommandPaletteProps) {
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-2xl p-0 shadow-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl">
+      <DialogContent class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-2xl p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl">
         <DialogTitle class="sr-only">{t("dashboard.commandCenter")}</DialogTitle>
         <DialogDescription class="sr-only">{t("common.searchPlaceholder")}</DialogDescription>
 
@@ -371,7 +371,7 @@ export function CommandPalette(props: CommandPaletteProps) {
             type="text"
             value={query()}
             placeholder={t("common.searchPlaceholder")}
-            class="flex-1 h-9 w-full bg-transparent px-1 text-sm sm:text-base font-medium text-foreground outline-none border-none shadow-none focus:outline-none focus:ring-0 placeholder:text-muted-foreground/60"
+            class="flex-1 h-9 w-full bg-transparent px-1 text-sm sm:text-base font-medium text-foreground outline-hidden border-none shadow-none focus:outline-hidden focus:ring-0 placeholder:text-muted-foreground/60"
             onInput={(event) => setQuery(event.currentTarget.value)}
             onKeyDown={handleKeyDown}
           />
@@ -416,9 +416,9 @@ export function CommandPalette(props: CommandPaletteProps) {
                           onClick={() => executeItem(item)}
                           onMouseEnter={() => setSelectedIndex(globalIndex)}
                           class={cn(
-                            "flex w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left outline-none transition-colors duration-150",
+                            "flex w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left outline-hidden transition-colors duration-150",
                             isSelected()
-                              ? "bg-accent text-accent-foreground font-medium shadow-sm"
+                              ? "bg-accent text-accent-foreground font-medium shadow-xs"
                               : "text-foreground hover:bg-secondary/60",
                           )}
                         >

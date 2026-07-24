@@ -216,7 +216,7 @@ export function ExamQuestionsPanel(props: {
             <ol class="space-y-3">
               <For each={pageItems()}>
                 {(q, index) => (
-                  <li class="rounded-lg border bg-card p-4 shadow-xs">
+                  <li class="rounded-lg border bg-card p-4 shadow-2xs">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                       <div class="min-w-0 flex-1 space-y-2.5">
                         <div class="flex flex-wrap items-center gap-2">
@@ -262,7 +262,7 @@ export function ExamQuestionsPanel(props: {
                                       : "flex items-start gap-3 rounded-md border border-transparent bg-muted/30 px-3 py-2 text-muted-foreground"
                                   }
                                 >
-                                  <span class="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-[3px] border bg-background font-mono text-[11px] font-bold text-foreground shadow-xs">
+                                  <span class="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-[3px] border bg-background font-mono text-[11px] font-bold text-foreground shadow-2xs">
                                     {String.fromCharCode(65 + choiceIndex())}
                                   </span>
                                   <span class="min-w-0 flex-1 space-y-2 whitespace-pre-wrap">

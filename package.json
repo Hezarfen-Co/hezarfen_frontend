@@ -12,25 +12,25 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@kobalte/core": "^0.13.11",
-    "@tanstack/solid-router": "^1.131.0",
+    "@kobalte/core": "^0.13.12",
+    "@tanstack/solid-router": "^1.170.18",
     "@tanstack/solid-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "pdfjs-dist": "^6.1.200",
-    "solid-js": "^1.9.13",
-    "tailwind-merge": "^3.3.1"
+    "solid-js": "^1.9.14",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
-    "@tanstack/solid-router-devtools": "^1.131.0",
-    "@types/node": "^24.13.2",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@tanstack/solid-router-devtools": "^1.167.0",
+    "@types/node": "^26.1.1",
+    "postcss": "^8.5.22",
+    "tailwindcss": "^4.3.3",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^7.0.2",
-    "vite": "^6.3.5",
-    "vite-plugin-solid": "^2.11.12",
+    "vite": "^8.1.5",
+    "vite-plugin-solid": "^2.11.13",
     "vitest": "^4.1.10"
   }
 }

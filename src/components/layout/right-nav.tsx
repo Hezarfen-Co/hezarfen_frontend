@@ -209,7 +209,7 @@ export function RightNav() {
     <>
       {/* Sticky Right Icon Bar */}
       <aside
-        class="sticky top-0 z-30 hidden h-screen w-14 shrink-0 flex-col items-center justify-between border-l border-black/[0.06] bg-sidebar py-3 text-sidebar-foreground dark:border-white/[0.08] dark:bg-[#070707] dark:text-white lg:flex"
+        class="sticky top-0 z-30 hidden h-screen w-14 shrink-0 flex-col items-center justify-between border-l border-black/6 bg-sidebar py-3 text-sidebar-foreground dark:border-white/8 dark:bg-[#070707] dark:text-white lg:flex"
       >
         <div class="flex flex-col items-center gap-3">
           {/* Messages Icon Button - Direct Page Navigation */}
@@ -220,7 +220,7 @@ export function RightNav() {
               "relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 cursor-pointer",
               isMessagesActive()
                 ? "bg-primary text-primary-foreground shadow-md scale-105"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/8 dark:hover:text-white"
             )}
             title={t("nav.messages")}
             aria-label={t("nav.messages")}
@@ -228,7 +228,7 @@ export function RightNav() {
             <IconMessage class="h-5 w-5" />
             <Show when={unreadCount() > 0}>
               <span
-                class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-xs ring-2 ring-sidebar dark:ring-[#070707]"
+                class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-2xs ring-2 ring-sidebar dark:ring-[#070707]"
                 title={`${unreadCount()} ${t("rightPanel.unreadBadge")}`}
               >
                 {unreadCount() > 9 ? "9+" : unreadCount()}
@@ -244,7 +244,7 @@ export function RightNav() {
               "relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 cursor-pointer",
               isCalendarActive()
                 ? "bg-primary text-primary-foreground shadow-md scale-105"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/8 dark:hover:text-white"
             )}
             title={t("nav.calendar")}
             aria-label={t("nav.calendar")}
@@ -255,11 +255,11 @@ export function RightNav() {
             <Show when={hasTodayEvents() && hasTodayExams()}>
               <div class="absolute -top-1 -right-1 z-10 flex items-center -space-x-1.5">
                 <span
-                  class="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-sidebar dark:ring-[#070707] shadow-xs"
+                  class="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-sidebar dark:ring-[#070707] shadow-2xs"
                   title={t("nav.events")}
                 />
                 <span
-                  class="h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-sidebar dark:ring-[#070707] shadow-xs"
+                  class="h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-sidebar dark:ring-[#070707] shadow-2xs"
                   title={t("nav.exams")}
                 />
               </div>
@@ -268,7 +268,7 @@ export function RightNav() {
             {/* Only Event */}
             <Show when={hasTodayEvents() && !hasTodayExams()}>
               <span
-                class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-sidebar dark:ring-[#070707] shadow-xs"
+                class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-sidebar dark:ring-[#070707] shadow-2xs"
                 title={t("nav.events")}
               />
             </Show>
@@ -276,7 +276,7 @@ export function RightNav() {
             {/* Only Exam */}
             <Show when={hasTodayExams() && !hasTodayEvents()}>
               <span
-                class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-sidebar dark:ring-[#070707] shadow-xs"
+                class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-sidebar dark:ring-[#070707] shadow-2xs"
                 title={t("nav.exams")}
               />
             </Show>
@@ -292,12 +292,12 @@ export function RightNav() {
       <Show when={activeTab() !== null}>
         {/* Backdrop overlay blurring main page content on the left */}
         <div
-          class="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm transition-all"
+          class="fixed inset-0 z-40 bg-black/20 backdrop-blur-xs transition-all"
           onClick={closePanel}
         />
 
         <div
-          class="fixed right-14 top-0 z-50 flex h-screen w-80 sm:w-96 flex-col border-l border-black/[0.08] bg-card text-card-foreground shadow-2xl dark:border-white/[0.08] dark:bg-[#0c0c0e] animate-in slide-in-from-right-4 duration-200"
+          class="fixed right-14 top-0 z-50 flex h-screen w-80 sm:w-96 flex-col border-l border-black/8 bg-card text-card-foreground shadow-2xl dark:border-white/8 dark:bg-[#0c0c0e] animate-in slide-in-from-right-4 duration-200"
         >
           {/* Drawer Header */}
           <div class="flex h-14 shrink-0 items-center justify-between border-b border-border/60 px-4">
@@ -423,7 +423,7 @@ export function RightNav() {
                               class={cn(
                                 "group flex cursor-pointer flex-col gap-1 rounded-xl border p-2.5 transition-all hover:border-primary/50 hover:bg-muted/40 shadow-2xs max-w-full overflow-hidden",
                                 !msg.read
-                                  ? "border-primary/30 bg-primary/[0.03] dark:bg-primary/[0.06]"
+                                  ? "border-primary/30 bg-primary/3 dark:bg-primary/6"
                                   : "border-border/60 bg-card"
                               )}
                             >
@@ -493,7 +493,7 @@ export function RightNav() {
                     <div class="rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3">
                       <div class="flex items-start justify-between gap-2 border-b border-border/50 pb-2.5">
                         <div class="flex items-center gap-2.5 min-w-0">
-                          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-sm">
+                          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-xs">
                             {personLabel(msg().sender).charAt(0).toUpperCase()}
                           </span>
                           <div class="min-w-0">
@@ -618,8 +618,8 @@ export function RightNav() {
                                 class={cn(
                                   "group flex cursor-pointer items-start justify-between gap-2.5 rounded-xl border p-3 shadow-2xs transition-all hover:shadow-md",
                                   isEvent
-                                    ? "border-emerald-500/30 bg-emerald-500/[0.02] hover:border-emerald-500/60 hover:bg-emerald-500/[0.05]"
-                                    : "border-rose-500/30 bg-rose-500/[0.02] hover:border-rose-500/60 hover:bg-rose-500/[0.05]"
+                                    ? "border-emerald-500/30 bg-emerald-500/2 hover:border-emerald-500/60 hover:bg-emerald-500/5"
+                                    : "border-rose-500/30 bg-rose-500/2 hover:border-rose-500/60 hover:bg-rose-500/5"
                                 )}
                               >
                                 <div class="min-w-0 space-y-1">
@@ -684,8 +684,8 @@ export function RightNav() {
                         class={cn(
                           "rounded-xl border p-4 space-y-3",
                           isEvent
-                            ? "border-emerald-500/30 bg-emerald-500/[0.03]"
-                            : "border-rose-500/30 bg-rose-500/[0.03]"
+                            ? "border-emerald-500/30 bg-emerald-500/3"
+                            : "border-rose-500/30 bg-rose-500/3"
                         )}
                       >
                         <div class="flex items-center justify-between">

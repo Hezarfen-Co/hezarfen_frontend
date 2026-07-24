@@ -56,7 +56,7 @@ export function NavBar() {
         <div class="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            class="absolute inset-0 bg-foreground/30 backdrop-blur-sm"
+            class="absolute inset-0 bg-foreground/30 backdrop-blur-xs"
             aria-label={t("nav.close")}
             onClick={() => setMobileOpen(false)}
           />

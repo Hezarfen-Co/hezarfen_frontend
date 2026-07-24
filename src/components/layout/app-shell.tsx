@@ -75,13 +75,13 @@ export function AppShell(props: ParentProps) {
         <Show when={auth.user() && !fullScreen()}>
           <aside
             class={cn(
-              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-black/[0.06] bg-sidebar/95 text-sidebar-foreground backdrop-blur-md transition-[width] duration-200 ease-out dark:border-white/[0.08] dark:bg-[#070707] dark:text-white lg:flex lg:flex-col",
+              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-black/6 bg-sidebar/95 text-sidebar-foreground backdrop-blur-md transition-[width] duration-200 ease-out dark:border-white/8 dark:bg-[#070707] dark:text-white lg:flex lg:flex-col",
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
             )}
           >
             <div
               class={cn(
-                "flex shrink-0 items-center gap-2 border-b border-black/[0.05] dark:border-white/[0.08]",
+                "flex shrink-0 items-center gap-2 border-b border-black/5 dark:border-white/8",
                 collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-14 px-3",
               )}
             >
@@ -101,7 +101,7 @@ export function AppShell(props: ParentProps) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                class="h-8 w-8 shrink-0 justify-center rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                class="h-8 w-8 shrink-0 justify-center rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/8 dark:hover:text-white"
                 aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
                 title={collapsed() ? t("nav.expand") : t("nav.collapse")}
                 onClick={() => prefs.toggleSidebar()}
@@ -126,8 +126,8 @@ export function AppShell(props: ParentProps) {
               aria-label={t("nav.close")}
               onClick={() => setMobileOpen(false)}
             />
-            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-black/[0.08] bg-sidebar/95 text-sidebar-foreground shadow-apple backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#070707] dark:text-white">
-              <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-black/[0.05] px-3 dark:border-white/[0.08]">
+            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-black/8 bg-sidebar/95 text-sidebar-foreground shadow-apple backdrop-blur-xl dark:border-white/8 dark:bg-[#070707] dark:text-white">
+              <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-black/5 px-3 dark:border-white/8">
                 <Link to="/" class="flex min-w-0 items-center gap-2.5" onClick={() => setMobileOpen(false)}>
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-apple">H</span>
                   <span class="truncate font-display text-base font-semibold text-foreground dark:text-white">{t("app.name")}</span>
@@ -136,7 +136,7 @@ export function AppShell(props: ParentProps) {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  class="h-8 w-8 shrink-0 rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                  class="h-8 w-8 shrink-0 rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/8 dark:hover:text-white"
                   aria-label={t("nav.close")}
                   onClick={() => setMobileOpen(false)}
                 >
@@ -155,7 +155,7 @@ export function AppShell(props: ParentProps) {
           <Show when={auth.user() && !fullScreen()}>
             <header class="sticky top-0 z-30 hig-translucent-bar flex h-14 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
               <div class="flex flex-1 items-center justify-start min-w-0">
-                <div class="rounded-full border border-black/[0.06] dark:border-white/[0.08] bg-card/80 px-3.5 py-1 text-xs font-semibold text-muted-foreground shadow-sm">
+                <div class="rounded-full border border-black/6 dark:border-white/8 bg-card/80 px-3.5 py-1 text-xs font-semibold text-muted-foreground shadow-xs">
                   <span class="block truncate max-w-[120px] sm:max-w-none">{routeLabel()}</span>
                 </div>
               </div>
@@ -164,7 +164,7 @@ export function AppShell(props: ParentProps) {
                 <button
                   type="button"
                   onClick={() => setCommandOpen(true)}
-                  class="flex h-9 w-full items-center justify-between gap-2.5 rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-secondary/60 px-3.5 text-xs font-medium text-muted-foreground shadow-2xs transition-all hover:bg-secondary hover:text-foreground hover:border-border/80"
+                  class="flex h-9 w-full items-center justify-between gap-2.5 rounded-full border border-black/8 dark:border-white/12 bg-secondary/60 px-3.5 text-xs font-medium text-muted-foreground shadow-2xs transition-all hover:bg-secondary hover:text-foreground hover:border-border/80"
                   title={t("dashboard.commandCenter")}
                 >
                   <div class="flex items-center gap-2 min-w-0">

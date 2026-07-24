@@ -479,7 +479,7 @@ function ExamDetailContent() {
                     <button
                       type="button"
                       onClick={() => setMarkOpen((v) => !v)}
-                      class="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm shadow-sm transition-colors hover:bg-muted/40"
+                      class="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm shadow-xs transition-colors hover:bg-muted/40"
                     >
                       <span class="inline-flex items-center gap-2 font-medium">
                         <IconEdit class="h-4 w-4" />
