@@ -124,6 +124,21 @@ describe("client", () => {
       expect(formatApiErrorMessage("forbidden", "tr")).toBe("Bu işlem için yetkin yok.");
     });
 
+    it("localizes slot-overlap conflicts (no half-English fallback)", () => {
+      // exact backend strings (lowercase) must map, not fall through to "İşlem tamamlanamadı: <english>"
+      expect(formatApiErrorMessage("this time overlaps a slot you have already published", "tr")).toBe(
+        "Bu zaman aralığı, daha önce yayınladığın bir müsaitlikle çakışıyor.",
+      );
+      expect(formatApiErrorMessage("a repeated slot overlaps one you have already published", "tr")).toBe(
+        "Tekrarlanan müsaitliklerden biri, daha önce yayınladığın bir müsaitlikle çakışıyor.",
+      );
+      expect(formatApiErrorMessage("the repeated slots overlap each other", "en")).toBe("The repeated slots overlap each other.");
+      // a 409 ApiError carrying the backend message resolves the same way
+      expect(formatApiError(new ApiError(409, "this time overlaps a slot you have already published"), "tr")).toBe(
+        "Bu zaman aralığı, daha önce yayınladığın bir müsaitlikle çakışıyor.",
+      );
+    });
+
     it("handles unknown messages with sentence case", () => {
       expect(formatApiErrorMessage("custom error occurred", "en")).toBe("Custom error occurred");
       expect(formatApiErrorMessage("custom error occurred", "tr")).toBe("İşlem tamamlanamadı: Custom error occurred");

@@ -35,7 +35,7 @@ import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLab
 import { cn } from "@/lib/cn";
 import { createFlash } from "@/lib/flash";
 import { createNow } from "@/lib/create-now";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -119,6 +119,19 @@ function AppointmentsContent() {
     sameDay(starts, ends)
       ? `${formatDateTime(starts, locale())} – ${timeOnly(ends)}`
       : `${formatDateTime(starts, locale())} — ${formatDateTime(ends, locale())}`;
+  // Stacked date/time cell: date on top, clock range below (tabular-nums so
+  // digits line up across rows). Same-day windows show one date; cross-day
+  // spells out the end date on the second line.
+  const timeCell = (starts: number | null, ends: number | null) => (
+    <div class="mono flex flex-col text-xs leading-tight tabular-nums">
+      <span class="text-foreground">{formatDate(starts, locale())}</span>
+      <span class="text-muted-foreground">
+        {sameDay(starts, ends)
+          ? `${timeOnly(starts)} – ${timeOnly(ends)}`
+          : `${timeOnly(starts)} → ${formatDate(ends, locale())} ${timeOnly(ends)}`}
+      </span>
+    </div>
+  );
   const statusBadge = (status: AppointmentStatus) => (
     <Badge variant="outline" class={cn("w-28 justify-center rounded-full", appointmentStatusClass(status))}>
       <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", appointmentStatusDotClass(status))} />
@@ -151,8 +164,8 @@ function AppointmentsContent() {
     {
       id: "time",
       header: t("appointments.time"),
-      meta: { headerClass: "w-56", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
-      cell: (cell) => timeWindow(cell.row.original.starts_at, cell.row.original.ends_at),
+      meta: { headerClass: "w-44", cellClass: "align-top pr-4" },
+      cell: (cell) => timeCell(cell.row.original.starts_at, cell.row.original.ends_at),
     },
     {
       id: "note",
@@ -221,12 +234,12 @@ function AppointmentsContent() {
     {
       id: "time",
       header: t("appointments.time"),
-      meta: { headerClass: "w-56", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
+      meta: { headerClass: "w-44", cellClass: "align-top pr-4" },
       cell: (cell) => (
-        <div>
-          <div>{timeWindow(cell.row.original.starts_at, cell.row.original.ends_at)}</div>
+        <div class="flex flex-col gap-0.5">
+          {timeCell(cell.row.original.starts_at, cell.row.original.ends_at)}
           <Show when={hasProposal(cell.row.original) && cell.row.original.status === "pending"}>
-            <div class="text-info">{t("appointments.rescheduleProposed")}</div>
+            <div class="text-info text-xs">{t("appointments.rescheduleProposed")}</div>
           </Show>
         </div>
       ),
@@ -274,8 +287,8 @@ function AppointmentsContent() {
     {
       id: "time",
       header: t("appointments.time"),
-      meta: { headerClass: "w-56", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
-      cell: (cell) => timeWindow(cell.row.original.starts_at, cell.row.original.ends_at),
+      meta: { headerClass: "w-44", cellClass: "align-top pr-4" },
+      cell: (cell) => timeCell(cell.row.original.starts_at, cell.row.original.ends_at),
     },
     {
       id: "note",
@@ -307,12 +320,13 @@ function AppointmentsContent() {
     {
       id: "time",
       header: t("appointments.time"),
-      meta: { headerClass: "w-56", cellClass: "mono text-xs text-muted-foreground align-top whitespace-normal break-words pr-4" },
+      meta: { headerClass: "w-44", cellClass: "align-top pr-4" },
       cell: (cell) => (
-        <div>
-          <div>{timeWindow(cell.row.original.starts_at, cell.row.original.ends_at)}</div>
+        <div class="flex flex-col gap-0.5">
+          {timeCell(cell.row.original.starts_at, cell.row.original.ends_at)}
           <Show when={hasProposal(cell.row.original) && cell.row.original.status === "pending"}>
-            <div class="text-info">{t("appointments.proposedTime")}: {timeWindow(cell.row.original.proposed_starts_at, cell.row.original.proposed_ends_at)}</div>
+            <div class="text-info text-xs">{t("appointments.proposedTime")}:</div>
+            {timeCell(cell.row.original.proposed_starts_at, cell.row.original.proposed_ends_at)}
           </Show>
         </div>
       ),

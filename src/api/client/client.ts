@@ -78,6 +78,18 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     en: "This note already has the maximum number of files.",
     tr: "Bu notta en fazla dosya sayısına ulaşılmış.",
   },
+  "this time overlaps a slot you have already published": {
+    en: "This time overlaps a slot you already published.",
+    tr: "Bu zaman aralığı, daha önce yayınladığın bir müsaitlikle çakışıyor.",
+  },
+  "a repeated slot overlaps one you have already published": {
+    en: "One of the repeated slots overlaps a slot you already published.",
+    tr: "Tekrarlanan müsaitliklerden biri, daha önce yayınladığın bir müsaitlikle çakışıyor.",
+  },
+  "the repeated slots overlap each other": {
+    en: "The repeated slots overlap each other.",
+    tr: "Tekrarlanan müsaitlikler birbiriyle çakışıyor.",
+  },
   "course not found": {
     en: "Course not found.",
     tr: "Ders bulunamadı.",

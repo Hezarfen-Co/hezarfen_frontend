@@ -8,6 +8,14 @@ export function formatDateTime(ms: number | null | undefined, locale: Locale = "
   }).format(new Date(ms));
 }
 
+/** Date only, no time — for stacked date/time cells. */
+export function formatDate(ms: number | null | undefined, locale: Locale = "en"): string {
+  if (ms == null) return "—";
+  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    dateStyle: "medium",
+  }).format(new Date(ms));
+}
+
 /** Convert datetime-local input value to unix ms, or null if empty. */
 export function localInputToMs(value: string): number | null {
   if (!value) return null;
