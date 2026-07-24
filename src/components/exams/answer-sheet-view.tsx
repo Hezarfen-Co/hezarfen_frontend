@@ -1,8 +1,9 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal, useTransition } from "solid-js";
 import { ApiError } from "@/api/client";
-import { getExamQuestions } from "@/api/exams";
+import { getExamQuestions, getExamReviewQuestions } from "@/api/exams";
 import { getStudentAnswers, getStudentAnswerImage } from "@/api/exams";
 import { getStudentAttempts, getStudentAttemptAnswers, getStudentAttemptAnswerImage } from "@/api/exams";
+import { getExamReviewAttempts, getExamReviewAttemptAnswers, getExamReviewAttemptAnswerImage } from "@/api/exams";
 import type { StudentAnswerSheet } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,11 @@ import { joinAnswerSheet } from "@/lib/answer-sheet";
 import { personLabelWithId } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
-export function AnswerSheetView(props: { examId: string; userId: string }) {
+export function AnswerSheetView(props: { examId: string; userId: string; mode?: "grader" | "self" }) {
   const t = useT();
+  // "grader" hits the teacher, userId-scoped routes; "self" hits the self-scoped
+  // /review routes (no userId in path). Everything below is identical either way.
+  const mode = () => props.mode ?? "grader";
 
   // Which sitting the grader is viewing. null = the latest (grade-of-record), the default.
   const [selectedSeq, setSelectedSeq] = createSignal<number | null>(null);
@@ -31,7 +35,7 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
     () => [props.examId, props.userId] as const,
     async ([examId, userId]) => {
       try {
-        return await getStudentAttempts(examId, userId);
+        return mode() === "self" ? await getExamReviewAttempts(examId) : await getStudentAttempts(examId, userId);
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) return [] as number[];
         throw err;
@@ -59,12 +63,15 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
 
   const answerImageUrl = (questionId: string) => {
     const seq = activeSeq();
+    if (mode() === "self")
+      return `/api/exams/${props.examId}/review/attempts/${seq}/answers/${questionId}/image`;
     return isLatest() || seq == null
       ? `/api/exams/${props.examId}/attempts/${props.userId}/answers/${questionId}/image`
       : `/api/exams/${props.examId}/students/${props.userId}/attempts/${seq}/answers/${questionId}/image`;
   };
   const fetchAnswerImage = (questionId: string) => {
     const seq = activeSeq();
+    if (mode() === "self") return getExamReviewAttemptAnswerImage(props.examId, seq ?? 1, questionId);
     return isLatest() || seq == null
       ? getStudentAnswerImage(props.examId, props.userId, questionId)
       : getStudentAttemptAnswerImage(props.examId, props.userId, seq, questionId);
@@ -75,12 +82,17 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
     // (unchanged from before); an older seq uses the per-seq history route.
     () => [props.examId, props.userId, activeSeq(), isLatest()] as const,
     async ([examId, userId, seq, latest]) => {
-      const questions = await getExamQuestions(examId);
+      const questions = mode() === "self" ? await getExamReviewQuestions(examId) : await getExamQuestions(examId);
       let sheet: StudentAnswerSheet;
       try {
-        sheet = latest || seq == null
-          ? await getStudentAnswers(examId, userId)
-          : await getStudentAttemptAnswers(examId, userId, seq);
+        if (mode() === "self") {
+          if (seq == null) throw new ApiError(404, "no attempts");
+          sheet = await getExamReviewAttemptAnswers(examId, seq);
+        } else {
+          sheet = latest || seq == null
+            ? await getStudentAnswers(examId, userId)
+            : await getStudentAttemptAnswers(examId, userId, seq);
+        }
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           sheet = {

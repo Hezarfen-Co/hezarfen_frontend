@@ -63,6 +63,7 @@ export type ExamFormValues = {
   duration_ms: number | null;
   max_attempts: number;
   allow_rejoin: boolean;
+  allow_review: boolean;
   draft: boolean;
 };
 
@@ -80,6 +81,7 @@ export function ExamForm(props: {
   const [hasRetakes, setHasRetakes] = createSignal((props.initial?.max_attempts ?? 1) !== 1);
   const [maxAttempts, setMaxAttempts] = createSignal(String(props.initial?.max_attempts ?? 1));
   const [allowRejoin, setAllowRejoin] = createSignal(props.initial?.allow_rejoin ?? true);
+  const [allowReview, setAllowReview] = createSignal(props.initial?.allow_review ?? false);
   const [draft, setDraft] = createSignal(props.initial?.draft ?? false);
   const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
@@ -188,6 +190,7 @@ export function ExamForm(props: {
       duration_ms,
       max_attempts: hasRetakes() ? Number(maxAttempts()) : 1,
       allow_rejoin: allowRejoin(),
+      allow_review: allowReview(),
       draft: draft(),
     } satisfies ExamFormValues;
 
@@ -392,6 +395,19 @@ export function ExamForm(props: {
             <div>
               <span class="font-medium">{t("exams.allowRejoin")}</span>
               <p class="text-xs font-normal text-muted-foreground">{t("exams.allowRejoinHelp")}</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-2 rounded-xl border bg-background/60 px-3 py-2 text-sm">
+            <input
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 shrink-0 rounded border-border"
+              checked={allowReview()}
+              onChange={(e) => setAllowReview(e.currentTarget.checked)}
+            />
+            <div>
+              <span class="font-medium">{t("exams.allowReview")}</span>
+              <p class="text-xs font-normal text-muted-foreground">{t("exams.allowReviewHelp")}</p>
             </div>
           </label>
 

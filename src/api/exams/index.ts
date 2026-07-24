@@ -30,4 +30,8 @@ export * from "./getStudentAnswerImage";
 export * from "./getStudentAttempts";
 export * from "./getStudentAttemptAnswers";
 export * from "./getStudentAttemptAnswerImage";
+export * from "./getExamReviewQuestions";
+export * from "./getExamReviewAttempts";
+export * from "./getExamReviewAttemptAnswers";
+export * from "./getExamReviewAttemptAnswerImage";
 export * from "./getStudentMarksHistory";

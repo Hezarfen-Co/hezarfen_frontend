@@ -382,6 +382,8 @@ export type MessageKey =
   | "exams.retakesHelp"
   | "exams.allowRejoin"
   | "exams.allowRejoinHelp"
+  | "exams.allowReview"
+  | "exams.allowReviewHelp"
   | "exams.draft"
   | "exams.draftHelp"
   | "exams.publish"
@@ -1205,6 +1207,8 @@ const en: Dict = {
   "exams.retakesHelp": "Students can retake the exam this many times before the window closes.",
   "exams.allowRejoin": "Allow rejoin",
   "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
+  "exams.allowReview": "Let students review their answers",
+  "exams.allowReviewHelp": "Students can see their own paper and past attempts once you've marked this exam.",
   "exams.draft": "Draft",
   "exams.draftHelp": "Keep hidden from students until published.",
   "exams.publish": "Publish exam",
@@ -2033,6 +2037,8 @@ const tr: Dict = {
   "exams.retakesHelp": "Öğrenciler sınav bitmeden bu kadar kez deneme yapabilir.",
   "exams.allowRejoin": "Yeniden girişe izin ver",
   "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
+  "exams.allowReview": "Öğrenciler cevaplarını inceleyebilsin",
+  "exams.allowReviewHelp": "Bu sınavı notlandırdığınızda öğrenciler kendi kağıtlarını ve geçmiş denemelerini görebilir.",
   "exams.draft": "Taslak",
   "exams.draftHelp": "Yayınlanana kadar öğrencilerden gizle.",
   "exams.publish": "Sınavı yayınla",

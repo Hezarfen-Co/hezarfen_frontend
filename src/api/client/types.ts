@@ -144,6 +144,7 @@ export type Exam = {
   duration_ms: number | null;
   max_attempts: number;
   allow_rejoin: boolean;
+  allow_review: boolean;
   draft: boolean;
 };
 

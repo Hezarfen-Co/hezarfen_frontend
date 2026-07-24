@@ -99,7 +99,6 @@ function ExamDetailContent() {
     const e = exam();
     return e ? isSittableExam(e) : false;
   };
-  const isScheduled = () => isSittable();
 
   const [ownResult] = createResource(
     () => (isStudent() ? id() : null),
@@ -573,7 +572,7 @@ function ExamDetailContent() {
             <Tabs value={examTab()} onChange={setExamTab} class="space-y-3">
               <TabsList>
                 <TabsTrigger value="schedule">{t("exams.schedule")}</TabsTrigger>
-                <Show when={isStudent() && !isScheduled()}>
+                <Show when={isStudent() && ownResult()}>
                   <TabsTrigger value="ownResult">{t("exams.yourResult")}</TabsTrigger>
                 </Show>
                 <Show when={hasCourseManagementRights()}>
@@ -605,7 +604,7 @@ function ExamDetailContent() {
                 </div>
               </TabsContent>
 
-              <Show when={isStudent() && !isScheduled()}>
+              <Show when={isStudent() && ownResult()}>
                 <TabsContent value="ownResult" forceMount>
                   <div class="tab-panel-note mb-4">{ownResult() ? `${t("form.mark")}: ${ownResult()!.mark}` : t("exams.notGraded")}</div>
                   <Suspense fallback={<PageSpinner />}>
@@ -613,6 +612,11 @@ function ExamDetailContent() {
                       {(r) => <ExamResultBadge mark={r().mark} />}
                     </Show>
                   </Suspense>
+                  <Show when={ex().allow_review && ownResult()}>
+                    <div class="mt-6">
+                      <AnswerSheetView examId={id()} userId={auth.user()?.id ?? ""} mode="self" />
+                    </div>
+                  </Show>
                 </TabsContent>
               </Show>
 

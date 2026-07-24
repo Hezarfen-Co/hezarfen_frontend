@@ -75,6 +75,8 @@
 | Grade students | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Read exam results / statistics | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Read own exam result | ✅ | ❌ (FE) | ❌ (FE) | ❌ (FE) |
+<!-- Own-result review (own answer sheet + past attempts) is additionally gated on the exam's `allow_review` flag AND the teacher having marked the student. -->
+
 | Write exam questions | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Start / finish own pomodoro focus session | ✅ | ❌ | ❌ | ❌ |
 | Read answer sheets | ❌ | ✅ (course manager) | ✅ | ✅ |
