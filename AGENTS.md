@@ -74,6 +74,16 @@ Solid components run **once**, there is no re-render:
    `<Suspense>` + `createResource` for server data.
 5. Use `class`, not `className`. Route components are `lazy()`-loaded and wired
    into the TanStack Router route tree.
+6. **`resource.latest` for reads outside `<Suspense>`.** A bare `resource()`
+   re-suspends on **every** `refetch()` (not just the first load, and
+   `initialValue` does NOT stop it). If that read sits outside a `<Suspense>` —
+   e.g. an always-rendered badge/count in a shell component mounted beside
+   `<Outlet>` — the suspension bubbles up and **blanks the whole page** for the
+   entire fetch duration, once per poll/refetch. Invisible on a fast local
+   backend, a multi-second blank on a real one. Rule: reads under a page's
+   `<Suspense>` use `resource()`; always-rendered/shell/badge reads of a
+   periodically-refetched resource use `resource.latest` (last value, no
+   suspend). Poll-driven revalidation belongs behind `.latest`.
 
 ## Performance
 
