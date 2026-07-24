@@ -2,8 +2,10 @@ import { For, Show, Suspense, createEffect, createMemo, createResource, createSi
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
+import { getAppointments } from "@/api/appointments";
 import { getMessages, patchMessageById } from "@/api/messages";
-import type { Event, Exam, Message } from "@/api/client";
+import type { Appointment, Event, Exam, Message } from "@/api/client";
+import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -22,7 +24,10 @@ import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 type ActiveTab = "messages" | "calendar" | null;
-type CalendarItemRef = { type: "event"; data: Event } | { type: "exam"; data: Exam };
+type CalendarItemRef =
+  | { type: "event"; data: Event }
+  | { type: "exam"; data: Exam }
+  | { type: "appointment"; data: Appointment };
 
 const PAGE_SIZE = 5;
 
@@ -44,7 +49,7 @@ export function RightNav() {
 
   // Calendar drawer state
   const [calPage, setCalPage] = createSignal(0);
-  const [calFilter, setCalFilter] = createSignal<"all" | "events" | "exams">("all");
+  const [calFilter, setCalFilter] = createSignal<"all" | "events" | "exams" | "appointments">("all");
   const [selectedCalItem, setSelectedCalItem] = createSignal<CalendarItemRef | null>(null);
 
   // Fetch inbox messages
@@ -82,12 +87,24 @@ export function RightNav() {
     { initialValue: [] }
   );
 
+  const [appointmentsRes, { refetch: refetchAppointments }] = createResource(
+    async () => {
+      try {
+        return (await getAppointments({ limit: 100 })).items;
+      } catch {
+        return [];
+      }
+    },
+    { initialValue: [] }
+  );
+
   // Revalidate every source so an item deleted on another page stops showing
   // in the drawer/badge: on the periodic clock tick and whenever a drawer opens.
   const refreshAll = () => {
     void refetchMessages();
     void refetchEvents();
     void refetchExams();
+    void refetchAppointments();
   };
 
   // Computed message data
@@ -138,6 +155,12 @@ export function RightNav() {
     return examsRes.latest.filter((e: Exam) => !e.draft && notEnded(e.starts_at, e.ends_at));
   });
 
+  const activeAppointments = createMemo(() => {
+    return appointmentsRes.latest.filter(
+      (a: Appointment) => (a.status === "pending" || a.status === "approved") && notEnded(a.starts_at, a.ends_at)
+    );
+  });
+
   const hasTodayEvents = createMemo(() => activeEvents().length > 0);
   const hasTodayExams = createMemo(() => activeExams().length > 0);
 
@@ -153,6 +176,12 @@ export function RightNav() {
     if (calFilter() === "all" || calFilter() === "exams") {
       for (const ex of activeExams()) {
         items.push({ type: "exam", data: ex });
+      }
+    }
+
+    if (calFilter() === "all" || calFilter() === "appointments") {
+      for (const ap of activeAppointments()) {
+        items.push({ type: "appointment", data: ap });
       }
     }
 
@@ -596,6 +625,18 @@ export function RightNav() {
                       >
                         {t("calendar.exams")} ({activeExams().length})
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => { setCalFilter("appointments"); setCalPage(0); }}
+                        class={cn(
+                          "rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors border",
+                          calFilter() === "appointments"
+                            ? "bg-violet-500 text-white font-semibold border-violet-500"
+                            : "text-violet-600 dark:text-violet-400 border-violet-500/30 hover:bg-violet-500/10"
+                        )}
+                      >
+                        {t("calendar.appointments")} ({activeAppointments().length})
+                      </button>
                     </div>
 
                     <Show
@@ -611,7 +652,11 @@ export function RightNav() {
                         <For each={paginatedCalItems()}>
                           {(item) => {
                             const isEvent = item.type === "event";
-                            const ev = item.data;
+                            const isAppt = item.type === "appointment";
+                            const title = item.type === "appointment"
+                              ? ((item.data.teacher?.display_name ?? item.data.teacher?.username)
+                                  ?? item.data.requester.display_name ?? item.data.requester.username)
+                              : item.data.title;
                             return (
                               <div
                                 onClick={() => setSelectedCalItem(item)}
@@ -619,7 +664,9 @@ export function RightNav() {
                                   "group flex cursor-pointer items-start justify-between gap-2.5 rounded-xl border p-3 shadow-2xs transition-all hover:shadow-md",
                                   isEvent
                                     ? "border-emerald-500/30 bg-emerald-500/2 hover:border-emerald-500/60 hover:bg-emerald-500/5"
-                                    : "border-rose-500/30 bg-rose-500/2 hover:border-rose-500/60 hover:bg-rose-500/5"
+                                    : isAppt
+                                      ? "border-violet-500/30 bg-violet-500/2 hover:border-violet-500/60 hover:bg-violet-500/5"
+                                      : "border-rose-500/30 bg-rose-500/2 hover:border-rose-500/60 hover:bg-rose-500/5"
                                 )}
                               >
                                 <div class="min-w-0 space-y-1">
@@ -628,16 +675,23 @@ export function RightNav() {
                                       "truncate text-xs font-semibold",
                                       isEvent
                                         ? "text-emerald-700 dark:text-emerald-300 group-hover:text-emerald-600"
-                                        : "text-rose-700 dark:text-rose-300 group-hover:text-rose-600"
+                                        : isAppt
+                                          ? "text-violet-700 dark:text-violet-300 group-hover:text-violet-600"
+                                          : "text-rose-700 dark:text-rose-300 group-hover:text-rose-600"
                                     )}
                                   >
-                                    {ev.title}
+                                    {title}
                                   </p>
+                                  <Show when={item.type === "appointment" && item.data.reason}>
+                                    <p class="truncate text-[11px] text-muted-foreground">
+                                      {item.type === "appointment" ? item.data.reason : ""}
+                                    </p>
+                                  </Show>
                                   <div class="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                                     <IconClock class="h-3 w-3 shrink-0" />
                                     <span>
-                                      {ev.starts_at
-                                        ? new Date(ev.starts_at).toLocaleDateString(
+                                      {item.data.starts_at
+                                        ? new Date(item.data.starts_at).toLocaleDateString(
                                             locale() === "tr" ? "tr-TR" : "en-US",
                                             { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }
                                           )
@@ -646,17 +700,30 @@ export function RightNav() {
                                   </div>
                                 </div>
 
-                                <Badge
-                                  variant="outline"
-                                  class={cn(
-                                    "shrink-0 text-[9px] font-semibold px-2 py-0.5",
-                                    isEvent
-                                      ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10"
-                                      : "border-rose-500/40 text-rose-700 dark:text-rose-300 bg-rose-500/10"
-                                  )}
+                                <Show
+                                  when={isAppt}
+                                  fallback={
+                                    <Badge
+                                      variant="outline"
+                                      class={cn(
+                                        "shrink-0 text-[9px] font-semibold px-2 py-0.5",
+                                        isEvent
+                                          ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10"
+                                          : "border-rose-500/40 text-rose-700 dark:text-rose-300 bg-rose-500/10"
+                                      )}
+                                    >
+                                      {isEvent ? t("calendar.events") : t("calendar.exams")}
+                                    </Badge>
+                                  }
                                 >
-                                  {isEvent ? t("calendar.events") : t("calendar.exams")}
-                                </Badge>
+                                  <Badge
+                                    variant="outline"
+                                    class={cn("shrink-0 gap-1 text-[9px] font-semibold px-2 py-0.5", appointmentStatusClass((item.data as Appointment).status))}
+                                  >
+                                    <span class={cn("h-1.5 w-1.5 rounded-full", appointmentStatusDotClass((item.data as Appointment).status))} />
+                                    {t(appointmentStatusLabelKey((item.data as Appointment).status))}
+                                  </Badge>
+                                </Show>
                               </div>
                             );
                           }}
@@ -677,7 +744,14 @@ export function RightNav() {
               >
                 {(item) => {
                   const isEvent = item().type === "event";
-                  const data = item().data;
+                  const isAppt = item().type === "appointment";
+                  const cur = item();
+                  const appt = () => (cur.type === "appointment" ? cur.data : null);
+                  const title = () => {
+                    const a = appt();
+                    if (a) return (a.teacher?.display_name ?? a.teacher?.username) ?? a.requester.display_name ?? a.requester.username;
+                    return (cur.data as Event | Exam).title;
+                  };
                   return (
                     <div class="space-y-4 animate-in fade-in-50">
                       <div
@@ -685,33 +759,52 @@ export function RightNav() {
                           "rounded-xl border p-4 space-y-3",
                           isEvent
                             ? "border-emerald-500/30 bg-emerald-500/3"
-                            : "border-rose-500/30 bg-rose-500/3"
+                            : isAppt
+                              ? "border-violet-500/30 bg-violet-500/3"
+                              : "border-rose-500/30 bg-rose-500/3"
                         )}
                       >
                         <div class="flex items-center justify-between">
-                          <Badge
-                            variant="outline"
-                            class={cn(
-                              "text-xs font-semibold px-2.5 py-0.5",
-                              isEvent
-                                ? "border-emerald-500/50 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10"
-                                : "border-rose-500/50 text-rose-700 dark:text-rose-300 bg-rose-500/10"
-                            )}
+                          <Show
+                            when={appt()}
+                            fallback={
+                              <Badge
+                                variant="outline"
+                                class={cn(
+                                  "text-xs font-semibold px-2.5 py-0.5",
+                                  isEvent
+                                    ? "border-emerald-500/50 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10"
+                                    : "border-rose-500/50 text-rose-700 dark:text-rose-300 bg-rose-500/10"
+                                )}
+                              >
+                                {isEvent ? t("calendar.events") : t("calendar.exams")}
+                              </Badge>
+                            }
                           >
-                            {isEvent ? t("calendar.events") : t("calendar.exams")}
-                          </Badge>
+                            {(a) => (
+                              <>
+                                <Badge variant="outline" class="text-xs font-semibold px-2.5 py-0.5 border-violet-500/50 text-violet-700 dark:text-violet-300 bg-violet-500/10">
+                                  {t("calendar.appointments")}
+                                </Badge>
+                                <Badge variant="outline" class={cn("gap-1 text-xs font-semibold px-2.5 py-0.5", appointmentStatusClass(a().status))}>
+                                  <span class={cn("h-1.5 w-1.5 rounded-full", appointmentStatusDotClass(a().status))} />
+                                  {t(appointmentStatusLabelKey(a().status))}
+                                </Badge>
+                              </>
+                            )}
+                          </Show>
                         </div>
 
                         <h3 class="text-base font-bold text-foreground tracking-tight">
-                          {data.title}
+                          {title()}
                         </h3>
 
                         <div class="space-y-2 text-xs text-muted-foreground border-t border-border/40 pt-2.5">
                           <div class="flex items-center gap-2">
                             <IconClock class="h-4 w-4 text-primary shrink-0" />
                             <span>
-                              {data.starts_at
-                                ? new Date(data.starts_at).toLocaleString(
+                              {cur.data.starts_at
+                                ? new Date(cur.data.starts_at).toLocaleString(
                                     locale() === "tr" ? "tr-TR" : "en-US",
                                     { dateStyle: "full", timeStyle: "short" }
                                   )
@@ -719,10 +812,21 @@ export function RightNav() {
                             </span>
                           </div>
 
-                          <Show when={"description" in data && data.description}>
+                          <Show when={appt()}>
+                            {(a) => (
+                              <Show when={a().reason}>
+                                <div class="pt-2 border-t border-border/30 text-foreground">
+                                  <p class="text-xs font-medium text-muted-foreground mb-1">{t("appointments.reason")}</p>
+                                  <p class="text-xs leading-relaxed whitespace-pre-wrap">{a().reason}</p>
+                                </div>
+                              </Show>
+                            )}
+                          </Show>
+
+                          <Show when={!isAppt && "description" in cur.data && cur.data.description}>
                             <div class="pt-2 border-t border-border/30 text-foreground">
                               <p class="text-xs font-medium text-muted-foreground mb-1">Açıklama / Detay:</p>
-                              <p class="text-xs leading-relaxed whitespace-pre-wrap">{String(data.description)}</p>
+                              <p class="text-xs leading-relaxed whitespace-pre-wrap">{String((cur.data as Event).description)}</p>
                             </div>
                           </Show>
                         </div>
@@ -733,7 +837,7 @@ export function RightNav() {
                             variant="secondary"
                             size="sm"
                             class="h-8 rounded-lg gap-1.5 text-xs font-medium"
-                            onClick={() => goTo(isEvent ? `/events/${data.id}` : `/exams/${data.id}`)}
+                            onClick={() => goTo(isAppt ? "/appointments" : isEvent ? `/events/${cur.data.id}` : `/exams/${cur.data.id}`)}
                           >
                             <span>Detay Sayfasına Git</span>
                             <IconExternalLink class="h-3.5 w-3.5" />

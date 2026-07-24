@@ -9,11 +9,12 @@ export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.CloseButton;
 
 export function DialogContent<T extends ValidComponent = "div">(
-  props: ComponentProps<typeof DialogPrimitive.Content<T>>,
+  props: ComponentProps<typeof DialogPrimitive.Content<T>> & { dismissable?: boolean },
 ) {
-  const [local, rest] = splitProps(props as ComponentProps<typeof DialogPrimitive.Content>, [
+  const [local, rest] = splitProps(props as ComponentProps<typeof DialogPrimitive.Content> & { dismissable?: boolean }, [
     "class",
     "children",
+    "dismissable",
   ]);
   return (
     <DialogPrimitive.Portal>
@@ -25,10 +26,11 @@ export function DialogContent<T extends ValidComponent = "div">(
             "pointer-events-auto relative flex max-h-[min(90vh,48rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-black/8 bg-popover/95 text-popover-foreground shadow-apple outline-hidden backdrop-blur-xl animate-fade-up dark:border-white/12 sm:rounded-3xl",
             local.class,
           )}
-          // ponytail: close only via X — outside/ESC races with clickable cards underneath
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
+          // Default: close only via X — outside/ESC races with clickable cards underneath.
+          // Opt into backdrop/ESC dismissal per-dialog with `dismissable`.
+          onPointerDownOutside={local.dismissable ? undefined : (e) => e.preventDefault()}
+          onInteractOutside={local.dismissable ? undefined : (e) => e.preventDefault()}
+          onEscapeKeyDown={local.dismissable ? undefined : (e) => e.preventDefault()}
           {...rest}
         >
           <DialogPrimitive.CloseButton

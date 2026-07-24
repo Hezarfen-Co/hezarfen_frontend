@@ -88,6 +88,43 @@ export type EventRegistration = {
   registered_by: PersonRef;
 };
 
+export type AppointmentStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export type AppointmentSlot = {
+  id: string;
+  teacher: PersonRef;
+  starts_at: number; // unix ms UTC
+  ends_at: number; // unix ms UTC, half-open
+  note: string | null;
+  series: string | null; // null = one-off; shared id across a weekly series
+  created_at: number;
+};
+
+export type Appointment = {
+  id: string;
+  slot: string;
+  teacher: PersonRef | null; // null only if slot vanished
+  requester: PersonRef;
+  status: AppointmentStatus;
+  reason: string;
+  starts_at: number | null; // effective window (proposal if accepted, else slot's)
+  ends_at: number | null;
+  proposed_starts_at: number | null;
+  proposed_ends_at: number | null;
+  proposed_by: PersonRef | null;
+  decided_by: PersonRef | null; // null while pending
+  cancelled_by: PersonRef | null; // set only when status === "cancelled"
+  cancel_reason: string | null; // optional reason, null when none given
+  reject_reason: string | null; // optional reason when status === "rejected" (rejecter is decided_by)
+  created_at: number;
+};
+
+export const APPOINTMENT_LIMITS = {
+  noteMaxLen: 500, // MAX_APPOINTMENT_NOTE_LEN, empty allowed
+  reasonMaxLen: 1000, // MAX_APPOINTMENT_REASON_LEN, non-blank required
+  maxSlotOccurrences: 52, // MAX_SLOT_OCCURRENCES for repeat_weekly
+} as const;
+
 export type Course = {
   id: string;
   creator: PersonRef;

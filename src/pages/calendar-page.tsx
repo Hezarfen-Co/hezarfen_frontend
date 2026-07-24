@@ -1,7 +1,9 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
-import type { Event, Exam } from "@/api/client";
+import { getAppointments } from "@/api/appointments";
+import type { Appointment, Event, Exam } from "@/api/client";
+import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ function CalendarContent() {
 
   const [events] = createResource(async () => (await getEvents({ limit: 100 })).items, { initialValue: [] });
   const [exams] = createResource(async () => (await getExams({ limit: 100 })).items, { initialValue: [] });
+  const [appointments] = createResource(async () => (await getAppointments({ limit: 100 })).items, { initialValue: [] });
 
   const monthLabel = () => {
     const names = locale() === "tr" ? MONTH_NAMES_TR : MONTH_NAMES;
@@ -56,18 +59,22 @@ function CalendarContent() {
   });
 
   const itemsByDay = createMemo(() => {
-    const map = new Map<string, { events: Event[]; exams: Exam[] }>();
+    const map = new Map<string, { events: Event[]; exams: Exam[]; appointments: Appointment[] }>();
+    const bucket = (k: string) => {
+      if (!map.has(k)) map.set(k, { events: [], exams: [], appointments: [] });
+      return map.get(k)!;
+    };
     for (const e of events()) {
       if (!e.starts_at) continue;
-      const k = dateKey(new Date(e.starts_at));
-      if (!map.has(k)) map.set(k, { events: [], exams: [] });
-      map.get(k)!.events.push(e);
+      bucket(dateKey(new Date(e.starts_at))).events.push(e);
     }
     for (const e of exams()) {
       if (!e.starts_at || e.draft) continue;
-      const k = dateKey(new Date(e.starts_at));
-      if (!map.has(k)) map.set(k, { events: [], exams: [] });
-      map.get(k)!.exams.push(e);
+      bucket(dateKey(new Date(e.starts_at))).exams.push(e);
+    }
+    for (const a of appointments()) {
+      if (!a.starts_at || (a.status !== "pending" && a.status !== "approved")) continue;
+      bucket(dateKey(new Date(a.starts_at))).appointments.push(a);
     }
     return map;
   });
@@ -77,7 +84,7 @@ function CalendarContent() {
     const [y, m, d] = selected().split("-").map(Number);
     return new Date(y, m, d);
   };
-  const selectedItems = () => itemsByDay().get(selectedKey()) ?? { events: [], exams: [] };
+  const selectedItems = () => itemsByDay().get(selectedKey()) ?? { events: [], exams: [], appointments: [] };
   const isToday = (day: number) => {
     const n = nowDate();
     return n.getFullYear() === viewYear() && n.getMonth() === viewMonth() && n.getDate() === day;
@@ -186,6 +193,17 @@ function CalendarContent() {
                                   </span>
                                 )}
                               </Show>
+                              <Show when={dayItems().appointments[0]}>
+                                {(appt) => (
+                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-violet-100 px-1 py-0.5 text-[9px] font-medium leading-none text-violet-700 dark:border dark:border-violet-800/50 dark:bg-violet-950/60 dark:text-violet-300">
+                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
+                                    <span class="truncate">{appt().requester.display_name ?? appt().requester.username}</span>
+                                    <Show when={dayItems().appointments.length > 1}>
+                                      <span class="shrink-0 opacity-70">+{dayItems().appointments.length - 1}</span>
+                                    </Show>
+                                  </span>
+                                )}
+                              </Show>
                             </div>
                           )}
                         </Show>
@@ -203,7 +221,7 @@ function CalendarContent() {
                 </h3>
 
                 <div class="mt-2 space-y-2.5">
-                  <Show when={selectedItems().events.length === 0 && selectedItems().exams.length === 0}>
+                  <Show when={selectedItems().events.length === 0 && selectedItems().exams.length === 0 && selectedItems().appointments.length === 0}>
                     <p class="text-xs text-muted-foreground">{t("calendar.noEvents")}</p>
                   </Show>
 
@@ -247,6 +265,32 @@ function CalendarContent() {
                               </p>
                             </div>
                             <Badge variant="outline" class="shrink-0 text-[10px]">{t("calendar.exams")}</Badge>
+                          </a>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+
+                  <Show when={selectedItems().appointments.length > 0}>
+                    <div class="space-y-2">
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-violet-500">{t("calendar.appointments")}</p>
+                      <For each={selectedItems().appointments}>
+                        {(appt) => (
+                          <a
+                            href="/appointments"
+                            class="group flex items-start justify-between gap-2 rounded-lg border border-violet-500/40 bg-card p-2.5 shadow-xs transition-all hover:border-violet-500/70 hover:shadow-md dark:border-violet-500/30 dark:hover:border-violet-500/70"
+                          >
+                            <div class="min-w-0">
+                              <p class="truncate text-xs font-semibold group-hover:text-violet-500">{appt.requester.display_name ?? appt.requester.username}</p>
+                              <p class="mt-0.5 text-[11px] text-muted-foreground">
+                                {appt.starts_at ? new Date(appt.starts_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
+                                {appt.ends_at ? ` — ${new Date(appt.ends_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })}` : ""}
+                              </p>
+                            </div>
+                            <Badge variant="outline" class={cn("shrink-0 gap-1 text-[10px]", appointmentStatusClass(appt.status))}>
+                              <span class={cn("h-1.5 w-1.5 rounded-full", appointmentStatusDotClass(appt.status))} />
+                              {t(appointmentStatusLabelKey(appt.status))}
+                            </Badge>
                           </a>
                         )}
                       </For>

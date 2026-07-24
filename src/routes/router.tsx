@@ -52,6 +52,7 @@ const MyStudentsPage = lazyRoute(() => import("@/pages/my-students-page"));
 const QuestionsPage = lazyRoute(() => import("@/pages/questions-page"));
 const QuestionDetailPage = lazyRoute(() => import("@/pages/question-detail-page"));
 const CalendarPage = lazyRoute(() => import("@/pages/calendar-page"));
+const AppointmentsPage = lazyRoute(() => import("@/pages/appointments-page"));
 
 function RootComponent() {
   return (
@@ -275,6 +276,12 @@ const calendarRoute = createRoute({
   component: CalendarPage,
 });
 
+const appointmentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/appointments",
+  component: AppointmentsPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -309,6 +316,7 @@ const routeTree = rootRoute.addChildren([
   questionsRoute,
   questionDetailRoute,
   calendarRoute,
+  appointmentsRoute,
 ]);
 
 function RouterPending() {

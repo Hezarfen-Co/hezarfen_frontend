@@ -16,6 +16,7 @@
 | Live monitor `/exams/:id/live` | ❌ | ✅ | ✅ | ✅ |
 | Events `/events` | ✅ | ✅ | ✅ | ✅ |
 | Event detail `/events/:id` | ✅ | ✅ | ✅ | ✅ |
+| Appointments `/appointments` | ✅ (book + own) | ✅ (publish/manage own) | ✅ (manage all) | ✅ (manage all) |
 | **Report card `/marks`** | ✅ | ❌ (FE) | ❌ (FE) | ❌ (FE) |
 | My attendance `/attendance` | ✅ | ✅ | ✅ | ✅ |
 | Student marks lookup `/management/student-marks` | ❌ | ✅ | ✅ | ✅ |
@@ -64,6 +65,9 @@
 | Mark own attendance on events | ✅ | ✅ | ✅ | ✅ |
 | Mark other users' event attendance | ❌ | ✅ | ✅ | ✅ |
 | Create / edit / delete events | ❌ | ✅ (creator or manager+) | ✅ | ✅ |
+| Publish / delete appointment slots | ❌ | ✅ (own slots) | ✅ (any) | ✅ (any) |
+| Approve / reject / reschedule / cancel bookings | ❌ | ✅ (own slots) | ✅ (any) | ✅ (any) |
+| Book an appointment (+ cancel / accept reschedule) | ✅ (student & parent) | ❌ | ❌ | ❌ |
 | Enroll students / unenroll any enrollment | ❌ | ✅ (course creator) | ✅ | ✅ |
 | Edit / delete courses | ❌ | ✅ (course creator) | ✅ | ✅ |
 | Create / edit / delete course sessions | ❌ | ✅ (course manager) | ✅ | ✅ |

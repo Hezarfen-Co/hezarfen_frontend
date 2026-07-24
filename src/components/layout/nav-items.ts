@@ -58,6 +58,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
       { to: "/calendar", labelKey: "nav.calendar", Icon: IconCalendarDays },
+      { to: "/appointments", labelKey: "nav.appointments", Icon: IconClock },
       { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
       { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
       { to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
@@ -137,11 +138,12 @@ const PARENT_GROUP: NavGroup = {
   exactRole: "parent",
   items: [
     { to: "/students", labelKey: "nav.myStudents", Icon: IconUsers, exactRole: "parent" },
+    { to: "/appointments", labelKey: "nav.appointments", Icon: IconClock },
   ],
 };
 
 function itemVisible(item: NavItem, role: Role | undefined) {
-  if (role === "parent") return item.to === "/students";
+  if (role === "parent") return item.to === "/students" || item.to === "/appointments";
   if (item.exactRole) return hasExactRole(role, item.exactRole);
   if (item.minRole || item.maxRole) return roleInRange(role, item.minRole, item.maxRole);
   return true;

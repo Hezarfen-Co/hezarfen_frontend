@@ -814,7 +814,74 @@ export type MessageKey =
   | "calendar.today"
   | "calendar.noEvents"
   | "calendar.events"
-  | "calendar.exams";
+  | "calendar.exams"
+  | "calendar.appointments"
+  | "nav.appointments"
+  | "appointments.title"
+  | "appointments.subtitle"
+  | "appointments.empty"
+  | "appointments.mySlots"
+  | "appointments.availableSlots"
+  | "appointments.requests"
+  | "appointments.myBookings"
+  | "appointments.publish"
+  | "appointments.book"
+  | "appointments.approve"
+  | "appointments.reject"
+  | "appointments.cancel"
+  | "appointments.reschedule"
+  | "appointments.acceptReschedule"
+  | "appointments.declineReschedule"
+  | "appointments.deleteSlot"
+  | "appointments.deleteSeries"
+  | "appointments.note"
+  | "appointments.reason"
+  | "appointments.repeatWeekly"
+  | "appointments.until"
+  | "appointments.starts"
+  | "appointments.ends"
+  | "appointments.teacher"
+  | "appointments.student"
+  | "appointments.proposedTime"
+  | "appointments.newTime"
+  | "appointments.status.pending"
+  | "appointments.status.approved"
+  | "appointments.status.rejected"
+  | "appointments.status.cancelled"
+  | "appointments.confirmCancel"
+  | "appointments.confirmDeleteSlot"
+  | "appointments.confirmDeleteSeries"
+  | "appointments.rescheduleProposed"
+  | "appointments.slotTaken"
+  | "appointments.noSlots"
+  | "appointments.series"
+  | "appointments.time"
+  | "appointments.status"
+  | "appointments.publishSubtitle"
+  | "appointments.bookSubtitle"
+  | "appointments.rescheduleSubtitle"
+  | "appointments.reasonPlaceholder"
+  | "appointments.notePlaceholder"
+  | "appointments.noRequests"
+  | "appointments.noBookings"
+  | "appointments.repeatWeeklyHelp"
+  | "appointments.untilRequired"
+  | "appointments.tooManyOccurrences"
+  | "appointments.cancelTitle"
+  | "appointments.cancelAction"
+  | "appointments.cancelReasonLabel"
+  | "appointments.cancelReasonPlaceholder"
+  | "appointments.cancelledBy"
+  | "appointments.details"
+  | "appointments.cancelReason"
+  | "appointments.rejectTitle"
+  | "appointments.rejectAction"
+  | "appointments.confirmReject"
+  | "appointments.rejectReasonLabel"
+  | "appointments.rejectReasonPlaceholder"
+  | "appointments.rejectReason"
+  | "appointments.rejectedBy"
+  | "appointments.reasonRequired";
 
 type Dict = Record<MessageKey, string>;
 
@@ -1161,6 +1228,73 @@ const en: Dict = {
   "calendar.noEvents": "No events or exams on this day.",
   "calendar.events": "Events",
   "calendar.exams": "Exams",
+  "calendar.appointments": "Appointments",
+  "nav.appointments": "Appointments",
+  "appointments.title": "Appointments",
+  "appointments.subtitle": "Book a meeting with a teacher, or publish times you are available.",
+  "appointments.empty": "No appointments yet.",
+  "appointments.mySlots": "My available times",
+  "appointments.availableSlots": "Available times",
+  "appointments.requests": "Booking requests",
+  "appointments.myBookings": "My bookings",
+  "appointments.publish": "Publish times",
+  "appointments.book": "Book",
+  "appointments.approve": "Approve",
+  "appointments.reject": "Reject",
+  "appointments.cancel": "Cancel",
+  "appointments.reschedule": "Propose new time",
+  "appointments.acceptReschedule": "Accept new time",
+  "appointments.declineReschedule": "Decline new time",
+  "appointments.deleteSlot": "Delete time",
+  "appointments.deleteSeries": "Delete series",
+  "appointments.note": "Note",
+  "appointments.reason": "Reason",
+  "appointments.repeatWeekly": "Repeat weekly",
+  "appointments.until": "Repeat until",
+  "appointments.starts": "Start",
+  "appointments.ends": "End",
+  "appointments.teacher": "Teacher",
+  "appointments.student": "Requested by",
+  "appointments.proposedTime": "Proposed time",
+  "appointments.newTime": "New time",
+  "appointments.status.pending": "Pending",
+  "appointments.status.approved": "Approved",
+  "appointments.status.rejected": "Rejected",
+  "appointments.status.cancelled": "Cancelled",
+  "appointments.confirmCancel": "Cancel this appointment? This cannot be undone.",
+  "appointments.confirmDeleteSlot": "Delete this available time? Any pending request for it will be dropped.",
+  "appointments.confirmDeleteSeries": "Delete the whole weekly series? All of its times will be removed.",
+  "appointments.rescheduleProposed": "A new time has been proposed and is waiting for the requester to accept.",
+  "appointments.slotTaken": "This time was just taken by someone else. Please pick another.",
+  "appointments.noSlots": "No available times right now.",
+  "appointments.series": "Series",
+  "appointments.time": "Time",
+  "appointments.status": "Status",
+  "appointments.publishSubtitle": "Offer a time window students can book. Repeat it weekly if you like.",
+  "appointments.bookSubtitle": "Tell the teacher why you would like to meet.",
+  "appointments.rescheduleSubtitle": "Propose a different time; the requester can accept or decline it.",
+  "appointments.reasonPlaceholder": "What would you like to talk about?",
+  "appointments.notePlaceholder": "Optional note for students (e.g. topic, location).",
+  "appointments.noRequests": "No booking requests.",
+  "appointments.noBookings": "You have no bookings yet.",
+  "appointments.repeatWeeklyHelp": "Creates the same time every week until the chosen date (max 52 times).",
+  "appointments.untilRequired": "Pick a date to repeat until.",
+  "appointments.tooManyOccurrences": "This range would create {count} weekly slots; the limit is {max}. Choose an earlier end date.",
+  "appointments.cancelTitle": "Cancel appointment?",
+  "appointments.cancelAction": "Yes, cancel",
+  "appointments.cancelReasonLabel": "Reason (optional)",
+  "appointments.cancelReasonPlaceholder": "Why are you cancelling?",
+  "appointments.cancelledBy": "Cancelled by",
+  "appointments.details": "Details",
+  "appointments.cancelReason": "Cancellation reason",
+  "appointments.rejectTitle": "Reject booking?",
+  "appointments.rejectAction": "Reject",
+  "appointments.confirmReject": "Reject this booking request? The slot frees up for others.",
+  "appointments.rejectReasonLabel": "Reason (optional)",
+  "appointments.rejectReasonPlaceholder": "Why are you rejecting?",
+  "appointments.rejectReason": "Rejection reason",
+  "appointments.rejectedBy": "Rejected by",
+  "appointments.reasonRequired": "Please give a reason for the meeting.",
   "events.clearStart": "Will clear start time",
   "events.clearEnd": "Will clear end time",
   "events.upcoming": "Upcoming",
@@ -1991,6 +2125,73 @@ const tr: Dict = {
   "calendar.noEvents": "Bu günde etkinlik veya sınav yok.",
   "calendar.events": "Etkinlikler",
   "calendar.exams": "Sınavlar",
+  "calendar.appointments": "Randevular",
+  "nav.appointments": "Randevular",
+  "appointments.title": "Randevular",
+  "appointments.subtitle": "Bir öğretmenle görüşme ayarlayın ya da uygun olduğunuz saatleri yayımlayın.",
+  "appointments.empty": "Henüz randevu yok.",
+  "appointments.mySlots": "Uygun saatlerim",
+  "appointments.availableSlots": "Uygun saatler",
+  "appointments.requests": "Randevu talepleri",
+  "appointments.myBookings": "Randevularım",
+  "appointments.publish": "Saat yayımla",
+  "appointments.book": "Randevu al",
+  "appointments.approve": "Onayla",
+  "appointments.reject": "Reddet",
+  "appointments.cancel": "İptal et",
+  "appointments.reschedule": "Yeni saat öner",
+  "appointments.acceptReschedule": "Yeni saati kabul et",
+  "appointments.declineReschedule": "Yeni saati reddet",
+  "appointments.deleteSlot": "Saati sil",
+  "appointments.deleteSeries": "Seriyi sil",
+  "appointments.note": "Not",
+  "appointments.reason": "Sebep",
+  "appointments.repeatWeekly": "Haftalık tekrarla",
+  "appointments.until": "Şu tarihe kadar tekrarla",
+  "appointments.starts": "Başlangıç",
+  "appointments.ends": "Bitiş",
+  "appointments.teacher": "Öğretmen",
+  "appointments.student": "Talep eden",
+  "appointments.proposedTime": "Önerilen saat",
+  "appointments.newTime": "Yeni saat",
+  "appointments.status.pending": "Bekliyor",
+  "appointments.status.approved": "Onaylandı",
+  "appointments.status.rejected": "Reddedildi",
+  "appointments.status.cancelled": "İptal edildi",
+  "appointments.confirmCancel": "Bu randevu iptal edilsin mi? Bu işlem geri alınamaz.",
+  "appointments.confirmDeleteSlot": "Bu uygun saat silinsin mi? Bekleyen talepleri de düşecektir.",
+  "appointments.confirmDeleteSeries": "Tüm haftalık seri silinsin mi? Serinin bütün saatleri kaldırılacak.",
+  "appointments.rescheduleProposed": "Yeni bir saat önerildi ve talep edenin kabul etmesi bekleniyor.",
+  "appointments.slotTaken": "Bu saat az önce başka biri tarafından alındı. Lütfen başka bir saat seçin.",
+  "appointments.noSlots": "Şu anda uygun saat yok.",
+  "appointments.series": "Seri",
+  "appointments.time": "Saat",
+  "appointments.status": "Durum",
+  "appointments.publishSubtitle": "Öğrencilerin alabileceği bir saat aralığı sunun. İsterseniz haftalık tekrarlayın.",
+  "appointments.bookSubtitle": "Öğretmene neden görüşmek istediğinizi belirtin.",
+  "appointments.rescheduleSubtitle": "Farklı bir saat önerin; talep eden bunu kabul edebilir ya da reddedebilir.",
+  "appointments.reasonPlaceholder": "Ne hakkında konuşmak istiyorsunuz?",
+  "appointments.notePlaceholder": "Öğrenciler için isteğe bağlı not (ör. konu, yer).",
+  "appointments.noRequests": "Randevu talebi yok.",
+  "appointments.noBookings": "Henüz randevunuz yok.",
+  "appointments.repeatWeeklyHelp": "Seçilen tarihe kadar her hafta aynı saati oluşturur (en fazla 52 kez).",
+  "appointments.untilRequired": "Tekrarlanacak son tarihi seçin.",
+  "appointments.tooManyOccurrences": "Bu aralık {count} haftalık saat oluşturur; sınır {max}. Daha yakın bir bitiş tarihi seçin.",
+  "appointments.cancelTitle": "Randevu iptal edilsin mi?",
+  "appointments.cancelAction": "Evet, iptal et",
+  "appointments.cancelReasonLabel": "Neden (isteğe bağlı)",
+  "appointments.cancelReasonPlaceholder": "Neden iptal ediyorsunuz?",
+  "appointments.cancelledBy": "İptal eden",
+  "appointments.details": "Detaylar",
+  "appointments.cancelReason": "İptal nedeni",
+  "appointments.rejectTitle": "Randevu talebi reddedilsin mi?",
+  "appointments.rejectAction": "Reddet",
+  "appointments.confirmReject": "Bu randevu talebi reddedilsin mi? Saat başkalarına açılır.",
+  "appointments.rejectReasonLabel": "Neden (isteğe bağlı)",
+  "appointments.rejectReasonPlaceholder": "Neden reddediyorsunuz?",
+  "appointments.rejectReason": "Ret nedeni",
+  "appointments.rejectedBy": "Reddeden",
+  "appointments.reasonRequired": "Lütfen görüşme için bir sebep belirtin.",
   "events.clearStart": "Başlangıç saati temizlenecek",
   "events.clearEnd": "Bitiş saati temizlenecek",
   "events.upcoming": "Yaklaşan",
