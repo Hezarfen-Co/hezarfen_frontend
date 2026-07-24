@@ -72,6 +72,31 @@ function ExamDetailContent() {
   }, "");
 
   const [exam, { refetch: refetchExam }] = createResource(id, (examId) => getExamById(examId));
+  const [reviewSaving, setReviewSaving] = createSignal(false);
+  // The review switch is driven by a LOCAL signal, not the shared `exam`
+  // resource: mutating `exam` changes its identity, which re-runs every
+  // resource source that reads it (results, grade sheets, …) and flashes the
+  // page spinner. The local signal keeps the toggle self-contained — it syncs
+  // from the server value whenever the exam (re)loads, and flips optimistically
+  // on toggle (reverting only on failure). No refetch, no toast, no flicker.
+  const [reviewOn, setReviewOn] = createSignal(false);
+  createEffect(() => {
+    const e = exam();
+    if (e) setReviewOn(e.allow_review);
+  });
+  const toggleReview = async (next: boolean) => {
+    if (reviewSaving()) return;
+    setReviewOn(next);
+    setReviewSaving(true);
+    try {
+      await patchExamById(id(), { allow_review: next });
+    } catch (err) {
+      setReviewOn(!next);
+      setError(formatApiError(err));
+    } finally {
+      setReviewSaving(false);
+    }
+  };
   const isStudent = createMemo(() => auth.user()?.role === "student");
 
   const hasCourseManagementRights = () => {
@@ -409,6 +434,30 @@ function ExamDetailContent() {
                 }
               />
             </div>
+            <Show when={hasCourseManagementRights() && isFinished()}>
+              <label
+                class={cn(
+                  "detail-metric-card flex cursor-pointer items-center gap-4 text-sm transition-colors",
+                  reviewOn() && "border-primary/30 bg-primary/[0.04]",
+                )}
+              >
+                <div class="min-w-0 flex-1">
+                  <span class="font-medium">{t("exams.allowReview")}</span>
+                  <p class="text-xs font-normal text-muted-foreground">{t("exams.allowReviewHelp")}</p>
+                </div>
+                <span class="relative shrink-0">
+                  <input
+                    type="checkbox"
+                    class="peer sr-only"
+                    checked={reviewOn()}
+                    disabled={reviewSaving()}
+                    onChange={(e) => toggleReview(e.currentTarget.checked)}
+                  />
+                  <span class="block h-7 w-12 rounded-full bg-input shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] ring-1 ring-inset ring-black/5 transition-colors duration-200 peer-checked:bg-primary peer-disabled:opacity-60 peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background dark:ring-white/10" />
+                  <span class="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-md ring-1 ring-black/5 transition-transform duration-200 ease-out peer-checked:translate-x-5" />
+                </span>
+              </label>
+            </Show>
             <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("work.status")}</p>
