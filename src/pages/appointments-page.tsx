@@ -1,4 +1,4 @@
-import { Show, createMemo, createResource, createSignal, onCleanup } from "solid-js";
+import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
   deleteSlotById,
@@ -15,6 +15,7 @@ import {
   postSlots,
 } from "@/api/appointments";
 import { APPOINTMENT_LIMITS, formatApiError } from "@/api/client";
+import { createLivePoll } from "@/lib/create-live-poll";
 import type { Appointment, AppointmentSlot, AppointmentStatus } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { BookAppointmentForm } from "@/components/appointments/book-appointment-form";
@@ -75,9 +76,10 @@ function AppointmentsContent() {
   const loaded = () => slots.latest !== undefined && appts.latest !== undefined;
 
   // Poll so statuses stay in sync when the other party acts (approve, book,
-  // cancel…). Reads use `.latest`, so a refetch never re-suspends/blanks the tables.
-  const poll = setInterval(() => void refetchAll(), 30_000);
-  onCleanup(() => clearInterval(poll));
+  // cancel…). Visibility-aware: pauses on hidden tabs, refetches on tab-back so
+  // a cross-actor status change isn't stale on a parked tab. Reads use `.latest`,
+  // so a refetch never re-suspends/blanks the tables.
+  createLivePoll(refetchAll, 10_000);
   const act = async (fn: () => Promise<unknown>, successKey?: MessageKey) => {
     setError("");
     try {

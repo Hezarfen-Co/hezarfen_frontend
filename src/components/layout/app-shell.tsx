@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { IconBotSquare, IconPanelLeft, IconSearch, IconX } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
+import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 
@@ -71,6 +72,7 @@ export function AppShell(props: ParentProps) {
       <Show when={!auth.user()}>
         <NavBar />
       </Show>
+      <ShellFeedProvider>
       <div class="flex w-full">
         <Show when={auth.user() && !fullScreen()}>
           <aside
@@ -201,6 +203,7 @@ export function AppShell(props: ParentProps) {
           <RightNav />
         </Show>
       </div>
+      </ShellFeedProvider>
       <Show when={auth.user() && !wide()}>
         <MobileTabBar onMenu={() => setMobileOpen(true)} />
       </Show>

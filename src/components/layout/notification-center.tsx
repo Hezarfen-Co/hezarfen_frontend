@@ -1,9 +1,6 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
-import { getEvents } from "@/api/events";
-import { getExams } from "@/api/exams";
-import { getHomework } from "@/api/homework";
-import { getMessages, patchMessageById } from "@/api/messages";
+import { patchMessageById } from "@/api/messages";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -24,71 +21,23 @@ import {
   type NotificationItem,
 } from "@/lib/notifications";
 import { useT } from "@/stores/preferences-context";
+import { useShellFeed } from "@/stores/shell-feed-context";
 
 export function NotificationCenter() {
   const t = useT();
   const navigate = useNavigate();
+  const feed = useShellFeed();
   const [open, setOpen] = createSignal(false);
   const [dismissedIds, setDismissedIds] = createSignal<Set<string>>(getDismissedNotificationIds());
 
-  // Fetch data sources. `initialValue` is required: the unread badge reads
-  // these via `unreadCount()` OUTSIDE the popover's <Suspense>, so a bare
-  // `resource()` would re-suspend on every 60s `refreshAll()` refetch and — since
-  // this component sits beside <Outlet> in AppShell — blank the whole page for
-  // the fetch duration. A seeded value keeps `resource()` non-suspending on
-  // refetch (matches RightNav).
-  const [messagesRes, { refetch: refetchMessages }] = createResource(
-    async () => {
-      try {
-        return await getMessages("inbox", { read: false, limit: 10 });
-      } catch {
-        return { items: [], total: 0 };
-      }
-    },
-    { initialValue: { items: [], total: 0 } }
-  );
-
-  const [eventsRes, { refetch: refetchEvents }] = createResource(async () => {
-    try {
-      return await getEvents();
-    } catch {
-      return { items: [], total: 0 };
-    }
-  }, { initialValue: { items: [], total: 0 } });
-
-  const [examsRes, { refetch: refetchExams }] = createResource(async () => {
-    try {
-      return await getExams();
-    } catch {
-      return { items: [], total: 0 };
-    }
-  }, { initialValue: { items: [], total: 0 } });
-
-  const [homeworkRes, { refetch: refetchHomework }] = createResource(async () => {
-    try {
-      return await getHomework();
-    } catch {
-      return { items: [], total: 0 };
-    }
-  }, { initialValue: { items: [], total: 0 } });
-
-  // Revalidate every source so an item deleted on another page stops
-  // notifying: on the periodic clock tick (badge self-heals) and whenever
-  // the panel is opened (list is fresh on interaction).
-  const refreshAll = () => {
-    void refetchMessages();
-    void refetchEvents();
-    void refetchExams();
-    void refetchHomework();
-  };
-
-  // Reactive clock so passed items drop off without a remount.
-  const [nowMs, setNowMs] = createSignal(Date.now());
-  const clockTimer = setInterval(() => {
-    setNowMs(Date.now());
-    refreshAll();
-  }, 60_000);
-  onCleanup(() => clearInterval(clockTimer));
+  // Shell feed data comes from the shared poller (ShellFeedProvider): one fetch
+  // per source for the whole shell instead of a duplicate set here. Every read
+  // below is `feed.x()` which returns `resource.latest` — non-suspending on the
+  // 60s refetch, so the unread badge (outside the popover's <Suspense>) never
+  // blanks the page beside <Outlet> (AGENTS.md #6).
+  const refetchMessages = feed.refetchMessages;
+  const refreshAll = feed.refreshAll;
+  const nowMs = feed.nowMs;
 
   createEffect(() => {
     if (open()) refreshAll();
@@ -101,8 +50,9 @@ export function NotificationCenter() {
   const allNotifications = createMemo<NotificationItem[]>(() => {
     const list: NotificationItem[] = [];
 
-    // 1. Unread Messages
-    const msgs = messagesRes.latest?.items ?? [];
+    // 1. Unread Messages — shared inbox is the full list, filter to unread here
+    // (was a dedicated read:false fetch before the shell feed consolidation).
+    const msgs = feed.messages().items.filter((m) => !m.read);
     for (const m of msgs) {
       list.push({
         id: `msg_${m.id}`,
@@ -115,7 +65,7 @@ export function NotificationCenter() {
     }
 
     // 2. Events starting today or upcoming
-    const evts = eventsRes.latest?.items ?? [];
+    const evts = feed.events().items;
     for (const e of evts) {
       if (!e.starts_at) continue;
       const t = new Date(e.starts_at).getTime();
@@ -139,7 +89,7 @@ export function NotificationCenter() {
     }
 
     // 3. Exams starting today or upcoming
-    const exms = examsRes.latest?.items ?? [];
+    const exms = feed.exams().items;
     for (const ex of exms) {
       if (!ex.starts_at || ex.draft) continue;
       const t = new Date(ex.starts_at).getTime();
@@ -163,7 +113,7 @@ export function NotificationCenter() {
     }
 
     // 4. Homework due upcoming
-    const hws = homeworkRes.latest?.items ?? [];
+    const hws = feed.homework().items;
     for (const hw of hws) {
       if (!hw.due_at) continue;
       if (hw.due_at >= nowMs()) {

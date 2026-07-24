@@ -1,9 +1,6 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
-import { getEvents } from "@/api/events";
-import { getExams } from "@/api/exams";
-import { getAppointments } from "@/api/appointments";
-import { getMessages, patchMessageById } from "@/api/messages";
+import { patchMessageById } from "@/api/messages";
 import type { Appointment, Event, Exam, Message } from "@/api/client";
 import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +19,7 @@ import {
 import { cn } from "@/lib/cn";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { useShellFeed } from "@/stores/shell-feed-context";
 
 type ActiveTab = "messages" | "calendar" | null;
 type CalendarItemRef =
@@ -36,6 +34,7 @@ export function RightNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { locale } = usePreferences();
+  const feed = useShellFeed();
 
   const isMessagesActive = () => location().pathname === "/messages";
   const isCalendarActive = () => location().pathname === "/calendar";
@@ -52,67 +51,18 @@ export function RightNav() {
   const [calFilter, setCalFilter] = createSignal<"all" | "events" | "exams" | "appointments">("all");
   const [selectedCalItem, setSelectedCalItem] = createSignal<CalendarItemRef | null>(null);
 
-  // Fetch inbox messages
-  const [messagesRes, { refetch: refetchMessages }] = createResource(
-    async () => {
-      try {
-        return await getMessages("inbox", { limit: 100 });
-      } catch {
-        return { items: [], total: 0, limit: 100, offset: 0 };
-      }
-    },
-    { initialValue: { items: [], total: 0, limit: 100, offset: 0 } }
-  );
-
-  // Fetch events & exams
-  const [eventsRes, { refetch: refetchEvents }] = createResource(
-    async () => {
-      try {
-        return (await getEvents({ limit: 100 })).items;
-      } catch {
-        return [];
-      }
-    },
-    { initialValue: [] }
-  );
-
-  const [examsRes, { refetch: refetchExams }] = createResource(
-    async () => {
-      try {
-        return (await getExams({ limit: 100 })).items;
-      } catch {
-        return [];
-      }
-    },
-    { initialValue: [] }
-  );
-
-  const [appointmentsRes, { refetch: refetchAppointments }] = createResource(
-    async () => {
-      try {
-        return (await getAppointments({ limit: 100 })).items;
-      } catch {
-        return [];
-      }
-    },
-    { initialValue: [] }
-  );
-
-  // Revalidate every source so an item deleted on another page stops showing
-  // in the drawer/badge: on the periodic clock tick and whenever a drawer opens.
-  const refreshAll = () => {
-    void refetchMessages();
-    void refetchEvents();
-    void refetchExams();
-    void refetchAppointments();
-  };
+  // Shell feed data comes from the shared poller (ShellFeedProvider), so
+  // messages/events/exams/appointments are fetched once for the whole shell,
+  // not independently here and in NotificationCenter.
+  const refetchMessages = feed.refetchMessages;
+  const refreshAll = feed.refreshAll;
 
   // Computed message data
-  // `.latest`, not `messagesRes()`: this feeds the always-rendered unread badge,
-  // which is outside any <Suspense>. A bare read re-suspends on every 60s refetch
-  // and — since RightNav sits beside <Outlet> in AppShell — blanks the whole page
-  // for the fetch duration. `.latest` keeps the last value without suspending.
-  const allMessages = () => messagesRes.latest.items;
+  // `.latest` (via the store accessor), not a bare `resource()`: this feeds the
+  // always-rendered unread badge outside any <Suspense>. A bare read re-suspends
+  // on every 60s refetch and — since RightNav sits beside <Outlet> in AppShell —
+  // blanks the whole page for the fetch duration. `.latest` keeps the last value.
+  const allMessages = () => feed.messages().items;
   const unreadCount = createMemo(() => allMessages().filter((m: Message) => !m.read).length);
 
   const filteredMessages = createMemo(() => {
@@ -128,13 +78,8 @@ export function RightNav() {
     return filteredMessages().slice(0, 5);
   });
 
-  // Reactive clock so passed items clear without a remount.
-  const [nowMs, setNowMs] = createSignal(Date.now());
-  const clockTimer = setInterval(() => {
-    setNowMs(Date.now());
-    refreshAll();
-  }, 60_000);
-  onCleanup(() => clearInterval(clockTimer));
+  // Reactive clock from the shared poller so passed items clear without a remount.
+  const nowMs = feed.nowMs;
 
   createEffect(() => {
     if (activeTab() !== null) refreshAll();
@@ -148,15 +93,15 @@ export function RightNav() {
   };
 
   const activeEvents = createMemo(() => {
-    return eventsRes.latest.filter((e: Event) => notEnded(e.starts_at, e.ends_at));
+    return feed.events().items.filter((e: Event) => notEnded(e.starts_at, e.ends_at));
   });
 
   const activeExams = createMemo(() => {
-    return examsRes.latest.filter((e: Exam) => !e.draft && notEnded(e.starts_at, e.ends_at));
+    return feed.exams().items.filter((e: Exam) => !e.draft && notEnded(e.starts_at, e.ends_at));
   });
 
   const activeAppointments = createMemo(() => {
-    return appointmentsRes.latest.filter(
+    return feed.appointments().items.filter(
       (a: Appointment) => (a.status === "pending" || a.status === "approved") && notEnded(a.starts_at, a.ends_at)
     );
   });
