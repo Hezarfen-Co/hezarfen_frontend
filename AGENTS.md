@@ -84,6 +84,32 @@ Solid components run **once**, there is no re-render:
    `<Suspense>` use `resource()`; always-rendered/shell/badge reads of a
    periodically-refetched resource use `resource.latest` (last value, no
    suspend). Poll-driven revalidation belongs behind `.latest`.
+7. **Live save-on-click toggles use a local signal, not `mutate`/`refetch`.**
+   For an inline switch that PATCHes one field (e.g. the exam-review toggle in
+   `exam-detail-page.tsx`), do NOT `refetch()` the shared resource (re-suspends
+   → page spinner) and do NOT `mutate({...res, field})` either — mutating a
+   shared resource changes its object identity, so every *other* `createResource`
+   whose source reads it (directly or via a memo like `hasCourseManagementRights()`)
+   re-runs and refetches, cascading the same spinner. Instead keep a local
+   signal, sync it from the resource in a `createEffect`, flip it optimistically
+   on toggle, and revert on failure:
+   ```ts
+   const [on, setOn] = createSignal(false);
+   createEffect(() => { const e = res(); if (e) setOn(e.field); });
+   const toggle = async (next: boolean) => {
+     if (saving()) return;
+     setOn(next); setSaving(true);
+     try { await patchX(id(), { field: next }); }
+     catch (err) { setOn(!next); setError(fmt(err)); }
+     finally { setSaving(false); }
+   };
+   ```
+   A correct toggle fires exactly one PATCH and zero GETs. No success toast — the
+   switch position is the feedback. Rule #6's `resource.latest` is the read-side
+   companion (survive a refetch without blanking); this is the write-side (don't
+   trigger the refetch at all). `mutate()` (`settings-page.tsx`) is fine for a
+   form that owns its whole resource, but still cascades for a shared one — the
+   local signal is the safe default.
 
 ## Performance
 
