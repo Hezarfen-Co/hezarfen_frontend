@@ -91,7 +91,11 @@ export function RightNav() {
   };
 
   // Computed message data
-  const allMessages = () => messagesRes().items;
+  // `.latest`, not `messagesRes()`: this feeds the always-rendered unread badge,
+  // which is outside any <Suspense>. A bare read re-suspends on every 60s refetch
+  // and — since RightNav sits beside <Outlet> in AppShell — blanks the whole page
+  // for the fetch duration. `.latest` keeps the last value without suspending.
+  const allMessages = () => messagesRes.latest.items;
   const unreadCount = createMemo(() => allMessages().filter((m: Message) => !m.read).length);
 
   const filteredMessages = createMemo(() => {
@@ -127,11 +131,11 @@ export function RightNav() {
   };
 
   const activeEvents = createMemo(() => {
-    return eventsRes().filter((e: Event) => notEnded(e.starts_at, e.ends_at));
+    return eventsRes.latest.filter((e: Event) => notEnded(e.starts_at, e.ends_at));
   });
 
   const activeExams = createMemo(() => {
-    return examsRes().filter((e: Exam) => !e.draft && notEnded(e.starts_at, e.ends_at));
+    return examsRes.latest.filter((e: Exam) => !e.draft && notEnded(e.starts_at, e.ends_at));
   });
 
   const hasTodayEvents = createMemo(() => activeEvents().length > 0);

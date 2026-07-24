@@ -31,7 +31,12 @@ export function NotificationCenter() {
   const [open, setOpen] = createSignal(false);
   const [dismissedIds, setDismissedIds] = createSignal<Set<string>>(getDismissedNotificationIds());
 
-  // Fetch data sources
+  // Fetch data sources. `initialValue` is required: the unread badge reads
+  // these via `unreadCount()` OUTSIDE the popover's <Suspense>, so a bare
+  // `resource()` would re-suspend on every 60s `refreshAll()` refetch and — since
+  // this component sits beside <Outlet> in AppShell — blank the whole page for
+  // the fetch duration. A seeded value keeps `resource()` non-suspending on
+  // refetch (matches RightNav).
   const [messagesRes, { refetch: refetchMessages }] = createResource(
     async () => {
       try {
@@ -39,7 +44,8 @@ export function NotificationCenter() {
       } catch {
         return { items: [], total: 0 };
       }
-    }
+    },
+    { initialValue: { items: [], total: 0 } }
   );
 
   const [eventsRes, { refetch: refetchEvents }] = createResource(async () => {
@@ -48,7 +54,7 @@ export function NotificationCenter() {
     } catch {
       return { items: [], total: 0 };
     }
-  });
+  }, { initialValue: { items: [], total: 0 } });
 
   const [examsRes, { refetch: refetchExams }] = createResource(async () => {
     try {
@@ -56,7 +62,7 @@ export function NotificationCenter() {
     } catch {
       return { items: [], total: 0 };
     }
-  });
+  }, { initialValue: { items: [], total: 0 } });
 
   const [homeworkRes, { refetch: refetchHomework }] = createResource(async () => {
     try {
@@ -64,7 +70,7 @@ export function NotificationCenter() {
     } catch {
       return { items: [], total: 0 };
     }
-  });
+  }, { initialValue: { items: [], total: 0 } });
 
   // Revalidate every source so an item deleted on another page stops
   // notifying: on the periodic clock tick (badge self-heals) and whenever
@@ -96,7 +102,7 @@ export function NotificationCenter() {
     const list: NotificationItem[] = [];
 
     // 1. Unread Messages
-    const msgs = messagesRes()?.items ?? [];
+    const msgs = messagesRes.latest?.items ?? [];
     for (const m of msgs) {
       list.push({
         id: `msg_${m.id}`,
@@ -109,7 +115,7 @@ export function NotificationCenter() {
     }
 
     // 2. Events starting today or upcoming
-    const evts = eventsRes()?.items ?? [];
+    const evts = eventsRes.latest?.items ?? [];
     for (const e of evts) {
       if (!e.starts_at) continue;
       const t = new Date(e.starts_at).getTime();
@@ -133,7 +139,7 @@ export function NotificationCenter() {
     }
 
     // 3. Exams starting today or upcoming
-    const exms = examsRes()?.items ?? [];
+    const exms = examsRes.latest?.items ?? [];
     for (const ex of exms) {
       if (!ex.starts_at || ex.draft) continue;
       const t = new Date(ex.starts_at).getTime();
@@ -157,7 +163,7 @@ export function NotificationCenter() {
     }
 
     // 4. Homework due upcoming
-    const hws = homeworkRes()?.items ?? [];
+    const hws = homeworkRes.latest?.items ?? [];
     for (const hw of hws) {
       if (!hw.due_at) continue;
       if (hw.due_at >= nowMs()) {
