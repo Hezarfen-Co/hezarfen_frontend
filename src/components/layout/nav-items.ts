@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 import type { Role } from "@/api/client";
 import {
+  IconArchive,
   IconBook,
   IconBriefcase,
   IconCalendar,
@@ -56,6 +57,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/clubs", labelKey: "nav.clubs", Icon: IconUsers },
       { to: "/homework", labelKey: "nav.homework", Icon: IconHomework },
       { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
+      { to: "/question-bank", labelKey: "nav.questionBank", Icon: IconArchive, minRole: "teacher" },
       { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
       { to: "/calendar", labelKey: "nav.calendar", Icon: IconCalendarDays },
       { to: "/appointments", labelKey: "nav.appointments", Icon: IconClock },

@@ -4,6 +4,7 @@ import { getExamById } from "../../exams";
 import { patchExamById } from "../../exams";
 import { deleteExamById } from "../../exams";
 import { getExamQuestionImageBlob } from "../../exams";
+import { getExamChoiceImageBlob } from "../../exams";
 import { postExamAttemptAnswerImage } from "../../exams";
 import { deleteExamAttemptAnswerImage } from "../../exams";
 import { getExamAnswerImageBlob } from "../../exams";
@@ -24,6 +25,17 @@ describe("exams API - core", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/exams?limit=10");
     expect(init?.method).toBe("GET");
+  });
+
+  it("getExamChoiceImageBlob calls /exams/:id/questions/:qid/choices/:index/image", async () => {
+    mockFetchBlob(new Blob(["img"], { type: "image/png" }));
+
+    const result = await getExamChoiceImageBlob("ex1", "q1", 2);
+    expect(result).toBeInstanceOf(Blob);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/exams/ex1/questions/q1/choices/2/image");
+    expect(init?.method).toBeUndefined();
   });
 
   it("getExamById calls /exams/:id", async () => {

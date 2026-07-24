@@ -3,7 +3,11 @@ import { deleteExamChoiceImage } from "@/api/exams";
 import { deleteExamQuestionImage } from "@/api/exams";
 import { deleteExamQuestionById } from "@/api/exams";
 import { getCourseSubjects } from "@/api/courses";
+import { getExamChoiceImageBlob } from "@/api/exams";
+import { getExamQuestionImageBlob } from "@/api/exams";
 import { getExamQuestions } from "@/api/exams";
+import { postExamQuestionFromBank } from "@/api/exams";
+import { postExamQuestionToBank } from "@/api/exams";
 import { patchExamQuestionById } from "@/api/exams";
 import { postExamChoiceImage } from "@/api/exams";
 import { postExamQuestionImage } from "@/api/exams";
@@ -15,10 +19,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { BankQuestionPicker } from "@/components/exams/bank-question-picker";
 import { QuestionForm, type QuestionValues } from "@/components/exams/question-form";
-import { IconChevronLeft, IconChevronRight, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconArchive, IconChevronLeft, IconChevronRight, IconPlus, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { planChoiceImageRestore } from "@/lib/choice-compaction";
 import { createFlash } from "@/lib/flash";
+import { hasMinRole } from "@/lib/roles";
+import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
 const QUESTION_PAGE_SIZE = 1;
@@ -32,6 +40,10 @@ export function ExamQuestionsPanel(props: {
   onCreateOpenChange?: (open: boolean) => void;
 }) {
   const t = useT();
+  const auth = useAuth();
+  const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
+  const [bankOpen, setBankOpen] = createSignal(false);
+  const [banking, setBanking] = createSignal("");
   const [subjects] = createResource(() => props.courseId, async (courseId) => (await getCourseSubjects(courseId)).items);
   const [questions, { refetch }] = createResource(() => props.examId, async (examId) => {
     try {
@@ -44,6 +56,10 @@ export function ExamQuestionsPanel(props: {
   const [showForm, setShowForm] = createSignal(false);
   const [editing, setEditing] = createSignal<ExamQuestion | null>(null);
   const [removeQuestion, setRemoveQuestion] = createSignal<ExamQuestion | null>(null);
+  const [confirmBank, setConfirmBank] = createSignal<ExamQuestion | null>(null);
+  // Older backends never write `source_bank` back onto the exam question after a
+  // to-bank save, so remember what this session banked and treat both as "banked".
+  const [bankedIds, setBankedIds] = createSignal<string[]>([]);
   const [error, setError] = createSignal("");
   const [imagePending, setImagePending] = createSignal("");
   const [flash, setFlash] = createFlash();
@@ -57,6 +73,11 @@ export function ExamQuestionsPanel(props: {
 
   const formInitial = createMemo(() => editing() ?? undefined);
   const questionList = createMemo(() => questions() ?? []);
+  // The header badge renders outside the <Suspense> below, so it must read
+  // `.latest` — a bare read there re-suspends on every refetch (insert-from-bank,
+  // save, delete) and blanks the surrounding page for the whole fetch.
+  const questionCount = () => questions.latest?.length ?? 0;
+  const isBanked = (question: ExamQuestion) => Boolean(question.source_bank) || bankedIds().includes(question.id);
   const subjectName = (subjectId: string) => subjects()?.find((subject) => subject.id === subjectId)?.name ?? subjectId;
   const totalPages = createMemo(() => Math.max(1, Math.ceil(questionList().length / QUESTION_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
@@ -82,13 +103,43 @@ export function ExamQuestionsPanel(props: {
     try {
       const q = editing();
       const isNewQuestion = !q;
-      const { image, choice_images, ...body } = values;
+      // choice_sources is form-only bookkeeping — never send it to the backend.
+      const { image, choice_images, choice_sources, ...body } = values;
+
+      // A PATCH carrying `choices` wipes every stored option image, so pull the
+      // ones the user kept first and put them back under their new indices.
+      const lost: number[] = [];
+      const keep: { index: number; file: File }[] = [];
+      if (q && body.kind === "choice") {
+        for (const slot of planChoiceImageRestore(choice_sources ?? [], q.choice_images ?? [], choice_images)) {
+          try {
+            const blob = await getExamChoiceImageBlob(props.examId, q.id, slot.source);
+            keep.push({ index: slot.index, file: new File([blob], `choice-${slot.source}`, { type: blob.type }) });
+          } catch {
+            lost.push(slot.index); // the write below drops it either way — report it
+          }
+        }
+      }
+
       const saved = q
         ? await patchExamQuestionById(props.examId, q.id, body)
         : await postExamQuestion(props.examId, body);
       if (image) await postExamQuestionImage(props.examId, saved.id, image);
       for (const [index, file] of (choice_images ?? []).entries()) {
         if (file) await postExamChoiceImage(props.examId, saved.id, index, file);
+      }
+      // Independent uploads: one failure must not strand the remaining images.
+      for (const slot of keep) {
+        try {
+          await postExamChoiceImage(props.examId, saved.id, slot.index, slot.file);
+        } catch {
+          lost.push(slot.index);
+        }
+      }
+      if (lost.length > 0) {
+        setError(t("questions.imagesLost", {
+          options: lost.sort((a, b) => a - b).map((index) => String.fromCharCode(65 + index)).join(", "),
+        }));
       }
       if (q) {
         setFlash(t("common.saved"));
@@ -101,6 +152,29 @@ export function ExamQuestionsPanel(props: {
       if (isNewQuestion) setPage(Math.max(0, Math.ceil(questionList().length / QUESTION_PAGE_SIZE) - 1));
     } catch (err) {
       throw err;
+    }
+  };
+
+  const insertFromBank = async (bankQuestionId: string, subjectId: string) => {
+    await postExamQuestionFromBank(props.examId, bankQuestionId, subjectId);
+    setBankOpen(false);
+    setFlash(t("bank.inserted"));
+    await refetch();
+  };
+
+  const saveToBank = async (question: ExamQuestion) => {
+    if (banking()) return;
+    setError("");
+    setBanking(question.id);
+    try {
+      await postExamQuestionToBank(props.examId, question.id);
+      setBankedIds((ids) => (ids.includes(question.id) ? ids : [...ids, question.id]));
+      setFlash(t("bank.savedToBank"));
+      await refetch();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setBanking("");
     }
   };
 
@@ -144,25 +218,52 @@ export function ExamQuestionsPanel(props: {
         <div class="flex items-center gap-2">
           <h2 class="font-display text-base font-semibold">{t("questions.title")}</h2>
           <Badge variant="secondary" class="rounded-full font-mono text-xs">
-            {questionList().length}
+            {questionCount()}
           </Badge>
         </div>
         <Show when={!props.readOnly}>
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            class="h-8 gap-1.5 rounded-md text-xs font-semibold"
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            <IconPlus class="h-3.5 w-3.5" />
-            {t("questions.add")}
-          </Button>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <Show when={isTeacherPlus()}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                class="h-8 gap-1.5 rounded-md text-xs font-semibold"
+                onClick={() => setBankOpen(true)}
+              >
+                <IconArchive class="h-3.5 w-3.5" />
+                {t("bank.fromBank")}
+              </Button>
+            </Show>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              class="h-8 gap-1.5 rounded-md text-xs font-semibold"
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <IconPlus class="h-3.5 w-3.5" />
+              {t("questions.add")}
+            </Button>
+          </div>
         </Show>
       </div>
+
+      <FormDialog
+        open={bankOpen() && !props.readOnly}
+        onOpenChange={setBankOpen}
+        title={t("bank.pickTemplate")}
+        description={t("bank.title")}
+      >
+        <BankQuestionPicker
+          subjects={subjects() ?? []}
+          onInsert={insertFromBank}
+          onCancel={() => setBankOpen(false)}
+        />
+      </FormDialog>
 
       <FormDialog
         open={formOpen() || editing() != null}
@@ -178,6 +279,9 @@ export function ExamQuestionsPanel(props: {
         <QuestionForm
           initial={formInitial()}
           subjects={subjects() ?? []}
+          imageSrc={editing() ? `/api/exams/${props.examId}/questions/${editing()!.id}/image` : undefined}
+          choiceImageSrc={(index) => `/api/exams/${props.examId}/questions/${editing()?.id}/choices/${index}/image`}
+          loadImageBlob={editing() ? () => getExamQuestionImageBlob(props.examId, editing()!.id) : undefined}
           onCancel={() => {
             setEditing(null);
             setFormOpen(false);
@@ -230,6 +334,14 @@ export function ExamQuestionsPanel(props: {
                           <Badge variant="outline" class="font-mono">
                             {q.points} {t("questions.points")}
                           </Badge>
+                          {/* `source_bank` is set in both directions (inserted from the
+                              bank, or saved to it), so the badge stays origin-neutral. */}
+                          <Show when={isBanked(q)}>
+                            <Badge variant="outline" class="gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400">
+                              <IconArchive class="h-3 w-3" />
+                              {t("bank.inBankBadge")}
+                            </Badge>
+                          </Show>
                         </div>
                         <Show when={q.image}>
                           <img
@@ -293,26 +405,43 @@ export function ExamQuestionsPanel(props: {
                           </ol>
                         </Show>
                       </div>
-                      <Show when={!props.readOnly}>
+                      {/* Saving to the bank copies the question out; it never touches the
+                          exam, so it stays available on a finished/read-only exam. */}
+                      <Show when={isTeacherPlus() || !props.readOnly}>
                         <div class="flex items-center gap-1.5">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            class="h-8 px-2.5 text-xs"
-                            onClick={() => setEditing(q)}
-                          >
-                            {t("common.edit")}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            class="h-8 w-8 p-0 text-destructive"
-                            onClick={() => setRemoveQuestion(q)}
-                          >
-                            <IconTrash class="h-4 w-4" />
-                          </Button>
+                          <Show when={isTeacherPlus()}>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              class="h-8 gap-1.5 px-2.5 text-xs"
+                              disabled={banking() === q.id}
+                              onClick={() => (isBanked(q) ? setConfirmBank(q) : void saveToBank(q))}
+                            >
+                              <IconArchive class="h-3.5 w-3.5" />
+                              {isBanked(q) ? t("bank.saveCopyToBank") : t("bank.saveToBank")}
+                            </Button>
+                          </Show>
+                          <Show when={!props.readOnly}>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              class="h-8 px-2.5 text-xs"
+                              onClick={() => setEditing(q)}
+                            >
+                              {t("common.edit")}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              class="h-8 w-8 p-0 text-destructive"
+                              onClick={() => setRemoveQuestion(q)}
+                            >
+                              <IconTrash class="h-4 w-4" />
+                            </Button>
+                          </Show>
                         </div>
                       </Show>
                     </div>
@@ -353,6 +482,24 @@ export function ExamQuestionsPanel(props: {
           </div>
         </Show>
       </Suspense>
+
+      <ConfirmDialog
+        open={confirmBank() != null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmBank(null);
+        }}
+        title={t("bank.saveCopyTitle")}
+        description={t("bank.saveCopyBody")}
+        confirmLabel={t("bank.saveCopyConfirm")}
+        icon={<IconArchive class="h-4 w-4" />}
+        summary={confirmBank()?.text ?? ""}
+        onConfirm={async () => {
+          const q = confirmBank();
+          if (!q) return;
+          setConfirmBank(null);
+          await saveToBank(q);
+        }}
+      />
 
       <ConfirmDialog
         open={removeQuestion() != null}

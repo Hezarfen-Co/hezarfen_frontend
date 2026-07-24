@@ -139,6 +139,22 @@ describe("client", () => {
       );
     });
 
+    it("localizes question-bank permission and attempt conflicts", () => {
+      // exact backend strings from web/bank_questions.rs + web/exams.rs
+      expect(formatApiErrorMessage("only the template's owner or an admin can change it", "tr")).toBe(
+        "Bu şablonu yalnızca onu oluşturan öğretmen (veya bir yönetici) değiştirebilir.",
+      );
+      expect(
+        formatApiErrorMessage("only the course creator, an assigned teacher, or a manager/admin can save questions to the bank", "en"),
+      ).toBe("Only this course's teachers or a manager can save this question to the bank.");
+      expect(formatApiError(new ApiError(409, "cannot change questions after attempts have started"), "tr")).toBe(
+        "Öğrenciler bu sınava başladığı için soruları artık değiştirilemez.",
+      );
+      expect(
+        formatApiErrorMessage("only the course creator, an assigned teacher, or a manager/admin can author questions", "tr"),
+      ).toBe("Bu sınava yalnızca dersin öğretmenleri veya bir müdür soru ekleyebilir.");
+    });
+
     it("handles unknown messages with sentence case", () => {
       expect(formatApiErrorMessage("custom error occurred", "en")).toBe("Custom error occurred");
       expect(formatApiErrorMessage("custom error occurred", "tr")).toBe("İşlem tamamlanamadı: Custom error occurred");

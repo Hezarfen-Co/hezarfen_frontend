@@ -90,6 +90,26 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     en: "The repeated slots overlap each other.",
     tr: "Tekrarlanan müsaitlikler birbiriyle çakışıyor.",
   },
+  "only the template's owner or an admin can change it": {
+    en: "Only the teacher who created this template (or an admin) can change it.",
+    tr: "Bu şablonu yalnızca onu oluşturan öğretmen (veya bir yönetici) değiştirebilir.",
+  },
+  "only the course creator, an assigned teacher, or a manager/admin can author questions": {
+    en: "Only this course's teachers or a manager can add questions to this exam.",
+    tr: "Bu sınava yalnızca dersin öğretmenleri veya bir müdür soru ekleyebilir.",
+  },
+  "only the course creator, an assigned teacher, or a manager/admin can save questions to the bank": {
+    en: "Only this course's teachers or a manager can save this question to the bank.",
+    tr: "Bu soruyu bankaya yalnızca dersin öğretmenleri veya bir müdür kaydedebilir.",
+  },
+  "cannot change questions after attempts have started": {
+    en: "Students have already started this exam, so its questions can no longer change.",
+    tr: "Öğrenciler bu sınava başladığı için soruları artık değiştirilemez.",
+  },
+  "bank questions still reference this subject — re-tag or delete them first": {
+    en: "Question bank templates still use this subject. Re-tag or delete them first.",
+    tr: "Soru bankasındaki şablonlar hâlâ bu konuyu kullanıyor. Önce onları başka konuya taşı veya sil.",
+  },
   "course not found": {
     en: "Course not found.",
     tr: "Ders bulunamadı.",

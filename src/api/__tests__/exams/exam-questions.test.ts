@@ -7,6 +7,8 @@ import { postExamQuestionImage } from "../../exams";
 import { deleteExamQuestionImage } from "../../exams";
 import { postExamChoiceImage } from "../../exams";
 import { deleteExamChoiceImage } from "../../exams";
+import { postExamQuestionFromBank } from "../../exams";
+import { postExamQuestionToBank } from "../../exams";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - questions", () => {
@@ -110,5 +112,31 @@ describe("exams API - questions", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/exams/ex1/questions/q1/choices/2/image");
     expect(init?.method).toBe("DELETE");
+  });
+
+  it("postExamQuestionFromBank calls /exams/:id/questions/from-bank/:bid with subject_id", async () => {
+    const mockQuestion = { id: "q9", source_bank: "b1" };
+    mockFetchSuccess(mockQuestion, 201);
+
+    const result = await postExamQuestionFromBank("ex1", "b1", "sub1");
+    expect(result).toEqual(mockQuestion);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/exams/ex1/questions/from-bank/b1");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ subject_id: "sub1" }));
+  });
+
+  it("postExamQuestionToBank calls /exams/:id/questions/:qid/to-bank with no body", async () => {
+    const mockBankQuestion = { id: "b1", source_exam: "ex1" };
+    mockFetchSuccess(mockBankQuestion, 201);
+
+    const result = await postExamQuestionToBank("ex1", "q1");
+    expect(result).toEqual(mockBankQuestion);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/exams/ex1/questions/q1/to-bank");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBeUndefined();
   });
 });

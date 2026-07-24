@@ -1,8 +1,7 @@
-import { For, Index, Show, Suspense, createEffect, createResource, createSignal, lazy } from "solid-js";
+import { For, Index, Show, Suspense, createEffect, createResource, createSignal, lazy, untrack } from "solid-js";
 import { formatApiError } from "@/api/client";
-import type { ExamQuestion, QuestionKind, Subject } from "@/api/client";
-import { QUESTION_KINDS } from "@/api/client";
-import { getExamQuestionImageBlob } from "@/api/exams";
+import type { ImageMeta, QuestionKind, Subject } from "@/api/client";
+import { BANK_QUESTION_LIMITS, QUESTION_KINDS } from "@/api/client";
 import { getSettings } from "@/api/settings";
 import type { DrawScene } from "@/lib/draw-stroke";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { compactChoices } from "@/lib/choice-compaction";
 import { cn } from "@/lib/cn";
 import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
@@ -27,11 +27,35 @@ export type QuestionValues = {
   correct: number | null;
   image: File | null;
   choice_images: (File | null)[] | null;
+  /**
+   * For each surviving choice, the index it had in `initial.choices` (or -1 when
+   * it was added in this edit). Blank choices are dropped on submit, so callers
+   * that must re-attach per-choice server state need this old→new map.
+   */
+  choice_sources: number[] | null;
+};
+
+/** Shape both `ExamQuestion` and `BankQuestion` satisfy — the form only needs these. */
+export type QuestionFormInitial = {
+  subject: string;
+  text: string;
+  kind: QuestionKind;
+  points: number;
+  choices: string[] | null;
+  correct: number | null;
+  image?: ImageMeta | null;
+  choice_images?: (ImageMeta | null)[] | null;
 };
 
 export function QuestionForm(props: {
-  initial?: ExamQuestion;
+  initial?: QuestionFormInitial;
   subjects: Subject[];
+  /** Existing stored image, as a URL the browser can GET (exam or bank path). */
+  imageSrc?: string;
+  choiceImageSrc?: (index: number) => string;
+  /** Reload the stored image so an existing drawing can be edited, not redrawn. */
+  loadImageBlob?: () => Promise<Blob>;
+  submitLabel?: string;
   onSubmit: (values: QuestionValues) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -47,6 +71,9 @@ export function QuestionForm(props: {
   const [drawing, setDrawing] = createSignal(false);
   const [editScene, setEditScene] = createSignal<DrawScene | null>(null);
   const [choiceImages, setChoiceImages] = createSignal<(File | null)[]>(choices().map(() => null));
+  // Index each row still holds in `initial.choices` (-1 once added here), so a
+  // caller can map surviving choices back to the server-side option they came from.
+  const [choiceSources, setChoiceSources] = createSignal<number[]>(choices().map((_, index) => index));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [settings] = createResource(async () => {
@@ -58,19 +85,29 @@ export function QuestionForm(props: {
   });
   const maxFileBytes = () => maxUploadBytes(settings());
 
+  // Reset on a new `initial` only — `props.subjects` may arrive after the form is
+  // open (async course subjects), and re-running then would wipe what was typed.
   createEffect(() => {
     const initial = props.initial;
-    setText(initial?.text ?? "");
-    setSubjectId(initial?.subject ?? props.subjects[0]?.id ?? "");
-    setKind(initial?.kind ?? "choice");
-    setPoints(String(initial?.points ?? 1));
-    setChoices(initial?.choices ?? ["", "", "", ""]);
-    setCorrect(initial?.correct ?? 0);
-    setImage(null);
-    setDrawing(false);
-    setEditScene(null);
-    setChoiceImages((initial?.choices ?? ["", "", "", ""]).map(() => null));
-    setError("");
+    untrack(() => {
+      setText(initial?.text ?? "");
+      setSubjectId(initial?.subject ?? props.subjects[0]?.id ?? "");
+      setKind(initial?.kind ?? "choice");
+      setPoints(String(initial?.points ?? 1));
+      setChoices(initial?.choices ?? ["", "", "", ""]);
+      setCorrect(initial?.correct ?? 0);
+      setImage(null);
+      setDrawing(false);
+      setEditScene(null);
+      setChoiceImages((initial?.choices ?? ["", "", "", ""]).map(() => null));
+      setChoiceSources((initial?.choices ?? ["", "", "", ""]).map((_, index) => (initial ? index : -1)));
+      setError("");
+    });
+  });
+
+  // Once subjects load, preselect the first one if nothing is chosen yet.
+  createEffect(() => {
+    if (!subjectId()) setSubjectId(props.subjects[0]?.id ?? "");
   });
 
   // Blank pad for a fresh drawing; reload the stored scene to edit an existing one.
@@ -80,11 +117,11 @@ export function QuestionForm(props: {
   };
 
   const editDrawing = async () => {
-    const q = props.initial;
-    if (!q?.image) return;
+    const load = props.loadImageBlob;
+    if (!props.initial?.image || !load) return;
     setError("");
     try {
-      const blob = await getExamQuestionImageBlob(q.exam, q.id);
+      const blob = await load();
       const { pngBytesToScene } = await import("@/lib/drawing-file");
       setEditScene(pngBytesToScene(new Uint8Array(await blob.arrayBuffer())));
     } catch {
@@ -134,14 +171,24 @@ export function QuestionForm(props: {
   };
 
   const addChoice = () => {
-    setChoices((current) => (current.length >= 10 ? current : [...current, ""]));
-    setChoiceImages((current) => (current.length >= 10 ? current : [...current, null]));
+    const max = BANK_QUESTION_LIMITS.maxChoices;
+    setChoices((current) => (current.length >= max ? current : [...current, ""]));
+    setChoiceImages((current) => (current.length >= max ? current : [...current, null]));
+    setChoiceSources((current) => (current.length >= max ? current : [...current, -1]));
   };
 
   const removeChoice = (index: number) => {
+    const remaining = choices().length - 1;
     setChoices((current) => current.filter((_, i) => i !== index));
     setChoiceImages((current) => current.filter((_, i) => i !== index));
-    setCorrect((current) => Math.max(0, Math.min(current, choices().length - 2)));
+    setChoiceSources((current) => current.filter((_, i) => i !== index));
+    // Deleting a row above the answer shifts it down; deleting the answer row
+    // itself moves the mark to the row that took its place (visible in the UI).
+    setCorrect((current) => {
+      if (index < current) return Math.max(0, current - 1);
+      if (index > current) return current;
+      return Math.max(0, Math.min(current, remaining - 1));
+    });
   };
 
   const validate = (): QuestionValues | string => {
@@ -149,22 +196,35 @@ export function QuestionForm(props: {
     const subject = subjectId().trim();
     if (!subject) return t("questions.subjectRequired");
     if (!body) return t("questions.textRequired");
-    if (body.length > 2000) return t("form.descriptionMax");
+    if (body.length > BANK_QUESTION_LIMITS.textMaxLen) return t("form.descriptionMax");
     const p = Number(points());
-    if (!Number.isInteger(p) || p < 1 || p > 100) return t("questions.pointsRange");
+    if (!Number.isInteger(p) || p < BANK_QUESTION_LIMITS.minPoints || p > BANK_QUESTION_LIMITS.maxPoints) return t("questions.pointsRange");
     if (kind() === "text") {
-      return { subject_id: subject, text: body, kind: "text", points: p, choices: null, correct: null, image: image(), choice_images: null };
+      return { subject_id: subject, text: body, kind: "text", points: p, choices: null, correct: null, image: image(), choice_images: null, choice_sources: null };
     }
-    const indexedChoices = choices()
-      .map((choice, index) => ({ choice: choice.trim(), image: choiceImages()[index] ?? null }))
-      .filter((item) => item.choice);
-    const cleanChoices = indexedChoices.map((item) => item.choice);
-    if (cleanChoices.length < 2 || cleanChoices.length > 10 || cleanChoices.some((choice) => choice.length > 500)) {
+    const compacted = compactChoices(choices(), choiceImages(), choiceSources(), correct());
+    const cleanChoices = compacted.choices;
+    if (
+      cleanChoices.length < BANK_QUESTION_LIMITS.minChoices ||
+      cleanChoices.length > BANK_QUESTION_LIMITS.maxChoices ||
+      cleanChoices.some((choice) => choice.length > BANK_QUESTION_LIMITS.choiceTextMaxLen)
+    ) {
       return t("questions.choicesRange");
     }
-    const c = correct();
-    if (!Number.isInteger(c) || c < 0 || c >= cleanChoices.length) return t("questions.correctRange");
-    return { subject_id: subject, text: body, kind: "choice", points: p, choices: cleanChoices, correct: c, image: image(), choice_images: indexedChoices.map((item) => item.image) };
+    // The marked row survived compaction as `compacted.correct`; -1 means the user
+    // blanked the very choice they had marked, so make them pick again.
+    if (compacted.correct < 0) return t("questions.correctBlanked");
+    return {
+      subject_id: subject,
+      text: body,
+      kind: "choice",
+      points: p,
+      choices: cleanChoices,
+      correct: compacted.correct,
+      image: image(),
+      choice_images: compacted.images,
+      choice_sources: compacted.sources,
+    };
   };
 
   const submit = async (e: SubmitEvent) => {
@@ -205,10 +265,10 @@ export function QuestionForm(props: {
             }}
           />
           <div class="flex items-center gap-3">
-            <Show when={props.initial?.image}>
+            <Show when={props.initial?.image && props.imageSrc}>
               <div class="relative shrink-0">
                 <img
-                  src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/image`}
+                  src={props.imageSrc}
                   alt={t("questions.image")}
                   class="h-14 w-24 rounded border bg-muted/20 object-contain"
                 />
@@ -235,7 +295,7 @@ export function QuestionForm(props: {
                 <IconEdit class="h-3.5 w-3.5" />
                 {t("questions.draw")}
               </button>
-              <Show when={props.initial?.image}>
+              <Show when={props.initial?.image && props.loadImageBlob}>
                 <button
                   type="button"
                   class="flex items-center gap-1.5 rounded-md border border-dashed bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
@@ -324,6 +384,10 @@ export function QuestionForm(props: {
             <Index each={choices()}>
               {(choice, index) => {
                 const isCorrect = () => correct() === index;
+                // Stored images are keyed by the option's ORIGINAL index, which drifts
+                // from the display row once a choice is removed; -1 = added just now.
+                const storedIndex = () => choiceSources()[index] ?? -1;
+                const storedImage = () => (storedIndex() >= 0 ? props.initial?.choice_images?.[storedIndex()] : null);
                 return (
                   <div
                     class={cn(
@@ -364,9 +428,9 @@ export function QuestionForm(props: {
                           <IconFileImage class="h-3 w-3" />
                           {choiceImages()[index]?.name ?? t("questions.choiceImage")}
                         </label>
-                        <Show when={props.initial?.choice_images?.[index]}>
+                        <Show when={storedImage() && props.choiceImageSrc}>
                           <img
-                            src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/choices/${index}/image`}
+                            src={props.choiceImageSrc?.(storedIndex())}
                             alt={t("questions.choiceImage")}
                             class="h-8 w-12 rounded border bg-muted/20 object-contain"
                           />
@@ -395,7 +459,7 @@ export function QuestionForm(props: {
 
       <div class="flex flex-wrap items-center gap-2 pt-1">
         <Button type="submit" class="h-8 text-xs font-semibold" disabled={pending()}>
-          {props.initial ? t("common.update") : t("common.create")}
+          {props.submitLabel ?? (props.initial ? t("common.update") : t("common.create"))}
         </Button>
         <Button type="button" variant="outline" class="h-8 text-xs font-semibold" onClick={props.onCancel}>
           {t("common.cancel")}

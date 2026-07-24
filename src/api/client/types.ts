@@ -125,6 +125,15 @@ export const APPOINTMENT_LIMITS = {
   maxSlotOccurrences: 52, // MAX_SLOT_OCCURRENCES for repeat_weekly
 } as const;
 
+export const BANK_QUESTION_LIMITS = {
+  textMaxLen: 2000, // MAX_QUESTION_TEXT_LEN
+  choiceTextMaxLen: 500, // MAX_CHOICE_TEXT_LEN
+  minPoints: 1, // MIN_QUESTION_POINTS
+  maxPoints: 100, // MAX_QUESTION_POINTS
+  minChoices: 2, // MIN_QUESTION_CHOICES
+  maxChoices: 10, // MAX_QUESTION_CHOICES
+} as const;
+
 export type Course = {
   id: string;
   creator: PersonRef;
@@ -209,6 +218,23 @@ export type ExamQuestion = {
   correct: number | null;
   image?: ImageMeta | null;
   choice_images?: (ImageMeta | null)[] | null;
+  source_bank?: string | null; // bank question this was copied from, if any
+};
+
+/** Reusable question stored in the school-wide question bank, outside any exam. */
+export type BankQuestion = {
+  id: string;
+  owner: string; // user id
+  subject: string; // subject id (origin metadata)
+  text: string;
+  kind: QuestionKind;
+  points: number;
+  choices: string[] | null;
+  correct: number | null;
+  image?: ImageMeta | null;
+  choice_images?: (ImageMeta | null)[] | null;
+  source_exam?: string | null;
+  created_at: number; // UTC unix ms
 };
 
 export type ExamAttempt = {

@@ -14,6 +14,7 @@ export type MessageKey =
   | "nav.notes"
   | "nav.events"
   | "nav.exams"
+  | "nav.questionBank"
   | "nav.homework"
   | "nav.courses"
   | "nav.studies"
@@ -431,6 +432,34 @@ export type MessageKey =
   | "questions.pointsRange"
   | "questions.choicesRange"
   | "questions.correctRange"
+  | "questions.correctBlanked"
+  | "questions.imagesLost"
+  | "bank.title"
+  | "bank.subtitle"
+  | "bank.empty"
+  | "bank.create"
+  | "bank.edit"
+  | "bank.owner"
+  | "bank.mine"
+  | "bank.created"
+  | "bank.copyNotice"
+  | "bank.courseHint"
+  | "bank.choiceImagesWarning"
+  | "bank.fromBank"
+  | "bank.pickTemplate"
+  | "bank.targetSubject"
+  | "bank.insert"
+  | "bank.inserted"
+  | "bank.saveToBank"
+  | "bank.saveCopyToBank"
+  | "bank.saveCopyTitle"
+  | "bank.saveCopyBody"
+  | "bank.saveCopyConfirm"
+  | "bank.savedToBank"
+  | "bank.inBankBadge"
+  | "bank.search"
+  | "bank.pickerEmpty"
+  | "bank.noSubjects"
   | "subjects.title"
   | "subjects.item"
   | "subjects.subject"
@@ -899,6 +928,7 @@ const en: Dict = {
   "nav.notes": "Notes",
   "nav.events": "Events",
   "nav.exams": "Exams",
+  "nav.questionBank": "Question bank",
   "nav.homework": "Homework",
   "nav.courses": "Courses",
   "nav.studies": "Study sessions",
@@ -1390,6 +1420,34 @@ const en: Dict = {
   "questions.pointsRange": "Points must be an integer from 1 to 100",
   "questions.choicesRange": "Choice questions need 2–10 choices, each at most 500 characters",
   "questions.correctRange": "Correct index must point to one of the choices",
+  "questions.correctBlanked": "The choice you marked correct is now empty. Type it back in, or mark another choice correct.",
+  "questions.imagesLost": "Saved, but the image for choice {options} could not be carried over the edit. Add it again.",
+  "bank.title": "Question bank",
+  "bank.subtitle": "Reusable question templates every teacher can use.",
+  "bank.empty": "No templates yet.",
+  "bank.create": "New template",
+  "bank.edit": "Edit template",
+  "bank.owner": "Added by",
+  "bank.mine": "Mine",
+  "bank.created": "Created",
+  "bank.copyNotice": "Adding a template to an exam makes a copy. Editing the template later does not change questions already added.",
+  "bank.courseHint": "Templates are tagged with a subject, so pick the course that subject belongs to. The template stays usable in every course.",
+  "bank.choiceImagesWarning": "Changing the choices clears the choice images stored on the server. Images for choices you keep are uploaded again, and you will be told if any could not be carried over.",
+  "bank.fromBank": "Add from bank",
+  "bank.pickTemplate": "Pick a template",
+  "bank.targetSubject": "Subject in this exam",
+  "bank.insert": "Add to exam",
+  "bank.inserted": "Question copied from the bank.",
+  "bank.saveToBank": "Save to bank",
+  "bank.saveCopyToBank": "Save another copy to bank",
+  "bank.saveCopyTitle": "Save a second copy?",
+  "bank.saveCopyBody": "This question is already linked to a bank template. Saving creates a second, separate template instead of updating the existing one. The two copies are independent: editing one never changes the other.",
+  "bank.saveCopyConfirm": "Save another copy",
+  "bank.savedToBank": "Question copied to the bank.",
+  "bank.inBankBadge": "In bank",
+  "bank.search": "Search templates",
+  "bank.pickerEmpty": "No matching template.",
+  "bank.noSubjects": "This exam's course has no subjects yet. Add a subject to the course first.",
   "subjects.title": "Subjects",
   "subjects.item": "Subject",
   "subjects.subject": "Subject",
@@ -1796,6 +1854,7 @@ const tr: Dict = {
   "nav.notes": "Defter",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
+  "nav.questionBank": "Soru bankası",
   "nav.homework": "Ödevler",
   "nav.courses": "Ders",
   "nav.studies": "Etüt",
@@ -2287,6 +2346,34 @@ const tr: Dict = {
   "questions.pointsRange": "Puan 1–100 arası tam sayı olmalı",
   "questions.choicesRange": "Seçmeli soruda 2–10 seçenek gerekir; her biri en fazla 500 karakter olmalı",
   "questions.correctRange": "Doğru indeks seçeneklerden birini göstermeli",
+  "questions.correctBlanked": "Doğru olarak işaretlediğin seçenek şu an boş. Metni tekrar yaz ya da başka bir seçeneği doğru işaretle.",
+  "questions.imagesLost": "Kaydedildi, ancak {options} seçeneğinin görseli bu düzenlemede taşınamadı. Görseli tekrar ekle.",
+  "bank.title": "Soru bankası",
+  "bank.subtitle": "Bütün öğretmenlerin kullanabildiği, yeniden kullanılabilir soru şablonları.",
+  "bank.empty": "Henüz şablon yok.",
+  "bank.create": "Yeni şablon",
+  "bank.edit": "Şablonu düzenle",
+  "bank.owner": "Ekleyen",
+  "bank.mine": "Benimkiler",
+  "bank.created": "Eklenme",
+  "bank.copyNotice": "Şablonu sınava eklemek bir kopya oluşturur. Şablonu sonradan düzenlemek, daha önce eklenmiş soruları değiştirmez.",
+  "bank.courseHint": "Şablonlar bir konuyla etiketlenir; o konunun bağlı olduğu dersi seç. Şablon yine de her derste kullanılabilir.",
+  "bank.choiceImagesWarning": "Seçenekleri değiştirmek, sunucudaki seçenek görsellerini siler. Koruduğun seçeneklerin görselleri yeniden yüklenir; taşınamayan olursa sana bildirilir.",
+  "bank.fromBank": "Bankadan ekle",
+  "bank.pickTemplate": "Şablon seç",
+  "bank.targetSubject": "Bu sınavdaki konu",
+  "bank.insert": "Sınava ekle",
+  "bank.inserted": "Soru bankadan kopyalandı.",
+  "bank.saveToBank": "Bankaya kaydet",
+  "bank.saveCopyToBank": "Bankaya yeni bir kopya kaydet",
+  "bank.saveCopyTitle": "İkinci bir kopya kaydedilsin mi?",
+  "bank.saveCopyBody": "Bu soru bir banka şablonuna zaten bağlı. Kaydetmek mevcut şablonu güncellemez; bankada ikinci, ayrı bir şablon oluşturur. İki kopya birbirinden bağımsızdır: birini düzenlemek diğerini hiçbir zaman değiştirmez.",
+  "bank.saveCopyConfirm": "Yeni kopya kaydet",
+  "bank.savedToBank": "Soru bankaya kopyalandı.",
+  "bank.inBankBadge": "Bankada",
+  "bank.search": "Şablonlarda ara",
+  "bank.pickerEmpty": "Eşleşen şablon yok.",
+  "bank.noSubjects": "Bu sınavın dersinde henüz konu yok. Önce derse bir konu ekle.",
   "subjects.title": "Konular",
   "subjects.item": "Konu",
   "subjects.subject": "Konu",
