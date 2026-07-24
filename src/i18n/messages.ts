@@ -659,6 +659,10 @@ export type MessageKey =
   | "exams.lastActivity"
   | "exams.answerSheet"
   | "exams.autoScore"
+  | "exams.answersRight"
+  | "exams.answersWrong"
+  | "exams.answersEmpty"
+  | "exams.answersPending"
   | "exams.earned"
   | "exams.possible"
   | "exams.isCorrect"
@@ -1489,6 +1493,10 @@ const en: Dict = {
   "exams.lastActivity": "Last activity",
   "exams.answerSheet": "Answer Sheet",
   "exams.autoScore": "Auto-score",
+  "exams.answersRight": "Correct",
+  "exams.answersWrong": "Wrong",
+  "exams.answersEmpty": "Empty",
+  "exams.answersPending": "Ungraded",
   "exams.earned": "Earned",
   "exams.possible": "Possible",
   "exams.isCorrect": "Correct",
@@ -2313,6 +2321,10 @@ const tr: Dict = {
   "exams.lastActivity": "Son hareket",
   "exams.answerSheet": "Cevap Kâğıdı",
   "exams.autoScore": "Otomatik puan",
+  "exams.answersRight": "Doğru",
+  "exams.answersWrong": "Yanlış",
+  "exams.answersEmpty": "Boş",
+  "exams.answersPending": "Değerlendirilmedi",
   "exams.earned": "Alınan",
   "exams.possible": "Mümkün",
   "exams.isCorrect": "Doğru",

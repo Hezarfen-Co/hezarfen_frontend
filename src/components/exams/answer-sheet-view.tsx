@@ -1,14 +1,15 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { ApiError } from "@/api/client";
 import { getExamQuestions } from "@/api/exams";
 import { getStudentAnswers, getStudentAnswerImage } from "@/api/exams";
-import { getStudentAttempts, getStudentAttemptAnswers, getStudentAttemptAnswerImage, getStudentMarksHistory } from "@/api/exams";
+import { getStudentAttempts, getStudentAttemptAnswers, getStudentAttemptAnswerImage } from "@/api/exams";
 import type { StudentAnswerSheet } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IconCheck, IconDownload, IconX } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { ReplayableImage } from "@/components/ui/replayable-image";
+import { DropdownSelect } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { joinAnswerSheet } from "@/lib/answer-sheet";
 import { personLabelWithId } from "@/lib/person";
@@ -33,18 +34,6 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
       }
     },
   );
-  const [marks] = createResource(
-    () => [props.examId, props.userId] as const,
-    async ([examId, userId]) => {
-      try {
-        return await getStudentMarksHistory(examId, userId);
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 404) return [];
-        throw err;
-      }
-    },
-  );
-
   const latestSeq = () => {
     const a = attempts();
     return a && a.length ? a[a.length - 1] : null;
@@ -55,7 +44,14 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
     const s = activeSeq();
     return s == null || s === latestSeq();
   };
-  const markForSeq = (seq: number) => marks()?.[seq - 1]?.mark ?? null;
+  // Dropdown options, newest sitting first (a student may have many). Just the
+  // sitting label; the latest is tagged as the current one. Per-sitting stats
+  // live in the sheet header for the selected sitting, not in the dropdown.
+  const attemptOptions = () =>
+    [...(attempts() ?? [])].reverse().map((seq) => ({
+      value: seq,
+      label: `${t("exams.attemptN", { n: seq })}${seq === latestSeq() ? ` (${t("exams.currentAttempt")})` : ""}`,
+    }));
 
   const answerImageUrl = (questionId: string) => {
     const seq = activeSeq();
@@ -97,32 +93,45 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
     },
   );
 
+  // Per-sitting answer breakdown for the viewed attempt's header. `is_correct`
+  // is only set for auto-gradable (choice) questions: right = got it, wrong =
+  // missed it, empty = no answer given; answered text questions fall in none
+  // (a human grades those). `pending` surfaces those so the counts stay honest.
+  const sheetStats = createMemo(() => {
+    const rows = data()?.rows ?? [];
+    const answered = (a: (typeof rows)[number]["answer"]) =>
+      !!a && (a.selected != null || !!a.text || !!a.answer_image);
+    let right = 0;
+    let wrong = 0;
+    let empty = 0;
+    let pending = 0;
+    for (const r of rows) {
+      if (!answered(r.answer)) empty++;
+      else if (r.answer?.is_correct === true) right++;
+      else if (r.answer?.is_correct === false) wrong++;
+      else pending++;
+    }
+    return { right, wrong, empty, pending, total: rows.length };
+  });
+
   return (
-    <Suspense fallback={<PageSpinner />}>
+    // The picker stays OUTSIDE the Suspense: switching attempts re-fetches
+    // `data`, and if the dropdown lived inside the suspending subtree it would
+    // unmount and its portalled menu would flash unpositioned (top-left) on
+    // every select. Only the answer sheet suspends.
+    <div class="space-y-4">
       <Show when={(attempts() ?? []).length > 1}>
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-col gap-1.5">
           <span class="text-xs font-medium text-muted-foreground">{t("exams.previousAttempts")}</span>
-          <For each={attempts()}>
-            {(seq) => (
-              <Button
-                type="button"
-                size="sm"
-                variant={activeSeq() === seq ? "secondary" : "outline"}
-                class="h-8 rounded-lg"
-                onClick={() => setSelectedSeq(seq)}
-              >
-                {t("exams.attemptN", { n: seq })}
-                <Show when={markForSeq(seq) != null}>
-                  <Badge variant="outline" class="ml-1.5 tabular-nums text-[10px]">{markForSeq(seq)}</Badge>
-                </Show>
-                <Show when={seq === latestSeq()}>
-                  <span class="ml-1 text-[10px] text-muted-foreground">({t("exams.currentAttempt")})</span>
-                </Show>
-              </Button>
-            )}
-          </For>
+          <DropdownSelect
+            options={attemptOptions()}
+            value={activeSeq() ?? 0}
+            onChange={(v) => setSelectedSeq(v)}
+            triggerClass="w-full sm:w-auto"
+          />
         </div>
       </Show>
+      <Suspense fallback={<PageSpinner />}>
       <Show when={data()}>
         {(d) => (
           <div class="space-y-4">
@@ -132,9 +141,25 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
             <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-4 py-3">
               <p class="text-sm font-medium">{personLabelWithId(d().sheet.user)}</p>
               <Show when={d().sheet.answers.length > 0} fallback={<Badge variant="outline">{t("exams.notStarted")}</Badge>}>
-                <Badge variant="secondary">
-                  {t("exams.autoScore")}: {d().sheet.auto_score.earned}/{d().sheet.auto_score.possible}
-                </Badge>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <Badge variant="outline" class="border-success/50 bg-success/10 text-success">
+                    {t("exams.answersRight")}: {sheetStats().right}
+                  </Badge>
+                  <Badge variant="outline" class="border-destructive/50 bg-destructive/10 text-destructive">
+                    {t("exams.answersWrong")}: {sheetStats().wrong}
+                  </Badge>
+                  <Badge variant="outline" class="text-muted-foreground">
+                    {t("exams.answersEmpty")}: {sheetStats().empty}
+                  </Badge>
+                  <Show when={sheetStats().pending > 0}>
+                    <Badge variant="outline" class="text-muted-foreground">
+                      {t("exams.answersPending")}: {sheetStats().pending}
+                    </Badge>
+                  </Show>
+                  <Badge variant="secondary">
+                    {t("exams.autoScore")}: {d().sheet.auto_score.earned}/{d().sheet.auto_score.possible}
+                  </Badge>
+                </div>
               </Show>
             </div>
 
@@ -225,6 +250,7 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
           </div>
         )}
       </Show>
-    </Suspense>
+      </Suspense>
+    </div>
   );
 }
