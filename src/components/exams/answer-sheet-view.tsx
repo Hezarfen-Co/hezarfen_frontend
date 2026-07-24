@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal, useTransition } from "solid-js";
 import { ApiError } from "@/api/client";
 import { getExamQuestions } from "@/api/exams";
 import { getStudentAnswers, getStudentAnswerImage } from "@/api/exams";
@@ -20,6 +20,10 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
 
   // Which sitting the grader is viewing. null = the latest (grade-of-record), the default.
   const [selectedSeq, setSelectedSeq] = createSignal<number | null>(null);
+  // Switch sittings inside a transition so the current sheet stays on screen
+  // while the next one loads — otherwise the `data` resource re-suspends and
+  // the whole panel blanks to the PageSpinner on every pick.
+  const [switching, startSwitch] = useTransition();
 
   // Attempt list + full mark history (oldest-first, index i = seq i+1). Both grader-only,
   // both tolerate "student never sat" by degrading to empty.
@@ -126,7 +130,7 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
           <DropdownSelect
             options={attemptOptions()}
             value={activeSeq() ?? 0}
-            onChange={(v) => setSelectedSeq(v)}
+            onChange={(v) => startSwitch(() => setSelectedSeq(v))}
             triggerClass="w-full sm:w-auto"
           />
         </div>
@@ -134,7 +138,7 @@ export function AnswerSheetView(props: { examId: string; userId: string }) {
       <Suspense fallback={<PageSpinner />}>
       <Show when={data()}>
         {(d) => (
-          <div class="space-y-4">
+          <div class={cn("space-y-4 transition-opacity", switching() && "opacity-60")}>
             <Show when={!isLatest()}>
               <p class="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">{t("exams.pastAttemptReadOnly")}</p>
             </Show>
