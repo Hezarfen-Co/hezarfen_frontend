@@ -185,9 +185,14 @@ export function ExamRoomWS(props: { exam: Exam }) {
   const handleWsMessage = (msg: WsMessage) => {
     switch (msg.type) {
       case "state": {
+        // `left_at` clears with the frame: the snapshot `start`/`resume` read
+        // was taken before this socket joined, and joining is what clears the
+        // stamp server-side. Keeping the stale value would leave a student who
+        // merely reopened the room reading as "left" — every answer disabled
+        // on a sitting the server would still take.
         setAttempt((prev) =>
           prev
-            ? { ...prev, status: msg.status as any, deadline: msg.deadline, remaining_ms: msg.remaining_ms, answered: msg.answered, question_count: msg.question_count, now: msg.now }
+            ? { ...prev, status: msg.status as any, left_at: null, deadline: msg.deadline, remaining_ms: msg.remaining_ms, answered: msg.answered, question_count: msg.question_count, now: msg.now }
             : prev,
         );
         setRemainingMs(msg.remaining_ms);
