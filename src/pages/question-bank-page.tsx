@@ -2,8 +2,6 @@ import { Show, Suspense, createMemo, createResource, createSignal } from "solid-
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteBankQuestionById, getBankQuestions } from "@/api/bank-questions";
 import { getCourses } from "@/api/courses";
-import { getSubjectById } from "@/api/subjects";
-import { getUserById } from "@/api/users";
 import { formatApiError } from "@/api/client";
 import type { BankQuestion } from "@/api/client";
 import { BankQuestionForm } from "@/components/exams/bank-question-form";
@@ -13,10 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconEyeOff, IconPlus, IconTrash, IconUsers } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { createDebouncedSignal } from "@/lib/create-debounced-signal";
 import { createFlash } from "@/lib/flash";
 import { formatDate } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -39,48 +38,44 @@ function QuestionBankContent() {
   const { locale } = usePreferences();
   const [ownerFilter, setOwnerFilter] = createSignal<"all" | "me">("all");
   const [subjectFilter, setSubjectFilter] = createSignal("all");
+  const [visibilityFilter, setVisibilityFilter] = createSignal<"all" | "private" | "school">("all");
+  const [page, setPage] = createSignal(0);
+  const [query, setQuery, debouncedQuery] = createDebouncedSignal();
   const [createOpen, setCreateOpen] = createSignal(false);
   const [editing, setEditing] = createSignal<BankQuestion | null>(null);
   const [removing, setRemoving] = createSignal<BankQuestion | null>(null);
+  // ponytail: the subject dropdown lists the subjects seen while browsing — the
+  // backend has no "all subjects" endpoint. Widen once one exists.
   const [subjectNames, setSubjectNames] = createSignal<Record<string, string>>({});
-  const [ownerNames, setOwnerNames] = createSignal<Record<string, string>>({});
   const [flash, setFlash] = createFlash();
   const [error, setError] = createSignal("");
 
-  // ponytail: first 100 templates per filter — matches how the other list pages
-  // page client-side. Move to `manualPagination` once a school outgrows it.
   const [list, { refetch }] = createResource(
-    () => ({ owner: ownerFilter(), subject: subjectFilter() }),
+    () => ({
+      page: page(),
+      owner: ownerFilter(),
+      subject: subjectFilter(),
+      visibility: visibilityFilter(),
+      q: debouncedQuery().trim(),
+    }),
     async (filters) => {
-      const items = (
-        await getBankQuestions({
-          limit: 100,
-          ...(filters.owner === "me" ? { owner: "me" } : {}),
-          ...(filters.subject !== "all" ? { subject: filters.subject } : {}),
-        })
-      ).items;
-      const subjects = [...new Set(items.map((item) => item.subject))].filter((id) => !subjectNames()[id]);
-      const owners = [...new Set(items.map((item) => item.owner))].filter((id) => !ownerNames()[id]);
-      await Promise.all([
-        ...subjects.map((id) =>
-          getSubjectById(id)
-            .then((subject) => setSubjectNames((current) => ({ ...current, [id]: subject.name })))
-            .catch(() => {}),
-        ),
-        ...owners.map((id) =>
-          getUserById(id)
-            .then((user) =>
-              setOwnerNames((current) => ({
-                ...current,
-                [id]: [user.name, user.surname].filter(Boolean).join(" ") || user.username,
-              })),
-            )
-            .catch(() => {}),
-        ),
-      ]);
-      return items;
+      const result = await getBankQuestions({
+        limit: BANK_PAGE_SIZE,
+        offset: filters.page * BANK_PAGE_SIZE,
+        ...(filters.owner === "me" ? { owner: "me" } : {}),
+        ...(filters.subject !== "all" ? { subject: filters.subject } : {}),
+        ...(filters.visibility !== "all" ? { visibility: filters.visibility } : {}),
+        ...(filters.q ? { q: filters.q } : {}),
+      });
+      setSubjectNames((current) => {
+        const next = { ...current };
+        for (const item of result.items) if (item.subject) next[item.subject] = item.subject_name;
+        return next;
+      });
+      return result;
     },
   );
+  const total = () => list.latest?.total ?? 0;
 
   // Only courses the teacher can author in supply subjects for a new template.
   const [courses] = createResource(async () => (await getCourses({ limit: 100 })).items);
@@ -96,16 +91,8 @@ function QuestionBankContent() {
     }),
   );
 
-  const subjectName = (id: string) => subjectNames()[id] ?? id;
-  const ownerName = (id: string) => ownerNames()[id] ?? id;
   const canEdit = (question: BankQuestion) =>
     question.owner === auth.user()?.id || hasMinRole(auth.user()?.role, "admin");
-
-  const searchTemplate = (question: BankQuestion, query: string) =>
-    [question.text, subjectName(question.subject), ownerName(question.owner)]
-      .join(" ")
-      .toLocaleLowerCase(locale())
-      .includes(query.toLocaleLowerCase(locale()));
 
   const columns = createMemo<ColumnDef<BankQuestion>[]>(() => [
     {
@@ -130,15 +117,46 @@ function QuestionBankContent() {
     },
     {
       id: "subject",
-      accessorFn: (question) => subjectName(question.subject),
+      accessorFn: (question) => question.subject_name,
       header: t("subjects.subject"),
       meta: { cellClass: "truncate text-muted-foreground" },
     },
     {
+      id: "visibility",
+      accessorFn: (question) => question.visibility,
+      header: t("bank.whoCanSee"),
+      meta: { headerClass: "text-center", cellClass: "text-center" },
+      cell: (cell) => (
+        <Show
+          when={cell.row.original.visibility === "school"}
+          fallback={
+            <Badge variant="secondary" class="gap-1 whitespace-nowrap">
+              <IconEyeOff class="h-3 w-3" />
+              {t("bank.onlyMe")}
+            </Badge>
+          }
+        >
+          <Badge variant="outline" class="gap-1 whitespace-nowrap border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+            <IconUsers class="h-3 w-3" />
+            {t("bank.sharedWithSchool")}
+          </Badge>
+        </Show>
+      ),
+    },
+    {
       id: "owner",
-      accessorFn: (question) => ownerName(question.owner),
+      accessorFn: (question) => question.owner_name,
       header: t("bank.owner"),
       meta: { cellClass: "truncate text-muted-foreground" },
+    },
+    {
+      id: "used",
+      accessorFn: (question) => question.used_count,
+      header: t("bank.usedInExams"),
+      meta: { headerClass: "text-center", cellClass: "mono text-center text-muted-foreground" },
+      // A template nobody copied stays blank: "0" is noise on a page where
+      // most rows are fresh.
+      cell: (cell) => <Show when={cell.row.original.used_count > 0}>{cell.row.original.used_count}</Show>,
     },
     {
       accessorKey: "created_at",
@@ -188,13 +206,13 @@ function QuestionBankContent() {
       </Show>
 
       <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={7} rows={8} />}>
+        <Suspense fallback={<DataTableSkeleton columns={9} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
           <DataTable
             title={t("bank.title")}
-            description={t("bank.subtitle")}
+            description={`${t("bank.subtitle")} ${t("bank.countTotal", { total: total() })}`}
             actions={
               <Show when={manageableCourses().length > 0}>
                 <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={() => setCreateOpen(true)}>
@@ -204,28 +222,51 @@ function QuestionBankContent() {
               </Show>
             }
             columns={columns()}
-            data={list() ?? []}
-            tableClass="table-fixed min-w-5xl"
+            data={list()?.items ?? []}
+            tableClass="table-fixed min-w-6xl"
             filterPlaceholder={t("bank.search")}
-            searchPredicate={searchTemplate}
+            searchValue={query()}
+            onSearchInput={(value) => {
+              setQuery(value);
+              setPage(0);
+            }}
             enablePagination
-            pageSize={BANK_PAGE_SIZE}
+            manualPagination={{ pageIndex: page(), pageSize: BANK_PAGE_SIZE, total: total(), onPageChange: setPage }}
             empty={t("bank.empty")}
             filters={
               <div class="flex flex-wrap items-center gap-2.5">
                 <DropdownSelect
                   labelPrefix={t("bank.owner")}
                   value={ownerFilter()}
-                  onChange={(value) => setOwnerFilter(value as "all" | "me")}
+                  onChange={(value) => {
+                    setOwnerFilter(value as "all" | "me");
+                    setPage(0);
+                  }}
                   options={[
                     { value: "all", label: t("common.all") },
                     { value: "me", label: t("bank.mine") },
                   ]}
                 />
                 <DropdownSelect
+                  labelPrefix={t("bank.whoCanSee")}
+                  value={visibilityFilter()}
+                  onChange={(value) => {
+                    setVisibilityFilter(value as "all" | "private" | "school");
+                    setPage(0);
+                  }}
+                  options={[
+                    { value: "all", label: t("common.all") },
+                    { value: "private", label: t("bank.onlyMe") },
+                    { value: "school", label: t("bank.sharedWithSchool") },
+                  ]}
+                />
+                <DropdownSelect
                   labelPrefix={t("subjects.subject")}
                   value={subjectFilter()}
-                  onChange={(value) => setSubjectFilter(value)}
+                  onChange={(value) => {
+                    setSubjectFilter(value);
+                    setPage(0);
+                  }}
                   options={subjectOptions()}
                 />
               </div>
@@ -249,11 +290,11 @@ function QuestionBankContent() {
         <BankQuestionForm
           initial={editing() ?? undefined}
           courses={manageableCourses()}
-          onSaved={async (_question, imagesLost) => {
+          onSaved={async () => {
             const wasEdit = editing() != null;
             setCreateOpen(false);
             setEditing(null);
-            setError(imagesLost ?? "");
+            setError("");
             setFlash(wasEdit ? t("common.saved") : t("common.created"));
             await refetch();
           }}

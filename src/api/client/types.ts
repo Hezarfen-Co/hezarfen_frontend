@@ -207,6 +207,9 @@ export type ExamResult = {
   graded_by: PersonRef;
 };
 
+/** One option of a choice question. `id` is stable across edits, so its image survives. */
+export type Choice = { id: string; text: string };
+
 export type ExamQuestion = {
   id: string;
   exam: string;
@@ -214,27 +217,41 @@ export type ExamQuestion = {
   text: string;
   kind: QuestionKind;
   points: number;
-  choices: string[] | null;
-  correct: number | null;
+  choices: Choice[] | null;
+  correct: string | null;
   image?: ImageMeta | null;
   choice_images?: (ImageMeta | null)[] | null;
-  source_bank?: string | null; // bank question this was copied from, if any
+  from_bank?: string | null; // bank template this question was added from, if any
+  banked_as?: string | null; // bank template last created by saving this question, if any
 };
+
+/** `private`: owner + admins only. `school`: every teacher can see it and its answer key. */
+export type BankVisibility = "private" | "school";
 
 /** Reusable question stored in the school-wide question bank, outside any exam. */
 export type BankQuestion = {
   id: string;
   owner: string; // user id
-  subject: string; // subject id (origin metadata)
+  owner_name: string;
+  subject: string | null; // subject id (origin metadata); null once that subject is deleted
+  subject_name: string;
   text: string;
   kind: QuestionKind;
   points: number;
-  choices: string[] | null;
-  correct: number | null;
+  choices: Choice[] | null;
+  correct: string | null;
   image?: ImageMeta | null;
   choice_images?: (ImageMeta | null)[] | null;
   source_exam?: string | null;
+  visibility: BankVisibility; // new templates start "private"
   created_at: number; // UTC unix ms
+  /**
+   * How many exam questions were copied out of this template. Each copy is
+   * detached, so editing the template never reaches them — this is the
+   * divergence surface. List-only, exactly like `subject_name`/`owner_name`:
+   * the single-template endpoints return 0.
+   */
+  used_count: number;
 };
 
 export type ExamAttempt = {
@@ -257,7 +274,7 @@ export type ExamAttempt = {
 };
 
 export type AttemptAnswer = {
-  selected?: number | null;
+  selected?: string | null;
   text?: string | null;
   updated_at?: number;
   answer_image?: ImageMeta | null;
@@ -269,7 +286,7 @@ export type AttemptQuestionResponse = {
   text: string;
   kind: QuestionKind;
   points: number;
-  choices: string[] | null;
+  choices: Choice[] | null;
   image?: ImageMeta | null;
   choice_images?: (ImageMeta | null)[] | null;
   answer: AttemptAnswer | null;
@@ -364,7 +381,7 @@ export type ExamStatistics = {
 
 export type StudentAnswer = {
   question: string;
-  selected: number | null;
+  selected: string | null;
   text: string | null;
   updated_at: number;
   is_correct: boolean | null;

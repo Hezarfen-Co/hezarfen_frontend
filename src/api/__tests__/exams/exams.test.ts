@@ -27,14 +27,14 @@ describe("exams API - core", () => {
     expect(init?.method).toBe("GET");
   });
 
-  it("getExamChoiceImageBlob calls /exams/:id/questions/:qid/choices/:index/image", async () => {
+  it("getExamChoiceImageBlob calls /exams/:id/questions/:qid/choices/:choiceId/image", async () => {
     mockFetchBlob(new Blob(["img"], { type: "image/png" }));
 
-    const result = await getExamChoiceImageBlob("ex1", "q1", 2);
+    const result = await getExamChoiceImageBlob("ex1", "q1", "c2");
     expect(result).toBeInstanceOf(Blob);
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/exams/ex1/questions/q1/choices/2/image");
+    expect(url).toBe("/api/exams/ex1/questions/q1/choices/c2/image");
     expect(init?.method).toBeUndefined();
   });
 

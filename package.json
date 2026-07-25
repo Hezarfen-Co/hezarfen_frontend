@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "check": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:contract": "vitest run --config vitest.contract.config.ts"
   },
   "dependencies": {
     "@kobalte/core": "^0.13.12",
@@ -25,6 +26,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@tanstack/solid-router-devtools": "^1.167.0",
     "@types/node": "^26.1.1",
+    "fast-check": "^4.9.0",
     "postcss": "^8.5.22",
     "tailwindcss": "^4.3.3",
     "tailwindcss-animate": "^1.0.7",

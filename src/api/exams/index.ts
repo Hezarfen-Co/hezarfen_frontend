@@ -37,4 +37,5 @@ export * from "./getExamReviewAttemptAnswers";
 export * from "./getExamReviewAttemptAnswerImage";
 export * from "./getStudentMarksHistory";
 export * from "./postExamQuestionFromBank";
+export * from "./postExamQuestionRefreshFromBank";
 export * from "./postExamQuestionToBank";

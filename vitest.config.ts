@@ -11,5 +11,7 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["src/**/*.test.ts"],
+    // Live-backend suite, run separately: `bun run test:contract`.
+    exclude: ["**/node_modules/**", "**/dist/**", "src/api/__tests__/contract/**"],
   },
 });

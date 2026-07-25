@@ -234,11 +234,11 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
                         {(choice, ci) => (
                           <div
                             class={`flex items-center gap-2 rounded-sm border px-3 py-2 text-sm ${
-                              ci() === row.question.correct && ci() === row.answer?.selected
+                              choice.id === row.question.correct && choice.id === row.answer?.selected
                                 ? "border-success bg-success/10"
-                                : ci() === row.question.correct
+                                : choice.id === row.question.correct
                                   ? "border-success/50 bg-success/5"
-                                  : ci() === row.answer?.selected
+                                  : choice.id === row.answer?.selected
                                     ? "border-destructive bg-destructive/10"
                                     : "border-border"
                             }`}
@@ -246,11 +246,11 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
                             <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border bg-background text-[11px] font-semibold text-foreground">
                               {String.fromCharCode(65 + ci())}
                             </span>
-                            <span>{choice}</span>
-                            <Show when={ci() === row.answer?.selected && ci() !== row.question.correct}>
+                            <span>{choice.text}</span>
+                            <Show when={choice.id === row.answer?.selected && choice.id !== row.question.correct}>
                               <Badge variant="destructive" class="ml-auto text-[10px]">✗</Badge>
                             </Show>
-                            {ci() === row.question.correct && (
+                            {choice.id === row.question.correct && (
                               <Badge variant="outline" class="ml-auto border-success/50 bg-success/10 text-success text-[10px]">
                                 <IconCheck class="h-3 w-3" />
                               </Badge>

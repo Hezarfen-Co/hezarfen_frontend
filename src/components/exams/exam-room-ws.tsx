@@ -256,19 +256,19 @@ export function ExamRoomWS(props: { exam: Exam }) {
     if (ws && ws.readyState === WebSocket.OPEN) {
       const payload: Record<string, unknown> = { type: "answer", question_id: question.id };
       if (question.kind === "choice") {
-        payload.selected = Number(value);
+        payload.selected = value; // choice id, not a position
       } else {
         payload.text = value;
       }
       sendWs(payload);
       setQuestions((prev) =>
-        prev.map((q) => (q.id === question.id ? { ...q, answer: { ...q.answer, selected: question.kind === "choice" ? Number(value) : undefined, text: question.kind === "text" ? value : undefined } } : q)),
+        prev.map((q) => (q.id === question.id ? { ...q, answer: { ...q.answer, selected: question.kind === "choice" ? value : undefined, text: question.kind === "text" ? value : undefined } } : q)),
       );
     } else {
       setPending(true);
       try {
         if (question.kind === "choice") {
-          await postExamAttemptAnswer(props.exam.id, { question_id: question.id, selected: Number(value) });
+          await postExamAttemptAnswer(props.exam.id, { question_id: question.id, selected: value });
         } else {
           await postExamAttemptAnswer(props.exam.id, { question_id: question.id, text: value });
         }
@@ -682,9 +682,7 @@ function QuestionAnswerCardWS(props: {
   const { locale } = usePreferences();
   const [value, setValue] = createSignal(
     props.question.kind === "choice"
-      ? props.question.answer?.selected != null
-        ? String(props.question.answer.selected)
-        : ""
+      ? props.question.answer?.selected ?? ""
       : props.question.answer?.text ?? "",
   );
   const [saved, setSaved] = createSignal(false);
@@ -698,9 +696,7 @@ function QuestionAnswerCardWS(props: {
     questionId = props.question.id;
     setValue(
       props.question.kind === "choice"
-        ? props.question.answer?.selected != null
-          ? String(props.question.answer.selected)
-          : ""
+        ? props.question.answer?.selected ?? ""
         : props.question.answer?.text ?? "",
     );
     setSaved(false);
@@ -838,17 +834,17 @@ function QuestionAnswerCardWS(props: {
                 disabled={props.disabled}
                 onClick={() => {
                   setSaved(false);
-                  setValue(String(choiceIndex()));
+                  setValue(choice.id);
                 }}
               >
-                <span class={value() === String(choiceIndex()) ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary bg-primary text-xs font-semibold text-primary-foreground" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input bg-background text-xs font-semibold text-foreground"}>
+                <span class={value() === choice.id ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary bg-primary text-xs font-semibold text-primary-foreground" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input bg-background text-xs font-semibold text-foreground"}>
                   {String.fromCharCode(65 + choiceIndex())}
                 </span>
                 <span class="min-w-0 space-y-2">
-                  <span class="block whitespace-pre-wrap">{choice}</span>
+                  <span class="block whitespace-pre-wrap">{choice.text}</span>
                   <Show when={props.question.choice_images?.[choiceIndex()]}>
                     <img
-                      src={`/api/exams/${props.question.exam}/questions/${props.question.id}/choices/${choiceIndex()}/image`}
+                      src={`/api/exams/${props.question.exam}/questions/${props.question.id}/choices/${choice.id}/image`}
                       alt={t("questions.choiceImage")}
                       class="h-36 w-full max-w-md rounded-md border bg-muted/20 object-contain"
                     />

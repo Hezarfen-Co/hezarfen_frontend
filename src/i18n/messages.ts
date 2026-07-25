@@ -428,12 +428,13 @@ export type MessageKey =
   | "questions.editDrawing"
   | "questions.choiceImage"
   | "questions.subjectRequired"
+  | "questions.subjectUnavailable"
+  | "questions.subjectUnavailableHelp"
   | "questions.textRequired"
   | "questions.pointsRange"
   | "questions.choicesRange"
+  | "questions.correctRequired"
   | "questions.correctRange"
-  | "questions.correctBlanked"
-  | "questions.imagesLost"
   | "bank.title"
   | "bank.subtitle"
   | "bank.empty"
@@ -444,7 +445,9 @@ export type MessageKey =
   | "bank.created"
   | "bank.copyNotice"
   | "bank.courseHint"
-  | "bank.choiceImagesWarning"
+  | "bank.courseSelect"
+  | "bank.courseUnavailable"
+  | "bank.targetSubjectHint"
   | "bank.fromBank"
   | "bank.pickTemplate"
   | "bank.targetSubject"
@@ -456,10 +459,28 @@ export type MessageKey =
   | "bank.saveCopyBody"
   | "bank.saveCopyConfirm"
   | "bank.savedToBank"
-  | "bank.inBankBadge"
+  | "bank.fromBankBadge"
+  | "bank.savedToBankBadge"
   | "bank.search"
   | "bank.pickerEmpty"
   | "bank.noSubjects"
+  | "bank.countTotal"
+  | "bank.countShown"
+  | "bank.whoCanSee"
+  | "bank.onlyMe"
+  | "bank.sharedWithSchool"
+  | "bank.onlyMeHint"
+  | "bank.sharedWithSchoolHint"
+  | "bank.shareTitle"
+  | "bank.shareBody"
+  | "bank.shareConfirm"
+  | "bank.startsPrivate"
+  | "bank.usedInExams"
+  | "bank.refresh"
+  | "bank.refreshTitle"
+  | "bank.refreshBody"
+  | "bank.refreshConfirm"
+  | "bank.refreshed"
   | "subjects.title"
   | "subjects.item"
   | "subjects.subject"
@@ -1416,12 +1437,13 @@ const en: Dict = {
   "questions.editDrawing": "Edit drawing",
   "questions.choiceImage": "Choice image",
   "questions.subjectRequired": "Select a subject for this question",
+  "questions.subjectUnavailable": "Current subject — no longer available to you",
+  "questions.subjectUnavailableHelp": "The subject saved on this question is not in the list you can pick from. Choose a subject from the list to save.",
   "questions.textRequired": "Question text is required",
   "questions.pointsRange": "Points must be an integer from 1 to 100",
   "questions.choicesRange": "Choice questions need 2–10 choices, each at most 500 characters",
+  "questions.correctRequired": "Mark one choice as the correct answer before saving.",
   "questions.correctRange": "Correct index must point to one of the choices",
-  "questions.correctBlanked": "The choice you marked correct is now empty. Type it back in, or mark another choice correct.",
-  "questions.imagesLost": "Saved, but the image for choice {options} could not be carried over the edit. Add it again.",
   "bank.title": "Question bank",
   "bank.subtitle": "Reusable question templates every teacher can use.",
   "bank.empty": "No templates yet.",
@@ -1431,8 +1453,10 @@ const en: Dict = {
   "bank.mine": "Mine",
   "bank.created": "Created",
   "bank.copyNotice": "Adding a template to an exam makes a copy. Editing the template later does not change questions already added.",
+  "bank.courseSelect": "Select course",
+  "bank.courseUnavailable": "Original course — not one of your courses",
+  "bank.targetSubjectHint": "Pick the subject this copy belongs to in this exam.",
   "bank.courseHint": "Templates are tagged with a subject, so pick the course that subject belongs to. The template stays usable in every course.",
-  "bank.choiceImagesWarning": "Changing the choices clears the choice images stored on the server. Images for choices you keep are uploaded again, and you will be told if any could not be carried over.",
   "bank.fromBank": "Add from bank",
   "bank.pickTemplate": "Pick a template",
   "bank.targetSubject": "Subject in this exam",
@@ -1441,13 +1465,31 @@ const en: Dict = {
   "bank.saveToBank": "Save to bank",
   "bank.saveCopyToBank": "Save another copy to bank",
   "bank.saveCopyTitle": "Save a second copy?",
-  "bank.saveCopyBody": "This question is already linked to a bank template. Saving creates a second, separate template instead of updating the existing one. The two copies are independent: editing one never changes the other.",
+  "bank.saveCopyBody": "This question is already linked to a bank template. Saving creates a second, separate template instead of updating the existing one. The two copies are independent: editing one never changes the other. The new template is private: only you can see it until you choose to share it.",
   "bank.saveCopyConfirm": "Save another copy",
-  "bank.savedToBank": "Question copied to the bank.",
-  "bank.inBankBadge": "In bank",
-  "bank.search": "Search templates",
+  "bank.savedToBank": "Question copied to the bank. Only you can see it until you share it.",
+  "bank.fromBankBadge": "Added from bank",
+  "bank.savedToBankBadge": "Saved to bank",
+  "bank.search": "Search question text",
   "bank.pickerEmpty": "No matching template.",
   "bank.noSubjects": "This exam's course has no subjects yet. Add a subject to the course first.",
+  "bank.countTotal": "{total} templates in total.",
+  "bank.countShown": "Showing {shown} of {total} — search to narrow it down.",
+  "bank.whoCanSee": "Who can see it",
+  "bank.onlyMe": "Only me",
+  "bank.sharedWithSchool": "Shared with the school",
+  "bank.onlyMeHint": "Only you can see this question and its answer. This is the safe choice.",
+  "bank.sharedWithSchoolHint": "Every teacher in the school can see this question and its correct answer.",
+  "bank.shareTitle": "Share this question with the whole school?",
+  "bank.shareBody": "Every teacher in the school will be able to see this question and its correct answer. If the question is on an exam that has not finished yet, they can see the answer before your students sit it. Other teachers can copy it into their own exams, and those copies stay with them even if you make the question private again or delete it. You cannot take a copy back.",
+  "bank.shareConfirm": "Yes, share it",
+  "bank.startsPrivate": "The saved template starts private: only you can see it until you choose to share it.",
+  "bank.usedInExams": "Copies in exams",
+  "bank.refresh": "Update from template",
+  "bank.refreshTitle": "Update this question from its template?",
+  "bank.refreshBody": "This question is a copy made from a bank template. Updating replaces its text, points, options, correct answer and pictures with what the template says today. Anything you changed on this copy is lost. It only works before anyone starts the exam, so no student's answers can be affected.",
+  "bank.refreshConfirm": "Yes, update it",
+  "bank.refreshed": "Question updated from its template.",
   "subjects.title": "Subjects",
   "subjects.item": "Subject",
   "subjects.subject": "Subject",
@@ -2342,12 +2384,13 @@ const tr: Dict = {
   "questions.editDrawing": "Çizimi düzenle",
   "questions.choiceImage": "Seçenek görseli",
   "questions.subjectRequired": "Bu soru için konu seç",
+  "questions.subjectUnavailable": "Şu anki konu — artık sana açık değil",
+  "questions.subjectUnavailableHelp": "Bu soruda kayıtlı konu, seçebileceğin listede yok. Kaydetmek için listeden bir konu seç.",
   "questions.textRequired": "Soru metni gerekli",
   "questions.pointsRange": "Puan 1–100 arası tam sayı olmalı",
   "questions.choicesRange": "Seçmeli soruda 2–10 seçenek gerekir; her biri en fazla 500 karakter olmalı",
+  "questions.correctRequired": "Kaydetmeden önce bir seçeneği doğru cevap olarak işaretle.",
   "questions.correctRange": "Doğru indeks seçeneklerden birini göstermeli",
-  "questions.correctBlanked": "Doğru olarak işaretlediğin seçenek şu an boş. Metni tekrar yaz ya da başka bir seçeneği doğru işaretle.",
-  "questions.imagesLost": "Kaydedildi, ancak {options} seçeneğinin görseli bu düzenlemede taşınamadı. Görseli tekrar ekle.",
   "bank.title": "Soru bankası",
   "bank.subtitle": "Bütün öğretmenlerin kullanabildiği, yeniden kullanılabilir soru şablonları.",
   "bank.empty": "Henüz şablon yok.",
@@ -2357,8 +2400,10 @@ const tr: Dict = {
   "bank.mine": "Benimkiler",
   "bank.created": "Eklenme",
   "bank.copyNotice": "Şablonu sınava eklemek bir kopya oluşturur. Şablonu sonradan düzenlemek, daha önce eklenmiş soruları değiştirmez.",
+  "bank.courseSelect": "Ders seç",
+  "bank.courseUnavailable": "Özgün ders — senin derslerinden değil",
+  "bank.targetSubjectHint": "Bu kopyanın bu sınavda hangi konuya gireceğini seç.",
   "bank.courseHint": "Şablonlar bir konuyla etiketlenir; o konunun bağlı olduğu dersi seç. Şablon yine de her derste kullanılabilir.",
-  "bank.choiceImagesWarning": "Seçenekleri değiştirmek, sunucudaki seçenek görsellerini siler. Koruduğun seçeneklerin görselleri yeniden yüklenir; taşınamayan olursa sana bildirilir.",
   "bank.fromBank": "Bankadan ekle",
   "bank.pickTemplate": "Şablon seç",
   "bank.targetSubject": "Bu sınavdaki konu",
@@ -2367,13 +2412,31 @@ const tr: Dict = {
   "bank.saveToBank": "Bankaya kaydet",
   "bank.saveCopyToBank": "Bankaya yeni bir kopya kaydet",
   "bank.saveCopyTitle": "İkinci bir kopya kaydedilsin mi?",
-  "bank.saveCopyBody": "Bu soru bir banka şablonuna zaten bağlı. Kaydetmek mevcut şablonu güncellemez; bankada ikinci, ayrı bir şablon oluşturur. İki kopya birbirinden bağımsızdır: birini düzenlemek diğerini hiçbir zaman değiştirmez.",
+  "bank.saveCopyBody": "Bu soru bir banka şablonuna zaten bağlı. Kaydetmek mevcut şablonu güncellemez; bankada ikinci, ayrı bir şablon oluşturur. İki kopya birbirinden bağımsızdır: birini düzenlemek diğerini hiçbir zaman değiştirmez. Yeni şablon gizlidir: sen paylaşmayı seçene kadar onu yalnızca sen görebilirsin.",
   "bank.saveCopyConfirm": "Yeni kopya kaydet",
-  "bank.savedToBank": "Soru bankaya kopyalandı.",
-  "bank.inBankBadge": "Bankada",
-  "bank.search": "Şablonlarda ara",
+  "bank.savedToBank": "Soru bankaya kopyalandı. Sen paylaşana kadar onu yalnızca sen görebilirsin.",
+  "bank.fromBankBadge": "Bankadan eklendi",
+  "bank.savedToBankBadge": "Bankaya kaydedildi",
+  "bank.search": "Soru metninde ara",
   "bank.pickerEmpty": "Eşleşen şablon yok.",
   "bank.noSubjects": "Bu sınavın dersinde henüz konu yok. Önce derse bir konu ekle.",
+  "bank.countTotal": "Toplam {total} şablon.",
+  "bank.countShown": "{total} şablondan {shown} tanesi gösteriliyor — daraltmak için arama yap.",
+  "bank.whoCanSee": "Kimler görebilir",
+  "bank.onlyMe": "Yalnızca ben",
+  "bank.sharedWithSchool": "Okulla paylaşıldı",
+  "bank.onlyMeHint": "Bu soruyu ve cevabını yalnızca sen görebilirsin. Güvenli seçenek budur.",
+  "bank.sharedWithSchoolHint": "Okuldaki bütün öğretmenler bu soruyu ve doğru cevabını görebilir.",
+  "bank.shareTitle": "Bu soru bütün okulla paylaşılsın mı?",
+  "bank.shareBody": "Okuldaki bütün öğretmenler bu soruyu ve doğru cevabını görebilecek. Soru henüz bitmemiş bir sınavdaysa, öğrencilerin sınava girmeden önce cevabı görebilirler. Diğer öğretmenler soruyu kendi sınavlarına kopyalayabilir; sen soruyu sonradan yeniden gizlesen ya da silsen bile o kopyalar onlarda kalır. Alınan kopyaları geri alamazsın.",
+  "bank.shareConfirm": "Evet, paylaş",
+  "bank.startsPrivate": "Kaydedilen şablon gizli başlar: sen paylaşmayı seçene kadar onu yalnızca sen görebilirsin.",
+  "bank.usedInExams": "Sınavlardaki kopyalar",
+  "bank.refresh": "Şablondan güncelle",
+  "bank.refreshTitle": "Bu soru şablonundan güncellensin mi?",
+  "bank.refreshBody": "Bu soru, bir soru bankası şablonundan alınmış bir kopya. Güncellersen sorunun metni, puanı, seçenekleri, doğru cevabı ve resimleri şablonun bugünkü hâliyle değiştirilir. Bu kopyada yaptığın değişiklikler kaybolur. Bu işlem yalnızca sınava kimse başlamadan önce yapılabilir, bu yüzden hiçbir öğrencinin cevabı etkilenmez.",
+  "bank.refreshConfirm": "Evet, güncelle",
+  "bank.refreshed": "Soru şablonundan güncellendi.",
   "subjects.title": "Konular",
   "subjects.item": "Konu",
   "subjects.subject": "Konu",
