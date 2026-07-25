@@ -103,7 +103,9 @@ class FakeWebSocket {
   }
 }
 
-const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+// Fake timers go in only once the room is already up (see the ack-timeout
+// tests), so the same helper has to work on both clocks.
+const tick = () => (vi.isFakeTimers() ? vi.advanceTimersByTimeAsync(0) : new Promise((resolve) => setTimeout(resolve, 0)));
 const socket = () => FakeWebSocket.last!;
 const closedBanners = () => screen.queryAllByText("This attempt is closed. Answers are read-only.");
 const choice = (name: string) => screen.getByRole("button", { name: new RegExp(name) }) as HTMLButtonElement;
@@ -145,6 +147,7 @@ beforeEach(() => {
   vi.stubGlobal("WebSocket", FakeWebSocket);
 });
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -189,13 +192,16 @@ test("a genuinely closed sitting stays read-only even after a state frame", asyn
 });
 
 // BUG 2 — question_id is not an identity; only the echoed client_seq is.
-async function saveParis() {
-  fireEvent.click(choice("Paris"));
-  fireEvent.click(screen.getByRole("button", { name: "Save answer" }));
+// Pick a choice, press save, hand back the frame that went out. The button
+// relabels to "Save answer again" after a failure, hence the prefix match.
+async function save(name: string) {
+  fireEvent.click(choice(name));
+  fireEvent.click(screen.getByRole("button", { name: /^Save answer/ }));
   await tick();
   const answer = socket().frames().filter((f) => f.type === "answer").at(-1);
   return answer as { question_id: string; client_seq: number };
 }
+const saveParis = () => save("Paris");
 
 test("an answer frame carries a client_seq and its echo settles that send", async () => {
   await openWritableRoom();
@@ -241,4 +247,46 @@ test("a reply with no client_seq confirms nothing and fails what is in flight", 
   await tick();
   expect(badge("Not saved")).toBe(true);
   expect(badge("Saved")).toBe(false);
+});
+
+// The ack timeout. Fake timers are installed AFTER the room is open, so the
+// mount's real-clock work (`createNow`'s getTime + 30s interval, the countdown
+// interval) never has to be driven by hand — only the 8s ack timer, which is
+// created later, inside `saveAnswer`, lands on the fake clock.
+const ACK_MS = 8000;
+
+test("a send that never gets a reply reads as not saved once it times out", async () => {
+  await openWritableRoom();
+  vi.useFakeTimers();
+  await saveParis();
+
+  expect(badge("Saving…")).toBe(true);
+  await vi.advanceTimersByTimeAsync(ACK_MS + 1);
+
+  expect(badge("Not saved")).toBe(true);
+  expect(badge("Saved")).toBe(false);
+  expect(screen.getByText(/did not confirm your answer/)).toBeTruthy();
+});
+
+test("a timed-out send leaves no debt that swallows the next save", async () => {
+  await openWritableRoom();
+  vi.useFakeTimers();
+  const a = await save("Paris");
+  await vi.advanceTimersByTimeAsync(ACK_MS + 1);
+  expect(badge("Not saved")).toBe(true);
+
+  const b = await save("Rome");
+  expect(b.client_seq).not.toBe(a.client_seq);
+
+  // A's echo turns up late. Under the old FIFO+debt matching this frame was
+  // the one that got eaten, and B — genuinely stored — read as not saved.
+  socket().deliver({ type: "saved", question_id: "q-1", updated_at: Date.now(), client_seq: a.client_seq });
+  await tick();
+  expect(badge("Saved")).toBe(false);
+  expect(badge("Saving…")).toBe(true);
+
+  socket().deliver({ type: "saved", question_id: "q-1", updated_at: Date.now(), client_seq: b.client_seq });
+  await tick();
+  expect(badge("Saved")).toBe(true);
+  expect(badge("Not saved")).toBe(false);
 });
