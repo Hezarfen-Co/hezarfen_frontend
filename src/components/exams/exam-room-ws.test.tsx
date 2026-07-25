@@ -397,3 +397,31 @@ test("an expired frame zeroes the clock and a later state frame does not reopen 
   expect(closedBanners().length).toBeGreaterThan(0);
   expect(choice("Paris").disabled).toBe(true);
 });
+
+// The other direction of the rejoin hazard: a live-looking `state` frame must
+// not un-finish a sitting that is already over.
+test("a state frame claiming in_progress cannot reopen a finished sheet", async () => {
+  await openWritableRoom();
+  socket().deliver({ type: "finished", finished_at: Date.now() });
+  await tick();
+
+  socket().deliver(liveState); // status: "in_progress", a full hour left
+  await tick();
+  expect(closedBanners().length).toBeGreaterThan(0);
+  expect(choice("Paris").disabled).toBe(true);
+  expect(badge("Submitted")).toBe(true);
+  expect(badge("00:00:00")).toBe(true); // the countdown does not come back either
+});
+
+test("a state frame claiming in_progress cannot reopen an expired sheet", async () => {
+  await openWritableRoom();
+  socket().deliver({ type: "expired" });
+  await tick();
+
+  socket().deliver(liveState);
+  await tick();
+  expect(closedBanners().length).toBeGreaterThan(0);
+  expect(choice("Paris").disabled).toBe(true);
+  expect(badge("Expired")).toBe(true);
+  expect(badge("00:00:00")).toBe(true);
+});

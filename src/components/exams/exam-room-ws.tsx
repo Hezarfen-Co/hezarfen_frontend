@@ -190,12 +190,17 @@ export function ExamRoomWS(props: { exam: Exam }) {
         // stamp server-side. Keeping the stale value would leave a student who
         // merely reopened the room reading as "left" — every answer disabled
         // on a sitting the server would still take.
+        // Terminal is terminal, the other direction of the same hazard: once
+        // this sitting is submitted or expired, a frame claiming `in_progress`
+        // must not reopen it — status and clock stay put, only the harmless
+        // counters catch up.
+        const over = attempt()?.status === "submitted" || attempt()?.status === "expired";
         setAttempt((prev) =>
           prev
-            ? { ...prev, status: msg.status as any, left_at: null, deadline: msg.deadline, remaining_ms: msg.remaining_ms, answered: msg.answered, question_count: msg.question_count, now: msg.now }
+            ? { ...prev, status: over ? prev.status : (msg.status as any), left_at: null, deadline: msg.deadline, remaining_ms: over ? 0 : msg.remaining_ms, answered: msg.answered, question_count: msg.question_count, now: msg.now }
             : prev,
         );
-        setRemainingMs(msg.remaining_ms);
+        setRemainingMs(over ? 0 : msg.remaining_ms);
         break;
       }
       case "saved": {
