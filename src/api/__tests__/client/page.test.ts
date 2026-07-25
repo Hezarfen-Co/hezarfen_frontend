@@ -13,6 +13,19 @@ describe("page helpers", () => {
       expect(pageQuery({ offset: 20 })).toBe("?offset=20");
       expect(pageQuery({ limit: 10, offset: 20 })).toBe("?limit=10&offset=20");
     });
+
+    it("formats the schedule window and omits undefined keys", () => {
+      expect(pageQuery({ ends_after: 1_700_000_000_000 })).toBe("?ends_after=1700000000000");
+      expect(pageQuery({ starts_after: 1_700_000_000_000 })).toBe("?starts_after=1700000000000");
+      expect(pageQuery({ limit: 50, ends_after: 1_700_000_000_000 })).toBe(
+        "?limit=50&ends_after=1700000000000"
+      );
+      // Present-but-empty (`?ends_after=`) is a hard 400 server-side, so an
+      // undefined filter must drop the key, not serialize as a blank value.
+      expect(pageQuery({ limit: 50, ends_after: undefined, starts_after: undefined })).toBe(
+        "?limit=50"
+      );
+    });
   });
 
   describe("appendPageParams", () => {

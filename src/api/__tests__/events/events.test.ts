@@ -29,6 +29,25 @@ describe("events API", () => {
     expect(init?.method).toBe("GET");
   });
 
+  it("getEvents sends the schedule window and drops undefined params", async () => {
+    mockFetchSuccess({ items: [{ id: "e1" }], total: 1 });
+
+    await getEvents({ ends_after: 1_700_000_000_000, limit: 50 });
+    expect(lastFetchCall()[0]).toBe("/api/events?limit=50&ends_after=1700000000000");
+
+    mockFetchSuccess({ items: [], total: 0 });
+    await getEvents({ starts_after: 1_700_000_000_000 });
+    expect(lastFetchCall()[0]).toBe("/api/events?starts_after=1700000000000");
+
+    // A blank value (`?ends_after=`) is a hard 400 server-side, so an
+    // undefined filter must leave the key out of the query string entirely.
+    mockFetchSuccess({ items: [], total: 0 });
+    await getEvents({ limit: 10, ends_after: undefined, starts_after: undefined });
+    expect(lastFetchCall()[0]).toBe("/api/events?limit=10");
+    expect(lastFetchCall()[0]).not.toContain("ends_after");
+    expect(lastFetchCall()[0]).not.toContain("starts_after");
+  });
+
   it("getEventById calls /events/:id", async () => {
     const mockEvent = { id: "e1", title: "Event" };
     mockFetchSuccess(mockEvent);

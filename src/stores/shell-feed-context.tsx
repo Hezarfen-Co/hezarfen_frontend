@@ -88,18 +88,24 @@ function createUserFeed(loggedIn: boolean): UserFeed {
     { initialValue: emptyPage<Message>() }
   );
 
-  // No limit on events/exams: the backend has no schedule filter or ordering
-  // param (`GET /events`, `GET /exams` take limit/offset only and serve
-  // ORDER BY id DESC = creation order), so any cap drops an event scheduled
-  // for tomorrow that was created before the newest N rows. The server loads
-  // the full list either way and only slices it afterwards.
-  // ponytail: payload grows with school history — upgrade path is a backend
-  // `starts_after`/`ends_after` query param, then cap again.
+  // `ends_after=now` keeps only rows whose window has not finished AND flips
+  // the server order to soonest-first, so a cap finally truncates the archive
+  // end instead of the upcoming end. Without it the whole school history rode
+  // along (~3.4 MB/poll at 5k+5k rows) only to be filtered out client-side.
+  //
+  // 50: the feed drives "upcoming" badges and the calendar dot — it needs the
+  // next handful, not the archive. 50 soonest-first rows cover a busy month
+  // per source. Both consumers already show only not-yet-ended items, so the
+  // dropped rows were never rendered.
+  // ponytail: a school with >50 simultaneously-open events loses the tail —
+  // upgrade path is narrowing the window (add an upper bound), not a bigger cap.
+  const upcoming = () => ({ ends_after: Date.now(), limit: 50 });
+
   const [eventsRes, { refetch: refetchEvents }] = createResource(
     source,
     async () => {
       try {
-        return await getEvents();
+        return await getEvents(upcoming());
       } catch {
         return emptyPage<Event>();
       }
@@ -111,7 +117,7 @@ function createUserFeed(loggedIn: boolean): UserFeed {
     source,
     async () => {
       try {
-        return await getExams();
+        return await getExams(upcoming());
       } catch {
         return emptyPage<Exam>();
       }
