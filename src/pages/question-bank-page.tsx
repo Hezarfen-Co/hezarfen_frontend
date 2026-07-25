@@ -1,4 +1,4 @@
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteBankQuestionById, getBankQuestions } from "@/api/bank-questions";
 import { getCourses } from "@/api/courses";
@@ -76,6 +76,13 @@ function QuestionBankContent() {
     },
   );
   const total = () => list.latest?.total ?? 0;
+  // Deleting the last row of the last page shrinks the page count under the
+  // current page; the table then hides its pagination bar entirely and the user
+  // is stranded with no control to get back. Same clamp as exam-questions-panel.
+  const pageCount = () => Math.max(1, Math.ceil(total() / BANK_PAGE_SIZE));
+  createEffect(() => {
+    if (page() >= pageCount()) setPage(pageCount() - 1);
+  });
 
   // Only courses the teacher can author in supply subjects for a new template.
   const [courses] = createResource(async () => (await getCourses({ limit: 100 })).items);

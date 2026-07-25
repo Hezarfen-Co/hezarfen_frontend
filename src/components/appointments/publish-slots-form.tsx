@@ -36,7 +36,8 @@ export function PublishSlotsForm(props: {
 
   const validate = (starts: number | null, ends: number | null, until: number | null): string | null => {
     if (starts == null || ends == null) return t("form.timeOrder");
-    if (ends < starts) return t("form.timeOrder");
+    // `check_window` rejects `starts >= ends` (400) — a zero-length slot is not a window.
+    if (ends <= starts) return t("form.timeOrder");
     const grace = now() - 60_000;
     if (starts < grace || ends < grace) return t("form.timePast");
     if (repeatWeekly()) {

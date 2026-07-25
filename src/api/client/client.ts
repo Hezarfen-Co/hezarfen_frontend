@@ -21,6 +21,11 @@ type RequestOptions = {
 
 const API_PREFIX = "/api";
 
+// Deadline for a JSON request. Generous enough for the slowest real call
+// (login's Argon2 hash under load), short enough that a hung socket surfaces
+// as an error instead of a permanently disabled button.
+const REQUEST_TIMEOUT_MS = 20_000;
+
 const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
   // Settings lists reject two entries that fold to the same word — İZİN/izin,
   // ÖDEV/odev. Keyed on the whole normalized string, so both fields are listed.
@@ -99,6 +104,47 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
   "the repeated slots overlap each other": {
     en: "The repeated slots overlap each other.",
     tr: "Tekrarlanan müsaitlikler birbiriyle çakışıyor.",
+  },
+  // Booking/decision conflicts from domain/appointment.rs — byte-exact.
+  "the slot is already booked": {
+    en: "Someone else booked this time first.",
+    tr: "Bu saati senden önce başkası aldı.",
+  },
+  "the slot has already started": {
+    en: "This time has already started, so it can no longer be booked.",
+    tr: "Bu saat başladığı için artık randevu alınamaz.",
+  },
+  "you already have an appointment at that time": {
+    en: "You already have an appointment at that time.",
+    tr: "O saatte zaten bir randevun var.",
+  },
+  "the appointment is already settled": {
+    en: "This appointment is already settled.",
+    tr: "Bu randevu zaten sonuçlanmış.",
+  },
+  "the appointment has already started": {
+    en: "This appointment has already started.",
+    tr: "Bu randevu çoktan başladı.",
+  },
+  "that time has already started": {
+    en: "That time has already started. Pick a later one.",
+    tr: "O saat çoktan başladı. Daha ileri bir saat seç.",
+  },
+  "no time has been proposed": {
+    en: "No time has been proposed for this appointment yet.",
+    tr: "Bu randevu için henüz bir saat önerilmedi.",
+  },
+  "the appointment is no longer pending": {
+    en: "This appointment is no longer waiting for an answer.",
+    tr: "Bu randevu artık yanıt bekliyor değil.",
+  },
+  "question: this question did not come from a bank template": {
+    en: "This question was not copied from a bank template, so there is nothing to refresh it from.",
+    tr: "Bu soru bir banka şablonundan kopyalanmadığı için yenilenecek bir kaynağı yok.",
+  },
+  "request timed out": {
+    en: "The server did not respond in time. Check your connection and try again.",
+    tr: "Sunucu zamanında yanıt vermedi. Bağlantını kontrol edip tekrar dene.",
   },
   "only the template's owner or an admin can change it": {
     en: "Only the teacher who created this template (or an admin) can change it.",
@@ -294,20 +340,42 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
     body = JSON.stringify(options.body);
   }
 
-  const res = await fetch(`${API_PREFIX}${path}`, {
-    method: options.method ?? "GET",
-    headers,
-    body,
-    credentials: "same-origin",
-    signal: options.signal,
-    cache: options.cache,
-  });
+  // JSON calls only — uploads (formClient) and downloads (blobClient) stay
+  // untimed. Without this a dead connection leaves callers (exam-room REST
+  // autosave) stuck on "saving…" until the browser gives up.
+  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+  // Caller-initiated aborts keep their original AbortError so cancellation
+  // handling upstream is untouched; only our own deadline becomes an ApiError.
+  const asDeadlineError = (err: unknown) =>
+    timeout.aborted && !options.signal?.aborted ? new ApiError(408, "request timed out") : err;
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_PREFIX}${path}`, {
+      method: options.method ?? "GET",
+      headers,
+      body,
+      credentials: "same-origin",
+      signal: options.signal ? AbortSignal.any([options.signal, timeout]) : timeout,
+      cache: options.cache,
+    });
+  } catch (err) {
+    throw asDeadlineError(err);
+  }
 
   if (res.status === 204) {
     return undefined as T;
   }
 
-  const text = await res.text();
+  // The deadline aborts the body stream too, so headers can arrive in time and
+  // res.text() still blow up mid-download on a multi-MB response.
+  let text: string;
+  try {
+    text = await res.text();
+  } catch (err) {
+    throw asDeadlineError(err);
+  }
+
   let data: unknown = null;
   if (text) {
     try {
@@ -398,12 +466,14 @@ export function formatApiError(err: unknown, locale: Locale = currentLocale()): 
     if ((err.status === 429 || err.status === 503) && err.retryAfter != null) {
       return locale === "tr" ? `${err.retryAfter} sn sonra tekrar dene.` : `Try again in ${err.retryAfter}s.`;
     }
+    // The specific backend message wins over the per-status generic one —
+    // otherwise every 401/403/404/413/5xx entry in the table is dead code.
+    const known = API_ERROR_MESSAGES[normalizeApiMessage(err.message)]?.[locale];
+    if (known) return known;
     if (err.status === 401) return API_ERROR_MESSAGES.unauthorized[locale];
     if (err.status === 403) return API_ERROR_MESSAGES.forbidden[locale];
     if (err.status === 404) return API_ERROR_MESSAGES["not found"][locale];
-    if (err.status === 409) return formatApiErrorMessage(err.message, locale);
     if (err.status === 413) return API_ERROR_MESSAGES["payload too large"][locale];
-    if (err.status === 422) return formatApiErrorMessage(err.message, locale);
     if (err.status >= 500) return locale === "tr" ? "Sunucuda bir sorun oluştu. Lütfen tekrar dene." : "Server error. Please try again.";
     return formatApiErrorMessage(err.message, locale);
   }

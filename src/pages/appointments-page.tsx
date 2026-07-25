@@ -31,6 +31,7 @@ import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from "@/
 import { IconCalendarX, IconCheck, IconEye, IconPlus, IconRefresh, IconTrash, IconX } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { appointmentActions, hasStandingProposal } from "@/lib/appointment-actions";
 import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
 import { cn } from "@/lib/cn";
 import { createFlash } from "@/lib/flash";
@@ -42,6 +43,7 @@ import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 const PAGE_SIZE = 10;
+const PAGE_LIMIT = 100;
 const isLive = (status: AppointmentStatus) => status === "pending" || status === "approved";
 
 export default function AppointmentsPage() {
@@ -69,8 +71,21 @@ function AppointmentsContent() {
   const isStaff = () => hasMinRole(me()?.role, "teacher");
   const isManager = () => hasMinRole(me()?.role, "manager");
 
-  const [slots, { refetch: refetchSlots }] = createResource(async () => (await getSlots({ limit: 100 })).items);
-  const [appts, { refetch: refetchAppts }] = createResource(async () => (await getAppointments({ limit: 100 })).items);
+  // Staff get EVERY slot they ever published (`list_for_teacher`, `starts_at ASC`,
+  // no past filter), so past ~100 lifetime slots page one is nothing but expired
+  // rows and the upcoming ones are unreachable. Take the last page instead — they
+  // always sit at the tail. Requesters get `list_upcoming` (future-only, ASC), so
+  // their first page is the near one and must stay first.
+  // ponytail: shows the newest PAGE_LIMIT slots; >100 upcoming slots would need
+  // real paging, and the endpoint takes only limit/offset today.
+  const fetchSlots = async () => {
+    const first = await getSlots({ limit: PAGE_LIMIT });
+    if (!isStaff() || first.total <= PAGE_LIMIT) return first.items;
+    return (await getSlots({ limit: PAGE_LIMIT, offset: first.total - PAGE_LIMIT })).items;
+  };
+  const [slots, { refetch: refetchSlots }] = createResource(fetchSlots);
+  // Appointments come back newest-first (`ORDER BY id DESC`), so page one is right.
+  const [appts, { refetch: refetchAppts }] = createResource(async () => (await getAppointments({ limit: PAGE_LIMIT })).items);
 
   const refetchAll = () => Promise.all([refetchSlots(), refetchAppts()]);
   const loaded = () => slots.latest !== undefined && appts.latest !== undefined;
@@ -78,8 +93,10 @@ function AppointmentsContent() {
   // Poll so statuses stay in sync when the other party acts (approve, book,
   // cancel…). Visibility-aware: pauses on hidden tabs, refetches on tab-back so
   // a cross-actor status change isn't stale on a parked tab. Reads use `.latest`,
-  // so a refetch never re-suspends/blanks the tables.
-  createLivePoll(refetchAll, 10_000);
+  // so a refetch never re-suspends/blanks the tables. 30s (the primitive's
+  // default): this page fans out to 2 GETs a tick, and tab-back freshness comes
+  // from the visibility/focus wake, not from a short period.
+  createLivePoll(refetchAll);
   const act = async (fn: () => Promise<unknown>, successKey?: MessageKey) => {
     setError("");
     try {
@@ -138,7 +155,6 @@ function AppointmentsContent() {
       {t(appointmentStatusLabelKey(status))}
     </Badge>
   );
-  const hasProposal = (a: Appointment) => a.proposed_starts_at != null;
   // Cancelled/rejected appointments carry a record (who + optional reason) shown in the details dialog.
   const hasRecord = (a: Appointment) => a.status === "cancelled" || a.status === "rejected";
   const detailAction = (a: Appointment) =>
@@ -241,7 +257,7 @@ function AppointmentsContent() {
       cell: (cell) => (
         <div class="flex flex-col gap-0.5">
           {timeCell(cell.row.original.starts_at, cell.row.original.ends_at)}
-          <Show when={hasProposal(cell.row.original) && cell.row.original.status === "pending"}>
+          <Show when={hasStandingProposal(cell.row.original)}>
             <div class="text-info text-xs">{t("appointments.rescheduleProposed")}</div>
           </Show>
         </div>
@@ -260,12 +276,10 @@ function AppointmentsContent() {
       cell: (cell) => {
         const a = cell.row.original;
         const actions = [] as { label: string; icon: import("solid-js").JSX.Element; destructive?: boolean; onSelect: () => void }[];
-        if (a.status === "pending" && !hasProposal(a)) {
-          actions.push({ label: t("appointments.approve"), icon: <IconCheck class="h-4 w-4" />, onSelect: () => void act(() => patchApproveAppointment(a.id), "appointments.status.approved") });
-          actions.push({ label: t("appointments.reject"), icon: <IconX class="h-4 w-4" />, destructive: true, onSelect: () => askReject(a.id) });
-        }
-        if (isLive(a.status) && !hasProposal(a)) {
-          actions.push({ label: t("appointments.reschedule"), icon: <IconRefresh class="h-4 w-4" />, onSelect: () => setReschedAppt(a) });
+        for (const action of appointmentActions(a, "staff", now())) {
+          if (action === "approve") actions.push({ label: t("appointments.approve"), icon: <IconCheck class="h-4 w-4" />, onSelect: () => void act(() => patchApproveAppointment(a.id), "appointments.status.approved") });
+          if (action === "reject") actions.push({ label: t("appointments.reject"), icon: <IconX class="h-4 w-4" />, destructive: true, onSelect: () => askReject(a.id) });
+          if (action === "reschedule") actions.push({ label: t("appointments.reschedule"), icon: <IconRefresh class="h-4 w-4" />, onSelect: () => setReschedAppt(a) });
         }
         // Staff never cancel — a booking is declined via reject (pending) or reschedule; only the requester cancels (their own bookings table).
         actions.push(...detailAction(a));
@@ -278,7 +292,10 @@ function AppointmentsContent() {
   const myLiveSlotIds = () => new Set((appts.latest ?? []).filter((a) => a.requester.id === me()?.id && isLive(a.status)).map((a) => a.slot));
   const availableSlots = () => {
     const taken = myLiveSlotIds();
-    return (slots.latest ?? []).filter((s) => s.ends_at > now() && !taken.has(s.id));
+    // `book` refuses a slot whose window has OPENED ("the slot has already
+    // started", no skew grace), not one that has ended — an in-progress slot
+    // listed here would show a Book button that always 409s.
+    return (slots.latest ?? []).filter((s) => s.starts_at > now() && !taken.has(s.id));
   };
 
   const availableColumns = createMemo<ColumnDef<AppointmentSlot>[]>(() => [
@@ -326,11 +343,13 @@ function AppointmentsContent() {
       meta: { headerClass: "w-44", cellClass: "align-top pr-4" },
       cell: (cell) => (
         <div class="flex flex-col gap-0.5">
-          {timeCell(cell.row.original.starts_at, cell.row.original.ends_at)}
-          <Show when={hasProposal(cell.row.original) && cell.row.original.status === "pending"}>
+          {/* The effective window IS the proposal while one stands (backend
+              `Appointment::window`), so the row's own time already shows the
+              proposed one — label it instead of printing it twice. */}
+          <Show when={hasStandingProposal(cell.row.original)}>
             <div class="text-info text-xs">{t("appointments.proposedTime")}:</div>
-            {timeCell(cell.row.original.proposed_starts_at, cell.row.original.proposed_ends_at)}
           </Show>
+          {timeCell(cell.row.original.starts_at, cell.row.original.ends_at)}
         </div>
       ),
     },
@@ -347,11 +366,10 @@ function AppointmentsContent() {
       cell: (cell) => {
         const a = cell.row.original;
         const actions = [] as { label: string; icon: import("solid-js").JSX.Element; destructive?: boolean; onSelect: () => void }[];
-        if (a.status === "pending" && hasProposal(a)) {
-          actions.push({ label: t("appointments.acceptReschedule"), icon: <IconCheck class="h-4 w-4" />, onSelect: () => void act(() => patchAcceptReschedule(a.id), "appointments.status.approved") });
-          actions.push({ label: t("appointments.declineReschedule"), icon: <IconX class="h-4 w-4" />, destructive: true, onSelect: () => askCancel(() => patchDeclineReschedule(a.id), false) });
-        } else if (isLive(a.status)) {
-          actions.push({ label: t("appointments.cancel"), icon: <IconX class="h-4 w-4" />, destructive: true, onSelect: () => askCancel((reason) => patchCancelAppointment(a.id, reason ? { reason } : undefined)) });
+        for (const action of appointmentActions(a, "requester", now())) {
+          if (action === "acceptReschedule") actions.push({ label: t("appointments.acceptReschedule"), icon: <IconCheck class="h-4 w-4" />, onSelect: () => void act(() => patchAcceptReschedule(a.id), "appointments.status.approved") });
+          if (action === "declineReschedule") actions.push({ label: t("appointments.declineReschedule"), icon: <IconX class="h-4 w-4" />, destructive: true, onSelect: () => askCancel(() => patchDeclineReschedule(a.id), false) });
+          if (action === "cancel") actions.push({ label: t("appointments.cancel"), icon: <IconX class="h-4 w-4" />, destructive: true, onSelect: () => askCancel((reason) => patchCancelAppointment(a.id, reason ? { reason } : undefined)) });
         }
         actions.push(...detailAction(a));
         return <Show when={actions.length > 0} fallback={<span class="text-muted-foreground">—</span>}><TableRowActions label={t("common.actions")} actions={actions} /></Show>;

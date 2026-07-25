@@ -11,6 +11,8 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { IconCalendarDays, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
+import { appointmentCounterpart } from "@/lib/person";
+import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 const DAY_NAMES_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -31,6 +33,7 @@ export default function CalendarPage() {
 }
 
 function CalendarContent() {
+  const auth = useAuth();
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
@@ -42,6 +45,8 @@ function CalendarContent() {
   const [events] = createResource(async () => (await getEvents({ limit: 100 })).items, { initialValue: [] });
   const [exams] = createResource(async () => (await getExams({ limit: 100 })).items, { initialValue: [] });
   const [appointments] = createResource(async () => (await getAppointments({ limit: 100 })).items, { initialValue: [] });
+
+  const counterpart = (a: Appointment) => appointmentCounterpart(a, auth.user()?.id);
 
   const monthLabel = () => {
     const names = locale() === "tr" ? MONTH_NAMES_TR : MONTH_NAMES;
@@ -197,7 +202,7 @@ function CalendarContent() {
                                 {(appt) => (
                                   <span class="inline-flex min-w-0 items-center gap-1 rounded bg-violet-100 px-1 py-0.5 text-[9px] font-medium leading-none text-violet-700 dark:border dark:border-violet-800/50 dark:bg-violet-950/60 dark:text-violet-300">
                                     <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
-                                    <span class="truncate">{appt().requester.display_name ?? appt().requester.username}</span>
+                                    <span class="truncate">{counterpart(appt())}</span>
                                     <Show when={dayItems().appointments.length > 1}>
                                       <span class="shrink-0 opacity-70">+{dayItems().appointments.length - 1}</span>
                                     </Show>
@@ -281,7 +286,7 @@ function CalendarContent() {
                             class="group flex items-start justify-between gap-2 rounded-lg border border-violet-500/40 bg-card p-2.5 shadow-xs transition-all hover:border-violet-500/70 hover:shadow-md dark:border-violet-500/30 dark:hover:border-violet-500/70"
                           >
                             <div class="min-w-0">
-                              <p class="truncate text-xs font-semibold group-hover:text-violet-500">{appt.requester.display_name ?? appt.requester.username}</p>
+                              <p class="truncate text-xs font-semibold group-hover:text-violet-500">{counterpart(appt)}</p>
                               <p class="mt-0.5 text-[11px] text-muted-foreground">
                                 {appt.starts_at ? new Date(appt.starts_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
                                 {appt.ends_at ? ` — ${new Date(appt.ends_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })}` : ""}

@@ -64,6 +64,76 @@ describe("client", () => {
     });
   });
 
+  describe("client() timeout", () => {
+    // hang until whatever signal fetch was given aborts
+    const hangingFetch = () =>
+      vi.spyOn(globalThis, "fetch").mockImplementation(
+        (_url, init?: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            const signal = init?.signal;
+            if (!signal) return; // no deadline at all -> test times out, which is the bug
+            signal.addEventListener("abort", () => reject(signal.reason));
+          }),
+      );
+
+    it("fails a hung request as a localized ApiError instead of hanging forever", async () => {
+      // shrink the real deadline; everything else (AbortSignal.any, the catch) runs for real
+      const realTimeout = AbortSignal.timeout.bind(AbortSignal);
+      vi.spyOn(AbortSignal, "timeout").mockImplementation(() => realTimeout(5));
+      hangingFetch();
+      await expect(client("/slow")).rejects.toMatchObject({ name: "ApiError", status: 408 });
+      try {
+        await client("/slow");
+      } catch (err) {
+        expect(formatApiError(err, "tr")).toBe("Sunucu zamanında yanıt vermedi. Bağlantını kontrol edip tekrar dene.");
+        expect(formatApiError(err, "en")).toBe("The server did not respond in time. Check your connection and try again.");
+      }
+    });
+
+    // headers arrive promptly, the body stalls — the multi-MB shell feed on a
+    // school connection. The deadline lands while res.text() is streaming.
+    const stallingBodyFetch = () =>
+      vi.spyOn(globalThis, "fetch").mockImplementation((_url, init?: RequestInit) => {
+        const signal = init?.signal;
+        const stream = new ReadableStream({
+          start(ctrl) {
+            ctrl.enqueue(new TextEncoder().encode('{"items":['));
+            signal?.addEventListener("abort", () => ctrl.error(signal.reason));
+          },
+        });
+        return Promise.resolve(new Response(stream, { status: 200 }));
+      });
+
+    it("fails a timeout during body streaming as ApiError 408, not a raw DOMException", async () => {
+      const realTimeout = AbortSignal.timeout.bind(AbortSignal);
+      vi.spyOn(AbortSignal, "timeout").mockImplementation(() => realTimeout(5));
+      stallingBodyFetch();
+      await expect(client("/big-feed")).rejects.toMatchObject({ name: "ApiError", status: 408 });
+      try {
+        await client("/big-feed");
+      } catch (err) {
+        expect(formatApiError(err, "tr")).toBe("Sunucu zamanında yanıt vermedi. Bağlantını kontrol edip tekrar dene.");
+      }
+    });
+
+    it("still surfaces a caller abort mid-body as AbortError, not a timeout", async () => {
+      stallingBodyFetch();
+      const ctrl = new AbortController();
+      const pending = client("/big-feed", { signal: ctrl.signal });
+      await Promise.resolve();
+      ctrl.abort();
+      await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    });
+
+    it("still surfaces a caller abort as AbortError, not a timeout", async () => {
+      hangingFetch();
+      const ctrl = new AbortController();
+      const pending = client("/slow", { signal: ctrl.signal });
+      ctrl.abort();
+      await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    });
+  });
+
   describe("formClient()", () => {
     it("makes POST request with FormData", async () => {
       mockFetchSuccess({ ok: true });
@@ -195,6 +265,58 @@ describe("client", () => {
       expect(formatApiError(new ApiError(401, ""), "en")).toBe("Sign in to continue.");
       expect(formatApiError(new ApiError(403, ""), "tr")).toBe("Bu işlem için yetkin yok.");
       expect(formatApiError(new ApiError(404, ""), "en")).toBe("The requested record was not found.");
+    });
+
+    it("prefers the table entry over the per-status generic message", () => {
+      // the whole 403 table was dead code: every 403 rendered "forbidden"
+      expect(formatApiError(new ApiError(403, "only the template's owner or an admin can change it"), "tr")).toBe(
+        "Bu şablonu yalnızca onu oluşturan öğretmen (veya bir yönetici) değiştirebilir.",
+      );
+      expect(
+        formatApiError(new ApiError(403, "only the course creator, an assigned teacher, or a manager/admin can author questions"), "tr"),
+      ).toBe("Bu sınava yalnızca dersin öğretmenleri veya bir müdür soru ekleyebilir.");
+      expect(
+        formatApiError(
+          new ApiError(403, "only the course creator, an assigned teacher, or a manager/admin can save questions to the bank"),
+          "en",
+        ),
+      ).toBe("Only this course's teachers or a manager can save this question to the bank.");
+      // same ordering bug shape for 404 ("course not found" / "exam not found")
+      expect(formatApiError(new ApiError(404, "exam not found"), "tr")).toBe("Sınav bulunamadı.");
+      expect(formatApiError(new ApiError(404, "course not found"), "en")).toBe("Course not found.");
+      // unmatched messages still fall back to the generic per-status message
+      expect(formatApiError(new ApiError(403, "some brand new refusal"), "tr")).toBe("Bu işlem için yetkin yok.");
+      expect(formatApiError(new ApiError(404, ""), "en")).toBe("The requested record was not found.");
+    });
+
+    it("localizes appointment booking and decision conflicts", () => {
+      // exact backend strings from domain/appointment.rs — a miss renders
+      // "İşlem tamamlanamadı: <English>"
+      const cases: Array<[string, string]> = [
+        ["the slot is already booked", "Bu saati senden önce başkası aldı."],
+        ["the slot has already started", "Bu saat başladığı için artık randevu alınamaz."],
+        ["you already have an appointment at that time", "O saatte zaten bir randevun var."],
+        ["the appointment is already settled", "Bu randevu zaten sonuçlanmış."],
+        ["the appointment has already started", "Bu randevu çoktan başladı."],
+        ["that time has already started", "O saat çoktan başladı. Daha ileri bir saat seç."],
+        ["no time has been proposed", "Bu randevu için henüz bir saat önerilmedi."],
+        ["the appointment is no longer pending", "Bu randevu artık yanıt bekliyor değil."],
+      ];
+      for (const [backend, turkish] of cases) {
+        expect(formatApiError(new ApiError(409, backend), "tr")).toBe(turkish);
+        expect(formatApiError(new ApiError(409, backend), "en")).not.toMatch(/^İşlem/);
+        expect(formatApiErrorMessage(backend, "en")).toMatch(/\.$/);
+      }
+    });
+
+    it("localizes the refresh-from-bank validation error", () => {
+      // ValidationError::Invalid renders "{field}: {reason}" (web/exams.rs:2013)
+      expect(formatApiError(new ApiError(400, "question: this question did not come from a bank template"), "tr")).toBe(
+        "Bu soru bir banka şablonundan kopyalanmadığı için yenilenecek bir kaynağı yok.",
+      );
+      expect(formatApiError(new ApiError(400, "question: this question did not come from a bank template"), "en")).toBe(
+        "This question was not copied from a bank template, so there is nothing to refresh it from.",
+      );
     });
 
     it("formats 500+", () => {

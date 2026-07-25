@@ -26,7 +26,8 @@ export function RescheduleForm(props: {
     e.preventDefault();
     const starts_at = dateTimeInputToMs(startsDate(), startsTime());
     const ends_at = dateTimeInputToMs(endsDate(), endsTime());
-    if (starts_at == null || ends_at == null || ends_at < starts_at) {
+    // `propose` rejects `starts_at >= ends_at` (400 "must be after proposed_starts_at").
+    if (starts_at == null || ends_at == null || ends_at <= starts_at) {
       setError(t("form.timeOrder"));
       return;
     }

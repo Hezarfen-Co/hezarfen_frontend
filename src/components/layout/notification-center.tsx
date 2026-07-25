@@ -50,9 +50,10 @@ export function NotificationCenter() {
   const allNotifications = createMemo<NotificationItem[]>(() => {
     const list: NotificationItem[] = [];
 
-    // 1. Unread Messages — shared inbox is the full list, filter to unread here
-    // (was a dedicated read:false fetch before the shell feed consolidation).
-    const msgs = feed.messages().items.filter((m) => !m.read);
+    // 1. Unread messages — the dedicated `read=false` page from the shell feed.
+    // Never filter the shared inbox page instead: it is capped and ordered by
+    // id DESC, so an older unread message is simply not in it.
+    const msgs = feed.unreadMessages().items;
     for (const m of msgs) {
       list.push({
         id: `msg_${m.id}`,
@@ -143,7 +144,26 @@ export function NotificationCenter() {
     return allNotifications().filter((item) => !dismissed.has(item.id));
   });
 
-  const unreadCount = () => activeNotifications().length;
+  // The list only holds the newest 10 unread messages; `total` is the real
+  // server-side unread count, so the rest still counts towards the badge.
+  // Those extra rows have no id here, so they cannot be dismissed one by one:
+  // "dismiss all" snapshots the unread total instead. Everything at or below the
+  // snapshot counts as dismissed; anything above it arrived afterwards and still
+  // raises the badge (minus the new rows already listed, which the active list
+  // counts). Without the snapshot, 11 unread → dismiss all → badge stuck at 1
+  // over an empty popover.
+  // ponytail: the snapshot is in-memory while dismissed ids are persisted, so a
+  // reload re-shows unlisted unread — upgrade path is storing it next to the ids
+  // in `lib/notifications`.
+  const [dismissedUnreadTotal, setDismissedUnreadTotal] = createSignal(0);
+  const activeMessageCount = () => activeNotifications().filter((item) => item.type === "message").length;
+  const unlistedUnread = () => {
+    const page = feed.unreadMessages();
+    const beyondPage = page.total - page.items.length;
+    const sinceDismissAll = page.total - dismissedUnreadTotal() - activeMessageCount();
+    return Math.max(0, Math.min(beyondPage, sinceDismissAll));
+  };
+  const unreadCount = () => activeNotifications().length + unlistedUnread();
 
   const handleDismissSingle = (evt: MouseEvent, id: string) => {
     evt.stopPropagation();
@@ -155,6 +175,7 @@ export function NotificationCenter() {
     const ids = activeNotifications().map((item) => item.id);
     const updated = dismissAllNotificationIds(ids);
     setDismissedIds(new Set(updated));
+    setDismissedUnreadTotal(feed.unreadMessages().total);
   };
 
   const handleSelectNotification = async (item: NotificationItem) => {

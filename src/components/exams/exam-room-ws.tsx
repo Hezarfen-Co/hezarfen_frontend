@@ -147,7 +147,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       ws.onerror = null;
       ws.onmessage = null;
       ws.close();
-      acks.failAll(new Error(t("attempt.saveDisconnected")));
+      acks.failAll(new Error(t("attempt.saveDisconnected")), "socket-closed");
     }
     setWsState("connecting");
     const socket = new WebSocket(wsUrl());
@@ -161,7 +161,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       setWsState("disconnected");
       ws = null;
       // Anything still waiting for a `saved` frame will never get one.
-      acks.failAll(new Error(t("attempt.saveDisconnected")));
+      acks.failAll(new Error(t("attempt.saveDisconnected")), "socket-closed");
       scheduleReconnect();
     };
     socket.onclose = dropped;
@@ -215,11 +215,13 @@ export function ExamRoomWS(props: { exam: Exam }) {
       case "error": {
         const message = formatApiErrorMessage(msg.message, locale());
         setError(message);
-        // A frame that names a question refused that one save; anything else
-        // is room- or connection-level (bad frame, sitting over, unenrolled),
-        // so everything in flight is treated as rejected — never as saved.
+        // A frame that names a question refused that one save; anything else is
+        // room-level (bad frame, sitting over, unenrolled, internal error), so
+        // everything in flight is treated as rejected — never as saved. The
+        // socket stays open on this path, so each rejected send is still owed a
+        // frame of its own: `error-frame` keeps that debt instead of wiping it.
         if (msg.question_id) acks.fail(msg.question_id, new Error(message));
-        else acks.failAll(new Error(message));
+        else acks.failAll(new Error(message), "error-frame");
         break;
       }
     }
@@ -299,10 +301,13 @@ export function ExamRoomWS(props: { exam: Exam }) {
       } else {
         await postExamAttemptAnswer(props.exam.id, { question_id: question.id, text: value });
       }
-      const next = await getExamAttempt(props.exam.id);
-      setAttempt(next);
-      const qs = await getExamAttemptQuestions(props.exam.id);
-      setQuestions(qs);
+      // The POST above is the save. Refreshing is only about the badges, so a
+      // failed refresh must not report a stored answer as lost.
+      try {
+        await refreshAnswers();
+      } catch {
+        // ignore — the countdown/updated_at catch up on the next poll
+      }
       return true;
     } catch (err) {
       setError(formatApiError(err, locale()));
@@ -735,13 +740,19 @@ function QuestionAnswerCardWS(props: {
   // "Saved" means the server said so. A failure leaves the typed/picked answer
   // untouched in the card so the student can just press save again.
   const save = async () => {
+    // The card is reused across questions, and switching question resets
+    // `saveState` — so an outcome that lands after the switch would paint a
+    // badge for a question it never belonged to. Only the question that started
+    // this save may be told about it.
+    const savedId = props.question.id;
     setSaveState("saving");
     try {
       const confirmed = await props.onSave(value());
-      if (!confirmed) return; // a newer save owns the outcome
+      if (!confirmed || props.question.id !== savedId) return; // a newer save owns the outcome
       setSaveState("saved");
       props.onSaved?.();
     } catch {
+      if (props.question.id !== savedId) return;
       setSaveState("failed"); // the parent banner carries the reason
     }
   };

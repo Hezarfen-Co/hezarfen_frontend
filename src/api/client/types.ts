@@ -107,7 +107,8 @@ export type Appointment = {
   requester: PersonRef;
   status: AppointmentStatus;
   reason: string;
-  starts_at: number | null; // effective window (proposal if accepted, else slot's)
+  starts_at: number | null; // effective window: the proposal whenever one is on the
+                            // row (accepted or not), else the slot's own time
   ends_at: number | null;
   proposed_starts_at: number | null;
   proposed_ends_at: number | null;

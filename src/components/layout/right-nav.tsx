@@ -17,7 +17,8 @@ import {
   IconX,
 } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import { personLabel } from "@/lib/person";
+import { appointmentCounterpart, personLabel } from "@/lib/person";
+import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { useShellFeed } from "@/stores/shell-feed-context";
 
@@ -35,6 +36,7 @@ export function RightNav() {
   const location = useLocation();
   const { locale } = usePreferences();
   const feed = useShellFeed();
+  const auth = useAuth();
 
   const isMessagesActive = () => location().pathname === "/messages";
   const isCalendarActive = () => location().pathname === "/calendar";
@@ -63,7 +65,11 @@ export function RightNav() {
   // on every 60s refetch and — since RightNav sits beside <Outlet> in AppShell —
   // blanks the whole page for the fetch duration. `.latest` keeps the last value.
   const allMessages = () => feed.messages().items;
-  const unreadCount = createMemo(() => allMessages().filter((m: Message) => !m.read).length);
+  // Same source of truth as NotificationCenter: the dedicated `read=false` page,
+  // whose `total` is the exact server-side unread count. The inbox page above is
+  // capped at 100 and ordered by id DESC, so filtering it silently drops older
+  // unread messages and the two shell badges disagree.
+  const unreadCount = createMemo(() => feed.unreadMessages().total);
 
   const filteredMessages = createMemo(() => {
     let list = allMessages();
@@ -599,8 +605,7 @@ export function RightNav() {
                             const isEvent = item.type === "event";
                             const isAppt = item.type === "appointment";
                             const title = item.type === "appointment"
-                              ? ((item.data.teacher?.display_name ?? item.data.teacher?.username)
-                                  ?? item.data.requester.display_name ?? item.data.requester.username)
+                              ? appointmentCounterpart(item.data, auth.user()?.id)
                               : item.data.title;
                             return (
                               <div
@@ -694,7 +699,7 @@ export function RightNav() {
                   const appt = () => (cur.type === "appointment" ? cur.data : null);
                   const title = () => {
                     const a = appt();
-                    if (a) return (a.teacher?.display_name ?? a.teacher?.username) ?? a.requester.display_name ?? a.requester.username;
+                    if (a) return appointmentCounterpart(a, auth.user()?.id);
                     return (cur.data as Event | Exam).title;
                   };
                   return (

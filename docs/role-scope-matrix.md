@@ -14,6 +14,7 @@
 | Exam detail `/exams/:id` | ✅ | ✅ | ✅ | ✅ |
 | Exam room `/exam-room/:id` | ✅ | ❌ | ❌ | ❌ |
 | Live monitor `/exams/:id/live` | ❌ | ✅ | ✅ | ✅ |
+| Question bank `/question-bank` | ❌ | ✅ | ✅ | ✅ |
 | Events `/events` | ✅ | ✅ | ✅ | ✅ |
 | Event detail `/events/:id` | ✅ | ✅ | ✅ | ✅ |
 | Appointments `/appointments` | ✅ (book + own) | ✅ (publish/manage own) | ✅ (manage all) | ✅ (manage all) |
@@ -32,6 +33,7 @@
 | Sidebar group / item | Student | Teacher | Manager | Admin |
 |---|---|---|---|---|
 | **classes** — Courses / Exams / Events / exam grades | ✅ | ✅ | ✅ | ✅ |
+| **classes** — Question bank (`/question-bank`) | ❌ | ✅ | ✅ | ✅ |
 | **grades** — Defter (`/notes`) | ✅ | ✅ | ✅ | ✅ |
 | **community** — Messages / Question pool | ✅ | ✅ | ✅ | ✅ |
 | **students** — My attendance (`/attendance`) | ✅ | ✅ | ✅ | ✅ |
@@ -82,6 +84,8 @@
 <!-- Own-result review (own answer sheet + past attempts) is additionally gated on the exam's `allow_review` flag AND the teacher having marked the student. -->
 
 | Write exam questions | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Create bank templates | ❌ | ✅ (course manager) | ✅ | ✅ |
+| Edit / delete bank templates | ❌ | ✅ (own only) | ✅ (own only) | ✅ (any) |
 | Start / finish own pomodoro focus session | ✅ | ❌ | ❌ | ❌ |
 | Read answer sheets | ❌ | ✅ (course manager) | ✅ | ✅ |
 | Watch live monitor | ❌ | ✅ (course manager) | ✅ | ✅ |

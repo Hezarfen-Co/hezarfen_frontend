@@ -203,10 +203,12 @@ export function AppShell(props: ParentProps) {
           <RightNav />
         </Show>
       </div>
-      </ShellFeedProvider>
+      {/* MobileTabBar stays inside the provider — it is a shell surface, so a
+          useShellFeed() badge there must not throw. */}
       <Show when={auth.user() && !wide()}>
         <MobileTabBar onMenu={() => setMobileOpen(true)} />
       </Show>
+      </ShellFeedProvider>
       <Show when={auth.user()}>
         <CelebiPanel open={celebiOpen()} onOpenChange={setCelebiOpen} />
         <CommandPalette

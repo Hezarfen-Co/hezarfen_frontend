@@ -50,6 +50,13 @@ Pagination and request rules:
 - If a page intentionally fetches the full list and paginates in memory, document that the expected dataset is small or temporary.
 - Search/filter/sort UI should match the request model: server-side controls for server-paginated lists, client-side controls only for accepted small lists.
 
+Question bank rules:
+
+- The question bank (`/question-bank`, teacher+) lives in the **classes** nav group next to Exams, and is a full page because it is a durable, browsable school-wide resource.
+- Its list is server-paginated/filtered (`limit`/`offset`, owner/subject/visibility/`q`); every filter or search change resets to the first page, and a delete that empties the last page clamps the page index back so the user is never left on a page with no pagination controls.
+- Creating and editing a template uses a `SidePanel` from the table header; deleting uses a confirm dialog.
+- Templates are private by default; exam ↔ bank transfers are copies, never links.
+
 Table action rules:
 
 - Row actions use `TableRowActions` with a centered three-dot trigger.
