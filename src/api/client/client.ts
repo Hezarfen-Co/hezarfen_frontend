@@ -22,6 +22,16 @@ type RequestOptions = {
 const API_PREFIX = "/api";
 
 const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
+  // Settings lists reject two entries that fold to the same word — İZİN/izin,
+  // ÖDEV/odev. Keyed on the whole normalized string, so both fields are listed.
+  "exam_kinds: two entries are the same word apart from upper/lower case or turkish letters — keep only one of them": {
+    en: "Two exam kinds are the same word apart from upper/lower case or Turkish letters. Keep only one of them.",
+    tr: "İki sınav türü, büyük/küçük harf veya Türkçe harf farkı dışında aynı. Sadece birini bırak.",
+  },
+  "attendance_statuses: two entries are the same word apart from upper/lower case or turkish letters — keep only one of them": {
+    en: "Two attendance statuses are the same word apart from upper/lower case or Turkish letters. Keep only one of them.",
+    tr: "İki yoklama durumu, büyük/küçük harf veya Türkçe harf farkı dışında aynı. Sadece birini bırak.",
+  },
   "request failed": {
     en: "Request failed.",
     tr: "İşlem tamamlanamadı.",

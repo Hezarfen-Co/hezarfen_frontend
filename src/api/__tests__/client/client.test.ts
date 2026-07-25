@@ -124,6 +124,23 @@ describe("client", () => {
       expect(formatApiErrorMessage("forbidden", "tr")).toBe("Bu işlem için yetkin yok.");
     });
 
+    it("localizes the settings duplicate-entry error (Turkish casing)", () => {
+      // exact backend strings from settings.rs validate_list — a miss here renders
+      // "İşlem tamamlanamadı: <raw English>" to a Turkish admin
+      const kinds = "exam_kinds: two entries are the same word apart from upper/lower case or Turkish letters — keep only one of them";
+      const statuses =
+        "attendance_statuses: two entries are the same word apart from upper/lower case or Turkish letters — keep only one of them";
+      expect(formatApiErrorMessage(kinds, "tr")).toBe(
+        "İki sınav türü, büyük/küçük harf veya Türkçe harf farkı dışında aynı. Sadece birini bırak.",
+      );
+      expect(formatApiErrorMessage(statuses, "tr")).toBe(
+        "İki yoklama durumu, büyük/küçük harf veya Türkçe harf farkı dışında aynı. Sadece birini bırak.",
+      );
+      expect(formatApiErrorMessage(kinds, "en")).toBe(
+        "Two exam kinds are the same word apart from upper/lower case or Turkish letters. Keep only one of them.",
+      );
+    });
+
     it("localizes slot-overlap conflicts (no half-English fallback)", () => {
       // exact backend strings (lowercase) must map, not fall through to "İşlem tamamlanamadı: <english>"
       expect(formatApiErrorMessage("this time overlaps a slot you have already published", "tr")).toBe(
