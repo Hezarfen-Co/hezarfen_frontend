@@ -394,6 +394,7 @@ export function QuestionForm(props: {
                 const stored = () => storedImage(row().id);
                 return (
                   <div
+                    data-choice-id={row().id}
                     class={cn(
                       "flex items-start gap-2 rounded-md border p-2 transition-colors",
                       isCorrect() ? "border-emerald-400/60 bg-emerald-50/60" : "border-border bg-background",
