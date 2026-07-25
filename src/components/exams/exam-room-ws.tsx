@@ -32,12 +32,14 @@ const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => 
 type WsState = "connecting" | "connected" | "disconnected";
 type WsMessage =
   | { type: "state"; status: string; deadline: number | null; remaining_ms: number | null; now: number; answered: number; question_count: number }
-  | { type: "saved"; question_id: string; updated_at: number }
+  // `client_seq` is the value we minted on the `answer` frame this replies to,
+  // echoed back verbatim — the only exact link between a send and its outcome.
+  | { type: "saved"; question_id: string; updated_at: number; client_seq?: number }
   | { type: "finished"; finished_at: number }
   | { type: "expired" }
   | { type: "pong" }
   // `question_id` is present only when the server could blame one save.
-  | { type: "error"; message: string; question_id?: string };
+  | { type: "error"; message: string; question_id?: string; client_seq?: number };
 
 function formatRemaining(ms: number | null): string {
   if (ms == null) return "—";
@@ -99,6 +101,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
   // A `send()` is not a save. Every WS answer waits for the server's matching
   // `saved` frame before the student is told anything was stored.
   const acks = createAckWaiter();
+  // Stamped on every `answer` frame and echoed back on its reply. The server
+  // treats it as opaque, so it only has to be unique while this room lives.
+  let clientSeq = 0;
   // Auto-reconnect a socket that drops mid-sitting: a transient network blip
   // shouldn't freeze the live countdown/state at "disconnected". Rejoining also
   // clears the backend's `left_at` (which any socket close stamps) — so on an
@@ -147,7 +152,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       ws.onerror = null;
       ws.onmessage = null;
       ws.close();
-      acks.failAll(new Error(t("attempt.saveDisconnected")), "socket-closed");
+      acks.failAll(new Error(t("attempt.saveDisconnected")));
     }
     setWsState("connecting");
     const socket = new WebSocket(wsUrl());
@@ -161,7 +166,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       setWsState("disconnected");
       ws = null;
       // Anything still waiting for a `saved` frame will never get one.
-      acks.failAll(new Error(t("attempt.saveDisconnected")), "socket-closed");
+      acks.failAll(new Error(t("attempt.saveDisconnected")));
       scheduleReconnect();
     };
     socket.onclose = dropped;
@@ -189,7 +194,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
         break;
       }
       case "saved": {
-        acks.ack(msg.question_id);
+        // No echo means we cannot tell which send this confirms (an older
+        // server): confirm nobody and let the send time out as unsaved.
+        if (msg.client_seq != null) acks.ack(msg.client_seq);
         setQuestions((prev) =>
           prev.map((q) =>
             q.id === msg.question_id
@@ -215,13 +222,12 @@ export function ExamRoomWS(props: { exam: Exam }) {
       case "error": {
         const message = formatApiErrorMessage(msg.message, locale());
         setError(message);
-        // A frame that names a question refused that one save; anything else is
-        // room-level (bad frame, sitting over, unenrolled, internal error), so
-        // everything in flight is treated as rejected — never as saved. The
-        // socket stays open on this path, so each rejected send is still owed a
-        // frame of its own: `error-frame` keeps that debt instead of wiping it.
-        if (msg.question_id) acks.fail(msg.question_id, new Error(message));
-        else acks.failAll(new Error(message), "error-frame");
+        // A frame that echoes our `client_seq` refused that one send; anything
+        // else is room-level (bad frame, sitting over, unenrolled, internal
+        // error) or from an older server, so everything in flight is treated as
+        // rejected — never as saved.
+        if (msg.client_seq != null) acks.fail(msg.client_seq, new Error(message));
+        else acks.failAll(new Error(message));
         break;
       }
     }
@@ -271,13 +277,14 @@ export function ExamRoomWS(props: { exam: Exam }) {
   const saveAnswer = async (question: AttemptQuestion, value: string): Promise<boolean> => {
     setError("");
     if (ws && ws.readyState === WebSocket.OPEN) {
-      const payload: Record<string, unknown> = { type: "answer", question_id: question.id };
+      const seq = (clientSeq += 1);
+      const payload: Record<string, unknown> = { type: "answer", question_id: question.id, client_seq: seq };
       if (question.kind === "choice") {
         payload.selected = value; // choice id, not a position
       } else {
         payload.text = value;
       }
-      const acked = acks.wait(question.id);
+      const acked = acks.wait(seq, question.id);
       sendWs(payload);
       let result;
       try {

@@ -2,12 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import { createAckWaiter } from "./create-ack-waiter";
 
 describe("createAckWaiter", () => {
-  it("resolves ok only when the matching ack arrives", async () => {
+  it("resolves ok only when the ack for that client_seq arrives", async () => {
     const w = createAckWaiter(1000);
-    const p = w.wait("q1");
-    w.ack("q2"); // another question's ack must not confirm this one
+    const p = w.wait(1, "q1");
+    w.ack(2); // another send's ack must not confirm this one
     expect(w.size).toBe(1);
-    w.ack("q1");
+    w.ack(1);
     await expect(p).resolves.toBe("ok");
     expect(w.size).toBe(0);
   });
@@ -15,7 +15,7 @@ describe("createAckWaiter", () => {
   it("rejects when no ack ever comes back", async () => {
     vi.useFakeTimers();
     const w = createAckWaiter(8000);
-    const p = w.wait("q1");
+    const p = w.wait(1, "q1");
     const assertion = expect(p).rejects.toThrow("ack timeout");
     await vi.advanceTimersByTimeAsync(8000);
     await assertion;
@@ -23,152 +23,108 @@ describe("createAckWaiter", () => {
     vi.useRealTimers();
   });
 
-  it("rejects every pending wait on failAll (error frame / socket drop)", async () => {
+  it("rejects every pending wait on failAll (unattributable frame / socket drop)", async () => {
     const w = createAckWaiter(1000);
-    const a = w.wait("q1");
-    const b = w.wait("q2");
-    w.failAll(new Error("disconnected"), "socket-closed");
+    const a = w.wait(1, "q1");
+    const b = w.wait(2, "q2");
+    w.failAll(new Error("disconnected"));
     await expect(a).rejects.toThrow("disconnected");
     await expect(b).rejects.toThrow("disconnected");
     expect(w.size).toBe(0);
   });
 
-  // Regression (defect 1): an unattributed error frame does NOT close the socket
-  // (`exam_ws.rs:496` keeps serving), so the frames owed to the sends it rejected
-  // are still on their way. One of them must not confirm the student's retry.
-  it("does not let an in-flight ack confirm the retry after an unattributed error frame", async () => {
+  it("fails only the named send when the error frame echoes its client_seq", async () => {
     const w = createAckWaiter(1000);
-    const first = w.wait("q1");
-    const firstAssertion = expect(first).rejects.toThrow("state unavailable");
-    w.failAll(new Error("state unavailable"), "error-frame"); // socket stays open
-    await firstAssertion;
-
-    const retry = w.wait("q1");
-    let outcome: string | undefined;
-    void retry.then(
-      (r) => { outcome = `resolved:${r}`; },
-      (e: Error) => { outcome = `rejected:${e.message}`; },
-    );
-    w.ack("q1"); // the FIRST send's `saved` frame, still in flight
-    await Promise.resolve();
-    expect(outcome).toBeUndefined(); // must NOT claim the retry was saved
-
-    w.ack("q1"); // now the retry's own frame
-    await expect(retry).resolves.toBe("ok");
-  });
-
-  // A genuine socket close means nothing is coming: the debt must not survive
-  // into the reconnect, or the next save on that question would eat its own ack.
-  it("clears owed frames when the socket actually closes", async () => {
-    const w = createAckWaiter(1000);
-    const first = w.wait("q1");
-    const firstAssertion = expect(first).rejects.toThrow("state unavailable");
-    w.failAll(new Error("state unavailable"), "error-frame");
-    await firstAssertion;
-
-    w.failAll(new Error("disconnected"), "socket-closed"); // socket drops, reconnect
-    const afterReconnect = w.wait("q1");
-    w.ack("q1");
-    await expect(afterReconnect).resolves.toBe("ok");
-  });
-
-  it("fails only the named save when the error frame blames one question", async () => {
-    const w = createAckWaiter(1000);
-    const a = w.wait("q1");
-    const b = w.wait("q2");
-    w.fail("q1", new Error("a choice question takes selected"));
+    const a = w.wait(1, "q1");
+    const b = w.wait(2, "q2");
+    w.fail(1, new Error("a choice question takes selected"));
     await expect(a).rejects.toThrow("a choice question takes selected");
     expect(w.size).toBe(1); // q2 is still waiting for its own answer
-    w.ack("q2");
+    w.ack(2);
     await expect(b).resolves.toBe("ok");
   });
 
-  it("ignores a fail for a question with nothing in flight", () => {
+  it("ignores a fail for a client_seq with nothing in flight", () => {
     const w = createAckWaiter(1000);
-    void w.wait("q1").catch(() => {});
-    w.fail("q2", new Error("boom")); // late/unknown blame must not touch q1
+    void w.wait(1, "q1").catch(() => {});
+    w.fail(2, new Error("boom")); // late/unknown blame must not touch send #1
     expect(w.size).toBe(1);
-    w.failAll(new Error("cleanup"), "socket-closed");
+    w.failAll(new Error("cleanup"));
   });
 
   it("marks an overtaken save superseded and lets its own ack settle nobody", async () => {
     const w = createAckWaiter(1000);
-    const first = w.wait("q1");
-    const second = w.wait("q1");
+    const first = w.wait(1, "q1");
+    const second = w.wait(2, "q1");
     await expect(first).resolves.toBe("superseded");
     expect(w.size).toBe(1);
-    w.ack("q1"); // the first send's ack — the second is still unconfirmed
+    w.ack(1); // the first send's ack — it owns nobody now
     expect(w.size).toBe(1);
-    w.ack("q1"); // now the second send's own ack
+    w.ack(2);
     await expect(second).resolves.toBe("ok");
     expect(w.size).toBe(0);
   });
 
   // Regression: a `saved` frame for a send that already timed out must never
   // confirm the retry that replaced it — that told students "Saved" for an
-  // answer the server had refused.
+  // answer the server had refused. With exact correlation the late frame simply
+  // names a send nobody waits on, and it no longer poisons the retry either.
   it("does not let a timed-out send's late ack confirm the retry", async () => {
     vi.useFakeTimers();
     const w = createAckWaiter(8000);
-    const first = w.wait("q1"); // student saves "A"
+    const first = w.wait(1, "q1"); // student saves "A"
     const firstAssertion = expect(first).rejects.toThrow("ack timeout");
     await vi.advanceTimersByTimeAsync(8000);
     await firstAssertion;
 
-    const retry = w.wait("q1"); // student presses save again with "B"
+    const retry = w.wait(2, "q1"); // student presses save again with "B"
     let outcome: string | undefined;
     void retry.then(
       (r) => { outcome = `resolved:${r}`; },
       (e: Error) => { outcome = `rejected:${e.message}`; },
     );
 
-    w.ack("q1"); // the FIRST send's late `saved` frame finally lands
+    w.ack(1); // the FIRST send's late `saved` frame finally lands
     await vi.advanceTimersByTimeAsync(0);
     expect(outcome).toBeUndefined(); // must NOT claim the retry was saved
 
-    w.fail("q1", new Error("a choice question takes selected")); // the retry's own error frame
-    await vi.advanceTimersByTimeAsync(0);
-    expect(outcome).toBe("rejected:a choice question takes selected");
-    vi.useRealTimers();
-  });
-
-  // Regression (defect 2): the old tombstone was dropped by a timer after one
-  // more timeout window, so a frame arriving after that settled the NEXT live
-  // send "ok". Debt has no expiry — it is only ever paid off by a frame.
-  it("does not let a very late ack confirm a newer send once the tombstone window would have lapsed", async () => {
-    vi.useFakeTimers();
-    const w = createAckWaiter(8000);
-    const first = w.wait("q1"); // t=0, send #1
-    const firstAssertion = expect(first).rejects.toThrow("ack timeout");
-    await vi.advanceTimersByTimeAsync(8000); // t=8s, send #1 times out
-    await firstAssertion;
-
-    await vi.advanceTimersByTimeAsync(1000); // t=9s
-    const second = w.wait("q1"); // send #2, live
-    let outcome: string | undefined;
-    void second.then(
-      (r) => { outcome = `resolved:${r}`; },
-      (e: Error) => { outcome = `rejected:${e.message}`; },
-    );
-
-    await vi.advanceTimersByTimeAsync(7000); // t=16s, old tombstone expiry moment
-    w.ack("q1"); // send #1's frame lands at last
-    await vi.advanceTimersByTimeAsync(0);
-    expect(outcome).toBeUndefined(); // must NOT confirm send #2
-
-    w.ack("q1"); // send #2's own frame
+    w.ack(2); // the retry's own frame — no debt swallowed it
     await vi.advanceTimersByTimeAsync(0);
     expect(outcome).toBe("resolved:ok");
     vi.useRealTimers();
   });
 
+  // The unattributable-error path keeps the socket open, so the frames owed to
+  // the sends it rejected are still on their way. They name their own client_seq
+  // and settle nobody; the retry is confirmed by its own frame, not by theirs.
+  it("does not let an in-flight ack confirm the retry after an unattributable error frame", async () => {
+    const w = createAckWaiter(1000);
+    const first = w.wait(1, "q1");
+    const firstAssertion = expect(first).rejects.toThrow("state unavailable");
+    w.failAll(new Error("state unavailable")); // socket stays open
+    await firstAssertion;
+
+    const retry = w.wait(2, "q1");
+    let outcome: string | undefined;
+    void retry.then(
+      (r) => { outcome = `resolved:${r}`; },
+      (e: Error) => { outcome = `rejected:${e.message}`; },
+    );
+    w.ack(1); // the FIRST send's `saved` frame, still in flight
+    await Promise.resolve();
+    expect(outcome).toBeUndefined(); // must NOT claim the retry was saved
+
+    w.ack(2);
+    await expect(retry).resolves.toBe("ok");
+  });
+
   it("does not confirm after a timeout has already fired", async () => {
     vi.useFakeTimers();
     const w = createAckWaiter(100);
-    const p = w.wait("q1");
+    const p = w.wait(1, "q1");
     const assertion = expect(p).rejects.toThrow("ack timeout");
     await vi.advanceTimersByTimeAsync(100);
-    w.ack("q1"); // late ack: nothing to settle, must not throw
+    w.ack(1); // late ack: nothing to settle, must not throw
     await assertion;
     vi.useRealTimers();
   });
