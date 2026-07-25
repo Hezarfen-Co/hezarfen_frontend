@@ -19,6 +19,7 @@ import { IconAlert, IconChevronLeft, IconChevronRight, IconEdit, IconTrash, Icon
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
+import { ACK_TIMEOUT, createAckWaiter } from "@/lib/create-ack-waiter";
 import { createNow } from "@/lib/create-now";
 import { triggerConfetti } from "@/lib/confetti";
 import { formatDateTime } from "@/lib/format";
@@ -35,7 +36,8 @@ type WsMessage =
   | { type: "finished"; finished_at: number }
   | { type: "expired" }
   | { type: "pong" }
-  | { type: "error"; message: string };
+  // `question_id` is present only when the server could blame one save.
+  | { type: "error"; message: string; question_id?: string };
 
 function formatRemaining(ms: number | null): string {
   if (ms == null) return "—";
@@ -94,6 +96,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
   };
 
   let ws: WebSocket | null = null;
+  // A `send()` is not a save. Every WS answer waits for the server's matching
+  // `saved` frame before the student is told anything was stored.
+  const acks = createAckWaiter();
   // Auto-reconnect a socket that drops mid-sitting: a transient network blip
   // shouldn't freeze the live countdown/state at "disconnected". Rejoining also
   // clears the backend's `left_at` (which any socket close stamps) — so on an
@@ -142,6 +147,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       ws.onerror = null;
       ws.onmessage = null;
       ws.close();
+      acks.failAll(new Error(t("attempt.saveDisconnected")));
     }
     setWsState("connecting");
     const socket = new WebSocket(wsUrl());
@@ -151,16 +157,15 @@ export function ExamRoomWS(props: { exam: Exam }) {
       reconnectAttempts = 0;
       setWsState("connected");
     };
-    socket.onclose = () => {
+    const dropped = () => {
       setWsState("disconnected");
       ws = null;
+      // Anything still waiting for a `saved` frame will never get one.
+      acks.failAll(new Error(t("attempt.saveDisconnected")));
       scheduleReconnect();
     };
-    socket.onerror = () => {
-      setWsState("disconnected");
-      ws = null;
-      scheduleReconnect();
-    };
+    socket.onclose = dropped;
+    socket.onerror = dropped;
 
     socket.onmessage = (event) => {
       try {
@@ -184,6 +189,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
         break;
       }
       case "saved": {
+        acks.ack(msg.question_id);
         setQuestions((prev) =>
           prev.map((q) =>
             q.id === msg.question_id
@@ -207,7 +213,13 @@ export function ExamRoomWS(props: { exam: Exam }) {
         break;
       }
       case "error": {
-        setError(formatApiErrorMessage(msg.message, locale()));
+        const message = formatApiErrorMessage(msg.message, locale());
+        setError(message);
+        // A frame that names a question refused that one save; anything else
+        // is room- or connection-level (bad frame, sitting over, unenrolled),
+        // so everything in flight is treated as rejected — never as saved.
+        if (msg.question_id) acks.fail(msg.question_id, new Error(message));
+        else acks.failAll(new Error(message));
         break;
       }
     }
@@ -251,7 +263,10 @@ export function ExamRoomWS(props: { exam: Exam }) {
     }
   };
 
-  const saveAnswer = async (question: AttemptQuestion, value: string) => {
+  // Resolves `true` only when the server confirmed the write, `false` when a
+  // newer save for the same question took over, and throws when it failed —
+  // the card's "saved" badge hangs off exactly this.
+  const saveAnswer = async (question: AttemptQuestion, value: string): Promise<boolean> => {
     setError("");
     if (ws && ws.readyState === WebSocket.OPEN) {
       const payload: Record<string, unknown> = { type: "answer", question_id: question.id };
@@ -260,27 +275,40 @@ export function ExamRoomWS(props: { exam: Exam }) {
       } else {
         payload.text = value;
       }
+      const acked = acks.wait(question.id);
       sendWs(payload);
+      let result;
+      try {
+        result = await acked;
+      } catch (err) {
+        // A drop or an error frame carries its own words; a timeout has none.
+        const reason = (err as Error).message;
+        setError(reason && reason !== ACK_TIMEOUT ? reason : t("attempt.saveTimeout"));
+        throw err;
+      }
+      if (result === "superseded") return false;
       setQuestions((prev) =>
         prev.map((q) => (q.id === question.id ? { ...q, answer: { ...q.answer, selected: question.kind === "choice" ? value : undefined, text: question.kind === "text" ? value : undefined } } : q)),
       );
-    } else {
-      setPending(true);
-      try {
-        if (question.kind === "choice") {
-          await postExamAttemptAnswer(props.exam.id, { question_id: question.id, selected: value });
-        } else {
-          await postExamAttemptAnswer(props.exam.id, { question_id: question.id, text: value });
-        }
-        const next = await getExamAttempt(props.exam.id);
-        setAttempt(next);
-        const qs = await getExamAttemptQuestions(props.exam.id);
-        setQuestions(qs);
-      } catch (err) {
-        setError(formatApiError(err, locale()));
-      } finally {
-        setPending(false);
+      return true;
+    }
+    setPending(true);
+    try {
+      if (question.kind === "choice") {
+        await postExamAttemptAnswer(props.exam.id, { question_id: question.id, selected: value });
+      } else {
+        await postExamAttemptAnswer(props.exam.id, { question_id: question.id, text: value });
       }
+      const next = await getExamAttempt(props.exam.id);
+      setAttempt(next);
+      const qs = await getExamAttemptQuestions(props.exam.id);
+      setQuestions(qs);
+      return true;
+    } catch (err) {
+      setError(formatApiError(err, locale()));
+      throw err; // not stored — the card must not claim it is
+    } finally {
+      setPending(false);
     }
   };
 
@@ -673,7 +701,7 @@ function QuestionAnswerCardWS(props: {
   index: number;
   question: AttemptQuestion;
   disabled: boolean;
-  onSave: (value: string) => Promise<void>;
+  onSave: (value: string) => Promise<boolean>;
   onSaved?: () => void;
   onSaveImage: (file: File) => Promise<void>;
   onRemoveImage: () => Promise<void>;
@@ -685,7 +713,7 @@ function QuestionAnswerCardWS(props: {
       ? props.question.answer?.selected ?? ""
       : props.question.answer?.text ?? "",
   );
-  const [saved, setSaved] = createSignal(false);
+  const [saveState, setSaveState] = createSignal<"idle" | "saving" | "saved" | "failed">("idle");
   const [drawOpen, setDrawOpen] = createSignal(false);
   const [editScene, setEditScene] = createSignal<DrawScene | null>(null);
   let imageInput: HTMLInputElement | undefined;
@@ -699,15 +727,23 @@ function QuestionAnswerCardWS(props: {
         ? props.question.answer?.selected ?? ""
         : props.question.answer?.text ?? "",
     );
-    setSaved(false);
+    setSaveState("idle");
     setDrawOpen(false);
     setEditScene(null);
   });
 
+  // "Saved" means the server said so. A failure leaves the typed/picked answer
+  // untouched in the card so the student can just press save again.
   const save = async () => {
-    await props.onSave(value());
-    setSaved(true);
-    props.onSaved?.();
+    setSaveState("saving");
+    try {
+      const confirmed = await props.onSave(value());
+      if (!confirmed) return; // a newer save owns the outcome
+      setSaveState("saved");
+      props.onSaved?.();
+    } catch {
+      setSaveState("failed"); // the parent banner carries the reason
+    }
   };
 
   const openNewDrawing = () => {
@@ -745,8 +781,14 @@ function QuestionAnswerCardWS(props: {
       <div class="mb-3 flex flex-wrap items-center gap-2">
         <span class="text-xs font-semibold text-muted-foreground">#{props.index}</span>
         <Badge variant="outline" class="rounded-full">{props.question.points} {t("questions.points")}</Badge>
-        <Show when={saved()}>
+        <Show when={saveState() === "saving"}>
+          <Badge variant="outline" class="rounded-full">{t("attempt.saving")}</Badge>
+        </Show>
+        <Show when={saveState() === "saved"}>
           <Badge variant="outline" class="rounded-full">{t("attempt.saved")}</Badge>
+        </Show>
+        <Show when={saveState() === "failed"}>
+          <Badge variant="destructive" class="rounded-full">{t("attempt.notSaved")}</Badge>
         </Show>
         <Show when={props.question.answer?.updated_at}>
           {(updatedAt) => <Badge variant="outline" class="rounded-full">{t("attempt.savedAt")}: {formatDateTime(updatedAt(), locale())}</Badge>}
@@ -771,7 +813,7 @@ function QuestionAnswerCardWS(props: {
               disabled={props.disabled}
               maxlength={10000}
               onInput={(e) => {
-                setSaved(false);
+                setSaveState("idle");
                 setValue(e.currentTarget.value);
               }}
             />
@@ -833,7 +875,7 @@ function QuestionAnswerCardWS(props: {
               class="flex w-full items-center gap-3 rounded-xl border bg-background/70 px-4 py-3 text-left text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
                 disabled={props.disabled}
                 onClick={() => {
-                  setSaved(false);
+                  setSaveState("idle");
                   setValue(choice.id);
                 }}
               >
@@ -855,14 +897,19 @@ function QuestionAnswerCardWS(props: {
           </For>
         </div>
       </Show>
+      <Show when={saveState() === "failed"}>
+        <p class="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {t("attempt.notSavedHint")}
+        </p>
+      </Show>
       <Button
         type="button"
         size="sm"
         class="mt-4 w-full sm:w-auto"
-        disabled={props.disabled || (props.question.kind === "choice" && value() === "")}
+        disabled={props.disabled || saveState() === "saving" || (props.question.kind === "choice" && value() === "")}
         onClick={() => void save()}
       >
-        {t("attempt.saveAnswer")}
+        {saveState() === "failed" ? t("attempt.saveAnswerRetry") : t("attempt.saveAnswer")}
       </Button>
       <FormDialog
         open={drawOpen()}

@@ -531,6 +531,12 @@ export type MessageKey =
   | "attempt.notStarted"
   | "attempt.unscheduled"
   | "attempt.saved"
+  | "attempt.saving"
+  | "attempt.notSaved"
+  | "attempt.notSavedHint"
+  | "attempt.saveTimeout"
+  | "attempt.saveDisconnected"
+  | "attempt.saveAnswerRetry"
   | "attempt.savedAt"
   | "attempt.serverNow"
   | "attempt.mark"
@@ -1540,6 +1546,12 @@ const en: Dict = {
   "attempt.notStarted": "Start the scheduled exam to see questions.",
   "attempt.unscheduled": "This exam is not scheduled for online sitting.",
   "attempt.saved": "Saved",
+  "attempt.saving": "Saving…",
+  "attempt.notSaved": "Not saved",
+  "attempt.notSavedHint": "Your answer was not saved. It is still written here — press \"Save answer again\" to try once more.",
+  "attempt.saveTimeout": "The exam did not confirm your answer, so it is not saved yet. Your answer is still on screen — please try saving again.",
+  "attempt.saveDisconnected": "The connection dropped before your answer was saved. Your answer is still on screen — please try saving again.",
+  "attempt.saveAnswerRetry": "Save answer again",
   "attempt.savedAt": "Saved at",
   "attempt.serverNow": "Server time",
   "attempt.mark": "Mark",
@@ -2487,6 +2499,12 @@ const tr: Dict = {
   "attempt.notStarted": "Soruları görmek için zamanlı sınavı başlat.",
   "attempt.unscheduled": "Bu sınav çevrim içi oturum için zamanlanmamış.",
   "attempt.saved": "Kaydedildi",
+  "attempt.saving": "Kaydediliyor…",
+  "attempt.notSaved": "Kaydedilmedi",
+  "attempt.notSavedHint": "Cevabın kaydedilmedi. Yazdığın cevap burada duruyor — \"Cevabı tekrar kaydet\"e basıp yeniden dene.",
+  "attempt.saveTimeout": "Sınav cevabını onaylamadı, yani cevabın henüz kaydedilmedi. Cevabın ekranda duruyor — lütfen tekrar kaydetmeyi dene.",
+  "attempt.saveDisconnected": "Cevabın kaydedilmeden bağlantı koptu. Cevabın ekranda duruyor — lütfen tekrar kaydetmeyi dene.",
+  "attempt.saveAnswerRetry": "Cevabı tekrar kaydet",
   "attempt.savedAt": "Kayıt zamanı",
   "attempt.serverNow": "Sunucu saati",
   "attempt.mark": "Not",
