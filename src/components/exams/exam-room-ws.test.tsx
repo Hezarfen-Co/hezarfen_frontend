@@ -75,7 +75,7 @@ vi.mock("@/api/time", () => ({ getTime: async () => ({ now: Date.now() }) }));
 /** Controllable stand-in for the socket the room owns; drives frames by hand. */
 class FakeWebSocket {
   static OPEN = 1;
-  static last: FakeWebSocket | null = null;
+  static instances: FakeWebSocket[] = [];
   readyState = 0;
   sent: string[] = [];
   onopen: (() => void) | null = null;
@@ -83,7 +83,7 @@ class FakeWebSocket {
   onerror: (() => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   constructor(public url: string) {
-    FakeWebSocket.last = this;
+    FakeWebSocket.instances.push(this);
   }
   send(data: string) {
     this.sent.push(data);
@@ -106,14 +106,15 @@ class FakeWebSocket {
 // Fake timers go in only once the room is already up (see the ack-timeout
 // tests), so the same helper has to work on both clocks.
 const tick = () => (vi.isFakeTimers() ? vi.advanceTimersByTimeAsync(0) : new Promise((resolve) => setTimeout(resolve, 0)));
-const socket = () => FakeWebSocket.last!;
+const socket = () => FakeWebSocket.instances.at(-1)!;
+const sockets = () => FakeWebSocket.instances.length;
 const closedBanners = () => screen.queryAllByText("This attempt is closed. Answers are read-only.");
 const choice = (name: string) => screen.getByRole("button", { name: new RegExp(name) }) as HTMLButtonElement;
 const badge = (text: string) => screen.queryAllByText(text).length > 0;
 
 /** Mount, press Start, land inside the room with the stale snapshot loaded. */
 async function openRoom() {
-  render(() => (
+  const mounted = render(() => (
     <PreferencesProvider>
       <ExamRoomWS exam={exam as never} />
     </PreferencesProvider>
@@ -121,6 +122,7 @@ async function openRoom() {
   fireEvent.click(await screen.findByRole("button", { name: "Start exam" }));
   await tick();
   await tick();
+  return mounted;
 }
 
 const liveState = {
@@ -135,15 +137,16 @@ const liveState = {
 
 /** Room open, socket in, one `state` frame delivered — the writable baseline. */
 async function openWritableRoom() {
-  await openRoom();
+  const mounted = await openRoom();
   socket().open();
   socket().deliver(liveState);
   await tick();
+  return mounted;
 }
 
 beforeEach(() => {
   attemptRow = staleAttempt();
-  FakeWebSocket.last = null;
+  FakeWebSocket.instances = [];
   vi.stubGlobal("WebSocket", FakeWebSocket);
 });
 afterEach(() => {
@@ -289,4 +292,108 @@ test("a timed-out send leaves no debt that swallows the next save", async () => 
   await tick();
   expect(badge("Saved")).toBe(true);
   expect(badge("Not saved")).toBe(false);
+});
+
+// Reconnect. Same fake-timer discipline: the clock goes fake only once the room
+// is up, so only the backoff timers are hand-driven.
+const drop = () => socket().onclose?.();
+
+test("a socket that drops mid-sitting reconnects and the room recovers", async () => {
+  await openWritableRoom();
+  vi.useFakeTimers();
+
+  drop();
+  await tick();
+  expect(badge("Disconnected")).toBe(true);
+
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(sockets()).toBe(2); // a fresh socket, not the dead one
+  socket().open();
+  socket().deliver({ ...liveState, remaining_ms: HOUR - 60_000 });
+  await tick();
+
+  // Recovered: live again, still writable, clock moving rather than frozen.
+  expect(badge("Connected")).toBe(true);
+  expect(closedBanners()).toEqual([]);
+  expect(choice("Paris").disabled).toBe(false);
+  expect(badge("00:59:00")).toBe(true);
+});
+
+test("backoff grows between failed opens and resets after one succeeds", async () => {
+  await openWritableRoom();
+  vi.useFakeTimers();
+
+  drop();
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(sockets()).toBe(2);
+
+  // That one never opened: the next wait must be longer than the first.
+  drop();
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(sockets()).toBe(2);
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(sockets()).toBe(3);
+
+  // A successful open clears the debt, so a later blip retries fast again.
+  socket().open();
+  await tick();
+  drop();
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(sockets()).toBe(4);
+});
+
+test("a socket we closed ourselves never reconnects", async () => {
+  const mounted = await openWritableRoom();
+  vi.useFakeTimers();
+
+  const ours = socket();
+  mounted.unmount();
+  ours.onclose?.(); // the close WE asked for must not look like a drop
+
+  await vi.advanceTimersByTimeAsync(60_000);
+  expect(sockets()).toBe(1);
+});
+
+test("a save in flight when the socket drops fails toward not saved", async () => {
+  await openWritableRoom();
+  await saveParis();
+  expect(badge("Saving…")).toBe(true);
+
+  drop();
+  await tick();
+  expect(badge("Not saved")).toBe(true);
+  expect(badge("Saved")).toBe(false);
+  expect(screen.getByText(/connection dropped before your answer was saved/)).toBeTruthy();
+});
+
+// Finish / expiry. A terminal frame is terminal: a later `state` frame carries
+// `left_at: null`, and that must not read as "writable" on a sitting that is over.
+test("a finished frame closes the sheet and a later state frame does not reopen it", async () => {
+  await openWritableRoom();
+  socket().deliver({ type: "finished", finished_at: Date.now() });
+  await tick();
+
+  expect(closedBanners().length).toBeGreaterThan(0);
+  expect(choice("Paris").disabled).toBe(true);
+  expect(badge("Submitted")).toBe(true);
+
+  socket().deliver({ ...liveState, status: "submitted" });
+  await tick();
+  expect(closedBanners().length).toBeGreaterThan(0);
+  expect(choice("Paris").disabled).toBe(true);
+});
+
+test("an expired frame zeroes the clock and a later state frame does not reopen it", async () => {
+  await openWritableRoom();
+  socket().deliver({ type: "expired" });
+  await tick();
+
+  expect(closedBanners().length).toBeGreaterThan(0);
+  expect(choice("Paris").disabled).toBe(true);
+  expect(badge("00:00:00")).toBe(true);
+
+  socket().deliver({ ...liveState, status: "expired", remaining_ms: 0 });
+  await tick();
+  expect(closedBanners().length).toBeGreaterThan(0);
+  expect(choice("Paris").disabled).toBe(true);
 });
