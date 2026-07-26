@@ -12,8 +12,16 @@ Bilingual codebase: Turkish UI labels, English code + commits.
 - **SolidJS, not React.** Components run once. No re-render. Signals = functions.
   Load `solidjs-pitfalls` skill before writing components.
 - **Podman, not Docker.** Never suggest docker. `podman build`, `podman compose`.
+- **Bun only, never npm/npx/yarn/pnpm.** Install/run/exec with `bun add`,
+  `bun run`, `bunx` — this repo has no `package-lock.json`/`yarn.lock`/
+  `pnpm-lock.yaml`, only `bun.lock`. Translate any copy-pasted `npm ...` /
+  `npx ...` snippet to the `bun`/`bunx` equivalent before running it.
 - **Pre-approved commands:** `bun run build`, `tsc --noEmit`, `vite build`,
-  test runs, lint. Run without asking. Only commit needs approval.
+  test runs, lint — run without asking. **Commits are also pre-approved**
+  (see `commit-workflow` skill) — run `git commit` directly once the message
+  format and pre-commit build check pass, no per-commit ask. Only genuinely
+  risky git ops (force-push, history rewrite, branch deletion, hard
+  reset/clean that would discard work) need explicit approval.
 
 ## Skills
 
