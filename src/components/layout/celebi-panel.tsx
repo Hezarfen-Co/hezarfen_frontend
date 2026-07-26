@@ -108,8 +108,9 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
 
   return (
     <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("ai.title")} description={t("ai.description")}>
-      <div class="flex flex-col gap-4">
-        <Show
+      <div class="flex h-full min-h-0 flex-col">
+        <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+          <Show
           when={messages().length > 0}
           fallback={
             <div class="space-y-3">
@@ -159,13 +160,16 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
               )}
             </For>
           </div>
-        </Show>
-        <CelebiComposer
-          value={draft()}
-          onInput={setDraft}
-          onSubmit={() => void send()}
-          disabled={!draft().trim() || sending()}
-        />
+          </Show>
+        </div>
+        <div class="mt-4 shrink-0">
+          <CelebiComposer
+            value={draft()}
+            onInput={setDraft}
+            onSubmit={() => void send()}
+            disabled={!draft().trim() || sending()}
+          />
+        </div>
       </div>
     </SidePanel>
   );
