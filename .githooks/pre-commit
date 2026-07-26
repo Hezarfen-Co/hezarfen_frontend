@@ -1,0 +1,8 @@
+#!/bin/sh
+# Fail the commit if .codex/skills has drifted from .claude/skills.
+# Enable once per clone: git config core.hooksPath .githooks
+bun run scripts/sync-skills.ts --check || {
+  echo ""
+  echo "  Skill mirror drift blocked the commit. Fix with:  bun run sync-skills"
+  exit 1
+}
