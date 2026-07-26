@@ -1,6 +1,7 @@
 import { For, Show, createSignal, onCleanup } from "solid-js";
 import { getChatbotMessageById, postChatbotMessage, postChatbotThread, type ChatbotMessage } from "@/api/chatbot";
 import { formatApiError } from "@/api/client";
+import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { Button } from "@/components/ui/button";
 import { IconAlert, IconBotSquare, IconSend, IconSparkles } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -114,7 +115,15 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             <For each={messages()}>
               {(message) => (
                 <div class={message.role === "user" ? "ml-8 rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground" : "mr-6 rounded-2xl rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
-                  <Show when={message.role === "assistant" && message.status === "pending"} fallback={<p class="whitespace-pre-wrap leading-6">{message.status === "failed" && !message.content ? failureMessage(message.error_code) : message.content}</p>}>
+                  <Show when={message.role === "assistant" && message.status === "pending"} fallback={
+                    <Show when={message.role === "assistant" && message.status === "failed" && !message.content} fallback={
+                      <Show when={message.role === "assistant"} fallback={<p class="whitespace-pre-wrap leading-6">{message.content}</p>}>
+                        <CelebiMarkdown text={message.content} />
+                      </Show>
+                    }>
+                      <p class="whitespace-pre-wrap leading-6">{failureMessage(message.error_code)}</p>
+                    </Show>
+                  }>
                     <span class="flex items-center gap-2 text-muted-foreground"><IconBotSquare class="h-4 w-4 text-primary" /><span class="animate-pulse">•••</span></span>
                   </Show>
                   <Show when={message.role === "assistant" && message.status === "failed"}>
