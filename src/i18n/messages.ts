@@ -15,6 +15,11 @@ export type MessageKey =
   | "ai.thinking1"
   | "ai.thinking2"
   | "ai.thinking3"
+  | "ai.hint"
+  | "ai.suggest1"
+  | "ai.suggest2"
+  | "ai.suggest3"
+  | "ai.suggest4"
   | "nav.home"
   | "nav.notes"
   | "nav.events"
@@ -961,6 +966,11 @@ const en: Dict = {
   "ai.thinking1": "Çelebi is thinking…",
   "ai.thinking2": "Looking into it…",
   "ai.thinking3": "Almost there…",
+  "ai.hint": "Enter to send · Shift+Enter for a new line · AI-generated",
+  "ai.suggest1": "What are my classes today?",
+  "ai.suggest2": "Which exams are coming up?",
+  "ai.suggest3": "Do I have any missing homework?",
+  "ai.suggest4": "How is my attendance this term?",
   "nav.home": "Home",
   "nav.notes": "Notes",
   "nav.events": "Events",
@@ -1919,6 +1929,11 @@ const tr: Dict = {
   "ai.thinking1": "Çelebi düşünüyor…",
   "ai.thinking2": "Araştırıyor…",
   "ai.thinking3": "Neredeyse hazır…",
+  "ai.hint": "Enter gönder · Shift+Enter alt satır · Yapay zekâ üretimi",
+  "ai.suggest1": "Bugün hangi derslerim var?",
+  "ai.suggest2": "Yaklaşan sınavlarım neler?",
+  "ai.suggest3": "Eksik ödevim var mı?",
+  "ai.suggest4": "Bu dönem devamsızlığım nasıl?",
   "nav.home": "Ana sayfa",
   "nav.notes": "Defter",
   "nav.events": "Etkinlikler",

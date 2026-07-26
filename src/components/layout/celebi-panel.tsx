@@ -1,12 +1,12 @@
 import { For, Show, createSignal, onCleanup } from "solid-js";
 import { getChatbotMessageById, postChatbotMessage, postChatbotThread, type ChatbotMessage } from "@/api/chatbot";
 import { formatApiError } from "@/api/client";
+import { CelebiComposer } from "@/components/layout/celebi-composer";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
+import { CelebiSuggestions } from "@/components/layout/celebi-suggestions";
 import { CelebiThinkingLabel } from "@/components/layout/celebi-thinking-label";
-import { Button } from "@/components/ui/button";
-import { IconAlert, IconBotSquare, IconCopy, IconSend, IconSparkles } from "@/components/ui/icons";
+import { IconAlert, IconBotSquare, IconCopy, IconSparkles } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
-import { Textarea } from "@/components/ui/textarea";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 type PanelMessage = Pick<ChatbotMessage, "id" | "role" | "status" | "content" | "truncated" | "error_code">;
@@ -60,8 +60,9 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
 
   onCleanup(stopPolling);
 
-  const send = async () => {
-    const content = draft().trim();
+  const send = async (override?: string) => {
+    // A suggestion chip sends its own text without ever touching the draft.
+    const content = (override ?? draft()).trim();
     if (!content || sending()) return;
 
     setSending(true);
@@ -111,12 +112,15 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
         <Show
           when={messages().length > 0}
           fallback={
-            <div class="relative overflow-hidden rounded-2xl border border-border bg-card px-5 py-9 text-center text-sm text-muted-foreground">
-              <div class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-              <span class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                <IconSparkles class="h-5 w-5" />
-              </span>
-              {t("ai.empty")}
+            <div class="space-y-3">
+              <div class="relative overflow-hidden rounded-2xl border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">
+                <div class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+                <span class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                  <IconSparkles class="h-5 w-5" />
+                </span>
+                {t("ai.empty")}
+              </div>
+              <CelebiSuggestions onPick={(text) => void send(text)} />
             </div>
           }
         >
@@ -156,15 +160,12 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             </For>
           </div>
         </Show>
-        <form class="sticky bottom-0 rounded-2xl border border-border bg-card p-2 shadow-sm" onSubmit={(event) => { event.preventDefault(); void send(); }}>
-          <Textarea rows={3} class="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0" value={draft()} placeholder={t("ai.placeholder")} onInput={(event) => setDraft(event.currentTarget.value)} />
-          <div class="flex items-center justify-between px-1 pt-2">
-            <span class="text-xs text-muted-foreground">{locale() === "tr" ? "Çelebi yanıtları yapay zekâ tarafından üretilir." : "Çelebi responses are AI-generated."}</span>
-            <Button type="submit" size="sm" class="rounded-xl" disabled={!draft().trim() || sending()}>
-              <IconSend class="mr-1.5 h-4 w-4" />{t("ai.send")}
-            </Button>
-          </div>
-        </form>
+        <CelebiComposer
+          value={draft()}
+          onInput={setDraft}
+          onSubmit={() => void send()}
+          disabled={!draft().trim() || sending()}
+        />
       </div>
     </SidePanel>
   );
