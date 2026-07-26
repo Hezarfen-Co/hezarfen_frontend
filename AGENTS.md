@@ -26,7 +26,7 @@ Bilingual codebase: Turkish UI labels, English code + commits.
 ## Skills
 
 Load on demand by area — `solidjs-pitfalls` | `ui-conventions` | `api-layer` |
-`commit-workflow` | `dashboard-design`. Each under `.codex/skills/<name>/SKILL.md`;
-Claude Code uses same under `.claude/skills/`.
+`commit-workflow` | `dashboard-design`. Each under `.claude/skills/<name>/SKILL.md`;
+Codex uses same under `.codex/skills/`.
 
 Project docs under `docs/` for deeper reference.
