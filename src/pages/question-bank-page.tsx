@@ -36,6 +36,9 @@ function QuestionBankContent() {
   const auth = useAuth();
   const t = useT();
   const { locale } = usePreferences();
+  createEffect(() => {
+    document.title = `${t("nav.questionBank")} · Hezarfen`;
+  });
   const [ownerFilter, setOwnerFilter] = createSignal<"all" | "me">("all");
   const [subjectFilter, setSubjectFilter] = createSignal("all");
   const [visibilityFilter, setVisibilityFilter] = createSignal<"all" | "private" | "school">("all");

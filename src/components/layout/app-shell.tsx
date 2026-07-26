@@ -47,7 +47,9 @@ export function AppShell(props: ParentProps) {
     if (path === "/homework" || path.startsWith("/homework/")) return `${t("nav.group.classes")} / ${t("nav.homework")}`;
     if (path === "/events" || path.startsWith("/events/")) return `${t("nav.group.classes")} / ${t("nav.events")}`;
     if (path === "/exams" || path.startsWith("/exams/")) return `${t("nav.group.classes")} / ${t("nav.exams")}`;
+    if (path === "/question-bank") return `${t("nav.group.classes")} / ${t("nav.questionBank")}`;
     if (path === "/calendar") return `${t("nav.group.classes")} / ${t("nav.calendar")}`;
+    if (path === "/appointments") return `${t("nav.group.classes")} / ${t("nav.appointments")}`;
     if (path === "/students") return `${t("nav.group.students")} / ${t("nav.myStudents")}`;
     if (path === "/questions" || path.startsWith("/questions/")) return `${t("nav.group.community")} / ${t("pool.title")}`;
     if (path.startsWith("/exam-room/")) return t("nav.exams");
