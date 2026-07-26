@@ -12,6 +12,9 @@ export type MessageKey =
   | "ai.unavailable"
   | "ai.copy"
   | "ai.copied"
+  | "ai.thinking1"
+  | "ai.thinking2"
+  | "ai.thinking3"
   | "nav.home"
   | "nav.notes"
   | "nav.events"
@@ -955,6 +958,9 @@ const en: Dict = {
   "ai.unavailable": "Çelebi is temporarily unavailable. Please try again shortly.",
   "ai.copy": "Copy",
   "ai.copied": "Copied",
+  "ai.thinking1": "Çelebi is thinking…",
+  "ai.thinking2": "Looking into it…",
+  "ai.thinking3": "Almost there…",
   "nav.home": "Home",
   "nav.notes": "Notes",
   "nav.events": "Events",
@@ -1910,6 +1916,9 @@ const tr: Dict = {
   "ai.unavailable": "Çelebi şu anda kullanılamıyor. Lütfen biraz sonra tekrar dene.",
   "ai.copy": "Kopyala",
   "ai.copied": "Kopyalandı",
+  "ai.thinking1": "Çelebi düşünüyor…",
+  "ai.thinking2": "Araştırıyor…",
+  "ai.thinking3": "Neredeyse hazır…",
   "nav.home": "Ana sayfa",
   "nav.notes": "Defter",
   "nav.events": "Etkinlikler",

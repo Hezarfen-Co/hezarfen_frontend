@@ -2,6 +2,7 @@ import { For, Show, createSignal, onCleanup } from "solid-js";
 import { getChatbotMessageById, postChatbotMessage, postChatbotThread, type ChatbotMessage } from "@/api/chatbot";
 import { formatApiError } from "@/api/client";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
+import { CelebiThinkingLabel } from "@/components/layout/celebi-thinking-label";
 import { Button } from "@/components/ui/button";
 import { IconAlert, IconBotSquare, IconCopy, IconSend, IconSparkles } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -132,7 +133,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
                       <p class="whitespace-pre-wrap leading-6">{failureMessage(message.error_code)}</p>
                     </Show>
                   }>
-                    <span class="flex items-center gap-2 text-muted-foreground"><IconBotSquare class="h-4 w-4 text-primary" /><span class="animate-pulse">•••</span></span>
+                    <span class="flex items-center gap-2 text-muted-foreground"><IconBotSquare class="h-4 w-4 text-primary" /><span class="animate-pulse"><CelebiThinkingLabel /></span></span>
                   </Show>
                   <Show when={message.role === "assistant" && message.status === "failed"}>
                     <span class="mt-2 flex items-center gap-1.5 text-xs text-destructive"><IconAlert class="h-3.5 w-3.5" />{failureMessage(message.error_code)}</span>
