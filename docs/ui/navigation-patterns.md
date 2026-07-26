@@ -11,7 +11,7 @@ Dashboard pages are **observation-only**. They must not contain create, edit,
 delete, or other mutation actions. Links may navigate to list/detail routes;
 they must not open create/edit panels from the homepage.
 
-Structure (see `docs/ui-redesign-tokens.md` → Dashboard and
+Structure (see `docs/ui/ui-redesign-tokens.md` → Dashboard and
 `src/pages/dashboard-page.tsx`):
 
 1. Compact header (greeting, neutral role chip, date).
@@ -23,7 +23,7 @@ Rules:
 - Monochrome/grayscale chrome; semantic color only for status badges.
 - Portal cards: horizontal dense row; desktop title and count as `Title | N`.
 - No redundant KPI strip under cards, no activity charts, no guide/marketing CTA blocks on the homepage.
-- Card set is role-scoped and must stay aligned with nav/`docs/role-scope-matrix.md`
+- Card set is role-scoped and must stay aligned with nav/`docs/auth/role-scope-matrix.md`
   (e.g. personal `/work` for teacher–manager only; admin uses staff-work + users).
 - Attention items are time-sensitive exams/events only; empty states are informational text.
 

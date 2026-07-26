@@ -1,16 +1,23 @@
-# CLAUDE.md
+# CLAUDE.md — Hezarfen Frontend
 
-Hezarfen Frontend — SolidJS + TypeScript + TanStack Router + shadcn-solid, built
-with Vite/Bun. Read-only status-board dashboard; Turkish/English i18n.
+SolidJS + TypeScript + TanStack Router + shadcn-solid, Vite/Bun.
+Read-only status-board dashboard; Turkish/English i18n.
+Bilingual codebase: Turkish UI labels, English code + commits.
 
-**The rulebook is `AGENTS.md`** — one source of truth for every agent. Read it first.
+**AGENTS.md mirrors this for Codex/OpenCode.** Update CLAUDE.md first, then copy.
 
-@AGENTS.md
+## Gotchas
 
-Detailed, area-specific procedures load on demand as Skills under `.claude/skills/`
-(commit-workflow, api-layer, solidjs-pitfalls, ui-conventions, dashboard-design).
-Claude Code surfaces them automatically when a task matches; you can also open any
-`SKILL.md` directly. Deeper design docs live under `docs/`.
+- **SolidJS, not React.** Components run once. No re-render. Signals = functions.
+  Load `solidjs-pitfalls` skill before writing components.
+- **Podman, not Docker.** Never suggest docker. `podman build`, `podman compose`.
+- **Pre-approved commands:** `bun run build`, `tsc --noEmit`, `vite build`,
+  test runs, lint. Run without asking. Only commit needs approval.
 
-Keep this file thin. Put durable rules in `AGENTS.md`, detailed procedures in a
-Skill — not here.
+## Skills
+
+Load on demand by area — `solidjs-pitfalls` | `ui-conventions` | `api-layer` |
+`commit-workflow` | `dashboard-design`. Each under `.claude/skills/<name>/SKILL.md`;
+Codex uses same under `.codex/skills/`.
+
+Project docs under `docs/` for deeper reference.

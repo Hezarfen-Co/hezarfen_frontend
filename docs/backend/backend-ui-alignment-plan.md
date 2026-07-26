@@ -41,9 +41,9 @@ This document is now a completed archive. It records the backend contract alignm
 
 ## Current Follow-Up Documents
 
-- Active interaction rules: `docs/navigation-patterns.md`.
-- Active visual reference: `docs/ui-redesign-tokens.md`.
-- Active frontend backlog and dashboard plan: `docs/frontend-next-steps.md`.
+- Active interaction rules: `docs/ui/navigation-patterns.md`.
+- Active visual reference: `docs/ui/ui-redesign-tokens.md`.
+- Active frontend backlog and dashboard plan: `docs/frontend/frontend-next-steps.md`.
 
 ## Remaining Commit Order
 

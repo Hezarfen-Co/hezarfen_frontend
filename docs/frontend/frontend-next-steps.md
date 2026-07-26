@@ -5,7 +5,7 @@ role/request audits, dense table work, side panels, notebook UI, schedule
 validation, and list filtering cleanup.
 
 Active backend-refresh work is tracked in
-`docs/backend-contract-refresh-plan.md`.
+`docs/backend/backend-contract-refresh-plan.md`.
 
 ## Completed State
 
