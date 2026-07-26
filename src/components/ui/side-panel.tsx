@@ -1,7 +1,9 @@
 import { Dialog as DialogPrimitive } from "@kobalte/core/dialog";
-import type { ParentProps } from "solid-js";
+import { createEffect, onCleanup, type ParentProps } from "solid-js";
 import { IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+
+let openPanelCount = 0;
 
 export function SidePanel(
   props: ParentProps<{
@@ -14,6 +16,22 @@ export function SidePanel(
     size?: "default" | "wide" | "xl";
   }>,
 ) {
+  // Kobalte's modal Dialog hides the app with aria-hidden before its focus
+  // scope can move focus into this portalled panel. Chromium correctly blocks
+  // that transition when the opener still owns focus. `inert` makes the app
+  // unfocusable as well as hidden to assistive tech, while the portal remains
+  // interactive outside #root.
+  createEffect(() => {
+    if (!props.open || typeof document === "undefined") return;
+    const root = document.getElementById("root");
+    openPanelCount += 1;
+    root?.setAttribute("inert", "");
+    onCleanup(() => {
+      openPanelCount -= 1;
+      if (openPanelCount === 0) root?.removeAttribute("inert");
+    });
+  });
+
   const width = () => {
     if (props.size === "xl") return "max-w-[min(48rem,100vw)]";
     if (props.size === "wide") return "max-w-[min(42rem,100vw)]";
@@ -21,7 +39,7 @@ export function SidePanel(
   };
 
   return (
-    <DialogPrimitive open={props.open} onOpenChange={props.onOpenChange}>
+    <DialogPrimitive open={props.open} onOpenChange={props.onOpenChange} modal={false} preventScroll>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/40 backdrop-blur-md transition-opacity duration-200 data-closed:opacity-0 data-expanded:opacity-100" />
         <DialogPrimitive.Content
