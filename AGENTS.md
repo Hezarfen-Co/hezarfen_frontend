@@ -7,6 +7,12 @@ Keep this file lightweight — hard constraints and repo gotchas only. Detailed
 procedures live as loadable references (see **On-demand references** below); open
 the relevant one when a task touches that area instead of inlining it here.
 
+## Approval scope
+
+User pre-approves workspace edits and verification commands (`bun run build`,
+`tsc --noEmit`, `vite build`, test runs, lint) — run them without asking. The
+only mandatory approval gate is at commit time: see **commit-workflow**.
+
 ## Stack (hard constraints)
 
 - SolidJS + TypeScript, Vite scaffold.

@@ -178,6 +178,9 @@ function DashboardContent() {
   const auth = useAuth();
   const t = useT();
   const { locale } = usePreferences();
+  const copy = (tr: string, en: string) => (locale() === "tr" ? tr : en);
+  const countLabel = (count: number, tr: string, en: string) => `${count} ${copy(tr, en)}`;
+  const percentLabel = (value: number) => (locale() === "tr" ? `%${value}` : `${value}%`);
   const user = () => auth.user()!;
   const role = () => user().role;
   const now = createNow();
@@ -523,9 +526,9 @@ function DashboardContent() {
     const todayCount = items.filter((i) => i.status === "today").length;
     const soonCount = items.filter((i) => i.status === "soon").length;
     return [
-      { id: "active", label: "Aktif Program", value: activeCount, colorClass: "bg-emerald-500" },
-      { id: "today", label: "Bugünkü Sınav / Etkinlik", value: todayCount, colorClass: "bg-amber-500" },
-      { id: "soon", label: "Yakında (7 Gün İçi)", value: soonCount, colorClass: "bg-indigo-500" },
+      { id: "active", label: copy("Aktif Program", "Active schedule"), value: activeCount, colorClass: "bg-emerald-500" },
+      { id: "today", label: copy("Bugünkü Sınav / Etkinlik", "Today exams / events"), value: todayCount, colorClass: "bg-amber-500" },
+      { id: "soon", label: copy("Yakında (7 Gün İçi)", "Next 7 days"), value: soonCount, colorClass: "bg-indigo-500" },
     ];
   });
 
@@ -535,23 +538,23 @@ function DashboardContent() {
     const today = items.filter((i) => i.status === "today").length;
     const soon = items.filter((i) => i.status === "soon").length;
     return [
-      { id: "active", label: "Aktif", value: active, colorClass: "bg-emerald-500" },
-      { id: "today", label: "Bugün", value: today, colorClass: "bg-amber-500" },
-      { id: "soon", label: "Yakında", value: soon, colorClass: "bg-indigo-500" },
+      { id: "active", label: copy("Aktif", "Active"), value: active, colorClass: "bg-emerald-500" },
+      { id: "today", label: copy("Bugün", "Today"), value: today, colorClass: "bg-amber-500" },
+      { id: "soon", label: copy("Yakında", "Upcoming"), value: soon, colorClass: "bg-indigo-500" },
     ];
   });
 
   const weeklyDensityItems = createMemo<ChartBarItem[]>(() => {
     const days: { id: string; label: string; count: number }[] = [];
     const today = new Date();
-    const dayNames = ["Pzr", "Pzt", "Sal", "Çrş", "Prş", "Cum", "Cmt"];
+    const dayNames = locale() === "tr" ? ["Pzr", "Pzt", "Sal", "Çrş", "Prş", "Cum", "Cmt"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     for (let i = 0; i < 7; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
       const dayEnd = dayStart + 86400000;
-      const dayLabel = i === 0 ? "Bugün" : `${dayNames[d.getDay()]} ${d.getDate()}`;
+      const dayLabel = i === 0 ? copy("Bugün", "Today") : `${dayNames[d.getDay()]} ${d.getDate()}`;
 
       let count = 0;
       for (const exam of visibleExams()) {
@@ -580,7 +583,7 @@ function DashboardContent() {
       id: d.id,
       label: d.label,
       value: d.count,
-      formattedValue: `${d.count} Aktivite`,
+      formattedValue: `${d.count} ${copy("Aktivite", "activities")}`,
       colorClass: d.count > 0 ? "bg-emerald-500" : "bg-muted-foreground/30",
     }));
   });
@@ -609,14 +612,14 @@ function DashboardContent() {
       return courseWithAvg.map((c) => ({
         label: c.course.title,
         value: c.average!,
-        formattedValue: `${Math.round(c.average! * 10) / 10} Puan`,
+        formattedValue: `${Math.round(c.average! * 10) / 10} ${copy("Puan", "points")}`,
       }));
     }
 
     return entries.slice(-6).map((e) => ({
       label: e.label,
       value: e.value,
-      formattedValue: `${Math.round(e.value * 10) / 10} Puan`,
+      formattedValue: `${Math.round(e.value * 10) / 10} ${copy("Puan", "points")}`,
     }));
   });
 
@@ -626,31 +629,31 @@ function DashboardContent() {
     return [
       {
         id: "gpa",
-        label: "Not Ortalaması",
-        value: avgLabel() === "—" ? "Kayıt yok" : avgLabel(),
-        change: avg != null ? (avg >= 70 ? "Yüksek" : "Normal") : undefined,
+        label: copy("Not Ortalaması", "Average grade"),
+        value: avgLabel() === "—" ? copy("Kayıt yok", "No records") : avgLabel(),
+        change: avg != null ? (avg >= 70 ? copy("Yüksek", "High") : copy("Normal", "Normal")) : undefined,
         isPositive: avg != null ? avg >= 50 : true,
-        subtext: "Genel ders başarı ortalaması",
+        subtext: copy("Genel ders başarı ortalaması", "Overall course average"),
       },
       {
         id: "attendance",
-        label: "Derse Katılım",
-        value: att != null ? `%${att}` : "Kayıt yok",
-        change: att != null ? (att >= 85 ? "Düzenli" : "Takip Edilmeli") : undefined,
+        label: copy("Derse Katılım", "Attendance"),
+        value: att != null ? percentLabel(att) : copy("Kayıt yok", "No records"),
+        change: att != null ? (att >= 85 ? copy("Düzenli", "Regular") : copy("Takip Edilmeli", "Needs attention")) : undefined,
         isPositive: att != null ? att >= 85 : true,
-        subtext: "Devamlılık oranı",
+        subtext: copy("Devamlılık oranı", "Attendance rate"),
       },
       {
         id: "notes",
-        label: "Ders Notları",
-        value: noteCount() > 0 ? `${noteCount()} Not` : "Kayıt yok",
-        subtext: "Kayıtlı notlar",
+        label: copy("Ders Notları", "Course notes"),
+        value: noteCount() > 0 ? countLabel(noteCount(), "Not", "notes") : copy("Kayıt yok", "No records"),
+        subtext: copy("Kayıtlı notlar", "Saved notes"),
       },
       {
         id: "courses",
-        label: "Kayıtlı Dersler",
-        value: scopedCourses().length > 0 ? `${scopedCourses().length} Ders` : "Kayıt yok",
-        subtext: "Aktif müfredat programı",
+        label: copy("Kayıtlı Dersler", "Enrolled courses"),
+        value: scopedCourses().length > 0 ? countLabel(scopedCourses().length, "Ders", "courses") : copy("Kayıt yok", "No records"),
+        subtext: copy("Aktif müfredat programı", "Active curriculum"),
       },
     ];
   });
@@ -658,34 +661,34 @@ function DashboardContent() {
   const teacherMetricCards = createMemo<ChartMetricCardItem[]>(() => {
     const att = realAttendanceRate();
     return [
-      { id: "avgMark", label: "Sınıf Not Ortalaması", value: "78.4", change: "+1.5%", isPositive: true, subtext: "Sorumlu sınıflar" },
+      { id: "avgMark", label: copy("Sınıf Not Ortalaması", "Class average"), value: "78.4", change: "+1.5%", isPositive: true, subtext: copy("Sorumlu sınıflar", "Assigned classes") },
       {
         id: "attRate",
-        label: "Sınıf Katılım Oranı",
-        value: att != null ? `%${att}` : "Kayıt yok",
-        change: att != null ? (att >= 85 ? "Yüksek" : "Takip Edilmeli") : undefined,
+        label: copy("Sınıf Katılım Oranı", "Class attendance rate"),
+        value: att != null ? percentLabel(att) : copy("Kayıt yok", "No records"),
+        change: att != null ? (att >= 85 ? copy("Yüksek", "High") : copy("Takip Edilmeli", "Needs attention")) : undefined,
         isPositive: att != null ? att >= 85 : true,
-        subtext: "Ortalama devam",
+        subtext: copy("Ortalama devam", "Average attendance"),
       },
-      { id: "activeExams", label: "Sınav Sayısı", value: `${examCount()} Sınav`, subtext: "Okunan ve canlı" },
-      { id: "myCourses", label: "Verilen Dersler", value: `${scopedCourses().length} Ders`, subtext: "Aktif ders yükü" },
+      { id: "activeExams", label: copy("Sınav Sayısı", "Exam count"), value: countLabel(examCount(), "Sınav", "exams"), subtext: copy("Okunan ve canlı", "Graded and live") },
+      { id: "myCourses", label: copy("Verilen Dersler", "Assigned courses"), value: countLabel(scopedCourses().length, "Ders", "courses"), subtext: copy("Aktif ders yükü", "Active teaching load") },
     ];
   });
 
   const managerMetricCards = createMemo<ChartMetricCardItem[]>(() => {
     const att = realAttendanceRate();
     return [
-      { id: "schoolAvg", label: "Okul Başarı Ortalaması", value: "81.2", change: "+2.4%", isPositive: true, subtext: "Kurum ortalaması" },
+      { id: "schoolAvg", label: copy("Okul Başarı Ortalaması", "School average"), value: "81.2", change: "+2.4%", isPositive: true, subtext: copy("Kurum ortalaması", "Institution average") },
       {
         id: "overallAtt",
-        label: "Genel Devamlılık",
-        value: att != null ? `%${att}` : "Kayıt yok",
-        change: att != null ? (att >= 85 ? "Yüksek" : "Takip Edilmeli") : undefined,
+        label: copy("Genel Devamlılık", "Overall attendance"),
+        value: att != null ? percentLabel(att) : copy("Kayıt yok", "No records"),
+        change: att != null ? (att >= 85 ? copy("Yüksek", "High") : copy("Takip Edilmeli", "Needs attention")) : undefined,
         isPositive: att != null ? att >= 85 : true,
-        subtext: "Tüm sınıflar",
+        subtext: copy("Tüm sınıflar", "All classes"),
       },
-      { id: "staffWork", label: "Personel Mesai", value: "88.0%", subtext: "Tamamlanan vardiya" },
-      { id: "totalPrograms", label: "Program Sayısı", value: `${courseCount() + studyCount() + clubCount()} Program`, subtext: "Ders, etüt, kulüp" },
+      { id: "staffWork", label: copy("Personel Mesai", "Staff work"), value: "88.0%", subtext: copy("Tamamlanan vardiya", "Completed shifts") },
+      { id: "totalPrograms", label: copy("Program Sayısı", "Program count"), value: countLabel(courseCount() + studyCount() + clubCount(), "Program", "programs"), subtext: copy("Ders, etüt, kulüp", "Courses, studies, clubs") },
     ];
   });
 
@@ -712,36 +715,36 @@ function DashboardContent() {
     const total = visibleExams().length;
     const active = visibleExams().filter((e) => examWindow(e, now()) === "active").length;
     return [
-      { id: "graded", label: "Değerlendirildi", value: Math.max(1, Math.ceil(total * 0.6)), colorClass: "bg-emerald-500" },
-      { id: "pending", label: "Okuma Bekliyor", value: Math.max(1, Math.floor(total * 0.4)), colorClass: "bg-amber-500" },
-      { id: "active", label: "Canlı Sınav", value: active, colorClass: "bg-indigo-500" },
+      { id: "graded", label: copy("Değerlendirildi", "Graded"), value: Math.max(1, Math.ceil(total * 0.6)), colorClass: "bg-emerald-500" },
+      { id: "pending", label: copy("Okuma Bekliyor", "Awaiting grading"), value: Math.max(1, Math.floor(total * 0.4)), colorClass: "bg-amber-500" },
+      { id: "active", label: copy("Canlı Sınav", "Live exam"), value: active, colorClass: "bg-indigo-500" },
     ];
   });
 
   const managerCourseKindItems = createMemo<ChartBarItem[]>(() => [
-    { id: "courses", label: "Ders Programları", value: courseCount(), formattedValue: `${courseCount()} ders`, colorClass: "bg-emerald-500" },
-    { id: "studies", label: "Etüt Seansları", value: studyCount(), formattedValue: `${studyCount()} etüt`, colorClass: "bg-amber-500" },
-    { id: "clubs", label: "Sosyal Kulüpler", value: clubCount(), formattedValue: `${clubCount()} kulüp`, colorClass: "bg-indigo-500" },
+    { id: "courses", label: copy("Ders Programları", "Courses"), value: courseCount(), formattedValue: countLabel(courseCount(), "ders", "courses"), colorClass: "bg-emerald-500" },
+    { id: "studies", label: copy("Etüt Seansları", "Study sessions"), value: studyCount(), formattedValue: countLabel(studyCount(), "etüt", "study sessions"), colorClass: "bg-amber-500" },
+    { id: "clubs", label: copy("Sosyal Kulüpler", "Clubs"), value: clubCount(), formattedValue: countLabel(clubCount(), "kulüp", "clubs"), colorClass: "bg-indigo-500" },
   ]);
 
   const managerStaffWorkSegments = createMemo<ProgressRingSegment[]>(() => [
-    { id: "completed", label: "Tamamlanan Mesai", value: 42, colorClass: "bg-emerald-500" },
-    { id: "active", label: "Devam Eden Vardiya", value: 8, colorClass: "bg-indigo-500" },
-    { id: "pending", label: "Planlanan Görev", value: 6, colorClass: "bg-amber-500" },
+    { id: "completed", label: copy("Tamamlanan Mesai", "Completed work"), value: 42, colorClass: "bg-emerald-500" },
+    { id: "active", label: copy("Devam Eden Vardiya", "Active shifts"), value: 8, colorClass: "bg-indigo-500" },
+    { id: "pending", label: copy("Planlanan Görev", "Planned tasks"), value: 6, colorClass: "bg-amber-500" },
   ]);
 
   const adminUserRoleItems = createMemo<ChartBarItem[]>(() => [
-    { id: "students", label: "Öğrenciler", value: 140, formattedValue: "140 kişi", colorClass: "bg-emerald-500" },
-    { id: "teachers", label: "Öğretmenler", value: 24, formattedValue: "24 kişi", colorClass: "bg-indigo-500" },
-    { id: "parents", label: "Veliler", value: 110, formattedValue: "110 kişi", colorClass: "bg-sky-500" },
-    { id: "managers", label: "Yöneticiler", value: 6, formattedValue: "6 kişi", colorClass: "bg-amber-500" },
-    { id: "admins", label: "Sistem Adminleri", value: 2, formattedValue: "2 kişi", colorClass: "bg-purple-500" },
+    { id: "students", label: copy("Öğrenciler", "Students"), value: 140, formattedValue: countLabel(140, "kişi", "people"), colorClass: "bg-emerald-500" },
+    { id: "teachers", label: copy("Öğretmenler", "Teachers"), value: 24, formattedValue: countLabel(24, "kişi", "people"), colorClass: "bg-indigo-500" },
+    { id: "parents", label: copy("Veliler", "Parents"), value: 110, formattedValue: countLabel(110, "kişi", "people"), colorClass: "bg-sky-500" },
+    { id: "managers", label: copy("Yöneticiler", "Managers"), value: 6, formattedValue: countLabel(6, "kişi", "people"), colorClass: "bg-amber-500" },
+    { id: "admins", label: copy("Sistem Adminleri", "System admins"), value: 2, formattedValue: countLabel(2, "kişi", "people"), colorClass: "bg-purple-500" },
   ]);
 
   const adminSystemCapacitySegments = createMemo<ProgressRingSegment[]>(() => [
-    { id: "courses", label: "Aktif Dersler", value: courseCount(), colorClass: "bg-emerald-500" },
-    { id: "exams", label: "Sınav Kayıtları", value: examCount(), colorClass: "bg-amber-500" },
-    { id: "events", label: "Etkinlikler", value: eventCount(), colorClass: "bg-indigo-500" },
+    { id: "courses", label: copy("Aktif Dersler", "Active courses"), value: courseCount(), colorClass: "bg-emerald-500" },
+    { id: "exams", label: copy("Sınav Kayıtları", "Exam records"), value: examCount(), colorClass: "bg-amber-500" },
+    { id: "events", label: copy("Etkinlikler", "Events"), value: eventCount(), colorClass: "bg-indigo-500" },
   ]);
 
   const [serverPing, setServerPing] = createSignal<{ latency: number; status: string } | null>(null);
@@ -751,25 +754,25 @@ function DashboardContent() {
     getTime()
       .then(() => {
         const latency = Math.max(1, Math.round(performance.now() - t0));
-        setServerPing({ latency, status: "Erişilebilir" });
+        setServerPing({ latency, status: "reachable" });
       })
       .catch(() => {
-        setServerPing({ latency: 0, status: "Çevrimdışı" });
+        setServerPing({ latency: 0, status: "offline" });
       });
   });
 
   const adminMetricCards = createMemo<ChartMetricCardItem[]>(() => [
-    { id: "users", label: "Aktif Kullanıcılar", value: "282", change: "+12 bu ay", isPositive: true, subtext: "Platform geneli" },
+    { id: "users", label: copy("Aktif Kullanıcılar", "Active users"), value: "282", change: copy("+12 bu ay", "+12 this month"), isPositive: true, subtext: copy("Platform geneli", "Platform-wide") },
     {
       id: "uptime",
-      label: "Sunucu Yanıt Süresi",
+      label: copy("Sunucu Yanıt Süresi", "Server response time"),
       value: serverPing() ? `${serverPing()!.latency} ms` : "—",
-      change: serverPing() ? serverPing()!.status : "Ölçülüyor",
-      isPositive: serverPing()?.status === "Erişilebilir",
-      subtext: "Canlı ping",
+      change: serverPing() ? serverPing()!.status === "reachable" ? copy("Erişilebilir", "Reachable") : copy("Çevrimdışı", "Offline") : copy("Ölçülüyor", "Measuring"),
+      isPositive: serverPing()?.status === "reachable",
+      subtext: copy("Canlı ping", "Live ping"),
     },
-    { id: "courses", label: "Aktif Ders Kaydı", value: String(courseCount()), subtext: "Müfredat dersi" },
-    { id: "exams", label: "Sınav Havuzu", value: String(examCount()), subtext: "Tüm sınavlar" },
+    { id: "courses", label: copy("Aktif Ders Kaydı", "Active course records"), value: String(courseCount()), subtext: copy("Müfredat dersi", "Curriculum courses") },
+    { id: "exams", label: copy("Sınav Havuzu", "Exam pool"), value: String(examCount()), subtext: copy("Tüm sınavlar", "All exams") },
   ]);
 
   const [showAllPortals, setShowAllPortals] = createSignal(false);
@@ -812,21 +815,21 @@ function DashboardContent() {
         
         {/* Visual Analytics Panel (4 Distinct Chart Types Grid) */}
         <Show when={role() !== "parent"}>
-          <section class="grid grid-cols-1 gap-5 lg:grid-cols-2" aria-label="Görsel Analiz ve Raporlar">
+          <section class="grid grid-cols-1 gap-5 lg:grid-cols-2" aria-label={copy("Görsel Analiz ve Raporlar", "Visual analytics and reports")}>
             <Switch>
               {/* STUDENT ROLE CHARTS (4 Distinct Types) */}
               <Match when={role() === "student"}>
                 <ChartMetricCards
-                  title="Öğrenim & Katılım KPI Özeti"
-                  subtitle="Genel başarı notu, katılım ve not sayıları"
+                  title={copy("Öğrenim & Katılım KPI Özeti", "Learning and attendance KPI summary")}
+                  subtitle={copy("Genel başarı notu, katılım ve not sayıları", "Overall grades, attendance, and note counts")}
                   metrics={studentMetricCards()}
                 />
 
                 <ChartAreaTrend
-                  title="Sınav & Başarı Not Trendi"
-                  subtitle="Dönem içi sınav notlarının gelişim eğrisi"
+                  title={copy("Sınav & Başarı Not Trendi", "Exam and grade trend")}
+                  subtitle={copy("Dönem içi sınav notlarının gelişim eğrisi", "Term exam grade trend")}
                   items={studentGradeTrendItems()}
-                  unit=" Puan"
+                  unit={copy(" Puan", " points")}
                   minScale={50}
                   maxScale={100}
                 />
@@ -835,25 +838,25 @@ function DashboardContent() {
                   when={courseMarkItems().length > 0}
                   fallback={
                     <ChartBar
-                      title="Sınav & Zaman Çizelgesi Dağılımı"
-                      subtitle="Aktif, bugün ve 7 gün içerisindeki program yoğunluğu"
+                      title={copy("Sınav & Zaman Çizelgesi Dağılımı", "Exam and schedule distribution")}
+                      subtitle={copy("Aktif, bugün ve 7 gün içerisindeki program yoğunluğu", "Active, today, and next 7-day schedule load")}
                       items={scheduleTimeItems()}
                     />
                   }
                 >
                   <ChartBar
-                    title="Ders Bazlı Başarı Notları"
-                    subtitle="Kayıtlı dersler geneli ortalama puanlar"
+                    title={copy("Ders Bazlı Başarı Notları", "Course grade performance")}
+                    subtitle={copy("Kayıtlı dersler geneli ortalama puanlar", "Average scores across enrolled courses")}
                     items={courseMarkItems()}
                     maxScale={100}
                   />
                 </Show>
 
                 <ChartProgressRing
-                  title="Program & Takip Analizi"
+                  title={copy("Program & Takip Analizi", "Schedule and tracking analysis")}
                   valueText={`${attention().length}`}
-                  subtext="yaklaşan ve aktif kayıt"
-                  subtitle="Durum bazlı zaman çizelgesi oransal göstergesi"
+                  subtext={copy("yaklaşan ve aktif kayıt", "upcoming and active records")}
+                  subtitle={copy("Durum bazlı zaman çizelgesi oransal göstergesi", "Status-based schedule ratio")}
                   segments={scheduleSegments()}
                 />
               </Match>
@@ -861,30 +864,30 @@ function DashboardContent() {
               {/* TEACHER ROLE CHARTS (4 Distinct Types) */}
               <Match when={role() === "teacher"}>
                 <ChartMetricCards
-                  title="Öğretim & Okuma KPI Özeti"
-                  subtitle="Sorumlu dersler, sınavlar ve ortalama katılım"
+                  title={copy("Öğretim & Okuma KPI Özeti", "Teaching and grading KPI summary")}
+                  subtitle={copy("Sorumlu dersler, sınavlar ve ortalama katılım", "Assigned courses, exams, and average attendance")}
                   metrics={teacherMetricCards()}
                 />
 
                 <ChartAreaTrend
-                  title="Haftalık Öğretim Yükü Eğrisi"
-                  subtitle="Günlük ders ve etüt seans yoğunluğu"
+                  title={copy("Haftalık Öğretim Yükü Eğrisi", "Weekly teaching load")}
+                  subtitle={copy("Günlük ders ve etüt seans yoğunluğu", "Daily course and study-session load")}
                   items={weeklyDensityItems().map((i) => ({ label: i.label, value: i.value, formattedValue: i.formattedValue }))}
-                  unit=" Seans"
+                  unit={copy(" Seans", " sessions")}
                 />
 
                 <ChartBar
-                  title="Ders Öğretim Başarı Notları"
-                  subtitle="Sorumlu olunan derslerdeki öğrenci ortalamaları"
+                  title={copy("Ders Öğretim Başarı Notları", "Teaching grade performance")}
+                  subtitle={copy("Sorumlu olunan derslerdeki öğrenci ortalamaları", "Student averages in assigned courses")}
                   items={teacherCourseStats()}
                   maxScale={100}
                 />
 
                 <ChartProgressRing
-                  title="Sınav Değerlendirme & Okuma Durumu"
+                  title={copy("Sınav Değerlendirme & Okuma Durumu", "Exam grading status")}
                   valueText={`${examCount()}`}
-                  subtext="toplam sınav"
-                  subtitle="Tamamlanan, okuma bekleyen ve canlı sınavlar"
+                  subtext={copy("toplam sınav", "total exams")}
+                  subtitle={copy("Tamamlanan, okuma bekleyen ve canlı sınavlar", "Graded, awaiting grading, and live exams")}
                   segments={teacherExamStatusSegments()}
                 />
               </Match>
@@ -892,29 +895,29 @@ function DashboardContent() {
               {/* MANAGER ROLE CHARTS (4 Distinct Types) */}
               <Match when={role() === "manager"}>
                 <ChartMetricCards
-                  title="Kurumsal Performans KPI Özeti"
-                  subtitle="Okul başarısı, devamlılık ve personel mesai durumu"
+                  title={copy("Kurumsal Performans KPI Özeti", "Institutional performance KPI summary")}
+                  subtitle={copy("Okul başarısı, devamlılık ve personel mesai durumu", "School performance, attendance, and staff work status")}
                   metrics={managerMetricCards()}
                 />
 
                 <ChartAreaTrend
-                  title="Okul Geneli 7 Günlük Etkinlik Eğrisi"
-                  subtitle="Önümüzdeki 7 güne ait etkinlik ve sınav yoğunluğu"
+                  title={copy("Okul Geneli 7 Günlük Etkinlik Eğrisi", "School-wide 7-day activity")}
+                  subtitle={copy("Önümüzdeki 7 güne ait etkinlik ve sınav yoğunluğu", "Events and exams over the next 7 days")}
                   items={weeklyDensityItems().map((i) => ({ label: i.label, value: i.value, formattedValue: i.formattedValue }))}
-                  unit=" Etkinlik"
+                  unit={copy(" Etkinlik", " events")}
                 />
 
                 <ChartBar
-                  title="Kurumsal Program Türü Dağılımı"
-                  subtitle="Aktif ders, etüt ve kulüp sayıları"
+                  title={copy("Kurumsal Program Türü Dağılımı", "Program type distribution")}
+                  subtitle={copy("Aktif ders, etüt ve kulüp sayıları", "Active course, study, and club counts")}
                   items={managerCourseKindItems()}
                 />
 
                 <ChartProgressRing
-                  title="Personel Vardiya & Mesai Takibi"
+                  title={copy("Personel Vardiya & Mesai Takibi", "Staff shifts and work tracking")}
                   valueText="88%"
-                  subtext="Tamamlanan mesai"
-                  subtitle="Personel çalışma ve vardiya takip durumu"
+                  subtext={copy("Tamamlanan mesai", "completed work")}
+                  subtitle={copy("Personel çalışma ve vardiya takip durumu", "Staff work and shift status")}
                   segments={managerStaffWorkSegments()}
                 />
               </Match>
@@ -922,29 +925,29 @@ function DashboardContent() {
               {/* ADMIN ROLE CHARTS (4 Distinct Types) */}
               <Match when={role() === "admin"}>
                 <ChartMetricCards
-                  title="Sistem Altyapı & Sağlık Metrikleri"
-                  subtitle="Platform geneli kullanıcı, erişilebilirlik ve içerik sayıları"
+                  title={copy("Sistem Altyapı & Sağlık Metrikleri", "System health metrics")}
+                  subtitle={copy("Platform geneli kullanıcı, erişilebilirlik ve içerik sayıları", "Platform users, availability, and content counts")}
                   metrics={adminMetricCards()}
                 />
 
                 <ChartAreaTrend
-                  title="Platform Geneli 7 Günlük Aktivite Eğrisi"
-                  subtitle="Tüm modüller genelinde 7 günlük takvim yükü"
+                  title={copy("Platform Geneli 7 Günlük Aktivite Eğrisi", "Platform-wide 7-day activity")}
+                  subtitle={copy("Tüm modüller genelinde 7 günlük takvim yükü", "7-day calendar load across all modules")}
                   items={weeklyDensityItems().map((i) => ({ label: i.label, value: i.value, formattedValue: i.formattedValue }))}
-                  unit=" Kayıt"
+                  unit={copy(" Kayıt", " records")}
                 />
 
                 <ChartBar
-                  title="Sistem Kullanıcı & Rol Dağılımı"
-                  subtitle="Platformdaki aktif kullanıcı rollerinin dağılımı"
+                  title={copy("Sistem Kullanıcı & Rol Dağılımı", "System users and roles")}
+                  subtitle={copy("Platformdaki aktif kullanıcı rollerinin dağılımı", "Active platform user roles")}
                   items={adminUserRoleItems()}
                 />
 
                 <ChartProgressRing
-                  title="Sistem Altyapı & Kapasite Takibi"
+                  title={copy("Sistem Altyapı & Kapasite Takibi", "System capacity tracking")}
                   valueText={`${courseCount() + examCount() + eventCount()}`}
-                  subtext="toplam varlık"
-                  subtitle="Sistemdeki aktif ders, sınav ve etkinlik kapasitesi"
+                  subtext={copy("toplam varlık", "total assets")}
+                  subtitle={copy("Sistemdeki aktif ders, sınav ve etkinlik kapasitesi", "Active course, exam, and event capacity")}
                   segments={adminSystemCapacitySegments()}
                 />
               </Match>
@@ -1014,7 +1017,7 @@ function DashboardContent() {
                 class="h-8 rounded-full border-border/70 bg-background/80 px-4 text-xs font-medium text-foreground shadow-xs transition-all duration-200 hover:border-primary/50 hover:bg-card hover:shadow-sm"
                 onClick={() => setShowAllPortals((v) => !v)}
               >
-                <span>{showAllPortals() ? "Daha az göster" : "Daha fazla göster"}</span>
+                <span>{showAllPortals() ? copy("Daha az göster", "Show less") : copy("Daha fazla göster", "Show more")}</span>
                 <Show when={showAllPortals()} fallback={<IconChevronDown class="h-3.5 w-3.5 text-muted-foreground ml-1" />}>
                   <IconChevronUp class="h-3.5 w-3.5 text-muted-foreground ml-1" />
                 </Show>
@@ -1041,7 +1044,7 @@ function DashboardContent() {
                   )}
                   onClick={() => { setAttentionFilter("all"); setAttentionPage(0); }}
                 >
-                  Tümü
+                  {copy("Tümü", "All")}
                 </button>
                 <button
                   type="button"
@@ -1053,7 +1056,7 @@ function DashboardContent() {
                   )}
                   onClick={() => { setAttentionFilter("exam"); setAttentionPage(0); }}
                 >
-                  Sınavlar
+                  {copy("Sınavlar", "Exams")}
                 </button>
                 <button
                   type="button"
@@ -1065,7 +1068,7 @@ function DashboardContent() {
                   )}
                   onClick={() => { setAttentionFilter("event"); setAttentionPage(0); }}
                 >
-                  Etkinlikler
+                  {copy("Etkinlikler", "Events")}
                 </button>
               </div>
             </div>
@@ -1143,6 +1146,7 @@ function PortalCard(props: {
   onDrop: (target: string) => void;
 }) {
   const t = useT();
+  const { locale } = usePreferences();
   const Icon = props.card.Icon;
   const hasStat = () => props.card.stat != null && props.card.stat !== "";
 
@@ -1186,7 +1190,7 @@ function PortalCard(props: {
               e.stopPropagation();
               props.onMoveLeft?.();
             }}
-            title="Move Earlier"
+            title={locale() === "tr" ? "Öne taşı" : "Move earlier"}
           >
             ←
           </Button>
@@ -1201,7 +1205,7 @@ function PortalCard(props: {
               e.stopPropagation();
               props.onMoveRight?.();
             }}
-            title="Move Later"
+            title={locale() === "tr" ? "Arkaya taşı" : "Move later"}
           >
             →
           </Button>
