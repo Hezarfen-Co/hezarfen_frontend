@@ -10,6 +10,8 @@ export type MessageKey =
   | "ai.placeholder"
   | "ai.send"
   | "ai.unavailable"
+  | "ai.copy"
+  | "ai.copied"
   | "nav.home"
   | "nav.notes"
   | "nav.events"
@@ -951,6 +953,8 @@ const en: Dict = {
   "ai.placeholder": "Ask about courses, exams, attendance...",
   "ai.send": "Send",
   "ai.unavailable": "Çelebi is temporarily unavailable. Please try again shortly.",
+  "ai.copy": "Copy",
+  "ai.copied": "Copied",
   "nav.home": "Home",
   "nav.notes": "Notes",
   "nav.events": "Events",
@@ -1904,6 +1908,8 @@ const tr: Dict = {
   "ai.placeholder": "Dersler, sınavlar, yoklamalar hakkında sor...",
   "ai.send": "Gönder",
   "ai.unavailable": "Çelebi şu anda kullanılamıyor. Lütfen biraz sonra tekrar dene.",
+  "ai.copy": "Kopyala",
+  "ai.copied": "Kopyalandı",
   "nav.home": "Ana sayfa",
   "nav.notes": "Defter",
   "nav.events": "Etkinlikler",

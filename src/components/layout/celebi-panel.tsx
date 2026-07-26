@@ -3,7 +3,7 @@ import { getChatbotMessageById, postChatbotMessage, postChatbotThread, type Chat
 import { formatApiError } from "@/api/client";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { Button } from "@/components/ui/button";
-import { IconAlert, IconBotSquare, IconSend, IconSparkles } from "@/components/ui/icons";
+import { IconAlert, IconBotSquare, IconCopy, IconSend, IconSparkles } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Textarea } from "@/components/ui/textarea";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -19,6 +19,14 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   const [messages, setMessages] = createSignal<PanelMessage[]>([]);
   const [threadId, setThreadId] = createSignal<string>();
   const [sending, setSending] = createSignal(false);
+  const [copiedId, setCopiedId] = createSignal<string>();
+
+  const copyMessage = async (message: PanelMessage) => {
+    await navigator.clipboard.writeText(message.content);
+    setCopiedId(message.id);
+    window.setTimeout(() => setCopiedId((current) => (current === message.id ? undefined : current)), 1_500);
+  };
+
   let pollTimer: number | undefined;
 
   const stopPolling = () => {
@@ -131,6 +139,16 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
                   </Show>
                   <Show when={message.role === "assistant" && message.truncated}>
                     <p class="mt-2 text-xs text-muted-foreground">{locale() === "tr" ? "Yanıt uzunluk sınırında kısaltıldı." : "Response was shortened at the configured limit."}</p>
+                  </Show>
+                  <Show when={message.role === "assistant" && message.status === "complete"}>
+                    <button
+                      type="button"
+                      class="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => void copyMessage(message)}
+                    >
+                      <IconCopy class="h-3 w-3" />
+                      {copiedId() === message.id ? t("ai.copied") : t("ai.copy")}
+                    </button>
                   </Show>
                 </div>
               )}
