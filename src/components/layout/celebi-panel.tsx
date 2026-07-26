@@ -97,7 +97,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
 
   return (
     <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("ai.title")} description={t("ai.description")}>
-      <div class="flex min-h-[calc(100vh-9rem)] flex-col gap-4">
+      <div class="flex flex-col gap-4">
         <Show
           when={messages().length > 0}
           fallback={
@@ -110,7 +110,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             </div>
           }
         >
-          <div class="flex flex-1 flex-col gap-3 overflow-y-auto pr-1">
+          <div class="flex flex-col gap-3">
             <For each={messages()}>
               {(message) => (
                 <div class={message.role === "user" ? "ml-8 rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground" : "mr-6 rounded-2xl rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
@@ -128,7 +128,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             </For>
           </div>
         </Show>
-        <form class="mt-auto rounded-2xl border border-border bg-card p-2 shadow-sm" onSubmit={(event) => { event.preventDefault(); void send(); }}>
+        <form class="sticky bottom-0 rounded-2xl border border-border bg-card p-2 shadow-sm" onSubmit={(event) => { event.preventDefault(); void send(); }}>
           <Textarea rows={3} class="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0" value={draft()} placeholder={t("ai.placeholder")} onInput={(event) => setDraft(event.currentTarget.value)} />
           <div class="flex items-center justify-between px-1 pt-2">
             <span class="text-xs text-muted-foreground">{locale() === "tr" ? "Çelebi yanıtları yapay zekâ tarafından üretilir." : "Çelebi responses are AI-generated."}</span>
