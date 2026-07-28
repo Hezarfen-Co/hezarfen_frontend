@@ -62,7 +62,9 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
       </div>
       <For each={groups()}>
         {(group) => {
-          const dropdown = () => !props.collapsed && (group.id === "classes" || group.id === "workspace");
+          // Every group collapses the same way when expanded; the collapsed
+          // rail falls through to the icon-only section below.
+          const dropdown = () => !props.collapsed;
           const active = () => group.items.some((item) => current()?.id === item.id);
           const links = (
             <div class="grid gap-1">

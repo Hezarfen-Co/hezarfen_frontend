@@ -154,7 +154,7 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     id: "school",
-    labelKey: "nav.school",
+    labelKey: "nav.group.school",
     Icon: IconSchool,
     items: [
       SCHOOL_ITEM,

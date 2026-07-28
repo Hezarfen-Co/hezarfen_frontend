@@ -60,6 +60,7 @@ export type MessageKey =
   | "nav.account"
   | "nav.preferences"
   | "nav.group.students"
+  | "nav.group.school"
   | "nav.group.classes"
   | "nav.group.grades"
   | "nav.group.reports"
@@ -1156,7 +1157,8 @@ const en: Dict = {
   "nav.expand": "Expand sidebar",
   "nav.account": "Account",
   "nav.preferences": "Preferences",
-  "nav.group.students": "Students",
+  "nav.group.students": "Student Management",
+  "nav.group.school": "Management",
   "nav.group.classes": "Education",
   "nav.group.grades": "Grades",
   "nav.group.reports": "Reports",
@@ -2258,7 +2260,8 @@ const tr: Dict = {
   "nav.expand": "Kenar çubuğunu genişlet",
   "nav.account": "Hesap",
   "nav.preferences": "Tercihler",
-  "nav.group.students": "Öğrenciler",
+  "nav.group.students": "Öğrenci Yönetimi",
+  "nav.group.school": "Yönetim",
   "nav.group.classes": "Eğitim",
   "nav.group.grades": "Notlar",
   "nav.group.reports": "Raporlar",
