@@ -154,14 +154,14 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   };
 
   return (
-    <>
+    <div class={cn("overflow-hidden rounded-xl border border-border/70 bg-card shadow-none dark:border-white/10 dark:bg-[#111111]", props.class)}>
       <Show when={showHeader() || showToolbar()}>
-        <div class="space-y-3">
+        <div class="space-y-3 border-b border-border/70 bg-muted/15 p-3 dark:border-white/10 dark:bg-white/3 sm:p-4">
           <Show when={showHeader()}>
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div class="min-w-0">
                 <Show when={props.title}>
-                  <h2 class="truncate font-display text-2xl font-semibold tracking-tight text-foreground">{props.title}</h2>
+                  <h2 class="truncate font-display text-lg font-semibold tracking-tight text-foreground">{props.title}</h2>
                 </Show>
                 <Show when={props.description}>
                   <p class="mt-1 text-sm text-muted-foreground">{props.description}</p>
@@ -215,7 +215,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </Show>
         </div>
       </Show>
-      <DataTableFrame class={props.class}>
+      <DataTableFrame class="rounded-none border-0 bg-transparent dark:border-0 dark:bg-transparent">
         <Table class={cn("data-table", props.tableClass)}>
           <TableHeader>
             <For each={table.getHeaderGroups()}>
@@ -278,7 +278,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         </Table>
       </DataTableFrame>
       <Show when={props.enablePagination && pageCount() > 1}>
-        <div class="flex items-center justify-end gap-2 py-3">
+        <div class="flex items-center justify-end gap-2 border-t border-border/70 bg-muted/10 p-3 dark:border-white/10">
           <span class="mr-auto text-xs font-medium tabular-nums text-muted-foreground">
             {t("common.pageOf", { page: pageIndex() + 1, total: pageCount() })}
           </span>
@@ -290,7 +290,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </Button>
         </div>
       </Show>
-    </>
+    </div>
   );
 }
 

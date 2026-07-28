@@ -8,7 +8,7 @@ test("shows the first thinking phrase immediately", () => {
       <CelebiThinkingLabel />
     </PreferencesProvider>
   ));
-  expect(screen.getByText("Çelebi is thinking…")).toBeInTheDocument();
+  expect(screen.getByText("Çelebi is thinking…")).toBeTruthy();
 });
 
 test("rotates to the next phrase after the interval", () => {
@@ -19,6 +19,6 @@ test("rotates to the next phrase after the interval", () => {
     </PreferencesProvider>
   ));
   vi.advanceTimersByTime(1_800);
-  expect(screen.getByText("Looking into it…")).toBeInTheDocument();
+  expect(screen.getByText("Looking into it…")).toBeTruthy();
   vi.useRealTimers();
 });

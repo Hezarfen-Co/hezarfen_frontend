@@ -152,6 +152,14 @@
   @apply focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
+@utility topbar-control {
+  @apply border border-black/12 bg-card text-muted-foreground shadow-xs transition-colors hover:border-black/25 hover:bg-muted hover:text-foreground dark:border-white/16 dark:bg-[#141414] dark:hover:border-white/28 dark:hover:bg-white/8;
+}
+
+@utility topbar-ai-control {
+  @apply border border-orange-400/70 bg-orange-50 text-orange-700 shadow-[0_2px_10px_rgba(249,115,22,0.18)] transition-all hover:border-orange-500 hover:bg-orange-100 hover:text-orange-800 dark:border-orange-400/60 dark:bg-orange-500/14 dark:text-orange-300 dark:hover:border-orange-300 dark:hover:bg-orange-500/22;
+}
+
 @utility data-shell {
   @apply rounded-2xl border border-[#F2F2F3] dark:border-white/8 bg-card shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_8px_32px_rgba(0,0,0,0.5)];
 }
@@ -164,15 +172,15 @@
   @apply w-full caption-bottom text-sm;
 
   & thead {
-    @apply sticky top-0 z-10 border-b border-border bg-background text-muted-foreground dark:border-white/10 dark:bg-[#050505];
+    @apply sticky top-0 z-10 border-b border-border/70 bg-muted/45 text-muted-foreground dark:border-white/10 dark:bg-[#1a1a1a] dark:text-white/65;
   }
 
   & th {
-    @apply h-12 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/70 px-4 text-left text-sm font-semibold text-muted-foreground last:border-r-0 dark:border-white/10 dark:text-white/70;
+    @apply h-11 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/70 px-4 text-left text-xs font-semibold tracking-wide text-muted-foreground last:border-r-0 dark:border-white/10 dark:text-white/65;
   }
 
   & td {
-    @apply h-[3.2rem] whitespace-nowrap border-r border-border/60 px-4 py-2.5 align-middle text-sm font-medium last:border-r-0 dark:border-white/8;
+    @apply h-[3.2rem] whitespace-nowrap border-r border-border/60 px-4 py-2.5 align-middle text-sm font-normal text-foreground last:border-r-0 dark:border-white/8 dark:text-white/90;
   }
 
   & tbody tr {
