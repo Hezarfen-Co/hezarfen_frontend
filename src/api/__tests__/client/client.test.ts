@@ -242,9 +242,13 @@ describe("client", () => {
       ).toBe("Bu sınava yalnızca dersin öğretmenleri veya bir müdür soru ekleyebilir.");
     });
 
-    it("handles unknown messages with sentence case", () => {
-      expect(formatApiErrorMessage("custom error occurred", "en")).toBe("Custom error occurred");
-      expect(formatApiErrorMessage("custom error occurred", "tr")).toBe("İşlem tamamlanamadı: Custom error occurred");
+    it("falls back to a clean localized message for unmapped errors (no raw leak)", () => {
+      expect(formatApiErrorMessage("custom error occurred", "en")).toBe(
+        "Something went wrong. Please check your input and try again.",
+      );
+      expect(formatApiErrorMessage("custom error occurred", "tr")).toBe(
+        "İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene.",
+      );
     });
 
     it("localizes backend max-length validation messages", () => {
@@ -330,8 +334,8 @@ describe("client", () => {
     });
 
     it("formats generic Error", () => {
-      expect(formatApiError(new Error("generic"), "en")).toBe("Generic");
-      expect(formatApiError(new Error("generic"), "tr")).toBe("İşlem tamamlanamadı: Generic");
+      expect(formatApiError(new Error("generic"), "en")).toBe("Something went wrong. Please check your input and try again.");
+      expect(formatApiError(new Error("generic"), "tr")).toBe("İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene.");
     });
 
     it("does not expose network, runtime, or provider errors to users", () => {

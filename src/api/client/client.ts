@@ -477,8 +477,12 @@ export function formatApiErrorMessage(message: string, locale: Locale = currentL
   if (runtime) return runtime;
   const validation = formatValidationMessage(message, locale);
   if (validation) return validation;
-  if (locale === "tr") return `İşlem tamamlanamadı: ${sentenceCase(message)}`;
-  return sentenceCase(message);
+  // Unmapped backend text is raw English/technical — never surface it to the
+  // user. Fall back to a clean localized line; add a mapping in
+  // API_ERROR_MESSAGES when a specific message deserves its own wording.
+  return locale === "tr"
+    ? "İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene."
+    : "Something went wrong. Please check your input and try again.";
 }
 
 export function formatApiError(err: unknown, locale: Locale = currentLocale()): string {
