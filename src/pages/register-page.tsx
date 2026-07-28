@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/solid-router";
-import { createSignal, Show } from "solid-js";
+import { createResource, createSignal, Show } from "solid-js";
 import { postRegister } from "@/api/auth";
+import { getLimits } from "@/api/limits";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,17 +27,19 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  const [limits] = createResource(() => getLimits().catch(() => null));
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     const u = username().trim();
     const p = password();
     const cp = confirmPassword();
-    if (u.length < 3 || u.length > 32) {
+    const userLimits = limits()?.user;
+    if (userLimits && (u.length < userLimits.min_username_len || u.length > userLimits.max_username_len)) {
       setError(t("auth.usernameHint"));
       return;
     }
-    if (p.length < 6 || p.length > 128) {
+    if (userLimits && (p.length < userLimits.min_password_len || p.length > userLimits.max_password_len)) {
       setError(t("auth.passwordHint"));
       return;
     }
@@ -71,8 +74,8 @@ function RegisterForm() {
               id="register-username"
               class="h-11"
               autocomplete="username"
-              minlength={3}
-              maxlength={32}
+              minlength={limits()?.user.min_username_len}
+              maxlength={limits()?.user.max_username_len}
               required
               value={username()}
               onInput={(e) => setUsername(e.currentTarget.value)}
@@ -87,8 +90,8 @@ function RegisterForm() {
                 class="h-11 pr-10"
                 type={showPassword() ? "text" : "password"}
                 autocomplete="new-password"
-                minlength={6}
-                maxlength={128}
+                minlength={limits()?.user.min_password_len}
+                maxlength={limits()?.user.max_password_len}
                 required
                 value={password()}
                 onInput={(e) => setPassword(e.currentTarget.value)}
@@ -113,8 +116,8 @@ function RegisterForm() {
               class="h-11"
               type={showPassword() ? "text" : "password"}
               autocomplete="new-password"
-              minlength={6}
-              maxlength={128}
+              minlength={limits()?.user.min_password_len}
+              maxlength={limits()?.user.max_password_len}
               required
               value={confirmPassword()}
               onInput={(e) => setConfirmPassword(e.currentTarget.value)}
