@@ -13,7 +13,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconChevronDown, IconEdit, IconGlobe, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
+import { IconChevronDown, IconGlobe, IconLogout, IconMoon, IconSettings, IconSun } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -180,8 +180,8 @@ export function UserMenu() {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
-              <IconEdit class="h-4 w-4 shrink-0" />
-              <span>{t("profile.edit")}</span>
+              <IconSettings class="h-4 w-4 shrink-0" />
+              <span>{t("nav.settings")}</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />

@@ -1,4 +1,4 @@
-import { For, Index, Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
+import { Index, Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
 import { getSettings } from "@/api/settings";
 import { patchSettings } from "@/api/settings";
 import { getLimits } from "@/api/limits";
@@ -10,7 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconCheck, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAttendanceStatusMeta } from "@/lib/attendance-status";
 import { cn } from "@/lib/cn";
 import { dirtySettingsPatch, minuteToUtcTime, utcTimeToMinute } from "@/lib/meals";
-import { usePreferences, useT } from "@/stores/preferences-context";
+import { useT } from "@/stores/preferences-context";
 
 const CORE_ATTENDANCE = new Set(["present", "absent", "late", "excused"]);
 const CORE_ATTENDANCE_LABELS = {
@@ -29,14 +29,6 @@ const CORE_ATTENDANCE_LABELS = {
 } as const;
 
 const BYTES_PER_MIB = 1024 * 1024;
-const TRENDING_PALETTES = [
-  { name: "Sunny Beach Day", colors: ["#264653", "#2a9d8f", "#e9c46a", "#f4a261", "#e76f51"] },
-  { name: "Olive Garden Feast", colors: ["#606c38", "#283618", "#fefae0", "#dda15e", "#bc6c25"] },
-  { name: "Summer Ocean Breeze", colors: ["#e63946", "#f1faee", "#a8dadc", "#457b9d", "#1d3557"] },
-  { name: "Refreshing Summer Fun", colors: ["#8ecae6", "#219ebc", "#023047", "#ffb703", "#fb8500"] },
-  { name: "Pastel Dreamland Adventure", colors: ["#cdb4db", "#ffc8dd", "#ffafcc", "#bde0fe", "#a2d2ff"] },
-  { name: "Golden Summer Fields", colors: ["#ccd5ae", "#e9edc9", "#fefae0", "#faedcd", "#d4a373"] },
-] as const;
 
 // Neutralize the Tabs.Content card so it is just a container — the sections
 // inside already carry their own `data-shell` surfaces.
@@ -56,7 +48,6 @@ export default function SettingsPage() {
 
 function SettingsContent() {
   const t = useT();
-  const preferences = usePreferences();
   const [settings, { refetch, mutate }] = createResource(() => getSettings());
   const [examKinds, setExamKinds] = createSignal<ExamKindSetting[]>([]);
   const [attendanceStatuses, setAttendanceStatuses] = createSignal<string[]>([]);
@@ -187,7 +178,6 @@ function SettingsContent() {
           <TabsTrigger value="assessment">{t("settings.tabAssessment")}</TabsTrigger>
           <TabsTrigger value="meals">{t("settings.tabMeals")}</TabsTrigger>
           <TabsTrigger value="system">{t("settings.tabSystem")}</TabsTrigger>
-          <TabsTrigger value="appearance">{t("settings.tabAppearance")}</TabsTrigger>
         </TabsList>
 
         <Suspense fallback={<PageSpinner />}>
@@ -590,57 +580,6 @@ function SettingsContent() {
             </Show>
           </TabsContent>
         </Suspense>
-
-        <TabsContent value="appearance" class={TAB_PANEL}>
-          <section class="data-shell space-y-4 p-4">
-            <div>
-              <h2 class="font-display text-base font-semibold">{t("settings.colorPalette")}</h2>
-              <p class="mt-1 text-sm text-muted-foreground">{t("settings.colorPaletteHelp")}</p>
-            </div>
-
-            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              <For each={TRENDING_PALETTES}>
-                {(palette) => (
-                  <div class="overflow-hidden rounded-xl border border-border/70 bg-card shadow-2xs">
-                    <div class="flex h-12" role="group" aria-label={palette.name}>
-                      <For each={palette.colors}>
-                        {(color) => (
-                          <button
-                            type="button"
-                            class="relative flex-1 outline-hidden focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-inset"
-                            style={{ "background-color": color }}
-                            aria-label={`${palette.name} ${color}`}
-                            aria-pressed={preferences.paletteColor() === color}
-                            title={color}
-                            onClick={() => preferences.setPaletteColor(color)}
-                          >
-                            <Show when={preferences.paletteColor() === color}>
-                              <span class="absolute inset-0 grid place-items-center bg-black/15 text-white drop-shadow-md">
-                                <IconCheck class="h-4 w-4" />
-                              </span>
-                            </Show>
-                          </button>
-                        )}
-                      </For>
-                    </div>
-                    <p class="truncate px-3 py-2 text-xs font-medium">{palette.name}</p>
-                  </div>
-                )}
-              </For>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              class="rounded-lg"
-              disabled={preferences.paletteColor() === null}
-              onClick={() => preferences.setPaletteColor(null)}
-            >
-              {t("settings.defaultColor")}
-            </Button>
-          </section>
-        </TabsContent>
       </Tabs>
     </div>
   );
