@@ -867,6 +867,10 @@ export type MessageKey =
   | "settings.addMealSlot"
   | "settings.dietaryTags"
   | "settings.addDietaryTag"
+  | "settings.tabAssessment"
+  | "settings.tabMeals"
+  | "settings.tabSystem"
+  | "settings.tabAppearance"
   | "settings.colorPalette"
   | "settings.colorPaletteHelp"
   | "settings.colorPaletteSource"
@@ -2044,6 +2048,10 @@ const en: Dict = {
   "settings.addMealSlot": "Add meal slot",
   "settings.dietaryTags": "Dietary tags",
   "settings.addDietaryTag": "Add dietary tag",
+  "settings.tabAssessment": "Assessment",
+  "settings.tabMeals": "Meals",
+  "settings.tabSystem": "System",
+  "settings.tabAppearance": "Appearance",
   "settings.colorPalette": "Colour palette",
   "settings.colorPaletteHelp": "Choose an accent from Coolors trending palettes. Saved only in this browser.",
   "settings.colorPaletteSource": "Browse trending palettes",
@@ -3147,6 +3155,10 @@ const tr: Dict = {
   "settings.addMealSlot": "Öğün ekle",
   "settings.dietaryTags": "Beslenme etiketleri",
   "settings.addDietaryTag": "Beslenme etiketi ekle",
+  "settings.tabAssessment": "Değerlendirme",
+  "settings.tabMeals": "Yemekhane",
+  "settings.tabSystem": "Sistem",
+  "settings.tabAppearance": "Görünüm",
   "settings.colorPalette": "Renk paleti",
   "settings.colorPaletteHelp": "Coolors trend paletlerinden bir vurgu rengi seç. Yalnızca bu tarayıcıda saklanır.",
   "settings.colorPaletteSource": "Trend paletlere göz at",
