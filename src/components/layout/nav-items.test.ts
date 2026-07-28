@@ -36,3 +36,18 @@ test("nested entity routes keep their primary destination active", () => {
   expect(primaryPathActive("/management/student-attendance", primaryNavItems("teacher")[2]!)).toBe(true);
   expect(primaryPathActive("/management/settings", primaryNavItems("manager")[4]!)).toBe(true);
 });
+
+test.each([
+  ["/homework", "student", "homework"],
+  ["/events/event-1", "teacher", "events"],
+  ["/management/student-attendance", "teacher", "student-attendance"],
+  ["/management/settings", "manager", "settings"],
+] as const)("sidebar resolves one active item for %s", (pathname, role, expected) => {
+  const items = [
+    ...primaryNavItems(role),
+    ...sidebarNavGroups(role).flatMap((group) => group.items),
+  ];
+  const current = routeNavItem(pathname, role);
+
+  expect(items.filter((item) => item.id === current?.id).map((item) => item.id)).toEqual([expected]);
+});

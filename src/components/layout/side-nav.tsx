@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 import { Link, useRouterState } from "@tanstack/solid-router";
-import { primaryNavItems, primaryPathActive, sidebarNavGroups, type NavItem } from "@/components/layout/nav-items";
+import { primaryNavItems, routeNavItem, sidebarNavGroups, type NavItem } from "@/components/layout/nav-items";
 import { IconChevronDown } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
@@ -15,6 +15,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
 
   const primary = () => primaryNavItems(auth.user()?.role);
   const groups = () => sidebarNavGroups(auth.user()?.role);
+  const current = () => routeNavItem(pathname(), auth.user()?.role);
   const unread = () => feed.unreadMessages().total;
   const badgeFor = (item: NavItem) => (item.id === "messages" ? unread() : 0);
 
@@ -23,7 +24,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
       <div class="grid gap-1">
         <For each={primary()}>
           {(item) => {
-            const active = () => primaryPathActive(pathname(), item);
+            const active = () => current()?.id === item.id;
             return (
               <Link
                 to={item.to}
@@ -62,12 +63,12 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
       <For each={groups()}>
         {(group) => {
           const dropdown = () => !props.collapsed && (group.id === "classes" || group.id === "workspace");
-          const active = () => group.items.some((item) => primaryPathActive(pathname(), item));
+          const active = () => group.items.some((item) => current()?.id === item.id);
           const links = (
             <div class="grid gap-1">
               <For each={group.items}>
                 {(item: NavItem) => {
-                  const itemActive = () => primaryPathActive(pathname(), item);
+                  const itemActive = () => current()?.id === item.id;
                   return (
                     <Link
                       to={item.to}
