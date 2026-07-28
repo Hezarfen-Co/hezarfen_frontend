@@ -91,7 +91,7 @@ const SCHOOL_ITEM: NavItem = {
 const PROGRESS_ITEM: NavItem = {
   id: "progress",
   to: "/marks",
-  labelKey: "nav.progress",
+  labelKey: "nav.marks",
   Icon: IconChart,
   exactRole: "student",
 };

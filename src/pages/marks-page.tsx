@@ -38,7 +38,7 @@ function MarksContent() {
           </Show>
         </span>
         <div class="min-w-0">
-          <h1 class="font-display text-2xl font-semibold tracking-tight">{t("nav.progress")}</h1>
+          <h1 class="font-display text-2xl font-semibold tracking-tight">{t("marks.title")}</h1>
           <p class="mt-0.5 text-sm text-muted-foreground">
             {tab() === "marks" ? t("marks.subtitle") : t("attendance.subtitle")}
           </p>
@@ -57,7 +57,7 @@ function MarksContent() {
         <TabsList class="w-fit max-w-full rounded-xl bg-card p-1 shadow-xs">
           <TabsTrigger value="marks" class="h-9 rounded-lg">
             <IconChart class="h-4 w-4" />
-            {t("marks.title")}
+            {t("nav.group.grades")}
           </TabsTrigger>
           <TabsTrigger value="attendance" class="h-9 rounded-lg">
             <IconClipboardCheck class="h-4 w-4" />

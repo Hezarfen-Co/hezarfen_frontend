@@ -41,7 +41,7 @@ test("progress keeps report card and attendance in tabs", async () => {
 
   render(() => <PreferencesProvider><MarksPage /></PreferencesProvider>);
 
-  expect(await screen.findByRole("tab", { name: "Report card" })).toBeTruthy();
+  expect(await screen.findByRole("tab", { name: "Grades" })).toBeTruthy();
   const attendanceTab = screen.getByRole("tab", { name: "Attendance" });
   fireEvent.click(attendanceTab);
   await waitFor(() => expect(getMyAttendance).toHaveBeenCalledTimes(1));
