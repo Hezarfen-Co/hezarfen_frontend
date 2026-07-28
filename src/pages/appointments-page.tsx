@@ -18,6 +18,7 @@ import { APPOINTMENT_LIMITS, formatApiError } from "@/api/client";
 import { createLivePoll } from "@/lib/create-live-poll";
 import type { Appointment, AppointmentSlot, AppointmentStatus } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
+import { AppointmentCalendar } from "@/components/appointments/appointment-calendar";
 import { BookAppointmentForm } from "@/components/appointments/book-appointment-form";
 import { PublishSlotsForm } from "@/components/appointments/publish-slots-form";
 import { RescheduleForm } from "@/components/appointments/reschedule-form";
@@ -28,9 +29,10 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { IconCalendarX, IconCheck, IconEye, IconPlus, IconRefresh, IconTrash, IconX } from "@/components/ui/icons";
+import { IconCalendarDays, IconCalendarX, IconCheck, IconClock, IconEye, IconPlus, IconRefresh, IconTrash, IconX } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { appointmentActions, hasStandingProposal } from "@/lib/appointment-actions";
 import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
 import { cn } from "@/lib/cn";
@@ -65,6 +67,7 @@ function AppointmentsContent() {
   const [error, setError] = createSignal("");
   const [, setFlash] = createFlash();
   const [showPublish, setShowPublish] = createSignal(false);
+  const [section, setSection] = createSignal<"appointments" | "availability">("appointments");
   const [bookSlot, setBookSlot] = createSignal<AppointmentSlot | null>(null);
   const [reschedAppt, setReschedAppt] = createSignal<Appointment | null>(null);
   const [detailAppt, setDetailAppt] = createSignal<Appointment | null>(null);
@@ -381,7 +384,7 @@ function AppointmentsContent() {
   ]);
 
   return (
-    <div class="space-y-6">
+    <div class="space-y-5">
       <SidePanel open={showPublish()} onOpenChange={setShowPublish} title={t("appointments.publish")} description={t("appointments.publishSubtitle")}>
         <PublishSlotsForm
           onCancel={() => setShowPublish(false)}
@@ -412,6 +415,7 @@ function AppointmentsContent() {
                   await postAppointment({ slot: slot().id, reason });
                   setBookSlot(null);
                   await refetchAll();
+                  setSection("appointments");
                   setFlash(t("common.created"));
                 } catch (err) {
                   setError(formatApiError(err));
@@ -450,75 +454,116 @@ function AppointmentsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <Show when={isStaff()} fallback={
-        <>
-          <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-            <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
-              <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
-              <DataTable
-                title={t("appointments.availableSlots")}
-                description={t("appointments.subtitle")}
-                columns={availableColumns()}
-                data={availableSlots()}
-                tableClass="table-fixed min-w-[46rem]"
-                enablePagination
-                pageSize={PAGE_SIZE}
-                empty={t("appointments.noSlots")}
-              />
-            </Show>
-          </section>
-          <section class="data-shell space-y-4 border-violet-500/15 bg-violet-500/2.5 p-4">
-            <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
-              <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
-              <DataTable
-                title={t("appointments.myBookings")}
-                columns={bookingColumns()}
-                data={myBookings()}
-                tableClass="table-fixed min-w-[46rem]"
-                enablePagination
-                pageSize={PAGE_SIZE}
-                empty={t("appointments.noBookings")}
-              />
-            </Show>
-          </section>
-        </>
-      }>
-        <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-          <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
-            <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
-            <DataTable
-              title={t("appointments.mySlots")}
-              description={t("appointments.subtitle")}
-              actions={
-                <Button type="button" size="sm" class="min-w-30" onClick={() => setShowPublish(true)}>
-                  <IconPlus class="h-4 w-4" />
-                  {t("appointments.publish")}
-                </Button>
-              }
-              columns={slotColumns()}
-              data={mySlots()}
-              tableClass="table-fixed min-w-[46rem]"
-              enablePagination
-              pageSize={PAGE_SIZE}
-              empty={t("appointments.noSlots")}
-            />
+      <header class="flex items-center gap-3 border-b border-border pb-5">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <IconCalendarDays class="h-5 w-5" />
+        </span>
+        <div class="min-w-0">
+          <h1 class="font-display text-2xl font-semibold tracking-tight">{t("appointments.title")}</h1>
+          <p class="mt-0.5 text-sm text-muted-foreground">{t("appointments.subtitle")}</p>
+        </div>
+      </header>
+
+      <Tabs
+        class="space-y-4"
+        value={section()}
+        onChange={(value) => setSection(value === "availability" ? "availability" : "appointments")}
+      >
+        <TabsList class="w-fit">
+          <TabsTrigger value="appointments" class="h-9 rounded-lg">
+            <IconCalendarDays class="h-4 w-4" />
+            {isStaff() ? t("appointments.requests") : t("appointments.myBookings")}
+            <Badge variant="secondary" class="rounded-full px-1.5 text-[10px]">
+              {isStaff() ? requests().length : myBookings().length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="availability" class="h-9 rounded-lg">
+            <IconClock class="h-4 w-4" />
+            {isStaff() ? t("appointments.mySlots") : t("appointments.availableSlots")}
+            <Badge variant="secondary" class="rounded-full px-1.5 text-[10px]">
+              {isStaff() ? mySlots().length : availableSlots().length}
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="appointments" class="mt-0 space-y-4 border-0 bg-transparent p-0 shadow-none">
+          <Show when={isStaff()} fallback={
+            <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+              <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+                <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
+                <DataTable
+                  title={t("appointments.myBookings")}
+                  columns={bookingColumns()}
+                  data={myBookings()}
+                  tableClass="table-fixed min-w-[46rem]"
+                  enablePagination
+                  pageSize={PAGE_SIZE}
+                  empty={t("appointments.noBookings")}
+                />
+              </Show>
+            </section>
+          }>
+            <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+              <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
+                <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
+                <DataTable
+                  title={t("appointments.requests")}
+                  columns={requestColumns()}
+                  data={requests()}
+                  tableClass="table-fixed min-w-[46rem]"
+                  enablePagination
+                  pageSize={PAGE_SIZE}
+                  empty={t("appointments.noRequests")}
+                />
+              </Show>
+            </section>
           </Show>
-        </section>
-        <section class="data-shell space-y-4 border-violet-500/15 bg-violet-500/2.5 p-4">
-          <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
-            <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
-            <DataTable
-              title={t("appointments.requests")}
-              columns={requestColumns()}
-              data={requests()}
-              tableClass="table-fixed min-w-[46rem]"
-              enablePagination
-              pageSize={PAGE_SIZE}
-              empty={t("appointments.noRequests")}
-            />
+
+          <Show when={loaded()}>
+            <AppointmentCalendar appointments={isStaff() ? requests() : myBookings()} userId={me()?.id} />
           </Show>
-        </section>
-      </Show>
+        </TabsContent>
+
+        <TabsContent value="availability" class="mt-0 border-0 bg-transparent p-0 shadow-none">
+          <Show when={isStaff()} fallback={
+            <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+              <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+                <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
+                <DataTable
+                  title={t("appointments.availableSlots")}
+                  columns={availableColumns()}
+                  data={availableSlots()}
+                  tableClass="table-fixed min-w-[46rem]"
+                  enablePagination
+                  pageSize={PAGE_SIZE}
+                  empty={t("appointments.noSlots")}
+                />
+              </Show>
+            </section>
+          }>
+            <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+              <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
+                <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
+                <DataTable
+                  title={t("appointments.mySlots")}
+                  actions={
+                    <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={() => setShowPublish(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("appointments.publish")}
+                    </Button>
+                  }
+                  columns={slotColumns()}
+                  data={mySlots()}
+                  tableClass="table-fixed min-w-[46rem]"
+                  enablePagination
+                  pageSize={PAGE_SIZE}
+                  empty={t("appointments.noSlots")}
+                />
+              </Show>
+            </section>
+          </Show>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={detailAppt() != null} onOpenChange={(o) => !o && setDetailAppt(null)}>
         <DialogContent class="max-w-md" dismissable>
