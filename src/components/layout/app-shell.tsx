@@ -59,8 +59,8 @@ export function AppShell(props: ParentProps) {
           >
             <div
               class={cn(
-                "flex shrink-0 items-center gap-2 border-b border-black/5 dark:border-white/8",
-                collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-14 px-3",
+                "flex shrink-0 items-center gap-2 border-b border-border/70",
+                collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-16 px-3",
               )}
             >
               <Link
