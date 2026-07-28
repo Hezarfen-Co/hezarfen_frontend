@@ -1,4 +1,5 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Link } from "@tanstack/solid-router";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import { getAppointments } from "@/api/appointments";
@@ -8,7 +9,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { IconCalendarDays, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
+import { IconCalendarDays, IconChevronLeft, IconChevronRight, IconClock } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { appointmentCounterpart } from "@/lib/person";
@@ -128,10 +129,19 @@ function CalendarContent() {
               </Button>
             </div>
           </div>
-          <Button type="button" variant="outline" size="sm" class="h-9 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
-            <IconCalendarDays class="h-3.5 w-3.5" />
-            {t("calendar.today")}
-          </Button>
+          <div class="flex items-center gap-2">
+            <Link
+              to="/appointments"
+              class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-semibold outline-hidden transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <IconClock class="h-3.5 w-3.5" />
+              {t("nav.appointments")}
+            </Link>
+            <Button type="button" variant="outline" size="sm" class="h-9 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
+              <IconCalendarDays class="h-3.5 w-3.5" />
+              {t("calendar.today")}
+            </Button>
+          </div>
         </div>
         <Suspense fallback={<PageSpinner />}>
           <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">

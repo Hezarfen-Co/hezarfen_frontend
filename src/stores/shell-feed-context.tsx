@@ -17,7 +17,7 @@ import { createLivePoll } from "@/lib/create-live-poll";
 import { useAuth } from "@/stores/auth-context";
 
 // One shared poller for the always-mounted shell (NotificationCenter header +
-// RightNav sidebar). Both used to `createResource` messages/events/exams
+// header message/notification controls). Both used to `createResource` messages/events/exams
 // independently — ~8 GETs/min. This fetches the widest form of each source
 // ONCE; both consumers derive their own views locally.
 //

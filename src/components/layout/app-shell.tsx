@@ -11,7 +11,7 @@ import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconBotSquare, IconChevronLeft, IconPanelLeft, IconSearch, IconX } from "@/components/ui/icons";
+import { IconChevronLeft, IconPanelLeft, IconSearch, IconSparkles, IconX } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
@@ -137,21 +137,21 @@ export function AppShell(props: ParentProps) {
                   <button
                     type="button"
                     onClick={() => window.history.back()}
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    class="topbar-control flex h-9 w-9 shrink-0 items-center justify-center rounded-xl outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label={t("common.back")}
                     title={t("common.back")}
                   >
                     <IconChevronLeft class="h-4 w-4" />
                   </button>
                 </Show>
-                <span class="block truncate text-sm font-semibold">{routeLabel()}</span>
+                <span class="hidden truncate text-sm font-semibold sm:block">{routeLabel()}</span>
               </div>
 
               <div class="mx-auto flex min-w-0 max-w-xl flex-1 items-center justify-center">
                 <button
                   type="button"
                   onClick={() => setCommandOpen(true)}
-                  class="flex h-10 w-full items-center justify-between gap-2.5 rounded-xl border border-border bg-muted/50 px-3.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  class="topbar-control flex h-10 w-full items-center justify-between gap-2.5 rounded-xl px-3.5 text-sm"
                   title={t("dashboard.commandCenter")}
                 >
                   <div class="flex items-center gap-2 min-w-0">
@@ -167,10 +167,14 @@ export function AppShell(props: ParentProps) {
               <div class="flex shrink-0 items-center justify-end gap-2">
                 <ShellMessagesButton />
                 <NotificationCenter />
-                <Button type="button" variant="ghost" size="sm" class="hidden h-9 shrink-0 rounded-xl border border-border bg-transparent text-muted-foreground shadow-none hover:bg-muted hover:text-foreground sm:flex" onClick={() => setCelebiOpen(true)}>
-                  <IconBotSquare class="h-4 w-4" />
+                <button
+                  type="button"
+                  class="topbar-ai-control hidden h-9 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-xs font-semibold outline-hidden hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-orange-400 active:translate-y-0 sm:flex"
+                  onClick={() => setCelebiOpen(true)}
+                >
+                  <IconSparkles class="h-4 w-4" />
                   <span class="hidden sm:inline">{t("ai.askCelebi")}</span>
-                </Button>
+                </button>
               </div>
             </header>
           </Show>

@@ -200,7 +200,7 @@ export function NotificationCenter() {
     <Popover open={open()} onOpenChange={setOpen} placement="bottom-end" gutter={8}>
       <PopoverTrigger
         class={cn(
-          "relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground shrink-0 cursor-pointer outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+          "topbar-control relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
           open() && "bg-muted text-foreground"
         )}
         title={t("rightPanel.messagesTitle")}

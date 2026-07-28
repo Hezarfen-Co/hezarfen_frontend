@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 import { fireEvent, render, screen } from "@solidjs/testing-library";
 import { NotificationCenter } from "@/components/layout/notification-center";
-import { RightNav } from "@/components/layout/right-nav";
+import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
 // The shell feed is the single source of truth for both badges; the test drives
@@ -11,8 +11,8 @@ const h = vi.hoisted(() => ({ feed: null as never }));
 vi.mock("@/stores/shell-feed-context", () => ({ useShellFeed: () => h.feed }));
 vi.mock("@/stores/auth-context", () => ({ useAuth: () => ({ user: () => ({ id: "u-1" }) }) }));
 vi.mock("@tanstack/solid-router", () => ({
-  useNavigate: () => () => {},
-  useLocation: () => () => ({ pathname: "/" }),
+  Link: (props: never) => <a href={(props as { to: string }).to}>{(props as { children: unknown }).children}</a>,
+  useNavigate: () => () => undefined,
 }));
 // Kobalte's popover keeps its content unmounted in jsdom; the badge and the
 // "dismiss all" button are the surfaces under test, so render both inline.
@@ -54,7 +54,7 @@ const badges = () => Array.from(document.querySelectorAll(".bg-rose-500")).map((
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
 
-// DEFECT 1: RightNav used to filter the capped `limit:100` inbox page, so an
+// DEFECT 1: shell message badge used to filter the capped `limit:100` inbox page, so an
 // unread message that fell off that page was counted by one badge only.
 test("both shell badges report the same unread count", () => {
   // 7 unread server-side, but only 2 of them are on the capped inbox page.
@@ -62,7 +62,7 @@ test("both shell badges report the same unread count", () => {
 
   render(() => (
     <PreferencesProvider>
-      <RightNav />
+      <ShellMessagesButton />
       <NotificationCenter />
     </PreferencesProvider>
   ));

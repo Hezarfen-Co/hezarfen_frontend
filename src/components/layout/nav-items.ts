@@ -10,29 +10,27 @@ import {
   IconClock,
   IconClipboardCheck,
   IconExam,
-  IconGlobe,
   IconHelpCircle,
   IconHomework,
   IconHome,
   IconMessage,
   IconNote,
-  IconReportAnalytics,
   IconSchool,
   IconSettings,
   IconUserCog,
   IconUsers,
+  IconUtensils,
 } from "@/components/ui/icons";
 import type { MessageKey } from "@/i18n/messages";
-import { hasExactRole, hasMinRole, roleInRange } from "@/lib/roles";
+import { hasExactRole, roleInRange } from "@/lib/roles";
 
 export type NavItem = {
+  id: string;
   to: string;
   labelKey: MessageKey;
   Icon: Component<{ class?: string }>;
   minRole?: Role;
-  /** Inclusive upper bound (e.g. hide from admin with maxRole: "manager"). */
   maxRole?: Role;
-  /** When set, only this exact role sees the item. */
   exactRole?: Role;
   exact?: boolean;
 };
@@ -41,9 +39,76 @@ export type NavGroup = {
   id: string;
   labelKey: MessageKey;
   Icon: Component<{ class?: string }>;
-  minRole?: Role;
-  exactRole?: Role;
   items: NavItem[];
+};
+
+export const HOME_ITEM: NavItem = {
+  id: "today",
+  to: "/",
+  labelKey: "nav.today",
+  Icon: IconHome,
+  exact: true,
+};
+
+const CLASSES_ITEM: NavItem = {
+  id: "classes",
+  to: "/courses",
+  labelKey: "nav.classes",
+  Icon: IconBook,
+};
+
+const CALENDAR_ITEM: NavItem = {
+  id: "calendar",
+  to: "/calendar",
+  labelKey: "nav.calendar",
+  Icon: IconCalendarDays,
+};
+
+const STUDENTS_ITEM: NavItem = {
+  id: "students",
+  to: "/students",
+  labelKey: "nav.students",
+  Icon: IconUsers,
+  minRole: "teacher",
+};
+
+const CHILDREN_ITEM: NavItem = {
+  id: "children",
+  to: "/students",
+  labelKey: "nav.children",
+  Icon: IconUsers,
+  exactRole: "parent",
+};
+
+const SCHOOL_ITEM: NavItem = {
+  id: "school",
+  to: "/school",
+  labelKey: "nav.school",
+  Icon: IconSchool,
+  minRole: "manager",
+};
+
+const PROGRESS_ITEM: NavItem = {
+  id: "progress",
+  to: "/marks",
+  labelKey: "nav.progress",
+  Icon: IconChart,
+  exactRole: "student",
+};
+
+const MEALS_ITEM: NavItem = {
+  id: "meals",
+  to: "/meals",
+  labelKey: "nav.meals",
+  Icon: IconUtensils,
+};
+
+const PRIMARY_BY_ROLE: Record<Role, NavItem[]> = {
+  student: [HOME_ITEM, CLASSES_ITEM, CALENDAR_ITEM, PROGRESS_ITEM],
+  teacher: [HOME_ITEM, CLASSES_ITEM, STUDENTS_ITEM, CALENDAR_ITEM],
+  manager: [HOME_ITEM, CLASSES_ITEM, STUDENTS_ITEM, CALENDAR_ITEM, SCHOOL_ITEM],
+  admin: [HOME_ITEM, CLASSES_ITEM, STUDENTS_ITEM, CALENDAR_ITEM, SCHOOL_ITEM],
+  parent: [HOME_ITEM, CHILDREN_ITEM, CALENDAR_ITEM, MEALS_ITEM],
 };
 
 const NAV_GROUPS: NavGroup[] = [
@@ -52,121 +117,103 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.classes",
     Icon: IconSchool,
     items: [
-      { to: "/courses", labelKey: "nav.courses", Icon: IconBook },
-      { to: "/studies", labelKey: "nav.studies", Icon: IconClock },
-      { to: "/clubs", labelKey: "nav.clubs", Icon: IconUsers },
-      { to: "/homework", labelKey: "nav.homework", Icon: IconHomework },
-      { to: "/exams", labelKey: "nav.exams", Icon: IconExam },
-      { to: "/question-bank", labelKey: "nav.questionBank", Icon: IconArchive, minRole: "teacher" },
-      { to: "/events", labelKey: "nav.events", Icon: IconCalendar },
-      { to: "/calendar", labelKey: "nav.calendar", Icon: IconCalendarDays },
-      { to: "/appointments", labelKey: "nav.appointments", Icon: IconClock },
-      { to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
-      { to: "/attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, exactRole: "student" },
-      { to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
+      CLASSES_ITEM,
+      { id: "homework", to: "/homework", labelKey: "nav.homework", Icon: IconHomework },
+      { id: "exams", to: "/exams", labelKey: "nav.exams", Icon: IconExam },
+      { id: "question-bank", to: "/question-bank", labelKey: "nav.questionBank", Icon: IconArchive, minRole: "teacher" },
+      { id: "events", to: "/events", labelKey: "nav.events", Icon: IconCalendar },
+      CALENDAR_ITEM,
+      { id: "appointments", to: "/appointments", labelKey: "nav.appointments", Icon: IconClock },
+      { id: "notes", to: "/notes", labelKey: "nav.notes", Icon: IconNote },
+      { id: "marks", to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
+      { id: "pomodoro", to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
     ],
   },
   {
     id: "students",
     labelKey: "nav.group.students",
     Icon: IconUsers,
-    exactRole: "parent",
     items: [
-      { to: "/students", labelKey: "nav.myStudents", Icon: IconUsers, exactRole: "parent" },
+      STUDENTS_ITEM,
+      CHILDREN_ITEM,
+      { id: "student-marks", to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
+      { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
+      { id: "student-pomodoro", to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
     ],
   },
   {
-    id: "grades",
-    labelKey: "nav.group.grades",
-    Icon: IconNote,
-    items: [
-      { to: "/notes", labelKey: "nav.notes", Icon: IconNote },
-    ],
-  },
-  {
-    id: "community",
+    id: "workspace",
     labelKey: "nav.group.community",
-    Icon: IconGlobe,
+    Icon: IconMessage,
     items: [
-      { to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
-      { to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
+      MEALS_ITEM,
+      { id: "messages", to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
+      { id: "questions", to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
+      { id: "work", to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
     ],
   },
   {
-    id: "reports",
-    labelKey: "nav.group.reports",
-    Icon: IconReportAnalytics,
-    minRole: "teacher",
+    id: "school",
+    labelKey: "nav.school",
+    Icon: IconSchool,
     items: [
-      { to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
-      { to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
-      { to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
-      { to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
-      { to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
-    ],
-  },
-  {
-    id: "settings",
-    labelKey: "nav.group.settings",
-    Icon: IconSettings,
-    minRole: "manager",
-    items: [
-      { to: "/management/settings", labelKey: "nav.settings", Icon: IconSettings, minRole: "manager" },
-      { to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendarDays, minRole: "manager" },
-    ],
-  },
-  {
-    id: "admin",
-    labelKey: "nav.admin",
-    Icon: IconUserCog,
-    minRole: "admin",
-    items: [
-      { to: "/admin/users", labelKey: "nav.users", Icon: IconUsers, minRole: "admin" },
+      SCHOOL_ITEM,
+      { id: "staff-work", to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
+      { id: "settings", to: "/management/settings", labelKey: "nav.settings", Icon: IconSettings, minRole: "manager" },
+      { id: "terms", to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendarDays, minRole: "manager" },
+      { id: "users", to: "/admin/users", labelKey: "nav.users", Icon: IconUserCog, minRole: "admin" },
     ],
   },
 ];
 
-export const HOME_ITEM: NavItem = {
-  to: "/",
-  labelKey: "nav.home",
-  Icon: IconHome,
-  exact: true,
-};
-
-const PARENT_GROUP: NavGroup = {
-  id: "students",
-  labelKey: "nav.group.students",
-  Icon: IconUsers,
-  exactRole: "parent",
-  items: [
-    { to: "/students", labelKey: "nav.myStudents", Icon: IconUsers, exactRole: "parent" },
-    { to: "/appointments", labelKey: "nav.appointments", Icon: IconClock },
-  ],
-};
-
 function itemVisible(item: NavItem, role: Role | undefined) {
-  if (role === "parent") return item.to === "/students" || item.to === "/appointments";
+  if (!role) return false;
   if (item.exactRole) return hasExactRole(role, item.exactRole);
   if (item.minRole || item.maxRole) return roleInRange(role, item.minRole, item.maxRole);
-  return true;
+  return role !== "parent" || ["/", "/students", "/calendar", "/appointments", "/meals", "/messages"].includes(item.to);
+}
+
+export function primaryNavItems(role: Role | undefined): NavItem[] {
+  return role ? PRIMARY_BY_ROLE[role] : [];
 }
 
 export function visibleNavGroups(role: Role | undefined): NavGroup[] {
-  if (role === "parent") return [PARENT_GROUP];
   return NAV_GROUPS
-    .filter((group) => {
-      if (group.exactRole && !hasExactRole(role, group.exactRole)) return false;
-      if (group.minRole && !hasMinRole(role, group.minRole)) return false;
-      return true;
-    })
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => itemVisible(item, role)),
-    }))
+    .map((group) => ({ ...group, items: group.items.filter((item) => itemVisible(item, role)) }))
     .filter((group) => group.items.length > 0);
+}
+
+export function sidebarNavGroups(role: Role | undefined): NavGroup[] {
+  const primaryPaths = new Set(primaryNavItems(role).map((item) => item.to));
+  return visibleNavGroups(role)
+    .map((group) => ({ ...group, items: group.items.filter((item) => !primaryPaths.has(item.to)) }))
+    .filter((group) => group.items.length > 0);
+}
+
+export function visibleNavItems(role: Role | undefined): NavItem[] {
+  const items = [HOME_ITEM, ...visibleNavGroups(role).flatMap((group) => group.items)];
+  return items.filter((item, index) => items.findIndex((candidate) => candidate.to === item.to) === index);
 }
 
 export function pathActive(pathname: string, to: string, exact?: boolean) {
   if (exact) return pathname === to;
   return pathname === to || pathname.startsWith(`${to}/`);
+}
+
+export function primaryPathActive(pathname: string, item: NavItem) {
+  if (pathActive(pathname, item.to, item.exact)) return true;
+  const prefixes: Partial<Record<string, string[]>> = {
+    classes: ["/homework", "/exams", "/question-bank"],
+    students: ["/management/student-", "/management/pomodoros"],
+    calendar: ["/events", "/appointments"],
+    progress: ["/attendance", "/pomodoro"],
+    school: ["/management/settings", "/management/terms", "/management/staff-work", "/admin/users"],
+  };
+  return (prefixes[item.id] ?? []).some((prefix) => pathname.startsWith(prefix));
+}
+
+export function routeNavItem(pathname: string, role: Role | undefined): NavItem | undefined {
+  return [...primaryNavItems(role), ...visibleNavItems(role)]
+    .filter((item) => pathActive(pathname, item.to, item.exact))
+    .sort((a, b) => b.to.length - a.to.length)[0];
 }
