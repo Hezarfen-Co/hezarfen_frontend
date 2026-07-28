@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconChevronDown, IconChevronLeft, IconEdit, IconExam, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconCalendarDays, IconChart, IconChevronDown, IconClipboardCheck, IconClock, IconEdit, IconExam, IconEye, IconPencilQuestion, IconRefresh, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -43,7 +43,7 @@ import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/for
 import { personId, personLabel, personLabelWithId } from "@/lib/person";
 import { cn } from "@/lib/cn";
 import { createFlash } from "@/lib/flash";
-import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
+import { scheduleStatusClass } from "@/lib/schedule-status";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -118,8 +118,7 @@ function ExamDetailContent() {
   const [answerMark, setAnswerMark] = createSignal("0");
   const [answerError, setAnswerError] = createSignal("");
   const [answerPending, setAnswerPending] = createSignal(false);
-  const [questionCreateOpen, setQuestionCreateOpen] = createSignal(false);
-  const [examTab, setExamTab] = createSignal("schedule");
+  const [examTab, setExamTab] = createSignal("questions");
   const isSittable = () => {
     const e = exam();
     return e ? isSittableExam(e) : false;
@@ -203,6 +202,13 @@ function ExamDetailContent() {
   };
   const isFinished = () => examStatus().finished;
   const isUpcoming = () => examStatus().upcoming;
+  let defaultTabExamId = "";
+  createEffect(() => {
+    const current = exam();
+    if (!current || current.id === defaultTabExamId) return;
+    defaultTabExamId = current.id;
+    setExamTab(current.ends_at != null && current.ends_at < now() ? "results" : "questions");
+  });
   const ownAttemptSummary = (): ExamAttemptSummary | null => {
     const attempt = ownAttempt();
     return attempt ? { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } : null;
@@ -377,21 +383,20 @@ function ExamDetailContent() {
         {(ex) => (
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
-          <div class="space-y-6">
-            <div class="sticky top-14 z-10 -mx-4 bg-background px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+          <div class="mx-auto w-full max-w-[1440px] space-y-6">
+            <div class="sticky top-14 z-10 -mx-4 space-y-2 bg-background px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+              <nav class="detail-breadcrumb">
+                <Link to="/exams">{t("exams.title")}</Link>
+                <span aria-hidden>›</span>
+                <span class="text-foreground">{ex().title}</span>
+              </nav>
               <PageHeader
                 accent="rose"
-                eyebrow={t("exams.title")}
                 title={ex().title}
                 description={ex().description || "—"}
+                class="border-rose-500/30 shadow-sm"
                 actions={
-                  <div class="detail-action-group">
-                    <Link to="/exams">
-                      <Button variant="ghost" size="sm" class="w-full rounded-xl sm:w-auto">
-                        <IconChevronLeft class="h-4 w-4" />
-                        {t("common.back")}
-                      </Button>
-                    </Link>
+                  <div class="flex flex-wrap items-center gap-2">
                     <Show when={isStudent() && !isDraft() && isSittable()}>
                       <Show when={!isUpcoming() && !isFinished()}>
                         <Show when={noAttemptsLeft()}
@@ -412,106 +417,100 @@ function ExamDetailContent() {
                     </Show>
                     <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
                       <Link to="/exams/$id/live" params={{ id: id() }}>
-                        <Button variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none">
+                        <Button size="sm" class="flex-1 rounded-xl sm:flex-none">
                           <IconEye class="h-4 w-4" />
                           {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                         </Button>
                       </Link>
                     </Show>
                     <Show when={canManage()}>
-                      <div class="detail-action-divider">
-                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(true)}>
-                          <IconEdit class="h-4 w-4" />
-                          {t("common.edit")}
-                        </Button>
-                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-xl sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
-                          <IconTrash class="h-4 w-4" />
-                          {t("common.delete")}
-                        </Button>
-                      </div>
+                      <TableRowActions
+                        label={t("common.actions")}
+                        actions={[
+                          {
+                            label: t("common.edit"),
+                            icon: <IconEdit class="h-4 w-4" />,
+                            onSelect: () => setEditing(true),
+                          },
+                          {
+                            label: t("common.delete"),
+                            icon: <IconTrash class="h-4 w-4" />,
+                            destructive: true,
+                            disabled: pending(),
+                            onSelect: () => setDeleteOpen(true),
+                          },
+                        ]}
+                      />
                     </Show>
                   </div>
                 }
-              />
-            </div>
-            <Show when={hasCourseManagementRights() && isFinished()}>
-              <label
-                class={cn(
-                  "detail-metric-card flex cursor-pointer items-center gap-4 text-sm transition-colors",
-                  reviewOn() && "border-primary/30 bg-primary/[0.04]",
-                )}
               >
-                <div class="min-w-0 flex-1">
-                  <span class="font-medium">{t("exams.allowReview")}</span>
-                  <p class="text-xs font-normal text-muted-foreground">{t("exams.allowReviewHelp")}</p>
-                </div>
-                <span class="relative shrink-0">
-                  <input
-                    type="checkbox"
-                    class="peer sr-only"
-                    checked={reviewOn()}
-                    disabled={reviewSaving()}
-                    onChange={(e) => toggleReview(e.currentTarget.checked)}
-                  />
-                  <span class="block h-7 w-12 rounded-full bg-input shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] ring-1 ring-inset ring-black/5 transition-colors duration-200 peer-checked:bg-primary peer-disabled:opacity-60 peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background dark:ring-white/10" />
-                  <span class="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-md ring-1 ring-black/5 transition-transform duration-200 ease-out peer-checked:translate-x-5" />
-                </span>
-              </label>
-            </Show>
-            <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("work.status")}</p>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
                   <Badge
                     variant="outline"
-                    class={cn(
-                      "mt-2 w-fit rounded-full capitalize",
-                      scheduleStatusClass(examStatusTone(detailStatus())),
-                    )}
+                    class={cn("w-fit rounded-full capitalize !bg-transparent !text-foreground", scheduleStatusClass(examStatusTone(detailStatus())))}
                   >
-                    <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(detailStatus())))} />
+                    <span class="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
                     {detailStatusLabel()}
                   </Badge>
+                  <Badge variant="outline" class="rounded-full border-rose-500/30">
+                    {examKindLabel(String(ex().kind), t)}
+                  </Badge>
                 </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.kind")}</p>
-                  <p class="mt-1 font-medium capitalize">{examKindLabel(String(ex().kind), t)}</p>
+              </PageHeader>
+            </div>
+            <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-sky-500/30 bg-card p-3.5">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                  <IconExam class="h-4 w-4" />
+                </span>
+                <div class="min-w-0">
+                  <p class="text-xs font-medium text-muted-foreground">{t("exams.mode")}</p>
+                  <p class="truncate text-sm font-semibold">{examModeLabel(ex().mode)}</p>
                 </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
-                  <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
-                </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.maxAttempts")}</p>
-                  <p class="mono mt-1 font-medium tabular-nums">
+              </div>
+              <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-violet-500/30 bg-card p-3.5">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                  <IconRefresh class="h-4 w-4" />
+                </span>
+                <div class="min-w-0">
+                  <p class="text-xs font-medium text-muted-foreground">{t("exams.maxAttempts")}</p>
+                  <p class="mono truncate text-sm font-semibold">
                     <Show when={isStudent()} fallback={ex().max_attempts}>
                       {ownAttemptSummary() ? `${ownAttemptSummary()!.attempts_used} / ${ex().max_attempts}` : `0 / ${ex().max_attempts}`}
-                      <span class="ml-1.5 text-xs text-muted-foreground font-sans tracking-normal">
-                        ({t("exams.attemptsLeft")}: {ex().max_attempts - (ownAttemptSummary()?.attempts_used ?? 0)})
-                      </span>
                     </Show>
                   </p>
+                  <Show when={isStudent()}>
+                    <p class="truncate text-xs text-muted-foreground">{t("exams.attemptsLeft")}: {ex().max_attempts - (ownAttemptSummary()?.attempts_used ?? 0)}</p>
+                  </Show>
                 </div>
-                <Show when={ex().starts_at}>
-                  <div class="detail-metric-card">
-                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.startsAt")}</p>
-                    <p class="mono mt-1 font-medium tabular-nums">{formatDateTime(ex().starts_at, locale())}</p>
-                  </div>
-                </Show>
-                <Show when={ex().ends_at}>
-                  <div class="detail-metric-card">
-                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.endsAt")}</p>
-                    <p class="mono mt-1 font-medium tabular-nums">{formatDateTime(ex().ends_at, locale())}</p>
-                  </div>
-                </Show>
-                <Show when={examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at)}>
-                  {(dur) => (
-                    <div class="detail-metric-card">
-                      <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.durationMinutes")}</p>
-                      <p class="mono mt-1 font-medium tabular-nums">{formatDurationMinutes(dur(), locale())}</p>
-                    </div>
-                  )}
-                </Show>
               </div>
+              <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-rose-500/30 bg-card p-3.5">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                  <IconCalendarDays class="h-4 w-4" />
+                </span>
+                <div class="min-w-0">
+                  <p class="text-xs font-medium text-muted-foreground">{t("exams.window")}</p>
+                  <p class="truncate text-xs font-semibold tabular-nums">
+                    <Show when={ex().starts_at} fallback="—">{formatDateTime(ex().starts_at, locale())}</Show>
+                  </p>
+                  <Show when={ex().ends_at}>
+                    <p class="truncate text-xs text-muted-foreground tabular-nums">{formatDateTime(ex().ends_at, locale())}</p>
+                  </Show>
+                </div>
+              </div>
+              <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-amber-500/30 bg-card p-3.5">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                  <IconClock class="h-4 w-4" />
+                </span>
+                <div class="min-w-0">
+                  <p class="text-xs font-medium text-muted-foreground">{t("exams.durationMinutes")}</p>
+                  <p class="mono truncate text-sm font-semibold">
+                    {formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <SidePanel
               open={answerSheetOpen()}
@@ -618,77 +617,49 @@ function ExamDetailContent() {
               </Alert>
             </Show>
 
-            <Tabs value={examTab()} onChange={setExamTab} class="space-y-3">
-              <TabsList>
-                <TabsTrigger value="schedule">{t("exams.schedule")}</TabsTrigger>
-                <Show when={isStudent() && ownResult()}>
-                  <TabsTrigger value="ownResult">{t("exams.yourResult")}</TabsTrigger>
-                </Show>
-                <Show when={hasCourseManagementRights()}>
-                  <TabsTrigger value="statistics">{t("exams.statistics")}</TabsTrigger>
-                  <TabsTrigger value="questions">{t("questions.title")}</TabsTrigger>
-                  <TabsTrigger value="results">{t("exams.results")}</TabsTrigger>
-                </Show>
-              </TabsList>
-
-              <TabsContent value="schedule" forceMount>
-                <div class="tab-panel-note mb-4">{t("exams.details")}</div>
-                <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                  <div class="detail-metric-card">
-                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.mode")}</p>
-                    <p class="mt-1 font-medium">{examModeLabel(ex().mode)}</p>
+            <Show when={isStudent() && ownResult()}>
+              {(result) => (
+                <section class="space-y-4 rounded-2xl border border-emerald-500/30 bg-card p-4" aria-labelledby="own-exam-result">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                      <IconClipboardCheck class="h-4 w-4" />
+                    </span>
+                    <h2 id="own-exam-result" class="font-display text-base font-semibold">{t("exams.yourResult")}</h2>
+                    <ExamResultBadge mark={result().mark} />
                   </div>
-                  <div class="detail-metric-card">
-                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</p>
-                    <p class="mono mt-1 font-medium">{formatDateTime(ex().starts_at, locale())}</p>
-                  </div>
-                  <div class="detail-metric-card">
-                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.ends")}</p>
-                    <p class="mono mt-1 font-medium">{formatDateTime(ex().ends_at, locale())}</p>
-                  </div>
-                  <div class="detail-metric-card">
-                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.durationMinutes")}</p>
-                    <p class="mono mt-1 font-medium">{formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}</p>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <Show when={isStudent() && ownResult()}>
-                <TabsContent value="ownResult" forceMount>
-                  <div class="tab-panel-note mb-4">{ownResult() ? `${t("form.mark")}: ${ownResult()!.mark}` : t("exams.notGraded")}</div>
-                  <Suspense fallback={<PageSpinner />}>
-                    <Show when={ownResult()} fallback={<ExamResultBadge notGraded />}>
-                      {(r) => <ExamResultBadge mark={r().mark} />}
-                    </Show>
-                  </Suspense>
-                  <Show when={ex().allow_review && ownResult()}>
-                    <div class="mt-6">
-                      <AnswerSheetView examId={id()} userId={auth.user()?.id ?? ""} mode="self" />
-                    </div>
+                  <Show when={ex().allow_review}>
+                    <AnswerSheetView examId={id()} userId={auth.user()?.id ?? ""} mode="self" />
                   </Show>
-                </TabsContent>
-              </Show>
+                </section>
+              )}
+            </Show>
 
-              <Show when={hasCourseManagementRights()}>
-                <TabsContent value="statistics" forceMount>
-                  <div class="tab-panel-note mb-4">{t("exams.examStatistics")}</div>
+            <Show when={hasCourseManagementRights()}>
+              <Tabs value={examTab()} onChange={setExamTab} class="space-y-3">
+                <TabsList class="border-primary/10 bg-card/80 shadow-sm">
+                  <TabsTrigger value="statistics"><IconChart class="h-4 w-4" />{t("exams.statistics")}</TabsTrigger>
+                  <TabsTrigger value="questions"><IconPencilQuestion class="h-4 w-4" />{t("questions.title")}</TabsTrigger>
+                  <TabsTrigger value="results"><IconClipboardCheck class="h-4 w-4" />{t("exams.results")}</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="statistics" forceMount class="border-border/60 bg-card/80 shadow-sm">
                   <Suspense fallback={<DataTableSkeleton columns={4} />}>
                     <Show when={stats()}>
                       {(s) => (
-                        <div class="grid gap-3 text-sm sm:grid-cols-4">
-                          <div class="detail-metric-card">
+                        <div class="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                          <div class="rounded-xl border border-violet-500/30 bg-card p-4">
                             <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.graded")}</p>
                             <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().graded}</p>
                           </div>
-                          <div class="detail-metric-card">
+                          <div class="rounded-xl border border-sky-500/30 bg-card p-4">
                             <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.average")}</p>
                             <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
                           </div>
-                          <div class="detail-metric-card">
+                          <div class="rounded-xl border border-amber-500/30 bg-card p-4">
                             <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.min")}</p>
                             <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
                           </div>
-                          <div class="detail-metric-card">
+                          <div class="rounded-xl border border-emerald-500/30 bg-card p-4">
                             <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.max")}</p>
                             <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
                           </div>
@@ -698,18 +669,55 @@ function ExamDetailContent() {
                   </Suspense>
                 </TabsContent>
 
-                <TabsContent value="questions" forceMount class="space-y-4">
-                  <div class="tab-panel-header">
-                    <p class="text-sm text-muted-foreground">{t("exams.examQuestions")}</p>
-                    <Show when={hasCourseManagementRights() && !isFinished()}>
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => { setExamTab("questions"); setQuestionCreateOpen(true); }}>
-                        <IconPlus class="h-4 w-4" />
-                        {t("questions.add")}
-                      </Button>
-                    </Show>
-                  </div>
-                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded createOpen={questionCreateOpen()} onCreateOpenChange={setQuestionCreateOpen} />
+                <TabsContent value="questions" forceMount class="border-border/60 bg-card/80 shadow-sm">
+                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded />
                 </TabsContent>
+
+                <TabsContent value="results" forceMount class="space-y-4 border-border/60 bg-card/80 shadow-sm">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <Badge variant="secondary" class="rounded-full">{`${resultTotal()} ${t("exams.studentResults")}`}</Badge>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <Show when={isFinished()}>
+                        <label
+                          class={cn(
+                            "inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-muted/50",
+                            reviewOn() && "text-primary",
+                          )}
+                          title={t("exams.allowReviewHelp")}
+                        >
+                          <span class="font-medium">{t("exams.allowReview")}</span>
+                          <span class="relative shrink-0">
+                            <input
+                              type="checkbox"
+                              class="peer sr-only"
+                              checked={reviewOn()}
+                              disabled={reviewSaving()}
+                              onChange={(event) => toggleReview(event.currentTarget.checked)}
+                            />
+                            <span class="block h-6 w-10 rounded-full bg-input ring-1 ring-inset ring-black/5 transition-colors peer-checked:bg-primary peer-disabled:opacity-60 peer-focus-visible:ring-2 peer-focus-visible:ring-ring dark:ring-white/10" />
+                            <span class="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+                          </span>
+                        </label>
+                      </Show>
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
+                        <IconEdit class="h-4 w-4" />
+                        {t("exams.gradeStudent")}
+                      </Button>
+                    </div>
+                  </div>
+                  <Suspense fallback={<PageSpinner />}>
+                    <Show
+                      when={(results()?.items ?? []).length > 0}
+                      fallback={<EmptyState kind="exams" title={t("exams.noResults")} />}
+                    >
+                      <DataTable columns={resultColumns()} data={results()?.items ?? []} filterColumn="user" />
+                      <Show when={resultTotal() > RESULT_PAGE_SIZE}>
+                        <PaginationControls page={Math.min(resultPage(), resultTotalPages() - 1)} totalPages={resultTotalPages()} onPageChange={setResultPage} />
+                      </Show>
+                    </Show>
+                  </Suspense>
+                </TabsContent>
+              </Tabs>
 
               <SidePanel
                 open={gradeOpen()}
@@ -730,29 +738,7 @@ function ExamDetailContent() {
                   }}
                 />
               </SidePanel>
-
-                <TabsContent value="results" forceMount class="space-y-4">
-                  <div class="tab-panel-header">
-                    <p class="text-sm text-muted-foreground">{`${resultTotal()} ${t("exams.studentResults")}`}</p>
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
-                      <IconEdit class="h-4 w-4" />
-                      {t("exams.gradeStudent")}
-                    </Button>
-                  </div>
-                  <Suspense fallback={<PageSpinner />}>
-                    <Show
-                      when={(results()?.items ?? []).length > 0}
-                      fallback={<EmptyState kind="exams" title={t("exams.noResults")} />}
-                    >
-                      <DataTable columns={resultColumns()} data={results()?.items ?? []} filterColumn="user" />
-                      <Show when={resultTotal() > RESULT_PAGE_SIZE}>
-                        <PaginationControls page={Math.min(resultPage(), resultTotalPages() - 1)} totalPages={resultTotalPages()} onPageChange={setResultPage} />
-                      </Show>
-                    </Show>
-                  </Suspense>
-                </TabsContent>
-              </Show>
-            </Tabs>
+            </Show>
 
             <Show when={flash()}>
               <Alert variant="success">{flash()}</Alert>

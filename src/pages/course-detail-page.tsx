@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconBook, IconCalendarDays, IconEdit, IconExam, IconHomework, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
 import { createFlash } from "@/lib/flash";
 import { cn } from "@/lib/cn";
 import { Input } from "@/components/ui/input";
@@ -69,7 +69,7 @@ function CourseDetailContent() {
     return params().id;
   });
 
-  const [courseTab, setCourseTab] = createSignal("overview");
+  const [courseTab, setCourseTab] = createSignal("subjects");
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
   const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
   const [settings] = createResource(() => getSettings());
@@ -150,6 +150,11 @@ function CourseDetailContent() {
   const courseListSearch = (value: CourseKind | undefined) => value ? { kind: value } as never : {} as never;
 
   const examCount = createMemo(() => exams()?.length ?? 0);
+  const nextExam = createMemo(() =>
+    (exams() ?? [])
+      .filter((exam) => (exam.ends_at ?? exam.starts_at ?? 0) > Date.now())
+      .sort((a, b) => (a.starts_at ?? a.ends_at ?? 0) - (b.starts_at ?? b.ends_at ?? 0))[0],
+  );
   const rosterCount = createMemo(() => roster()?.length ?? 0);
   const countDescription = (count: number, item: string) => t("common.countItem", { count, item });
 
@@ -274,50 +279,79 @@ function CourseDetailContent() {
         {(c) => (
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
-          <div class="space-y-6">
+          <div class="mx-auto w-full max-w-[1440px] space-y-6">
             <div class="space-y-2">
+              <nav class="detail-breadcrumb">
+                <Link to="/courses" search={courseListSearch(c().kind)}>{t("courses.kind.course")}</Link>
+                <span aria-hidden>›</span>
+                <span class="text-foreground">{c().title}</span>
+              </nav>
               <PageHeader
                 accent="violet"
-                eyebrow={courseKindLabel(c().kind)}
                 title={c().title}
                 description={c().description || "—"}
+                class="border-violet-500/30 shadow-sm"
                 actions={
-                  <div class="detail-action-group">
-                    <Link to="/courses" search={courseListSearch(c().kind)}>
-                      <Button variant="ghost" size="sm" class="w-full rounded-xl sm:w-auto">
-                        <IconChevronLeft class="h-4 w-4" />
-                        {t("common.back")}
-                      </Button>
-                    </Link>
-                    <Show when={canManage()}>
-                      <div class="detail-action-divider">
-                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={startEdit}>
-                          <IconEdit class="h-4 w-4" />
-                          {t("common.edit")}
-                        </Button>
-                        <Show when={canDeleteCourse()}>
-                          <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={() => setDeleteOpen(true)}>
-                            <IconTrash class="h-4 w-4" />
-                            {t("courses.delete")}
-                          </Button>
-                        </Show>
-                      </div>
-                    </Show>
-                  </div>
+                  <Show when={canManage()}>
+                    <TableRowActions
+                      label={t("common.actions")}
+                      actions={[
+                        {
+                          label: t("common.edit"),
+                          icon: <IconEdit class="h-4 w-4" />,
+                          onSelect: startEdit,
+                        },
+                        ...(canDeleteCourse()
+                          ? [{
+                              label: t("courses.delete"),
+                              icon: <IconTrash class="h-4 w-4" />,
+                              destructive: true,
+                              onSelect: () => setDeleteOpen(true),
+                            }]
+                          : []),
+                      ]}
+                    />
+                  </Show>
                 }
               />
-              <div class="grid gap-3 text-sm sm:grid-cols-3">
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("courses.kind")}</p>
-                  <p class="mt-1 font-medium">{courseKindLabel(c().kind)}</p>
+              <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-violet-500/30 bg-card p-3.5">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                    <IconBook class="h-4 w-4" />
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-medium text-muted-foreground">{t("courses.kind")}</p>
+                    <p class="truncate text-sm font-semibold">{courseKindLabel(c().kind)}</p>
+                  </div>
                 </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("terms.term")}</p>
-                  <p class="mt-1 font-medium">{terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}</p>
+                <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-sky-500/30 bg-card p-3.5">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                    <IconCalendarDays class="h-4 w-4" />
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-medium text-muted-foreground">{t("terms.term")}</p>
+                    <p class="truncate text-sm font-semibold">{terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}</p>
+                  </div>
                 </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("courses.capacity")}</p>
-                  <p class="mono mt-1 font-medium">{c().capacity == null ? "—" : hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}</p>
+                <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-emerald-500/30 bg-card p-3.5">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                    <IconUsers class="h-4 w-4" />
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-medium text-muted-foreground">{t("courses.capacity")}</p>
+                    <p class="mono truncate text-sm font-semibold">{c().capacity == null ? "—" : hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}</p>
+                  </div>
+                </div>
+                <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-amber-500/30 bg-card p-3.5">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                    <IconExam class="h-4 w-4" />
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-medium text-muted-foreground">{t("courses.nextExam")}</p>
+                    <Show when={nextExam()} fallback={<p class="truncate text-sm font-semibold">{t("courses.noUpcoming")}</p>}>
+                      {(exam) => <ExamLink examId={exam().id} class="block truncate text-sm font-semibold hover:text-primary hover:underline">{exam().title}</ExamLink>}
+                    </Show>
+                  </div>
                 </div>
               </div>
             </div>
@@ -556,58 +590,46 @@ function CourseDetailContent() {
             )}
 
             <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-3">
-              <TabsList>
-                <TabsTrigger value="overview">{t("courses.overview")}</TabsTrigger>
-                <TabsTrigger value="work">{t("courses.work")}</TabsTrigger>
-                <TabsTrigger value="sessions">{t("sessions.title")}</TabsTrigger>
-                <TabsTrigger value="people">{t("courses.people")}</TabsTrigger>
+              <TabsList class="border-primary/10 bg-card/80 shadow-sm">
+                <TabsTrigger value="subjects"><IconBook class="h-4 w-4" />{t("subjects.title")}</TabsTrigger>
+                <TabsTrigger value="exams"><IconExam class="h-4 w-4" />{t("courses.exams")}</TabsTrigger>
+                <TabsTrigger value="homework"><IconHomework class="h-4 w-4" />{t("homework.title")}</TabsTrigger>
+                <TabsTrigger value="sessions"><IconCalendarDays class="h-4 w-4" />{t("sessions.title")}</TabsTrigger>
+                <TabsTrigger value="teachers"><IconSchool class="h-4 w-4" />{t("courses.teachers")}</TabsTrigger>
+                <Show when={hasCourseManagementRights()}>
+                  <TabsTrigger value="students"><IconUsers class="h-4 w-4" />{t("courses.roster")}</TabsTrigger>
+                </Show>
               </TabsList>
 
-              <TabsContent value="overview" class="space-y-4">
-                <div class="data-shell p-4">
-                  <h2 class="font-display text-base font-semibold">{t("courses.overview")}</h2>
-                  <p class="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{c().description || "—"}</p>
+              <TabsContent value="subjects" class="space-y-4 border-border/60 bg-card/80 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <Badge variant="secondary" class="rounded-full">{countDescription(subjectCount(), t("subjects.item"))}</Badge>
+                  <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 hover:bg-muted" onClick={() => setShowSubjectForm(true)}><IconPlus class="h-4 w-4" />{t("subjects.add")}</Button></Show>
                 </div>
-                <div class="data-shell p-4">
-                  <h2 class="font-display text-base font-semibold">{t("courses.upcoming")}</h2>
-                  <Show
-                    when={(exams() ?? []).filter((exam) => (exam.ends_at ?? exam.starts_at ?? 0) > Date.now()).sort((a, b) => (a.starts_at ?? a.ends_at ?? 0) - (b.starts_at ?? b.ends_at ?? 0))[0]}
-                    fallback={<p class="mt-2 text-sm text-muted-foreground">{t("courses.noUpcoming")}</p>}
-                  >
-                    {(exam) => <ExamLink examId={exam().id} class="mt-2 block text-sm font-medium hover:underline">{exam().title}</ExamLink>}
-                  </Show>
-                </div>
+                <CourseSubjectsPanel courseId={id()} canManage={canManage()} active={courseTab() === "subjects"} createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
               </TabsContent>
 
-              <TabsContent value="work" class="space-y-5">
-                <div class="space-y-4">
-                  <div class="tab-panel-header">
-                    <p class="text-sm font-medium">{t("subjects.title")} · {countDescription(subjectCount(), t("subjects.item"))}</p>
-                    <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSubjectForm(true)}><IconPlus class="h-4 w-4" />{t("subjects.add")}</Button></Show>
-                  </div>
-                  <CourseSubjectsPanel courseId={id()} canManage={canManage()} active={courseTab() === "work"} createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
+              <TabsContent value="exams" class="space-y-4 border-border/60 bg-card/80 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <Badge variant="secondary" class="rounded-full">{countDescription(examCount(), t("courses.examItem"))}</Badge>
+                  <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 hover:bg-muted" onClick={() => setShowExamForm(true)}><IconPlus class="h-4 w-4" />{t("courses.addExam")}</Button></Show>
                 </div>
-                <div class="space-y-4 border-t border-border/60 pt-5">
-                  <div class="tab-panel-header">
-                    <p class="text-sm font-medium">{t("courses.exams")} · {countDescription(examCount(), t("courses.examItem"))}</p>
-                    <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}><IconPlus class="h-4 w-4" />{t("courses.addExam")}</Button></Show>
-                  </div>
-                  <Suspense fallback={<DataTableSkeleton />}><DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })} /></Suspense>
-                </div>
-                <div class="space-y-4 border-t border-border/60 pt-5">
-                  <div class="tab-panel-header">
-                    <p class="text-sm font-medium">{t("homework.title")} · {countDescription(homeworkCount(), t("homework.item"))}</p>
-                    <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowHomeworkForm(true)}><IconPlus class="h-4 w-4" />{t("homework.add")}</Button></Show>
-                  </div>
-                  <CourseHomeworkPanel courseId={id()} canManage={canManage()} active={courseTab() === "work"} createOpen={showHomeworkForm()} onCreateOpenChange={setShowHomeworkForm} onCountChange={setHomeworkCount} />
-                </div>
+                <Suspense fallback={<DataTableSkeleton />}><DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })} /></Suspense>
               </TabsContent>
 
-              <TabsContent value="sessions" class="space-y-4">
-                <div class="tab-panel-header">
-                  <p class="text-sm text-muted-foreground">{countDescription(sessionCount(), t("sessions.item"))}</p>
+              <TabsContent value="homework" class="space-y-4 border-border/60 bg-card/80 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <Badge variant="secondary" class="rounded-full">{countDescription(homeworkCount(), t("homework.item"))}</Badge>
+                  <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 hover:bg-muted" onClick={() => setShowHomeworkForm(true)}><IconPlus class="h-4 w-4" />{t("homework.add")}</Button></Show>
+                </div>
+                <CourseHomeworkPanel courseId={id()} canManage={canManage()} active={courseTab() === "homework"} createOpen={showHomeworkForm()} onCreateOpenChange={setShowHomeworkForm} onCountChange={setHomeworkCount} />
+              </TabsContent>
+
+              <TabsContent value="sessions" class="space-y-4 border-border/60 bg-card/80 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <Badge variant="secondary" class="rounded-full">{countDescription(sessionCount(), t("sessions.item"))}</Badge>
                   <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSessionForm(true)}>
+                    <Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 hover:bg-muted" onClick={() => setShowSessionForm(true)}>
                       <IconPlus class="h-4 w-4" />
                       {t("sessions.add")}
                     </Button>
@@ -616,25 +638,27 @@ function CourseDetailContent() {
                 <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} active={courseTab() === "sessions"} createOpen={showSessionForm()} onCreateOpenChange={setShowSessionForm} onCountChange={setSessionCount} />
               </TabsContent>
 
-              <TabsContent value="people" class="space-y-5">
-                <div class="space-y-4">
-                  <div class="tab-panel-header">
-                    <p class="text-sm font-medium">{t("courses.teachers")} · {countDescription((c().teachers ?? []).length + 1, t("courses.teachers"))}</p>
-                    <Show when={canStaffCourse()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowTeacherForm(true)}><IconPlus class="h-4 w-4" />{t("courses.assignTeacher")}</Button></Show>
-                  </div>
-                  <p class="rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-sm">{t("common.creator")}: {c().creator.display_name || c().creator.username}</p>
-                  <CourseTeachersPanel courseId={id()} teachers={c().teachers ?? []} canStaff={canStaffCourse()} assignOpen={showTeacherForm()} onAssignOpenChange={setShowTeacherForm} onCourseUpdated={refetchCourse} />
+              <TabsContent value="teachers" class="space-y-4 border-border/60 bg-card/80 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <Badge variant="secondary" class="rounded-full">{countDescription((c().teachers ?? []).length + 1, t("courses.teachers"))}</Badge>
+                  <Show when={canStaffCourse()}><Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 hover:bg-muted" onClick={() => setShowTeacherForm(true)}><IconPlus class="h-4 w-4" />{t("courses.assignTeacher")}</Button></Show>
                 </div>
-                <Show when={hasCourseManagementRights()}>
-                  <div class="space-y-4 border-t border-border/60 pt-5">
-                    <div class="tab-panel-header">
-                      <p class="text-sm font-medium">{t("courses.roster")} · {countDescription(rosterCount(), t("courses.rosterItem"))}</p>
-                      <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}><IconPlus class="h-4 w-4" />{t("courses.enroll")}</Button></Show>
-                    </div>
-                    <Suspense fallback={<DataTableSkeleton />}><Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="courses" title={t("exams.emptyRoster")} />}><DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} /></Show></Suspense>
-                  </div>
-                </Show>
+                <div class="flex items-center gap-3 rounded-xl border border-violet-500/30 bg-card px-3 py-2.5 text-sm">
+                  <IconSchool class="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span><span class="text-muted-foreground">{t("common.creator")}:</span> <span class="font-medium">{c().creator.display_name || c().creator.username}</span></span>
+                </div>
+                <CourseTeachersPanel courseId={id()} teachers={c().teachers ?? []} canStaff={canStaffCourse()} assignOpen={showTeacherForm()} onAssignOpenChange={setShowTeacherForm} onCourseUpdated={refetchCourse} />
               </TabsContent>
+
+              <Show when={hasCourseManagementRights()}>
+                <TabsContent value="students" class="space-y-4 border-border/60 bg-card/80 shadow-sm">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <Badge variant="secondary" class="rounded-full">{countDescription(rosterCount(), t("courses.rosterItem"))}</Badge>
+                    <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 hover:bg-muted" onClick={() => setShowEnrollPanel(true)}><IconPlus class="h-4 w-4" />{t("courses.enroll")}</Button></Show>
+                  </div>
+                  <Suspense fallback={<DataTableSkeleton />}><Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="courses" title={t("exams.emptyRoster")} />}><DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} /></Show></Suspense>
+                </TabsContent>
+              </Show>
             </Tabs>
           </div>
             </Show>
