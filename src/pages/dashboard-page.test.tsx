@@ -5,25 +5,25 @@ import { PreferencesProvider } from "@/stores/preferences-context";
 
 const { navigate, authUser } = vi.hoisted(() => ({
   navigate: vi.fn(),
-  authUser: { role: "student" },
+  authUser: { authenticated: true, role: "student" },
 }));
 
 vi.mock("@tanstack/solid-router", () => ({
   Link: (props: { to: string; children: JSX.Element; class?: string }) => (
     <a href={props.to} class={props.class}>{props.children}</a>
   ),
-  Navigate: () => null,
+  Navigate: (props: { to: string }) => <span>redirect:{props.to}</span>,
   useNavigate: () => navigate,
 }));
 vi.mock("@/stores/auth-context", () => ({
   useAuth: () => ({
-    user: () => ({
+    user: () => authUser.authenticated ? ({
       id: "u-1",
       username: "demo",
       role: authUser.role,
       name: "Demo",
       surname: "User",
-    }),
+    }) : null,
     loading: () => false,
     error: () => undefined,
     refresh: async () => undefined,
@@ -89,6 +89,7 @@ vi.mock("@/api/meals", () => ({
 afterEach(() => {
   cleanup();
   navigate.mockReset();
+  authUser.authenticated = true;
 });
 
 function renderDashboard(role: string) {
@@ -99,6 +100,13 @@ function renderDashboard(role: string) {
     </PreferencesProvider>
   ));
 }
+
+test("logged-out visitor redirects before dashboard reads user role", () => {
+  authUser.authenticated = false;
+  renderDashboard("student");
+
+  expect(screen.getByText("redirect:/login")).toBeTruthy();
+});
 
 test("student sees truthful charts, full-width deadlines, and no teaching resources", async () => {
   const view = renderDashboard("student");

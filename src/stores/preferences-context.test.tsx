@@ -21,3 +21,14 @@ test("sidebar collapse preference loads and persists", () => {
   expect(screen.getByRole("button").textContent).toBe("expanded");
   expect(localStorage.getItem("hezarfen.sidebarCollapsed")).toBe("0");
 });
+
+test("preferences stay usable when browser storage writes fail", () => {
+  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    throw new DOMException("Storage blocked", "SecurityError");
+  });
+
+  render(() => <PreferencesProvider><SidebarPreferenceProbe /></PreferencesProvider>);
+  fireEvent.click(screen.getByRole("button"));
+
+  expect(screen.getByRole("button").textContent).toBe("collapsed");
+});

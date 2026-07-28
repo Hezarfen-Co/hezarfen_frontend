@@ -286,6 +286,24 @@ function sentenceCase(message: string): string {
   return trimmed[0].toLocaleUpperCase("en-US") + trimmed.slice(1);
 }
 
+function formatRuntimeErrorMessage(message: string, locale: Locale): string | null {
+  const normalized = normalizeApiMessage(message);
+  if (/^(failed to fetch|load failed|networkerror|network request failed)/.test(normalized)) {
+    return locale === "tr"
+      ? "Sunucuya ulaşılamadı. Bağlantını kontrol edip tekrar dene."
+      : "Could not reach the server. Check your connection and try again.";
+  }
+  if (
+    /^(typeerror:\s*)?cannot (read|set) propert(y|ies) of (null|undefined)/.test(normalized) ||
+    /^use\w+ must be used within \w+provider/.test(normalized)
+  ) {
+    return locale === "tr"
+      ? "Sayfa yüklenirken bir sorun oluştu. Sayfayı yeniden yükleyip tekrar dene."
+      : "Something went wrong while loading the page. Reload the page and try again.";
+  }
+  return null;
+}
+
 function formatNumber(value: string, locale: Locale): string {
   return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US").format(Number(value));
 }
@@ -455,6 +473,8 @@ export function formatApiErrorMessage(message: string, locale: Locale = currentL
   const normalized = normalizeApiMessage(message);
   const known = API_ERROR_MESSAGES[normalized]?.[locale];
   if (known) return known;
+  const runtime = formatRuntimeErrorMessage(message, locale);
+  if (runtime) return runtime;
   const validation = formatValidationMessage(message, locale);
   if (validation) return validation;
   if (locale === "tr") return `İşlem tamamlanamadı: ${sentenceCase(message)}`;
@@ -476,6 +496,12 @@ export function formatApiError(err: unknown, locale: Locale = currentLocale()): 
     if (err.status === 413) return API_ERROR_MESSAGES["payload too large"][locale];
     if (err.status >= 500) return locale === "tr" ? "Sunucuda bir sorun oluştu. Lütfen tekrar dene." : "Server error. Please try again.";
     return formatApiErrorMessage(err.message, locale);
+  }
+  if (err instanceof TypeError) {
+    return formatRuntimeErrorMessage(err.message, locale) ??
+      (locale === "tr"
+        ? "Sayfa yüklenirken bir sorun oluştu. Sayfayı yeniden yükleyip tekrar dene."
+        : "Something went wrong while loading the page. Reload the page and try again.");
   }
   if (err instanceof Error) return formatApiErrorMessage(err.message, locale);
   return locale === "tr" ? "Bir şeyler ters gitti." : "Something went wrong.";

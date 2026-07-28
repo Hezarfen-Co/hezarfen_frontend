@@ -79,6 +79,10 @@ function scheduleStatus(startsAt: number | null, endsAt: number | null, now: num
 }
 
 export default function DashboardPage() {
+  return <RouteGuard><DashboardContent /></RouteGuard>;
+}
+
+function DashboardContent() {
   const auth = useAuth();
   const t = useT();
   const navigate = useNavigate();
@@ -290,8 +294,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <RouteGuard>
-      <div class="space-y-5">
+    <div class="space-y-5">
         <header class="flex flex-wrap items-end justify-between gap-3">
           <div class="space-y-1">
             <h1 class="font-display text-2xl font-semibold tracking-tight">{t("dashboard.welcomeBack", { name: fullName() })}</h1>
@@ -415,7 +418,6 @@ export default function DashboardPage() {
             </Show>
           </div>
         </Suspense>
-      </div>
-    </RouteGuard>
+    </div>
   );
 }

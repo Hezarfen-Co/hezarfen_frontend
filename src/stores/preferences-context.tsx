@@ -31,14 +31,28 @@ const LOCALE_KEY = "hezarfen.locale";
 const THEME_KEY = "hezarfen.theme";
 const SIDEBAR_KEY = "hezarfen.sidebarCollapsed";
 
-function canUseStorage() {
-  return typeof window !== "undefined" && typeof localStorage !== "undefined";
+function getStorage(): Storage | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function writeStorage(key: string, value: string) {
+  try {
+    getStorage()?.setItem(key, value);
+  } catch {
+    // Preferences still work for this session when storage is blocked/full.
+  }
 }
 
 function readLocale(): Locale {
-  if (!canUseStorage()) return "en";
+  const storage = getStorage();
+  if (!storage) return "en";
   try {
-    const saved = localStorage.getItem(LOCALE_KEY);
+    const saved = storage.getItem(LOCALE_KEY);
     if (saved === "en" || saved === "tr") return saved;
     return navigator.language.toLowerCase().startsWith("tr") ? "tr" : "en";
   } catch {
@@ -47,9 +61,10 @@ function readLocale(): Locale {
 }
 
 function readTheme(): ThemeMode {
-  if (!canUseStorage()) return "light";
+  const storage = getStorage();
+  if (!storage) return "light";
   try {
-    const saved = localStorage.getItem(THEME_KEY);
+    const saved = storage.getItem(THEME_KEY);
     if (saved === "light" || saved === "dark") return saved;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   } catch {
@@ -58,9 +73,10 @@ function readTheme(): ThemeMode {
 }
 
 function readSidebarCollapsed(): boolean {
-  if (!canUseStorage()) return false;
+  const storage = getStorage();
+  if (!storage) return false;
   try {
-    return localStorage.getItem(SIDEBAR_KEY) === "1";
+    return storage.getItem(SIDEBAR_KEY) === "1";
   } catch {
     return false;
   }
@@ -73,22 +89,19 @@ export function PreferencesProvider(props: ParentProps) {
 
   createEffect(() => {
     const l = locale();
-    if (!canUseStorage()) return;
-    localStorage.setItem(LOCALE_KEY, l);
+    writeStorage(LOCALE_KEY, l);
     document.documentElement.lang = l;
   });
 
   createEffect(() => {
     const th = theme();
-    if (!canUseStorage()) return;
-    localStorage.setItem(THEME_KEY, th);
+    writeStorage(THEME_KEY, th);
     document.documentElement.setAttribute("data-kb-theme", th);
     document.documentElement.classList.toggle("dark", th === "dark");
   });
 
   createEffect(() => {
-    if (!canUseStorage()) return;
-    localStorage.setItem(SIDEBAR_KEY, sidebarCollapsed() ? "1" : "0");
+    writeStorage(SIDEBAR_KEY, sidebarCollapsed() ? "1" : "0");
   });
 
   const persistPreferences = (body: Parameters<typeof patchMyPreferences>[0]) => {

@@ -333,5 +333,17 @@ describe("client", () => {
       expect(formatApiError(new Error("generic"), "en")).toBe("Generic");
       expect(formatApiError(new Error("generic"), "tr")).toBe("İşlem tamamlanamadı: Generic");
     });
+
+    it("does not expose network, runtime, or provider errors to users", () => {
+      expect(formatApiError(new TypeError("Failed to fetch"), "tr")).toBe(
+        "Sunucuya ulaşılamadı. Bağlantını kontrol edip tekrar dene.",
+      );
+      expect(formatApiError(new TypeError("Cannot read properties of null (reading 'user')"), "tr")).toBe(
+        "Sayfa yüklenirken bir sorun oluştu. Sayfayı yeniden yükleyip tekrar dene.",
+      );
+      expect(formatApiError(new Error("useAuth must be used within AuthProvider"), "en")).toBe(
+        "Something went wrong while loading the page. Reload the page and try again.",
+      );
+    });
   });
 });
