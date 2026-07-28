@@ -26,11 +26,11 @@ export function DialogContent<T extends ValidComponent = "div">(
             "pointer-events-auto relative flex max-h-[min(90vh,48rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-black/8 bg-popover/95 text-popover-foreground shadow-apple outline-hidden backdrop-blur-xl animate-fade-up dark:border-white/12 sm:rounded-3xl",
             local.class,
           )}
-          // Default: close only via X — outside/ESC races with clickable cards underneath.
-          // Opt into backdrop/ESC dismissal per-dialog with `dismissable`.
-          onPointerDownOutside={local.dismissable ? undefined : (e) => e.preventDefault()}
-          onInteractOutside={local.dismissable ? undefined : (e) => e.preventDefault()}
-          onEscapeKeyDown={local.dismissable ? undefined : (e) => e.preventDefault()}
+          // Standard dialogs dismiss outside/ESC; pass false only when losing
+          // unsaved state would be unsafe.
+          onPointerDownOutside={local.dismissable === false ? (e) => e.preventDefault() : undefined}
+          onInteractOutside={local.dismissable === false ? (e) => e.preventDefault() : undefined}
+          onEscapeKeyDown={local.dismissable === false ? (e) => e.preventDefault() : undefined}
           {...rest}
         >
           <DialogPrimitive.CloseButton
