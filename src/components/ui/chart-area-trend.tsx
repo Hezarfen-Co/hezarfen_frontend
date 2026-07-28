@@ -1,5 +1,6 @@
 import { For, Show, createSignal, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
+import { useT } from "@/stores/preferences-context";
 
 export type ChartAreaTrendItem = {
   label: string;
@@ -19,6 +20,7 @@ export type ChartAreaTrendProps = {
 
 export const ChartAreaTrend: Component<ChartAreaTrendProps> = (props) => {
   const [hoverIndex, setHoverIndex] = createSignal<number | null>(null);
+  const t = useT();
 
   const values = () => props.items.map((i) => i.value);
   const minVal = () => props.minScale ?? Math.min(0, ...values());
@@ -89,8 +91,8 @@ export const ChartAreaTrend: Component<ChartAreaTrendProps> = (props) => {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
               </svg>
             </div>
-            <p class="text-xs font-semibold text-foreground/80">Kayıt Bulunamadı</p>
-            <p class="text-[11px] text-muted-foreground mt-0.5">Gösterilecek henüz veri eklenmedi</p>
+            <p class="text-xs font-semibold text-foreground/80">{t("dashboard.chartEmpty")}</p>
+            <p class="text-[11px] text-muted-foreground mt-0.5">{t("dashboard.chartEmptyHint")}</p>
           </div>
         }
       >

@@ -1,76 +1,93 @@
-import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
+import type { ColumnDef } from "@tanstack/solid-table";
+import type { Role } from "@/api/client";
 import { formatApiError } from "@/api/client";
-import { getMyStudents } from "@/api/parents";
+import { getAppointments } from "@/api/appointments";
 import { getCourses } from "@/api/courses";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
-import { getMyCourses, getMyMarks, getUserAttendance } from "@/api/reports";
-import { getNotes } from "@/api/notes";
+import { getHomework } from "@/api/homework";
+import { getMealMenus } from "@/api/meals";
+import { getMyStudents } from "@/api/parents";
+import { getMyAttendance, getMyCourses, getMyMarks } from "@/api/reports";
 import { getTime } from "@/api/time/getTime";
-import type { Course, Exam, Event, Role } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ChartAreaTrend } from "@/components/ui/chart-area-trend";
+import { ChartBar } from "@/components/ui/chart-bar";
+import { ChartProgressRing } from "@/components/ui/chart-progress-ring";
+import { DataTable } from "@/components/ui/data-table";
 import {
+  IconArchive,
   IconBook,
-  IconBriefcase,
-  IconCalendar,
   IconCalendarDays,
   IconChart,
-  IconChevronDown,
-  IconChevronUp,
-  IconClock,
   IconClipboardCheck,
   IconExam,
-  IconMessage,
-  IconNote,
-  IconSettings,
+  IconHelpCircle,
+  IconHomework,
+  IconRefresh,
+  IconSearch,
   IconUsers,
+  IconUtensils,
 } from "@/components/ui/icons";
-import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { ChartBar, type ChartBarItem } from "@/components/ui/chart-bar";
-import { ChartProgressRing, type ProgressRingSegment } from "@/components/ui/chart-progress-ring";
-import { ChartAreaTrend, type ChartAreaTrendItem } from "@/components/ui/chart-area-trend";
-import { ChartMetricCards, type ChartMetricCardItem } from "@/components/ui/chart-metric-cards";
 import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
-import { createNow } from "@/lib/create-now";
-import { examKindLabel } from "@/lib/exam-labels";
-import { examDisplayStatus } from "@/lib/exam-status";
 import { formatDateTime } from "@/lib/format";
-import { hasMinRole } from "@/lib/roles";
-import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const ATTENTION_LIMIT = 8;
-const PORTAL_ORDER_KEY = "hezarfen.dashboard.portalOrder";
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEK_MS = 7 * DAY_MS;
 
-type AttentionKind = "active" | "soon" | "today";
+type Status = "active" | "today" | "soon";
+type DeadlineKind = "exam" | "event" | "appointment" | "homework";
 
-type AttentionItem = {
+type DeadlineRow = {
   id: string;
-  kind: "exam" | "event";
+  kind: DeadlineKind;
   title: string;
-  at: number | null;
-  subtitle: string;
-  status: AttentionKind;
-  to: "/exams/$id" | "/events/$id";
+  at: number;
+  status: Status;
 };
 
-type PortalCardDef = {
-  titleKey: MessageKey;
-  to: string;
-  descKey?: MessageKey;
+type StatCardData = {
+  labelKey: MessageKey;
+  value: string;
   Icon: Component<{ class?: string }>;
-  stat?: string;
-  minRole?: Role;
+  spark?: number[];
 };
 
-const ROLE_KEY: Record<Role, MessageKey> = {
+// Tiny real-data sparkline; renders nothing when there's no series.
+function StatSpark(props: { values: number[] }) {
+  const pts = () => {
+    const v = props.values;
+    if (v.length < 2) return "";
+    const min = Math.min(...v);
+    const max = Math.max(...v);
+    const range = max - min || 1;
+    const w = 64;
+    const h = 24;
+    return v
+      .map((val, i) => {
+        const x = (i / (v.length - 1)) * w;
+        const y = h - ((val - min) / range) * h;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(" ");
+  };
+  return (
+    <Show when={pts()}>
+      <svg viewBox="0 0 64 24" class="h-6 w-16 shrink-0 overflow-visible" preserveAspectRatio="none">
+        <polyline points={pts()} fill="none" stroke="hsl(var(--primary))" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+      </svg>
+    </Show>
+  );
+}
+
+const roleKeys: Record<Role, MessageKey> = {
   student: "role.student",
   parent: "role.parent",
   teacher: "role.teacher",
@@ -78,1222 +95,407 @@ const ROLE_KEY: Record<Role, MessageKey> = {
   admin: "role.admin",
 };
 
-const ROLE_TONE: Record<Role, string> = {
-  student: "border border-cyan-500/50 bg-muted/40 text-foreground ring-1 ring-cyan-500/30",
-  parent: "border border-violet-500/50 bg-muted/40 text-foreground ring-1 ring-violet-500/30",
-  teacher: "border border-emerald-500/50 bg-muted/40 text-foreground ring-1 ring-emerald-500/30",
-  manager: "border border-amber-500/50 bg-muted/40 text-foreground ring-1 ring-amber-500/30",
-  admin: "border border-rose-500/50 bg-muted/40 text-foreground ring-1 ring-rose-500/30",
+const kindKeys: Record<DeadlineKind, MessageKey> = {
+  exam: "dashboard.type.exam",
+  event: "dashboard.type.event",
+  appointment: "dashboard.type.appointment",
+  homework: "dashboard.type.homework",
 };
 
-function portalTone(to: string) {
-  const base = "bg-muted/40 text-muted-foreground shadow-xs transition-all duration-200 group-hover:scale-105 group-hover:text-foreground dark:bg-muted/30 border";
-  if (to === "/exams") {
-    return cn(base, "border-indigo-500/50 dark:border-indigo-400/40 group-hover:border-indigo-500/90 dark:group-hover:border-indigo-400 group-hover:shadow-[0_0_12px_rgba(99,102,241,0.25)]");
-  }
-  if (to === "/courses") {
-    return cn(base, "border-cyan-500/50 dark:border-cyan-400/40 group-hover:border-cyan-500/90 dark:group-hover:border-cyan-400 group-hover:shadow-[0_0_12px_rgba(6,182,212,0.25)]");
-  }
-  if (to === "/marks" || to === "/management/student-marks") {
-    return cn(base, "border-amber-500/50 dark:border-amber-400/40 group-hover:border-amber-500/90 dark:group-hover:border-amber-400 group-hover:shadow-[0_0_12px_rgba(245,158,11,0.25)]");
-  }
-  if (to === "/studies") {
-    return cn(base, "border-emerald-500/50 dark:border-emerald-400/40 group-hover:border-emerald-500/90 dark:group-hover:border-emerald-400 group-hover:shadow-[0_0_12px_rgba(16,185,129,0.25)]");
-  }
-  if (to === "/events") {
-    return cn(base, "border-rose-500/50 dark:border-rose-400/40 group-hover:border-rose-500/90 dark:group-hover:border-rose-400 group-hover:shadow-[0_0_12px_rgba(244,63,94,0.25)]");
-  }
-  if (to === "/notes") {
-    return cn(base, "border-purple-500/50 dark:border-purple-400/40 group-hover:border-purple-500/90 dark:group-hover:border-purple-400 group-hover:shadow-[0_0_12px_rgba(168,85,247,0.25)]");
-  }
-  if (to === "/pomodoro" || to === "/management/pomodoros") {
-    return cn(base, "border-red-500/50 dark:border-red-400/40 group-hover:border-red-500/90 dark:group-hover:border-red-400 group-hover:shadow-[0_0_12px_rgba(239,68,68,0.25)]");
-  }
-  if (to === "/clubs") {
-    return cn(base, "border-fuchsia-500/50 dark:border-fuchsia-400/40 group-hover:border-fuchsia-500/90 dark:group-hover:border-fuchsia-400 group-hover:shadow-[0_0_12px_rgba(217,70,239,0.25)]");
-  }
-  if (to === "/messages") {
-    return cn(base, "border-sky-500/50 dark:border-sky-400/40 group-hover:border-sky-500/90 dark:group-hover:border-sky-400 group-hover:shadow-[0_0_12px_rgba(14,165,233,0.25)]");
-  }
-  if (to === "/students") {
-    return cn(base, "border-violet-500/50 dark:border-violet-400/40 group-hover:border-violet-500/90 dark:group-hover:border-violet-400 group-hover:shadow-[0_0_12px_rgba(139,92,246,0.25)]");
-  }
-  if (to === "/admin/users") {
-    return cn(base, "border-pink-500/50 dark:border-pink-400/40 group-hover:border-pink-500/90 dark:group-hover:border-pink-400 group-hover:shadow-[0_0_12px_rgba(236,72,153,0.25)]");
-  }
-  if (to === "/management/student-attendance") {
-    return cn(base, "border-teal-500/50 dark:border-teal-400/40 group-hover:border-teal-500/90 dark:group-hover:border-teal-400 group-hover:shadow-[0_0_12px_rgba(20,184,166,0.25)]");
-  }
-  if (to === "/work") {
-    return cn(base, "border-blue-500/50 dark:border-blue-400/40 group-hover:border-blue-500/90 dark:group-hover:border-blue-400 group-hover:shadow-[0_0_12px_rgba(59,130,246,0.25)]");
-  }
-  if (to === "/management/staff-work") {
-    return cn(base, "border-amber-400/60 dark:border-amber-300/40 group-hover:border-amber-400 dark:group-hover:border-amber-300 group-hover:shadow-[0_0_12px_rgba(251,191,36,0.25)]");
-  }
-  if (to === "/management/terms") {
-    return cn(base, "border-orange-500/50 dark:border-orange-400/40 group-hover:border-orange-500/90 dark:group-hover:border-orange-400 group-hover:shadow-[0_0_12px_rgba(249,115,22,0.25)]");
-  }
-  if (to === "/management/settings") {
-    return cn(base, "border-lime-500/50 dark:border-lime-400/40 group-hover:border-lime-500/90 dark:group-hover:border-lime-400 group-hover:shadow-[0_0_12px_rgba(132,204,22,0.25)]");
-  }
-  return cn(base, "border-primary/50 dark:border-primary/40 group-hover:border-primary");
-}
-
-
-function examWindow(exam: Exam, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
-  const status = examDisplayStatus(exam, now);
-  if (status === "active") return "active";
-  if (status !== "upcoming") return status === "unscheduled" ? "unscheduled" : "past";
-  if (exam.starts_at != null && exam.starts_at > now) {
-    const delta = exam.starts_at - now;
-    if (delta <= 24 * 60 * 60 * 1000) return "today";
-    if (delta <= WEEK_MS) return "soon";
-    return "upcoming";
-  }
-  return "upcoming";
-}
-
-function eventWindow(event: Event, now: number): AttentionKind | "upcoming" | "past" | "unscheduled" {
-  if (event.starts_at == null) return "unscheduled";
-  if (event.ends_at != null && event.ends_at < now) return "past";
-  if (event.starts_at > now) {
-    const delta = event.starts_at - now;
-    if (delta <= 24 * 60 * 60 * 1000) return "today";
-    if (delta <= WEEK_MS) return "soon";
-    return "upcoming";
-  }
-  if (event.ends_at == null || event.ends_at >= now) return "active";
-  return "past";
+function scheduleStatus(startsAt: number | null, endsAt: number | null, now: number): Status | null {
+  if (startsAt == null || (endsAt ?? startsAt) < now) return null;
+  if (startsAt <= now) return "active";
+  if (startsAt - now <= DAY_MS) return "today";
+  if (startsAt - now <= WEEK_MS) return "soon";
+  return null;
 }
 
 export default function DashboardPage() {
-  return (
-    <RouteGuard>
-      <DashboardContent />
-    </RouteGuard>
-  );
-}
-
-function DashboardContent() {
   const auth = useAuth();
   const t = useT();
   const { locale } = usePreferences();
-  const copy = (tr: string, en: string) => (locale() === "tr" ? tr : en);
-  const countLabel = (count: number, tr: string, en: string) => `${count} ${copy(tr, en)}`;
-  const percentLabel = (value: number) => (locale() === "tr" ? `%${value}` : `${value}%`);
   const user = () => auth.user()!;
   const role = () => user().role;
-  const now = createNow();
-  const [portalOrder, setPortalOrder] = createSignal<string[]>([]);
-  const [previewPortalOrder, setPreviewPortalOrder] = createSignal<string[] | null>(null);
-  const [draggingPortal, setDraggingPortal] = createSignal<string | null>(null);
-  const [dragOverPortal, setDragOverPortal] = createSignal<string | null>(null);
-  const [editingPortalOrder, setEditingPortalOrder] = createSignal(false);
-  const [attentionPage, setAttentionPage] = createSignal(0);
-
-  const [courses] = createResource(
-    () => (role() !== "student" && role() !== "parent" ? true : null),
-    async (enabled) => (enabled ? getCourses({ limit: 1 }) : null),
+  const [clock, clockQ] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
+  const [courses, coursesQ] = createResource(
+    () => role() === "parent" ? null : role(),
+    (currentRole) => currentRole === "student"
+      ? getMyCourses({ kind: "course", limit: 12 })
+      : getCourses({ kind: "course", limit: 12 }),
   );
-  const [myCourses] = createResource(
-    () => (role() === "student" ? true : null),
-    async (enabled) => {
-      if (!enabled) return null;
-      try {
-        return await getMyCourses({ limit: 1 });
-      } catch {
-        return null;
-      }
-    },
+  const [events, eventsQ] = createResource(
+    () => role() === "parent" ? null : clock()?.now,
+    (now) => getEvents({ ends_after: now, limit: 50 }),
   );
-  const [events] = createResource(
-    () => (role() === "parent" ? null : true),
-    async (enabled) => (enabled ? getEvents({ limit: 1 }) : null),
+  const [exams, examsQ] = createResource(
+    () => role() === "parent" ? null : role(),
+    () => getExams({ limit: 50 }),
   );
-  const [exams] = createResource(
-    () => (role() === "parent" ? null : true),
-    async (enabled) => (enabled ? getExams({ limit: 1 }) : null),
+  const [homework, homeworkQ] = createResource(
+    () => role() === "parent" ? null : clock()?.now,
+    (now) => getHomework({ due_after: now, limit: 50 }),
   );
-  const [notes] = createResource(
-    () => (role() === "parent" ? null : true),
-    async (enabled) => (enabled ? getNotes({ limit: 1 }) : null),
+  const [children, childrenQ] = createResource(
+    () => role() === "parent" ? true : null,
+    () => getMyStudents({ limit: 12 }),
   );
-  const [marks] = createResource(
-    () => (role() === "student" ? true : null),
-    async (enabled) => (enabled ? getMyMarks() : null),
+  const [appointments, appointmentsQ] = createResource(
+    () => role() === "parent" ? true : null,
+    () => getAppointments({ limit: 20 }),
   );
-  const [myStudents] = createResource(
-    () => (role() === "parent" ? true : null),
-    async (enabled) => (enabled ? getMyStudents() : null),
+  const [menus, menusQ] = createResource(
+    () => clock()?.now,
+    (now) => getMealMenus({ from: new Date(now).toISOString().slice(0, 10), limit: 1 }),
+  );
+  const [marks, marksQ] = createResource(
+    () => role() === "student" ? true : null,
+    () => getMyMarks(),
+  );
+  const [attendance, attendanceQ] = createResource(
+    () => role() === "student" ? true : null,
+    () => getMyAttendance(),
   );
 
-  const resourceError = createMemo(() => {
-    const e = courses.error || myCourses.error || events.error || exams.error || notes.error || marks.error || myStudents.error;
-    return e ? formatApiError(e, locale()) : null;
-  });
-
-  const loading = () =>
-    (role() === "student" ? myCourses.loading : courses.loading) ||
-    events.loading ||
-    exams.loading ||
-    notes.loading ||
-    myStudents.loading;
+  const [refreshing, setRefreshing] = createSignal(false);
+  const refresh = async () => {
+    if (refreshing()) return;
+    setRefreshing(true);
+    try {
+      await Promise.all(
+        [clockQ, coursesQ, eventsQ, examsQ, homeworkQ, childrenQ, appointmentsQ, menusQ, marksQ, attendanceQ]
+          .map((q) => q.refetch()),
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
-  const hasGlobalScope = createMemo(() => hasMinRole(role(), "admin"));
-  const scopedCourses = createMemo(() => (role() === "student" ? (myCourses()?.items ?? []) : (courses()?.items ?? [])));
-  const scopedCourseIds = createMemo(() => new Set(scopedCourses().map((c) => c.id)));
+  const now = () => clock()?.now ?? Date.now();
 
-  const courseMap = createMemo(() => {
-    const map = new Map<string, string>();
-    for (const course of scopedCourses()) map.set(course.id, course.title);
-    return map;
+  const attendanceRate = createMemo(() => {
+    const report = attendance();
+    if (!report) return null;
+    const total = report.events.total + report.sessions.total;
+    const present = report.events.present + report.sessions.present;
+    return total ? Math.round((present / total) * 100) : null;
   });
 
-  const visibleExams = createMemo(() => {
-    const all = exams()?.items ?? [];
-    if (hasGlobalScope()) return all;
-    const allowed = scopedCourseIds();
-    if (role() === "student" || role() === "teacher") {
-      if (allowed.size === 0) return [];
-      return all.filter((exam) => allowed.has(exam.course));
-    }
-    return all;
-  });
+  const capacities = () =>
+    (courses()?.items ?? []).map((c) => c.capacity).filter((n): n is number => n != null);
+  const courseAvgValues = () =>
+    (marks()?.courses ?? []).filter((c) => c.average != null).map((c) => c.average!);
+  const attendanceValues = () => {
+    const report = attendance();
+    if (!report) return [];
+    const sum = (k: "present" | "absent" | "late" | "excused") => report.events[k] + report.sessions[k];
+    return [sum("present"), sum("late"), sum("excused"), sum("absent")];
+  };
 
-  const countCoursesByKind = (kind: Course["kind"]) => scopedCourses().filter((course) => course.kind === kind).length;
-  const courseCount = createMemo(() => countCoursesByKind("course"));
-  const studyCount = createMemo(() => countCoursesByKind("study"));
-  const clubCount = createMemo(() => countCoursesByKind("club"));
-  const examCount = createMemo(() => exams()?.total ?? visibleExams().length);
-  const eventCount = createMemo(() => events()?.total ?? 0);
-  const noteCount = createMemo(() => notes()?.total ?? 0);
-  const studentCount = createMemo(() => myStudents()?.total ?? 0);
-  const [userAttendance] = createResource(
-    () => (role() !== "student" && user()?.id ? user()?.id : null),
-    async (id) => {
-      try {
-        return await getUserAttendance(id);
-      } catch {
-        return null;
-      }
-    }
-  );
-
-  const realAttendanceRate = createMemo(() => {
-    const rep = userAttendance();
-    if (!rep) return null;
-    const totalPresent = (rep.events?.present ?? 0) + (rep.sessions?.present ?? 0);
-    const totalAll = (rep.events?.total ?? 0) + (rep.sessions?.total ?? 0);
-    if (totalAll === 0) return null;
-    return Math.round((totalPresent / totalAll) * 100);
-  });
-
-  const overallAvg = createMemo(() => marks()?.overall_average ?? null);
-  const avgLabel = createMemo(() =>
-    overallAvg() != null ? `${Math.round(overallAvg()! * 10) / 10}` : "—",
-  );
-
-  const portalCards = createMemo<PortalCardDef[]>(() => {
+  const stats = createMemo<StatCardData[]>(() => {
     const r = role();
-    const cc = String(courseCount());
-    const sc = String(studyCount());
-    const clc = String(clubCount());
-    const ec = String(examCount());
-    const evc = String(eventCount());
-    const nc = String(noteCount());
-    const stc = String(studentCount());
-    const list: PortalCardDef[] = [];
-
-    if (r === "parent") {
-      list.push(
-        { Icon: IconUsers, titleKey: "nav.myStudents", to: "/students", stat: stc },
-        { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
-      );
-      return list;
-    }
-
     if (r === "student") {
-      list.push(
-        { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
-        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
-        { Icon: IconChart, titleKey: "nav.marks", to: "/marks", descKey: "dashboard.portal.marksDesc", stat: avgLabel() },
-        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
-        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
-        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
-        { Icon: IconClock, titleKey: "nav.pomodoro", to: "/pomodoro", descKey: "dashboard.portal.pomodoroDesc" },
-        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
-        { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
-      );
-      return list;
-    }
-
-    if (r === "teacher") {
-      list.push(
-        { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
-        { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
-        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
-        { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
-        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc, minRole: "teacher" },
-        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
-        { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
-        { Icon: IconBriefcase, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" },
-        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
-        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
-        { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
-      );
-      return list;
-    }
-
-    if (r === "manager") {
-      list.push(
-        { Icon: IconBriefcase, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", minRole: "manager" },
-        { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
-        { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
-        { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
-        { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
-        { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
-        { Icon: IconCalendarDays, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
-        { Icon: IconSettings, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", minRole: "manager" },
-        { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
-        { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
-        { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
-        { Icon: IconBriefcase, titleKey: "nav.work", to: "/work", descKey: "dashboard.portal.workDesc", minRole: "teacher" },
-        { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
-        { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
-      );
-      return list;
-    }
-
-    // admin
-    list.push(
-      { Icon: IconUsers, titleKey: "nav.users", to: "/admin/users", descKey: "dashboard.portal.usersDesc", minRole: "admin" },
-      { Icon: IconSettings, titleKey: "nav.settings", to: "/management/settings", descKey: "dashboard.portal.settingsDesc", minRole: "manager" },
-      { Icon: IconCalendarDays, titleKey: "nav.terms", to: "/management/terms", descKey: "dashboard.portal.termsDesc", minRole: "manager" },
-      { Icon: IconBriefcase, titleKey: "nav.staffWork", to: "/management/staff-work", descKey: "dashboard.portal.workDesc", minRole: "manager" },
-      { Icon: IconChart, titleKey: "nav.studentMarks", to: "/management/student-marks", descKey: "dashboard.portal.studentMarksDesc", minRole: "teacher" },
-      { Icon: IconClipboardCheck, titleKey: "nav.studentAttendance", to: "/management/student-attendance", descKey: "dashboard.portal.attendanceDesc", minRole: "teacher" },
-      { Icon: IconBook, titleKey: "nav.courses", to: "/courses", descKey: "dashboard.portal.coursesDesc", stat: cc },
-      { Icon: IconExam, titleKey: "nav.exams", to: "/exams", descKey: "dashboard.portal.examsDesc", stat: ec },
-      { Icon: IconCalendar, titleKey: "nav.events", to: "/events", descKey: "dashboard.portal.eventsDesc", stat: evc },
-      { Icon: IconClock, titleKey: "nav.studies", to: "/studies", descKey: "dashboard.portal.studiesDesc", stat: sc },
-      { Icon: IconUsers, titleKey: "nav.clubs", to: "/clubs", descKey: "dashboard.portal.clubsDesc", stat: clc },
-      { Icon: IconClock, titleKey: "nav.studentPomodoro", to: "/management/pomodoros", descKey: "dashboard.portal.pomodoroDesc", minRole: "teacher" },
-      { Icon: IconMessage, titleKey: "nav.messages", to: "/messages" },
-      { Icon: IconNote, titleKey: "nav.notes", to: "/notes", descKey: "dashboard.portal.notesDesc", stat: nc },
-    );
-    return list;
-  });
-  const portalOrderKey = () => `${PORTAL_ORDER_KEY}.${role()}`;
-  const cardsFromOrder = (cards: PortalCardDef[], order: string[]) => {
-    const byId = new Map(cards.map((card) => [card.to, card]));
-    const ordered: PortalCardDef[] = [];
-    const seen = new Set<string>();
-
-    for (const id of order) {
-      const card = byId.get(id);
-      if (card && !seen.has(id)) {
-        ordered.push(card);
-        seen.add(id);
-      }
-    }
-
-    for (const card of cards) {
-      if (!seen.has(card.to)) {
-        ordered.push(card);
-      }
-    }
-
-    return ordered;
-  };
-  const baseOrderedPortalCards = createMemo(() => cardsFromOrder(portalCards(), portalOrder()));
-  const orderedPortalCards = createMemo(() => {
-    const cards = portalCards();
-    const preview = previewPortalOrder();
-    return preview ? cardsFromOrder(cards, preview) : baseOrderedPortalCards();
-  });
-  createEffect(() => {
-    try {
-      setPortalOrder(JSON.parse(window.localStorage.getItem(portalOrderKey()) || "[]") as string[]);
-    } catch {
-      setPortalOrder([]);
-    }
-  });
-  const movePortalCard = (from: string, to: string) => {
-    if (from === to) return;
-    const current = baseOrderedPortalCards().map((card) => card.to);
-    const fromIndex = current.indexOf(from);
-    const toIndex = current.indexOf(to);
-    if (fromIndex >= 0 && toIndex >= 0) {
-      const ids = current.slice();
-      ids.splice(toIndex, 0, ids.splice(fromIndex, 1)[0]);
-      setPortalOrder(ids);
-      setPreviewPortalOrder(null);
-      window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
-    }
-  };
-  const moveCardByDelta = (cardTo: string, delta: number) => {
-    const current = baseOrderedPortalCards().map((card) => card.to);
-    const index = current.indexOf(cardTo);
-    if (index < 0) return;
-    const targetIndex = index + delta;
-    if (targetIndex < 0 || targetIndex >= current.length) return;
-    const ids = current.slice();
-    const [item] = ids.splice(index, 1);
-    ids.splice(targetIndex, 0, item);
-    setPortalOrder(ids);
-    setPreviewPortalOrder(null);
-    window.localStorage.setItem(portalOrderKey(), JSON.stringify(ids));
-  };
-  const resetPortalOrder = () => {
-    setPortalOrder([]);
-    setPreviewPortalOrder(null);
-    window.localStorage.removeItem(portalOrderKey());
-  };
-
-  const attention = createMemo<AttentionItem[]>(() => {
-    const n = now();
-    const items: AttentionItem[] = [];
-
-    for (const exam of visibleExams()) {
-      const status = examWindow(exam, n);
-      if (status === "active" || status === "today" || status === "soon") {
-        items.push({
-          id: exam.id,
-          kind: "exam",
-          title: exam.title,
-          at: exam.starts_at,
-          subtitle: courseMap().get(exam.course) ?? examKindLabel(String(exam.kind), t),
-          status,
-          to: "/exams/$id",
-        });
-      }
-    }
-
-    for (const event of events()?.items ?? []) {
-      const status = eventWindow(event, n);
-      if (status === "active" || status === "today" || status === "soon") {
-        items.push({
-          id: event.id,
-          kind: "event",
-          title: event.title,
-          at: event.starts_at,
-          subtitle: event.description || t("nav.events"),
-          status,
-          to: "/events/$id",
-        });
-      }
-    }
-
-    const rank: Record<AttentionKind, number> = { active: 0, today: 1, soon: 2 };
-    return items
-      .sort((a, b) => {
-        const r = rank[a.status] - rank[b.status];
-        if (r !== 0) return r;
-        return (a.at ?? Number.MAX_SAFE_INTEGER) - (b.at ?? Number.MAX_SAFE_INTEGER);
-      });
-  });
-
-  const [attentionFilter, setAttentionFilter] = createSignal<"all" | "exam" | "event">("all");
-
-  const filteredAttention = createMemo(() => {
-    const filter = attentionFilter();
-    if (filter === "all") return attention();
-    return attention().filter((item) => item.kind === filter);
-  });
-
-  const attentionTotalPages = createMemo(() => Math.max(1, Math.ceil(filteredAttention().length / ATTENTION_LIMIT)));
-  const pagedAttention = createMemo(() => {
-    const start = attentionPage() * ATTENTION_LIMIT;
-    return filteredAttention().slice(start, start + ATTENTION_LIMIT);
-  });
-
-  const courseMarkItems = createMemo<ChartBarItem[]>(() => {
-    const list = marks()?.courses ?? [];
-    return list.map((c) => ({
-      id: c.course.id,
-      label: c.course.title,
-      value: c.average ?? 0,
-      max: 100,
-      formattedValue: c.average != null ? `${Math.round(c.average * 10) / 10}` : "—",
-      colorClass: (c.average ?? 0) >= 70 ? "bg-emerald-500" : (c.average ?? 0) >= 50 ? "bg-amber-500" : "bg-rose-500",
-    }));
-  });
-
-  const scheduleTimeItems = createMemo<ChartBarItem[]>(() => {
-    const items = attention();
-    const activeCount = items.filter((i) => i.status === "active").length;
-    const todayCount = items.filter((i) => i.status === "today").length;
-    const soonCount = items.filter((i) => i.status === "soon").length;
-    return [
-      { id: "active", label: copy("Aktif Program", "Active schedule"), value: activeCount, colorClass: "bg-emerald-500" },
-      { id: "today", label: copy("Bugünkü Sınav / Etkinlik", "Today exams / events"), value: todayCount, colorClass: "bg-amber-500" },
-      { id: "soon", label: copy("Yakında (7 Gün İçi)", "Next 7 days"), value: soonCount, colorClass: "bg-indigo-500" },
-    ];
-  });
-
-  const scheduleSegments = createMemo<ProgressRingSegment[]>(() => {
-    const items = attention();
-    const active = items.filter((i) => i.status === "active").length;
-    const today = items.filter((i) => i.status === "today").length;
-    const soon = items.filter((i) => i.status === "soon").length;
-    return [
-      { id: "active", label: copy("Aktif", "Active"), value: active, colorClass: "bg-emerald-500" },
-      { id: "today", label: copy("Bugün", "Today"), value: today, colorClass: "bg-amber-500" },
-      { id: "soon", label: copy("Yakında", "Upcoming"), value: soon, colorClass: "bg-indigo-500" },
-    ];
-  });
-
-  const weeklyDensityItems = createMemo<ChartBarItem[]>(() => {
-    const days: { id: string; label: string; count: number }[] = [];
-    const today = new Date();
-    const dayNames = locale() === "tr" ? ["Pzr", "Pzt", "Sal", "Çrş", "Prş", "Cum", "Cmt"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-      const dayEnd = dayStart + 86400000;
-      const dayLabel = i === 0 ? copy("Bugün", "Today") : `${dayNames[d.getDay()]} ${d.getDate()}`;
-
-      let count = 0;
-      for (const exam of visibleExams()) {
-        if (exam.starts_at != null && exam.starts_at >= dayStart && exam.starts_at < dayEnd) {
-          count++;
-        }
-      }
-      for (const event of events()?.items ?? []) {
-        if (event.starts_at != null && event.starts_at >= dayStart && event.starts_at < dayEnd) {
-          count++;
-        }
-      }
-      // Include active weekday schedule baseline for rich platform activity curve
-      if (count === 0 && d.getDay() !== 0 && d.getDay() !== 6) {
-        count = (d.getDay() % 3) + 2;
-      }
-
-      days.push({
-        id: `day-${i}`,
-        label: dayLabel,
-        count,
-      });
-    }
-
-    return days.map((d) => ({
-      id: d.id,
-      label: d.label,
-      value: d.count,
-      formattedValue: `${d.count} ${copy("Aktivite", "activities")}`,
-      colorClass: d.count > 0 ? "bg-emerald-500" : "bg-muted-foreground/30",
-    }));
-  });
-
-  const studentGradeTrendItems = createMemo<ChartAreaTrendItem[]>(() => {
-    const report = marks();
-    if (!report || !report.courses || report.courses.length === 0) {
-      return [];
-    }
-
-    const entries: { label: string; value: number }[] = [];
-    for (const c of report.courses) {
-      for (const r of c.results ?? []) {
-        if (r.mark != null) {
-          entries.push({
-            label: r.title,
-            value: r.mark,
-          });
-        }
-      }
-    }
-
-    if (entries.length === 0) {
-      const courseWithAvg = report.courses.filter((c) => c.average != null);
-      if (courseWithAvg.length === 0) return [];
-      return courseWithAvg.map((c) => ({
-        label: c.course.title,
-        value: c.average!,
-        formattedValue: `${Math.round(c.average! * 10) / 10} ${copy("Puan", "points")}`,
-      }));
-    }
-
-    return entries.slice(-6).map((e) => ({
-      label: e.label,
-      value: e.value,
-      formattedValue: `${Math.round(e.value * 10) / 10} ${copy("Puan", "points")}`,
-    }));
-  });
-
-  const studentMetricCards = createMemo<ChartMetricCardItem[]>(() => {
-    const avg = overallAvg();
-    const att = realAttendanceRate();
-    return [
-      {
-        id: "gpa",
-        label: copy("Not Ortalaması", "Average grade"),
-        value: avgLabel() === "—" ? copy("Kayıt yok", "No records") : avgLabel(),
-        change: avg != null ? (avg >= 70 ? copy("Yüksek", "High") : copy("Normal", "Normal")) : undefined,
-        isPositive: avg != null ? avg >= 50 : true,
-        subtext: copy("Genel ders başarı ortalaması", "Overall course average"),
-      },
-      {
-        id: "attendance",
-        label: copy("Derse Katılım", "Attendance"),
-        value: att != null ? percentLabel(att) : copy("Kayıt yok", "No records"),
-        change: att != null ? (att >= 85 ? copy("Düzenli", "Regular") : copy("Takip Edilmeli", "Needs attention")) : undefined,
-        isPositive: att != null ? att >= 85 : true,
-        subtext: copy("Devamlılık oranı", "Attendance rate"),
-      },
-      {
-        id: "notes",
-        label: copy("Ders Notları", "Course notes"),
-        value: noteCount() > 0 ? countLabel(noteCount(), "Not", "notes") : copy("Kayıt yok", "No records"),
-        subtext: copy("Kayıtlı notlar", "Saved notes"),
-      },
-      {
-        id: "courses",
-        label: copy("Kayıtlı Dersler", "Enrolled courses"),
-        value: scopedCourses().length > 0 ? countLabel(scopedCourses().length, "Ders", "courses") : copy("Kayıt yok", "No records"),
-        subtext: copy("Aktif müfredat programı", "Active curriculum"),
-      },
-    ];
-  });
-
-  const teacherMetricCards = createMemo<ChartMetricCardItem[]>(() => {
-    const att = realAttendanceRate();
-    return [
-      { id: "avgMark", label: copy("Sınıf Not Ortalaması", "Class average"), value: "78.4", change: "+1.5%", isPositive: true, subtext: copy("Sorumlu sınıflar", "Assigned classes") },
-      {
-        id: "attRate",
-        label: copy("Sınıf Katılım Oranı", "Class attendance rate"),
-        value: att != null ? percentLabel(att) : copy("Kayıt yok", "No records"),
-        change: att != null ? (att >= 85 ? copy("Yüksek", "High") : copy("Takip Edilmeli", "Needs attention")) : undefined,
-        isPositive: att != null ? att >= 85 : true,
-        subtext: copy("Ortalama devam", "Average attendance"),
-      },
-      { id: "activeExams", label: copy("Sınav Sayısı", "Exam count"), value: countLabel(examCount(), "Sınav", "exams"), subtext: copy("Okunan ve canlı", "Graded and live") },
-      { id: "myCourses", label: copy("Verilen Dersler", "Assigned courses"), value: countLabel(scopedCourses().length, "Ders", "courses"), subtext: copy("Aktif ders yükü", "Active teaching load") },
-    ];
-  });
-
-  const managerMetricCards = createMemo<ChartMetricCardItem[]>(() => {
-    const att = realAttendanceRate();
-    return [
-      { id: "schoolAvg", label: copy("Okul Başarı Ortalaması", "School average"), value: "81.2", change: "+2.4%", isPositive: true, subtext: copy("Kurum ortalaması", "Institution average") },
-      {
-        id: "overallAtt",
-        label: copy("Genel Devamlılık", "Overall attendance"),
-        value: att != null ? percentLabel(att) : copy("Kayıt yok", "No records"),
-        change: att != null ? (att >= 85 ? copy("Yüksek", "High") : copy("Takip Edilmeli", "Needs attention")) : undefined,
-        isPositive: att != null ? att >= 85 : true,
-        subtext: copy("Tüm sınıflar", "All classes"),
-      },
-      { id: "staffWork", label: copy("Personel Mesai", "Staff work"), value: "88.0%", subtext: copy("Tamamlanan vardiya", "Completed shifts") },
-      { id: "totalPrograms", label: copy("Program Sayısı", "Program count"), value: countLabel(courseCount() + studyCount() + clubCount(), "Program", "programs"), subtext: copy("Ders, etüt, kulüp", "Courses, studies, clubs") },
-    ];
-  });
-
-  const teacherCourseStats = createMemo<ChartBarItem[]>(() => {
-    const list = scopedCourses();
-    if (list.length === 0) {
       return [
-        { id: "c1", label: "Matematik 10-A", value: 84, max: 100, formattedValue: "84.0", colorClass: "bg-emerald-500" },
-        { id: "c2", label: "Fizik 11-B", value: 76, max: 100, formattedValue: "76.5", colorClass: "bg-emerald-500" },
-        { id: "c3", label: "Geometri 9-C", value: 68, max: 100, formattedValue: "68.0", colorClass: "bg-amber-500" },
+        { labelKey: "dashboard.stats.courses", value: String(courses()?.total ?? 0), Icon: IconBook, spark: capacities() },
+        { labelKey: "dashboard.stats.exams", value: String(exams()?.total ?? 0), Icon: IconExam },
+        { labelKey: "dashboard.stats.average", value: marks()?.overall_average == null ? "—" : marks()!.overall_average!.toFixed(1), Icon: IconChart, spark: courseAvgValues() },
+        { labelKey: "dashboard.stats.attendance", value: attendanceRate() == null ? "—" : `${attendanceRate()}%`, Icon: IconClipboardCheck, spark: attendanceValues() },
       ];
     }
-    return list.map((c) => ({
-      id: c.id,
-      label: c.title,
-      value: 78,
-      max: 100,
-      formattedValue: "78.0",
-      colorClass: "bg-emerald-500",
-    }));
-  });
-
-  const teacherExamStatusSegments = createMemo<ProgressRingSegment[]>(() => {
-    const total = visibleExams().length;
-    const active = visibleExams().filter((e) => examWindow(e, now()) === "active").length;
+    if (r === "teacher") {
+      return [
+        { labelKey: "dashboard.stats.courses", value: String(courses()?.total ?? 0), Icon: IconBook, spark: capacities() },
+        { labelKey: "dashboard.stats.exams", value: String(exams()?.total ?? 0), Icon: IconExam },
+        { labelKey: "dashboard.stats.events", value: String(events()?.total ?? 0), Icon: IconCalendarDays },
+        { labelKey: "dashboard.stats.homework", value: String(homework()?.total ?? 0), Icon: IconHomework },
+      ];
+    }
+    if (r === "parent") {
+      return [
+        { labelKey: "dashboard.stats.children", value: String(children()?.total ?? 0), Icon: IconUsers },
+        { labelKey: "dashboard.stats.appointments", value: String(appointments()?.total ?? 0), Icon: IconCalendarDays },
+        { labelKey: "dashboard.stats.meals", value: String(menus()?.total ?? 0), Icon: IconUtensils },
+      ];
+    }
     return [
-      { id: "graded", label: copy("Değerlendirildi", "Graded"), value: Math.max(1, Math.ceil(total * 0.6)), colorClass: "bg-emerald-500" },
-      { id: "pending", label: copy("Okuma Bekliyor", "Awaiting grading"), value: Math.max(1, Math.floor(total * 0.4)), colorClass: "bg-amber-500" },
-      { id: "active", label: copy("Canlı Sınav", "Live exam"), value: active, colorClass: "bg-indigo-500" },
+      { labelKey: "dashboard.stats.courses", value: String(courses()?.total ?? 0), Icon: IconBook, spark: capacities() },
+      { labelKey: "dashboard.stats.exams", value: String(exams()?.total ?? 0), Icon: IconExam },
+      { labelKey: "dashboard.stats.events", value: String(events()?.total ?? 0), Icon: IconCalendarDays },
+      { labelKey: "dashboard.stats.meals", value: String(menus()?.total ?? 0), Icon: IconUtensils },
     ];
   });
 
-  const managerCourseKindItems = createMemo<ChartBarItem[]>(() => [
-    { id: "courses", label: copy("Ders Programları", "Courses"), value: courseCount(), formattedValue: countLabel(courseCount(), "ders", "courses"), colorClass: "bg-emerald-500" },
-    { id: "studies", label: copy("Etüt Seansları", "Study sessions"), value: studyCount(), formattedValue: countLabel(studyCount(), "etüt", "study sessions"), colorClass: "bg-amber-500" },
-    { id: "clubs", label: copy("Sosyal Kulüpler", "Clubs"), value: clubCount(), formattedValue: countLabel(clubCount(), "kulüp", "clubs"), colorClass: "bg-indigo-500" },
-  ]);
+  // Progress panel — student: per-course averages; teacher/manager/admin: class sizes.
+  const courseAverages = createMemo(() =>
+    (marks()?.courses ?? [])
+      .filter((c) => c.average != null)
+      .map((c) => ({ label: c.course.title, value: c.average!, formattedValue: c.average!.toFixed(1) })),
+  );
+  const classSizes = createMemo(() =>
+    (courses()?.items ?? [])
+      .filter((c) => c.capacity != null)
+      .map((c) => ({ id: c.id, label: c.title, value: c.capacity! })),
+  );
 
-  const managerStaffWorkSegments = createMemo<ProgressRingSegment[]>(() => [
-    { id: "completed", label: copy("Tamamlanan Mesai", "Completed work"), value: 42, colorClass: "bg-emerald-500" },
-    { id: "active", label: copy("Devam Eden Vardiya", "Active shifts"), value: 8, colorClass: "bg-indigo-500" },
-    { id: "pending", label: copy("Planlanan Görev", "Planned tasks"), value: 6, colorClass: "bg-amber-500" },
-  ]);
-
-  const adminUserRoleItems = createMemo<ChartBarItem[]>(() => [
-    { id: "students", label: copy("Öğrenciler", "Students"), value: 140, formattedValue: countLabel(140, "kişi", "people"), colorClass: "bg-emerald-500" },
-    { id: "teachers", label: copy("Öğretmenler", "Teachers"), value: 24, formattedValue: countLabel(24, "kişi", "people"), colorClass: "bg-indigo-500" },
-    { id: "parents", label: copy("Veliler", "Parents"), value: 110, formattedValue: countLabel(110, "kişi", "people"), colorClass: "bg-sky-500" },
-    { id: "managers", label: copy("Yöneticiler", "Managers"), value: 6, formattedValue: countLabel(6, "kişi", "people"), colorClass: "bg-amber-500" },
-    { id: "admins", label: copy("Sistem Adminleri", "System admins"), value: 2, formattedValue: countLabel(2, "kişi", "people"), colorClass: "bg-purple-500" },
-  ]);
-
-  const adminSystemCapacitySegments = createMemo<ProgressRingSegment[]>(() => [
-    { id: "courses", label: copy("Aktif Dersler", "Active courses"), value: courseCount(), colorClass: "bg-emerald-500" },
-    { id: "exams", label: copy("Sınav Kayıtları", "Exam records"), value: examCount(), colorClass: "bg-amber-500" },
-    { id: "events", label: copy("Etkinlikler", "Events"), value: eventCount(), colorClass: "bg-indigo-500" },
-  ]);
-
-  const [serverPing, setServerPing] = createSignal<{ latency: number; status: string } | null>(null);
-
-  createEffect(() => {
-    const t0 = performance.now();
-    getTime()
-      .then(() => {
-        const latency = Math.max(1, Math.round(performance.now() - t0));
-        setServerPing({ latency, status: "reachable" });
-      })
-      .catch(() => {
-        setServerPing({ latency: 0, status: "offline" });
-      });
+  // Weekly activity split — student attendance breakdown (events + sessions).
+  const attendanceSegments = createMemo(() => {
+    const report = attendance();
+    if (!report) return [];
+    const sum = (k: "present" | "absent" | "late" | "excused") => report.events[k] + report.sessions[k];
+    return [
+      { id: "present", label: t("dashboard.attend.present"), value: sum("present"), colorClass: "bg-emerald-500" },
+      { id: "absent", label: t("dashboard.attend.absent"), value: sum("absent"), colorClass: "bg-rose-500" },
+      { id: "late", label: t("dashboard.attend.late"), value: sum("late"), colorClass: "bg-amber-500" },
+      { id: "excused", label: t("dashboard.attend.excused"), value: sum("excused"), colorClass: "bg-muted-foreground/40" },
+    ];
   });
 
-  const adminMetricCards = createMemo<ChartMetricCardItem[]>(() => [
-    { id: "users", label: copy("Aktif Kullanıcılar", "Active users"), value: "282", change: copy("+12 bu ay", "+12 this month"), isPositive: true, subtext: copy("Platform geneli", "Platform-wide") },
-    {
-      id: "uptime",
-      label: copy("Sunucu Yanıt Süresi", "Server response time"),
-      value: serverPing() ? `${serverPing()!.latency} ms` : "—",
-      change: serverPing() ? serverPing()!.status === "reachable" ? copy("Erişilebilir", "Reachable") : copy("Çevrimdışı", "Offline") : copy("Ölçülüyor", "Measuring"),
-      isPositive: serverPing()?.status === "reachable",
-      subtext: copy("Canlı ping", "Live ping"),
-    },
-    { id: "courses", label: copy("Aktif Ders Kaydı", "Active course records"), value: String(courseCount()), subtext: copy("Müfredat dersi", "Curriculum courses") },
-    { id: "exams", label: copy("Sınav Havuzu", "Exam pool"), value: String(examCount()), subtext: copy("Tüm sınavlar", "All exams") },
-  ]);
-
-  const [showAllPortals, setShowAllPortals] = createSignal(false);
-
-  const displayPortalCards = createMemo(() => {
-    const cards = orderedPortalCards();
-    if (editingPortalOrder() || showAllPortals() || cards.length <= 8) {
-      return cards;
+  // Right-side "workload split" for non-student roles — real resource totals.
+  const workloadSegments = createMemo(() => {
+    const r = role();
+    const base = [
+      { id: "courses", label: t("nav.classes"), value: courses()?.total ?? 0, colorClass: "bg-primary" },
+      { id: "exams", label: t("nav.exams"), value: exams()?.total ?? 0, colorClass: "bg-blue-500" },
+      { id: "events", label: t("nav.events"), value: events()?.total ?? 0, colorClass: "bg-emerald-500" },
+    ];
+    if (r === "teacher") {
+      return [...base, { id: "homework", label: t("nav.homework"), value: homework()?.total ?? 0, colorClass: "bg-rose-500" }];
     }
-    return cards.slice(0, 8);
+    return [...base, { id: "meals", label: t("nav.meals"), value: menus()?.total ?? 0, colorClass: "bg-rose-500" }];
+  });
+
+  const deadlines = createMemo<DeadlineRow[]>(() => {
+    const items: DeadlineRow[] = [];
+    for (const exam of exams()?.items ?? []) {
+      const status = scheduleStatus(exam.starts_at, exam.ends_at, now());
+      if (status) items.push({ id: exam.id, kind: "exam", title: exam.title, at: exam.starts_at!, status });
+    }
+    for (const event of events()?.items ?? []) {
+      const status = scheduleStatus(event.starts_at, event.ends_at, now());
+      if (status) items.push({ id: event.id, kind: "event", title: event.title, at: event.starts_at!, status });
+    }
+    for (const hw of homework()?.items ?? []) {
+      const status = scheduleStatus(hw.due_at, hw.due_at, now());
+      if (status) items.push({ id: hw.id, kind: "homework", title: hw.title, at: hw.due_at, status });
+    }
+    for (const appointment of appointments()?.items ?? []) {
+      if (appointment.starts_at == null || !["pending", "approved"].includes(appointment.status)) continue;
+      const status = scheduleStatus(appointment.starts_at, appointment.ends_at, now());
+      if (status) {
+        const person = appointment.teacher?.display_name || appointment.teacher?.username || t("nav.appointments");
+        items.push({ id: appointment.id, kind: "appointment", title: person, at: appointment.starts_at, status });
+      }
+    }
+    return items.sort((a, b) => a.at - b.at);
+  });
+
+  const headerClass = "text-xs font-medium text-muted-foreground";
+  const deadlineColumns = createMemo<ColumnDef<DeadlineRow>[]>(() => [
+    {
+      accessorKey: "title",
+      header: t("dashboard.col.task"),
+      enableSorting: false,
+      meta: { headerClass },
+      cell: (info) => <span class="font-medium">{info.row.original.title}</span>,
+    },
+    {
+      accessorKey: "kind",
+      header: t("dashboard.col.type"),
+      enableSorting: false,
+      meta: { headerClass },
+      cell: (info) => <span class="text-muted-foreground">{t(kindKeys[info.row.original.kind])}</span>,
+    },
+    {
+      accessorKey: "at",
+      header: t("dashboard.col.dueDate"),
+      enableSorting: false,
+      meta: { headerClass },
+      cell: (info) => <span class="tabular-nums text-muted-foreground">{formatDateTime(info.row.original.at, locale())}</span>,
+    },
+    {
+      accessorKey: "status",
+      header: t("dashboard.col.status"),
+      enableSorting: false,
+      meta: { headerClass },
+      cell: (info) => {
+        const s = info.row.original.status;
+        return (
+          <Badge variant="outline" class="rounded-full text-[10px]">
+            <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", s === "active" ? "bg-emerald-500" : s === "today" ? "bg-amber-500" : "bg-muted-foreground/50")} />
+            {s === "active" ? t("dashboard.activeNow") : s === "today" ? t("dashboard.today") : t("dashboard.soon")}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: "priority",
+      header: t("dashboard.col.priority"),
+      enableSorting: false,
+      meta: { headerClass },
+      cell: (info) => {
+        const high = info.row.original.status !== "soon";
+        return (
+          <span class={cn("text-xs font-semibold", high ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400")}>
+            {high ? t("dashboard.priority.high") : t("dashboard.priority.medium")}
+          </span>
+        );
+      },
+    },
+  ]);
+
+  const deadlineSearch = (row: DeadlineRow, q: string) => row.title.toLowerCase().includes(q.toLowerCase());
+
+  const error = createMemo(() => {
+    const problem = courses.error || events.error || exams.error || homework.error || children.error || appointments.error || menus.error || marks.error || attendance.error;
+    return problem ? formatApiError(problem, locale()) : "";
   });
 
   return (
-    <div class="overflow-hidden rounded-[1.75rem] border border-[#F2F2F3] bg-background shadow-apple dark:border-white/8 dark:bg-background">
-      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-[#F2F2F3] bg-card/85 px-4 py-4 backdrop-blur-xl dark:border-white/8 sm:px-5">
-        <div class="min-w-0 space-y-1">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("dashboard.today")}</p>
-          <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {t("dashboard.greeting", { name: fullName() })}
-          </h1>
-          <p class="text-sm text-muted-foreground">{t("dashboard.observationOnly")}</p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span class={cn("rounded-full border px-2.5 py-1 font-semibold shadow-xs", ROLE_TONE[role()])}>
-            {t(ROLE_KEY[role()])}
-          </span>
-          <span class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-2.5 py-1 mono tabular-nums shadow-xs">
-            <span class="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.14)]" aria-hidden="true" />
-            {formatDateTime(now(), locale()).split(",")[0]}
-          </span>
-        </div>
-      </header>
+    <RouteGuard>
+      <div class="space-y-5">
+        <header class="flex flex-wrap items-end justify-between gap-3">
+          <div class="space-y-1">
+            <h1 class="font-display text-2xl font-semibold tracking-tight">{t("dashboard.welcomeBack", { name: fullName() })}</h1>
+            <p class="text-sm text-muted-foreground">{t("dashboard.welcomeHint")}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <Badge variant="outline" class="rounded-full bg-muted/40">{t(roleKeys[role()])}</Badge>
+            <time class="text-sm tabular-nums text-muted-foreground">
+              {new Intl.DateTimeFormat(locale() === "tr" ? "tr-TR" : "en-GB", { dateStyle: "medium" }).format(now())}
+            </time>
+          </div>
+        </header>
 
-      <Show when={resourceError()}>
-        {(msg) => <div class="px-4 pt-4 sm:px-5"><Alert variant="destructive">{msg()}</Alert></div>}
-      </Show>
+        <Suspense fallback={<PageSpinner />}>
+          <Show when={error()}>
+            <p class="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error()}</p>
+          </Show>
 
-      <Show when={!loading()} fallback={<div class="px-4 py-8"><PageSpinner /></div>}>
-        <div class="space-y-5 bg-muted/10 px-4 py-4 sm:px-5 sm:py-5 dark:bg-black/40">
-        
-        {/* Visual Analytics Panel (4 Distinct Chart Types Grid) */}
-        <Show when={role() !== "parent"}>
-          <section class="grid grid-cols-1 gap-5 lg:grid-cols-2" aria-label={copy("Görsel Analiz ve Raporlar", "Visual analytics and reports")}>
-            <Switch>
-              {/* STUDENT ROLE CHARTS (4 Distinct Types) */}
-              <Match when={role() === "student"}>
-                <ChartMetricCards
-                  title={copy("Öğrenim & Katılım KPI Özeti", "Learning and attendance KPI summary")}
-                  subtitle={copy("Genel başarı notu, katılım ve not sayıları", "Overall grades, attendance, and note counts")}
-                  metrics={studentMetricCards()}
-                />
-
-                <ChartAreaTrend
-                  title={copy("Sınav & Başarı Not Trendi", "Exam and grade trend")}
-                  subtitle={copy("Dönem içi sınav notlarının gelişim eğrisi", "Term exam grade trend")}
-                  items={studentGradeTrendItems()}
-                  unit={copy(" Puan", " points")}
-                  minScale={50}
-                  maxScale={100}
-                />
-
-                <Show
-                  when={courseMarkItems().length > 0}
-                  fallback={
-                    <ChartBar
-                      title={copy("Sınav & Zaman Çizelgesi Dağılımı", "Exam and schedule distribution")}
-                      subtitle={copy("Aktif, bugün ve 7 gün içerisindeki program yoğunluğu", "Active, today, and next 7-day schedule load")}
-                      items={scheduleTimeItems()}
-                    />
-                  }
-                >
-                  <ChartBar
-                    title={copy("Ders Bazlı Başarı Notları", "Course grade performance")}
-                    subtitle={copy("Kayıtlı dersler geneli ortalama puanlar", "Average scores across enrolled courses")}
-                    items={courseMarkItems()}
-                    maxScale={100}
-                  />
-                </Show>
-
-                <ChartProgressRing
-                  title={copy("Program & Takip Analizi", "Schedule and tracking analysis")}
-                  valueText={`${attention().length}`}
-                  subtext={copy("yaklaşan ve aktif kayıt", "upcoming and active records")}
-                  subtitle={copy("Durum bazlı zaman çizelgesi oransal göstergesi", "Status-based schedule ratio")}
-                  segments={scheduleSegments()}
-                />
-              </Match>
-
-              {/* TEACHER ROLE CHARTS (4 Distinct Types) */}
-              <Match when={role() === "teacher"}>
-                <ChartMetricCards
-                  title={copy("Öğretim & Okuma KPI Özeti", "Teaching and grading KPI summary")}
-                  subtitle={copy("Sorumlu dersler, sınavlar ve ortalama katılım", "Assigned courses, exams, and average attendance")}
-                  metrics={teacherMetricCards()}
-                />
-
-                <ChartAreaTrend
-                  title={copy("Haftalık Öğretim Yükü Eğrisi", "Weekly teaching load")}
-                  subtitle={copy("Günlük ders ve etüt seans yoğunluğu", "Daily course and study-session load")}
-                  items={weeklyDensityItems().map((i) => ({ label: i.label, value: i.value, formattedValue: i.formattedValue }))}
-                  unit={copy(" Seans", " sessions")}
-                />
-
-                <ChartBar
-                  title={copy("Ders Öğretim Başarı Notları", "Teaching grade performance")}
-                  subtitle={copy("Sorumlu olunan derslerdeki öğrenci ortalamaları", "Student averages in assigned courses")}
-                  items={teacherCourseStats()}
-                  maxScale={100}
-                />
-
-                <ChartProgressRing
-                  title={copy("Sınav Değerlendirme & Okuma Durumu", "Exam grading status")}
-                  valueText={`${examCount()}`}
-                  subtext={copy("toplam sınav", "total exams")}
-                  subtitle={copy("Tamamlanan, okuma bekleyen ve canlı sınavlar", "Graded, awaiting grading, and live exams")}
-                  segments={teacherExamStatusSegments()}
-                />
-              </Match>
-
-              {/* MANAGER ROLE CHARTS (4 Distinct Types) */}
-              <Match when={role() === "manager"}>
-                <ChartMetricCards
-                  title={copy("Kurumsal Performans KPI Özeti", "Institutional performance KPI summary")}
-                  subtitle={copy("Okul başarısı, devamlılık ve personel mesai durumu", "School performance, attendance, and staff work status")}
-                  metrics={managerMetricCards()}
-                />
-
-                <ChartAreaTrend
-                  title={copy("Okul Geneli 7 Günlük Etkinlik Eğrisi", "School-wide 7-day activity")}
-                  subtitle={copy("Önümüzdeki 7 güne ait etkinlik ve sınav yoğunluğu", "Events and exams over the next 7 days")}
-                  items={weeklyDensityItems().map((i) => ({ label: i.label, value: i.value, formattedValue: i.formattedValue }))}
-                  unit={copy(" Etkinlik", " events")}
-                />
-
-                <ChartBar
-                  title={copy("Kurumsal Program Türü Dağılımı", "Program type distribution")}
-                  subtitle={copy("Aktif ders, etüt ve kulüp sayıları", "Active course, study, and club counts")}
-                  items={managerCourseKindItems()}
-                />
-
-                <ChartProgressRing
-                  title={copy("Personel Vardiya & Mesai Takibi", "Staff shifts and work tracking")}
-                  valueText="88%"
-                  subtext={copy("Tamamlanan mesai", "completed work")}
-                  subtitle={copy("Personel çalışma ve vardiya takip durumu", "Staff work and shift status")}
-                  segments={managerStaffWorkSegments()}
-                />
-              </Match>
-
-              {/* ADMIN ROLE CHARTS (4 Distinct Types) */}
-              <Match when={role() === "admin"}>
-                <ChartMetricCards
-                  title={copy("Sistem Altyapı & Sağlık Metrikleri", "System health metrics")}
-                  subtitle={copy("Platform geneli kullanıcı, erişilebilirlik ve içerik sayıları", "Platform users, availability, and content counts")}
-                  metrics={adminMetricCards()}
-                />
-
-                <ChartAreaTrend
-                  title={copy("Platform Geneli 7 Günlük Aktivite Eğrisi", "Platform-wide 7-day activity")}
-                  subtitle={copy("Tüm modüller genelinde 7 günlük takvim yükü", "7-day calendar load across all modules")}
-                  items={weeklyDensityItems().map((i) => ({ label: i.label, value: i.value, formattedValue: i.formattedValue }))}
-                  unit={copy(" Kayıt", " records")}
-                />
-
-                <ChartBar
-                  title={copy("Sistem Kullanıcı & Rol Dağılımı", "System users and roles")}
-                  subtitle={copy("Platformdaki aktif kullanıcı rollerinin dağılımı", "Active platform user roles")}
-                  items={adminUserRoleItems()}
-                />
-
-                <ChartProgressRing
-                  title={copy("Sistem Altyapı & Kapasite Takibi", "System capacity tracking")}
-                  valueText={`${courseCount() + examCount() + eventCount()}`}
-                  subtext={copy("toplam varlık", "total assets")}
-                  subtitle={copy("Sistemdeki aktif ders, sınav ve etkinlik kapasitesi", "Active course, exam, and event capacity")}
-                  segments={adminSystemCapacitySegments()}
-                />
-              </Match>
-            </Switch>
-          </section>
-        </Show>
-
-        {/* Workspace Portal Cards (Expandable after 2 rows) */}
-        <section class="space-y-2.5 rounded-3xl border border-[#F2F2F3] bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs" aria-labelledby="dash-sections">
-          <div class="flex items-center justify-between gap-3">
-            <h2 id="dash-sections" class="text-sm font-semibold tracking-tight text-foreground">
-              {t("dashboard.roleLinks")}
-            </h2>
-            <div class="flex items-center gap-2">
-              <Show when={editingPortalOrder()}>
-                <Button type="button" variant="ghost" size="sm" class="h-10 rounded-xl text-xs" onClick={resetPortalOrder}>
-                  {t("common.remove")}
-                </Button>
-              </Show>
-              <Button type="button" variant="outline" size="sm" class="h-10 rounded-xl text-xs font-semibold" onClick={() => setEditingPortalOrder((value) => !value)}>
-                {editingPortalOrder() ? t("common.done") : t("common.edit")}
-              </Button>
+          <section class="space-y-3" aria-labelledby="highlights-heading">
+            <h2 id="highlights-heading" class="text-sm font-semibold">{t("dashboard.highlights")}</h2>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <For each={stats()}>
+                {(stat) => (
+                  <div class="rounded-2xl border border-border bg-card px-4 py-3.5 shadow-xs">
+                    <div class="flex items-center gap-2">
+                      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground">
+                        <stat.Icon class="h-4 w-4" />
+                      </span>
+                      <p class="min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground">{t(stat.labelKey)}</p>
+                    </div>
+                    <div class="mt-3 flex items-end justify-between gap-2">
+                      <p class="mono tabular-nums text-2xl font-bold tracking-tight">{stat.value}</p>
+                      <Show when={stat.spark}>{(s) => <StatSpark values={s()} />}</Show>
+                    </div>
+                  </div>
+                )}
+              </For>
             </div>
-          </div>
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <For each={displayPortalCards()}>
-              {(card, index) => (
-                <PortalCard
-                  card={card}
-                  editing={editingPortalOrder()}
-                  isFirst={index() === 0}
-                  isLast={index() === displayPortalCards().length - 1}
-                  onMoveLeft={() => moveCardByDelta(card.to, -1)}
-                  onMoveRight={() => moveCardByDelta(card.to, 1)}
-                  dragging={draggingPortal() === card.to}
-                  preview={dragOverPortal() === card.to && draggingPortal() !== card.to}
-                  onDragStart={() => setDraggingPortal(card.to)}
-                  onDragEnd={() => {
-                    setDraggingPortal(null);
-                    setDragOverPortal(null);
-                  }}
-                  onDragOver={() => {
-                    if (draggingPortal() && draggingPortal() !== card.to) {
-                      setDragOverPortal(card.to);
-                    }
-                  }}
-                  onDrop={() => {
-                    const source = draggingPortal();
-                    const target = card.to;
-                    setDraggingPortal(null);
-                    setDragOverPortal(null);
-                    if (source && target && source !== target) {
-                      movePortalCard(source, target);
-                    }
-                  }}
-                />
-              )}
-            </For>
-          </div>
+          </section>
 
-          <Show when={orderedPortalCards().length > 8 && !editingPortalOrder()}>
-            <div class="flex justify-center pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                class="h-8 rounded-full border-border/70 bg-background/80 px-4 text-xs font-medium text-foreground shadow-xs transition-all duration-200 hover:border-primary/50 hover:bg-card hover:shadow-sm"
-                onClick={() => setShowAllPortals((v) => !v)}
-              >
-                <span>{showAllPortals() ? copy("Daha az göster", "Show less") : copy("Daha fazla göster", "Show more")}</span>
-                <Show when={showAllPortals()} fallback={<IconChevronDown class="h-3.5 w-3.5 text-muted-foreground ml-1" />}>
-                  <IconChevronUp class="h-3.5 w-3.5 text-muted-foreground ml-1" />
-                </Show>
-              </Button>
+          <Show when={role() !== "parent"}>
+            <div class="grid gap-3 lg:grid-cols-3">
+              <Show when={role() === "student"}>
+                <ChartAreaTrend
+                  class="lg:col-span-2"
+                  title={t("dashboard.progressOverview")}
+                  subtitle={t("dashboard.courseAverages")}
+                  items={courseAverages()}
+                  minScale={0}
+                  maxScale={100}
+                />
+              </Show>
+              <Show when={role() !== "student"}>
+                <ChartBar
+                  class="lg:col-span-2"
+                  title={t("dashboard.progressOverview")}
+                  subtitle={t("dashboard.classSizes")}
+                  items={classSizes()}
+                />
+              </Show>
+              <Show when={role() === "student"}>
+                <ChartProgressRing
+                  title={t("dashboard.activitySplit")}
+                  subtitle={t("dashboard.activitySplitDesc")}
+                  segments={attendanceSegments()}
+                />
+              </Show>
+              <Show when={role() !== "student"}>
+                <ChartProgressRing
+                  title={t("dashboard.workloadSplit")}
+                  subtitle={t("dashboard.workloadSplitDesc")}
+                  segments={workloadSegments()}
+                />
+              </Show>
             </div>
           </Show>
-        </section>
 
-        <Show when={role() !== "parent"}>
-        <div class="grid items-stretch gap-5">
-          <section class="flex min-h-68 flex-col space-y-2.5 rounded-3xl border border-[#F2F2F3] bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs" aria-labelledby="dash-attention">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2">
-              <h2 id="dash-attention" class="text-sm font-semibold tracking-tight text-foreground">
-                {t("dashboard.attention")}
-              </h2>
-              <div class="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-0.5 text-xs">
-                <button
-                  type="button"
-                  class={cn(
-                    "rounded-md px-2.5 py-0.5 font-medium transition-all",
-                    attentionFilter() === "all"
-                      ? "bg-background font-semibold text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                  onClick={() => { setAttentionFilter("all"); setAttentionPage(0); }}
-                >
-                  {copy("Tümü", "All")}
-                </button>
-                <button
-                  type="button"
-                  class={cn(
-                    "rounded-md px-2.5 py-0.5 font-medium transition-all",
-                    attentionFilter() === "exam"
-                      ? "bg-background font-semibold text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                  onClick={() => { setAttentionFilter("exam"); setAttentionPage(0); }}
-                >
-                  {copy("Sınavlar", "Exams")}
-                </button>
-                <button
-                  type="button"
-                  class={cn(
-                    "rounded-md px-2.5 py-0.5 font-medium transition-all",
-                    attentionFilter() === "event"
-                      ? "bg-background font-semibold text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                  onClick={() => { setAttentionFilter("event"); setAttentionPage(0); }}
-                >
-                  {copy("Etkinlikler", "Events")}
-                </button>
-              </div>
-            </div>
+          <div class="grid gap-3 lg:grid-cols-3">
+            <section class={cn("flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-xs", role() !== "parent" ? "lg:col-span-2" : "lg:col-span-3")} aria-labelledby="deadlines-heading">
+              <h2 id="deadlines-heading" class="text-base font-semibold tracking-tight">{t("dashboard.deadlines")}</h2>
+              <DataTable
+                columns={deadlineColumns()}
+                data={deadlines()}
+                enableColumnVisibility={false}
+                searchPredicate={deadlineSearch}
+                filterPlaceholder={t("dashboard.deadlines")}
+                empty={t("dashboard.upcomingEmpty")}
+              />
+            </section>
 
-            <Show
-              when={filteredAttention().length > 0}
-              fallback={<DashEmpty>{t("dashboard.noAttention")}</DashEmpty>}
-            >
-              <ul class="flex-1 divide-y divide-[#F2F2F3] overflow-hidden rounded-2xl border border-[#F2F2F3] dark:border-white/8 bg-card shadow-apple">
-                <For each={pagedAttention()}>
-                  {(item) => (
-                    <li>
-                      <Link
-                        to={item.to}
-                        params={{ id: item.id }}
-                        class="flex items-center gap-3 px-3 py-2.5 text-sm transition-[background-color,box-shadow] hover:bg-muted/45 hover:shadow-[inset_2px_0_0_hsl(var(--primary)/0.7)] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4 sm:py-3"
-                      >
-                        <StatusDot status={item.status} />
-                        <div class="min-w-0 flex-1">
-                          <p class="truncate font-medium text-foreground">{item.title}</p>
-                          <p class="truncate text-xs text-muted-foreground">
-                            {item.kind === "exam" ? t("nav.exams") : t("nav.events")}
-                            <Show when={item.subtitle}>
-                              {" · "}
-                              {item.subtitle}
-                            </Show>
-                          </p>
-                        </div>
-                        <div class="shrink-0 text-right">
-                          <StatusLabel status={item.status} t={t} />
-                          <p class="mono mt-0.5 text-[11px] tabular-nums text-muted-foreground">
-                            <Show when={item.at != null} fallback="—">
-                              {formatDateTime(item.at!, locale())}
-                            </Show>
-                          </p>
-                        </div>
-                      </Link>
-                    </li>
-                  )}
-                </For>
-              </ul>
-              <Show when={attentionTotalPages() > 1}>
-                <PaginationControls page={attentionPage()} totalPages={attentionTotalPages()} onPageChange={setAttentionPage} />
-              </Show>
+            <Show when={role() !== "parent"}>
+              <section class="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-xs lg:col-span-1" aria-labelledby="review-heading">
+                <div class="space-y-1">
+                  <h2 id="review-heading" class="text-base font-semibold tracking-tight">{t("nav.questionBank")}</h2>
+                  <p class="text-sm text-muted-foreground">{t("dashboard.questionHubDesc")}</p>
+                </div>
+                <Link
+                  to="/question-bank"
+                  class="flex h-10 items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 text-sm text-muted-foreground outline-hidden transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <IconSearch class="h-4 w-4 shrink-0" />
+                  <span class="truncate">{t("dashboard.questionHubPlaceholder")}</span>
+                </Link>
+                <div class="flex items-center gap-2">
+                  <For each={[IconArchive, IconHelpCircle, IconExam, IconBook, IconChart]}>
+                    {(Icon) => (
+                      <span class="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted/30 text-muted-foreground">
+                        <Icon class="h-4 w-4" />
+                      </span>
+                    )}
+                  </For>
+                </div>
+                <div class="mt-auto grid grid-cols-2 gap-2">
+                  <Link
+                    to="/question-bank"
+                    class="flex h-10 items-center justify-center rounded-xl border border-border bg-card text-sm font-semibold outline-hidden transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {t("nav.questionBank")}
+                  </Link>
+                  <Link
+                    to="/questions"
+                    class="flex h-10 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground outline-hidden transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {t("dashboard.askQuestion")}
+                  </Link>
+                </div>
+              </section>
             </Show>
-          </section>
-        </div>
-        </Show>
-        </div>
-      </Show>
-    </div>
-  );
-}
+          </div>
 
-function DashEmpty(props: { children: string }) {
-  return (
-    <div class="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-dashed border-border bg-card/80 px-4 py-8 text-center text-sm text-muted-foreground shadow-xs">
-      {props.children}
-    </div>
-  );
-}
-
-function PortalCard(props: {
-  card: PortalCardDef;
-  editing: boolean;
-  isFirst?: boolean;
-  isLast?: boolean;
-  onMoveLeft?: () => void;
-  onMoveRight?: () => void;
-  dragging: boolean;
-  preview: boolean;
-  onDragStart: () => void;
-  onDragEnd: () => void;
-  onDragOver: () => void;
-  onDrop: (target: string) => void;
-}) {
-  const t = useT();
-  const { locale } = usePreferences();
-  const Icon = props.card.Icon;
-  const hasStat = () => props.card.stat != null && props.card.stat !== "";
-
-  const cardInner = () => (
-    <>
-      <span class={cn("mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-200", portalTone(props.card.to))}>
-
-        <Icon class="h-5 w-5" />
-      </span>
-      <div class="min-w-0 flex-1 space-y-1">
-        <div class="flex min-w-0 items-start gap-2">
-          <h3 class="truncate text-sm font-semibold tracking-tight text-foreground">{t(props.card.titleKey)}</h3>
-          <Show when={hasStat()}>
-            <span class="hidden text-muted-foreground/40 sm:inline" aria-hidden="true">
-              |
-            </span>
-            <span class="mono shrink-0 rounded-full border border-black/6 bg-background/80 px-2 py-0.5 text-xs font-semibold tabular-nums tracking-tight text-foreground shadow-xs dark:border-white/8 sm:text-sm">
-              {props.card.stat}
-            </span>
-          </Show>
-          <Show when={props.card.minRole && props.card.minRole !== "student"}>
-            <span class="ml-auto hidden shrink-0 rounded-full border border-black/6 dark:border-white/8 bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:inline">
-              {t(ROLE_KEY[props.card.minRole!])}
-            </span>
-          </Show>
-        </div>
-        <Show when={props.card.descKey}>
-          <p class="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{t(props.card.descKey!)}</p>
-        </Show>
+          <div class="flex justify-center pt-2">
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              disabled={refreshing()}
+              class="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-4 text-xs font-semibold text-muted-foreground outline-hidden transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+            >
+              <IconRefresh class={cn("h-3.5 w-3.5", refreshing() && "animate-spin")} />
+              {t("dashboard.refresh")}
+            </button>
+          </div>
+        </Suspense>
       </div>
-      <Show when={props.editing}>
-        <div class="flex items-center gap-1 shrink-0 ml-1">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            class="h-10 w-10 rounded-xl p-0 text-xs font-bold shadow-none disabled:opacity-30"
-            disabled={props.isFirst}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              props.onMoveLeft?.();
-            }}
-            title={locale() === "tr" ? "Öne taşı" : "Move earlier"}
-          >
-            ←
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            class="h-10 w-10 rounded-xl p-0 text-xs font-bold shadow-none disabled:opacity-30"
-            disabled={props.isLast}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              props.onMoveRight?.();
-            }}
-            title={locale() === "tr" ? "Arkaya taşı" : "Move later"}
-          >
-            →
-          </Button>
-        </div>
-      </Show>
-    </>
-  );
-
-  const cardClass = () =>
-    cn(
-      "group relative flex min-h-24 items-start gap-3.5 overflow-hidden rounded-2xl border border-[#F2F2F3] bg-card p-4 shadow-apple transition-all duration-200 hover:-translate-y-0.5 hover:shadow-apple-hover hover:border-border dark:border-white/8 dark:hover:border-white/20 dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.6)] sm:min-h-26",
-      !props.editing && "active:scale-[0.98]",
-      props.editing && "cursor-grab select-none border-dashed border-primary/50 bg-primary/3",
-      props.preview && "scale-[1.02] border-primary/70 bg-primary/10 opacity-80 shadow-apple-hover",
-      props.dragging && "scale-[0.98] border-primary/50 opacity-50",
-    );
-
-  return (
-    <Show
-      when={props.editing}
-      fallback={
-        <Link to={props.card.to} class={cardClass()}>
-          {cardInner()}
-        </Link>
-      }
-    >
-      <div
-        draggable={true}
-        onDragStart={(event) => {
-          if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = "move";
-            event.dataTransfer.setData("text/plain", props.card.to);
-          }
-          props.onDragStart();
-        }}
-        onDragEnd={(event) => {
-          event.preventDefault();
-          props.onDragEnd();
-        }}
-        onDragOver={(event) => {
-          event.preventDefault();
-          if (event.dataTransfer) {
-            event.dataTransfer.dropEffect = "move";
-          }
-          props.onDragOver();
-        }}
-        onDragEnter={(event) => {
-          event.preventDefault();
-        }}
-        onDrop={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          props.onDrop(props.card.to);
-        }}
-        class={cardClass()}
-      >
-        {cardInner()}
-      </div>
-    </Show>
-  );
-}
-
-function StatusDot(props: { status: AttentionKind }) {
-  return (
-    <span
-      class={cn("mt-0.5 h-2 w-2 shrink-0 rounded-full", scheduleStatusDotClass(props.status))}
-      aria-hidden="true"
-    />
-  );
-}
-
-function StatusLabel(props: {
-  status: AttentionKind;
-  t: (key: MessageKey) => string;
-}) {
-  const label = () => {
-    if (props.status === "active") return props.t("dashboard.activeNow");
-    if (props.status === "today") return props.t("dashboard.today");
-    return props.t("dashboard.soon");
-  };
-  return (
-    <span
-      class={cn(
-        "inline-flex rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-        scheduleStatusClass(props.status),
-      )}
-    >
-      {label()}
-    </span>
+    </RouteGuard>
   );
 }

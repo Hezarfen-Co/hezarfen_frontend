@@ -17,11 +17,11 @@
 
 @theme {
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
-    'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+    'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-display:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
-    'SF Pro', sans-serif;
+    'Space Grotesk Variable', 'Inter Variable', -apple-system,
+    BlinkMacSystemFont, 'SF Pro Display', sans-serif;
 
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
@@ -122,9 +122,9 @@
 
 @utility font-display {
   font-family:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
-    'SF Pro', sans-serif;
-  letter-spacing: -0.015em;
+    'Space Grotesk Variable', 'Inter Variable', -apple-system,
+    BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 @utility glass-header {
@@ -442,9 +442,9 @@
     --ui-text-2: 240 5% 35%;
     --ui-text-3: 240 4% 52%;
     
-    /* Apple System SF Blue (#007AFF) */
-    --ui-accent: 211 100% 50%;
-    --ui-accent-muted: 211 90% 94%;
+    /* Knowvio brand orange (#F97316) */
+    --ui-accent: 24 95% 53%;
+    --ui-accent-muted: 24 95% 94%;
     
     /* Apple System Status Colors */
     --ui-success: 142 71% 45%;
@@ -477,7 +477,7 @@
     --muted: var(--ui-surface-2);
     --muted-foreground: var(--ui-text-2);
     --accent: var(--ui-accent-muted);
-    --accent-foreground: 211 100% 32%;
+    --accent-foreground: 24 90% 32%;
     --destructive: var(--ui-danger);
     --destructive-foreground: 0 0% 100%;
     --border: var(--ui-border-1);
@@ -504,9 +504,9 @@
     --ui-text-2: 240 5% 68%;
     --ui-text-3: 240 4% 48%;
     
-    /* Electric Dark Accent */
-    --ui-accent: 217 91% 60%;
-    --ui-accent-muted: 217 60% 16%;
+    /* Knowvio brand orange (dark) */
+    --ui-accent: 24 95% 58%;
+    --ui-accent-muted: 24 60% 16%;
     --ui-success: 142 71% 52%;
     --ui-success-muted: 142 40% 14%;
     --ui-warning: 38 92% 54%;
@@ -517,7 +517,7 @@
     --ui-info-muted: 199 50% 14%;
 
     --primary-foreground: 0 0% 100%;
-    --accent-foreground: 217 100% 85%;
+    --accent-foreground: 24 100% 80%;
     --destructive-foreground: 0 0% 100%;
     --sidebar: var(--ui-bg);
   }
@@ -528,7 +528,7 @@
 
   html {
     @apply scroll-smooth;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

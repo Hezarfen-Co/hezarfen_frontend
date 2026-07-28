@@ -4,8 +4,9 @@
 
 Dense school admin UI with Apple HIG-inspired grouped surfaces: neutral grouped
 backgrounds, subtle borders, translucent overlays, one blue accent for
-interactive chrome only. Dashboard and overview surfaces stay grayscale; color
-is reserved for semantic status (success / warning / danger / info).
+interactive chrome only. Surfaces stay neutral; color is reserved for the blue
+accent, dashboard charts (see "Charts" below), and semantic status (success /
+warning / danger / info).
 
 ## Color
 
@@ -85,7 +86,7 @@ Reference page: `src/pages/admin-users-page.tsx`.
 
 Implemented:
 
-- grouped accordion sidebar with active category auto-open
+- fixed single-level role sidebar with one neutral raised active row
 - compact stat row on top of users page
 - dense sticky data table styling via `.data-table`
 - centered row action dropdowns via `TableRowActions`
@@ -132,9 +133,20 @@ Reference implementation: `src/pages/dashboard-page.tsx`.
 - Status uses semantic color only (dot + small badge): active (emerald), today (amber), soon (muted).
 - Empty states are plain text — never “create exam/event” CTAs.
 
+### Charts (Knowvio-style dashboard)
+
+- The homepage uses the `Chart*` components in `src/components/ui/` (area trend,
+  bar, progress ring) for a Highlights stat row + Progress-overview + Activity split,
+  plus a `DataTable` of upcoming deadlines. Accent = `hsl(var(--primary))`; status
+  tints stay semantic (emerald/amber/rose/muted).
+- **Real data only:** every chart/stat maps to a live API field. No fabricated daily
+  trends, streak counters, or `+%` delta badges. Hide a panel when its source is empty
+  for the current role.
+
 ### Out of scope for dashboard
 
-- Activity bar charts, multi-color portal accents, guide/marketing footers, create shortcuts, redundant summary KPI tiles under the portal grid.
+- Guide/marketing footers, create shortcuts, promotional/upgrade cards.
+- Drag/drop ordering, fabricated trends / streaks, `+%` deltas, manual refresh controls.
 
 ## Current Implementation Notes
 

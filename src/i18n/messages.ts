@@ -21,6 +21,12 @@ export type MessageKey =
   | "ai.suggest3"
   | "ai.suggest4"
   | "nav.home"
+  | "nav.today"
+  | "nav.classes"
+  | "nav.progress"
+  | "nav.students"
+  | "nav.children"
+  | "nav.school"
   | "nav.notes"
   | "nav.events"
   | "nav.exams"
@@ -29,6 +35,7 @@ export type MessageKey =
   | "nav.courses"
   | "nav.studies"
   | "nav.clubs"
+  | "nav.meals"
   | "nav.marks"
   | "nav.messages"
   | "nav.pomodoro"
@@ -58,6 +65,7 @@ export type MessageKey =
   | "nav.group.reports"
   | "nav.group.settings"
   | "nav.group.community"
+  | "nav.darkMode"
   | "rightPanel.messagesTitle"
   | "rightPanel.calendarTitle"
   | "rightPanel.openFullMessages"
@@ -267,6 +275,51 @@ export type MessageKey =
   | "dashboard.portal.studentMarksDesc"
   | "dashboard.portal.settingsDesc"
   | "dashboard.portal.termsDesc"
+  | "dashboard.portal.mealsDesc"
+  | "dashboard.highlights"
+  | "dashboard.progressOverview"
+  | "dashboard.progressOverviewDesc"
+  | "dashboard.activitySplit"
+  | "dashboard.activitySplitDesc"
+  | "dashboard.workloadSplit"
+  | "dashboard.workloadSplitDesc"
+  | "dashboard.deadlines"
+  | "dashboard.classSizes"
+  | "dashboard.courseAverages"
+  | "dashboard.chartEmpty"
+  | "dashboard.chartEmptyHint"
+  | "dashboard.col.task"
+  | "dashboard.col.dueDate"
+  | "dashboard.col.type"
+  | "dashboard.col.status"
+  | "dashboard.type.exam"
+  | "dashboard.type.event"
+  | "dashboard.type.appointment"
+  | "dashboard.type.homework"
+  | "dashboard.stats.attendance"
+  | "dashboard.stats.homework"
+  | "dashboard.stats.students"
+  | "dashboard.stats.children"
+  | "dashboard.stats.meals"
+  | "dashboard.stats.appointments"
+  | "dashboard.attend.present"
+  | "dashboard.attend.absent"
+  | "dashboard.attend.late"
+  | "dashboard.attend.excused"
+  | "dashboard.welcomeBack"
+  | "dashboard.welcomeHint"
+  | "dashboard.refresh"
+  | "dashboard.col.priority"
+  | "dashboard.priority.high"
+  | "dashboard.priority.medium"
+  | "dashboard.quickReview.title"
+  | "dashboard.quickReview.subtitle"
+  | "dashboard.quickReview.placeholder"
+  | "dashboard.quickReview.practice"
+  | "dashboard.quickReview.startQuiz"
+  | "dashboard.questionHubDesc"
+  | "dashboard.questionHubPlaceholder"
+  | "dashboard.askQuestion"
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
@@ -664,6 +717,13 @@ export type MessageKey =
   | "courses.teacherAssigned"
   | "courses.teacherUnassigned"
   | "courses.noTeachers"
+  | "courses.overview"
+  | "courses.work"
+  | "courses.people"
+  | "courses.upcoming"
+  | "courses.noUpcoming"
+  | "courses.nextExam"
+  | "courses.nextHomework"
   | "homework.title"
   | "homework.item"
   | "homework.add"
@@ -794,6 +854,82 @@ export type MessageKey =
   | "settings.maxFileSize"
   | "settings.maxFileSizeHelp"
   | "settings.maxFileSizeInvalid"
+  | "settings.aiPolicy"
+  | "settings.aiPolicyHelp"
+  | "settings.chatHistory"
+  | "settings.chatThreads"
+  | "settings.chatMessage"
+  | "settings.foodPolicy"
+  | "settings.foodPolicyHelp"
+  | "settings.mealCutoff"
+  | "settings.noCutoff"
+  | "settings.mealSlot"
+  | "settings.servingTimeUtc"
+  | "settings.addMealSlot"
+  | "settings.dietaryTags"
+  | "settings.addDietaryTag"
+  | "meals.title"
+  | "meals.subtitle"
+  | "meals.publish"
+  | "meals.publishHelp"
+  | "meals.date"
+  | "meals.slot"
+  | "meals.capacity"
+  | "meals.from"
+  | "meals.empty"
+  | "meals.dishes"
+  | "meals.conflict"
+  | "meals.menu"
+  | "meals.detailHelp"
+  | "meals.total"
+  | "meals.cutoff"
+  | "meals.noCutoff"
+  | "meals.bookingStatus"
+  | "meals.closed"
+  | "meals.open"
+  | "meals.child"
+  | "meals.myAccount"
+  | "meals.service"
+  | "meals.manage"
+  | "meals.noDishes"
+  | "meals.booked"
+  | "meals.notBooked"
+  | "meals.cutoffPassed"
+  | "meals.bookingHelp"
+  | "meals.book"
+  | "meals.cancelBooking"
+  | "meals.cancelSummary"
+  | "meals.cancelled"
+  | "meals.dietaryProfile"
+  | "meals.noDietaryNotes"
+  | "meals.balance"
+  | "meals.ledger"
+  | "meals.ledger.charge"
+  | "meals.ledger.credit"
+  | "meals.ledger.reversal"
+  | "meals.noLedger"
+  | "meals.attendance"
+  | "meals.walkIn"
+  | "meals.served"
+  | "meals.missed"
+  | "meals.notMarked"
+  | "meals.addDish"
+  | "meals.studentRecord"
+  | "meals.student"
+  | "meals.dietaryNote"
+  | "meals.bookingAudit"
+  | "meals.recordCredit"
+  | "meals.creditAppendOnly"
+  | "meals.amountTry"
+  | "meals.method"
+  | "meals.note"
+  | "meals.creditRecorded"
+  | "meals.deleteMenu"
+  | "meals.deleteDish"
+  | "meals.editMenu"
+  | "meals.editDish"
+  | "meals.dishName"
+  | "meals.priceTry"
   | "terms.title"
   | "terms.subtitle"
   | "terms.create"
@@ -972,6 +1108,12 @@ const en: Dict = {
   "ai.suggest3": "Do I have any missing homework?",
   "ai.suggest4": "How is my attendance this term?",
   "nav.home": "Home",
+  "nav.today": "Today",
+  "nav.classes": "Classes",
+  "nav.progress": "Progress",
+  "nav.students": "Students",
+  "nav.children": "Children",
+  "nav.school": "School",
   "nav.notes": "Notes",
   "nav.events": "Events",
   "nav.exams": "Exams",
@@ -980,6 +1122,7 @@ const en: Dict = {
   "nav.courses": "Courses",
   "nav.studies": "Study sessions",
   "nav.clubs": "Clubs",
+  "nav.meals": "Meals",
   "nav.marks": "Report card",
   "nav.messages": "Messages",
   "rightPanel.messagesTitle": "Messages",
@@ -1016,6 +1159,7 @@ const en: Dict = {
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
   "nav.group.community": "Community",
+  "nav.darkMode": "Dark mode",
   "nav.myStudents": "My Students",
   "parents.title": "My Students",
   "parents.subtitle": "View records for your linked students.",
@@ -1218,6 +1362,51 @@ const en: Dict = {
   "dashboard.portal.studentMarksDesc": "View and grade student results.",
   "dashboard.portal.settingsDesc": "System preferences and configuration.",
   "dashboard.portal.termsDesc": "Manage academic terms and periods.",
+  "dashboard.portal.mealsDesc": "Menus, bookings, dietary alerts, and meal balance.",
+  "dashboard.highlights": "Highlights",
+  "dashboard.progressOverview": "Progress overview",
+  "dashboard.progressOverviewDesc": "Your performance across courses.",
+  "dashboard.activitySplit": "Attendance split",
+  "dashboard.activitySplitDesc": "Your attendance breakdown.",
+  "dashboard.workloadSplit": "Workload split",
+  "dashboard.workloadSplitDesc": "Courses, exams, events, and more.",
+  "dashboard.deadlines": "Upcoming deadlines",
+  "dashboard.classSizes": "Class sizes",
+  "dashboard.courseAverages": "Course averages",
+  "dashboard.chartEmpty": "No records found",
+  "dashboard.chartEmptyHint": "Not enough data to display yet.",
+  "dashboard.col.task": "Task",
+  "dashboard.col.dueDate": "Due date",
+  "dashboard.col.type": "Type",
+  "dashboard.col.status": "Status",
+  "dashboard.type.exam": "Exam",
+  "dashboard.type.event": "Event",
+  "dashboard.type.appointment": "Appointment",
+  "dashboard.type.homework": "Homework",
+  "dashboard.stats.attendance": "Attendance",
+  "dashboard.stats.homework": "Homework",
+  "dashboard.stats.students": "Students",
+  "dashboard.stats.children": "Children",
+  "dashboard.stats.meals": "Meal menus",
+  "dashboard.stats.appointments": "Appointments",
+  "dashboard.attend.present": "Present",
+  "dashboard.attend.absent": "Absent",
+  "dashboard.attend.late": "Late",
+  "dashboard.attend.excused": "Excused",
+  "dashboard.welcomeBack": "Welcome back, {name}!",
+  "dashboard.welcomeHint": "Here's what needs your attention today.",
+  "dashboard.refresh": "Refresh data",
+  "dashboard.col.priority": "Priority",
+  "dashboard.priority.high": "High",
+  "dashboard.priority.medium": "Medium",
+  "dashboard.quickReview.title": "Quick review",
+  "dashboard.quickReview.subtitle": "Sharpen your knowledge in 2 minutes!",
+  "dashboard.quickReview.placeholder": "Choose a topic to review…",
+  "dashboard.quickReview.practice": "Practice",
+  "dashboard.quickReview.startQuiz": "Start quiz",
+  "dashboard.questionHubDesc": "Browse the question bank or ask a question.",
+  "dashboard.questionHubPlaceholder": "Search the question bank…",
+  "dashboard.askQuestion": "Ask a question",
   "notes.title": "Notebook",
   "notes.subtitle": "Private scratchpad for class ideas and reminders.",
   "notes.new": "New note",
@@ -1688,7 +1877,7 @@ const en: Dict = {
   "courses.weight": "Weight",
   "courses.delete": "Delete course",
   "courses.kind": "Course type",
-  "courses.kind.course": "Course",
+  "courses.kind.course": "Classes",
   "courses.kind.study": "Study",
   "courses.kind.club": "Club",
   "courses.capacity": "Capacity",
@@ -1700,6 +1889,13 @@ const en: Dict = {
   "courses.teacherAssigned": "Teacher assigned successfully.",
   "courses.teacherUnassigned": "Teacher unassigned successfully.",
   "courses.noTeachers": "No assigned teachers.",
+  "courses.overview": "Overview",
+  "courses.work": "Work",
+  "courses.people": "People",
+  "courses.upcoming": "Upcoming work",
+  "courses.noUpcoming": "No upcoming work.",
+  "courses.nextExam": "Next exam",
+  "courses.nextHomework": "Next homework",
   "homework.title": "Homework",
   "homework.item": "Homework",
   "homework.add": "Add homework",
@@ -1830,6 +2026,82 @@ const en: Dict = {
   "settings.maxFileSize": "Max note file size",
   "settings.maxFileSizeHelp": "Per-file upload cap for note attachments, in MiB. Backend accepts 0.001-25 MiB.",
   "settings.maxFileSizeInvalid": "Enter a valid file size.",
+  "settings.aiPolicy": "AI policy",
+  "settings.aiPolicyHelp": "Limits for conversation context, threads, and message length.",
+  "settings.chatHistory": "History turns",
+  "settings.chatThreads": "Maximum threads",
+  "settings.chatMessage": "Message length",
+  "settings.foodPolicy": "Food policy",
+  "settings.foodPolicyHelp": "Meal slots use UTC serving times. Empty lists disable the meal program.",
+  "settings.mealCutoff": "Booking/cancellation cutoff (minutes)",
+  "settings.noCutoff": "No cutoff",
+  "settings.mealSlot": "Meal slot",
+  "settings.servingTimeUtc": "Serving time (UTC)",
+  "settings.addMealSlot": "Add meal slot",
+  "settings.dietaryTags": "Dietary tags",
+  "settings.addDietaryTag": "Add dietary tag",
+  "meals.title": "Meals",
+  "meals.subtitle": "Browse menus by date, manage dietary safety, and track meal accounts.",
+  "meals.publish": "Publish menu",
+  "meals.publishHelp": "One menu per date and meal slot.",
+  "meals.date": "Menu date",
+  "meals.slot": "Meal slot",
+  "meals.capacity": "Capacity",
+  "meals.from": "Starting date",
+  "meals.empty": "No menus in this date range.",
+  "meals.dishes": "dishes",
+  "meals.conflict": "Dietary warning",
+  "meals.menu": "Menu",
+  "meals.detailHelp": "Dishes, booking state, dietary warnings, service, and account records.",
+  "meals.total": "Total price",
+  "meals.cutoff": "Cutoff",
+  "meals.noCutoff": "No cutoff",
+  "meals.bookingStatus": "Booking",
+  "meals.closed": "Closed",
+  "meals.open": "Open",
+  "meals.child": "Child",
+  "meals.myAccount": "Account",
+  "meals.service": "Service register",
+  "meals.manage": "Manage",
+  "meals.noDishes": "No dishes have been added.",
+  "meals.booked": "Booked",
+  "meals.notBooked": "Not booked",
+  "meals.cutoffPassed": "The booking and cancellation cutoff has passed.",
+  "meals.bookingHelp": "The backend confirms capacity, cutoff, conflicts, and price.",
+  "meals.book": "Book seat",
+  "meals.cancelBooking": "Cancel booking",
+  "meals.cancelSummary": "Cancellation releases the seat and appends an exact reversal of the original charge. It is refused after cutoff.",
+  "meals.cancelled": "Booking cancelled.",
+  "meals.dietaryProfile": "Dietary profile",
+  "meals.noDietaryNotes": "No dietary notes recorded.",
+  "meals.balance": "Balance",
+  "meals.ledger": "Ledger",
+  "meals.ledger.charge": "Meal charge",
+  "meals.ledger.credit": "Credit",
+  "meals.ledger.reversal": "Refund",
+  "meals.noLedger": "No ledger entries.",
+  "meals.attendance": "Meal attendance",
+  "meals.walkIn": "Walk-in",
+  "meals.served": "Served",
+  "meals.missed": "Missed",
+  "meals.notMarked": "Not marked",
+  "meals.addDish": "Add dish",
+  "meals.studentRecord": "Student meal record",
+  "meals.student": "Student",
+  "meals.dietaryNote": "Kitchen note",
+  "meals.bookingAudit": "Booking audit",
+  "meals.recordCredit": "Record credit",
+  "meals.creditAppendOnly": "Credits are append-only. Corrections require a compensating entry.",
+  "meals.amountTry": "Amount (TRY)",
+  "meals.method": "Method",
+  "meals.note": "Note",
+  "meals.creditRecorded": "Credit recorded.",
+  "meals.deleteMenu": "Delete menu",
+  "meals.deleteDish": "Delete dish",
+  "meals.editMenu": "Edit menu",
+  "meals.editDish": "Edit dish",
+  "meals.dishName": "Dish name",
+  "meals.priceTry": "Price (TRY)",
   "terms.title": "Academic terms",
   "terms.subtitle": "Manage calendar terms and assign courses to them.",
   "terms.create": "Create term",
@@ -1935,6 +2207,12 @@ const tr: Dict = {
   "ai.suggest3": "Eksik ödevim var mı?",
   "ai.suggest4": "Bu dönem devamsızlığım nasıl?",
   "nav.home": "Ana sayfa",
+  "nav.today": "Bugün",
+  "nav.classes": "Sınıflar",
+  "nav.progress": "İlerleme",
+  "nav.students": "Öğrenciler",
+  "nav.children": "Çocuklar",
+  "nav.school": "Okul",
   "nav.notes": "Defter",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
@@ -1943,6 +2221,7 @@ const tr: Dict = {
   "nav.courses": "Ders",
   "nav.studies": "Etüt",
   "nav.clubs": "Kulüp",
+  "nav.meals": "Yemekler",
   "nav.marks": "Karnem",
   "nav.messages": "Mesajlar",
   "rightPanel.messagesTitle": "Mesajlar",
@@ -1979,6 +2258,7 @@ const tr: Dict = {
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
   "nav.group.community": "Topluluk",
+  "nav.darkMode": "Karanlık mod",
   "nav.myStudents": "Öğrencilerim",
   "parents.title": "Öğrencilerim",
   "parents.subtitle": "Size bağlı öğrencilerin akademik kayıtlarını inceleyin.",
@@ -2181,6 +2461,51 @@ const tr: Dict = {
   "dashboard.portal.studentMarksDesc": "Öğrenci sonuçlarını görüntüle ve notlandır.",
   "dashboard.portal.settingsDesc": "Sistem tercihleri ve yapılandırma.",
   "dashboard.portal.termsDesc": "Akademik dönemleri ve periyotları yönet.",
+  "dashboard.portal.mealsDesc": "Menüler, rezervasyonlar, beslenme uyarıları ve bakiye.",
+  "dashboard.highlights": "Öne çıkanlar",
+  "dashboard.progressOverview": "Performans özeti",
+  "dashboard.progressOverviewDesc": "Derslere göre performansın.",
+  "dashboard.activitySplit": "Yoklama dağılımı",
+  "dashboard.activitySplitDesc": "Yoklama dağılımın.",
+  "dashboard.workloadSplit": "İş yükü dağılımı",
+  "dashboard.workloadSplitDesc": "Dersler, sınavlar, etkinlikler ve dahası.",
+  "dashboard.deadlines": "Yaklaşan son tarihler",
+  "dashboard.classSizes": "Sınıf mevcutları",
+  "dashboard.courseAverages": "Ders ortalamaları",
+  "dashboard.chartEmpty": "Kayıt bulunamadı",
+  "dashboard.chartEmptyHint": "Gösterilecek yeterli veri yok.",
+  "dashboard.col.task": "Görev",
+  "dashboard.col.dueDate": "Son tarih",
+  "dashboard.col.type": "Tür",
+  "dashboard.col.status": "Durum",
+  "dashboard.type.exam": "Sınav",
+  "dashboard.type.event": "Etkinlik",
+  "dashboard.type.appointment": "Randevu",
+  "dashboard.type.homework": "Ödev",
+  "dashboard.stats.attendance": "Yoklama",
+  "dashboard.stats.homework": "Ödev",
+  "dashboard.stats.students": "Öğrenciler",
+  "dashboard.stats.children": "Çocuklar",
+  "dashboard.stats.meals": "Yemek menüleri",
+  "dashboard.stats.appointments": "Randevular",
+  "dashboard.attend.present": "Var",
+  "dashboard.attend.absent": "Yok",
+  "dashboard.attend.late": "Geç",
+  "dashboard.attend.excused": "İzinli",
+  "dashboard.welcomeBack": "Tekrar hoş geldin, {name}!",
+  "dashboard.welcomeHint": "Bugün dikkat etmen gerekenler burada.",
+  "dashboard.refresh": "Verileri yenile",
+  "dashboard.col.priority": "Öncelik",
+  "dashboard.priority.high": "Yüksek",
+  "dashboard.priority.medium": "Orta",
+  "dashboard.quickReview.title": "Hızlı tekrar",
+  "dashboard.quickReview.subtitle": "2 dakikada bilgini tazele!",
+  "dashboard.quickReview.placeholder": "Tekrar için konu seç…",
+  "dashboard.quickReview.practice": "Alıştır",
+  "dashboard.quickReview.startQuiz": "Teste başla",
+  "dashboard.questionHubDesc": "Soru havuzuna göz at ya da soru sor.",
+  "dashboard.questionHubPlaceholder": "Soru havuzunda ara…",
+  "dashboard.askQuestion": "Soru sor",
   "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleri ve hatırlatmalar için özel defter.",
   "notes.new": "Yeni not",
@@ -2651,7 +2976,7 @@ const tr: Dict = {
   "courses.weight": "Ağırlık",
   "courses.delete": "Dersi sil",
   "courses.kind": "Ders türü",
-  "courses.kind.course": "Ders",
+  "courses.kind.course": "Dersler",
   "courses.kind.study": "Etüt",
   "courses.kind.club": "Kulüp",
   "courses.capacity": "Kapasite",
@@ -2663,6 +2988,13 @@ const tr: Dict = {
   "courses.teacherAssigned": "Öğretmen başarıyla atandı.",
   "courses.teacherUnassigned": "Öğretmen başarıyla çıkarıldı.",
   "courses.noTeachers": "Atanmış öğretmen yok.",
+  "courses.overview": "Genel Bakış",
+  "courses.work": "Çalışmalar",
+  "courses.people": "Kişiler",
+  "courses.upcoming": "Yaklaşan çalışmalar",
+  "courses.noUpcoming": "Yaklaşan çalışma yok.",
+  "courses.nextExam": "Sıradaki sınav",
+  "courses.nextHomework": "Sıradaki ödev",
   "homework.title": "Ödevler",
   "homework.item": "Ödev",
   "homework.add": "Ödev ekle",
@@ -2793,6 +3125,82 @@ const tr: Dict = {
   "settings.maxFileSize": "Not dosyası boyut sınırı",
   "settings.maxFileSizeHelp": "Not ekleri için dosya başına yükleme sınırı, MiB cinsinden. Backend 0.001-25 MiB kabul eder.",
   "settings.maxFileSizeInvalid": "Geçerli bir dosya boyutu gir.",
+  "settings.aiPolicy": "Yapay zekâ politikası",
+  "settings.aiPolicyHelp": "Konuşma bağlamı, konu sayısı ve mesaj uzunluğu sınırları.",
+  "settings.chatHistory": "Geçmiş turu",
+  "settings.chatThreads": "En fazla konu",
+  "settings.chatMessage": "Mesaj uzunluğu",
+  "settings.foodPolicy": "Yemek politikası",
+  "settings.foodPolicyHelp": "Öğün saatleri UTC girilir. Boş listeler yemek programını kapatır.",
+  "settings.mealCutoff": "Rezervasyon/iptal kapanışı (dakika)",
+  "settings.noCutoff": "Kapanış yok",
+  "settings.mealSlot": "Öğün",
+  "settings.servingTimeUtc": "Servis saati (UTC)",
+  "settings.addMealSlot": "Öğün ekle",
+  "settings.dietaryTags": "Beslenme etiketleri",
+  "settings.addDietaryTag": "Beslenme etiketi ekle",
+  "meals.title": "Yemekler",
+  "meals.subtitle": "Menüleri tarihe göre incele; beslenme güvenliğini ve yemek hesabını takip et.",
+  "meals.publish": "Menü yayınla",
+  "meals.publishHelp": "Her tarih ve öğün için tek menü.",
+  "meals.date": "Menü tarihi",
+  "meals.slot": "Öğün",
+  "meals.capacity": "Kapasite",
+  "meals.from": "Başlangıç tarihi",
+  "meals.empty": "Bu tarih aralığında menü yok.",
+  "meals.dishes": "yemek",
+  "meals.conflict": "Beslenme uyarısı",
+  "meals.menu": "Menü",
+  "meals.detailHelp": "Yemekler, rezervasyon, beslenme uyarıları, servis ve hesap kayıtları.",
+  "meals.total": "Toplam fiyat",
+  "meals.cutoff": "Kapanış",
+  "meals.noCutoff": "Kapanış yok",
+  "meals.bookingStatus": "Rezervasyon",
+  "meals.closed": "Kapalı",
+  "meals.open": "Açık",
+  "meals.child": "Çocuk",
+  "meals.myAccount": "Hesap",
+  "meals.service": "Servis kaydı",
+  "meals.manage": "Yönet",
+  "meals.noDishes": "Henüz yemek eklenmedi.",
+  "meals.booked": "Rezerve edildi",
+  "meals.notBooked": "Rezervasyon yok",
+  "meals.cutoffPassed": "Rezervasyon ve iptal süresi geçti.",
+  "meals.bookingHelp": "Kapasiteyi, kapanışı, çakışmaları ve fiyatı sunucu doğrular.",
+  "meals.book": "Yer ayır",
+  "meals.cancelBooking": "Rezervasyonu iptal et",
+  "meals.cancelSummary": "İptal yeri serbest bırakır ve ilk ücretin tam ters kaydını ekler. Kapanıştan sonra reddedilir.",
+  "meals.cancelled": "Rezervasyon iptal edildi.",
+  "meals.dietaryProfile": "Beslenme profili",
+  "meals.noDietaryNotes": "Beslenme notu yok.",
+  "meals.balance": "Bakiye",
+  "meals.ledger": "Hesap hareketleri",
+  "meals.ledger.charge": "Yemek ücreti",
+  "meals.ledger.credit": "Kredi",
+  "meals.ledger.reversal": "İade",
+  "meals.noLedger": "Hesap hareketi yok.",
+  "meals.attendance": "Yemek katılımı",
+  "meals.walkIn": "Rezervasyonsuz",
+  "meals.served": "Servis edildi",
+  "meals.missed": "Gelmedi",
+  "meals.notMarked": "İşaretlenmedi",
+  "meals.addDish": "Yemek ekle",
+  "meals.studentRecord": "Öğrenci yemek kaydı",
+  "meals.student": "Öğrenci",
+  "meals.dietaryNote": "Mutfak notu",
+  "meals.bookingAudit": "Rezervasyon denetimi",
+  "meals.recordCredit": "Kredi kaydet",
+  "meals.creditAppendOnly": "Krediler yalnızca eklenir. Düzeltme dengeleyici yeni kayıt gerektirir.",
+  "meals.amountTry": "Tutar (TRY)",
+  "meals.method": "Yöntem",
+  "meals.note": "Not",
+  "meals.creditRecorded": "Kredi kaydedildi.",
+  "meals.deleteMenu": "Menüyü sil",
+  "meals.deleteDish": "Yemeği sil",
+  "meals.editMenu": "Menüyü düzenle",
+  "meals.editDish": "Yemeği düzenle",
+  "meals.dishName": "Yemek adı",
+  "meals.priceTry": "Fiyat (TRY)",
   "terms.title": "Akademik dönemler",
   "terms.subtitle": "Takvim dönemlerini yönet ve dersleri dönemlere bağla.",
   "terms.create": "Dönem oluştur",

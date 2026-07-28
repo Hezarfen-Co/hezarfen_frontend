@@ -6,18 +6,19 @@ import { CommandPalette } from "@/components/layout/command-palette";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
 import { NotificationCenter } from "@/components/layout/notification-center";
-import { RightNav } from "@/components/layout/right-nav";
+import { routeNavItem } from "@/components/layout/nav-items";
+import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconBotSquare, IconPanelLeft, IconSearch, IconX } from "@/components/ui/icons";
+import { IconBotSquare, IconChevronLeft, IconPanelLeft, IconSearch, IconX } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 
-const SIDEBAR_EXPANDED = "w-52 2xl:w-56";
+const SIDEBAR_EXPANDED = "w-60";
 const SIDEBAR_COLLAPSED = "w-16";
 
 export function AppShell(props: ParentProps) {
@@ -34,35 +35,8 @@ export function AppShell(props: ParentProps) {
   const wide = () => location().pathname.startsWith("/exam-room/") || location().searchStr.includes("answerUser=") || location().pathname === "/messages";
   const fullScreen = () => location().pathname.startsWith("/exam-room/");
   const routeLabel = createMemo(() => {
-    const path = location().pathname;
-    if (path === "/") return t("nav.home");
-    if (path === "/notes") return `${t("nav.group.grades")} / ${t("nav.notes")}`;
-    if (path === "/messages") return `${t("nav.group.community")} / ${t("nav.messages")}`;
-    if (path === "/marks") return `${t("nav.group.classes")} / ${t("nav.marks")}`;
-    if (path === "/attendance") return `${t("nav.group.classes")} / ${t("nav.attendance")}`;
-    if (path === "/pomodoro") return `${t("nav.group.classes")} / ${t("nav.pomodoro")}`;
-    if (path === "/courses" || path.startsWith("/courses/")) return `${t("nav.group.classes")} / ${t("nav.courses")}`;
-    if (path === "/studies") return `${t("nav.group.classes")} / ${t("nav.studies")}`;
-    if (path === "/clubs") return `${t("nav.group.classes")} / ${t("nav.clubs")}`;
-    if (path === "/homework" || path.startsWith("/homework/")) return `${t("nav.group.classes")} / ${t("nav.homework")}`;
-    if (path === "/events" || path.startsWith("/events/")) return `${t("nav.group.classes")} / ${t("nav.events")}`;
-    if (path === "/exams" || path.startsWith("/exams/")) return `${t("nav.group.classes")} / ${t("nav.exams")}`;
-    if (path === "/question-bank") return `${t("nav.group.classes")} / ${t("nav.questionBank")}`;
-    if (path === "/calendar") return `${t("nav.group.classes")} / ${t("nav.calendar")}`;
-    if (path === "/appointments") return `${t("nav.group.classes")} / ${t("nav.appointments")}`;
-    if (path === "/students") return `${t("nav.group.students")} / ${t("nav.myStudents")}`;
-    if (path === "/questions" || path.startsWith("/questions/")) return `${t("nav.group.community")} / ${t("pool.title")}`;
-    if (path.startsWith("/exam-room/")) return t("nav.exams");
-    if (path === "/work") return `${t("nav.group.reports")} / ${t("nav.work")}`;
-    if (path === "/management/student-marks") return `${t("nav.group.classes")} / ${t("nav.studentMarks")}`;
-    if (path === "/management/student-attendance") return `${t("nav.group.reports")} / ${t("nav.studentAttendance")}`;
-    if (path === "/management/pomodoros") return `${t("nav.group.reports")} / ${t("nav.studentPomodoro")}`;
-    if (path === "/management/staff-work") return `${t("nav.group.reports")} / ${t("nav.staffWork")}`;
-    if (path === "/management/settings") return `${t("nav.group.settings")} / ${t("nav.settings")}`;
-    if (path === "/management/terms") return `${t("nav.group.settings")} / ${t("nav.terms")}`;
-    if (path === "/admin/users") return `${t("nav.admin")} / ${t("nav.users")}`;
-    if (path === "/guide") return t("nav.guide");
-    return path;
+    const item = routeNavItem(location().pathname, auth.user()?.role);
+    return item ? t(item.labelKey) : location().pathname;
   });
   const logout = async () => {
     await auth.logout();
@@ -157,18 +131,27 @@ export function AppShell(props: ParentProps) {
 
         <main class="min-w-0 flex-1">
           <Show when={auth.user() && !fullScreen()}>
-            <header class="sticky top-0 z-30 hig-translucent-bar flex h-14 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-              <div class="flex flex-1 items-center justify-start min-w-0">
-                <div class="rounded-full border border-black/6 dark:border-white/8 bg-card/80 px-3.5 py-1 text-xs font-semibold text-muted-foreground shadow-xs">
-                  <span class="block truncate max-w-[120px] sm:max-w-none">{routeLabel()}</span>
-                </div>
+            <header class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/70 bg-background/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+              <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-44">
+                <Show when={location().pathname !== "/"}>
+                  <button
+                    type="button"
+                    onClick={() => window.history.back()}
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={t("common.back")}
+                    title={t("common.back")}
+                  >
+                    <IconChevronLeft class="h-4 w-4" />
+                  </button>
+                </Show>
+                <span class="block truncate text-sm font-semibold">{routeLabel()}</span>
               </div>
 
-              <div class="flex flex-1 items-center justify-center max-w-md min-w-0">
+              <div class="mx-auto flex min-w-0 max-w-xl flex-1 items-center justify-center">
                 <button
                   type="button"
                   onClick={() => setCommandOpen(true)}
-                  class="flex h-9 w-full items-center justify-between gap-2.5 rounded-full border border-black/8 dark:border-white/12 bg-secondary/60 px-3.5 text-xs font-medium text-muted-foreground shadow-2xs transition-all hover:bg-secondary hover:text-foreground hover:border-border/80"
+                  class="flex h-10 w-full items-center justify-between gap-2.5 rounded-xl border border-border bg-muted/50 px-3.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   title={t("dashboard.commandCenter")}
                 >
                   <div class="flex items-center gap-2 min-w-0">
@@ -181,9 +164,10 @@ export function AppShell(props: ParentProps) {
                 </button>
               </div>
 
-              <div class="flex flex-1 items-center justify-end gap-2 min-w-0">
+              <div class="flex shrink-0 items-center justify-end gap-2">
+                <ShellMessagesButton />
                 <NotificationCenter />
-                <Button type="button" variant="ghost" size="sm" class="h-9 shrink-0 rounded-full border border-border bg-transparent text-muted-foreground shadow-none hover:bg-muted hover:text-foreground" onClick={() => setCelebiOpen(true)}>
+                <Button type="button" variant="ghost" size="sm" class="hidden h-9 shrink-0 rounded-xl border border-border bg-transparent text-muted-foreground shadow-none hover:bg-muted hover:text-foreground sm:flex" onClick={() => setCelebiOpen(true)}>
                   <IconBotSquare class="h-4 w-4" />
                   <span class="hidden sm:inline">{t("ai.askCelebi")}</span>
                 </Button>
@@ -200,10 +184,6 @@ export function AppShell(props: ParentProps) {
             {props.children}
           </div>
         </main>
-
-        <Show when={auth.user() && !fullScreen()}>
-          <RightNav />
-        </Show>
       </div>
       {/* MobileTabBar stays inside the provider — it is a shell surface, so a
           useShellFeed() badge there must not throw. */}

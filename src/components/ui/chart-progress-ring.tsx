@@ -1,5 +1,6 @@
 import { For, Show, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
+import { useT } from "@/stores/preferences-context";
 
 export type ProgressRingSegment = {
   id: string;
@@ -19,6 +20,7 @@ export type ChartProgressRingProps = {
 };
 
 export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
+  const t = useT();
   const calculatedTotal = () => props.total ?? props.segments.reduce((acc, s) => acc + s.value, 0);
 
   return (
@@ -44,8 +46,8 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
               </svg>
             </div>
-            <p class="text-xs font-semibold text-foreground/80">Kayıt Bulunamadı</p>
-            <p class="text-[11px] text-muted-foreground mt-0.5">Analiz için henüz yeterli veri eklenmedi</p>
+            <p class="text-xs font-semibold text-foreground/80">{t("dashboard.chartEmpty")}</p>
+            <p class="text-[11px] text-muted-foreground mt-0.5">{t("dashboard.chartEmptyHint")}</p>
           </div>
         }
       >
