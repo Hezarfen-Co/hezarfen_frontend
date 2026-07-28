@@ -108,7 +108,7 @@ function QuestionBankContent() {
     {
       accessorKey: "text",
       header: t("questions.text"),
-      cell: (cell) => <p class="truncate font-medium">{cell.row.original.text}</p>,
+      cell: (cell) => <p class="max-w-[24rem] truncate font-medium">{cell.row.original.text}</p>,
     },
     {
       accessorKey: "kind",
@@ -233,7 +233,7 @@ function QuestionBankContent() {
             }
             columns={columns()}
             data={list()?.items ?? []}
-            tableClass="table-fixed min-w-6xl"
+            tableClass="min-w-6xl"
             filterPlaceholder={t("bank.search")}
             searchValue={query()}
             onSearchInput={(value) => {

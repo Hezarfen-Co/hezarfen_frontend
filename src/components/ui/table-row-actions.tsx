@@ -33,7 +33,11 @@ export function TableRowActions(props: { label: string; actions: TableRowAction[
                 class="flex h-10 items-center gap-2.5 rounded-xl px-3 text-xs font-medium"
                 destructive={action.destructive}
                 disabled={action.disabled}
-                onSelect={action.onSelect}
+                // Defer to the next macrotask so the menu fully closes (and
+                // restores focus to its trigger) before the action opens a
+                // panel/dialog — otherwise the non-modal SidePanel reads that
+                // focus-restore as an outside interaction and instantly closes.
+                onSelect={() => setTimeout(action.onSelect, 0)}
               >
                 {action.icon}
                 <span>{action.label}</span>
