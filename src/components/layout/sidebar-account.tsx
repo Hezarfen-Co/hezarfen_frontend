@@ -70,7 +70,7 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                 </Show>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent class="w-72 rounded-xl p-0 shadow-apple dark:border-white/10 dark:bg-[#151515] dark:text-white">
+              <DropdownMenuContent class="w-72 rounded-xl border-border bg-popover p-0 text-popover-foreground shadow-apple">
                 <DropdownMenuItem class="m-1.5 gap-2.5 rounded-xl bg-muted/70 p-2.5 focus:bg-muted data-highlighted:bg-muted dark:bg-white/8 dark:focus:bg-white/10 dark:data-highlighted:bg-white/10" onSelect={() => setProfileOpen(true)}>
                   <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary dark:bg-emerald-100 dark:text-emerald-950">
                     {initials(name())}

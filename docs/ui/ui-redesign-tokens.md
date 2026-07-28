@@ -3,40 +3,24 @@
 ## Direction
 
 Dense school admin UI with Apple HIG-inspired grouped surfaces: neutral grouped
-backgrounds, subtle borders, translucent overlays, one blue accent for
-interactive chrome only. Surfaces stay neutral; color is reserved for the blue
-accent, dashboard charts (see "Charts" below), and semantic status (success /
-warning / danger / info).
+backgrounds, subtle borders, restrained elevation, and one graphite accent for
+interactive chrome. Translucency stays limited to functional layers such as
+headers and popovers; content surfaces remain opaque and easy to scan.
 
 ## Color
 
-Light palette is defined in `src/index.css` as `--ui-*` variables:
+Core palette: [Coolors light steel](https://coolors.co/palette/f8f9fa-e9ecef-dee2e6-ced4da-adb5bd-6c757d-495057-343a40-212529).
 
-- `--ui-bg`: `240 5% 96%`
-- `--ui-surface-1`: `0 0% 100%`
-- `--ui-surface-2`: `240 5% 92%`
-- `--ui-surface-3`: `240 5% 88%`
-- `--ui-border-1`: `240 5% 86%`
-- `--ui-border-2`: `240 4% 78%`
-- `--ui-text-1`: `240 10% 9%`
-- `--ui-text-2`: `240 5% 35%`
-- `--ui-text-3`: `240 4% 52%`
-- `--ui-accent`: Apple system blue (`211 100% 50%`)
-- semantic colors: success, warning, danger, info, each with muted pair
+- Canvas: `#E9ECEF`; cards and popovers: `#F8F9FA`
+- Muted layers: `#DEE2E6`, `#CED4DA`; borders: `#CED4DA`, `#ADB5BD`
+- Text: `#212529`, secondary `#495057`, tertiary `#6C757D`
+- Primary actions: `#343A40` with `#F8F9FA` text
+- Dark mode reverses the same scale from `#212529` canvas to `#F8F9FA` text
+- Success, warning, danger, and info keep semantic colors because color carries state
 
-Dark palette follows dark.design aesthetics (deep obsidian canvas, `#121318` card surfaces, crisp hairline borders, electric dark accent):
-
-- `--ui-bg`: `240 10% 3.9%` (`#09090b` canvas)
-- `--ui-surface-1`: `240 6% 7.5%` (`#121318` card surface)
-- `--ui-surface-2`: `240 6% 11.5%` (`#1b1c24` muted container / input)
-- `--ui-surface-3`: `240 5% 15.5%` (`#242531` elevated popover)
-- `--ui-border-1`: `240 5% 15%` (`#24252d` razor-sharp 1px border)
-- `--ui-border-2`: `240 4% 22%` (`#343644` active border)
-- `--ui-text-1`: `0 0% 98%` (`#fafafa` crisp heading text)
-- `--ui-text-2`: `240 5% 68%` (`#a1a1aa` secondary body text)
-- `--ui-text-3`: `240 4% 48%` (`#71717a` subtle label text)
-- `--ui-accent`: Electric dark blue (`217 91% 60%`)
-- semantic colors: luminous emerald, amber, rose, cyan
+Body text pairs exceed WCAG AA; `#6C757D` is limited to tertiary metadata and
+nonessential labels. Shadows use low-opacity `#212529`, two layers at most, and
+appear only where elevation communicates hierarchy or interaction.
 
 Existing shadcn tokens (`--background`, `--card`, `--primary`, etc.) are mapped
 to these `--ui-*` variables so existing components keep working seamlessly.

@@ -154,7 +154,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   };
 
   return (
-    <div class={cn("overflow-hidden rounded-xl border border-border/70 bg-card shadow-none dark:border-white/10 dark:bg-[#111111]", props.class)}>
+    <div class={cn("overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs", props.class)}>
       <Show when={showHeader() || showToolbar()}>
         <div class="space-y-3 border-b border-border/70 bg-muted/15 p-3 dark:border-white/10 dark:bg-white/3 sm:p-4">
           <Show when={showHeader()}>
@@ -176,7 +176,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <Show when={showSearch()}>
                 <Input
-                  class="h-9 max-w-sm rounded-lg border-transparent bg-muted/70 text-sm shadow-none focus-visible:ring-1 dark:bg-[#222222] dark:text-white dark:placeholder:text-white/40"
+                  class="h-9 max-w-sm rounded-lg border-border/80 bg-card text-sm shadow-xs focus-visible:ring-1"
                   value={props.onSearchInput || props.searchPredicate ? searchValue() : ((props.filterColumn ? table.getColumn(props.filterColumn)?.getFilterValue() : "") as string) ?? ""}
                   placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
                   onInput={(event) => {
@@ -192,7 +192,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
               </Show>
               <Show when={showColumnMenu()}>
             <DropdownMenu placement="bottom-end" gutter={6}>
-              <DropdownMenuTrigger class="ml-auto inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border/70 bg-muted/70 px-3 text-sm font-semibold shadow-none transition-all hover:bg-muted active:scale-[0.97] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring dark:border-white/8 dark:bg-[#222222] dark:text-white dark:hover:bg-white/12">
+              <DropdownMenuTrigger class="ml-auto inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border/80 bg-card px-3 text-sm font-semibold shadow-xs transition-all hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                 {t("common.columns")}
                 <IconChevronDown class="h-3.5 w-3.5 opacity-60" />
               </DropdownMenuTrigger>

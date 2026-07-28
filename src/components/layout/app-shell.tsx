@@ -53,7 +53,7 @@ export function AppShell(props: ParentProps) {
         <Show when={auth.user() && !fullScreen()}>
           <aside
             class={cn(
-              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-black/6 bg-sidebar/95 text-sidebar-foreground backdrop-blur-md transition-[width] duration-200 ease-out dark:border-white/8 dark:bg-[#070707] dark:text-white lg:flex lg:flex-col",
+              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-border bg-sidebar/95 text-sidebar-foreground shadow-sm backdrop-blur-md transition-[width] duration-200 ease-out lg:flex lg:flex-col",
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
             )}
           >
@@ -104,7 +104,7 @@ export function AppShell(props: ParentProps) {
               aria-label={t("nav.close")}
               onClick={() => setMobileOpen(false)}
             />
-            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-black/8 bg-sidebar/95 text-sidebar-foreground shadow-apple backdrop-blur-xl dark:border-white/8 dark:bg-[#070707] dark:text-white">
+            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-border bg-sidebar/95 text-sidebar-foreground shadow-apple backdrop-blur-xl">
               <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-black/5 px-3 dark:border-white/8">
                 <Link to="/" class="flex min-w-0 items-center gap-2.5" onClick={() => setMobileOpen(false)}>
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-apple">H</span>
@@ -169,7 +169,7 @@ export function AppShell(props: ParentProps) {
                 <NotificationCenter />
                 <button
                   type="button"
-                  class="topbar-ai-control hidden h-9 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-xs font-semibold outline-hidden hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-orange-400 active:translate-y-0 sm:flex"
+                  class="topbar-ai-control hidden h-9 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-xs font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] sm:flex"
                   onClick={() => setCelebiOpen(true)}
                 >
                   <IconSparkles class="h-4 w-4" />
