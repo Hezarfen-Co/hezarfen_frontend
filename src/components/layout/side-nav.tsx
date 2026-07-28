@@ -1,7 +1,7 @@
 import { For, Show } from "solid-js";
 import { Link, useRouterState } from "@tanstack/solid-router";
 import { primaryNavItems, routeNavItem, sidebarNavGroups, type NavItem } from "@/components/layout/nav-items";
-import { IconChevronDown } from "@/components/ui/icons";
+import { IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { useShellFeed } from "@/stores/shell-feed-context";
@@ -66,7 +66,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
           // rail falls through to the icon-only section below.
           const dropdown = () => !props.collapsed;
           const active = () => group.items.some((item) => current()?.id === item.id);
-          const links = (
+          const renderLinks = (showIcon: boolean) => (
             <div class="grid gap-1">
               <For each={group.items}>
                 {(item: NavItem) => {
@@ -85,7 +85,9 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                           : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                       )}
                     >
-                      <item.Icon class="h-4 w-4 shrink-0" />
+                      <Show when={showIcon}>
+                        <item.Icon class="h-4 w-4 shrink-0" />
+                      </Show>
                       <span class={props.collapsed ? "sr-only" : "truncate"}>{t(item.labelKey)}</span>
                       <Show when={badgeFor(item) > 0}>
                         <Show
@@ -115,17 +117,24 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                   <h2 class={props.collapsed ? "sr-only" : "mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"}>
                     {t(group.labelKey)}
                   </h2>
-                  {links}
+                  {renderLinks(true)}
                 </section>
               }
             >
-              <details class="group/nav mt-3 border-t border-border/60 pt-2 dark:border-white/8" open={active()}>
-                <summary class="flex h-9 cursor-pointer list-none items-center gap-3 rounded-lg px-3 text-[13px] font-semibold text-muted-foreground outline-hidden transition-colors hover:bg-muted/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+              <details class="group/nav mt-1" open={active()}>
+                <summary
+                  class={cn(
+                    "flex h-9 cursor-pointer list-none items-center gap-3 rounded-lg px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
+                    active()
+                      ? "bg-muted/70 text-foreground"
+                      : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                  )}
+                >
                   <group.Icon class="h-4 w-4 shrink-0" />
                   <span class="truncate">{t(group.labelKey)}</span>
-                  <IconChevronDown class="ml-auto h-3.5 w-3.5 transition-transform group-open/nav:rotate-180" />
+                  <IconChevronRight class="ml-auto h-3.5 w-3.5 shrink-0 opacity-60 transition-transform duration-200 group-open/nav:rotate-90" />
                 </summary>
-                <div class="ml-3 mt-1 border-l border-border/70 pl-2">{links}</div>
+                <div class="mt-1 ml-[1.15rem] border-l border-border/70 pl-2">{renderLinks(false)}</div>
               </details>
             </Show>
           );

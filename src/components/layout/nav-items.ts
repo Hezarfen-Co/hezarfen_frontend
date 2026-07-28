@@ -10,11 +10,15 @@ import {
   IconClock,
   IconClipboardCheck,
   IconExam,
+  IconGlobe,
+  IconGrid,
+  IconGuide,
   IconHelpCircle,
   IconHomework,
   IconHome,
   IconMessage,
   IconNote,
+  IconReportAnalytics,
   IconSchool,
   IconSettings,
   IconUserCog,
@@ -115,7 +119,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "classes",
     labelKey: "nav.group.classes",
-    Icon: IconSchool,
+    Icon: IconGuide,
     items: [
       CLASSES_ITEM,
       { id: "homework", to: "/homework", labelKey: "nav.homework", Icon: IconHomework },
@@ -132,7 +136,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "students",
     labelKey: "nav.group.students",
-    Icon: IconUsers,
+    Icon: IconReportAnalytics,
     items: [
       STUDENTS_ITEM,
       CHILDREN_ITEM,
@@ -144,7 +148,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "workspace",
     labelKey: "nav.group.community",
-    Icon: IconMessage,
+    Icon: IconGlobe,
     items: [
       MEALS_ITEM,
       { id: "messages", to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
@@ -155,7 +159,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "school",
     labelKey: "nav.group.school",
-    Icon: IconSchool,
+    Icon: IconGrid,
     items: [
       SCHOOL_ITEM,
       { id: "staff-work", to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
