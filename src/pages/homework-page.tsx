@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getCourseById, getCourseSubjects, getCourses, postCourseHomework } from "@/api/courses";
@@ -16,7 +16,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { IconEye, IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
@@ -206,15 +206,11 @@ function HomeworkContent() {
           </Show>
           <div class="space-y-1.5">
             <Label for="homework-course">{t("nav.courses")}</Label>
-            <Select id="homework-course" required value={selectedCourseId()} onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
-              <For each={manageableCourses()}>{(course) => <option value={course.id}>{course.title}</option>}</For>
-            </Select>
+            <SearchableSelect id="homework-course" required value={selectedCourseId()} onChange={setSelectedCourseId} placeholder={t("exams.selectCourse")} options={manageableCourses().map((course) => ({ value: course.id, label: course.title }))} />
           </div>
           <div class="space-y-1.5">
             <Label for="homework-subject-global">{t("subjects.subject")}</Label>
-            <Select id="homework-subject-global" required value={subjectId()} onChange={(event) => setSubjectId(event.currentTarget.value)}>
-              <For each={subjects() ?? []}>{(subject) => <option value={subject.id}>{subject.name}</option>}</For>
-            </Select>
+            <SearchableSelect id="homework-subject-global" required value={subjectId()} onChange={setSubjectId} placeholder={t("subjects.select")} options={(subjects() ?? []).map((subject) => ({ value: subject.id, label: subject.name }))} />
           </div>
           <div class="space-y-1.5">
             <Label for="homework-title-global">{t("form.title")}</Label>

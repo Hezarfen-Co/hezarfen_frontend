@@ -12,6 +12,18 @@ function SidebarPreferenceProbe() {
   );
 }
 
+function PalettePreferenceProbe() {
+  const preferences = usePreferences();
+  return (
+    <button
+      type="button"
+      onClick={() => preferences.setPaletteColor(preferences.paletteColor() ? null : "#fefae0")}
+    >
+      {preferences.paletteColor() ?? "default"}
+    </button>
+  );
+}
+
 test("sidebar collapse preference loads and persists", () => {
   localStorage.setItem("hezarfen.sidebarCollapsed", "1");
   render(() => <PreferencesProvider><SidebarPreferenceProbe /></PreferencesProvider>);
@@ -23,7 +35,7 @@ test("sidebar collapse preference loads and persists", () => {
 });
 
 test("preferences stay usable when browser storage writes fail", () => {
-  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+  const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
     throw new DOMException("Storage blocked", "SecurityError");
   });
 
@@ -31,4 +43,19 @@ test("preferences stay usable when browser storage writes fail", () => {
   fireEvent.click(screen.getByRole("button"));
 
   expect(screen.getByRole("button").textContent).toBe("collapsed");
+  setItem.mockRestore();
+});
+
+test("palette color applies, persists, and resets", () => {
+  localStorage.removeItem("hezarfen.paletteColor");
+  render(() => <PreferencesProvider><PalettePreferenceProbe /></PreferencesProvider>);
+
+  fireEvent.click(screen.getByRole("button"));
+  expect(localStorage.getItem("hezarfen.paletteColor")).toBe("#fefae0");
+  expect(document.documentElement.style.getPropertyValue("--ui-accent")).toBe("52 94% 94%");
+  expect(document.documentElement.style.getPropertyValue("--primary-foreground")).toBe("210 10.8% 14.5%");
+
+  fireEvent.click(screen.getByRole("button"));
+  expect(localStorage.getItem("hezarfen.paletteColor")).toBeNull();
+  expect(document.documentElement.style.getPropertyValue("--ui-accent")).toBe("");
 });

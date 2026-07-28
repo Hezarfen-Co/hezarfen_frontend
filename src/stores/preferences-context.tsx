@@ -17,6 +17,8 @@ type PreferencesContextValue = {
   setLocale: (locale: Locale) => void;
   theme: Accessor<ThemeMode>;
   setTheme: (theme: ThemeMode) => void;
+  paletteColor: Accessor<string | null>;
+  setPaletteColor: (color: string | null) => void;
   toggleTheme: () => void;
   hydratePreferences: (user: Pick<User, "theme" | "language">) => void;
   sidebarCollapsed: Accessor<boolean>;
@@ -29,7 +31,9 @@ const PreferencesContext = createContext<PreferencesContextValue>();
 
 const LOCALE_KEY = "hezarfen.locale";
 const THEME_KEY = "hezarfen.theme";
+const PALETTE_COLOR_KEY = "hezarfen.paletteColor";
 const SIDEBAR_KEY = "hezarfen.sidebarCollapsed";
+const HEX_COLOR = /^#[\da-f]{6}$/i;
 
 function getStorage(): Storage | null {
   if (typeof window === "undefined") return null;
@@ -45,6 +49,14 @@ function writeStorage(key: string, value: string) {
     getStorage()?.setItem(key, value);
   } catch {
     // Preferences still work for this session when storage is blocked/full.
+  }
+}
+
+function removeStorage(key: string) {
+  try {
+    getStorage()?.removeItem(key);
+  } catch {
+    // Preferences still work for this session when storage is blocked.
   }
 }
 
@@ -72,6 +84,45 @@ function readTheme(): ThemeMode {
   }
 }
 
+function readPaletteColor(): string | null {
+  try {
+    const saved = getStorage()?.getItem(PALETTE_COLOR_KEY);
+    return saved && HEX_COLOR.test(saved) ? saved.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
+function hexToHsl(hex: string): string {
+  const [red, green, blue] = hex.slice(1).match(/.{2}/g)!.map((value) => parseInt(value, 16) / 255);
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const delta = max - min;
+  const lightness = (max + min) / 2;
+
+  if (delta === 0) return `0 0% ${Math.round(lightness * 100)}%`;
+
+  const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+  const hue =
+    max === red
+      ? 60 * (((green - blue) / delta) % 6)
+      : max === green
+        ? 60 * ((blue - red) / delta + 2)
+        : 60 * ((red - green) / delta + 4);
+
+  return `${Math.round(hue < 0 ? hue + 360 : hue)} ${Math.round(saturation * 100)}% ${Math.round(lightness * 100)}%`;
+}
+
+function paletteForeground(hex: string): string {
+  const [red, green, blue] = hex.slice(1).match(/.{2}/g)!.map((value) => {
+    const channel = parseInt(value, 16) / 255;
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  return red * 0.2126 + green * 0.7152 + blue * 0.0722 > 0.179
+    ? "210 10.8% 14.5%"
+    : "210 16.7% 97.6%";
+}
+
 function readSidebarCollapsed(): boolean {
   const storage = getStorage();
   if (!storage) return false;
@@ -85,6 +136,7 @@ function readSidebarCollapsed(): boolean {
 export function PreferencesProvider(props: ParentProps) {
   const [locale, setLocaleSignal] = createSignal<Locale>(readLocale());
   const [theme, setThemeSignal] = createSignal<ThemeMode>(readTheme());
+  const [paletteColor, setPaletteColorSignal] = createSignal<string | null>(readPaletteColor());
   const [sidebarCollapsed, setSidebarCollapsedSignal] = createSignal(readSidebarCollapsed());
 
   createEffect(() => {
@@ -98,6 +150,19 @@ export function PreferencesProvider(props: ParentProps) {
     writeStorage(THEME_KEY, th);
     document.documentElement.setAttribute("data-kb-theme", th);
     document.documentElement.classList.toggle("dark", th === "dark");
+  });
+
+  createEffect(() => {
+    const color = paletteColor();
+    if (!color) {
+      removeStorage(PALETTE_COLOR_KEY);
+      document.documentElement.style.removeProperty("--ui-accent");
+      document.documentElement.style.removeProperty("--primary-foreground");
+      return;
+    }
+    writeStorage(PALETTE_COLOR_KEY, color);
+    document.documentElement.style.setProperty("--ui-accent", hexToHsl(color));
+    document.documentElement.style.setProperty("--primary-foreground", paletteForeground(color));
   });
 
   createEffect(() => {
@@ -115,6 +180,9 @@ export function PreferencesProvider(props: ParentProps) {
   const setTheme = (th: ThemeMode) => {
     setThemeSignal(th);
     persistPreferences({ theme: th });
+  };
+  const setPaletteColor = (color: string | null) => {
+    setPaletteColorSignal(color && HEX_COLOR.test(color) ? color.toLowerCase() : null);
   };
   const toggleTheme = () => {
     const next = theme() === "dark" ? "light" : "dark";
@@ -140,6 +208,8 @@ export function PreferencesProvider(props: ParentProps) {
         setLocale,
         theme,
         setTheme,
+        paletteColor,
+        setPaletteColor,
         toggleTheme,
         hydratePreferences,
         sidebarCollapsed,

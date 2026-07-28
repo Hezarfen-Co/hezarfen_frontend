@@ -39,7 +39,7 @@ import { IconAlert, IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { Select } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -180,7 +180,7 @@ function MealDetailContent() {
             </Show>
 
             <Show when={isParent()}>
-              <div class="data-shell max-w-md p-4"><Label for="meal-child">{t("meals.child")}</Label><Select id="meal-child" value={selectedStudent()} onChange={(e) => setSelectedStudent(e.currentTarget.value)}><For each={children()?.items ?? []}>{(child) => <option value={child.id}>{personLabel(child)}</option>}</For></Select></div>
+              <div class="data-shell max-w-md p-4"><Label for="meal-child">{t("meals.child")}</Label><SearchableSelect id="meal-child" value={selectedStudent()} onChange={setSelectedStudent} options={(children()?.items ?? []).map((child) => ({ value: child.id, label: personLabel(child) }))} /></div>
             </Show>
 
             <Tabs value={tab()} onChange={setTab}>

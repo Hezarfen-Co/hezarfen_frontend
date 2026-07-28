@@ -866,6 +866,10 @@ export type MessageKey =
   | "settings.addMealSlot"
   | "settings.dietaryTags"
   | "settings.addDietaryTag"
+  | "settings.colorPalette"
+  | "settings.colorPaletteHelp"
+  | "settings.colorPaletteSource"
+  | "settings.defaultColor"
   | "meals.title"
   | "meals.subtitle"
   | "meals.publish"
@@ -2038,6 +2042,10 @@ const en: Dict = {
   "settings.addMealSlot": "Add meal slot",
   "settings.dietaryTags": "Dietary tags",
   "settings.addDietaryTag": "Add dietary tag",
+  "settings.colorPalette": "Colour palette",
+  "settings.colorPaletteHelp": "Choose an accent from Coolors trending palettes. Saved only in this browser.",
+  "settings.colorPaletteSource": "Browse trending palettes",
+  "settings.defaultColor": "Use default colour",
   "meals.title": "Meals",
   "meals.subtitle": "Browse menus by date, manage dietary requirements, and track meal accounts.",
   "meals.publish": "Publish menu",
@@ -3136,6 +3144,10 @@ const tr: Dict = {
   "settings.addMealSlot": "Öğün ekle",
   "settings.dietaryTags": "Beslenme etiketleri",
   "settings.addDietaryTag": "Beslenme etiketi ekle",
+  "settings.colorPalette": "Renk paleti",
+  "settings.colorPaletteHelp": "Coolors trend paletlerinden bir vurgu rengi seç. Yalnızca bu tarayıcıda saklanır.",
+  "settings.colorPaletteSource": "Trend paletlere göz at",
+  "settings.defaultColor": "Varsayılan rengi kullan",
   "meals.title": "Yemekler",
   "meals.subtitle": "Menüleri tarihe göre inceleyin, beslenme gereksinimlerini yönetin ve yemek hesaplarını takip edin.",
   "meals.publish": "Menü yayınla",

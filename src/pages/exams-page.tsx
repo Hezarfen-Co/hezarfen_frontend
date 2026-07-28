@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourseById } from "@/api/courses";
@@ -17,7 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconCheck, IconEdit, IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
-import { DropdownSelect, Select } from "@/components/ui/select";
+import { DropdownSelect } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
@@ -393,10 +394,7 @@ function ExamsContent() {
               <label class="text-sm font-medium" for="exam-course">
                 {t("exams.selectCourse")}
               </label>
-              <Select id="exam-course" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
-                <option value="">{t("exams.selectCourse")}</option>
-                <For each={manageableCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>
-              </Select>
+              <SearchableSelect id="exam-course" value={selectedCourseId()} required onChange={setSelectedCourseId} placeholder={t("exams.selectCourse")} options={manageableCourses().map((course: Course) => ({ value: course.id, label: course.title }))} />
             </div>
           </Show>
           <ExamForm

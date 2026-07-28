@@ -1,11 +1,11 @@
-import { For, Show, createMemo, createSignal } from "solid-js";
+import { Show, createMemo, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconCheck, IconEye } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useT } from "@/stores/preferences-context";
 
 export type GradeFormValues = {
@@ -59,19 +59,15 @@ export function GradeForm(props: {
         <div class="grid gap-3 sm:grid-cols-2">
           <div class="space-y-1.5">
             <Label for="grade-user">{t("form.studentId")}</Label>
-            <Select
+            <SearchableSelect
               id="grade-user"
-              class="rounded-sm"
               value={userId()}
               required
               disabled={props.students.length === 0}
-              onChange={(e) => setUserId(e.currentTarget.value)}
-            >
-              <option value="">{props.students.length === 0 ? t("form.noStudents") : t("form.selectStudent")}</option>
-              <For each={props.students}>
-                {(student) => <option value={student.id}>{student.label}</option>}
-              </For>
-            </Select>
+              options={props.students.map((student) => ({ value: student.id, label: student.label }))}
+              placeholder={props.students.length === 0 ? t("form.noStudents") : t("form.selectStudent")}
+              onChange={setUserId}
+            />
           </div>
           <div class="space-y-1.5">
             <Label for="grade-mark">{t("form.mark")}</Label>

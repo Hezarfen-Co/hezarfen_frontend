@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/stores/preferences-context";
@@ -213,10 +214,7 @@ export function EventForm(props: {
         <Show when={audienceKind() === "course"}>
           <div class="space-y-1.5">
             <Label for="event-audience-course">{t("nav.courses")}</Label>
-            <Select id="event-audience-course" value={audienceCourse()} onChange={(e) => setAudienceCourse(e.currentTarget.value)}>
-              <option value="">{t("events.selectCourse")}</option>
-              <For each={courses() ?? []}>{(course) => <option value={course.id}>{course.title}</option>}</For>
-            </Select>
+            <SearchableSelect id="event-audience-course" value={audienceCourse()} onChange={setAudienceCourse} placeholder={t("events.selectCourse")} options={(courses() ?? []).map((course) => ({ value: course.id, label: course.title }))} />
           </div>
         </Show>
         <Show when={audienceKind() === "registration"}>
