@@ -86,7 +86,8 @@ Reference page: `src/pages/admin-users-page.tsx`.
 
 Implemented:
 
-- fixed single-level role sidebar with one neutral raised active row
+- fixed role sidebar with compact primary links and collapsible Education /
+  Community groups
 - compact stat row on top of users page
 - dense sticky data table styling via `.data-table`
 - centered row action dropdowns via `TableRowActions`
@@ -108,45 +109,31 @@ Reference implementation: `src/pages/dashboard-page.tsx`.
 ### Structure
 
 1. Header — greeting, neutral role chip, date.
-2. Workspace portal cards — role-scoped section links.
-3. Needs attention + Upcoming — two columns from `lg`, stacked on small screens.
-
-### Portal card anatomy
-
-```text
-┌──────────────────────────────────────────────┐
-│ [icon]  Courses  |  12                       │
-│         Browse courses and class materials.  │
-└──────────────────────────────────────────────┘
-```
-
-- Horizontal row: left icon box (muted border, no tinted fill), middle title + one-line description, count on the **same line as the title**.
-- Desktop title/count separator: literal `|` in muted border color (`Title | 12`). Count uses `.mono` / tabular nums.
-- No colored top bars, no per-card accent tints, no large stacked KPI under the description.
-- Do not add a second KPI strip that repeats the same course/exam/event counts.
-- Grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`, compact padding (`px-3 py-3` / `sm:px-4`), min height ~4.5–5rem.
-- Optional min-role badge is neutral (border + muted), hidden on the smallest width if it crowds the row.
-
-### Attention / upcoming lists
-
-- Divided list inside one bordered card; row is a full-width link.
-- Status uses semantic color only (dot + small badge): active (emerald), today (amber), soon (muted).
-- Empty states are plain text — never “create exam/event” CTAs.
+2. Highlights — role-scoped live totals, `1 → 2 sm → 4 lg`.
+3. Progress chart (`lg:col-span-2`) + attendance/workload split.
+4. Upcoming-deadlines `DataTable`.
+5. Teacher+ Question Bank / Question Pool navigation.
 
 ### Charts (Knowvio-style dashboard)
 
-- The homepage uses the `Chart*` components in `src/components/ui/` (area trend,
-  bar, progress ring) for a Highlights stat row + Progress-overview + Activity split,
+- The homepage uses `ChartBar` and `ChartProgressRing` for a Highlights stat row +
+  Progress overview + Activity split,
   plus a `DataTable` of upcoming deadlines. Accent = `hsl(var(--primary))`; status
   tints stay semantic (emerald/amber/rose/muted).
 - **Real data only:** every chart/stat maps to a live API field. No fabricated daily
-  trends, streak counters, or `+%` delta badges. Hide a panel when its source is empty
-  for the current role.
+  trends, streak counters, or `+%` delta badges. Categorical course averages and
+  capacities are bars; capacity never means current enrollment.
+- Chart cards share `rounded-2xl`, `border-border`, `bg-card`, `p-4`, and the same
+  plain-text empty state.
+- Deadline rows are focusable and navigate by kind. Appointment rows and a direct
+  appointments link are available to every role. Student/parent tables span full
+  width because the teaching-resources panel is teacher+ only.
 
 ### Out of scope for dashboard
 
 - Guide/marketing footers, create shortcuts, promotional/upgrade cards.
-- Drag/drop ordering, fabricated trends / streaks, `+%` deltas, manual refresh controls.
+- Drag/drop ordering, sparklines, fabricated trends / streaks, `+%` deltas,
+  inferred priority, manual refresh controls.
 
 ## Current Implementation Notes
 
