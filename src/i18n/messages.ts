@@ -284,7 +284,7 @@ export type MessageKey =
   | "dashboard.workloadSplit"
   | "dashboard.workloadSplitDesc"
   | "dashboard.deadlines"
-  | "dashboard.classSizes"
+  | "dashboard.courseCapacities"
   | "dashboard.courseAverages"
   | "dashboard.chartEmpty"
   | "dashboard.chartEmptyHint"
@@ -308,18 +308,15 @@ export type MessageKey =
   | "dashboard.attend.excused"
   | "dashboard.welcomeBack"
   | "dashboard.welcomeHint"
-  | "dashboard.refresh"
-  | "dashboard.col.priority"
-  | "dashboard.priority.high"
-  | "dashboard.priority.medium"
+  | "dashboard.teachingResources"
+  | "dashboard.teachingResourcesDesc"
+  | "dashboard.questionBankDesc"
+  | "dashboard.questionPoolDesc"
   | "dashboard.quickReview.title"
   | "dashboard.quickReview.subtitle"
   | "dashboard.quickReview.placeholder"
   | "dashboard.quickReview.practice"
   | "dashboard.quickReview.startQuiz"
-  | "dashboard.questionHubDesc"
-  | "dashboard.questionHubPlaceholder"
-  | "dashboard.askQuestion"
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
@@ -693,6 +690,7 @@ export type MessageKey =
   | "courses.title"
   | "courses.listTitle"
   | "courses.subtitle"
+  | "courses.pageSubtitle"
   | "courses.create"
   | "courses.empty"
   | "courses.enrolled"
@@ -1020,6 +1018,7 @@ export type MessageKey =
   | "calendar.appointments"
   | "nav.appointments"
   | "appointments.title"
+  | "appointments.calendar"
   | "appointments.subtitle"
   | "appointments.empty"
   | "appointments.mySlots"
@@ -1371,7 +1370,7 @@ const en: Dict = {
   "dashboard.workloadSplit": "Workload split",
   "dashboard.workloadSplitDesc": "Courses, exams, events, and more.",
   "dashboard.deadlines": "Upcoming deadlines",
-  "dashboard.classSizes": "Class sizes",
+  "dashboard.courseCapacities": "Course capacities",
   "dashboard.courseAverages": "Course averages",
   "dashboard.chartEmpty": "No records found",
   "dashboard.chartEmptyHint": "Not enough data to display yet.",
@@ -1395,18 +1394,15 @@ const en: Dict = {
   "dashboard.attend.excused": "Excused",
   "dashboard.welcomeBack": "Welcome back, {name}!",
   "dashboard.welcomeHint": "Here's what needs your attention today.",
-  "dashboard.refresh": "Refresh data",
-  "dashboard.col.priority": "Priority",
-  "dashboard.priority.high": "High",
-  "dashboard.priority.medium": "Medium",
+  "dashboard.teachingResources": "Teaching resources",
+  "dashboard.teachingResourcesDesc": "Review reusable material and student questions.",
+  "dashboard.questionBankDesc": "Build and reuse question templates for exams.",
+  "dashboard.questionPoolDesc": "Review questions submitted by students.",
   "dashboard.quickReview.title": "Quick review",
   "dashboard.quickReview.subtitle": "Sharpen your knowledge in 2 minutes!",
   "dashboard.quickReview.placeholder": "Choose a topic to review…",
   "dashboard.quickReview.practice": "Practice",
   "dashboard.quickReview.startQuiz": "Start quiz",
-  "dashboard.questionHubDesc": "Browse the question bank or ask a question.",
-  "dashboard.questionHubPlaceholder": "Search the question bank…",
-  "dashboard.askQuestion": "Ask a question",
   "notes.title": "Notebook",
   "notes.subtitle": "Private scratchpad for class ideas and reminders.",
   "notes.new": "New note",
@@ -1497,6 +1493,7 @@ const en: Dict = {
   "calendar.appointments": "Appointments",
   "nav.appointments": "Appointments",
   "appointments.title": "Appointments",
+  "appointments.calendar": "Appointment calendar",
   "appointments.subtitle": "Book a meeting with a teacher, or publish times you are available.",
   "appointments.empty": "No appointments yet.",
   "appointments.mySlots": "My available times",
@@ -1865,6 +1862,7 @@ const en: Dict = {
   "courses.title": "Education",
   "courses.listTitle": "{item} records",
   "courses.subtitle": "Manage {item}, enrollment, and exams here.",
+  "courses.pageSubtitle": "Classes, study groups, and clubs in one place.",
   "courses.create": "New education item",
   "courses.empty": "No {item} yet.",
   "courses.enrolled": "Enrolled",
@@ -2277,7 +2275,7 @@ const tr: Dict = {
   "common.approve": "Onayla",
   "common.reject": "Reddet",
   "common.actions": "İşlemler",
-  "common.columns": "Kolonlar",
+  "common.columns": "Sütunlar",
   "common.moreFilters": "Daha fazla filtre",
   "common.lessFilters": "Daha az filtre",
   "common.search": "Ara",
@@ -2470,7 +2468,7 @@ const tr: Dict = {
   "dashboard.workloadSplit": "İş yükü dağılımı",
   "dashboard.workloadSplitDesc": "Dersler, sınavlar, etkinlikler ve dahası.",
   "dashboard.deadlines": "Yaklaşan son tarihler",
-  "dashboard.classSizes": "Sınıf mevcutları",
+  "dashboard.courseCapacities": "Eğitim kapasiteleri",
   "dashboard.courseAverages": "Ders ortalamaları",
   "dashboard.chartEmpty": "Kayıt bulunamadı",
   "dashboard.chartEmptyHint": "Gösterilecek yeterli veri yok.",
@@ -2494,18 +2492,15 @@ const tr: Dict = {
   "dashboard.attend.excused": "İzinli",
   "dashboard.welcomeBack": "Tekrar hoş geldin, {name}!",
   "dashboard.welcomeHint": "Bugün dikkat etmen gerekenler burada.",
-  "dashboard.refresh": "Verileri yenile",
-  "dashboard.col.priority": "Öncelik",
-  "dashboard.priority.high": "Yüksek",
-  "dashboard.priority.medium": "Orta",
+  "dashboard.teachingResources": "Öğretim kaynakları",
+  "dashboard.teachingResourcesDesc": "Yeniden kullanılabilir içerikleri ve öğrenci sorularını incele.",
+  "dashboard.questionBankDesc": "Sınavlar için soru şablonları oluştur ve yeniden kullan.",
+  "dashboard.questionPoolDesc": "Öğrencilerin gönderdiği soruları incele.",
   "dashboard.quickReview.title": "Hızlı tekrar",
   "dashboard.quickReview.subtitle": "2 dakikada bilgini tazele!",
   "dashboard.quickReview.placeholder": "Tekrar için konu seç…",
   "dashboard.quickReview.practice": "Alıştır",
   "dashboard.quickReview.startQuiz": "Teste başla",
-  "dashboard.questionHubDesc": "Soru havuzuna göz at ya da soru sor.",
-  "dashboard.questionHubPlaceholder": "Soru havuzunda ara…",
-  "dashboard.askQuestion": "Soru sor",
   "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleri ve hatırlatmalar için özel defter.",
   "notes.new": "Yeni not",
@@ -2596,6 +2591,7 @@ const tr: Dict = {
   "calendar.appointments": "Randevular",
   "nav.appointments": "Randevular",
   "appointments.title": "Randevular",
+  "appointments.calendar": "Randevu takvimi",
   "appointments.subtitle": "Bir öğretmenle görüşme ayarlayın ya da uygun olduğunuz saatleri yayımlayın.",
   "appointments.empty": "Henüz randevu yok.",
   "appointments.mySlots": "Uygun saatlerim",
@@ -2964,6 +2960,7 @@ const tr: Dict = {
   "courses.title": "Eğitim",
   "courses.listTitle": "{item} kayıtları",
   "courses.subtitle": "{item}, kayıtlar ve sınavlar burada.",
+  "courses.pageSubtitle": "Dersler, etütler ve kulüpler tek yerde.",
   "courses.create": "Yeni eğitim kaydı",
   "courses.empty": "Henüz {item} yok.",
   "courses.enrolled": "Kayıtlı",

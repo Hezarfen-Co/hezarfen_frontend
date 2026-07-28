@@ -642,6 +642,18 @@ export function IconBriefcase(props: IconProps) {
   );
 }
 
+export function IconUtensils(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 2v7a3 3 0 0 0 3 3V2" />
+      <path d="M3 6h3" />
+      <path d="M6 12v10" />
+      <path d="M17 2v20" />
+      <path d="M17 2c3 2 4 5 4 8h-4" />
+    </Svg>
+  );
+}
+
 export function IconSearch(props: IconProps) {
   return (
     <Svg {...props}>
@@ -725,4 +737,3 @@ export function IconBell(props: IconProps) {
     </Svg>
   );
 }
-
