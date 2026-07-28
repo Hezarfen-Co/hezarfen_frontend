@@ -80,12 +80,14 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
   );
 }
 
-export type SelectProps = ComponentProps<"select">;
+export type SelectProps = ComponentProps<"select"> & {
+  wrapperClass?: string;
+};
 
 export function Select(props: SelectProps) {
-  const [local, rest] = splitProps(props, ["class"]);
+  const [local, rest] = splitProps(props, ["class", "wrapperClass"]);
   return (
-    <div class="relative w-full">
+    <div class={cn("relative w-full", local.wrapperClass)}>
       <select
         class={cn(
           "flex h-11 w-full appearance-none rounded-xl border border-black/8 dark:border-white/12 bg-card pl-3.5 pr-9 py-2 text-xs font-medium text-foreground transition-all duration-150",

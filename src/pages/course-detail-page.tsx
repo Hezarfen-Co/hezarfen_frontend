@@ -69,7 +69,7 @@ function CourseDetailContent() {
     return params().id;
   });
 
-  const [courseTab, setCourseTab] = createSignal("subjects");
+  const [courseTab, setCourseTab] = createSignal("overview");
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
   const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
   const [settings] = createResource(() => getSettings());
@@ -147,7 +147,7 @@ function CourseDetailContent() {
   };
   const courseKindLabel = (value: CourseKind | undefined) =>
     value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
-  const courseListPath = (value: CourseKind | undefined) => value === "study" ? "/studies" : value === "club" ? "/clubs" : "/courses";
+  const courseListSearch = (value: CourseKind | undefined) => value ? { kind: value } as never : {} as never;
 
   const examCount = createMemo(() => exams()?.length ?? 0);
   const rosterCount = createMemo(() => roster()?.length ?? 0);
@@ -283,7 +283,7 @@ function CourseDetailContent() {
                 description={c().description || "—"}
                 actions={
                   <div class="detail-action-group">
-                    <Link to={courseListPath(c().kind)}>
+                    <Link to="/courses" search={courseListSearch(c().kind)}>
                       <Button variant="ghost" size="sm" class="w-full rounded-xl sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
                         {t("common.back")}
@@ -331,7 +331,7 @@ function CourseDetailContent() {
               onConfirm={async () => {
                 await wrap(async () => {
                   await deleteCourseById(id());
-                  void navigate({ to: courseListPath(c().kind) });
+                  void navigate({ to: "/courses", search: courseListSearch(c().kind) });
                 });
               }}
             />
@@ -557,75 +557,53 @@ function CourseDetailContent() {
 
             <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-3">
               <TabsList>
-                <Show when={hasCourseManagementRights()}>
-                  <TabsTrigger value="teachers">{t("courses.teachers")}</TabsTrigger>
-                </Show>
-                <TabsTrigger value="subjects">{t("subjects.title")}</TabsTrigger>
-                <TabsTrigger value="exams">{t("courses.exams")}</TabsTrigger>
-                <TabsTrigger value="homework">{t("homework.title")}</TabsTrigger>
+                <TabsTrigger value="overview">{t("courses.overview")}</TabsTrigger>
+                <TabsTrigger value="work">{t("courses.work")}</TabsTrigger>
                 <TabsTrigger value="sessions">{t("sessions.title")}</TabsTrigger>
-                <Show when={hasCourseManagementRights()}>
-                  <TabsTrigger value="roster">{t("courses.roster")}</TabsTrigger>
-                </Show>
+                <TabsTrigger value="people">{t("courses.people")}</TabsTrigger>
               </TabsList>
 
-              <Show when={hasCourseManagementRights()}>
-                <TabsContent value="teachers" forceMount class="space-y-4">
+              <TabsContent value="overview" class="space-y-4">
+                <div class="data-shell p-4">
+                  <h2 class="font-display text-base font-semibold">{t("courses.overview")}</h2>
+                  <p class="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{c().description || "—"}</p>
+                </div>
+                <div class="data-shell p-4">
+                  <h2 class="font-display text-base font-semibold">{t("courses.upcoming")}</h2>
+                  <Show
+                    when={(exams() ?? []).filter((exam) => (exam.ends_at ?? exam.starts_at ?? 0) > Date.now()).sort((a, b) => (a.starts_at ?? a.ends_at ?? 0) - (b.starts_at ?? b.ends_at ?? 0))[0]}
+                    fallback={<p class="mt-2 text-sm text-muted-foreground">{t("courses.noUpcoming")}</p>}
+                  >
+                    {(exam) => <ExamLink examId={exam().id} class="mt-2 block text-sm font-medium hover:underline">{exam().title}</ExamLink>}
+                  </Show>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="work" class="space-y-5">
+                <div class="space-y-4">
                   <div class="tab-panel-header">
-                    <p class="text-sm text-muted-foreground">{countDescription((c().teachers ?? []).length, t("courses.teachers"))}</p>
-                    <Show when={canStaffCourse()}>
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowTeacherForm(true)}>
-                        <IconPlus class="h-4 w-4" />
-                        {t("courses.assignTeacher")}
-                      </Button>
-                    </Show>
+                    <p class="text-sm font-medium">{t("subjects.title")} · {countDescription(subjectCount(), t("subjects.item"))}</p>
+                    <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSubjectForm(true)}><IconPlus class="h-4 w-4" />{t("subjects.add")}</Button></Show>
                   </div>
-                  <CourseTeachersPanel courseId={id()} teachers={c().teachers ?? []} canStaff={canStaffCourse()} assignOpen={showTeacherForm()} onAssignOpenChange={setShowTeacherForm} onCourseUpdated={refetchCourse} />
-                </TabsContent>
-              </Show>
-
-              <TabsContent value="subjects" forceMount class="space-y-4">
-                <div class="tab-panel-header">
-                  <p class="text-sm text-muted-foreground">{countDescription(subjectCount(), t("subjects.item"))}</p>
-                  <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowSubjectForm(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("subjects.add")}
-                    </Button>
-                  </Show>
+                  <CourseSubjectsPanel courseId={id()} canManage={canManage()} active={courseTab() === "work"} createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
                 </div>
-                <CourseSubjectsPanel courseId={id()} canManage={canManage()} active createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
+                <div class="space-y-4 border-t border-border/60 pt-5">
+                  <div class="tab-panel-header">
+                    <p class="text-sm font-medium">{t("courses.exams")} · {countDescription(examCount(), t("courses.examItem"))}</p>
+                    <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}><IconPlus class="h-4 w-4" />{t("courses.addExam")}</Button></Show>
+                  </div>
+                  <Suspense fallback={<DataTableSkeleton />}><DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })} /></Suspense>
+                </div>
+                <div class="space-y-4 border-t border-border/60 pt-5">
+                  <div class="tab-panel-header">
+                    <p class="text-sm font-medium">{t("homework.title")} · {countDescription(homeworkCount(), t("homework.item"))}</p>
+                    <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowHomeworkForm(true)}><IconPlus class="h-4 w-4" />{t("homework.add")}</Button></Show>
+                  </div>
+                  <CourseHomeworkPanel courseId={id()} canManage={canManage()} active={courseTab() === "work"} createOpen={showHomeworkForm()} onCreateOpenChange={setShowHomeworkForm} onCountChange={setHomeworkCount} />
+                </div>
               </TabsContent>
 
-              <TabsContent value="exams" forceMount class="space-y-4">
-                <div class="tab-panel-header">
-                  <p class="text-sm text-muted-foreground">{countDescription(examCount(), t("courses.examItem"))}</p>
-                  <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("courses.addExam")}
-                    </Button>
-                  </Show>
-                </div>
-                <Suspense fallback={<DataTableSkeleton />}>
-                  <DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })} />
-                </Suspense>
-              </TabsContent>
-
-              <TabsContent value="homework" forceMount class="space-y-4">
-                <div class="tab-panel-header">
-                  <p class="text-sm text-muted-foreground">{countDescription(homeworkCount(), t("homework.item"))}</p>
-                  <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowHomeworkForm(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("homework.add")}
-                    </Button>
-                  </Show>
-                </div>
-                <CourseHomeworkPanel courseId={id()} canManage={canManage()} active={courseTab() === "homework"} createOpen={showHomeworkForm()} onCreateOpenChange={setShowHomeworkForm} onCountChange={setHomeworkCount} />
-              </TabsContent>
-
-              <TabsContent value="sessions" forceMount class="space-y-4">
+              <TabsContent value="sessions" class="space-y-4">
                 <div class="tab-panel-header">
                   <p class="text-sm text-muted-foreground">{countDescription(sessionCount(), t("sessions.item"))}</p>
                   <Show when={canManage()}>
@@ -635,27 +613,28 @@ function CourseDetailContent() {
                     </Button>
                   </Show>
                 </div>
-                <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} active createOpen={showSessionForm()} onCreateOpenChange={setShowSessionForm} onCountChange={setSessionCount} />
+                <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} active={courseTab() === "sessions"} createOpen={showSessionForm()} onCreateOpenChange={setShowSessionForm} onCountChange={setSessionCount} />
               </TabsContent>
 
-              <Show when={hasCourseManagementRights()}>
-                <TabsContent value="roster" forceMount class="space-y-4">
+              <TabsContent value="people" class="space-y-5">
+                <div class="space-y-4">
                   <div class="tab-panel-header">
-                    <p class="text-sm text-muted-foreground">{countDescription(rosterCount(), t("courses.rosterItem"))}</p>
-                    <Show when={canManage()}>
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
-                        <IconPlus class="h-4 w-4" />
-                        {t("courses.enroll")}
-                      </Button>
-                    </Show>
+                    <p class="text-sm font-medium">{t("courses.teachers")} · {countDescription((c().teachers ?? []).length + 1, t("courses.teachers"))}</p>
+                    <Show when={canStaffCourse()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowTeacherForm(true)}><IconPlus class="h-4 w-4" />{t("courses.assignTeacher")}</Button></Show>
                   </div>
-                  <Suspense fallback={<DataTableSkeleton />}>
-                    <Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="courses" title={t("exams.emptyRoster")} />}>
-                      <DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} />
-                    </Show>
-                  </Suspense>
-                </TabsContent>
-              </Show>
+                  <p class="rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-sm">{t("common.creator")}: {c().creator.display_name || c().creator.username}</p>
+                  <CourseTeachersPanel courseId={id()} teachers={c().teachers ?? []} canStaff={canStaffCourse()} assignOpen={showTeacherForm()} onAssignOpenChange={setShowTeacherForm} onCourseUpdated={refetchCourse} />
+                </div>
+                <Show when={hasCourseManagementRights()}>
+                  <div class="space-y-4 border-t border-border/60 pt-5">
+                    <div class="tab-panel-header">
+                      <p class="text-sm font-medium">{t("courses.roster")} · {countDescription(rosterCount(), t("courses.rosterItem"))}</p>
+                      <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}><IconPlus class="h-4 w-4" />{t("courses.enroll")}</Button></Show>
+                    </div>
+                    <Suspense fallback={<DataTableSkeleton />}><Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="courses" title={t("exams.emptyRoster")} />}><DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} /></Show></Suspense>
+                  </div>
+                </Show>
+              </TabsContent>
             </Tabs>
           </div>
             </Show>
