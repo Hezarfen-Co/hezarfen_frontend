@@ -172,7 +172,7 @@ export function EventForm(props: {
   return (
     <>
     <form class="space-y-4" onSubmit={handleSubmit}>
-      <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4 shadow-xs">
+      <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
         <div class="space-y-1.5">
           <Label for="event-title">{t("form.title")}</Label>
           <Input

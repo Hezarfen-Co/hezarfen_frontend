@@ -206,7 +206,7 @@ export function ExamForm(props: {
     <>
       <form class="space-y-4" onSubmit={handleSubmit}>
         {/* Section 1: Basic Info */}
-        <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4 shadow-xs">
+        <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionBasic")}</h3>
           <div class="space-y-1.5">
             <Label for="exam-title">{t("form.title")}</Label>

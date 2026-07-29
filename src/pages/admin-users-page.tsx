@@ -54,7 +54,7 @@ function AdminUsersContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <PageHeader accent="violet" eyebrow={t("nav.users")} title={t("admin.title")} description={t("admin.subtitle")} />
+        <PageHeader eyebrow={t("nav.users")} title={t("admin.title")} description={t("admin.subtitle")} />
       </div>
 
       <Show when={flash()}>

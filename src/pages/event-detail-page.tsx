@@ -167,7 +167,6 @@ function EventDetailContent() {
           <div class="space-y-6">
             <div class="space-y-2">
               <PageHeader
-                accent="sky"
                 eyebrow={t("events.title")}
                 title={ev().title}
                 description={ev().description || "—"}

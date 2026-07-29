@@ -42,7 +42,7 @@ export function BookAppointmentForm(props: {
 
   return (
     <form class="space-y-4" onSubmit={handleSubmit}>
-      <div class="space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4 text-sm">
+      <div class="space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/2.5 p-4 text-sm">
         <p>
           <span class="text-muted-foreground">{t("appointments.teacher")}:</span>{" "}
           <span class="font-medium">{personLabel(props.slot.teacher)}</span>

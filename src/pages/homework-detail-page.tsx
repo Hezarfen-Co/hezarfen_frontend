@@ -48,7 +48,6 @@ export default function HomeworkDetailPage() {
           {(item) => (
             <div class="space-y-6">
               <PageHeader
-                accent="amber"
                 eyebrow={t("homework.item")}
                 title={item().title}
                 description={item().description || undefined}

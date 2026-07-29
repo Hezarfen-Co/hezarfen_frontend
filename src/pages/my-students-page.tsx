@@ -51,7 +51,7 @@ function MyStudentsContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <PageHeader accent="violet" eyebrow={t("nav.group.students")} title={t("nav.myStudents")} description={t("parents.subtitle")} />
+        <PageHeader eyebrow={t("nav.group.students")} title={t("nav.myStudents")} description={t("parents.subtitle")} />
       </div>
 
       <Suspense fallback={<PageSpinner />}>

@@ -140,7 +140,6 @@ function GuideContent() {
   return (
     <div class="space-y-6">
       <PageHeader
-        accent="sky"
         eyebrow={t("nav.guide")}
         title={t("guide.title")}
         description="Kampüs akışı: Rol yetkileri, modül kullanım adımları ve pratik çalışma ipuçları."

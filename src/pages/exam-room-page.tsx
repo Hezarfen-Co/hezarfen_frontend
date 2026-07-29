@@ -62,7 +62,6 @@ function ExamRoomContent() {
             <div class="space-y-2">
               <PageHeader
                 compact
-                accent="rose"
                 eyebrow={t("attempt.title")}
                 title={ex().title}
                 description={ex().description || undefined}

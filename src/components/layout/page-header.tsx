@@ -2,14 +2,11 @@ import type { JSX, ParentProps } from "solid-js";
 import { Show } from "solid-js";
 import { cn } from "@/lib/cn";
 
-export type PageAccent = "mint" | "sky" | "amber" | "violet" | "rose";
-
 export function PageHeader(
   props: ParentProps<{
     eyebrow?: string;
     title: string;
     description?: string;
-    accent?: PageAccent;
     actions?: JSX.Element;
     class?: string;
     /** Compact greeting strip (dashboard). */

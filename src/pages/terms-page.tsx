@@ -166,7 +166,6 @@ function TermsContent() {
     <div class="space-y-6">
       <div class="space-y-2">
         <PageHeader
-          accent="violet"
           eyebrow={t("nav.admin")}
           title={t("terms.title")}
           description={t("terms.subtitle")}

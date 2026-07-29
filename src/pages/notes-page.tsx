@@ -75,7 +75,6 @@ function NotesContent() {
     <div class="space-y-6">
       <div class="space-y-2">
         <PageHeader
-          accent="amber"
           eyebrow={t("nav.notes")}
           title={t("notes.title")}
           description={t("notes.subtitle")}

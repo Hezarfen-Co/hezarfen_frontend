@@ -391,7 +391,6 @@ function ExamDetailContent() {
                 <span class="text-foreground">{ex().title}</span>
               </nav>
               <PageHeader
-                accent="rose"
                 title={ex().title}
                 description={ex().description || "—"}
                 class="border-rose-500/30 shadow-sm"

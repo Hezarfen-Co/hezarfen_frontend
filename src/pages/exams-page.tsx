@@ -390,7 +390,7 @@ function ExamsContent() {
 
         <Show when={createStep() === "details"}>
           <Show when={!createdExam()}>
-            <div class="mb-4 space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4">
+            <div class="mb-4 space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/2.5 p-4">
               <label class="text-sm font-medium" for="exam-course">
                 {t("exams.selectCourse")}
               </label>

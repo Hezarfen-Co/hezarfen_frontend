@@ -287,7 +287,6 @@ function CourseDetailContent() {
                 <span class="text-foreground">{c().title}</span>
               </nav>
               <PageHeader
-                accent="violet"
                 title={c().title}
                 description={c().description || "—"}
                 class="border-violet-500/30 shadow-sm"
@@ -410,7 +409,7 @@ function CourseDetailContent() {
                   }, t("common.saved"));
                 }}
               >
-                <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4 shadow-xs">
+                <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
                   <div class="space-y-1.5">
                     <Label for="edit-course-title">{t("form.title")}</Label>
                     <Input

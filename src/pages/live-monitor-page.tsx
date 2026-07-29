@@ -268,7 +268,6 @@ function LiveMonitorContent() {
             <div class="space-y-2">
               <PageHeader
                 compact
-                accent="rose"
                 eyebrow={isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                 title={ex().title}
                 description={isFinished() ? t("exams.finalStateDesc") : t("exams.liveMonitorDesc")}

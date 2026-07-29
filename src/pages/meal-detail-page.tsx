@@ -158,7 +158,6 @@ function MealDetailContent() {
         {(current) => (
           <div class="space-y-5">
             <PageHeader
-              accent="violet"
               eyebrow={`${current().date} · ${current().slot}`}
               title={t("meals.menu")}
               description={t("meals.detailHelp")}

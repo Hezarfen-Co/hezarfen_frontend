@@ -141,7 +141,6 @@ function SettingsContent() {
   return (
     <div class="space-y-6">
       <PageHeader
-        accent="violet"
         eyebrow={t("nav.admin")}
         title={t("settings.title")}
         description={t("settings.subtitle")}

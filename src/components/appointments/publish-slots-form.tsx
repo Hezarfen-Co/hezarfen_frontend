@@ -116,7 +116,7 @@ export function PublishSlotsForm(props: {
         </div>
       </div>
 
-      <div class="space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4">
+      <div class="space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/2.5 p-4">
         <Label for="slot-note">{t("appointments.note")}</Label>
         <Textarea
           id="slot-note"
