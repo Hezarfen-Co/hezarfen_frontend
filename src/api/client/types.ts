@@ -541,6 +541,13 @@ export type Limits = {
     attendance_statuses: string[];
     ledger_kinds: string[];
   };
+  payment: {
+    max_plan_name_len: number;
+    max_plan_installments: number;
+    max_assign_students: number;
+    max_request_key_len: number;
+    ledger_kinds: string[];
+  };
   chatbot: {
     max_message_len: number;
     max_thread_title_len: number;

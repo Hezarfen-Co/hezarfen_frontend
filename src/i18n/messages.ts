@@ -937,6 +937,74 @@ export type MessageKey =
   | "meals.editDish"
   | "meals.dishName"
   | "meals.priceTry"
+  | "nav.payments"
+  | "nav.paymentStatement"
+  | "payments.title"
+  | "payments.subtitle"
+  | "payments.empty"
+  | "payments.createPlan"
+  | "payments.editPlan"
+  | "payments.deletePlan"
+  | "payments.planName"
+  | "payments.installments"
+  | "payments.addInstallment"
+  | "payments.amountTry"
+  | "payments.dueDate"
+  | "payments.total"
+  | "payments.assign"
+  | "payments.assignHelp"
+  | "payments.selectStudent"
+  | "payments.assignments"
+  | "payments.noAssignments"
+  | "payments.outcomeAssigned"
+  | "payments.outcomeAlready"
+  | "payments.outcomeRejected"
+  | "payments.studentLedger"
+  | "payments.balance"
+  | "payments.ledger"
+  | "payments.noLedger"
+  | "payments.recordPayment"
+  | "payments.recordRefund"
+  | "payments.reverse"
+  | "payments.method"
+  | "payments.note"
+  | "payments.reason"
+  | "payments.kindCharge"
+  | "payments.kindCredit"
+  | "payments.kindRefund"
+  | "payments.kindReversal"
+  | "payments.statementTitle"
+  | "payments.statementSubtitle"
+  | "payments.noStatement"
+  | "payments.due"
+  | "payments.credited"
+  | "payments.refunded"
+  | "payments.outstanding"
+  | "payments.status"
+  | "payments.overdue"
+  | "payments.reversed"
+  | "payments.paid"
+  | "payments.appendOnly"
+  | "payments.tabCollect"
+  | "payments.tabPlans"
+  | "payments.collect"
+  | "payments.collectFrom"
+  | "payments.totalDebt"
+  | "payments.collected"
+  | "payments.overdueCount"
+  | "payments.statusPending"
+  | "payments.statusPartial"
+  | "payments.statusCancelled"
+  | "payments.noDebt"
+  | "payments.noDebtHint"
+  | "payments.methodCash"
+  | "payments.methodTransfer"
+  | "payments.methodCard"
+  | "payments.methodCheck"
+  | "payments.ledgerAudit"
+  | "payments.showLedger"
+  | "payments.hideLedger"
+  | "payments.plan"
   | "terms.title"
   | "terms.subtitle"
   | "terms.create"
@@ -2118,6 +2186,74 @@ const en: Dict = {
   "meals.editDish": "Edit dish",
   "meals.dishName": "Dish name",
   "meals.priceTry": "Price (TRY)",
+  "nav.payments": "Fees",
+  "nav.paymentStatement": "My Fees",
+  "payments.title": "School fees",
+  "payments.subtitle": "Fee plans, assignments, and the payment ledger.",
+  "payments.empty": "No fee plans yet.",
+  "payments.createPlan": "New plan",
+  "payments.editPlan": "Edit plan",
+  "payments.deletePlan": "Delete plan",
+  "payments.planName": "Plan name",
+  "payments.installments": "Installments",
+  "payments.addInstallment": "Add installment",
+  "payments.amountTry": "Amount (TRY)",
+  "payments.dueDate": "Due date",
+  "payments.total": "Total",
+  "payments.assign": "Assign",
+  "payments.assignHelp": "Assigning bills every installment as a charge at once. Students already on the plan are not billed again.",
+  "payments.selectStudent": "Select student",
+  "payments.assignments": "Assigned students",
+  "payments.noAssignments": "No students assigned yet.",
+  "payments.outcomeAssigned": "Assigned",
+  "payments.outcomeAlready": "Already assigned",
+  "payments.outcomeRejected": "Rejected",
+  "payments.studentLedger": "Student ledger",
+  "payments.balance": "Balance",
+  "payments.ledger": "Ledger",
+  "payments.noLedger": "No ledger entries.",
+  "payments.recordPayment": "Record payment",
+  "payments.recordRefund": "Refund",
+  "payments.reverse": "Reverse",
+  "payments.method": "Method",
+  "payments.note": "Note",
+  "payments.reason": "Reason",
+  "payments.kindCharge": "Charge",
+  "payments.kindCredit": "Payment",
+  "payments.kindRefund": "Refund",
+  "payments.kindReversal": "Reversal",
+  "payments.statementTitle": "My fees",
+  "payments.statementSubtitle": "What you owe the school and every charge behind it.",
+  "payments.noStatement": "No charges yet.",
+  "payments.due": "Due",
+  "payments.credited": "Paid",
+  "payments.refunded": "Refunded",
+  "payments.outstanding": "Outstanding",
+  "payments.status": "Status",
+  "payments.overdue": "Overdue",
+  "payments.reversed": "Reversed",
+  "payments.paid": "Paid",
+  "payments.appendOnly": "The ledger is append-only. A correction needs a balancing entry, never an edit.",
+  "payments.tabCollect": "Collection",
+  "payments.tabPlans": "Fee plans",
+  "payments.collect": "Collect",
+  "payments.collectFrom": "Collect payment",
+  "payments.totalDebt": "Total billed",
+  "payments.collected": "Collected",
+  "payments.overdueCount": "Overdue",
+  "payments.statusPending": "Pending",
+  "payments.statusPartial": "Partial",
+  "payments.statusCancelled": "Cancelled",
+  "payments.noDebt": "No charges for this student yet.",
+  "payments.noDebtHint": "Assign a fee plan from the Fee plans tab to bill this student.",
+  "payments.methodCash": "Cash",
+  "payments.methodTransfer": "Transfer / EFT",
+  "payments.methodCard": "Card",
+  "payments.methodCheck": "Cheque",
+  "payments.ledgerAudit": "Account activity",
+  "payments.showLedger": "Show account activity",
+  "payments.hideLedger": "Hide account activity",
+  "payments.plan": "Plan",
   "terms.title": "Academic terms",
   "terms.subtitle": "Manage academic terms and assign courses to each one.",
   "terms.create": "Create term",
@@ -3225,6 +3361,74 @@ const tr: Dict = {
   "meals.editDish": "Yemeği düzenle",
   "meals.dishName": "Yemek adı",
   "meals.priceTry": "Fiyat (TRY)",
+  "nav.payments": "Ücretler",
+  "nav.paymentStatement": "Ücretlerim",
+  "payments.title": "Okul ücretleri",
+  "payments.subtitle": "Ücret planları, atamalar ve ödeme hareketleri.",
+  "payments.empty": "Henüz ücret planı yok.",
+  "payments.createPlan": "Yeni plan",
+  "payments.editPlan": "Planı düzenle",
+  "payments.deletePlan": "Planı sil",
+  "payments.planName": "Plan adı",
+  "payments.installments": "Taksitler",
+  "payments.addInstallment": "Taksit ekle",
+  "payments.amountTry": "Tutar (TRY)",
+  "payments.dueDate": "Vade tarihi",
+  "payments.total": "Toplam",
+  "payments.assign": "Ata",
+  "payments.assignHelp": "Atama, tüm taksitleri anında ücret olarak yansıtır. Planda olan öğrenciye tekrar ücret çıkmaz.",
+  "payments.selectStudent": "Öğrenci seç",
+  "payments.assignments": "Atanan öğrenciler",
+  "payments.noAssignments": "Henüz öğrenci atanmadı.",
+  "payments.outcomeAssigned": "Atandı",
+  "payments.outcomeAlready": "Zaten atanmış",
+  "payments.outcomeRejected": "Reddedildi",
+  "payments.studentLedger": "Öğrenci hesabı",
+  "payments.balance": "Bakiye",
+  "payments.ledger": "Hesap hareketleri",
+  "payments.noLedger": "Hesap hareketi yok.",
+  "payments.recordPayment": "Ödeme kaydet",
+  "payments.recordRefund": "İade et",
+  "payments.reverse": "Ters kaydet",
+  "payments.method": "Yöntem",
+  "payments.note": "Not",
+  "payments.reason": "Gerekçe",
+  "payments.kindCharge": "Ücret",
+  "payments.kindCredit": "Ödeme",
+  "payments.kindRefund": "İade",
+  "payments.kindReversal": "Ters kayıt",
+  "payments.statementTitle": "Ücretlerim",
+  "payments.statementSubtitle": "Okula borcunuz ve arkasındaki tüm ücretler.",
+  "payments.noStatement": "Henüz ücret yok.",
+  "payments.due": "Vade",
+  "payments.credited": "Ödenen",
+  "payments.refunded": "İade",
+  "payments.outstanding": "Kalan",
+  "payments.status": "Durum",
+  "payments.overdue": "Gecikmiş",
+  "payments.reversed": "Ters kaydedildi",
+  "payments.paid": "Ödendi",
+  "payments.appendOnly": "Hesap yalnızca eklenir. Düzeltme, düzenleme değil dengeleyici kayıt gerektirir.",
+  "payments.tabCollect": "Tahsilat",
+  "payments.tabPlans": "Ücret planları",
+  "payments.collect": "Tahsilat Al",
+  "payments.collectFrom": "Tahsilat al",
+  "payments.totalDebt": "Toplam borç",
+  "payments.collected": "Tahsil edilen",
+  "payments.overdueCount": "Gecikmiş",
+  "payments.statusPending": "Bekliyor",
+  "payments.statusPartial": "Kısmi",
+  "payments.statusCancelled": "İptal edildi",
+  "payments.noDebt": "Bu öğrenci için henüz borç yok.",
+  "payments.noDebtHint": "Bu öğrenciye borç çıkmak için Ücret planları sekmesinden bir plan atayın.",
+  "payments.methodCash": "Nakit",
+  "payments.methodTransfer": "Havale / EFT",
+  "payments.methodCard": "Kredi kartı",
+  "payments.methodCheck": "Çek",
+  "payments.ledgerAudit": "Hesap hareketleri",
+  "payments.showLedger": "Hesap hareketlerini göster",
+  "payments.hideLedger": "Hesap hareketlerini gizle",
+  "payments.plan": "Plan",
   "terms.title": "Akademik dönemler",
   "terms.subtitle": "Akademik dönemleri yönetin ve dersleri ilgili dönemlere atayın.",
   "terms.create": "Dönem oluştur",

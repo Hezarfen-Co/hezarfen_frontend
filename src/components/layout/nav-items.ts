@@ -151,6 +151,7 @@ const NAV_GROUPS: NavGroup[] = [
     Icon: IconGlobe,
     items: [
       MEALS_ITEM,
+      { id: "payment-statement", to: "/payments", labelKey: "nav.paymentStatement", Icon: IconChart, maxRole: "student" },
       { id: "messages", to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
       { id: "questions", to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
       { id: "work", to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
@@ -165,6 +166,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "staff-work", to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
       { id: "settings", to: "/management/settings", labelKey: "nav.settings", Icon: IconSettings, minRole: "manager" },
       { id: "terms", to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendarDays, minRole: "manager" },
+      { id: "payments", to: "/management/payments", labelKey: "nav.payments", Icon: IconReportAnalytics, minRole: "manager" },
       { id: "users", to: "/admin/users", labelKey: "nav.users", Icon: IconUserCog, minRole: "admin" },
     ],
   },
