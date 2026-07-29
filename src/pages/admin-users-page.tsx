@@ -66,7 +66,7 @@ function AdminUsersContent() {
         <For each={ROLES}>{(role) => <Metric role={role} label={t(`role.${role}` as MessageKey)} value={roleCount(role)} />}</For>
       </section>
 
-      <div class="data-shell space-y-4 border-violet-500/15 bg-violet-500/2.5 p-4">
+      <div class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="font-display text-lg font-semibold">{t("nav.users")}</h2>
@@ -121,17 +121,9 @@ function AdminUsersContent() {
   );
 }
 
-const ROLE_METRIC_TONE: Record<Role, string> = {
-  student: "border-sky-500/20 bg-sky-500/3",
-  parent: "border-violet-500/20 bg-violet-500/3",
-  teacher: "border-emerald-500/20 bg-emerald-500/3",
-  manager: "border-amber-500/20 bg-amber-500/3",
-  admin: "border-rose-500/20 bg-rose-500/3",
-};
-
 function Metric(props: { role: Role; label: string; value: number }) {
   return (
-    <article class={`data-shell p-4 ${ROLE_METRIC_TONE[props.role]}`}>
+    <article class="data-shell p-4">
       <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{props.label}</p>
       <p class="mono mt-2 text-2xl font-semibold tabular-nums">{props.value}</p>
     </article>

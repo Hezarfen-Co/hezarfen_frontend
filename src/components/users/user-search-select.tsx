@@ -37,6 +37,7 @@ export function UserSearchSelect(props: {
   const [users, setUsers] = createSignal<PersonRef[]>([]);
   const [selected, setSelected] = createSignal<PersonRef | null>(null);
   const [loading, setLoading] = createSignal(false);
+  const [open, setOpen] = createSignal(false);
 
   const options = createMemo(() => {
     const excluded = new Set(props.excludeIds ?? []);
@@ -60,10 +61,12 @@ export function UserSearchSelect(props: {
       setLoading(false);
       return;
     }
+    // Mark pending now, not after the debounce fires — otherwise the empty
+    // "no students" message flashes during the wait before the request starts.
+    setLoading(true);
     timer = setTimeout(() => {
       const ctrl = new AbortController();
       controller = ctrl;
-      setLoading(true);
       void getUserSearch(q, ctrl.signal, props.role)
         .then((data) => setUsers(data.items))
         .catch(() => {
@@ -72,7 +75,7 @@ export function UserSearchSelect(props: {
         .finally(() => {
           if (!ctrl.signal.aborted) setLoading(false);
         });
-    }, 250);
+    }, 300);
   };
   onCleanup(() => {
     controller?.abort();
@@ -89,6 +92,13 @@ export function UserSearchSelect(props: {
       <Show when={props.label}>{(label) => <Label for={props.id}>{label()}</Label>}</Show>
       <Combobox<PersonRef>
         options={options()}
+        // Results arrive async, so options is empty at input time. Kobalte
+        // refuses to open an empty collection by default (and would close on
+        // input) — allow it, and control open so the panel stays up while
+        // loading, then results pop in.
+        allowsEmptyCollection
+        open={open()}
+        onOpenChange={setOpen}
         value={selected()}
         onChange={(user) => {
           setSelected(user);
@@ -97,6 +107,7 @@ export function UserSearchSelect(props: {
         onInputChange={(value) => {
           setQuery(value);
           runSearch(value);
+          if (value.trim().length > 0) setOpen(true);
         }}
         optionValue="id"
         optionLabel={(user) => personLabelWithId(user)}
