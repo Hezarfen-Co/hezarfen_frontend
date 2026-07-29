@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { AttendanceReportView } from "@/components/attendance/attendance-report-view";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconChart, IconClipboardCheck } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -31,19 +32,10 @@ function MarksContent() {
 
   return (
     <div class="space-y-5">
-      <header class="flex items-center gap-3 border-b border-border pb-5">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Show when={tab() === "marks"} fallback={<IconClipboardCheck class="h-5 w-5" />}>
-            <IconChart class="h-5 w-5" />
-          </Show>
-        </span>
-        <div class="min-w-0">
-          <h1 class="font-display text-2xl font-semibold tracking-tight">{t("marks.title")}</h1>
-          <p class="mt-0.5 text-sm text-muted-foreground">
-            {tab() === "marks" ? t("marks.subtitle") : t("attendance.subtitle")}
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title={t("marks.title")}
+        description={tab() === "marks" ? t("marks.subtitle") : t("attendance.subtitle")}
+      />
 
       <Tabs
         class="space-y-4"
