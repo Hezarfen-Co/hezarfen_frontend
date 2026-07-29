@@ -3,7 +3,8 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { getUserMarks } from "@/api/reports";
 import { getUserSearch } from "@/api/users";
 import { ApiError, formatApiError } from "@/api/client";
-import type { PersonRef } from "@/api/client";
+import type { MarksReport, PersonRef } from "@/api/client";
+import { cn } from "@/lib/cn";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
@@ -16,6 +17,10 @@ import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
 const PAGE_SIZE = 12;
+const round = (n: number) => (Math.round(n * 100) / 100).toString();
+// ponytail: display-only color tiers (70/40 on a 0-100 scale), not a pass/fail rule
+const avgTone = (v: number) =>
+  v >= 70 ? "text-emerald-600 dark:text-emerald-400" : v >= 40 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
 
 export default function StudentMarksPage() {
   return (
@@ -42,6 +47,31 @@ function StudentMarksContent() {
     },
     { initialValue: [] },
   );
+
+  // Per-student overall marks for the inline "average" column. No bulk endpoint
+  // exists, so this is one getUserMarks call per listed student, bounded by cap.
+  // ponytail: N+1 marks fetch, capped at 200; add a bulk /reports/marks endpoint
+  // if whole-school listing is needed. Mirrors the payments roster balance fetch.
+  const MARKS_FETCH_CAP = 200;
+  const [marksMapRes] = createResource(
+    () => {
+      const ids = list().map((user) => user.id);
+      return ids.length > 0 && ids.length <= MARKS_FETCH_CAP ? ids : null;
+    },
+    async (ids) => {
+      const pairs = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            return [id, await getUserMarks(id)] as const;
+          } catch {
+            return [id, null] as const;
+          }
+        }),
+      );
+      return Object.fromEntries(pairs) as Record<string, MarksReport | null>;
+    },
+  );
+  const marksOf = (id: string) => marksMapRes()?.[id];
 
   const [report, { refetch: refetchReport }] = createResource(
     () => viewUser()?.id ?? null,
@@ -77,6 +107,24 @@ function StudentMarksContent() {
       cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
     },
     {
+      id: "average",
+      header: () => <span class="block text-right">{t("marks.overall")}</span>,
+      accessorFn: (user) => marksOf(user.id)?.overall_average ?? -1,
+      meta: { headerClass: "text-right", cellClass: "text-right" },
+      cell: (cell) => {
+        const rep = marksOf(cell.row.original.id);
+        if (rep == null) return <span class="text-sm text-muted-foreground">—</span>;
+        if (rep.overall_average == null)
+          return <span class="text-sm text-muted-foreground">{rep.overall_grade ?? "—"}</span>;
+        return (
+          <span class={cn("mono font-semibold tabular-nums", avgTone(rep.overall_average))}>
+            {round(rep.overall_average)}
+            <Show when={rep.overall_grade}>{(g) => <span class="ml-1 font-medium text-muted-foreground">/ {g()}</span>}</Show>
+          </span>
+        );
+      },
+    },
+    {
       accessorKey: "id",
       header: t("admin.id"),
       cell: (cell) => <span class="mono text-xs text-muted-foreground">{cell.row.original.id}</span>,
@@ -110,7 +158,7 @@ function StudentMarksContent() {
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
-        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
           <DataTable
             title={t("nav.studentMarks")}
             description={`${t("marks.lookup")} · ${rows().length} / ${total()}`}
