@@ -5,6 +5,7 @@ import { postWorkCheckIn } from "@/api/work";
 import { postWorkCheckOut } from "@/api/work";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,8 @@ function WorkLogContent() {
 
   return (
     <div class="space-y-6">
+      <PageHeader title={t("work.title")} description={t("work.subtitle")} />
+
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -129,7 +132,6 @@ function WorkLogContent() {
           >
             <DataTable
               title={t("work.entries")}
-              description={t("work.subtitle")}
               actions={<Badge variant="secondary" class="mono rounded-lg px-3 py-1">{total()}</Badge>}
               columns={columns()}
               data={pageItems()}
