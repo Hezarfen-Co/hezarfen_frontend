@@ -19,7 +19,7 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 
 const SIDEBAR_EXPANDED = "w-60";
-const SIDEBAR_COLLAPSED = "w-16";
+const SIDEBAR_COLLAPSED = "w-24";
 
 export function AppShell(props: ParentProps) {
   const auth = useAuth();

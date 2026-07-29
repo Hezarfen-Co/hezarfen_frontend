@@ -64,10 +64,6 @@ export function DatePicker(props: {
   const monthLabel = createMemo(() =>
     new Intl.DateTimeFormat(locale(), { month: "long", year: "numeric" }).format(month()),
   );
-  const selectedDayLabel = createMemo(() => {
-    const date = selected();
-    return date ? new Intl.DateTimeFormat(locale(), { weekday: "long" }).format(date) : "";
-  });
   const todayLabel = createMemo(() => locale().startsWith("tr") ? "Bugün" : "Today");
   const dayHeaders = createMemo(() => {
     const base = new Date(2024, 0, 1);
@@ -140,9 +136,6 @@ export function DatePicker(props: {
         />
         <IconCalendar class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       </div>
-      <Show when={selectedDayLabel()}>
-        {(day) => <p class="mt-1 text-xs font-medium capitalize text-muted-foreground">{day()}</p>}
-      </Show>
       <Show when={open()}>
         <Portal>
           <div
