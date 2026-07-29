@@ -1005,6 +1005,12 @@ export type MessageKey =
   | "payments.showLedger"
   | "payments.hideLedger"
   | "payments.plan"
+  | "payments.student"
+  | "payments.username"
+  | "payments.allStudents"
+  | "payments.allPlans"
+  | "payments.inDebt"
+  | "payments.settled"
   | "terms.title"
   | "terms.subtitle"
   | "terms.create"
@@ -2254,6 +2260,12 @@ const en: Dict = {
   "payments.showLedger": "Show account activity",
   "payments.hideLedger": "Hide account activity",
   "payments.plan": "Plan",
+  "payments.student": "Student",
+  "payments.username": "Username",
+  "payments.allStudents": "All students",
+  "payments.allPlans": "All plans",
+  "payments.inDebt": "In debt",
+  "payments.settled": "Settled",
   "terms.title": "Academic terms",
   "terms.subtitle": "Manage academic terms and assign courses to each one.",
   "terms.create": "Create term",
@@ -3429,6 +3441,12 @@ const tr: Dict = {
   "payments.showLedger": "Hesap hareketlerini göster",
   "payments.hideLedger": "Hesap hareketlerini gizle",
   "payments.plan": "Plan",
+  "payments.student": "Öğrenci",
+  "payments.username": "Kullanıcı adı",
+  "payments.allStudents": "Tüm öğrenciler",
+  "payments.allPlans": "Tüm planlar",
+  "payments.inDebt": "Borçlu",
+  "payments.settled": "Borçsuz",
   "terms.title": "Akademik dönemler",
   "terms.subtitle": "Akademik dönemleri yönetin ve dersleri ilgili dönemlere atayın.",
   "terms.create": "Dönem oluştur",

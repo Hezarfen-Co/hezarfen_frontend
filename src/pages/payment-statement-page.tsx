@@ -125,7 +125,7 @@ function StatementContent() {
         <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.balance")}</p><p class="mt-1 text-2xl font-semibold tabular-nums" classList={{ "text-destructive": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p></div>
       </div>
 
-      <section class="data-shell space-y-4 border-violet-500/15 bg-violet-500/2.5 p-4">
+      <section class="space-y-4">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={6} />}>
           <Show when={statement.error}>
             <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetch()} />

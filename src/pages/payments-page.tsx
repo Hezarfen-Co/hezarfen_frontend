@@ -2,6 +2,7 @@ import { For, Index, Show, Suspense, createMemo, createResource, createSignal } 
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
   deletePaymentPlanById,
+  getPaymentBalanceByUserId,
   getPaymentLedgerByUserId,
   getPaymentPlans,
   getPaymentStatementByUserId,
@@ -17,7 +18,8 @@ import {
   type PaymentLine,
   type StatementEntry,
 } from "@/api/payments";
-import { formatApiError } from "@/api/client";
+import { getUsers } from "@/api/users";
+import { formatApiError, type User } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -28,7 +30,7 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -85,7 +87,85 @@ function PaymentsContent() {
   const [pending, setPending] = createSignal(false);
 
   // ============================ Collection ============================
-  const [student, setStudent] = createSignal("");
+  const [selectedStudent, setSelectedStudent] = createSignal<User | null>(null);
+  const student = () => selectedStudent()?.id ?? "";
+  const studentLabel = (user: User) => `${user.name ?? ""} ${user.surname ?? ""}`.trim() || user.username;
+
+  const [students, { refetch: refetchStudents }] = createResource(async () =>
+    (await getUsers({ limit: 500 })).items.filter((user) => user.role === "student"),
+  );
+  const studentList = () => students() ?? [];
+
+  // Filter the student list by fee plan (via that plan's assignment roster).
+  const [planFilter, setPlanFilter] = createSignal("");
+  const [filterAssignments] = createResource(
+    () => planFilter() || null,
+    (planId) => getPlanAssignments(planId, { limit: 500 }),
+  );
+  const filteredStudents = createMemo(() => {
+    const all = studentList();
+    if (!planFilter()) return all;
+    const ids = new Set((filterAssignments()?.items ?? []).map((row) => row.student.id));
+    return all.filter((user) => ids.has(user.id));
+  });
+
+  // Per-student balance for the "in debt / settled" column. No bulk endpoint
+  // exists, so this is one call per listed student — bounded to a plan-sized
+  // list. ponytail: N+1 balance fetch, capped at 200; add a bulk
+  // /payments/balances endpoint if whole-school unfiltered debt is needed.
+  const BALANCE_FETCH_CAP = 200;
+  const [balances] = createResource(
+    () => {
+      const ids = filteredStudents().map((user) => user.id);
+      return ids.length > 0 && ids.length <= BALANCE_FETCH_CAP ? ids : null;
+    },
+    async (ids) => {
+      const pairs = await Promise.all(
+        ids.map(async (id) => [id, (await getPaymentBalanceByUserId(id)).balance_minor] as const),
+      );
+      return Object.fromEntries(pairs) as Record<string, number>;
+    },
+  );
+  const balanceOf = (id: string) => balances()?.[id];
+
+  const studentColumns = createMemo<ColumnDef<User>[]>(() => [
+    {
+      id: "name",
+      header: t("payments.student"),
+      cell: (cell) => <span class="font-medium">{studentLabel(cell.row.original)}</span>,
+    },
+    {
+      accessorKey: "username",
+      header: t("payments.username"),
+      cell: (cell) => <span class="text-sm text-muted-foreground">@{cell.row.original.username}</span>,
+    },
+    {
+      id: "debt",
+      header: t("payments.status"),
+      accessorFn: (user) => balanceOf(user.id) ?? 0,
+      cell: (cell) => {
+        const bal = balanceOf(cell.row.original.id);
+        if (bal === undefined) return <span class="text-sm text-muted-foreground">—</span>;
+        const inDebt = bal < 0;
+        return (
+          <Badge variant="outline" class={inDebt ? "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300" : "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"}>
+            <span class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${inDebt ? "bg-red-500" : "bg-emerald-500"}`} />
+            {inDebt ? t("payments.inDebt") : t("payments.settled")}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: "balance",
+      header: t("payments.balance"),
+      accessorFn: (user) => balanceOf(user.id) ?? 0,
+      cell: (cell) => {
+        const bal = balanceOf(cell.row.original.id);
+        return <span class="tabular-nums" classList={{ "text-destructive": (bal ?? 0) < 0 }}>{bal === undefined ? "—" : formatTry(bal, moneyLocale())}</span>;
+      },
+    },
+  ]);
+
   const [statement, { refetch: refetchStatement }] = createResource(
     () => student() || null,
     (userId) => getPaymentStatementByUserId(userId, { limit: 500 }),
@@ -377,11 +457,48 @@ function PaymentsContent() {
 
         {/* ---------------- Collection ---------------- */}
         <TabsContent value="collect" class="space-y-5">
-          <div class="data-shell max-w-md p-4">
-            <UserSearchSelect id="collect-student" role="student" value={student()} onChange={setStudent} label={t("payments.selectStudent")} placeholder={t("payments.selectStudent")} />
-          </div>
-
-          <Show when={student()}>
+          <Show
+            when={selectedStudent()}
+            fallback={
+              <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+              <Suspense fallback={<DataTableSkeleton columns={4} rows={8} />}>
+                <Show when={students.error}>
+                  <ErrorAlert message={formatApiError(students.error)} onRetry={() => void refetchStudents()} />
+                </Show>
+                <Show when={studentList().length > 0} fallback={<EmptyState title={t("payments.selectStudent")} />}>
+                  <DataTable
+                    columns={studentColumns()}
+                    data={filteredStudents()}
+                    onRowClick={(user) => setSelectedStudent(user)}
+                    searchPredicate={(user, q) => `${studentLabel(user)} ${user.username} ${user.email ?? ""}`.toLowerCase().includes(q.toLowerCase())}
+                    filterPlaceholder={t("payments.selectStudent")}
+                    title={t("payments.selectStudent")}
+                    filters={
+                      <Select value={planFilter()} onChange={(e) => setPlanFilter(e.currentTarget.value)} wrapperClass="w-56">
+                        <option value="">{t("payments.allPlans")}</option>
+                        <For each={planList()}>{(plan) => <option value={plan.id}>{plan.name}</option>}</For>
+                      </Select>
+                    }
+                    tableClass="min-w-160"
+                    enableSorting
+                    enablePagination
+                    pageSize={STATEMENT_PAGE_SIZE}
+                  />
+                </Show>
+              </Suspense>
+              </section>
+            }
+          >
+            {(current) => (<>
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-semibold">{studentLabel(current())}</h2>
+                <p class="text-sm text-muted-foreground">@{current().username}</p>
+              </div>
+              <Button variant="outline" size="sm" class="rounded-lg" onClick={() => setSelectedStudent(null)}>
+                <IconChevronLeft class="h-4 w-4" />{t("payments.allStudents")}
+              </Button>
+            </div>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.totalDebt")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().billed, moneyLocale())}</p></div>
               <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.collected")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().collected, moneyLocale())}</p></div>
@@ -389,7 +506,7 @@ function PaymentsContent() {
               <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.overdueCount")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().overdue > 0 }}>{summary().overdue}</p></div>
             </div>
 
-            <section class="data-shell space-y-4 border-violet-500/15 bg-violet-500/2.5 p-4">
+            <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
               <Suspense fallback={<DataTableSkeleton columns={7} rows={5} />}>
                 <Show when={statement.error}>
                   <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetchStatement()} />
@@ -446,6 +563,7 @@ function PaymentsContent() {
                 </section>
               </Show>
             </div>
+            </>)}
           </Show>
         </TabsContent>
 
@@ -457,13 +575,13 @@ function PaymentsContent() {
               {t("payments.createPlan")}
             </Button>
           </div>
-          <section class="data-shell space-y-4 border-violet-500/15 bg-violet-500/2.5 p-4">
+          <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
             <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
               <Show when={plans.error}>
                 <ErrorAlert message={formatApiError(plans.error)} onRetry={() => void refetchPlans()} />
               </Show>
               <Show when={planList().length > 0} fallback={<EmptyState title={t("payments.empty")} />}>
-                <DataTable columns={planColumns()} data={planList()} tableClass="min-w-160" filterColumn="name" enablePagination pageSize={PLAN_PAGE_SIZE} />
+                <DataTable columns={planColumns()} data={planList()} onRowClick={(plan) => { setPlanFilter(plan.id); setTab("collect"); }} tableClass="min-w-160" filterColumn="name" enablePagination pageSize={PLAN_PAGE_SIZE} />
               </Show>
             </Suspense>
           </section>
