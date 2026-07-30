@@ -273,7 +273,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
               />
             </Show>
             <Show when={props.filters}>
-              <div class="flex flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-md [&_select]:h-9 [&_select]:rounded-md">{props.filters}</div>
+              <div class="flex flex-wrap items-center gap-2 [&_button]:h-8 [&_button]:rounded-lg [&_button]:text-[13px] [&_select]:h-8 [&_select]:rounded-lg [&_select]:text-[13px]">{props.filters}</div>
             </Show>
           </div>
           <Show when={showColumnMenu()}>

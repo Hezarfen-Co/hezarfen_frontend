@@ -69,7 +69,7 @@ display-font, translucent surface, or custom shadow rules.
   right, and inherits the exact opaque row surface
 - Data columns fill the available table width at a consistent proportional width.
   Column resizing is not offered (no resize handles, no width persistence)
-- Search and column controls: `h-9 rounded-lg` (not pill)
+- Search / filter / column controls: compact `h-8 rounded-lg` + `text-[13px]` (not pill)
 - Pagination includes range, optional page-size selector, previous/next, and page
   count
 - `storageKey` remains optional. When provided, only column visibility persists

@@ -34,7 +34,7 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
       <DropdownMenuTrigger
         disabled={props.disabled}
         class={cn(
-          "inline-flex h-9 items-center justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/40 px-3 text-sm font-medium text-foreground transition-all hover:border-border hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex h-8 items-center justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/40 px-2.5 text-[13px] font-medium text-foreground transition-all hover:border-border hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
           props.triggerClass,
           props.class,
         )}
