@@ -385,8 +385,7 @@ function DashboardContent() {
                 columns={deadlineColumns()}
                 data={deadlines()}
                 enableColumnVisibility={false}
-                searchPredicate={deadlineSearch}
-                filterPlaceholder={t("dashboard.deadlines")}
+                searchPredicate={deadlines().length > 0 ? deadlineSearch : undefined}
                 empty={t("dashboard.upcomingEmpty")}
                 onRowClick={openDeadline}
               />

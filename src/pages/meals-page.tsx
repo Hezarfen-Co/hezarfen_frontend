@@ -87,7 +87,7 @@ function MealsContent() {
         </div>
         <Suspense fallback={<PageSpinner />}>
           <Show when={menus.error}><ErrorAlert message={formatApiError(menus.error)} onRetry={() => void refetch()} /></Show>
-          <Show when={visible().length > 0} fallback={<EmptyState title={t("meals.empty")} />}>
+          <Show when={visible().length > 0} fallback={<EmptyState kind="meals" title={t("meals.empty")} />}>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"><For each={visible()}>{(menu) => <MealMenuCard menu={menu} locale={locale() === "tr" ? "tr-TR" : "en-US"} labels={{ dishes: t("meals.dishes"), capacity: t("meals.capacity"), conflict: t("meals.conflict") }} />}</For></div>
             <PaginationControls page={page()} totalPages={totalPages()} onPageChange={setPage} />
           </Show>

@@ -16,8 +16,8 @@ import { appointmentCounterpart } from "@/lib/person";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const DAY_NAMES_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const DAY_NAMES_SHORT_TR = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+const DAY_NAMES_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_NAMES_SHORT_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const MONTH_NAMES_TR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
@@ -54,7 +54,8 @@ function CalendarContent() {
     return `${names[viewMonth()]} ${viewYear()}`;
   };
   const dayNames = () => locale() === "tr" ? DAY_NAMES_SHORT_TR : DAY_NAMES_SHORT;
-  const firstDay = () => new Date(viewYear(), viewMonth(), 1).getDay();
+  // Monday-first: shift Sunday (0) to the end of the week.
+  const firstDay = () => (new Date(viewYear(), viewMonth(), 1).getDay() + 6) % 7;
   const daysInMonth = () => new Date(viewYear(), viewMonth() + 1, 0).getDate();
 
   const grid = createMemo(() => {

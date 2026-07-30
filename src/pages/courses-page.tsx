@@ -43,6 +43,7 @@ function CoursesContent() {
   const createKind = (): CourseKind => pageKind() ?? "course";
   const pageLabel = () => t("nav.classes");
   const kindLabel = () => createKind() === "study" ? t("courses.kind.study") : createKind() === "club" ? t("courses.kind.club") : t("courses.kind.course");
+  const kindLabelSingular = () => createKind() === "study" ? t("courses.kind.studySingular") : createKind() === "club" ? t("courses.kind.clubSingular") : t("courses.kind.courseSingular");
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
   const [showForm, setShowForm] = createSignal(routeSearch().action === "new");
   const [title, setTitle] = createSignal("");
@@ -119,11 +120,15 @@ function CoursesContent() {
 
   return (
     <div class="space-y-5">
-      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: kindLabel() })} description={t("courses.subtitle", { item: kindLabel() })}>
+      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: kindLabelSingular() })} description={t("courses.subtitle", { item: kindLabel() })}>
         <form class="space-y-4" onSubmit={createCourse}>
           <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
+          <div class="flex items-center justify-between rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+            <span>{t("exams.kind")}</span>
+            <span class="font-medium text-foreground">{kindLabelSingular()}</span>
+          </div>
           <div class="space-y-3">
-            <div class="space-y-1.5"><Label for="course-title">{t("form.title")}</Label><Input id="course-title" required maxlength={limits.latest?.course.max_title_len} value={title()} onInput={(e) => setTitle(e.currentTarget.value)} /></div>
+            <div class="space-y-1.5"><Label for="course-title">{t("form.title")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="course-title" required maxlength={limits.latest?.course.max_title_len} value={title()} onInput={(e) => setTitle(e.currentTarget.value)} /></div>
             <div class="space-y-1.5"><Label for="course-description">{t("form.description")}</Label><Textarea id="course-description" maxlength={limits.latest?.course.max_description_len} rows={3} value={description()} onInput={(e) => setDescription(e.currentTarget.value)} /></div>
             <div class="space-y-1.5"><Label for="course-term">{t("terms.term")}</Label><Select id="course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}><option value="">{t("terms.unassigned")}</option><For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For></Select></div>
             <div class="space-y-1.5"><Label for="course-capacity">{t("courses.capacity")}</Label><Input id="course-capacity" type="number" min={1} value={capacity()} onInput={(e) => setCapacity(e.currentTarget.value)} /></div>
@@ -142,7 +147,7 @@ function CoursesContent() {
         <Show when={canCreate()}>
           <Button size="sm" class="min-w-30 rounded-lg" onClick={() => setShowForm(true)}>
             <IconPlus class="h-4 w-4" />
-            {t("common.createItem", { item: kindLabel() })}
+            {t("common.createItem", { item: kindLabelSingular() })}
           </Button>
         </Show>
       </header>
