@@ -210,7 +210,7 @@ function CourseDetailContent() {
       cell: (cell) => (
         <Badge variant="outline" class="rounded-full capitalize">
           {examKindLabel(String(cell.row.original.kind), t)}
-          <Show when={examWeight(cell.row.original, settings()?.exam_kinds) != null}>
+          <Show when={examWeight(cell.row.original, settings()?.exam_kinds)}>
             {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
           </Show>
         </Badge>
@@ -275,14 +275,14 @@ function CourseDetailContent() {
           <div class="mx-auto w-full max-w-[1440px] space-y-6">
             <div class="space-y-2">
               <nav class="detail-breadcrumb">
-                <Link to="/courses" search={courseListSearch(c().kind)}>{t("courses.kind.course")}</Link>
+                <Link to="/courses" search={courseListSearch(c().kind)}>{courseKindLabel(c().kind)}</Link>
                 <span aria-hidden>›</span>
                 <span class="text-foreground">{c().title}</span>
               </nav>
               <PageHeader
                 title={c().title}
                 description={c().description || "—"}
-                class="border-violet-500/30 shadow-sm"
+                class="border-border/70"
                 actions={
                   <Show when={canManage()}>
                     <TableRowActions
@@ -307,7 +307,7 @@ function CourseDetailContent() {
                 }
               />
               <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-violet-500/30 bg-card p-3.5">
+                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3.5">
                   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <IconBook class="h-4 w-4" />
                   </span>
@@ -316,7 +316,7 @@ function CourseDetailContent() {
                     <p class="truncate text-sm font-semibold">{courseKindLabel(c().kind)}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-sky-500/30 bg-card p-3.5">
+                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3.5">
                   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <IconCalendarDays class="h-4 w-4" />
                   </span>
@@ -325,7 +325,7 @@ function CourseDetailContent() {
                     <p class="truncate text-sm font-semibold">{terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-emerald-500/30 bg-card p-3.5">
+                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3.5">
                   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <IconUsers class="h-4 w-4" />
                   </span>
@@ -334,7 +334,7 @@ function CourseDetailContent() {
                     <p class="mono truncate text-sm font-semibold">{c().capacity == null ? "—" : hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-amber-500/30 bg-card p-3.5">
+                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3.5">
                   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <IconExam class="h-4 w-4" />
                   </span>
@@ -402,7 +402,7 @@ function CourseDetailContent() {
                   }, t("common.saved"));
                 }}
               >
-                <div class="space-y-3 rounded-lg border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
+                <div class="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-4">
                   <div class="space-y-1.5">
                     <Label for="edit-course-title">{t("form.title")}</Label>
                     <Input
@@ -424,7 +424,7 @@ function CourseDetailContent() {
                     />
                   </div>
                 </div>
-                <div class="space-y-3 rounded-lg border border-violet-500/15 bg-violet-500/3 p-4 shadow-xs">
+                <div class="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-4">
                   <div class="space-y-1.5">
                     <Label for="edit-course-kind">{t("courses.kind")}</Label>
                     <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
@@ -467,7 +467,7 @@ function CourseDetailContent() {
               description={createdCourseExam() ? t("exams.step2Questions") : c().title}
               size={examCreateStep() === "questions" ? "wide" : "default"}
             >
-              <div class="mb-4 flex rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-1">
+              <div class="mb-4 flex rounded-lg border border-border/60 bg-muted/30 p-1">
                 <button
                   type="button"
                   class={cn(
@@ -635,7 +635,7 @@ function CourseDetailContent() {
                   <Badge variant="secondary" class="rounded-full">{countDescription((c().teachers ?? []).length + 1, t("courses.teachers"))}</Badge>
                   <Show when={canStaffCourse()}><Button type="button" variant="outline" size="sm" class="rounded-lg border-primary/30 hover:bg-muted" onClick={() => setShowTeacherForm(true)}><IconPlus class="h-4 w-4" />{t("courses.assignTeacher")}</Button></Show>
                 </div>
-                <div class="flex items-center gap-3 rounded-xl border border-violet-500/30 bg-card px-3 py-2.5 text-sm">
+                <div class="flex items-center gap-3 rounded-xl border border-border/70 bg-card px-3 py-2.5 text-sm">
                   <IconSchool class="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span><span class="text-muted-foreground">{t("common.creator")}:</span> <span class="font-medium">{c().creator.display_name || c().creator.username}</span></span>
                 </div>
