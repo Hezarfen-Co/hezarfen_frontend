@@ -15,7 +15,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 export default function StudentAttendancePage() {
   return (

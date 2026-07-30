@@ -32,7 +32,7 @@ import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const EXAM_PAGE_SIZE = 12;
+const EXAM_PAGE_SIZE = 10;
 
 type ExamRow = Exam & { displayStatus: ExamDisplayStatus };
 

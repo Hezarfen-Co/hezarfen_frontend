@@ -56,7 +56,7 @@ export function HomeworkReportView(props: { userId: string }) {
     {
       id: "mark",
       header: t("form.mark"),
-      meta: { cellClass: "text-right font-medium tabular-nums" },
+      meta: { align: "right", cellClass: "font-medium tabular-nums" },
       cell: (cell) => cell.row.original.result?.mark ?? "—",
     },
     {

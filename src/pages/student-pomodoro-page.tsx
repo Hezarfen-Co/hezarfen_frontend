@@ -15,7 +15,7 @@ import { formatDateTime, formatDurationClock } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 export default function StudentPomodoroPage() {
   return (

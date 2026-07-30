@@ -33,6 +33,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
     {
       accessorKey: "title",
       header: t("marks.exam"),
+      meta: { stickyLeft: true },
       cell: (cell) => (
         <span class="min-w-0">
           <ExamLink examId={cell.row.original.exam} class="block truncate font-medium hover:underline">
@@ -54,14 +55,14 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
     },
     {
       id: "weight",
-      header: () => <span class="block text-right">{t("marks.weight")}</span>,
-      meta: { cellClass: "mono text-right" },
+      header: t("marks.weight"),
+      meta: { align: "right", divider: "left", cellClass: "mono" },
       cell: (cell) => examWeight(cell.row.original, settings()?.exam_kinds) ?? "—",
     },
     {
       accessorKey: "mark",
-      header: () => <span class="block text-right">{t("marks.mark")}</span>,
-      meta: { cellClass: "mono text-right font-semibold" },
+      header: t("marks.mark"),
+      meta: { align: "right", cellClass: "mono font-semibold" },
       cell: (cell) => markWithGrade(cell.row.original.mark, cell.row.original.grade),
     },
   ]);

@@ -16,7 +16,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const round = (n: number) => (Math.round(n * 100) / 100).toString();
 // ponytail: display-only color tiers (70/40 on a 0-100 scale), not a pass/fail rule
 const avgTone = (v: number) =>
@@ -91,7 +91,15 @@ function StudentMarksContent() {
   );
 
   const total = () => list().length;
-  const rows = () => list();
+  // The inline "average" column reads the separate marksMapRes resource, which
+  // resolves AFTER this table first renders. TanStack caches cell values by the
+  // data-array identity, so without a new reference the averages only appear once
+  // something forces a re-derive (e.g. sorting). Track marksMapRes and hand back a
+  // fresh array so the column fills in as soon as the marks load.
+  const rows = () => {
+    marksMapRes();
+    return [...list()];
+  };
   const listLoading = () => list.loading;
   const searchPerson = (person: PersonRef, query: string) =>
     [person.username, person.display_name, person.id].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase());
@@ -108,9 +116,9 @@ function StudentMarksContent() {
     },
     {
       id: "average",
-      header: () => <span class="block text-right">{t("marks.overall")}</span>,
+      header: t("marks.overall"),
       accessorFn: (user) => marksOf(user.id)?.overall_average ?? -1,
-      meta: { headerClass: "text-right", cellClass: "text-right" },
+      meta: { align: "right" },
       cell: (cell) => {
         const rep = marksOf(cell.row.original.id);
         if (rep == null) return <span class="text-sm text-muted-foreground">—</span>;

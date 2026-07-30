@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { DataTableSearch } from "@/components/ui/data-table-search";
 import { DataTableViewMenu, type ViewMenuColumn } from "@/components/ui/data-table-view-menu";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { IconChevronDown } from "@/components/ui/icons";
+import { IconArrowDown, IconArrowUp, IconChevronsUpDown } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { createTablePreferences } from "@/lib/table-preferences";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -30,6 +30,12 @@ declare module "@tanstack/solid-table" {
     headerClass?: string;
     cellClass?: string;
     label?: string;
+    /** Header + cell horizontal alignment. Applied to both so they never drift apart. */
+    align?: "left" | "center" | "right";
+    /** Freeze this column to the left edge on horizontal scroll (fintables-style). */
+    stickyLeft?: boolean;
+    /** Vertical divider on the given edge — separates frozen label from metric columns. */
+    divider?: "left" | "right";
   }
 }
 
@@ -69,6 +75,8 @@ export type DataTableProps<TData, TValue = unknown> = {
 
 const resolveUpdater = <T,>(updater: Updater<T>, old: T): T =>
   typeof updater === "function" ? (updater as (value: T) => T)(old) : updater;
+
+const alignClass = { left: "text-left", center: "text-center", right: "text-right" } as const;
 
 export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, TValue>) {
   const t = useT();
@@ -129,11 +137,27 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     },
   });
   const hiddenLocked = (columnId: string) => columnId === "actions" || columnId === "update";
-  const stickyLocked = (columnId: string) =>
+  const stickyRightLocked = (columnId: string) =>
     columnId === "actions" || (columnId === "update" && table.getColumn("actions") == null);
-  const actionColumnClass = (columnId: string) => stickyLocked(columnId) ? "w-28 min-w-28 px-2 text-center whitespace-nowrap" : undefined;
-  const stickyHeadClass = (columnId: string) => stickyLocked(columnId) ? "table-sticky-head sticky right-0 z-30" : undefined;
-  const stickyCellClass = (columnId: string) => stickyLocked(columnId) ? "table-sticky-cell sticky right-0 z-10" : undefined;
+  const isStickyLeft = (column: Column<TData, unknown>) => column.columnDef.meta?.stickyLeft === true;
+  const alignOf = (column: Column<TData, unknown>) => column.columnDef.meta?.align ?? "left";
+  const dividerClass = (column: Column<TData, unknown>) => {
+    const divider = column.columnDef.meta?.divider;
+    return divider === "left" ? "border-l border-border/70" : divider === "right" ? "border-r border-border/70" : undefined;
+  };
+  const actionColumnClass = (columnId: string) => stickyRightLocked(columnId) ? "w-28 min-w-28 px-2 text-center whitespace-nowrap" : undefined;
+  const stickyHeadClass = (column: Column<TData, unknown>) =>
+    isStickyLeft(column)
+      ? "table-sticky-head-left sticky left-0 z-30"
+      : stickyRightLocked(column.id)
+        ? "table-sticky-head-right sticky right-0 z-30"
+        : undefined;
+  const stickyCellClass = (column: Column<TData, unknown>) =>
+    isStickyLeft(column)
+      ? "table-sticky-left sticky left-0 z-10"
+      : stickyRightLocked(column.id)
+        ? "table-sticky-right sticky right-0 z-10"
+        : undefined;
   const hideableColumns = () => table.getAllColumns().filter((column) => column.getCanHide() && !hiddenLocked(column.id));
   const columnLabel = (column: Column<TData, unknown>) => {
     const header = column.columnDef.header;
@@ -149,7 +173,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const colSpan = () => Math.max(1, table.getVisibleLeafColumns().length);
   const tableWidth = () =>
     table.getVisibleLeafColumns().reduce(
-      (total, column) => total + (stickyLocked(column.id) ? 112 : column.getSize()),
+      (total, column) => total + (stickyRightLocked(column.id) ? 112 : column.getSize()),
       0,
     );
   const showColumnMenu = () => (props.enableColumnVisibility ?? true) && hideableColumns().length > 0;
@@ -182,18 +206,33 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   };
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
-    if (!(props.enableSorting ?? true) || !header.column.getCanSort()) return content;
+    const align = alignOf(header.column);
+    if (!(props.enableSorting ?? true) || !header.column.getCanSort()) {
+      // The th already carries alignClass; the block span makes text-align resolve.
+      return <span class="block truncate">{content}</span>;
+    }
     const sorted = () => header.column.getIsSorted();
     return (
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        class={cn("-ml-3 h-8 px-2 uppercase", sorted() && "text-foreground")}
+        // th text-align positions this inline-flex button; -ml-3 only trims the left gutter.
+        class={cn("h-8 px-2 uppercase", align === "left" && "-ml-3", sorted() && "text-foreground")}
         onClick={() => header.column.toggleSorting(sorted() === "asc")}
       >
         {content}
-        <IconChevronDown class={cn("h-3.5 w-3.5 opacity-50", sorted() === "asc" && "rotate-180", sorted() && "opacity-100")} />
+        <Show
+          when={sorted() !== false}
+          fallback={<IconChevronsUpDown class="h-3.5 w-3.5 opacity-50" />}
+        >
+          <Show
+            when={sorted() === "asc"}
+            fallback={<IconArrowDown class="h-3.5 w-3.5" />}
+          >
+            <IconArrowUp class="h-3.5 w-3.5" />
+          </Show>
+        </Show>
       </Button>
     );
   };
@@ -257,14 +296,16 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                         colSpan={header.colSpan}
                         class={cn(
                           "group/head relative",
+                          alignClass[alignOf(header.column)],
+                          dividerClass(header.column),
                           actionColumnClass(header.column.id),
-                          stickyHeadClass(header.column.id),
+                          stickyHeadClass(header.column),
                           header.column.columnDef.meta?.headerClass,
                         )}
-                        style={{ width: `${stickyLocked(header.column.id) ? 112 : header.getSize()}px` }}
+                        style={{ width: `${stickyRightLocked(header.column.id) ? 112 : header.getSize()}px` }}
                       >
                         <Show when={!header.isPlaceholder}>{renderHeader(header)}</Show>
-                        <Show when={header.column.getCanResize() && !stickyLocked(header.column.id)}>
+                        <Show when={header.column.getCanResize() && !stickyRightLocked(header.column.id)}>
                           <div
                             role="separator"
                             aria-orientation="vertical"
@@ -333,11 +374,13 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                       {(cell) => (
                         <TableCell
                           class={cn(
+                            alignClass[alignOf(cell.column)],
+                            dividerClass(cell.column),
                             actionColumnClass(cell.column.id),
-                            stickyCellClass(cell.column.id),
+                            stickyCellClass(cell.column),
                             cell.column.columnDef.meta?.cellClass,
                           )}
-                          style={{ width: `${stickyLocked(cell.column.id) ? 112 : cell.column.getSize()}px` }}
+                          style={{ width: `${stickyRightLocked(cell.column.id) ? 112 : cell.column.getSize()}px` }}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>

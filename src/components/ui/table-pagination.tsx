@@ -18,7 +18,12 @@ export type TablePaginationProps = {
 /** Footer: "X kayıttan a-b arası" + page-size select + prev/next + "page / total". */
 export function TablePagination(props: TablePaginationProps) {
   const t = useT();
-  const options = () => props.pageSizeOptions ?? [10, 25, 50];
+  // Always include the active page size so the select shows a selected value
+  // instead of rendering blank when a page passes a non-standard size (e.g. 12).
+  const options = () => {
+    const base = props.pageSizeOptions ?? [10, 25, 50];
+    return base.includes(props.pageSize) ? base : [...base, props.pageSize].sort((a, b) => a - b);
+  };
   const start = () => (props.total === 0 ? 0 : props.pageIndex * props.pageSize + 1);
   const end = () => Math.min((props.pageIndex + 1) * props.pageSize, props.total);
 

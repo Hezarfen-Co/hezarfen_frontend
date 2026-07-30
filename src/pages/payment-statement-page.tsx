@@ -28,7 +28,7 @@ import { personLabel } from "@/lib/person";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const STATEMENT_PAGE_SIZE = 12;
+const STATEMENT_PAGE_SIZE = 10;
 
 export default function PaymentStatementPage() {
   return (

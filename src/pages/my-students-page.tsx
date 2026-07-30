@@ -132,14 +132,14 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
     },
     {
       accessorKey: "weight",
-      header: () => <span class="block text-right">{t("marks.weight")}</span>,
-      meta: { cellClass: "mono text-right tabular-nums" },
+      header: t("marks.weight"),
+      meta: { align: "right", cellClass: "mono tabular-nums" },
       cell: (cell) => cell.row.original.weight,
     },
     {
       accessorKey: "mark",
-      header: () => <span class="block text-right">{t("marks.mark")}</span>,
-      meta: { cellClass: "mono text-right font-semibold tabular-nums" },
+      header: t("marks.mark"),
+      meta: { align: "right", cellClass: "mono font-semibold tabular-nums" },
       cell: (cell) => formatNumber(cell.row.original.mark),
     },
   ]);

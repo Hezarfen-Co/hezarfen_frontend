@@ -33,16 +33,17 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
     {
       id: "course",
       header: t("nav.courses"),
+      meta: { stickyLeft: true },
       cell: (cell) => (
         <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} class="block truncate font-medium hover:text-primary hover:underline">
           {cell.row.original.course.title}
         </Link>
       ),
     },
-    ...ATTENDANCE_STATUSES.map((status) => ({
+    ...ATTENDANCE_STATUSES.map((status, index) => ({
       id: status.value,
       header: () => <span title={t(status.detailKey)}>{compact() ? t(status.key).slice(0, 1) : t(status.key)}</span>,
-      meta: { headerClass: "text-right", cellClass: "text-right" },
+      meta: { align: "right" as const, divider: index === 0 ? ("left" as const) : undefined },
       cell: (cell) => (
         <span class={cn("mono inline-flex min-w-7 justify-center rounded-md border px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", status.class)}>
           {cell.row.original.counts[status.value]}
@@ -51,14 +52,14 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
     } satisfies ColumnDef<CourseAttendanceRow>)),
     {
       id: "total",
-      header: () => <span class="block text-right">{compact() ? "Σ" : t("common.all")}</span>,
-      meta: { cellClass: "mono text-right" },
+      header: () => <span>{compact() ? "Σ" : t("common.all")}</span>,
+      meta: { align: "right", cellClass: "mono" },
       cell: (cell) => cell.row.original.counts.total,
     },
     {
       id: "rate",
-      header: () => <span class="block text-right">%</span>,
-      meta: { cellClass: "mono text-right font-semibold" },
+      header: () => <span>%</span>,
+      meta: { align: "right", cellClass: "mono font-semibold" },
       cell: (cell) => percent(cell.row.original.counts.rate),
     },
   ]);

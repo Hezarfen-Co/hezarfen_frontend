@@ -22,7 +22,7 @@ import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
-const BANK_PAGE_SIZE = 12;
+const BANK_PAGE_SIZE = 10;
 
 export default function QuestionBankPage() {
   return (

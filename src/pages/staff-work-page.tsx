@@ -24,7 +24,7 @@ import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const PEOPLE_PAGE_SIZE = 12;
+const PEOPLE_PAGE_SIZE = 10;
 const WORK_PAGE_SIZE = 15;
 function msToDateInput(ms: number): string {
   const d = new Date(ms);

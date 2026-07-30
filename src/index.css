@@ -141,7 +141,10 @@
   }
 
   & th {
-    @apply h-11 overflow-hidden text-ellipsis whitespace-nowrap px-3 text-left text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground first:pl-4 last:pr-4;
+    /* No text-align here: `.data-table th` would out-specify the per-column
+     * text-right/center utility on TableHead and force every header left. The
+     * TableHead base class provides the left default; alignment stays utility-driven. */
+    @apply h-11 overflow-hidden text-ellipsis whitespace-nowrap px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground first:pl-4 last:pr-4;
     background-color: color-mix(in srgb, hsl(var(--muted)) 55%, hsl(var(--card)));
   }
 
@@ -172,16 +175,34 @@
 }
 
 /*
- * Yatay kaydırmada sağda sabit kalan aksiyon hücresi. Altındaki içerik görünmesin
- * diye opak olmalı ama zebra/hover satır tonuyla da eşleşmeli: yarı saydam satır
- * tonunun kart zemini üzerindeki karşılığı color-mix ile üretiliyor.
+ * Yatay kaydırmada sabit kalan (dondurulmuş) kolonlar. Altındaki içerik görünmesin
+ * diye opak olmalı ama zebra/hover satır tonuyla da eşleşmeli: gövde hücresi satır
+ * tonunu `inherit` ile alır, başlık hücresi başlık tonunu kullanır. Kayan içerikle
+ * arasında görsel dikiş için kenara ince çizgi + yumuşak gölge eklenir.
  */
-@utility table-sticky-cell {
+@utility table-sticky-left {
   background-color: inherit;
+  border-right: 1px solid hsl(var(--border));
+  box-shadow: 6px 0 8px -6px color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
 }
 
-@utility table-sticky-head {
+@utility table-sticky-right {
+  background-color: inherit;
+  border-left: 1px solid hsl(var(--border));
+  box-shadow: -6px 0 8px -6px color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
+}
+
+/* Dondurulmuş başlık hücreleri gövde hücrelerinin üstünde opak kalmalı. */
+@utility table-sticky-head-left {
   background-color: color-mix(in srgb, hsl(var(--muted)) 55%, hsl(var(--card)));
+  border-right: 1px solid hsl(var(--border));
+  box-shadow: 6px 0 8px -6px color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
+}
+
+@utility table-sticky-head-right {
+  background-color: color-mix(in srgb, hsl(var(--muted)) 55%, hsl(var(--card)));
+  border-left: 1px solid hsl(var(--border));
+  box-shadow: -6px 0 8px -6px color-mix(in srgb, hsl(var(--foreground)) 18%, transparent);
 }
 
 /* Satır yoğunluğu (density). Normal = @utility data-table varsayılanları. */

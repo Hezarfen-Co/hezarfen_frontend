@@ -22,7 +22,7 @@ import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function MealsPage() {

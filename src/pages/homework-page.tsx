@@ -243,7 +243,7 @@ function HomeworkContent() {
             tableClass="table-fixed min-w-5xl"
             filterColumn="title"
             enablePagination
-            pageSize={12}
+            pageSize={10}
             empty={t("homework.empty")}
             storageKey="homework"
             onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}

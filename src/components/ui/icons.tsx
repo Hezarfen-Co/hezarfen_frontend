@@ -345,6 +345,33 @@ export function IconChevronDown(props: IconProps) {
   );
 }
 
+export function IconArrowUp(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 19V5" />
+      <path d="m5 12 7-7 7 7" />
+    </Svg>
+  );
+}
+
+export function IconArrowDown(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 5v14" />
+      <path d="m19 12-7 7-7-7" />
+    </Svg>
+  );
+}
+
+export function IconChevronsUpDown(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="m7 15 5 5 5-5" />
+      <path d="m7 9 5-5 5 5" />
+    </Svg>
+  );
+}
+
 export function IconHome(props: IconProps) {
   return (
     <Svg {...props}>

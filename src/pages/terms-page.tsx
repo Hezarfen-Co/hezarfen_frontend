@@ -24,7 +24,7 @@ import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const TERM_PAGE_SIZE = 12;
+const TERM_PAGE_SIZE = 10;
 
 function dateInputFromMs(ms: number): string {
   const date = new Date(ms);

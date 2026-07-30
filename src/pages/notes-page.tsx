@@ -21,7 +21,7 @@ import { createFlash } from "@/lib/flash";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { useT } from "@/stores/preferences-context";
 
-const NOTE_PAGE_SIZE = 12;
+const NOTE_PAGE_SIZE = 10;
 
 export default function NotesPage() {
   return (

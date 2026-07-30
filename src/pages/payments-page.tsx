@@ -48,7 +48,7 @@ import { PAYMENT_METHOD_KEYS, sortStatementEntries, statementStatus } from "@/li
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const PLAN_PAGE_SIZE = 12;
+const PLAN_PAGE_SIZE = 10;
 const STATEMENT_PAGE_SIZE = 15;
 const STUDENT_PAGE_SIZE = 10;
 

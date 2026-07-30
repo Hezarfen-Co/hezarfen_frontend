@@ -40,10 +40,33 @@ test("keeps only the rightmost action column sticky", () => {
   ));
 
   const actionsHeader = screen.getByRole("columnheader", { name: "Actions" });
-  expect(actionsHeader.classList).toContain("table-sticky-head");
+  expect(actionsHeader.classList).toContain("table-sticky-head-right");
   expect(actionsHeader.classList).toContain("z-30");
   const roleHeader = screen.getAllByRole("columnheader").find((header) => header.textContent?.startsWith("Role"));
-  expect(roleHeader?.classList).not.toContain("table-sticky-head");
+  expect(roleHeader?.classList).not.toContain("table-sticky-head-right");
+});
+
+test("freezes the meta.stickyLeft column and aligns head + cell together", () => {
+  const alignedColumns: ColumnDef<Row>[] = [
+    { accessorKey: "name", header: "Name", meta: { stickyLeft: true } },
+    { accessorKey: "role", header: "Role", meta: { align: "right" } },
+  ];
+  render(() => (
+    <PreferencesProvider>
+      <DataTable columns={alignedColumns} data={[{ name: "Ada", role: "Admin" }]} enableColumnVisibility={false} enableSorting={false} />
+    </PreferencesProvider>
+  ));
+
+  const headers = screen.getAllByRole("columnheader");
+  const nameHeader = headers.find((header) => header.textContent?.startsWith("Name"));
+  expect(nameHeader?.classList).toContain("table-sticky-head-left");
+  expect(nameHeader?.classList).toContain("left-0");
+
+  const roleHeader = headers.find((header) => header.textContent?.startsWith("Role"));
+  const roleCell = screen.getByRole("cell", { name: "Admin" });
+  // Same alignment class on head and cell so columns never drift apart.
+  expect(roleHeader?.classList).toContain("text-right");
+  expect(roleCell.classList).toContain("text-right");
 });
 
 test("paginates tables by default", () => {
