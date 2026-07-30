@@ -21,7 +21,7 @@ export function TableRowActions(props: { label: string; actions: TableRowAction[
     <div class="flex justify-center">
       <DropdownMenu placement="bottom-end" gutter={6}>
         <DropdownMenuTrigger
-          class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background/85 text-muted-foreground shadow-sm outline-hidden transition-colors hover:border-primary/35 hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-accent data-expanded:text-accent-foreground"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border/70 bg-transparent text-muted-foreground outline-hidden transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-muted data-expanded:text-foreground"
           aria-label={props.label}
           title={props.label}
         >
