@@ -15,8 +15,8 @@ export function ComboboxControl<T extends ValidComponent = "div">(
   return (
     <ComboboxPrimitive.Control
       class={cn(
-        "relative flex h-11 w-full items-center rounded-xl border border-black/8 dark:border-white/12 bg-card transition-all duration-150",
-        "focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/60 focus-within:ring-offset-2 data-disabled:cursor-not-allowed data-disabled:opacity-50",
+        "relative flex h-9 w-full items-center rounded-md border border-input bg-background/90 shadow-sm transition-all",
+        "hover:border-ring/45 focus-within:ring-2 focus-within:ring-ring/70 focus-within:ring-offset-1 data-disabled:cursor-not-allowed data-disabled:opacity-50",
         local.class,
       )}
       {...rest}
@@ -66,7 +66,7 @@ export function ComboboxContent<T extends ValidComponent = "div">(
     <ComboboxPrimitive.Portal>
       <ComboboxPrimitive.Content
         class={cn(
-          "z-50 mt-1.5 max-h-72 min-w-(--kb-popper-anchor-width) overflow-hidden rounded-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-hidden",
+        "z-50 mt-1.5 max-h-72 min-w-(--kb-popper-anchor-width) overflow-hidden rounded-md border border-border/80 bg-popover p-1 text-popover-foreground shadow-xl shadow-black/10 outline-hidden",
           "origin-(--kb-combobox-content-transform-origin) animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,
         )}
@@ -85,8 +85,8 @@ export function ComboboxItem<T extends ValidComponent = "li">(
   return (
     <ComboboxPrimitive.Item
       class={cn(
-        "relative flex min-h-10 cursor-pointer select-none items-center justify-between gap-2.5 rounded-xl px-3 py-2 text-sm font-medium outline-hidden transition-all duration-150",
-        "data-highlighted:bg-primary/10 data-highlighted:text-primary active:scale-[0.98] data-disabled:pointer-events-none data-disabled:opacity-40",
+        "relative flex cursor-pointer select-none items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors",
+        "data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
         local.class,
       )}
       {...rest}

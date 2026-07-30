@@ -34,7 +34,7 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
       <DropdownMenuTrigger
         disabled={props.disabled}
         class={cn(
-          "inline-flex h-9 items-center justify-between gap-2.5 rounded-lg border border-border/80 bg-card px-3 text-sm font-medium text-foreground shadow-xs transition-all hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex h-9 items-center justify-between gap-2.5 rounded-md border border-input bg-background/90 px-3 text-sm font-medium text-foreground shadow-sm transition-all hover:border-ring/45 active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
           props.triggerClass,
           props.class,
         )}
@@ -50,14 +50,14 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
         </div>
         <IconChevronDown class="h-3.5 w-3.5 shrink-0 opacity-60 transition-transform duration-200" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent class="min-w-48 max-h-72 overflow-y-auto rounded-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl p-1.5 shadow-apple">
+      <DropdownMenuContent class="max-h-72 min-w-48 overflow-y-auto">
         <For each={props.options}>
           {(option) => {
             const isSelected = () => option.value === props.value;
             return (
               <DropdownMenuItem
                 class={cn(
-                  "flex h-10 items-center justify-between gap-2.5 rounded-xl px-3 text-xs font-medium cursor-pointer transition-colors",
+                  "flex items-center justify-between gap-2.5 text-sm",
                   isSelected() && "bg-primary/10 text-primary font-semibold",
                 )}
                 onSelect={() => props.onChange(option.value)}
@@ -90,8 +90,8 @@ export function Select(props: SelectProps) {
     <div class={cn("relative w-full", local.wrapperClass)}>
       <select
         class={cn(
-          "flex h-11 w-full appearance-none rounded-xl border border-black/8 dark:border-white/12 bg-card pl-3.5 pr-9 py-2 text-xs font-medium text-foreground transition-all duration-150",
-          "hover:bg-secondary focus:bg-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2",
+          "flex h-9 w-full appearance-none rounded-md border border-input bg-background/90 py-2 pl-3 pr-9 text-sm text-foreground shadow-sm transition-all",
+          "hover:border-ring/45 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-1",
           "disabled:cursor-not-allowed disabled:opacity-50 [&>option]:bg-popover [&>option]:text-popover-foreground [&>option]:py-1.5",
           local.class,
         )}

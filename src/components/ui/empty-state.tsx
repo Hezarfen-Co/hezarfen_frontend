@@ -25,11 +25,11 @@ export function EmptyState(props: {
   return (
     <div
       class={cn(
-        "flex min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/70 bg-muted/15 px-6 py-8 text-center transition-all duration-300",
+        "flex min-h-48 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/70 bg-muted/15 px-6 py-8 text-center transition-all duration-300",
         props.class,
       )}
     >
-      <div class={cn("relative flex h-16 w-16 items-center justify-center rounded-2xl border shadow-inner", KIND_TONE[kind()])}>
+      <div class={cn("relative flex h-16 w-16 items-center justify-center rounded-lg border shadow-inner", KIND_TONE[kind()])}>
         <Show when={kind() === "notes"}>
           <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />

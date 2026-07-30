@@ -14,7 +14,7 @@ export function MobileTabBar(props: { onMenu: () => void }) {
 
   return (
     <nav
-      class="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+      class="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
       aria-label={t("nav.menu")}
     >
       <ul
@@ -34,7 +34,7 @@ export function MobileTabBar(props: { onMenu: () => void }) {
                     active() ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
-                  <span class={cn("flex h-8 w-10 items-center justify-center rounded-xl", active() && "bg-muted")}>
+                  <span class={cn("flex h-8 w-10 items-center justify-center rounded-md", active() && "bg-muted")}>
                     <item.Icon class="h-4.5 w-4.5" />
                   </span>
                   <span class="max-w-full truncate">{t(item.labelKey)}</span>
@@ -50,7 +50,7 @@ export function MobileTabBar(props: { onMenu: () => void }) {
             class="flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[10px] font-medium text-muted-foreground"
             onClick={() => props.onMenu()}
           >
-            <span class="flex h-8 w-10 items-center justify-center rounded-xl">
+            <span class="flex h-8 w-10 items-center justify-center rounded-md">
               <IconMenu class="h-4.5 w-4.5" />
             </span>
             <span class="truncate">{t("nav.account")}</span>

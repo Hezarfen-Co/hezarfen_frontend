@@ -17,11 +17,8 @@
 
 @theme {
   --font-sans:
-    'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text',
-    'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-display:
-    'Space Grotesk Variable', 'Inter Variable', -apple-system,
-    BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
 
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
@@ -57,19 +54,13 @@
   --color-sidebar: hsl(var(--sidebar));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
 
-  --radius-3xl: 1.5rem;
-  --radius-2xl: 1.25rem;
-  --radius-xl: 1rem;
+  /* bdash radius scale: base 0.5rem, sm=r-4px, md=r-2px, lg=r, xl=r+4px */
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-xl: calc(var(--radius) + 4px);
   --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 4px);
-  --radius-sm: calc(var(--radius) - 8px);
-
-  --shadow-soft:
-    0 1px 2px rgba(33, 37, 41, 0.05), 0 10px 30px -16px rgba(33, 37, 41, 0.16);
-  --shadow-apple:
-    0 1px 2px rgba(33, 37, 41, 0.06), 0 10px 28px -14px rgba(33, 37, 41, 0.18);
-  --shadow-apple-hover:
-    0 2px 4px rgba(33, 37, 41, 0.07), 0 16px 40px -16px rgba(33, 37, 41, 0.22);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 
   --animate-fade-up: fade-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-accordion-down: accordion-down 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -121,87 +112,95 @@
   }
 }
 
-@utility font-display {
-  font-family:
-    'Space Grotesk Variable', 'Inter Variable', -apple-system,
-    BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  letter-spacing: -0.02em;
-}
-
-@utility glass-header {
-  @apply sticky top-0 z-20 border-b border-border/80 bg-background/85 shadow-xs backdrop-blur-xl;
-}
-
-@utility glass-panel {
-  @apply border border-border/80 bg-card/90 shadow-apple backdrop-blur-xl;
-}
-
-@utility apple-card {
-  @apply rounded-2xl border border-border/80 bg-card p-5 shadow-apple transition-[border-color,box-shadow] duration-200 hover:border-border;
-}
-
-@utility surface-card {
-  @apply rounded-2xl border border-border/80 bg-card text-card-foreground shadow-xs transition-[border-color,box-shadow] duration-200;
-}
-
-@utility stat-tile {
-  @apply surface-card relative overflow-hidden p-5 hover:border-border hover:shadow-apple-hover active:scale-[0.985];
-}
-
 @utility focus-ring {
-  @apply focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  @apply focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/75 focus-visible:ring-offset-1 focus-visible:ring-offset-background;
 }
 
 @utility topbar-control {
-  @apply border border-border/90 bg-card/90 text-muted-foreground shadow-xs transition-colors hover:border-border hover:bg-muted hover:text-foreground;
+  @apply border border-input bg-background/85 text-muted-foreground shadow-sm transition-colors hover:border-primary/35 hover:bg-accent hover:text-accent-foreground;
 }
 
 @utility topbar-ai-control {
-  @apply border border-primary bg-primary text-primary-foreground shadow-sm transition-[background-color,box-shadow,transform] hover:bg-primary/90 hover:shadow-md;
+  @apply bg-primary text-primary-foreground shadow-sm transition-[background-color,box-shadow,transform] hover:bg-primary/90 hover:shadow-md;
 }
 
 @utility data-shell {
-  @apply rounded-2xl border border-border/80 bg-card shadow-xs;
+  @apply rounded-lg border border-border bg-card shadow-sm;
 }
 
 @utility data-table-wrap {
-  @apply max-h-[65vh] overflow-auto rounded-xl border border-border/80 bg-card shadow-none;
+  @apply isolate max-h-[65vh] overflow-auto rounded-lg border border-border bg-card;
 }
 
 @utility data-table {
   @apply w-full caption-bottom text-sm;
 
   & thead {
-    @apply sticky top-0 z-10 border-b border-border/80 bg-muted/55 text-muted-foreground;
+    @apply sticky top-0 z-20 border-b border-border/80 text-muted-foreground;
+    background-color: color-mix(in srgb, hsl(var(--muted)) 55%, hsl(var(--card)));
   }
 
   & th {
-    @apply h-11 overflow-hidden text-ellipsis whitespace-nowrap border-r border-border/70 px-4 text-left text-xs font-semibold tracking-wide text-muted-foreground last:border-r-0 dark:border-white/10 dark:text-white/65;
+    @apply h-11 overflow-hidden text-ellipsis whitespace-nowrap px-3 text-left text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground first:pl-4 last:pr-4;
+    background-color: color-mix(in srgb, hsl(var(--muted)) 55%, hsl(var(--card)));
+  }
+
+  & th * {
+    text-transform: uppercase;
   }
 
   & td {
-    @apply h-[3.2rem] whitespace-nowrap border-r border-border/60 px-4 py-2.5 align-middle text-sm font-normal text-foreground last:border-r-0 dark:border-white/8 dark:text-white/90;
+    @apply whitespace-nowrap px-3 py-3 align-middle text-sm font-normal text-foreground first:pl-4 last:pr-4;
   }
 
   & tbody tr {
-    @apply border-b border-border/70 transition-colors hover:bg-muted/70 active:bg-muted dark:border-white/8 dark:hover:bg-white/6 dark:active:bg-white/8;
+    @apply border-b border-border/70 transition-colors hover:bg-muted/55 data-[state=selected]:bg-muted;
+    background-color: hsl(var(--card));
   }
 
   & tbody tr:nth-child(even) {
-    background-color: hsl(var(--muted) / 0.18);
+    background-color: color-mix(in oklab, hsl(var(--muted)) 22%, hsl(var(--card)));
   }
 
-  & tbody tr:hover:nth-child(even) {
-    background-color: hsl(var(--muted) / 0.7);
+  & tbody tr:hover {
+    background-color: color-mix(in oklab, hsl(var(--muted)) 55%, hsl(var(--card)));
   }
 
-  [data-kb-theme='dark'] & tbody tr:nth-child(even) {
-    background-color: hsl(var(--muted) / 0.35);
+  & tbody tr[data-state='selected'] {
+    background-color: hsl(var(--muted));
   }
+}
 
-  [data-kb-theme='dark'] & tbody tr:hover:nth-child(even) {
-    background-color: hsl(var(--muted) / 0.65);
-  }
+/*
+ * Yatay kaydırmada sağda sabit kalan aksiyon hücresi. Altındaki içerik görünmesin
+ * diye opak olmalı ama zebra/hover satır tonuyla da eşleşmeli: yarı saydam satır
+ * tonunun kart zemini üzerindeki karşılığı color-mix ile üretiliyor.
+ */
+@utility table-sticky-cell {
+  background-color: inherit;
+}
+
+@utility table-sticky-head {
+  background-color: color-mix(in srgb, hsl(var(--muted)) 55%, hsl(var(--card)));
+}
+
+/* Satır yoğunluğu (density). Normal = @utility data-table varsayılanları. */
+.data-table[data-density='compact'] {
+  font-size: 13px;
+}
+.data-table[data-density='compact'] th {
+  height: 2.25rem;
+}
+.data-table[data-density='compact'] td {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+.data-table[data-density='comfortable'] th {
+  height: 3.25rem;
+}
+.data-table[data-density='comfortable'] td {
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
 }
 
 @utility detail-breadcrumb {
@@ -213,7 +212,7 @@
 }
 
 @utility detail-action-group {
-  @apply flex w-full flex-wrap items-center gap-1.5 rounded-xl border border-border/80 bg-card p-1.5 shadow-xs sm:w-auto;
+  @apply flex w-full flex-wrap items-center gap-1.5 rounded-lg border border-border/80 bg-card p-1.5 shadow-sm sm:w-auto;
 }
 
 @utility detail-action-divider {
@@ -221,36 +220,36 @@
 }
 
 @utility tab-panel-header {
-  @apply flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-muted/20 px-3 py-2;
+  @apply flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2;
 }
 
 @utility tab-panel-note {
-  @apply rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-sm text-muted-foreground;
+  @apply rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-sm text-muted-foreground;
 }
 
 @utility detail-metric-card {
-  @apply rounded-xl border border-black/5 bg-transparent px-4 py-4 shadow-xs dark:border-white/6;
+  @apply rounded-lg border border-border bg-card px-4 py-4 shadow-sm;
 }
 
 @utility side-panel-body {
   & form {
-    @apply space-y-6 pb-6;
+    @apply space-y-4 pb-4;
   }
 
   & form > .space-y-3 {
-    @apply rounded-2xl border border-border/80 bg-card p-5 shadow-xs;
+    @apply rounded-lg border border-border bg-card p-4;
   }
 
   & form > .space-y-4 {
-    @apply rounded-2xl border border-border/80 bg-card p-5 shadow-xs;
+    @apply rounded-lg border border-border bg-card p-4;
   }
 
   & form > .space-y-1\.5 {
-    @apply rounded-2xl border border-border/80 bg-card p-5 shadow-xs;
+    @apply rounded-lg border border-border bg-card p-4;
   }
 
   & form > .grid {
-    @apply rounded-2xl border border-border/80 bg-card p-5 shadow-xs;
+    @apply rounded-lg border border-border bg-card p-4;
   }
 
   & label {
@@ -258,104 +257,36 @@
   }
 
   & input {
-    @apply rounded-xl bg-muted/30 border border-border/80 h-11 px-3.5 transition-colors focus:bg-background;
+    @apply h-9 rounded-md;
   }
 
   & textarea {
-    @apply rounded-xl bg-muted/30 border border-border/80 h-11 px-3.5 transition-colors focus:bg-background;
+    @apply rounded-md;
   }
 
   & select {
-    @apply rounded-xl bg-muted/30 border border-border/80 h-11 px-3.5 transition-colors focus:bg-background;
+    @apply h-9 rounded-md;
   }
 
   & form > .flex:last-child {
-    @apply sticky bottom-0 -mx-6 justify-end border-t border-border/80 bg-background/90 backdrop-blur-md px-6 py-4 shadow-[0_-16px_32px_hsl(var(--background)/0.8)];
+    @apply sticky bottom-0 -mx-5 justify-end border-t border-border bg-background px-5 py-3;
   }
 
   & form > .flex.flex-wrap:last-child {
-    @apply sticky bottom-0 -mx-6 justify-end border-t border-border/80 bg-background/90 backdrop-blur-md px-6 py-4 shadow-[0_-16px_32px_hsl(var(--background)/0.8)];
+    @apply sticky bottom-0 -mx-5 justify-end border-t border-border bg-background px-5 py-3;
   }
 
   & form > .flex:last-child button {
-    @apply rounded-xl h-11 px-5 font-medium active:scale-[0.97] transition-transform duration-150;
+    @apply h-9 rounded-md px-4 font-medium;
   }
 
   & form > .flex.flex-wrap:last-child button {
-    @apply rounded-xl h-11 px-5 font-medium active:scale-[0.97] transition-transform duration-150;
-  }
-}
-
-@utility space-y-3 {
-  .side-panel-body form > & {
-    @apply rounded-2xl border border-border/80 bg-card p-5 shadow-xs;
-  }
-}
-
-@utility space-y-4 {
-  .side-panel-body form > & {
-    @apply rounded-2xl border border-border/80 bg-card p-5 shadow-xs;
-  }
-}
-
-@utility space-y-1.5 {
-  .side-panel-body form > & {
-    @apply rounded-2xl border border-border/80 bg-card p-5 shadow-xs;
-  }
-}
-
-@utility grid {
-  .side-panel-body form > & {
-    @apply rounded-2xl border border-border/80 bg-card p-5 shadow-xs;
-  }
-}
-
-@utility flex {
-  .side-panel-body form > &:last-child {
-    @apply sticky bottom-0 -mx-6 justify-end border-t border-border/80 bg-background/90 backdrop-blur-md px-6 py-4 shadow-[0_-16px_32px_hsl(var(--background)/0.8)];
-  }
-
-  .side-panel-body form > &.flex-wrap:last-child {
-    @apply sticky bottom-0 -mx-6 justify-end border-t border-border/80 bg-background/90 backdrop-blur-md px-6 py-4 shadow-[0_-16px_32px_hsl(var(--background)/0.8)];
-  }
-
-  .side-panel-body form > &:last-child button {
-    @apply rounded-xl h-11 px-5 font-medium active:scale-[0.97] transition-transform duration-150;
-  }
-
-  .side-panel-body form > &.flex-wrap:last-child button {
-    @apply rounded-xl h-11 px-5 font-medium active:scale-[0.97] transition-transform duration-150;
-  }
-}
-
-@utility flex-wrap {
-  .side-panel-body form > &.flex:last-child {
-    @apply sticky bottom-0 -mx-6 justify-end border-t border-border/80 bg-background/90 backdrop-blur-md px-6 py-4 shadow-[0_-16px_32px_hsl(var(--background)/0.8)];
-  }
-
-  .side-panel-body form > &.flex:last-child button {
-    @apply rounded-xl h-11 px-5 font-medium active:scale-[0.97] transition-transform duration-150;
+    @apply h-9 rounded-md px-4 font-medium;
   }
 }
 
 @utility tactile-press {
   @apply active:scale-[0.97] transition-transform duration-150;
-}
-
-@utility card-lift {
-  @apply transition-shadow duration-200 ease-out hover:shadow-apple-hover;
-}
-
-@utility hig-grouped-card {
-  @apply rounded-2xl border border-border/80 bg-card p-4 shadow-xs transition-[border-color,box-shadow] sm:p-5;
-}
-
-@utility hig-translucent-bar {
-  @apply border-b border-border/80 bg-background/85 backdrop-blur-xl backdrop-saturate-150;
-}
-
-@utility hig-popover-panel {
-  @apply backdrop-blur-xl backdrop-saturate-150 bg-popover/95 border border-black/8 dark:border-white/12 rounded-2xl shadow-apple p-1.5;
 }
 
 @utility animate-pulse-glow {
@@ -382,90 +313,62 @@
 
 @layer base {
   :root {
-    /* Coolors light steel: #F8F9FA → #212529 */
-    --ui-bg: 210 15.8% 92.5%;
-    --ui-surface-1: 210 16.7% 97.6%;
-    --ui-surface-2: 210 13.8% 88.6%;
-    --ui-surface-3: 210 14% 83.1%;
-    --ui-border-1: 210 14% 83.1%;
-    --ui-border-2: 210 10.8% 71%;
-    --ui-text-1: 210 10.8% 14.5%;
-    --ui-text-2: 210 8.8% 31.4%;
-    --ui-text-3: 208.2 7.3% 45.7%;
-    --ui-accent: 210 10.3% 22.7%;
-    --ui-accent-muted: 210 13.8% 88.6%;
-    
-    /* Apple System Status Colors */
-    --ui-success: 142 71% 45%;
-    --ui-success-muted: 142 60% 94%;
-    --ui-warning: 38 92% 50%;
-    --ui-warning-muted: 38 85% 93%;
-    --ui-danger: 354 84% 57%;
-    --ui-danger-muted: 354 80% 94%;
-    --ui-info: 199 89% 48%;
-    --ui-info-muted: 199 80% 94%;
-
-    --space-1: 0.25rem;
-    --space-2: 0.5rem;
-    --space-3: 0.75rem;
-    --space-4: 1rem;
-    --space-5: 1.25rem;
-    --space-6: 1.5rem;
-    --space-8: 2rem;
-
-    --background: var(--ui-bg);
-    --foreground: var(--ui-text-1);
-    --card: var(--ui-surface-1);
-    --card-foreground: var(--ui-text-1);
-    --popover: var(--ui-surface-1);
-    --popover-foreground: var(--ui-text-1);
+    --ui-accent: 210 8.8% 31.4%;
+    --background: 210 16.7% 97.6%;
+    --foreground: 210 10.8% 14.5%;
+    --card: 210 16.7% 97.6%;
+    --card-foreground: 210 10.8% 14.5%;
+    --popover: 210 16.7% 97.6%;
+    --popover-foreground: 210 10.8% 14.5%;
     --primary: var(--ui-accent);
     --primary-foreground: 210 16.7% 97.6%;
-    --secondary: var(--ui-surface-2);
-    --secondary-foreground: var(--ui-text-1);
-    --muted: var(--ui-surface-2);
-    --muted-foreground: var(--ui-text-2);
-    --accent: var(--ui-accent-muted);
-    --accent-foreground: 210 10.3% 22.7%;
-    --destructive: var(--ui-danger);
+    --secondary: 210 13.8% 88.6%;
+    --secondary-foreground: 210 10.3% 22.7%;
+    --muted: 210 13.8% 88.6%;
+    --muted-foreground: 208.2 7.3% 45.7%;
+    --accent: 210 14% 83.1%;
+    --accent-foreground: 210 10.8% 14.5%;
+    --destructive: 354 84% 57%;
     --destructive-foreground: 0 0% 100%;
-    --border: var(--ui-border-1);
-    --input: var(--ui-border-1);
-    --ring: var(--ui-accent);
-    --radius: 1rem;
-    --success: var(--ui-success);
-    --warning: var(--ui-warning);
-    --info: var(--ui-info);
-    --surface-elevated: var(--ui-surface-1);
-    --sidebar: var(--ui-surface-1);
-    --sidebar-foreground: var(--ui-text-2);
+    --border: 210 14% 83.1%;
+    --input: 210 10.8% 71%;
+    --ring: 208.2 7.3% 45.7%;
+    --radius: 0.5rem;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --info: 199 89% 48%;
+    --surface-elevated: 210 16.7% 97.6%;
+    --sidebar: 210 16.7% 97.6%;
+    --sidebar-foreground: 210 10.8% 14.5%;
   }
 
   [data-kb-theme="dark"] {
-    --ui-bg: 210 10.8% 14.5%;
-    --ui-surface-1: 210 10.3% 22.7%;
-    --ui-surface-2: 210 8.8% 31.4%;
-    --ui-surface-3: 208.2 7.3% 45.7%;
-    --ui-border-1: 210 8.8% 31.4%;
-    --ui-border-2: 208.2 7.3% 45.7%;
-    --ui-text-1: 210 16.7% 97.6%;
-    --ui-text-2: 210 13.8% 88.6%;
-    --ui-text-3: 210 10.8% 71%;
     --ui-accent: 210 14% 83.1%;
-    --ui-accent-muted: 210 8.8% 31.4%;
-    --ui-success: 142 71% 52%;
-    --ui-success-muted: 142 40% 14%;
-    --ui-warning: 38 92% 54%;
-    --ui-warning-muted: 38 50% 14%;
-    --ui-danger: 354 84% 62%;
-    --ui-danger-muted: 354 50% 15%;
-    --ui-info: 199 89% 60%;
-    --ui-info-muted: 199 50% 14%;
-
+    --background: 210 10.8% 14.5%;
+    --foreground: 210 16.7% 97.6%;
+    --card: 210 10.8% 14.5%;
+    --card-foreground: 210 16.7% 97.6%;
+    --popover: 210 10.8% 14.5%;
+    --popover-foreground: 210 16.7% 97.6%;
+    --primary: var(--ui-accent);
     --primary-foreground: 210 10.8% 14.5%;
+    --secondary: 210 8.8% 31.4%;
+    --secondary-foreground: 210 16.7% 97.6%;
+    --muted: 210 8.8% 31.4%;
+    --muted-foreground: 210 14% 83.1%;
+    --accent: 208.2 7.3% 45.7%;
     --accent-foreground: 210 16.7% 97.6%;
+    --destructive: 354 84% 62%;
     --destructive-foreground: 0 0% 100%;
-    --sidebar: var(--ui-bg);
+    --border: 210 8.8% 31.4%;
+    --input: 208.2 7.3% 45.7%;
+    --ring: 210 10.8% 71%;
+    --success: 142 71% 52%;
+    --warning: 38 92% 54%;
+    --info: 199 89% 60%;
+    --surface-elevated: 210 10.8% 14.5%;
+    --sidebar: 210 10.8% 14.5%;
+    --sidebar-foreground: 210 16.7% 97.6%;
   }
 
   * {
@@ -474,7 +377,7 @@
 
   html {
     @apply scroll-smooth;
-    font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

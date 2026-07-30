@@ -4,9 +4,10 @@ import {
   type Column,
   type ColumnDef,
   type ColumnFiltersState,
+  type ColumnSizingState,
   type PaginationState,
   type SortingState,
-  type VisibilityState,
+  type Updater,
   createSolidTable,
   flexRender,
   getCoreRowModel,
@@ -15,15 +16,12 @@ import {
   getSortedRowModel,
 } from "@tanstack/solid-table";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DataTableSearch } from "@/components/ui/data-table-search";
+import { DataTableViewMenu, type ViewMenuColumn } from "@/components/ui/data-table-view-menu";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { IconChevronDown } from "@/components/ui/icons";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
+import { createTablePreferences } from "@/lib/table-preferences";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useT } from "@/stores/preferences-context";
 
@@ -55,19 +53,29 @@ export type DataTableProps<TData, TValue = unknown> = {
     pageSize: number;
     total: number;
     onPageChange: (pageIndex: number) => void;
+    onPageSizeChange?: (pageSize: number) => void;
   };
   onRowClick?: (row: TData) => void;
   onSearchInput?: (value: string) => void;
   pageSize?: number;
   searchPredicate?: (row: TData, query: string) => boolean;
   searchValue?: string;
+  /**
+   * When set, column widths / visibility / row density persist to localStorage.
+   * Without a key the same controls remain available for the current mount.
+   */
+  storageKey?: string;
 };
+
+const resolveUpdater = <T,>(updater: Updater<T>, old: T): T =>
+  typeof updater === "function" ? (updater as (value: T) => T)(old) : updater;
 
 export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, TValue>) {
   const t = useT();
+  const paginationEnabled = props.enablePagination ?? true;
+  const prefs = createTablePreferences(props.storageKey);
   const [sorting, setSorting] = createSignal<SortingState>([]);
   const [columnFilters, setColumnFilters] = createSignal<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = createSignal<VisibilityState>({});
   const [pagination, setPagination] = createSignal<PaginationState>({
     pageIndex: 0,
     pageSize: props.pageSize ?? 10,
@@ -87,13 +95,18 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       return props.columns;
     },
     enableSorting: props.enableSorting ?? true,
+    enableColumnResizing: true,
+    columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    ...(props.enablePagination && !props.manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
+    ...(paginationEnabled && !props.manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange: (updater) =>
+      prefs.setVisibility(resolveUpdater(updater, prefs.preferences().visibility)),
+    onColumnSizingChange: (updater) =>
+      prefs.setSizing(resolveUpdater(updater, prefs.preferences().sizing) as ColumnSizingState),
     onPaginationChange: setPagination,
     state: {
       get sorting() {
@@ -103,7 +116,10 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         return columnFilters();
       },
       get columnVisibility() {
-        return columnVisibility();
+        return prefs.preferences().visibility;
+      },
+      get columnSizing() {
+        return prefs.preferences().sizing;
       },
       get pagination() {
         return props.manualPagination
@@ -113,22 +129,51 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     },
   });
   const hiddenLocked = (columnId: string) => columnId === "actions" || columnId === "update";
-  const actionColumnClass = (columnId: string) => hiddenLocked(columnId) ? "w-28 min-w-28 px-2 text-center whitespace-nowrap" : undefined;
+  const stickyLocked = (columnId: string) =>
+    columnId === "actions" || (columnId === "update" && table.getColumn("actions") == null);
+  const actionColumnClass = (columnId: string) => stickyLocked(columnId) ? "w-28 min-w-28 px-2 text-center whitespace-nowrap" : undefined;
+  const stickyHeadClass = (columnId: string) => stickyLocked(columnId) ? "table-sticky-head sticky right-0 z-30" : undefined;
+  const stickyCellClass = (columnId: string) => stickyLocked(columnId) ? "table-sticky-cell sticky right-0 z-10" : undefined;
   const hideableColumns = () => table.getAllColumns().filter((column) => column.getCanHide() && !hiddenLocked(column.id));
   const columnLabel = (column: Column<TData, unknown>) => {
     const header = column.columnDef.header;
     return column.columnDef.meta?.label ?? (typeof header === "string" ? header : column.id);
   };
+  const viewMenuColumns = (): ViewMenuColumn[] =>
+    hideableColumns().map((column) => ({
+      id: column.id,
+      label: columnLabel(column),
+      visible: column.getIsVisible(),
+      toggle: (visible: boolean) => column.toggleVisibility(visible),
+    }));
   const colSpan = () => Math.max(1, table.getVisibleLeafColumns().length);
+  const tableWidth = () =>
+    table.getVisibleLeafColumns().reduce(
+      (total, column) => total + (stickyLocked(column.id) ? 112 : column.getSize()),
+      0,
+    );
   const showColumnMenu = () => (props.enableColumnVisibility ?? true) && hideableColumns().length > 0;
   const showSearch = () => props.searchPredicate != null || props.filterColumn != null || props.onSearchInput != null;
   const showHeader = () => props.title != null || props.description != null || props.actions != null;
   const showToolbar = () => showSearch() || props.filters != null || showColumnMenu();
   const pageCount = () => props.manualPagination ? Math.max(1, Math.ceil(props.manualPagination.total / props.manualPagination.pageSize)) : table.getPageCount();
   const pageIndex = () => props.manualPagination?.pageIndex ?? table.getState().pagination.pageIndex;
+  const pageSize = () => props.manualPagination?.pageSize ?? table.getState().pagination.pageSize;
+  const totalRows = () => props.manualPagination?.total ?? table.getFilteredRowModel().rows.length;
   const setPageIndex = (next: number) => {
     if (props.manualPagination) props.manualPagination.onPageChange(next);
     else table.setPageIndex(next);
+  };
+  const searchFieldValue = () => {
+    if (props.onSearchInput || props.searchPredicate) return searchValue();
+    if (props.filterColumn) return (table.getColumn(props.filterColumn)?.getFilterValue() as string) ?? "";
+    return "";
+  };
+  const handleSearch = (value: string) => {
+    if (props.onSearchInput) props.onSearchInput(value);
+    else if (props.searchPredicate) setSearch(value);
+    else if (props.filterColumn) table.getColumn(props.filterColumn)?.setFilterValue(value);
+    setPageIndex(0);
   };
   const isInteractiveTarget = (target: EventTarget | null, row: EventTarget | null) => {
     if (!(target instanceof Element)) return false;
@@ -138,93 +183,114 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
     if (!(props.enableSorting ?? true) || !header.column.getCanSort()) return content;
-    const sorted = header.column.getIsSorted();
+    const sorted = () => header.column.getIsSorted();
     return (
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        class={cn("-ml-3 h-8 px-2", sorted && "text-foreground")}
-        onClick={() => header.column.toggleSorting(sorted === "asc")}
+        class={cn("-ml-3 h-8 px-2 uppercase", sorted() && "text-foreground")}
+        onClick={() => header.column.toggleSorting(sorted() === "asc")}
       >
         {content}
-        <IconChevronDown class={cn("h-3.5 w-3.5 opacity-50", sorted === "asc" && "rotate-180", sorted && "opacity-100")} />
+        <IconChevronDown class={cn("h-3.5 w-3.5 opacity-50", sorted() === "asc" && "rotate-180", sorted() && "opacity-100")} />
       </Button>
     );
   };
 
   return (
-    <div class={cn("overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs", props.class)}>
-      <Show when={showHeader() || showToolbar()}>
-        <div class="space-y-3 border-b border-border/70 bg-muted/15 p-3 dark:border-white/10 dark:bg-white/3 sm:p-4">
-          <Show when={showHeader()}>
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div class="min-w-0">
-                <Show when={props.title}>
-                  <h2 class="truncate font-display text-lg font-semibold tracking-tight text-foreground">{props.title}</h2>
-                </Show>
-                <Show when={props.description}>
-                  <p class="mt-1 text-sm text-muted-foreground">{props.description}</p>
-                </Show>
-              </div>
-              <Show when={props.actions}>
-                <div class="flex shrink-0 flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-lg">{props.actions}</div>
-              </Show>
-            </div>
+    <div class={cn("space-y-3", props.class)}>
+      <Show when={showHeader()}>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <Show when={props.title}>
+              <h2 class="truncate text-lg font-semibold tracking-tight text-foreground">{props.title}</h2>
+            </Show>
+            <Show when={props.description}>
+              <p class="mt-1 text-sm text-muted-foreground">{props.description}</p>
+            </Show>
+          </div>
+          <Show when={props.actions}>
+            <div class="flex shrink-0 flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-md">{props.actions}</div>
           </Show>
-          <Show when={showToolbar()}>
-            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-              <Show when={showSearch()}>
-                <Input
-                  class="h-9 max-w-sm rounded-lg border-border/80 bg-card text-sm shadow-xs focus-visible:ring-1"
-                  value={props.onSearchInput || props.searchPredicate ? searchValue() : ((props.filterColumn ? table.getColumn(props.filterColumn)?.getFilterValue() : "") as string) ?? ""}
-                  placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
-                  onInput={(event) => {
-                    if (props.onSearchInput) props.onSearchInput(event.currentTarget.value);
-                    else if (props.searchPredicate) setSearch(event.currentTarget.value);
-                    else if (props.filterColumn) table.getColumn(props.filterColumn)?.setFilterValue(event.currentTarget.value);
-                    setPageIndex(0);
-                  }}
-                />
-              </Show>
-              <Show when={props.filters}>
-                <div class="flex flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-lg [&_select]:h-9 [&_select]:rounded-lg">{props.filters}</div>
-              </Show>
-              <Show when={showColumnMenu()}>
-            <DropdownMenu placement="bottom-end" gutter={6}>
-              <DropdownMenuTrigger class="ml-auto inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border/80 bg-card px-3 text-sm font-semibold shadow-xs transition-all hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                {t("common.columns")}
-                <IconChevronDown class="h-3.5 w-3.5 opacity-60" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent class="w-48 rounded-2xl border border-black/8 bg-popover/95 p-1.5 shadow-apple backdrop-blur-xl dark:border-white/12">
-                <For each={hideableColumns()}>
-                  {(column) => (
-                    <DropdownMenuCheckboxItem
-                      class="rounded-lg"
-                      checked={column.getIsVisible()}
-                      onChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {columnLabel(column)}
-                    </DropdownMenuCheckboxItem>
-                  )}
-                </For>
-              </DropdownMenuContent>
-            </DropdownMenu>
-              </Show>
+        </div>
+      </Show>
+      <Show when={showToolbar()}>
+        <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex flex-1 flex-wrap items-center gap-2">
+            <Show when={showSearch()}>
+              <DataTableSearch
+                value={searchFieldValue()}
+                onChange={handleSearch}
+                placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
+              />
+            </Show>
+            <Show when={props.filters}>
+              <div class="flex flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-md [&_select]:h-9 [&_select]:rounded-md">{props.filters}</div>
+            </Show>
+          </div>
+          <Show when={showColumnMenu()}>
+            <div class="flex justify-end">
+              <DataTableViewMenu
+                columns={viewMenuColumns()}
+                density={prefs.preferences().density}
+                onDensityChange={prefs.setDensity}
+                onResetWidths={prefs.resetSizing}
+              />
             </div>
           </Show>
         </div>
       </Show>
-      <DataTableFrame class="rounded-none border-0 bg-transparent dark:border-0 dark:bg-transparent">
-        <Table class={cn("data-table", props.tableClass)}>
+      <DataTableFrame>
+        <Table
+          class={cn("data-table table-fixed", props.tableClass)}
+          data-density={prefs.preferences().density}
+          style={{ width: `max(100%, ${tableWidth()}px)` }}
+        >
           <TableHeader>
             <For each={table.getHeaderGroups()}>
               {(headerGroup) => (
-                <TableRow>
+                <TableRow class="hover:bg-transparent">
                   <For each={headerGroup.headers}>
                     {(header) => (
-                        <TableHead colSpan={header.colSpan} class={cn(actionColumnClass(header.column.id), header.column.columnDef.meta?.headerClass)}>
+                      <TableHead
+                        colSpan={header.colSpan}
+                        class={cn(
+                          "group/head relative",
+                          actionColumnClass(header.column.id),
+                          stickyHeadClass(header.column.id),
+                          header.column.columnDef.meta?.headerClass,
+                        )}
+                        style={{ width: `${stickyLocked(header.column.id) ? 112 : header.getSize()}px` }}
+                      >
                         <Show when={!header.isPlaceholder}>{renderHeader(header)}</Show>
+                        <Show when={header.column.getCanResize() && !stickyLocked(header.column.id)}>
+                          <div
+                            role="separator"
+                            aria-orientation="vertical"
+                            aria-label="Sütun genişliğini ayarla"
+                            aria-valuemin={header.column.columnDef.minSize ?? 72}
+                            aria-valuenow={header.getSize()}
+                            tabIndex={0}
+                            onMouseDown={header.getResizeHandler()}
+                            onTouchStart={header.getResizeHandler()}
+                            onDblClick={() => header.column.resetSize()}
+                            onKeyDown={(event) => {
+                              if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                              event.preventDefault();
+                              const step = event.shiftKey ? 32 : 8;
+                              const delta = event.key === "ArrowLeft" ? -step : step;
+                              const min = header.column.columnDef.minSize ?? 72;
+                              prefs.setSizing({
+                                ...prefs.preferences().sizing,
+                                [header.column.id]: Math.max(min, header.getSize() + delta),
+                              });
+                            }}
+                            class="absolute right-0 top-0 z-20 flex h-full w-2 cursor-col-resize touch-none select-none items-center justify-center opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-hidden group-hover/head:opacity-100"
+                          >
+                            <span class="h-1/2 w-px rounded bg-primary/70" />
+                          </div>
+                        </Show>
                       </TableHead>
                     )}
                   </For>
@@ -265,7 +331,14 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                   >
                     <For each={row.getVisibleCells()}>
                       {(cell) => (
-                        <TableCell class={cn(actionColumnClass(cell.column.id), cell.column.columnDef.meta?.cellClass)}>
+                        <TableCell
+                          class={cn(
+                            actionColumnClass(cell.column.id),
+                            stickyCellClass(cell.column.id),
+                            cell.column.columnDef.meta?.cellClass,
+                          )}
+                          style={{ width: `${stickyLocked(cell.column.id) ? 112 : cell.column.getSize()}px` }}
+                        >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       )}
@@ -277,18 +350,19 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </TableBody>
         </Table>
       </DataTableFrame>
-      <Show when={props.enablePagination && pageCount() > 1}>
-        <div class="flex items-center justify-end gap-2 border-t border-border/70 bg-muted/10 p-3 dark:border-white/10">
-          <span class="mr-auto text-xs font-medium tabular-nums text-muted-foreground">
-            {t("common.pageOf", { page: pageIndex() + 1, total: pageCount() })}
-          </span>
-          <Button type="button" variant="outline" size="sm" class="h-11 rounded-xl px-4 text-xs font-semibold tactile-press" disabled={pageIndex() <= 0} onClick={() => setPageIndex(Math.max(0, pageIndex() - 1))}>
-            {t("common.prev")}
-          </Button>
-          <Button type="button" variant="outline" size="sm" class="h-11 rounded-xl px-4 text-xs font-semibold tactile-press" disabled={pageIndex() >= pageCount() - 1} onClick={() => setPageIndex(Math.min(pageCount() - 1, pageIndex() + 1))}>
-            {t("common.next")}
-          </Button>
-        </div>
+      <Show when={paginationEnabled && totalRows() > 0}>
+        <TablePagination
+          pageIndex={pageIndex()}
+          pageCount={pageCount()}
+          pageSize={pageSize()}
+          total={totalRows()}
+          onPageChange={setPageIndex}
+          onPageSizeChange={
+            props.manualPagination
+              ? props.manualPagination.onPageSizeChange
+              : (size) => { table.setPageSize(size); setPageIndex(0); }
+          }
+        />
       </Show>
     </div>
   );
@@ -300,7 +374,7 @@ export function DataTableFrame(props: ParentProps<{ class?: string }>) {
 
 export function DataTableEmpty(props: ParentProps<{ class?: string }>) {
   return (
-    <div class={cn("rounded-2xl border border-dashed border-border/70 bg-muted/15 px-6 py-10 text-center text-sm leading-6 text-muted-foreground", props.class)}>
+    <div class={cn("rounded-lg border border-dashed border-border/70 bg-muted/15 px-6 py-10 text-center text-sm leading-6 text-muted-foreground", props.class)}>
       {props.children}
     </div>
   );

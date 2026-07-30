@@ -46,8 +46,8 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                   "flex w-full items-center text-left outline-hidden transition-colors",
                   "focus-visible:ring-2 focus-visible:ring-ring dark:focus-visible:ring-white/30",
                   props.collapsed
-                    ? "h-11 justify-center rounded-md px-0 text-foreground hover:bg-muted/70 data-expanded:bg-muted/70 dark:text-white dark:hover:bg-white/8 dark:data-expanded:bg-white/8"
-                    : "h-12 gap-2 rounded-md px-2 text-foreground hover:bg-muted/70 data-expanded:bg-muted/70 dark:text-white dark:hover:bg-white/8 dark:data-expanded:bg-white/8",
+                    ? "h-9 justify-center rounded-md px-0 text-foreground hover:bg-muted/70 data-expanded:bg-muted/70 dark:text-white dark:hover:bg-white/8 dark:data-expanded:bg-white/8"
+                    : "h-10 gap-2 rounded-md px-2 text-foreground hover:bg-muted/70 data-expanded:bg-muted/70 dark:text-white dark:hover:bg-white/8 dark:data-expanded:bg-white/8",
                 )}
                 aria-label={t("nav.account")}
               >
@@ -70,7 +70,7 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                 </Show>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent class="w-72 rounded-xl border-border bg-popover p-0 text-popover-foreground shadow-apple">
+              <DropdownMenuContent class="w-72 rounded-xl border-border bg-popover p-0 text-popover-foreground shadow-xl shadow-black/10">
                 <DropdownMenuItem class="m-1.5 gap-2.5 rounded-xl bg-muted/70 p-2.5 focus:bg-muted data-highlighted:bg-muted dark:bg-white/8 dark:focus:bg-white/10 dark:data-highlighted:bg-white/10" onSelect={() => setProfileOpen(true)}>
                   <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary dark:bg-emerald-100 dark:text-emerald-950">
                     {initials(name())}

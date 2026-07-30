@@ -39,13 +39,6 @@ export function CourseTeachersPanel(props: {
       meta: { cellClass: "font-medium" },
       cell: (cell) => cell.row.original.display_name || cell.row.original.username,
     },
-    {
-      id: "id",
-      accessorFn: (row) => row.id,
-      header: t("admin.id"),
-      meta: { cellClass: "mono text-xs text-muted-foreground" },
-      cell: (cell) => cell.row.original.id,
-    },
     ...(props.canStaff
       ? [
           {
@@ -125,7 +118,7 @@ export function CourseTeachersPanel(props: {
           />
         }
       >
-        <DataTable columns={columns()} data={props.teachers} />
+        <DataTable columns={columns()} data={props.teachers} storageKey="course-teachers" />
       </Show>
 
       <SidePanel

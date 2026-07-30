@@ -81,14 +81,14 @@ export function PublishSlotsForm(props: {
 
   return (
     <form class="space-y-4" onSubmit={handleSubmit}>
-      <div class="grid gap-3 rounded-2xl border border-amber-500/15 bg-amber-500/3 p-4">
+      <div class="grid gap-3 rounded-lg border border-amber-500/15 bg-amber-500/3 p-4">
         <div class="space-y-1.5">
           <Label for="slot-starts">{t("appointments.starts")}</Label>
           <div class="grid grid-cols-2 gap-2">
-            <DatePicker id="slot-starts" class="h-11" placeholder={t("form.datePlaceholder")} value={startsDate()} onChange={setStartsDate} />
+            <DatePicker id="slot-starts" class="h-9" placeholder={t("form.datePlaceholder")} value={startsDate()} onChange={setStartsDate} />
             <Input
               id="slot-starts-time"
-              class="h-11 font-mono placeholder:text-muted-foreground/45"
+              class="h-9 font-mono placeholder:text-muted-foreground/45"
               inputMode="numeric"
               placeholder="09:00"
               pattern="[0-2][0-9]:[0-5][0-9]"
@@ -101,10 +101,10 @@ export function PublishSlotsForm(props: {
         <div class="space-y-1.5">
           <Label for="slot-ends">{t("appointments.ends")}</Label>
           <div class="grid grid-cols-2 gap-2">
-            <DatePicker id="slot-ends" class="h-11" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
+            <DatePicker id="slot-ends" class="h-9" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
             <Input
               id="slot-ends-time"
-              class="h-11 font-mono placeholder:text-muted-foreground/45"
+              class="h-9 font-mono placeholder:text-muted-foreground/45"
               inputMode="numeric"
               placeholder="10:00"
               pattern="[0-2][0-9]:[0-5][0-9]"
@@ -116,7 +116,7 @@ export function PublishSlotsForm(props: {
         </div>
       </div>
 
-      <div class="space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/2.5 p-4">
+      <div class="space-y-1.5 rounded-lg border border-sky-500/15 bg-sky-500/2.5 p-4">
         <Label for="slot-note">{t("appointments.note")}</Label>
         <Textarea
           id="slot-note"
@@ -129,7 +129,7 @@ export function PublishSlotsForm(props: {
         />
       </div>
 
-      <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/3 p-4">
+      <div class="space-y-3 rounded-lg border border-violet-500/15 bg-violet-500/3 p-4">
         <label class="flex items-center gap-2 text-sm font-medium">
           <input
             type="checkbox"
@@ -143,7 +143,7 @@ export function PublishSlotsForm(props: {
         <Show when={repeatWeekly()}>
           <div class="space-y-1.5 pt-1">
             <Label for="slot-until">{t("appointments.until")}</Label>
-            <DatePicker id="slot-until" class="h-11" placeholder={t("form.datePlaceholder")} value={untilDate()} onChange={setUntilDate} />
+            <DatePicker id="slot-until" class="h-9" placeholder={t("form.datePlaceholder")} value={untilDate()} onChange={setUntilDate} />
           </div>
         </Show>
       </div>

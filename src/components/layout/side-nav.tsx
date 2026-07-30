@@ -34,7 +34,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                 title={t(item.labelKey)}
                 aria-current={active() ? "page" : undefined}
                 class={cn(
-                  "relative flex h-9 items-center rounded-lg text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                  "relative flex h-9 items-center rounded-md text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                   props.collapsed ? "mx-auto h-10 w-12 justify-center px-0" : "gap-3 px-3",
                   active()
                     ? "bg-primary/10 text-primary"
@@ -77,7 +77,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                       title={t(item.labelKey)}
                       aria-current={itemActive() ? "page" : undefined}
                       class={cn(
-                        "relative flex h-9 items-center rounded-lg text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                        "relative flex h-9 items-center rounded-md text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                         props.collapsed ? "mx-auto h-10 w-12 justify-center px-0" : "gap-3 px-3",
                         itemActive()
                           ? "bg-primary/10 text-primary"
@@ -115,7 +115,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                 <details class="group/nav" open={active()}>
                   <summary
                     class={cn(
-                      "flex h-9 cursor-pointer list-none items-center gap-3 rounded-lg px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
+                      "flex h-9 cursor-pointer list-none items-center gap-3 rounded-md px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
                       active()
                         ? "bg-muted/70 text-foreground"
                         : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
@@ -132,7 +132,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
               <DropdownMenu placement="right-start" gutter={8}>
                 <DropdownMenuTrigger
                   class={cn(
-                    "relative mx-auto flex h-10 w-12 items-center justify-center rounded-lg outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                    "relative mx-auto flex h-10 w-12 items-center justify-center rounded-md outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     active()
                       ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
@@ -151,7 +151,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                   <For each={group.items}>
                     {(item: NavItem) => (
                       <DropdownMenuItem
-                        class="min-h-8 gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px]"
+                        class="min-h-8 gap-2.5 rounded-md px-2.5 py-1.5 text-[13px]"
                         onSelect={() => {
                           props.onNavigate?.();
                           void navigate({ to: item.to });

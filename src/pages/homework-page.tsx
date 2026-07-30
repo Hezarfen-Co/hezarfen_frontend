@@ -3,13 +3,11 @@ import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getCourseById, getCourseSubjects, getCourses, postCourseHomework } from "@/api/courses";
 import { getHomework } from "@/api/homework";
-import { getSubjectById } from "@/api/subjects";
 import { getTime } from "@/api/time";
 import { formatApiError } from "@/api/client";
 import type { Course, Homework } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -70,13 +68,10 @@ function HomeworkContent() {
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [courseNames, setCourseNames] = createSignal<Record<string, string>>({});
-  const [subjectNames, setSubjectNames] = createSignal<Record<string, string>>({});
   const [list, { refetch }] = createResource(async () => {
     const items = (await getHomework({ limit: 100 })).items;
     const courses = [...new Set(items.map((item) => item.course))];
-    const subjects = [...new Set(items.map((item) => item.subject))];
     await Promise.all(courses.map((id) => getCourseById(id).then((course) => setCourseNames((current) => ({ ...current, [id]: course.title }))).catch(() => {})));
-    await Promise.all(subjects.map((id) => getSubjectById(id).then((subject) => setSubjectNames((current) => ({ ...current, [id]: subject.name }))).catch(() => {})));
     return items;
   });
   const [courses] = createResource(
@@ -94,7 +89,6 @@ function HomeworkContent() {
   );
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
   const courseName = (id: string) => courseNames()[id] ?? id;
-  const subjectName = (id: string) => subjectNames()[id] ?? id;
   const canCreate = () => manageableCourses().length > 0;
   const pageTitle = () => auth.user()?.role === "student" ? t("homework.mineTitle") : t("homework.title");
 
@@ -160,12 +154,6 @@ function HomeworkContent() {
       header: t("nav.courses"),
       meta: { cellClass: "text-muted-foreground" },
       cell: (cell) => courseName(cell.row.original.course),
-    },
-    {
-      id: "subject",
-      accessorFn: (row) => subjectName(row.subject),
-      header: t("subjects.subject"),
-      cell: (cell) => <Badge variant="outline" class="rounded-full">{subjectName(cell.row.original.subject)}</Badge>,
     },
     {
       id: "due_at",
@@ -235,7 +223,7 @@ function HomeworkContent() {
         </form>
       </SidePanel>
       <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
@@ -257,6 +245,7 @@ function HomeworkContent() {
             enablePagination
             pageSize={12}
             empty={t("homework.empty")}
+            storageKey="homework"
             onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
           />
         </Suspense>

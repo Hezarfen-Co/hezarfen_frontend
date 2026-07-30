@@ -179,15 +179,15 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
                 <div class="grid gap-3 sm:grid-cols-3">
                   <article class="rounded-xl border border-border/80 bg-card p-4">
                     <p class="text-xs font-medium text-muted-foreground">{t("dashboard.stats.average")}</p>
-                    <p class="mt-2 font-display text-2xl font-semibold tabular-nums text-foreground">{formatNumber(report()?.overall_average ?? null)}</p>
+                    <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatNumber(report()?.overall_average ?? null)}</p>
                   </article>
                   <article class="rounded-xl border border-border/80 bg-card p-4">
                     <p class="text-xs font-medium text-muted-foreground">{t("nav.courses")}</p>
-                    <p class="mt-2 font-display text-2xl font-semibold tabular-nums text-foreground">{courseRows().length}</p>
+                    <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{courseRows().length}</p>
                   </article>
                   <article class="rounded-xl border border-border/80 bg-card p-4">
                     <p class="text-xs font-medium text-muted-foreground">{t("attendance.rate")}</p>
-                    <p class="mt-2 font-display text-2xl font-semibold tabular-nums text-foreground">{formatPercent(attendanceRate())}</p>
+                    <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatPercent(attendanceRate())}</p>
                   </article>
                 </div>
               </Match>

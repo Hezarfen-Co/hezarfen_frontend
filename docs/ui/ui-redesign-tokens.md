@@ -1,164 +1,89 @@
 # UI Redesign Tokens
 
-## Direction
+## Source
 
-Dense school admin UI with Apple HIG-inspired grouped surfaces: neutral grouped
-backgrounds, subtle borders, restrained elevation, and one graphite accent for
-interactive chrome. Translucency stays limited to functional layers such as
-headers and popovers; content surfaces remain opaque and easy to scan.
+bDash is Hezarfen's visual source of truth. Hezarfen keeps its SolidJS
+architecture, Kobalte behavior, content model, workflows, semantic status colors,
+and accessibility. React/Radix implementation details are not copied.
 
 ## Color
 
-Core palette: [Coolors light steel](https://coolors.co/palette/f8f9fa-e9ecef-dee2e6-ced4da-adb5bd-6c757d-495057-343a40-212529).
+Light:
 
-- Canvas: `#E9ECEF`; cards and popovers: `#F8F9FA`
-- Muted layers: `#DEE2E6`, `#CED4DA`; borders: `#CED4DA`, `#ADB5BD`
-- Text: `#212529`, secondary `#495057`, tertiary `#6C757D`
-- Primary actions: `#343A40` with `#F8F9FA` text
-- Dark mode reverses the same scale from `#212529` canvas to `#F8F9FA` text
-- Success, warning, danger, and info keep semantic colors because color carries state
+- background, card, popover, sidebar: `#F8F9FA`
+- foreground: `#212529`
+- primary: `#495057`; primary foreground: `#F8F9FA`
+- secondary and muted: `#DEE2E6`
+- accent and border: `#CED4DA`
+- input: `#ADB5BD`; muted foreground and ring: `#6C757D`
 
-Body text pairs exceed WCAG AA; `#6C757D` is limited to tertiary metadata and
-nonessential labels. Shadows use low-opacity `#212529`, two layers at most, and
-appear only where elevation communicates hierarchy or interaction.
+Dark:
 
-Existing shadcn tokens (`--background`, `--card`, `--primary`, etc.) are mapped
-to these `--ui-*` variables so existing components keep working seamlessly.
+- background, card, popover, sidebar: `#212529`
+- foreground: `#F8F9FA`
+- primary: `#CED4DA`; primary foreground: `#212529`
+- secondary and muted: `#495057`
+- accent: `#6C757D`; border: `#495057`; input: `#6C757D`
+- muted foreground: `#CED4DA`; ring: `#ADB5BD`
+
+Success, warning, destructive, and info remain semantic. Custom palette choice
+continues to override `--ui-accent`, which feeds `--primary`.
 
 ## Typography
 
-- UI face: system Apple stack (`-apple-system`, `BlinkMacSystemFont`, SF Pro,
-  Helvetica Neue fallback)
-- Data face: `.mono` / `.num`, using `ui-monospace, SFMono-Regular, Menlo,
-  Monaco, Consolas`
-- `.font-display` maps to the same system UI face with tighter letter spacing.
+- UI: native system sans (`ui-sans-serif`, `system-ui`, `-apple-system`,
+  `BlinkMacSystemFont`, `Segoe UI`)
+- Data: `ui-monospace`, `SFMono-Regular`, Menlo, Monaco, Consolas
+- No downloaded UI fonts and no display-font override
+- Default body/control text: `14px`; metadata: `12px`; table headers: `11px`
 
-Scale target:
+## Shape, size, elevation
 
-- `xs`: 12/16, labels and metadata
-- `sm`: 13/18, nav and table cells
-- `base`: 14/20, body
-- `lg`: 18/24, section/page titles
-- `xl`: 22/28, key page title only
+- Base radius: `0.5rem`
+- Controls and menus: `rounded-md`
+- Cards and tables: `rounded-lg`
+- Resource/page header: `rounded-xl`
+- Default control: `h-9`; small control: `h-8`; large control: `h-10`
+- Content surfaces: `shadow-sm`; menus/popovers: `shadow-xl shadow-black/10`
+- Dialogs and side panels: `shadow-2xl shadow-black/20`
+- Content surfaces stay opaque. Blur is limited to modal overlays and table
+  headers where hierarchy needs it.
 
-## Spacing
+## Shared primitives
 
-CSS variables:
+`Button`, `Input`, `Textarea`, `Select`, `Card`, `Badge`, `Table`, `Tabs`,
+`Dialog`, `DropdownMenu`, `Popover`, `Alert`, `Label`, `DatePicker`,
+`SidePanel`, `PageHeader`, empty/error states, and shell chrome use these tokens.
+Page/domain components must not restore old oversized radius, control height,
+display-font, translucent surface, or custom shadow rules.
 
-- `--space-1`: 4px
-- `--space-2`: 8px
-- `--space-3`: 12px
-- `--space-4`: 16px
-- `--space-5`: 20px
-- `--space-6`: 24px
-- `--space-8`: 32px
+## DataTable
 
-Density defaults:
+- Table shell: `rounded-lg border bg-card`
+- Header: sticky, `11px` bold uppercase, `tracking-[0.16em]`, muted background
+- Body: compact by default, even-row muted zebra, restrained hover
+- Cell padding: compact `py-1.5`; normal `py-3`; comfortable `py-5`
+- The rightmost action/update column is `w-28`, centered, sticky right, and
+  inherits the exact opaque zebra/hover row surface
+- Data columns start at a consistent width, fill the available table width, and
+  expose mouse, touch, and keyboard resize handles; action/update stays fixed
+- Search and column controls: `h-9`; search remains pill-shaped like bDash
+- Pagination includes range, optional page-size selector, previous/next, and page
+  count
+- `storageKey` remains optional. When provided, column widths, visibility, and
+  density persist under `hezarfen.table.<storageKey>` and resizing is enabled.
+- Application tables use `DataTable`; page/domain components do not render table
+  primitives directly.
 
-- sidebar group/header row: 32px
-- table header/cell row: 36px
-- card padding: 16px
-- radius: 16px base token (`1rem`), with `rounded-xl`/`rounded-2xl` used by form,
-  feedback, card, and panel surfaces
-- table numerals/IDs use tabular mono
-- table action column: narrow, centered, three-dot trigger
-- table column separators: subtle border between cells, no heavy gridlines
+## Layout rules
 
-## Proof Of Concept
-
-Reference page: `src/pages/admin-users-page.tsx`.
-
-Implemented:
-
-- fixed role sidebar with compact primary links and collapsible Education /
-  Community groups
-- compact stat row on top of users page
-- dense sticky data table styling via `.data-table`
-- centered row action dropdowns via `TableRowActions`
-- role pills with semantic tints
-- mono IDs and tabular metrics
-- neutral surfaces, subtle borders, no gradients or decorative cards
-- HIG shared primitives: rounded controls, frosted overlays, tactile press
-  feedback, and 44px targets where layout allows
-
-## Dashboard (homepage)
-
-Reference implementation: `src/pages/dashboard-page.tsx`.
-
-### Intent
-
-- Observation / navigation board, not a mutation surface.
-- Cloudflare-style density: quiet borders, flat cards, mono counts, no vanity decoration.
-
-### Structure
-
-1. Header — greeting, neutral role chip, date.
-2. Highlights — role-scoped live totals, `1 → 2 sm → 4 lg`.
-3. Progress chart (`lg:col-span-2`) + attendance/workload split.
-4. Upcoming-deadlines `DataTable`.
-5. Teacher+ Question Bank / Question Pool navigation.
-
-### Charts (Knowvio-style dashboard)
-
-- The homepage uses `ChartBar` and `ChartProgressRing` for a Highlights stat row +
-  Progress overview + Activity split,
-  plus a `DataTable` of upcoming deadlines. Accent = `hsl(var(--primary))`; status
-  tints stay semantic (emerald/amber/rose/muted).
-- **Real data only:** every chart/stat maps to a live API field. No fabricated daily
-  trends, streak counters, or `+%` delta badges. Categorical course averages and
-  capacities are bars; capacity never means current enrollment.
-- Chart cards share `rounded-2xl`, `border-border`, `bg-card`, `p-4`, and the same
-  plain-text empty state.
-- Deadline rows are focusable and navigate by kind. Appointment rows and a direct
-  appointments link are available to every role. Student/parent tables span full
-  width because the teaching-resources panel is teacher+ only.
-
-### Out of scope for dashboard
-
-- Guide/marketing footers, create shortcuts, promotional/upgrade cards.
-- Drag/drop ordering, sparklines, fabricated trends / streaks, `+%` deltas,
-  inferred priority, manual refresh controls.
-
-## Current Implementation Notes
-
-- Data-heavy admin and management views should prefer `DataToolbar`, `DataTableFrame`, and `.data-table`.
-- Page header create/add buttons use compact icon + label controls with `size="sm" class="min-w-[7.5rem] rounded-lg"`; secondary header actions keep the same shape with `variant="outline"`.
-- Row-level table actions should use `TableRowActions`; avoid inline action button clusters in table rows.
-- Quick create/edit flows should use `SidePanel`; destructive actions stay in confirm dialogs.
-- Durable resources keep full detail pages with breadcrumbs.
-- Detail routes should use `.detail-breadcrumb`, `.detail-action-group`, `.detail-action-divider`, and `.detail-metric-card` before adding page-local header/card styling.
-- Large detail sections can use `SectionDisclosure`; choose deferred mounting for request savings or mounted content for state preservation.
-- Product date inputs should use the shared `DatePicker`; date-time flows should pair it with a compact `HH:mm` input.
-- Icons are local Lucide-geometry SVG wrappers in `src/components/ui/icons.tsx` (24 grid, stroke 2, round caps/joins, `rx=2` on rounded rects). No icon package — keeps dev builds small. Prefer adding a path there over ad-hoc inline SVGs.
-- User-facing tables should prefer usernames/display names over raw ids; show raw ids only as fallback or in explicit id columns.
-- Header actions use compact icon + label buttons with equal min-width; related sections should use matching badge labels and button sizing.
-- Form and feedback surfaces should use shared `Input`, `Select`, `Textarea`, `Alert`, `DataTableEmpty`, and `ConfirmDialog` primitives; avoid page-local destructive/empty-state boxes unless the primitive cannot express the state.
-- Attendance status UI uses shared metadata: localized label, short detail text, and semantic color classes.
-- Homepage/dashboard follows the **Dashboard (homepage)** section above; keep list pages dense-table oriented, not dashboard-card oriented.
-
-Static wireframe:
-
-```text
-Students / Users
-People & roles
-
-[ Total ] [ Students ] [ Teachers ] [ Managers ] [ Admins ]
-
-Directory                                     [ Search... ]
-┌──────────┬────────────┬──────────────┬─────────┬──────────────┬────────┐
-│ Username │ Name       │ Email        │ Role    │ ID           │Update  │
-├──────────┼────────────┼──────────────┼─────────┼──────────────┼────────┤
-│ ali      │ Ali Demir  │ ali@...      │ Student │ 01J...       │ select │
-│ ayse     │ Ayse Kaya  │ —            │ Student │ 01J...       │ select │
-│ mehmet   │ Mehmet Ar  │ mehmet@...   │ Teacher │ 01J...       │ select │
-└──────────┴────────────┴──────────────┴─────────┴──────────────┴────────┘
-```
-
-## Dropdowns & Select Elevation
-
-- Dropdown menus (`DropdownMenu`), comboboxes (`Combobox`), popovers (`Popover`),
-  dialogs, side panels, and toasts use squircle containers (`rounded-2xl` /
-  `rounded-3xl`), frosted glass backdrop blur (`backdrop-blur-xl`), tactile
-  press feedback, and 44px targets where layout allows. Native selects keep the
-  same rounded 44px control shape; their option popup remains browser-owned.
-- Table actions headers use `w-28 min-w-[7rem] text-center whitespace-nowrap` to ensure localized labels (`İŞLEMLER`, `Actions`) render without text truncation or overflow.
+- Table-primary pages place title, description, filters, and actions in
+  `DataTable`.
+- Durable resources use full detail pages. Short create/edit/filter work uses
+  `SidePanel`; destructive actions use confirm dialogs.
+- Page-header create/add actions use `size="sm"` with a shared minimum width.
+- Dashboard stays read-only and role-scoped. Charts and counts use live data only.
+- Dates use shared `DatePicker`; date-time flows pair it with a separate `HH:mm`
+  input.
+- Collapsed and expanded sidebar behavior stays equivalent. Collapsed groups
+  remain dropdown triggers; icons remain `h-4 w-4`.

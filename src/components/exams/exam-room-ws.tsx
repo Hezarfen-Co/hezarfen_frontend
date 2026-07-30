@@ -426,11 +426,11 @@ export function ExamRoomWS(props: { exam: Exam }) {
   });
 
   return (
-    <section class="surface-card space-y-5 p-5">
+    <section class="data-shell space-y-5 p-5">
       <Show when={!roomOpen()}>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
+            <h2 class="text-lg font-semibold">{t("attempt.title")}</h2>
             <p class="mt-1 text-sm text-muted-foreground">
               {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : props.exam.mode === "open" ? t("exams.mode.open") : t("attempt.unscheduled")}
             </p>
@@ -558,9 +558,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
                   </div>
                 )}
               </Show>
-              <aside class="surface-card order-first space-y-3 p-3 lg:sticky lg:top-4 lg:order-0">
+              <aside class="data-shell order-first space-y-3 p-3 lg:sticky lg:top-4 lg:order-0">
               <div>
-                <h3 class="font-display text-sm font-semibold">{t("questions.title")}</h3>
+                <h3 class="text-sm font-semibold">{t("questions.title")}</h3>
                 <p class="mt-1 text-xs text-muted-foreground">
                   {attempt()?.answered ?? 0} / {attempt()?.question_count ?? questions().length} {t("attempt.progress").toLowerCase()}
                 </p>
@@ -805,7 +805,7 @@ function QuestionAnswerCardWS(props: {
   };
 
   return (
-    <article id={`question-${props.question.id}`} class="surface-card min-h-[calc(100vh-16rem)] p-5 sm:p-6 lg:p-8">
+    <article id={`question-${props.question.id}`} class="data-shell min-h-[calc(100vh-16rem)] p-5 sm:p-6 lg:p-8">
       <div class="mb-3 flex flex-wrap items-center gap-2">
         <span class="text-xs font-semibold text-muted-foreground">#{props.index}</span>
         <Badge variant="outline" class="rounded-full">{props.question.points} {t("questions.points")}</Badge>

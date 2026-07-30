@@ -39,8 +39,8 @@ vi.mock("@/stores/auth-context", () => ({
 // Kobalte's dropdown/dialog chrome is not what this test is about — flatten both
 // to plain buttons so the delete path can be driven in jsdom.
 vi.mock("@/components/ui/table-row-actions", () => ({
-  TableRowActions: (props: { actions: { label: string; onSelect: () => void }[] }) => (
-    <button type="button" onClick={() => props.actions[1].onSelect()}>
+  TableRowActions: (props: { actions: { label: string; destructive?: boolean; onSelect: () => void }[] }) => (
+    <button type="button" onClick={() => props.actions.find((action) => action.destructive)?.onSelect()}>
       delete-row
     </button>
   ),

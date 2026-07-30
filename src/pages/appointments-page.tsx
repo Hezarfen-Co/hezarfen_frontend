@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DetailField } from "@/components/ui/detail-field";
 import { IconCalendarDays, IconCalendarX, IconCheck, IconClock, IconEye, IconPlus, IconRefresh, IconTrash, IconX } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
@@ -71,6 +71,7 @@ function AppointmentsContent() {
   const [bookSlot, setBookSlot] = createSignal<AppointmentSlot | null>(null);
   const [reschedAppt, setReschedAppt] = createSignal<Appointment | null>(null);
   const [detailAppt, setDetailAppt] = createSignal<Appointment | null>(null);
+  const [detailSlot, setDetailSlot] = createSignal<AppointmentSlot | null>(null);
   const [confirm, setConfirm] = createSignal<{ summary: string; run: (reason?: string) => Promise<unknown>; title?: string; confirmLabel?: string; icon?: import("solid-js").JSX.Element; prompt?: { label: string; placeholder?: string; maxLength?: number } } | null>(null);
 
   const me = () => auth.user();
@@ -161,13 +162,8 @@ function AppointmentsContent() {
       {t(appointmentStatusLabelKey(status))}
     </Badge>
   );
-  // Cancelled/rejected appointments carry a record (who + optional reason) shown in the details dialog.
-  const hasRecord = (a: Appointment) => a.status === "cancelled" || a.status === "rejected";
   const detailAction = (a: Appointment) =>
-    hasRecord(a)
-      ? [{ label: t("appointments.details"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setDetailAppt(a) }]
-      : [];
-  // The details dialog surfaces cancelled-by/cancel-reason or (for rejected) decided-by/reject-reason.
+    [{ label: t("appointments.details"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setDetailAppt(a) }];
   const recordActor = (a: Appointment) => (a.status === "rejected" ? a.decided_by : a.cancelled_by);
   const recordActorLabel = (a: Appointment) => (a.status === "rejected" ? t("appointments.rejectedBy") : t("appointments.cancelledBy"));
   const recordReason = (a: Appointment) => (a.status === "rejected" ? a.reject_reason : a.cancel_reason);
@@ -190,17 +186,6 @@ function AppointmentsContent() {
       cell: (cell) => timeCell(cell.row.original.starts_at, cell.row.original.ends_at),
     },
     {
-      id: "note",
-      header: t("appointments.note"),
-      cell: (cell) => <span class="truncate">{cell.row.original.note || "—"}</span>,
-    },
-    {
-      id: "series",
-      header: t("appointments.series"),
-      meta: { headerClass: "text-center", cellClass: "text-center" },
-      cell: (cell) => (cell.row.original.series ? <Badge variant="outline" class="rounded-full"><IconRefresh class="mr-1 h-3 w-3" />{t("appointments.repeatWeekly")}</Badge> : <span class="text-muted-foreground">—</span>),
-    },
-    {
       id: "status",
       header: t("appointments.status"),
       meta: { headerClass: "text-center", cellClass: "text-center" },
@@ -216,6 +201,10 @@ function AppointmentsContent() {
       cell: (cell) => {
         const slot = cell.row.original;
         const actions = [{
+          label: t("appointments.details"),
+          icon: <IconEye class="h-4 w-4" />,
+          onSelect: () => setDetailSlot(slot),
+        }, {
           label: t("appointments.deleteSlot"),
           icon: <IconTrash class="h-4 w-4" />,
           destructive: true,
@@ -250,11 +239,6 @@ function AppointmentsContent() {
       id: "student",
       header: t("appointments.student"),
       cell: (cell) => <span class="font-medium">{personLabel(cell.row.original.requester)}</span>,
-    },
-    {
-      id: "reason",
-      header: t("appointments.reason"),
-      cell: (cell) => <span class="truncate text-sm text-muted-foreground">{cell.row.original.reason || "—"}</span>,
     },
     {
       id: "time",
@@ -317,19 +301,17 @@ function AppointmentsContent() {
       cell: (cell) => timeCell(cell.row.original.starts_at, cell.row.original.ends_at),
     },
     {
-      id: "note",
-      header: t("appointments.note"),
-      cell: (cell) => <span class="truncate text-sm text-muted-foreground">{cell.row.original.note || "—"}</span>,
-    },
-    {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "w-40 text-center", cellClass: "w-40 min-w-[10rem] text-center whitespace-nowrap" },
       cell: (cell) => (
-        <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setBookSlot(cell.row.original)}>
-          <IconPlus class="h-4 w-4" />
-          {t("appointments.book")}
-        </Button>
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+            { label: t("appointments.details"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setDetailSlot(cell.row.original) },
+            { label: t("appointments.book"), icon: <IconPlus class="h-4 w-4" />, onSelect: () => setBookSlot(cell.row.original) },
+          ]}
+        />
       ),
     },
   ]);
@@ -459,7 +441,7 @@ function AppointmentsContent() {
           <IconCalendarDays class="h-5 w-5" />
         </span>
         <div class="min-w-0">
-          <h1 class="font-display text-2xl font-semibold tracking-tight">{t("appointments.title")}</h1>
+          <h1 class="text-2xl font-semibold tracking-tight">{t("appointments.title")}</h1>
           <p class="mt-0.5 text-sm text-muted-foreground">{t("appointments.subtitle")}</p>
         </div>
       </header>
@@ -488,7 +470,7 @@ function AppointmentsContent() {
 
         <TabsContent value="appointments" class="mt-0 space-y-4 border-0 bg-transparent p-0 shadow-none">
           <Show when={isStaff()} fallback={
-            <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+            <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
                 <DataTable
@@ -498,12 +480,14 @@ function AppointmentsContent() {
                   tableClass="table-fixed min-w-[46rem]"
                   enablePagination
                   pageSize={PAGE_SIZE}
+                  storageKey="appointment-bookings"
+                  onRowClick={setDetailAppt}
                   empty={t("appointments.noBookings")}
                 />
               </Show>
             </section>
           }>
-            <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+            <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
                 <DataTable
@@ -513,6 +497,8 @@ function AppointmentsContent() {
                   tableClass="table-fixed min-w-[46rem]"
                   enablePagination
                   pageSize={PAGE_SIZE}
+                  storageKey="appointment-requests"
+                  onRowClick={setDetailAppt}
                   empty={t("appointments.noRequests")}
                 />
               </Show>
@@ -526,7 +512,7 @@ function AppointmentsContent() {
 
         <TabsContent value="availability" class="mt-0 border-0 bg-transparent p-0 shadow-none">
           <Show when={isStaff()} fallback={
-            <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+            <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
                 <DataTable
@@ -536,12 +522,14 @@ function AppointmentsContent() {
                   tableClass="table-fixed min-w-[46rem]"
                   enablePagination
                   pageSize={PAGE_SIZE}
+                  storageKey="appointment-available-slots"
+                  onRowClick={setDetailSlot}
                   empty={t("appointments.noSlots")}
                 />
               </Show>
             </section>
           }>
-            <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+            <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
                 <DataTable
@@ -557,6 +545,8 @@ function AppointmentsContent() {
                   tableClass="table-fixed min-w-[46rem]"
                   enablePagination
                   pageSize={PAGE_SIZE}
+                  storageKey="appointment-my-slots"
+                  onRowClick={setDetailSlot}
                   empty={t("appointments.noSlots")}
                 />
               </Show>
@@ -565,37 +555,62 @@ function AppointmentsContent() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={detailAppt() != null} onOpenChange={(o) => !o && setDetailAppt(null)}>
-        <DialogContent class="max-w-md" dismissable>
-          <DialogHeader>
-            <DialogTitle>{t("appointments.details")}</DialogTitle>
-          </DialogHeader>
-          <Show when={detailAppt()}>
-            {(a) => (
-              <DialogBody class="space-y-3 text-sm">
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-muted-foreground">{t("appointments.status")}</span>
-                  {statusBadge(a().status)}
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                  <span class="text-muted-foreground">{t("appointments.time")}</span>
-                  <span class="mono text-xs">{timeWindow(a().starts_at, a().ends_at)}</span>
-                </div>
-                <Show when={recordActor(a())}>
-                  <div class="flex items-center justify-between gap-3">
-                    <span class="text-muted-foreground">{recordActorLabel(a())}</span>
-                    <span class="font-medium">{personLabel(recordActor(a()))}</span>
-                  </div>
-                </Show>
+      <SidePanel
+        open={detailAppt() != null}
+        onOpenChange={(open) => { if (!open) setDetailAppt(null); }}
+        title={t("appointments.details")}
+        description={detailAppt() ? timeWindow(detailAppt()!.starts_at, detailAppt()!.ends_at) : ""}
+      >
+        <Show when={detailAppt()} keyed>
+          {(appointment) => (
+            <div class="space-y-5">
+              <div class="grid gap-4 sm:grid-cols-2">
+                <DetailField label={t("appointments.student")} value={personLabel(appointment.requester)} />
+                <DetailField label={t("appointments.teacher")} value={personLabel(appointment.teacher)} />
+                <DetailField label={t("appointments.status")} value={t(appointmentStatusLabelKey(appointment.status))} />
+                <DetailField label={t("appointments.time")} value={timeWindow(appointment.starts_at, appointment.ends_at)} />
+                <DetailField label={t("appointments.proposedTime")} value={appointment.proposed_starts_at == null ? "—" : timeWindow(appointment.proposed_starts_at, appointment.proposed_ends_at)} />
+                <DetailField label={t("appointments.series")} value={appointment.slot} mono />
+              </div>
+              <div class="space-y-1">
+                <p class="text-xs font-medium text-muted-foreground">{t("appointments.reason")}</p>
+                <p class="rounded-lg border bg-card px-3 py-2.5 text-sm">{appointment.reason || "—"}</p>
+              </div>
+              <Show when={recordActor(appointment)}>
+                <DetailField label={recordActorLabel(appointment)} value={personLabel(recordActor(appointment))} />
                 <div class="space-y-1">
-                  <p class="text-muted-foreground">{recordReasonLabel(a())}</p>
-                  <p class="rounded-md border border-border bg-muted/40 px-3 py-2 leading-relaxed">{recordReason(a()) || "—"}</p>
+                  <p class="text-xs font-medium text-muted-foreground">{recordReasonLabel(appointment)}</p>
+                  <p class="rounded-lg border bg-card px-3 py-2.5 text-sm">{recordReason(appointment) || "—"}</p>
                 </div>
-              </DialogBody>
-            )}
-          </Show>
-        </DialogContent>
-      </Dialog>
+              </Show>
+            </div>
+          )}
+        </Show>
+      </SidePanel>
+
+      <SidePanel
+        open={detailSlot() != null}
+        onOpenChange={(open) => { if (!open) setDetailSlot(null); }}
+        title={t("appointments.details")}
+        description={detailSlot() ? timeWindow(detailSlot()!.starts_at, detailSlot()!.ends_at) : ""}
+      >
+        <Show when={detailSlot()} keyed>
+          {(slot) => (
+            <div class="space-y-5">
+              <div class="grid gap-4 sm:grid-cols-2">
+                <DetailField label={t("appointments.teacher")} value={personLabel(slot.teacher)} />
+                <DetailField label={t("appointments.time")} value={timeWindow(slot.starts_at, slot.ends_at)} />
+                <DetailField label={t("appointments.series")} value={slot.series || "—"} mono />
+                <DetailField label={t("admin.id")} value={slot.id} mono />
+              </div>
+              <div class="space-y-1">
+                <p class="text-xs font-medium text-muted-foreground">{t("appointments.note")}</p>
+                <p class="rounded-lg border bg-card px-3 py-2.5 text-sm">{slot.note || "—"}</p>
+              </div>
+            </div>
+          )}
+        </Show>
+      </SidePanel>
 
       <ConfirmDialog
         open={confirm() != null}

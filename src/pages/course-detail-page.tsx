@@ -168,13 +168,6 @@ function CourseDetailContent() {
       cell: (cell) => cell.row.original.user.display_name || cell.row.original.user.username,
     },
     {
-      id: "id",
-      accessorFn: (row) => row.user.id,
-      header: t("admin.id"),
-      meta: { cellClass: "mono text-xs text-muted-foreground" },
-      cell: (cell) => cell.row.original.user.id,
-    },
-    {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
@@ -314,7 +307,7 @@ function CourseDetailContent() {
                 }
               />
               <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-violet-500/30 bg-card p-3.5">
+                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-violet-500/30 bg-card p-3.5">
                   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <IconBook class="h-4 w-4" />
                   </span>
@@ -323,7 +316,7 @@ function CourseDetailContent() {
                     <p class="truncate text-sm font-semibold">{courseKindLabel(c().kind)}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-sky-500/30 bg-card p-3.5">
+                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-sky-500/30 bg-card p-3.5">
                   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <IconCalendarDays class="h-4 w-4" />
                   </span>
@@ -332,7 +325,7 @@ function CourseDetailContent() {
                     <p class="truncate text-sm font-semibold">{terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-emerald-500/30 bg-card p-3.5">
+                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-emerald-500/30 bg-card p-3.5">
                   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <IconUsers class="h-4 w-4" />
                   </span>
@@ -341,7 +334,7 @@ function CourseDetailContent() {
                     <p class="mono truncate text-sm font-semibold">{c().capacity == null ? "—" : hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-amber-500/30 bg-card p-3.5">
+                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-amber-500/30 bg-card p-3.5">
                   <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                     <IconExam class="h-4 w-4" />
                   </span>
@@ -409,7 +402,7 @@ function CourseDetailContent() {
                   }, t("common.saved"));
                 }}
               >
-                <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
+                <div class="space-y-3 rounded-lg border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
                   <div class="space-y-1.5">
                     <Label for="edit-course-title">{t("form.title")}</Label>
                     <Input
@@ -431,7 +424,7 @@ function CourseDetailContent() {
                     />
                   </div>
                 </div>
-                <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/3 p-4 shadow-xs">
+                <div class="space-y-3 rounded-lg border border-violet-500/15 bg-violet-500/3 p-4 shadow-xs">
                   <div class="space-y-1.5">
                     <Label for="edit-course-kind">{t("courses.kind")}</Label>
                     <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
@@ -474,7 +467,7 @@ function CourseDetailContent() {
               description={createdCourseExam() ? t("exams.step2Questions") : c().title}
               size={examCreateStep() === "questions" ? "wide" : "default"}
             >
-              <div class="mb-4 flex rounded-2xl border border-indigo-500/15 bg-indigo-500/3 p-1">
+              <div class="mb-4 flex rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-1">
                 <button
                   type="button"
                   class={cn(

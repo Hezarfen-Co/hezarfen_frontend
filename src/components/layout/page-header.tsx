@@ -16,18 +16,16 @@ export function PageHeader(
   return (
     <div
       class={cn(
-        "surface-card relative overflow-hidden text-card-foreground",
+        "rounded-xl border border-border/60 bg-card text-card-foreground shadow-sm",
         props.class,
       )}
     >
-      <div class="pointer-events-none absolute inset-0 bg-muted/25" />
-      <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/10" />
       <div
         class={cn(
-          "relative flex flex-col sm:flex-row sm:items-center sm:justify-between",
+          "flex flex-col sm:flex-row sm:items-center sm:justify-between",
           props.compact
             ? "gap-3 px-4 py-3 sm:px-5 sm:py-3.5"
-            : "gap-3 px-4 py-4 sm:items-end sm:px-5 sm:py-5",
+            : "gap-4 px-4 py-4 sm:px-5 sm:py-5",
         )}
       >
         <div class={cn("min-w-0", props.compact ? "space-y-0.5" : "max-w-2xl space-y-1")}>
@@ -36,7 +34,7 @@ export function PageHeader(
           </Show>
           <h1
             class={cn(
-              "font-display font-semibold tracking-tight",
+              "font-semibold tracking-tight",
               props.compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl",
             )}
           >

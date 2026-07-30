@@ -126,11 +126,6 @@ function StaffWorkContent() {
       cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
     },
     {
-      accessorKey: "id",
-      header: t("admin.id"),
-      cell: (cell) => <span class="mono text-xs text-muted-foreground">{cell.row.original.id}</span>,
-    },
-    {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
@@ -153,16 +148,16 @@ function StaffWorkContent() {
   ]);
   const entryColumns = createMemo<ColumnDef<WorkEntry>[]>(() => [
     {
-      accessorKey: "check_in",
+      id: "time",
+      accessorFn: (row) => row.check_in,
       header: t("work.checkIn"),
       meta: { cellClass: "mono text-xs" },
-      cell: (cell) => formatDateTime(cell.row.original.check_in, locale()),
-    },
-    {
-      accessorKey: "check_out",
-      header: t("work.checkOut"),
-      meta: { cellClass: "mono text-xs" },
-      cell: (cell) => formatDateTime(cell.row.original.check_out, locale()),
+      cell: (cell) => (
+        <div class="whitespace-nowrap">
+          <p>{formatDateTime(cell.row.original.check_in, locale())}</p>
+          <p class="text-[11px] text-muted-foreground">→ {formatDateTime(cell.row.original.check_out, locale())}</p>
+        </div>
+      ),
     },
     {
       accessorKey: "duration_ms",
@@ -253,7 +248,7 @@ function StaffWorkContent() {
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
-        <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+        <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
           <DataTable
             title={t("work.staffTitle")}
             description={`${t("work.staffSubtitle")} · ${peopleRows().length} / ${peopleTotal()}`}
@@ -264,6 +259,7 @@ function StaffWorkContent() {
             searchPredicate={searchPerson}
             enablePagination
             pageSize={PEOPLE_PAGE_SIZE}
+            storageKey="staff-work-people"
             onRowClick={(person) => {
               setError("");
               setViewUser(person);
@@ -289,13 +285,13 @@ function StaffWorkContent() {
             {error()}
           </Alert>
         </Show>
-        <Show when={!entries.loading} fallback={<DataTableSkeleton columns={5} rows={4} />}>
+        <Show when={!entries.loading} fallback={<DataTableSkeleton columns={4} rows={4} />}>
           <Show
             when={entryRows().length > 0}
             fallback={<EmptyState title={t("work.empty")} />}
           >
             <div class="space-y-3">
-              <DataTable columns={entryColumns()} data={entryRows()} enablePagination pageSize={WORK_PAGE_SIZE} />
+              <DataTable columns={entryColumns()} data={entryRows()} storageKey="staff-work-entries" enablePagination pageSize={WORK_PAGE_SIZE} />
             </div>
           </Show>
         </Show>

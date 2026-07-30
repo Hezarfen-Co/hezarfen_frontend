@@ -47,7 +47,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
   return (
     <div
       class={cn(
-        "flex flex-col rounded-xl border border-border/80 bg-background overflow-hidden transition-all",
+        "flex flex-col overflow-hidden rounded-md border border-input bg-background transition-all",
         isFocused() && "ring-1 ring-primary border-primary/60",
         props.class
       )}

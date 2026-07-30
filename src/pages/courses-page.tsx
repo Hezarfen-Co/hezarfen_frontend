@@ -136,7 +136,7 @@ function CoursesContent() {
 
       <header class="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
         <div class="space-y-1">
-          <h1 class="font-display text-2xl font-semibold tracking-tight">{pageLabel()}</h1>
+          <h1 class="text-2xl font-semibold tracking-tight">{pageLabel()}</h1>
           <p class="text-sm text-muted-foreground">{t("courses.pageSubtitle")}</p>
         </div>
         <Show when={canCreate()}>
@@ -169,14 +169,14 @@ function CoursesContent() {
         </TabsList>
 
         <TabsContent value={pageKind() ?? "all"} class="mt-4 space-y-4 border-0 bg-transparent p-0 shadow-none">
-          <section class="rounded-2xl border border-border bg-card p-3 shadow-xs" aria-label={t("common.search")}>
+          <section class="rounded-lg border border-border bg-card p-3 shadow-xs" aria-label={t("common.search")}>
             <DataToolbar
               inline
               searchValue={search()}
               searchPlaceholder={t("common.searchPlaceholder")}
               onSearchInput={setSearch}
               filters={
-                <Select wrapperClass="w-40 shrink-0 sm:w-52" class="h-11 rounded-xl" aria-label={t("terms.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)}>
+                <Select wrapperClass="w-40 shrink-0 sm:w-52" class="h-9 rounded-md" aria-label={t("terms.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)}>
                   <option value="all">{t("common.all")}</option>
                   <option value="unassigned">{t("terms.unassigned")}</option>
                   <For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>

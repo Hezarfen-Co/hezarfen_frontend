@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/solid-router";
 import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteBankQuestionById, getBankQuestions } from "@/api/bank-questions";
@@ -11,16 +12,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconEdit, IconEyeOff, IconPlus, IconTrash, IconUsers } from "@/components/ui/icons";
+import { IconEdit, IconEye, IconEyeOff, IconPlus, IconTrash, IconUsers } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createDebouncedSignal } from "@/lib/create-debounced-signal";
 import { createFlash } from "@/lib/flash";
-import { formatDate } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
-import { usePreferences, useT } from "@/stores/preferences-context";
+import { useT } from "@/stores/preferences-context";
 
 const BANK_PAGE_SIZE = 12;
 
@@ -34,8 +34,8 @@ export default function QuestionBankPage() {
 
 function QuestionBankContent() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const t = useT();
-  const { locale } = usePreferences();
   createEffect(() => {
     document.title = `${t("nav.questionBank")} · Hezarfen`;
   });
@@ -108,7 +108,12 @@ function QuestionBankContent() {
     {
       accessorKey: "text",
       header: t("questions.text"),
-      cell: (cell) => <p class="max-w-[24rem] truncate font-medium">{cell.row.original.text}</p>,
+      cell: (cell) => (
+        <div class="min-w-0">
+          <p class="max-w-[30rem] truncate font-medium">{cell.row.original.text}</p>
+          <p class="truncate text-xs text-muted-foreground">{cell.row.original.subject_name || "—"}</p>
+        </div>
+      ),
     },
     {
       accessorKey: "kind",
@@ -124,12 +129,6 @@ function QuestionBankContent() {
       accessorKey: "points",
       header: t("questions.points"),
       meta: { headerClass: "text-center", cellClass: "mono text-center" },
-    },
-    {
-      id: "subject",
-      accessorFn: (question) => question.subject_name,
-      header: t("subjects.subject"),
-      meta: { cellClass: "truncate text-muted-foreground" },
     },
     {
       id: "visibility",
@@ -154,35 +153,19 @@ function QuestionBankContent() {
       ),
     },
     {
-      id: "owner",
-      accessorFn: (question) => question.owner_name,
-      header: t("bank.owner"),
-      meta: { cellClass: "truncate text-muted-foreground" },
-    },
-    {
-      id: "used",
-      accessorFn: (question) => question.used_count,
-      header: t("bank.usedInExams"),
-      meta: { headerClass: "text-center", cellClass: "mono text-center text-muted-foreground" },
-      // A template nobody copied stays blank: "0" is noise on a page where
-      // most rows are fresh.
-      cell: (cell) => <Show when={cell.row.original.used_count > 0}>{cell.row.original.used_count}</Show>,
-    },
-    {
-      accessorKey: "created_at",
-      header: t("bank.created"),
-      meta: { cellClass: "mono whitespace-nowrap text-muted-foreground" },
-      cell: (cell) => formatDate(cell.row.original.created_at, locale()),
-    },
-    {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap", cellClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
       cell: (cell) => (
-        <Show when={canEdit(cell.row.original)}>
-          <TableRowActions
-            label={t("common.actions")}
-            actions={[
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+              {
+                label: t("common.view"),
+                icon: <IconEye class="h-4 w-4" />,
+                onSelect: () => navigate({ to: "/question-bank/$id", params: { id: cell.row.original.id } }),
+              },
+              ...(canEdit(cell.row.original) ? [
               {
                 label: t("common.edit"),
                 icon: <IconEdit class="h-4 w-4" />,
@@ -194,9 +177,9 @@ function QuestionBankContent() {
                 destructive: true,
                 onSelect: () => setRemoving(cell.row.original),
               },
+              ] : []),
             ]}
-          />
-        </Show>
+        />
       ),
     },
   ]);
@@ -216,7 +199,7 @@ function QuestionBankContent() {
       </Show>
 
       <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={9} rows={8} />}>
+        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
@@ -233,7 +216,7 @@ function QuestionBankContent() {
             }
             columns={columns()}
             data={list()?.items ?? []}
-            tableClass="min-w-6xl"
+            tableClass="min-w-[48rem]"
             filterPlaceholder={t("bank.search")}
             searchValue={query()}
             onSearchInput={(value) => {
@@ -243,6 +226,8 @@ function QuestionBankContent() {
             enablePagination
             manualPagination={{ pageIndex: page(), pageSize: BANK_PAGE_SIZE, total: total(), onPageChange: setPage }}
             empty={t("bank.empty")}
+            storageKey="question-bank"
+            onRowClick={(question) => navigate({ to: "/question-bank/$id", params: { id: question.id } })}
             filters={
               <div class="flex flex-wrap items-center gap-2.5">
                 <DropdownSelect

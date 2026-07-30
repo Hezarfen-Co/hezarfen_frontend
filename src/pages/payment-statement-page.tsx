@@ -13,10 +13,14 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DetailField } from "@/components/ui/detail-field";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
+import { IconEye } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { formatDate } from "@/lib/format";
 import { formatTry } from "@/lib/meals";
 import { sortStatementEntries, statementStatus } from "@/lib/payments";
@@ -58,6 +62,7 @@ function StatementContent() {
     (key) => (key === "me" ? getMyPaymentBalance() : getPaymentBalanceByUserId(key)),
   );
   const entries = () => statement()?.entries.items ?? [];
+  const [viewEntry, setViewEntry] = createSignal<StatementEntry | null>(null);
   const summary = createMemo(() => {
     const rows = entries();
     return {
@@ -74,19 +79,9 @@ function StatementContent() {
       cell: (cell) => <span class="font-medium">{cell.row.original.plan_name ?? "—"}</span>,
     },
     {
-      accessorKey: "amount_minor",
-      header: t("payments.amountTry"),
-      cell: (cell) => <span class="tabular-nums">{formatTry(cell.row.original.amount_minor, moneyLocale())}</span>,
-    },
-    {
       accessorKey: "due_at",
       header: t("payments.due"),
       cell: (cell) => <span class="mono text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
-    },
-    {
-      accessorKey: "credited_minor",
-      header: t("payments.credited"),
-      cell: (cell) => <span class="tabular-nums">{formatTry(cell.row.original.credited_minor, moneyLocale())}</span>,
     },
     {
       accessorKey: "outstanding_minor",
@@ -100,6 +95,21 @@ function StatementContent() {
         const status = statementStatus(cell.row.original);
         return <Badge variant="outline" class={status.class}><span class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${status.dot}`} />{t(status.key)}</Badge>;
       },
+    },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      cell: (cell) => (
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[{
+            label: t("common.view"),
+            icon: <IconEye class="h-4 w-4" />,
+            onSelect: () => setViewEntry(cell.row.original),
+          }]}
+        />
+      ),
     },
   ]);
 
@@ -125,15 +135,43 @@ function StatementContent() {
       </div>
 
       <section class="space-y-4">
-        <Suspense fallback={<DataTableSkeleton columns={6} rows={6} />}>
+        <Suspense fallback={<DataTableSkeleton columns={5} rows={6} />}>
           <Show when={statement.error}>
             <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetch()} />
           </Show>
           <Show when={entries().length > 0} fallback={<EmptyState title={t("payments.noStatement")} />}>
-            <DataTable columns={columns()} data={sortStatementEntries(entries())} tableClass="min-w-160" enablePagination pageSize={STATEMENT_PAGE_SIZE} />
+            <DataTable
+              columns={columns()}
+              data={sortStatementEntries(entries())}
+              tableClass="min-w-160"
+              storageKey="my-payment-statement"
+              enablePagination
+              pageSize={STATEMENT_PAGE_SIZE}
+              onRowClick={setViewEntry}
+            />
           </Show>
         </Suspense>
       </section>
+
+      <SidePanel
+        open={viewEntry() != null}
+        onOpenChange={(open) => { if (!open) setViewEntry(null); }}
+        title={viewEntry()?.plan_name ?? t("payments.plan")}
+        description={viewEntry()?.due_at == null ? "—" : formatDate(viewEntry()!.due_at, locale())}
+      >
+        <Show when={viewEntry()} keyed>
+          {(entry) => (
+            <div class="grid gap-4 sm:grid-cols-2">
+              <DetailField label={t("payments.amountTry")} value={formatTry(entry.amount_minor, moneyLocale())} />
+              <DetailField label={t("payments.credited")} value={formatTry(entry.credited_minor, moneyLocale())} />
+              <DetailField label={t("payments.outstanding")} value={formatTry(entry.outstanding_minor, moneyLocale())} />
+              <DetailField label={t("payments.reversed")} value={entry.reversed ? t("payments.reversed") : "—"} />
+              <DetailField label={t("payments.plan")} value={entry.plan ?? "—"} mono />
+              <DetailField label={t("admin.id")} value={entry.charge_id} mono />
+            </div>
+          )}
+        </Show>
+      </SidePanel>
     </div>
   );
 }

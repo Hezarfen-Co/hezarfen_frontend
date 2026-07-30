@@ -4,24 +4,15 @@ import type { Role, User } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { IconCheck, IconUsers } from "@/components/ui/icons";
+import { IconCheck, IconEye, IconUsers } from "@/components/ui/icons";
 import { ROLES } from "@/lib/roles";
-import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
 
 function displayName(user: User): string {
   return [user.name, user.surname].filter(Boolean).join(" ") || "—";
-}
-
-function roleTone(role: Role): string {
-  if (role === "admin") return "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300";
-  if (role === "manager") return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
-  if (role === "teacher") return "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300";
-  return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
 }
 
 function UserRoleActions(props: {
@@ -39,7 +30,7 @@ function UserRoleActions(props: {
   return (
     <>
       <Select
-        class="h-11 rounded-xl text-xs"
+        class="h-9 rounded-md text-xs"
         value={pendingRole()}
         disabled={isSelf()}
         onChange={(e) => setPendingRole(e.currentTarget.value as Role)}
@@ -50,7 +41,7 @@ function UserRoleActions(props: {
         ))}
       </Select>
       <Show when={!isSelf() && dirty()}>
-        <Button type="button" size="sm" class="mt-2 h-10 rounded-xl px-3" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
+        <Button type="button" size="sm" class="mt-2 h-10 rounded-md px-3" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
           <IconCheck />
           {t("common.update")}
         </Button>
@@ -89,38 +80,32 @@ export function UserTable(props: {
     {
       accessorKey: "username",
       header: t("admin.username"),
+      size: 220,
+      minSize: 140,
       meta: { cellClass: "truncate font-medium" },
     },
     {
       id: "name",
       header: t("profile.name"),
+      size: 180,
+      minSize: 120,
       meta: { cellClass: "truncate" },
       cell: (cell) => displayName(cell.row.original),
     },
     {
       accessorKey: "email",
       header: t("profile.email"),
+      size: 240,
+      minSize: 180,
       meta: { cellClass: "truncate text-muted-foreground" },
       cell: (cell) => cell.row.original.email || "—",
     },
     {
-      accessorKey: "role",
-      header: t("admin.role"),
-      meta: { headerClass: "text-center", cellClass: "text-center" },
-      cell: (cell) => (
-        <Badge variant="outline" class={cn("mono uppercase tracking-[0.08em]", roleTone(cell.row.original.role))}>
-          {t(`role.${cell.row.original.role}` as MessageKey)}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: "id",
-      header: t("admin.id"),
-      meta: { cellClass: "mono truncate text-xs text-muted-foreground" },
-    },
-    {
       id: "update",
       header: t("admin.role"),
+      size: 208,
+      minSize: 208,
+      enableHiding: false,
       meta: { headerClass: "w-52", cellClass: "w-52" },
       cell: (cell) => (
         <UserRoleActions user={cell.row.original} currentUserId={props.currentUserId} onRoleChange={props.onRoleChange} onParentClick={props.onParentClick} />
@@ -129,25 +114,46 @@ export function UserTable(props: {
     {
       id: "actions",
       header: t("common.actions"),
+      size: 112,
+      minSize: 112,
+      enableHiding: false,
       meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap", cellClass: "w-28 text-center" },
       cell: (cell) => (
-        <Show when={cell.row.original.role === "parent"} fallback={<span class="text-center text-muted-foreground/40">—</span>}>
-          <TableRowActions
-            label={t("common.actions")}
-            actions={[
-              {
-                label: t("nav.myStudents"),
-                icon: <IconUsers class="h-4 w-4" />,
-                onSelect: () => props.onParentClick?.(cell.row.original),
-              },
-            ]}
-          />
-        </Show>
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+            {
+              label: t("common.view"),
+              icon: <IconEye class="h-4 w-4" />,
+              onSelect: () => props.onUserClick?.(cell.row.original),
+            },
+            ...(cell.row.original.role === "parent"
+              ? [
+                  {
+                    label: t("nav.myStudents"),
+                    icon: <IconUsers class="h-4 w-4" />,
+                    onSelect: () => props.onParentClick?.(cell.row.original),
+                  },
+                ]
+              : []),
+          ]}
+        />
       ),
     },
   ]);
 
   return (
-    <DataTable columns={columns()} data={props.users} tableClass="table-fixed min-w-232" searchPredicate={searchUser} enablePagination pageSize={20} onRowClick={props.onUserClick} />
+    <DataTable
+      title={t("nav.users")}
+      description={String(props.users.length)}
+      columns={columns()}
+      data={props.users}
+      empty={t("admin.noUsers")}
+      storageKey="admin-users"
+      searchPredicate={searchUser}
+      enablePagination
+      pageSize={20}
+      onRowClick={props.onUserClick}
+    />
   );
 }

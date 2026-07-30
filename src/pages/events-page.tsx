@@ -96,18 +96,18 @@ function EventsContent() {
       ),
     },
     {
-      id: "starts_at",
-      accessorFn: (event) => event.starts_at ?? 0,
+      id: "time",
+      accessorFn: (event) => event.starts_at ?? event.ends_at ?? 0,
       header: t("events.starts"),
       meta: { cellClass: "mono text-xs text-muted-foreground" },
-      cell: (cell) => formatDateTime(cell.row.original.starts_at, locale()),
-    },
-    {
-      id: "ends_at",
-      accessorFn: (event) => event.ends_at ?? 0,
-      header: t("events.ends"),
-      meta: { cellClass: "mono text-xs text-muted-foreground" },
-      cell: (cell) => formatDateTime(cell.row.original.ends_at, locale()),
+      cell: (cell) => (
+        <div class="whitespace-nowrap">
+          <p>{formatDateTime(cell.row.original.starts_at, locale())}</p>
+          <Show when={cell.row.original.ends_at}>
+            <p class="text-[11px]">→ {formatDateTime(cell.row.original.ends_at, locale())}</p>
+          </Show>
+        </div>
+      ),
     },
     {
       id: "audience",
@@ -208,6 +208,7 @@ function EventsContent() {
             enablePagination
             pageSize={EVENT_PAGE_SIZE}
             empty={t("events.empty")}
+            storageKey="events"
             onRowClick={(event) => void navigate({ to: "/events/$id", params: { id: event.id } })}
             filters={
               <DropdownSelect

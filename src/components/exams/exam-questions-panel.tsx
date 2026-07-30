@@ -206,14 +206,14 @@ export function ExamQuestionsPanel(props: {
   };
 
   return (
-    <div class={props.embedded ? "space-y-4" : "surface-card space-y-4 p-5"}>
+    <div class={props.embedded ? "space-y-4" : "data-shell space-y-4 p-5"}>
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
 
       <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-3">
         <div class="flex items-center gap-2">
-          <h2 class="font-display text-base font-semibold">{t("questions.title")}</h2>
+          <h2 class="text-base font-semibold">{t("questions.title")}</h2>
           <Badge variant="secondary" class="rounded-full font-mono text-xs">
             {questionCount()}
           </Badge>

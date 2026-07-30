@@ -10,11 +10,11 @@ export function MealMenuCard(props: { menu: MealMenu; locale: string; labels: { 
   const conflicts = () => [...new Set(props.menu.dishes.flatMap((dish) => dish.conflicts))];
 
   return (
-    <Link to="/meals/$id" params={{ id: props.menu.id }} class="group flex min-h-56 flex-col rounded-2xl border border-border/70 bg-card p-4 shadow-2xs transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <Link to="/meals/$id" params={{ id: props.menu.id }} class="group flex min-h-56 flex-col rounded-lg border border-border/70 bg-card p-4 shadow-2xs transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <div class="flex items-start justify-between gap-3">
         <div class="flex min-w-0 items-center gap-3">
           <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-muted/40"><IconUtensils class="h-5 w-5" /></span>
-          <div><h2 class="font-display font-semibold">{props.menu.slot}</h2><time class="mono text-xs text-muted-foreground" datetime={props.menu.date}>{props.menu.date}</time></div>
+          <div><h2 class="font-semibold">{props.menu.slot}</h2><time class="mono text-xs text-muted-foreground" datetime={props.menu.date}>{props.menu.date}</time></div>
         </div>
         <span class="font-semibold tabular-nums">{formatTry(total(), props.locale)}</span>
       </div>

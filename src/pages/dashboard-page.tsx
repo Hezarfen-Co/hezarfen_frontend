@@ -297,7 +297,7 @@ function DashboardContent() {
     <div class="space-y-5">
         <header class="flex flex-wrap items-end justify-between gap-3">
           <div class="space-y-1">
-            <h1 class="font-display text-2xl font-semibold tracking-tight">{t("dashboard.welcomeBack", { name: fullName() })}</h1>
+            <h1 class="text-2xl font-semibold tracking-tight">{t("dashboard.welcomeBack", { name: fullName() })}</h1>
             <p class="text-sm text-muted-foreground">{t("dashboard.welcomeHint")}</p>
           </div>
           <div class="flex items-center gap-2">
@@ -318,7 +318,7 @@ function DashboardContent() {
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <For each={stats()}>
                 {(stat) => (
-                  <div class="rounded-2xl border border-border bg-card px-4 py-3.5 shadow-xs">
+                  <div class="rounded-lg border border-border bg-card px-4 py-3.5 shadow-xs">
                     <div class="flex items-center gap-2">
                       <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground">
                         <stat.Icon class="h-4 w-4" />
@@ -371,7 +371,7 @@ function DashboardContent() {
           </Show>
 
           <div class="grid gap-3 lg:grid-cols-3">
-            <section class={cn("flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-xs", hasMinRole(role(), "teacher") ? "lg:col-span-2" : "lg:col-span-3")} aria-labelledby="deadlines-heading">
+            <section class={cn("flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-xs", hasMinRole(role(), "teacher") ? "lg:col-span-2" : "lg:col-span-3")} aria-labelledby="deadlines-heading">
               <div class="flex items-center justify-between gap-3">
                 <h2 id="deadlines-heading" class="text-base font-semibold tracking-tight">{t("dashboard.deadlines")}</h2>
                 <Link
@@ -393,7 +393,7 @@ function DashboardContent() {
             </section>
 
             <Show when={hasMinRole(role(), "teacher")}>
-              <section class="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-xs lg:col-span-1" aria-labelledby="review-heading">
+              <section class="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-xs lg:col-span-1" aria-labelledby="review-heading">
                 <div class="space-y-1">
                   <h2 id="review-heading" class="text-base font-semibold tracking-tight">{t("dashboard.teachingResources")}</h2>
                   <p class="text-sm text-muted-foreground">{t("dashboard.teachingResourcesDesc")}</p>

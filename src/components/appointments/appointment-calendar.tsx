@@ -61,10 +61,10 @@ export function AppointmentCalendar(props: {
   };
 
   return (
-    <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+    <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
       <header class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
         <div>
-          <h2 class="font-display text-lg font-semibold">{t("appointments.calendar")}</h2>
+          <h2 class="text-lg font-semibold">{t("appointments.calendar")}</h2>
           <p class="mt-0.5 text-sm text-muted-foreground">{monthLabel()}</p>
         </div>
         <div class="flex items-center gap-1">

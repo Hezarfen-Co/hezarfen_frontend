@@ -1,4 +1,5 @@
-import { For, Index, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { useLocation, useNavigate } from "@tanstack/solid-router";
+import { For, Index, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
   deletePaymentPlanById,
@@ -18,7 +19,7 @@ import {
   type PaymentLine,
   type StatementEntry,
 } from "@/api/payments";
-import { getUsers } from "@/api/users";
+import { getUserById, getUsers } from "@/api/users";
 import { formatApiError, type User } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -28,9 +29,10 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
+import { DetailField } from "@/components/ui/detail-field";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconChevronLeft, IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -48,6 +50,7 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 
 const PLAN_PAGE_SIZE = 12;
 const STATEMENT_PAGE_SIZE = 15;
+const STUDENT_PAGE_SIZE = 10;
 
 function dateInputFromMs(ms: number): string {
   const date = new Date(ms);
@@ -68,6 +71,7 @@ function dateInputToMs(value: string): number | null {
 }
 
 type LineAction = { line: PaymentLine; kind: "refund" | "reverse" };
+type PaymentStudentRow = User & { balance_minor: number | null };
 
 export default function PaymentsPage() {
   return (
@@ -78,6 +82,8 @@ export default function PaymentsPage() {
 }
 
 function PaymentsContent() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const t = useT();
   const { locale } = usePreferences();
   const moneyLocale = () => (locale() === "tr" ? "tr-TR" : "en-US");
@@ -88,6 +94,19 @@ function PaymentsContent() {
 
   // ============================ Collection ============================
   const [selectedStudent, setSelectedStudent] = createSignal<User | null>(null);
+  const routeStudentId = createMemo(() => {
+    const prefix = "/management/payments/";
+    return location().pathname.startsWith(prefix) ? decodeURIComponent(location().pathname.slice(prefix.length)) : null;
+  });
+  const [routeStudent] = createResource(routeStudentId, (userId) => getUserById(userId));
+  createEffect(() => {
+    const routeId = routeStudentId();
+    if (!routeId) {
+      setSelectedStudent(null);
+      return;
+    }
+    if (routeStudent()?.id === routeId) setSelectedStudent(routeStudent()!);
+  });
   const student = () => selectedStudent()?.id ?? "";
   const studentLabel = (user: User) => `${user.name ?? ""} ${user.surname ?? ""}`.trim() || user.username;
 
@@ -108,27 +127,48 @@ function PaymentsContent() {
     const ids = new Set((filterAssignments()?.items ?? []).map((row) => row.student.id));
     return all.filter((user) => ids.has(user.id));
   });
+  const [studentQuery, setStudentQuery] = createSignal("");
+  const [studentPage, setStudentPage] = createSignal(0);
+  const [studentPageSize, setStudentPageSize] = createSignal(STUDENT_PAGE_SIZE);
+  const searchedStudents = createMemo(() => {
+    const query = studentQuery().trim().toLocaleLowerCase(locale());
+    if (!query) return filteredStudents();
+    return filteredStudents().filter((user) =>
+      [studentLabel(user), user.username, user.email, user.id]
+        .join(" ")
+        .toLocaleLowerCase(locale())
+        .includes(query),
+    );
+  });
+  const pagedStudents = createMemo(() => {
+    const start = studentPage() * studentPageSize();
+    return searchedStudents().slice(start, start + studentPageSize());
+  });
+  createEffect(() => {
+    const lastPage = Math.max(0, Math.ceil(searchedStudents().length / studentPageSize()) - 1);
+    if (studentPage() > lastPage) setStudentPage(lastPage);
+  });
 
-  // Per-student balance for the "in debt / settled" column. No bulk endpoint
-  // exists, so this is one call per listed student — bounded to a plan-sized
-  // list. ponytail: N+1 balance fetch, capped at 200; add a bulk
-  // /payments/balances endpoint if whole-school unfiltered debt is needed.
-  const BALANCE_FETCH_CAP = 200;
-  const [balances] = createResource(
+  // The backend has no bulk balance endpoint. Fetch only the visible page so
+  // status/balance never disappear on schools with more than 200 students.
+  const [paymentStudentRows] = createResource(
     () => {
-      const ids = filteredStudents().map((user) => user.id);
-      return ids.length > 0 && ids.length <= BALANCE_FETCH_CAP ? ids : null;
+      const users = pagedStudents();
+      return users.length > 0 ? users : null;
     },
-    async (ids) => {
-      const pairs = await Promise.all(
-        ids.map(async (id) => [id, (await getPaymentBalanceByUserId(id)).balance_minor] as const),
-      );
-      return Object.fromEntries(pairs) as Record<string, number>;
-    },
+    async (users): Promise<PaymentStudentRow[]> =>
+      Promise.all(
+        users.map(async (user) => {
+          try {
+            return { ...user, balance_minor: (await getPaymentBalanceByUserId(user.id)).balance_minor };
+          } catch {
+            return { ...user, balance_minor: null };
+          }
+        }),
+      ),
   );
-  const balanceOf = (id: string) => balances()?.[id];
 
-  const studentColumns = createMemo<ColumnDef<User>[]>(() => [
+  const studentColumns = createMemo<ColumnDef<PaymentStudentRow>[]>(() => [
     {
       id: "name",
       header: t("payments.student"),
@@ -142,10 +182,10 @@ function PaymentsContent() {
     {
       id: "debt",
       header: t("payments.status"),
-      accessorFn: (user) => balanceOf(user.id) ?? 0,
+      accessorFn: (user) => user.balance_minor ?? 0,
       cell: (cell) => {
-        const bal = balanceOf(cell.row.original.id);
-        if (bal === undefined) return <span class="text-sm text-muted-foreground">—</span>;
+        const bal = cell.row.original.balance_minor;
+        if (bal == null) return <span class="text-sm text-muted-foreground">—</span>;
         const inDebt = bal < 0;
         return (
           <Badge variant="outline" class={inDebt ? "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300" : "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"}>
@@ -158,11 +198,26 @@ function PaymentsContent() {
     {
       id: "balance",
       header: t("payments.balance"),
-      accessorFn: (user) => balanceOf(user.id) ?? 0,
+      accessorFn: (user) => user.balance_minor ?? 0,
       cell: (cell) => {
-        const bal = balanceOf(cell.row.original.id);
-        return <span class="tabular-nums" classList={{ "text-destructive": (bal ?? 0) < 0 }}>{bal === undefined ? "—" : formatTry(bal, moneyLocale())}</span>;
+        const bal = cell.row.original.balance_minor;
+        return <span class="font-medium tabular-nums" classList={{ "text-destructive": (bal ?? 0) < 0 }}>{bal == null ? "—" : formatTry(bal, moneyLocale())}</span>;
       },
+    },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      cell: (cell) => (
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[{
+            label: t("common.view"),
+            icon: <IconEye class="h-4 w-4" />,
+            onSelect: () => navigate({ to: "/management/payments/$userId", params: { userId: cell.row.original.id } }),
+          }]}
+        />
+      ),
     },
   ]);
 
@@ -187,6 +242,7 @@ function PaymentsContent() {
   });
 
   const [collectEntry, setCollectEntry] = createSignal<StatementEntry | null>(null);
+  const [viewEntry, setViewEntry] = createSignal<StatementEntry | null>(null);
   const [collectAmount, setCollectAmount] = createSignal("");
   const [collectMethod, setCollectMethod] = createSignal("");
   const [collectNote, setCollectNote] = createSignal("");
@@ -239,16 +295,6 @@ function PaymentsContent() {
       cell: (cell) => <span class="mono text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
     },
     {
-      accessorKey: "amount_minor",
-      header: t("payments.amountTry"),
-      cell: (cell) => <span class="tabular-nums">{formatTry(cell.row.original.amount_minor, moneyLocale())}</span>,
-    },
-    {
-      accessorKey: "credited_minor",
-      header: t("payments.collected"),
-      cell: (cell) => <span class="tabular-nums text-muted-foreground">{formatTry(cell.row.original.credited_minor, moneyLocale())}</span>,
-    },
-    {
       accessorKey: "outstanding_minor",
       header: t("payments.outstanding"),
       cell: (cell) => <span class="font-semibold tabular-nums">{formatTry(cell.row.original.outstanding_minor, moneyLocale())}</span>,
@@ -263,12 +309,18 @@ function PaymentsContent() {
     },
     {
       id: "actions",
-      header: "",
-      meta: { headerClass: "w-32 min-w-32 text-right", cellClass: "text-right" },
+      header: t("common.actions"),
+      meta: { headerClass: "w-28 min-w-28 text-center", cellClass: "text-center" },
       cell: (cell) => (
-        <Show when={!cell.row.original.reversed && cell.row.original.outstanding_minor > 0}>
-          <Button size="sm" class="rounded-lg" onClick={() => openCollect(cell.row.original)}>{t("payments.collect")}</Button>
-        </Show>
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+            { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setViewEntry(cell.row.original) },
+            ...(!cell.row.original.reversed && cell.row.original.outstanding_minor > 0
+              ? [{ label: t("payments.collect"), icon: <IconPlus class="h-4 w-4" />, onSelect: () => openCollect(cell.row.original) }]
+              : []),
+          ]}
+        />
       ),
     },
   ]);
@@ -323,9 +375,10 @@ function PaymentsContent() {
   const [rows, setRows] = createSignal<{ amount: string; due: string }[]>([{ amount: "", due: "" }]);
   const [deleteTarget, setDeleteTarget] = createSignal<FeePlan | null>(null);
   const [assignPlan, setAssignPlan] = createSignal<FeePlan | null>(null);
+  const [viewPlan, setViewPlan] = createSignal<FeePlan | null>(null);
   const [assignStudent, setAssignStudent] = createSignal("");
   const [assignments, { refetch: refetchAssignments }] = createResource(
-    () => assignPlan()?.id ?? null,
+    () => assignPlan()?.id ?? viewPlan()?.id ?? null,
     (planId) => getPlanAssignments(planId, { limit: 200 }),
   );
 
@@ -347,6 +400,7 @@ function PaymentsContent() {
           <TableRowActions
             label={t("common.actions")}
             actions={[
+              { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setViewPlan(cell.row.original) },
               { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => startEdit(cell.row.original) },
               { label: t("common.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
             ]}
@@ -461,28 +515,42 @@ function PaymentsContent() {
             when={selectedStudent()}
             fallback={
               <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-              <Suspense fallback={<DataTableSkeleton columns={4} rows={8} />}>
+              <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
                 <Show when={students.error}>
                   <ErrorAlert message={formatApiError(students.error)} onRetry={() => void refetchStudents()} />
                 </Show>
                 <Show when={studentList().length > 0} fallback={<EmptyState title={t("payments.selectStudent")} />}>
                   <DataTable
                     columns={studentColumns()}
-                    data={filteredStudents()}
-                    onRowClick={(user) => setSelectedStudent(user)}
-                    searchPredicate={(user, q) => `${studentLabel(user)} ${user.username} ${user.email ?? ""}`.toLowerCase().includes(q.toLowerCase())}
+                    data={paymentStudentRows() ?? []}
+                    onRowClick={(user) => navigate({ to: "/management/payments/$userId", params: { userId: user.id } })}
+                    searchValue={studentQuery()}
+                    onSearchInput={(value) => {
+                      setStudentQuery(value);
+                      setStudentPage(0);
+                    }}
                     filterPlaceholder={t("payments.selectStudent")}
                     title={t("payments.selectStudent")}
                     filters={
-                      <Select value={planFilter()} onChange={(e) => setPlanFilter(e.currentTarget.value)} wrapperClass="w-56">
+                      <Select value={planFilter()} onChange={(e) => { setPlanFilter(e.currentTarget.value); setStudentPage(0); }} wrapperClass="w-56">
                         <option value="">{t("payments.allPlans")}</option>
                         <For each={planList()}>{(plan) => <option value={plan.id}>{plan.name}</option>}</For>
                       </Select>
                     }
                     tableClass="min-w-160"
+                    storageKey="payment-students"
                     enableSorting
                     enablePagination
-                    pageSize={STATEMENT_PAGE_SIZE}
+                    manualPagination={{
+                      pageIndex: studentPage(),
+                      pageSize: studentPageSize(),
+                      total: searchedStudents().length,
+                      onPageChange: setStudentPage,
+                      onPageSizeChange: (size) => {
+                        setStudentPageSize(size);
+                        setStudentPage(0);
+                      },
+                    }}
                   />
                 </Show>
               </Suspense>
@@ -495,7 +563,7 @@ function PaymentsContent() {
                 <h2 class="text-lg font-semibold">{studentLabel(current())}</h2>
                 <p class="text-sm text-muted-foreground">@{current().username}</p>
               </div>
-              <Button variant="outline" size="sm" class="rounded-lg" onClick={() => setSelectedStudent(null)}>
+              <Button variant="outline" size="sm" class="rounded-lg" onClick={() => navigate({ to: "/management/payments" })}>
                 <IconChevronLeft class="h-4 w-4" />{t("payments.allStudents")}
               </Button>
             </div>
@@ -507,7 +575,7 @@ function PaymentsContent() {
             </div>
 
             <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-              <Suspense fallback={<DataTableSkeleton columns={7} rows={5} />}>
+              <Suspense fallback={<DataTableSkeleton columns={5} rows={5} />}>
                 <Show when={statement.error}>
                   <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetchStatement()} />
                 </Show>
@@ -522,7 +590,15 @@ function PaymentsContent() {
                     </div>
                   }
                 >
-                  <DataTable columns={statementColumns()} data={sortedEntries()} tableClass="min-w-180" enablePagination pageSize={STATEMENT_PAGE_SIZE} />
+                  <DataTable
+                    columns={statementColumns()}
+                    data={sortedEntries()}
+                    tableClass="min-w-160"
+                    storageKey="payment-statement"
+                    enablePagination
+                    pageSize={STATEMENT_PAGE_SIZE}
+                    onRowClick={setViewEntry}
+                  />
                 </Show>
               </Suspense>
             </section>
@@ -581,12 +657,82 @@ function PaymentsContent() {
                 <ErrorAlert message={formatApiError(plans.error)} onRetry={() => void refetchPlans()} />
               </Show>
               <Show when={planList().length > 0} fallback={<EmptyState title={t("payments.empty")} />}>
-                <DataTable columns={planColumns()} data={planList()} onRowClick={(plan) => { setPlanFilter(plan.id); setTab("collect"); }} tableClass="min-w-160" filterColumn="name" enablePagination pageSize={PLAN_PAGE_SIZE} />
+                <DataTable columns={planColumns()} data={planList()} onRowClick={setViewPlan} storageKey="payment-plans" tableClass="min-w-160" filterColumn="name" enablePagination pageSize={PLAN_PAGE_SIZE} />
               </Show>
             </Suspense>
           </section>
         </TabsContent>
       </Tabs>
+
+      <SidePanel
+        open={viewEntry() != null}
+        onOpenChange={(open) => { if (!open) setViewEntry(null); }}
+        title={viewEntry()?.plan_name ?? t("payments.plan")}
+        description={viewEntry()?.due_at == null ? "—" : formatDate(viewEntry()!.due_at, locale())}
+      >
+        <Show when={viewEntry()} keyed>
+          {(entry) => (
+            <div class="space-y-5">
+              <div class="grid gap-4 sm:grid-cols-2">
+                <DetailField label={t("payments.amountTry")} value={formatTry(entry.amount_minor, moneyLocale())} />
+                <DetailField label={t("payments.credited")} value={formatTry(entry.credited_minor, moneyLocale())} />
+                <DetailField label={t("payments.outstanding")} value={formatTry(entry.outstanding_minor, moneyLocale())} />
+                <DetailField label={t("payments.reversed")} value={entry.reversed ? t("payments.reversed") : "—"} />
+                <DetailField label={t("payments.plan")} value={entry.plan ?? "—"} mono />
+                <DetailField label={t("admin.id")} value={entry.charge_id} mono />
+              </div>
+              <Show when={!entry.reversed && entry.outstanding_minor > 0}>
+                <Button onClick={() => { setViewEntry(null); openCollect(entry); }}>{t("payments.collect")}</Button>
+              </Show>
+            </div>
+          )}
+        </Show>
+      </SidePanel>
+
+      <SidePanel
+        open={viewPlan() != null}
+        onOpenChange={(open) => { if (!open) setViewPlan(null); }}
+        title={viewPlan()?.name ?? t("payments.plan")}
+        description={viewPlan() ? formatDate(viewPlan()!.created_at, locale()) : ""}
+        size="wide"
+      >
+        <Show when={viewPlan()} keyed>
+          {(plan) => (
+            <div class="space-y-5">
+              <div class="grid gap-4 sm:grid-cols-2">
+                <DetailField label={t("payments.total")} value={formatTry(planTotal(plan), moneyLocale())} />
+                <DetailField label={t("payments.installments")} value={String(plan.installments.length)} mono />
+                <DetailField label={t("bank.owner")} value={personLabel(plan.created_by)} />
+                <DetailField label={t("bank.created")} value={formatDate(plan.created_at, locale())} />
+              </div>
+              <div class="space-y-2">
+                <Label>{t("payments.installments")}</Label>
+                <For each={plan.installments}>
+                  {(installment) => (
+                    <div class="flex items-center justify-between rounded-lg border bg-card px-3 py-2.5 text-sm">
+                      <span>{formatDate(installment.due_at, locale())}</span>
+                      <span class="font-semibold tabular-nums">{formatTry(installment.amount_minor, moneyLocale())}</span>
+                    </div>
+                  )}
+                </For>
+              </div>
+              <div class="space-y-2">
+                <Label>{t("payments.assignments")}</Label>
+                <For each={assignments()?.items ?? []}>
+                  {(row) => <div class="rounded-lg border bg-card px-3 py-2.5 text-sm">{personLabel(row.student)}</div>}
+                </For>
+                <Show when={(assignments()?.items.length ?? 0) === 0}>
+                  <p class="text-sm text-muted-foreground">{t("payments.noAssignments")}</p>
+                </Show>
+              </div>
+              <div class="flex gap-2">
+                <Button variant="outline" onClick={() => { setViewPlan(null); startEdit(plan); }}>{t("common.edit")}</Button>
+                <Button onClick={() => { setViewPlan(null); openAssign(plan); }}>{t("payments.assign")}</Button>
+              </div>
+            </div>
+          )}
+        </Show>
+      </SidePanel>
 
       {/* ---------------- Collect payment panel ---------------- */}
       <SidePanel

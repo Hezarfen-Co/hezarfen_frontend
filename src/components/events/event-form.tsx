@@ -172,12 +172,12 @@ export function EventForm(props: {
   return (
     <>
     <form class="space-y-4" onSubmit={handleSubmit}>
-      <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
+      <div class="space-y-3 rounded-lg border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
         <div class="space-y-1.5">
           <Label for="event-title">{t("form.title")}</Label>
           <Input
             id="event-title"
-            class="h-11"
+            class="h-9"
             value={title()}
             maxlength={200}
             required
@@ -196,7 +196,7 @@ export function EventForm(props: {
           />
         </div>
       </div>
-      <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/3 p-4 shadow-xs">
+      <div class="space-y-3 rounded-lg border border-violet-500/15 bg-violet-500/3 p-4 shadow-xs">
         <div class="space-y-1.5">
           <Label for="event-audience">{t("events.audience")}</Label>
           <Select id="event-audience" value={audienceKind()} onChange={(e) => setAudienceKind(e.currentTarget.value as EventAudience["kind"])}>
@@ -232,13 +232,13 @@ export function EventForm(props: {
           </div>
         </Show>
       </div>
-      <div class="grid gap-3 rounded-2xl border border-amber-500/15 bg-amber-500/3 p-4">
+      <div class="grid gap-3 rounded-lg border border-amber-500/15 bg-amber-500/3 p-4">
         <div class="space-y-1.5">
           <Label for="event-starts">{t("events.starts")}</Label>
           <div class="grid grid-cols-2 gap-2">
             <DatePicker
               id="event-starts"
-              class="h-11"
+              class="h-9"
               placeholder={t("form.datePlaceholder")}
               value={startsDate()}
               onChange={(value) => {
@@ -248,7 +248,7 @@ export function EventForm(props: {
             />
             <Input
               id="event-starts-time"
-              class="h-11 font-mono placeholder:text-muted-foreground/45"
+              class="h-9 font-mono placeholder:text-muted-foreground/45"
               inputMode="numeric"
               placeholder="09:00"
               pattern="[0-2][0-9]:[0-5][0-9]"
@@ -269,7 +269,7 @@ export function EventForm(props: {
           <div class="grid grid-cols-2 gap-2">
             <DatePicker
               id="event-ends"
-              class="h-11"
+              class="h-9"
               placeholder={t("form.datePlaceholder")}
               value={endsDate()}
               onChange={(value) => {
@@ -279,7 +279,7 @@ export function EventForm(props: {
             />
             <Input
               id="event-ends-time"
-              class="h-11 font-mono placeholder:text-muted-foreground/45"
+              class="h-9 font-mono placeholder:text-muted-foreground/45"
               inputMode="numeric"
               placeholder="10:00"
               pattern="[0-2][0-9]:[0-5][0-9]"

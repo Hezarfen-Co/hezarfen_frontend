@@ -34,6 +34,7 @@ const ExamsPage = lazyRoute(() => import("@/pages/exams-page"));
 const ExamDetailPage = lazyRoute(() => import("@/pages/exam-detail-page"));
 const ExamRoomPage = lazyRoute(() => import("@/pages/exam-room-page"));
 const QuestionBankPage = lazyRoute(() => import("@/pages/question-bank-page"));
+const BankQuestionDetailPage = lazyRoute(() => import("@/pages/bank-question-detail-page"));
 const CoursesPage = lazyRoute(() => import("@/pages/courses-page"));
 const CourseDetailPage = lazyRoute(() => import("@/pages/course-detail-page"));
 const MarksPage = lazyRoute(() => import("@/pages/marks-page"));
@@ -46,6 +47,7 @@ const WorkLogPage = lazyRoute(() => import("@/pages/work-log-page"));
 const StaffWorkPage = lazyRoute(() => import("@/pages/staff-work-page"));
 const LiveMonitorPage = lazyRoute(() => import("@/pages/live-monitor-page"));
 const AdminUsersPage = lazyRoute(() => import("@/pages/admin-users-page"));
+const AdminUserDetailPage = lazyRoute(() => import("@/pages/admin-user-detail-page"));
 const SettingsPage = lazyRoute(() => import("@/pages/settings-page"));
 const TermsPage = lazyRoute(() => import("@/pages/terms-page"));
 const GuidePage = lazyRoute(() => import("@/pages/guide-page"));
@@ -154,6 +156,12 @@ const questionBankRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/question-bank",
   component: QuestionBankPage,
+});
+
+const bankQuestionDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/question-bank/$id",
+  component: BankQuestionDetailPage,
 });
 
 const coursesRoute = createRoute({
@@ -271,6 +279,12 @@ const adminUsersRoute = createRoute({
   component: AdminUsersPage,
 });
 
+const adminUserDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/users/$id",
+  component: AdminUserDetailPage,
+});
+
 const guideRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/guide",
@@ -331,6 +345,12 @@ const paymentsRoute = createRoute({
   component: PaymentsPage,
 });
 
+const managedPaymentDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/payments/$userId",
+  component: PaymentsPage,
+});
+
 const paymentStatementRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/payments",
@@ -351,6 +371,7 @@ const routeTree = rootRoute.addChildren([
   liveMonitorRoute,
   examsRoute,
   questionBankRoute,
+  bankQuestionDetailRoute,
   coursesRoute,
   studiesRoute,
   clubsRoute,
@@ -367,6 +388,7 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
   termsRoute,
   adminUsersRoute,
+  adminUserDetailRoute,
   guideRoute,
   myStudentsRoute,
   schoolRoute,
@@ -377,6 +399,7 @@ const routeTree = rootRoute.addChildren([
   mealsRoute,
   mealDetailRoute,
   paymentsRoute,
+  managedPaymentDetailRoute,
   paymentStatementRoute,
 ]);
 

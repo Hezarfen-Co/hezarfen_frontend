@@ -53,7 +53,7 @@ export function AppShell(props: ParentProps) {
         <Show when={auth.user() && !fullScreen()}>
           <aside
             class={cn(
-              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-border bg-sidebar/95 text-sidebar-foreground shadow-sm backdrop-blur-md transition-[width] duration-200 ease-out lg:flex lg:flex-col",
+              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex lg:flex-col",
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
             )}
           >
@@ -68,11 +68,11 @@ export function AppShell(props: ParentProps) {
                 class={cn("flex min-w-0 items-center gap-2.5", collapsed() ? "justify-center" : "flex-1")}
                 title={t("app.name")}
               >
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-apple">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
                   H
                 </span>
                 <Show when={!collapsed()}>
-                  <span class="truncate font-display text-base font-semibold tracking-tight text-foreground dark:text-white 2xl:text-lg">{t("app.name")}</span>
+                  <span class="truncate text-base font-semibold tracking-tight text-foreground dark:text-white 2xl:text-lg">{t("app.name")}</span>
                 </Show>
               </Link>
               <Button
@@ -100,15 +100,15 @@ export function AppShell(props: ParentProps) {
           <div class="fixed inset-0 z-50 lg:hidden">
             <button
               type="button"
-              class="absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity"
+              class="absolute inset-0 bg-black/40 transition-opacity"
               aria-label={t("nav.close")}
               onClick={() => setMobileOpen(false)}
             />
-            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-border bg-sidebar/95 text-sidebar-foreground shadow-apple backdrop-blur-xl">
-              <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-black/5 px-3 dark:border-white/8">
+            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-border bg-sidebar text-sidebar-foreground shadow-2xl shadow-black/20">
+              <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
                 <Link to="/" class="flex min-w-0 items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-apple">H</span>
-                  <span class="truncate font-display text-base font-semibold text-foreground dark:text-white">{t("app.name")}</span>
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">H</span>
+                  <span class="truncate text-base font-semibold text-foreground dark:text-white">{t("app.name")}</span>
                 </Link>
                 <Button
                   type="button"
@@ -131,13 +131,13 @@ export function AppShell(props: ParentProps) {
 
         <main class="min-w-0 flex-1">
           <Show when={auth.user() && !fullScreen()}>
-            <header class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/70 bg-background/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+            <header class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/70 bg-background px-4 shadow-[0_18px_40px_-34px_rgba(33,37,41,0.28)] sm:px-6 lg:px-8 dark:shadow-[0_18px_44px_-34px_rgba(0,0,0,0.72)]">
               <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-44">
                 <Show when={location().pathname !== "/"}>
                   <button
                     type="button"
                     onClick={() => window.history.back()}
-                    class="topbar-control flex h-9 w-9 shrink-0 items-center justify-center rounded-xl outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                    class="topbar-control flex h-9 w-9 shrink-0 items-center justify-center rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label={t("common.back")}
                     title={t("common.back")}
                   >
@@ -151,7 +151,7 @@ export function AppShell(props: ParentProps) {
                 <button
                   type="button"
                   onClick={() => setCommandOpen(true)}
-                  class="topbar-control flex h-10 w-full items-center justify-between gap-2.5 rounded-xl px-3.5 text-sm"
+                  class="topbar-control flex h-9 w-full items-center justify-between gap-2.5 rounded-full px-3.5 text-sm"
                   title={t("dashboard.commandCenter")}
                 >
                   <div class="flex items-center gap-2 min-w-0">
@@ -169,7 +169,7 @@ export function AppShell(props: ParentProps) {
                 <NotificationCenter />
                 <button
                   type="button"
-                  class="topbar-ai-control hidden h-9 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-xs font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] sm:flex"
+                  class="topbar-ai-control hidden h-9 shrink-0 items-center justify-center gap-2 rounded-md px-3 text-xs font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] sm:flex"
                   onClick={() => setCelebiOpen(true)}
                 >
                   <IconSparkles class="h-4 w-4" />

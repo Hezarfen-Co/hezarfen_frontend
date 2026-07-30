@@ -30,7 +30,7 @@ export const ChartBar: Component<ChartBarProps> = (props) => {
   };
 
   return (
-    <div class={cn("flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-xs", props.class)}>
+    <div class={cn("flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm", props.class)}>
       <Show when={props.title}>
         <div class="border-b border-border pb-3">
           <div>

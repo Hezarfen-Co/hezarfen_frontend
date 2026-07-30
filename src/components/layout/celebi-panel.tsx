@@ -114,9 +114,9 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           when={messages().length > 0}
           fallback={
             <div class="space-y-3">
-              <div class="relative overflow-hidden rounded-2xl border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">
+              <div class="relative overflow-hidden rounded-lg border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">
                 <div class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <span class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                <span class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
                   <IconSparkles class="h-5 w-5" />
                 </span>
                 {t("ai.empty")}
@@ -128,7 +128,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           <div class="flex flex-col gap-3">
             <For each={messages()}>
               {(message) => (
-                <div class={message.role === "user" ? "ml-8 rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground" : "mr-6 rounded-2xl rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
+                <div class={message.role === "user" ? "ml-8 rounded-lg rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground" : "mr-6 rounded-lg rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
                   <Show when={message.role === "assistant" && message.status === "pending"} fallback={
                     <Show when={message.role === "assistant" && message.status === "failed" && !message.content} fallback={
                       <Show when={message.role === "assistant"} fallback={<p class="whitespace-pre-wrap leading-6">{message.content}</p>}>

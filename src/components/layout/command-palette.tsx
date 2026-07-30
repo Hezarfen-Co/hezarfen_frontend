@@ -359,7 +359,7 @@ export function CommandPalette(props: CommandPaletteProps) {
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-2xl p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl">
+      <DialogContent class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95">
         <DialogTitle class="sr-only">{t("dashboard.commandCenter")}</DialogTitle>
         <DialogDescription class="sr-only">{t("common.searchPlaceholder")}</DialogDescription>
 

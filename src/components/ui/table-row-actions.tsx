@@ -21,16 +21,17 @@ export function TableRowActions(props: { label: string; actions: TableRowAction[
     <div class="flex justify-center">
       <DropdownMenu placement="bottom-end" gutter={6}>
         <DropdownMenuTrigger
-          class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-foreground/80 opacity-90 outline-hidden transition-all duration-150 hover:bg-secondary hover:text-foreground hover:opacity-100 active:scale-[0.96] focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-secondary data-expanded:text-foreground data-expanded:opacity-100 sm:group-hover:opacity-100 sm:group-hover/row:opacity-100"
+          class="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-input bg-background/85 px-3 text-sm font-semibold text-foreground shadow-sm outline-hidden transition-colors hover:border-primary/35 hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-accent data-expanded:text-accent-foreground"
           aria-label={props.label}
         >
-          <IconDotsVertical class="h-4 w-4" />
+          <IconDotsVertical class="h-4 w-4 rotate-90" />
+          <span>{props.label}</span>
         </DropdownMenuTrigger>
-        <DropdownMenuContent class="w-48 rounded-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl p-1.5 shadow-apple">
+        <DropdownMenuContent class="w-48">
           <For each={props.actions}>
             {(action) => (
               <DropdownMenuItem
-                class="flex h-10 items-center gap-2.5 rounded-xl px-3 text-xs font-medium"
+                class="flex items-center gap-2.5 text-xs"
                 destructive={action.destructive}
                 disabled={action.disabled}
                 // Defer to the next macrotask so the menu fully closes (and

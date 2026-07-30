@@ -193,7 +193,7 @@ function MealDetailContent() {
               <TabsContent value="menu" class="space-y-4">
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <For each={current().dishes}>{(dish) => (
-                    <article class="rounded-2xl border border-border/70 bg-card p-4">
+                    <article class="rounded-lg border border-border/70 bg-card p-4">
                       <div class="flex justify-between gap-3"><h2 class="font-semibold">{dish.name}</h2><span class="font-semibold">{formatTry(dish.price_minor, moneyLocale())}</span></div>
                       <p class="mt-2 text-sm text-muted-foreground">{dish.description || "—"}</p>
                       <div class="mt-3 flex flex-wrap gap-1"><For each={dish.tags}>{(tag) => <Badge variant="outline" class={dish.conflicts.includes(tag) ? "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200" : ""}>{dish.conflicts.includes(tag) ? `⚠ ${tag}` : tag}</Badge>}</For></div>

@@ -93,6 +93,14 @@ export type MessageKey =
   | "common.reject"
   | "common.actions"
   | "common.columns"
+  | "common.visibleColumns"
+  | "common.rowDensity"
+  | "common.densityCompact"
+  | "common.densityNormal"
+  | "common.densityComfortable"
+  | "common.resetColumnWidths"
+  | "common.pageRange"
+  | "common.rowsPerPage"
   | "common.moreFilters"
   | "common.lessFilters"
   | "common.search"
@@ -1262,6 +1270,14 @@ const en: Dict = {
   "common.reject": "Reject",
   "common.actions": "Actions",
   "common.columns": "Columns",
+  "common.visibleColumns": "Visible columns",
+  "common.rowDensity": "Row density",
+  "common.densityCompact": "Compact",
+  "common.densityNormal": "Normal",
+  "common.densityComfortable": "Comfortable",
+  "common.resetColumnWidths": "Reset column widths",
+  "common.pageRange": "{start}-{end} of {total}",
+  "common.rowsPerPage": "{size} / page",
   "common.moreFilters": "More filters",
   "common.lessFilters": "Less filters",
   "common.search": "Search",
@@ -2443,6 +2459,14 @@ const tr: Dict = {
   "common.reject": "Reddet",
   "common.actions": "İşlemler",
   "common.columns": "Sütunlar",
+  "common.visibleColumns": "Görünür sütunlar",
+  "common.rowDensity": "Satır yoğunluğu",
+  "common.densityCompact": "Sıkı",
+  "common.densityNormal": "Normal",
+  "common.densityComfortable": "Rahat",
+  "common.resetColumnWidths": "Sütun genişliklerini sıfırla",
+  "common.pageRange": "{total} kayıttan {start}-{end}",
+  "common.rowsPerPage": "{size} / sayfa",
   "common.moreFilters": "Daha fazla filtre",
   "common.lessFilters": "Daha az filtre",
   "common.search": "Ara",

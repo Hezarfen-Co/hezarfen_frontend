@@ -125,11 +125,6 @@ function StudentMarksContent() {
       },
     },
     {
-      accessorKey: "id",
-      header: t("admin.id"),
-      cell: (cell) => <span class="mono text-xs text-muted-foreground">{cell.row.original.id}</span>,
-    },
-    {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
@@ -158,7 +153,7 @@ function StudentMarksContent() {
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
-        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
+        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <DataTable
             title={t("nav.studentMarks")}
             description={`${t("marks.lookup")} · ${rows().length} / ${total()}`}
@@ -169,6 +164,7 @@ function StudentMarksContent() {
             searchPredicate={searchPerson}
             enablePagination
             pageSize={PAGE_SIZE}
+            storageKey="student-marks"
             onRowClick={(person) => {
               setError("");
               setViewUser(person);

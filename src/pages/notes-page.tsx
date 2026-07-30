@@ -140,7 +140,7 @@ function NotesContent() {
       </SidePanel>
 
       <div class="space-y-5">
-        <section class="min-w-0 space-y-4 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs">
+        <section class="min-w-0 space-y-4 rounded-lg border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs">
           <Show when={flash()}>
             <Alert variant="success">{flash()}</Alert>
           </Show>

@@ -30,7 +30,7 @@ export function CourseCard(props: {
         </span>
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2">
-            <h2 class="truncate font-display text-base font-semibold tracking-tight">{props.course.title}</h2>
+            <h2 class="truncate text-base font-semibold tracking-tight">{props.course.title}</h2>
             <Badge variant="outline" class="rounded-md text-[10px] font-medium">{props.labels.kind}</Badge>
             <Show when={props.enrolled}><Badge variant="secondary" class="rounded-md text-[10px]">{props.labels.enrolled}</Badge></Show>
           </div>

@@ -98,7 +98,7 @@ function QuestionDetailContent() {
               <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <Button variant="link" class="px-0 h-auto text-muted-foreground mb-2" onClick={() => router.history.back()}>&larr; {t("common.back")}</Button>
-                  <h1 class="text-2xl font-semibold font-display">{q().title}</h1>
+                  <h1 class="text-2xl font-semibold ">{q().title}</h1>
                   <div class="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                     <span>{personLabel(q().asker)}</span>
                     <span>&bull;</span>
@@ -140,7 +140,7 @@ function QuestionDetailContent() {
               <Show when={q().status === "approved"}>
                 <div class="mt-8">
                   <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold font-display">{t("pool.solutions")}</h2>
+                    <h2 class="text-xl font-semibold ">{t("pool.solutions")}</h2>
                     <Button variant="outline" onClick={() => setOfferOpen(true)}>
                       <IconMessage class="mr-2 h-4 w-4" />
                       {t("pool.offerSolution")}

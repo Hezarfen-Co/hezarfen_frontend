@@ -66,30 +66,30 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
   return (
     <div class="min-w-0 space-y-4">
       <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+        <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
           <dt class="text-xs font-medium text-muted-foreground">{t("common.all")}</dt>
-          <dd class="mt-2 font-display text-3xl font-semibold tabular-nums">
+          <dd class="mt-2 text-3xl font-semibold tabular-nums">
             {props.report.events.total + props.report.sessions.total}
           </dd>
         </div>
-        <div class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+        <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
           <dt class="text-xs font-medium text-muted-foreground">{t("attendance.events")}</dt>
-          <dd class="mt-2 font-display text-3xl font-semibold tabular-nums">{percent(props.report.events.rate)}</dd>
+          <dd class="mt-2 text-3xl font-semibold tabular-nums">{percent(props.report.events.rate)}</dd>
         </div>
-        <div class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+        <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
           <dt class="text-xs font-medium text-muted-foreground">{t("attendance.sessions")}</dt>
-          <dd class="mt-2 font-display text-3xl font-semibold tabular-nums">{percent(props.report.sessions.rate)}</dd>
+          <dd class="mt-2 text-3xl font-semibold tabular-nums">{percent(props.report.sessions.rate)}</dd>
         </div>
       </dl>
 
       <div class={cn("grid gap-3", !compact() && "lg:grid-cols-2")}>
         <For each={blocks()}>
           {(block) => (
-            <article class="rounded-2xl border border-border bg-card p-4 shadow-xs">
+            <article class="rounded-lg border border-border bg-card p-4 shadow-xs">
               <header class="flex items-end justify-between gap-3">
                 <div>
                   <p class="text-xs font-medium text-muted-foreground">{block.title}</p>
-                  <p class="mt-1 font-display text-2xl font-semibold tabular-nums">{percent(block.counts.rate)}</p>
+                  <p class="mt-1 text-2xl font-semibold tabular-nums">{percent(block.counts.rate)}</p>
                 </div>
                 <p class="text-xs text-muted-foreground">{block.counts.total} {t("common.all").toLocaleLowerCase()}</p>
               </header>
@@ -101,7 +101,7 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
                   {(status) => (
                     <div class={cn("rounded-xl border p-3", status.class)}>
                       <dt class="truncate text-[11px] font-medium">{t(status.key)}</dt>
-                      <dd class="mt-1 font-display text-xl font-semibold tabular-nums">{block.counts[status.value]}</dd>
+                      <dd class="mt-1 text-xl font-semibold tabular-nums">{block.counts[status.value]}</dd>
                     </div>
                   )}
                 </For>
@@ -118,8 +118,8 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
         </For>
       </div>
 
-      <section class="rounded-2xl border border-border bg-card p-4 shadow-xs">
-        <h3 class="font-display text-base font-semibold">{t("attendance.courseBreakdown")}</h3>
+      <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
+        <h3 class="text-base font-semibold">{t("attendance.courseBreakdown")}</h3>
         <div class="mt-3">
           <Show
             when={props.report.courses.length > 0}

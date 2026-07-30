@@ -141,16 +141,16 @@ export function DatePicker(props: {
           <div
             ref={panel}
             data-kb-top-layer=""
-            class="pointer-events-auto fixed z-80 rounded-2xl border border-black/8 bg-popover/95 p-2.5 text-popover-foreground shadow-apple backdrop-blur-xl dark:border-white/12"
+            class="pointer-events-auto fixed z-80 rounded-md border border-border/80 bg-popover p-2.5 text-popover-foreground shadow-xl shadow-black/10"
             style={{ left: `${position().left}px`, top: `${position().top}px`, width: `${position().width}px` }}
             on:pointerdown={(e) => e.stopPropagation()}
           >
             <div class="mb-3 flex items-center justify-between gap-2">
-              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-[0.96] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(-1)}>
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70" onClick={() => moveMonth(-1)}>
                 <IconChevronLeft class="h-4 w-4" />
               </button>
               <p class="min-w-0 truncate px-2 text-sm font-semibold capitalize">{monthLabel()}</p>
-              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-[0.96] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(1)}>
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70" onClick={() => moveMonth(1)}>
                 <IconChevronRight class="h-4 w-4" />
               </button>
             </div>
@@ -165,7 +165,7 @@ export function DatePicker(props: {
                       <button
                         type="button"
                         class={cn(
-                          "inline-flex h-9 items-center justify-center rounded-xl border border-transparent p-0 text-xs font-medium transition-all hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98]",
+                          "inline-flex h-9 items-center justify-center rounded-md border border-transparent p-0 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70",
                           isSameDay(today, day()) && "border-primary/50 text-primary",
                           sameDay(selected(), day()) && "border-primary bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 hover:text-primary-foreground",
                         )}
@@ -183,7 +183,7 @@ export function DatePicker(props: {
             </div>
             <button
               type="button"
-              class="mt-2 inline-flex h-10 w-full items-center justify-center rounded-xl border bg-background/80 px-3 text-xs font-medium text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              class="mt-2 inline-flex h-9 w-full items-center justify-center rounded-md border bg-background px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70"
               onClick={(event) => {
                 event.stopPropagation();
                 pick(today);

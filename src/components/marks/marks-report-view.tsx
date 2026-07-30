@@ -68,10 +68,10 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
 
   return (
     <div class="min-w-0 space-y-4">
-      <section class="grid gap-4 rounded-2xl border border-border bg-card p-4 shadow-xs sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      <section class="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-xs sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div>
           <p class="text-xs font-medium text-muted-foreground">{t("marks.overall")}</p>
-          <p class={cn("mt-1 font-display font-semibold tabular-nums", compact() ? "text-3xl" : "text-4xl")}>
+          <p class={cn("mt-1 font-semibold tabular-nums", compact() ? "text-3xl" : "text-4xl")}>
             {markWithGrade(props.report.overall_average, props.report.overall_grade)}
             <Show when={props.report.overall_average != null}>
               <span class="ml-1 text-sm font-medium text-muted-foreground">/ 100</span>
@@ -84,23 +84,23 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
         <dl class="grid grid-cols-2 gap-2 sm:min-w-56">
           <div class="rounded-xl bg-muted/45 p-3">
             <dt class="text-[11px] text-muted-foreground">{t("nav.courses")}</dt>
-            <dd class="mt-1 font-display text-2xl font-semibold tabular-nums">{props.report.courses.length}</dd>
+            <dd class="mt-1 text-2xl font-semibold tabular-nums">{props.report.courses.length}</dd>
           </div>
           <div class="rounded-xl bg-muted/45 p-3">
             <dt class="text-[11px] text-muted-foreground">{t("exams.results")}</dt>
-            <dd class="mt-1 font-display text-2xl font-semibold tabular-nums">{resultCount()}</dd>
+            <dd class="mt-1 text-2xl font-semibold tabular-nums">{resultCount()}</dd>
           </div>
         </dl>
       </section>
 
-      <Show when={props.report.courses.length > 0} fallback={<DataTableEmpty class="rounded-2xl border border-border bg-card py-10">{t("marks.empty")}</DataTableEmpty>}>
+      <Show when={props.report.courses.length > 0} fallback={<DataTableEmpty class="rounded-lg border border-border bg-card py-10">{t("marks.empty")}</DataTableEmpty>}>
         <div class="space-y-3">
           <For each={props.report.courses}>
             {(block) => (
-              <details name="marks-courses" class="group rounded-2xl border border-border bg-card shadow-xs open:ring-1 open:ring-primary/15">
-                <summary class="flex min-w-0 cursor-pointer list-none flex-wrap items-center justify-between gap-3 rounded-2xl p-4 outline-hidden transition-colors hover:bg-muted/35 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+              <details name="marks-courses" class="group rounded-lg border border-border bg-card shadow-xs open:ring-1 open:ring-primary/15">
+                <summary class="flex min-w-0 cursor-pointer list-none flex-wrap items-center justify-between gap-3 rounded-lg p-4 outline-hidden transition-colors hover:bg-muted/35 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
                   <div class="min-w-0 flex-1">
-                    <p class={cn("truncate font-display font-semibold", compact() ? "text-sm" : "text-lg")}>
+                    <p class={cn("truncate font-semibold", compact() ? "text-sm" : "text-lg")}>
                       {block.course.title}
                     </p>
                     <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -110,7 +110,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
                   <div class="flex shrink-0 items-center gap-3">
                     <div class="text-right">
                       <p class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t("marks.courseAvg")}</p>
-                      <p class="mt-0.5 font-display text-xl font-semibold tabular-nums">{markWithGrade(block.average, block.average_grade)}</p>
+                      <p class="mt-0.5 text-xl font-semibold tabular-nums">{markWithGrade(block.average, block.average_grade)}</p>
                     </div>
                     <IconChevronDown class="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
                   </div>

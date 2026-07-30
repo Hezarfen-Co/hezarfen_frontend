@@ -85,7 +85,7 @@ export function UserMenu() {
           <DropdownMenu placement="bottom-end" gutter={8}>
           <DropdownMenuTrigger
             class={cn(
-              "inline-flex h-11 max-w-[16rem] items-center gap-2.5 rounded-lg border border-input bg-background px-2.5 pr-3 text-sm shadow-xs outline-hidden transition-colors sm:max-w-88",
+              "inline-flex h-9 max-w-[16rem] items-center gap-2.5 rounded-lg border border-input bg-background px-2.5 pr-3 text-sm shadow-xs outline-hidden transition-colors sm:max-w-88",
               "hover:bg-accent hover:text-accent-foreground",
               "focus-visible:ring-2 focus-visible:ring-ring",
               "data-expanded:bg-accent data-expanded:text-accent-foreground",

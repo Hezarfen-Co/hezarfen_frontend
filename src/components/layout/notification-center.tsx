@@ -214,7 +214,7 @@ export function NotificationCenter() {
         </Show>
       </PopoverTrigger>
 
-      <PopoverContent class="w-80 sm:w-96 rounded-2xl p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl overflow-hidden">
+      <PopoverContent class="w-80 sm:w-96 rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95 overflow-hidden">
         {/* Header */}
         <div class="flex items-center justify-between border-b border-border/80 px-4 py-3 bg-muted/40">
           <div class="flex items-center gap-2">

@@ -24,7 +24,7 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
   const calculatedTotal = () => props.total ?? props.segments.reduce((acc, s) => acc + s.value, 0);
 
   return (
-    <div class={cn("flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-xs", props.class)}>
+    <div class={cn("flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm", props.class)}>
       <Show when={props.title}>
         <div class="border-b border-border pb-3">
           <div>

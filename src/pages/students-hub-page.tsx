@@ -22,7 +22,7 @@ export default function StudentsHubPage() {
       <RouteGuard minRole="teacher">
         <div class="space-y-5">
           <header>
-            <h1 class="font-display text-xl font-semibold">{t("nav.students")}</h1>
+            <h1 class="text-xl font-semibold">{t("nav.students")}</h1>
             <p class="mt-1 text-sm text-muted-foreground">
               {locale() === "tr" ? "Arama, not, yoklama ve odak geçmişi." : "Search, marks, attendance, and focus history."}
             </p>
@@ -30,7 +30,7 @@ export default function StudentsHubPage() {
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <For each={links}>
               {(item) => (
-                <Link to={item.to} class="flex gap-3 rounded-2xl border border-border bg-card p-4 hover:bg-muted/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                <Link to={item.to} class="flex gap-3 rounded-lg border border-border bg-card p-4 hover:bg-muted/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                   <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-muted/30 text-muted-foreground"><item.Icon class="h-4.5 w-4.5" /></span>
                   <span><span class="block text-sm font-semibold">{t(item.label)}</span><span class="mt-1 block text-xs text-muted-foreground">{item.description}</span></span>
                 </Link>

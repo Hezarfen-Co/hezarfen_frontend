@@ -459,7 +459,7 @@ function ExamDetailContent() {
               </PageHeader>
             </div>
             <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-sky-500/30 bg-card p-3.5">
+              <div class="flex min-w-0 items-center gap-3 rounded-lg border border-sky-500/30 bg-card p-3.5">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                   <IconExam class="h-4 w-4" />
                 </span>
@@ -468,7 +468,7 @@ function ExamDetailContent() {
                   <p class="truncate text-sm font-semibold">{examModeLabel(ex().mode)}</p>
                 </div>
               </div>
-              <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-violet-500/30 bg-card p-3.5">
+              <div class="flex min-w-0 items-center gap-3 rounded-lg border border-violet-500/30 bg-card p-3.5">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                   <IconRefresh class="h-4 w-4" />
                 </span>
@@ -484,7 +484,7 @@ function ExamDetailContent() {
                   </Show>
                 </div>
               </div>
-              <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-rose-500/30 bg-card p-3.5">
+              <div class="flex min-w-0 items-center gap-3 rounded-lg border border-rose-500/30 bg-card p-3.5">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                   <IconCalendarDays class="h-4 w-4" />
                 </span>
@@ -498,7 +498,7 @@ function ExamDetailContent() {
                   </Show>
                 </div>
               </div>
-              <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-amber-500/30 bg-card p-3.5">
+              <div class="flex min-w-0 items-center gap-3 rounded-lg border border-amber-500/30 bg-card p-3.5">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                   <IconClock class="h-4 w-4" />
                 </span>
@@ -618,12 +618,12 @@ function ExamDetailContent() {
 
             <Show when={isStudent() && ownResult()}>
               {(result) => (
-                <section class="space-y-4 rounded-2xl border border-emerald-500/30 bg-card p-4" aria-labelledby="own-exam-result">
+                <section class="space-y-4 rounded-lg border border-emerald-500/30 bg-card p-4" aria-labelledby="own-exam-result">
                   <div class="flex flex-wrap items-center gap-3">
                     <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                       <IconClipboardCheck class="h-4 w-4" />
                     </span>
-                    <h2 id="own-exam-result" class="font-display text-base font-semibold">{t("exams.yourResult")}</h2>
+                    <h2 id="own-exam-result" class="text-base font-semibold">{t("exams.yourResult")}</h2>
                     <ExamResultBadge mark={result().mark} />
                   </div>
                   <Show when={ex().allow_review}>

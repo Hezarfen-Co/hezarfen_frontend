@@ -191,7 +191,7 @@ function SettingsContent() {
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
                       <div class="min-w-0">
-                        <h2 class="font-display text-base font-semibold">{t("settings.examKinds")}</h2>
+                        <h2 class="text-base font-semibold">{t("settings.examKinds")}</h2>
                         <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{t("settings.examKindsHelp")}</p>
                       </div>
                       <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">
@@ -273,7 +273,7 @@ function SettingsContent() {
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
                       <div class="min-w-0">
-                        <h2 class="font-display text-base font-semibold">{t("settings.attendanceStatuses")}</h2>
+                        <h2 class="text-base font-semibold">{t("settings.attendanceStatuses")}</h2>
                         <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{t("settings.attendanceHelp")}</p>
                       </div>
                       <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">
@@ -362,7 +362,7 @@ function SettingsContent() {
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
                       <div class="min-w-0">
-                        <h2 class="font-display text-base font-semibold">{t("settings.gradeBands")}</h2>
+                        <h2 class="text-base font-semibold">{t("settings.gradeBands")}</h2>
                         <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{t("settings.gradeBandsHelp")}</p>
                       </div>
                       <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">
@@ -447,7 +447,7 @@ function SettingsContent() {
               <section class="data-shell p-4">
                 <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-end">
                   <div>
-                    <h2 class="font-display text-base font-semibold">{t("settings.foodPolicy")}</h2>
+                    <h2 class="text-base font-semibold">{t("settings.foodPolicy")}</h2>
                     <p class="mt-1 text-sm text-muted-foreground">{t("settings.foodPolicyHelp")}</p>
                   </div>
                   <div class="space-y-1.5">
@@ -461,7 +461,7 @@ function SettingsContent() {
                 <section class="data-shell flex flex-col overflow-hidden">
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
-                      <h2 class="font-display text-base font-semibold">{t("settings.mealSlot")}</h2>
+                      <h2 class="text-base font-semibold">{t("settings.mealSlot")}</h2>
                       <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">{mealSlots().length}</Badge>
                     </div>
                   </header>
@@ -504,7 +504,7 @@ function SettingsContent() {
                 <section class="data-shell flex flex-col overflow-hidden">
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
-                      <h2 class="font-display text-base font-semibold">{t("settings.dietaryTags")}</h2>
+                      <h2 class="text-base font-semibold">{t("settings.dietaryTags")}</h2>
                       <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">{dietaryTags().length}</Badge>
                     </div>
                   </header>
@@ -540,7 +540,7 @@ function SettingsContent() {
               <section class="data-shell p-4">
                 <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-end">
                   <div>
-                    <h2 class="font-display text-base font-semibold">{t("settings.maxFileSize")}</h2>
+                    <h2 class="text-base font-semibold">{t("settings.maxFileSize")}</h2>
                     <p class="mt-1 text-sm text-muted-foreground">{t("settings.maxFileSizeHelp")}</p>
                   </div>
                   <Input
@@ -558,7 +558,7 @@ function SettingsContent() {
 
               <section class="data-shell space-y-4 p-4">
                 <div>
-                  <h2 class="font-display text-base font-semibold">{t("settings.aiPolicy")}</h2>
+                  <h2 class="text-base font-semibold">{t("settings.aiPolicy")}</h2>
                   <p class="mt-1 text-sm text-muted-foreground">{t("settings.aiPolicyHelp")}</p>
                 </div>
                 <div class="grid gap-3 sm:grid-cols-3">

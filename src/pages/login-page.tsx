@@ -58,9 +58,9 @@ function LoginForm() {
 
   return (
     <div class="-mx-4 -my-6 flex min-h-[calc(100dvh-3.5rem)] items-center justify-center overflow-hidden px-4 py-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-my-8 lg:px-8">
-      <div class="surface-card w-full max-w-sm p-6 shadow-lg sm:p-8">
+      <div class="data-shell w-full max-w-sm p-6 shadow-lg sm:p-8">
         <div class="mb-8 text-center">
-          <h1 class="font-display text-3xl font-semibold tracking-tight">{t("auth.loginTitle")}</h1>
+          <h1 class="text-3xl font-semibold tracking-tight">{t("auth.loginTitle")}</h1>
           <p class="mt-1.5 text-sm text-muted-foreground">{t("auth.loginSubtitle")}</p>
         </div>
 
@@ -69,7 +69,7 @@ function LoginForm() {
             <Label for="login-username">{t("auth.username")}</Label>
             <Input
               id="login-username"
-              class="h-11"
+              class="h-9"
               autocomplete="username"
               minlength={limits()?.user.min_username_len}
               maxlength={limits()?.user.max_username_len}
@@ -84,7 +84,7 @@ function LoginForm() {
             <div class="relative">
               <Input
                 id="login-password"
-                class="h-11 pr-10"
+                class="h-9 pr-10"
                 type={showPassword() ? "text" : "password"}
                 autocomplete="current-password"
                 minlength={limits()?.user.min_password_len}
@@ -110,7 +110,7 @@ function LoginForm() {
             <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
           )}
 
-          <Button type="submit" class="h-11 w-full text-base" disabled={pending()}>
+          <Button type="submit" class="h-9 w-full text-base" disabled={pending()}>
             {t("auth.login")}
           </Button>
         </form>

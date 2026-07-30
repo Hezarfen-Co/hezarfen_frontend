@@ -118,12 +118,12 @@ function CalendarContent() {
       <section class="data-shell space-y-3 border-sky-500/15 bg-sky-500/2.5 p-3">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
-            <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground">{t("calendar.title")}</h1>
+            <h1 class="truncate text-xl font-semibold tracking-tight text-foreground">{t("calendar.title")}</h1>
             <div class="mt-1.5 flex items-center gap-2">
               <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={prevMonth}>
                 <IconChevronLeft class="h-4 w-4" />
               </Button>
-              <span class="font-display text-base font-semibold tracking-tight">{monthLabel()}</span>
+              <span class="text-base font-semibold tracking-tight">{monthLabel()}</span>
               <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={nextMonth}>
                 <IconChevronRight class="h-4 w-4" />
               </Button>
@@ -231,7 +231,7 @@ function CalendarContent() {
 
             <div class="space-y-3">
               <div class="rounded-xl border border-border/80 bg-card p-3 shadow-xs">
-                <h3 class="font-display text-sm font-semibold">
+                <h3 class="text-sm font-semibold">
                   {selectedDay().toLocaleDateString(locale() === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "long", year: "numeric" })}
                 </h3>
 
