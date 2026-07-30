@@ -4,7 +4,6 @@ import {
   type Column,
   type ColumnDef,
   type ColumnFiltersState,
-  type ColumnSizingState,
   type PaginationState,
   type SortingState,
   type Updater,
@@ -32,7 +31,7 @@ declare module "@tanstack/solid-table" {
     label?: string;
     /** Header + cell horizontal alignment. Applied to both so they never drift apart. */
     align?: "left" | "center" | "right";
-    /** Freeze this column to the left edge on horizontal scroll (fintables-style). */
+    /** Freeze this column to the left edge on horizontal scroll. */
     stickyLeft?: boolean;
     /** Vertical divider on the given edge — separates frozen label from metric columns. */
     divider?: "left" | "right";
@@ -103,8 +102,6 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       return props.columns;
     },
     enableSorting: props.enableSorting ?? true,
-    enableColumnResizing: true,
-    columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -113,8 +110,6 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: (updater) =>
       prefs.setVisibility(resolveUpdater(updater, prefs.preferences().visibility)),
-    onColumnSizingChange: (updater) =>
-      prefs.setSizing(resolveUpdater(updater, prefs.preferences().sizing) as ColumnSizingState),
     onPaginationChange: setPagination,
     state: {
       get sorting() {
@@ -125,9 +120,6 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       },
       get columnVisibility() {
         return prefs.preferences().visibility;
-      },
-      get columnSizing() {
-        return prefs.preferences().sizing;
       },
       get pagination() {
         return props.manualPagination
@@ -145,7 +137,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     const divider = column.columnDef.meta?.divider;
     return divider === "left" ? "border-l border-border/70" : divider === "right" ? "border-r border-border/70" : undefined;
   };
-  const actionColumnClass = (columnId: string) => stickyRightLocked(columnId) ? "w-28 min-w-28 px-2 text-center whitespace-nowrap" : undefined;
+  const actionColumnClass = (columnId: string) => stickyRightLocked(columnId) ? "table-action-cell h-[45px] w-[110px] min-w-[110px] max-w-[110px] px-2 py-0 text-center whitespace-nowrap" : undefined;
   const stickyHeadClass = (column: Column<TData, unknown>) =>
     isStickyLeft(column)
       ? "table-sticky-head-left sticky left-0 z-30"
@@ -171,11 +163,24 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       toggle: (visible: boolean) => column.toggleVisibility(visible),
     }));
   const colSpan = () => Math.max(1, table.getVisibleLeafColumns().length);
-  const tableWidth = () =>
+  const dataColumnsWidth = () =>
     table.getVisibleLeafColumns().reduce(
-      (total, column) => total + (stickyRightLocked(column.id) ? 112 : column.getSize()),
+      (total, column) => total + (stickyRightLocked(column.id) ? 0 : column.getSize()),
       0,
     );
+  const actionColumnsWidth = () =>
+    table.getVisibleLeafColumns().reduce(
+      (total, column) => total + (stickyRightLocked(column.id) ? 110 : 0),
+      0,
+    );
+  const tableWidth = () => dataColumnsWidth() + actionColumnsWidth();
+  const columnWidth = (column: Column<TData, unknown>) => {
+    if (stickyRightLocked(column.id)) return "110px";
+    const total = dataColumnsWidth();
+    if (total === 0) return `${column.getSize()}px`;
+    const share = column.getSize() / total;
+    return `calc(${share * 100}% - ${share * actionColumnsWidth()}px)`;
+  };
   const showColumnMenu = () => (props.enableColumnVisibility ?? true) && hideableColumns().length > 0;
   const showSearch = () => props.searchPredicate != null || props.filterColumn != null || props.onSearchInput != null;
   const showHeader = () => props.title != null || props.description != null || props.actions != null;
@@ -209,7 +214,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     const align = alignOf(header.column);
     if (!(props.enableSorting ?? true) || !header.column.getCanSort()) {
       // The th already carries alignClass; the block span makes text-align resolve.
-      return <span class="block truncate">{content}</span>;
+      return <span class="block truncate whitespace-nowrap">{content}</span>;
     }
     const sorted = () => header.column.getIsSorted();
     return (
@@ -217,14 +222,17 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         type="button"
         variant="ghost"
         size="sm"
-        // th text-align positions this inline-flex button; -ml-3 only trims the left gutter.
-        class={cn("h-8 px-2 uppercase", align === "left" && "-ml-3", sorted() && "text-foreground")}
+        // th text-align positions this inline-flex button; -ml-2 cancels the button's
+        // px-2 so header text starts at the same gutter as the cell text below it.
+        class={cn("h-8 min-w-0 max-w-full px-2 font-medium tracking-normal normal-case", align === "left" && "-ml-2", sorted() && "text-foreground")}
         onClick={() => header.column.toggleSorting(sorted() === "asc")}
       >
-        {content}
+        <span class="truncate">{content}</span>
         <Show
           when={sorted() !== false}
-          fallback={<IconChevronsUpDown class="h-3.5 w-3.5 opacity-50" />}
+          fallback={
+            <IconChevronsUpDown class="h-3.5 w-3.5 opacity-0 transition-opacity group-hover/head:opacity-50 group-focus-within/head:opacity-50" />
+          }
         >
           <Show
             when={sorted() === "asc"}
@@ -270,12 +278,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </div>
           <Show when={showColumnMenu()}>
             <div class="flex justify-end">
-              <DataTableViewMenu
-                columns={viewMenuColumns()}
-                density={prefs.preferences().density}
-                onDensityChange={prefs.setDensity}
-                onResetWidths={prefs.resetSizing}
-              />
+              <DataTableViewMenu columns={viewMenuColumns()} />
             </div>
           </Show>
         </div>
@@ -283,9 +286,13 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       <DataTableFrame>
         <Table
           class={cn("data-table table-fixed", props.tableClass)}
-          data-density={prefs.preferences().density}
           style={{ width: `max(100%, ${tableWidth()}px)` }}
         >
+          <colgroup>
+            <For each={table.getVisibleLeafColumns()}>
+              {(column) => <col style={{ width: columnWidth(column) }} />}
+            </For>
+          </colgroup>
           <TableHeader>
             <For each={table.getHeaderGroups()}>
               {(headerGroup) => (
@@ -295,43 +302,16 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                       <TableHead
                         colSpan={header.colSpan}
                         class={cn(
-                          "group/head relative",
+                          "group/head relative overflow-hidden",
                           alignClass[alignOf(header.column)],
                           dividerClass(header.column),
-                          actionColumnClass(header.column.id),
                           stickyHeadClass(header.column),
                           header.column.columnDef.meta?.headerClass,
+                          actionColumnClass(header.column.id),
                         )}
-                        style={{ width: `${stickyRightLocked(header.column.id) ? 112 : header.getSize()}px` }}
+                        style={{ width: columnWidth(header.column) }}
                       >
                         <Show when={!header.isPlaceholder}>{renderHeader(header)}</Show>
-                        <Show when={header.column.getCanResize() && !stickyRightLocked(header.column.id)}>
-                          <div
-                            role="separator"
-                            aria-orientation="vertical"
-                            aria-label="Sütun genişliğini ayarla"
-                            aria-valuemin={header.column.columnDef.minSize ?? 72}
-                            aria-valuenow={header.getSize()}
-                            tabIndex={0}
-                            onMouseDown={header.getResizeHandler()}
-                            onTouchStart={header.getResizeHandler()}
-                            onDblClick={() => header.column.resetSize()}
-                            onKeyDown={(event) => {
-                              if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-                              event.preventDefault();
-                              const step = event.shiftKey ? 32 : 8;
-                              const delta = event.key === "ArrowLeft" ? -step : step;
-                              const min = header.column.columnDef.minSize ?? 72;
-                              prefs.setSizing({
-                                ...prefs.preferences().sizing,
-                                [header.column.id]: Math.max(min, header.getSize() + delta),
-                              });
-                            }}
-                            class="absolute right-0 top-0 z-20 flex h-full w-2 cursor-col-resize touch-none select-none items-center justify-center opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-hidden group-hover/head:opacity-100"
-                          >
-                            <span class="h-1/2 w-px rounded bg-primary/70" />
-                          </div>
-                        </Show>
                       </TableHead>
                     )}
                   </For>
@@ -371,20 +351,30 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                     }}
                   >
                     <For each={row.getVisibleCells()}>
-                      {(cell) => (
-                        <TableCell
-                          class={cn(
-                            alignClass[alignOf(cell.column)],
-                            dividerClass(cell.column),
-                            actionColumnClass(cell.column.id),
-                            stickyCellClass(cell.column),
-                            cell.column.columnDef.meta?.cellClass,
-                          )}
-                          style={{ width: `${stickyRightLocked(cell.column.id) ? 112 : cell.column.getSize()}px` }}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      )}
+                      {(cell) => {
+                        const val = cell.getValue();
+                        const isText = typeof val === "string" || typeof val === "number";
+                        const isSystemColumn = ["actions", "update", "select"].includes(cell.column.id);
+                        const isEmpty = !isSystemColumn && (val == null || val === "");
+
+                        return (
+                          <TableCell
+                            class={cn(
+                              alignClass[alignOf(cell.column)],
+                              dividerClass(cell.column),
+                              stickyCellClass(cell.column),
+                              cell.column.columnDef.meta?.cellClass,
+                              actionColumnClass(cell.column.id),
+                            )}
+                            style={{ width: columnWidth(cell.column) }}
+                            title={isText && !isEmpty ? String(val) : undefined}
+                          >
+                            <Show when={!isEmpty} fallback={<span class="text-muted-foreground/40">-</span>}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </Show>
+                          </TableCell>
+                        );
+                      }}
                     </For>
                   </TableRow>
                 )}

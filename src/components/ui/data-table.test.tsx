@@ -8,7 +8,12 @@ type Row = { name: string; role?: string };
 const columns: ColumnDef<Row>[] = [
   { accessorKey: "name", header: "Name" },
   { id: "update", header: "Role", cell: () => "Role" },
-  { id: "actions", header: "Actions", cell: () => "…" },
+  {
+    id: "actions",
+    header: "Actions",
+    meta: { headerClass: "w-14", cellClass: "w-40 text-right" },
+    cell: () => "…",
+  },
 ];
 
 beforeEach(() => {
@@ -17,22 +22,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
-test("resizes data columns with the keyboard and keeps actions fixed", () => {
-  render(() => (
-    <PreferencesProvider>
-      <DataTable columns={columns} data={[{ name: "Ada" }]} storageKey="people" enableColumnVisibility={false} />
-    </PreferencesProvider>
-  ));
-
-  const separator = screen.getAllByRole("separator", { name: "Sütun genişliğini ayarla" })[0];
-  fireEvent.keyDown(separator, { key: "ArrowRight" });
-
-  const saved = JSON.parse(localStorage.getItem("hezarfen.table.people") ?? "{}");
-  expect(saved.sizing.name).toBe(158);
-  expect(screen.getAllByRole("separator")).toHaveLength(2);
-});
-
-test("keeps only the rightmost action column sticky", () => {
+test("keeps only the rightmost action column sticky and fixed at 110x45", () => {
   render(() => (
     <PreferencesProvider>
       <DataTable columns={columns} data={[{ name: "Ada" }]} enableColumnVisibility={false} />
@@ -41,7 +31,24 @@ test("keeps only the rightmost action column sticky", () => {
 
   const actionsHeader = screen.getByRole("columnheader", { name: "Actions" });
   expect(actionsHeader.classList).toContain("table-sticky-head-right");
+  expect(actionsHeader.classList).toContain("table-action-cell");
+  expect(actionsHeader.classList).toContain("h-[45px]");
+  expect(actionsHeader.classList).toContain("w-[110px]");
+  expect(actionsHeader.classList).not.toContain("w-14");
+  expect(actionsHeader.style.width).toBe("110px");
   expect(actionsHeader.classList).toContain("z-30");
+  const actionsCell = screen.getByRole("cell", { name: "…" });
+  expect(actionsCell.classList).toContain("table-action-cell");
+  expect(actionsCell.classList).toContain("h-[45px]");
+  expect(actionsCell.classList).toContain("w-[110px]");
+  expect(actionsCell.classList).not.toContain("w-40");
+  expect(actionsCell.classList).toContain("text-center");
+  expect(actionsCell.classList).not.toContain("text-right");
+  expect(actionsCell.style.width).toBe("110px");
+  const columnTracks = document.querySelectorAll("col");
+  expect(columnTracks[0]?.style.width).toBe("calc(50% - 55px)");
+  expect(columnTracks[1]?.style.width).toBe("calc(50% - 55px)");
+  expect(columnTracks[2]?.style.width).toBe("110px");
   const roleHeader = screen.getAllByRole("columnheader").find((header) => header.textContent?.startsWith("Role"));
   expect(roleHeader?.classList).not.toContain("table-sticky-head-right");
 });

@@ -10,29 +10,18 @@ const storageKey = `hezarfen.table.${key}`;
 
 beforeEach(() => localStorage.clear());
 
-test("reads saved widths, visibility and density", () => {
+test("reads saved visibility", () => {
   localStorage.setItem(
     storageKey,
-    JSON.stringify({
-      sizing: { name: 240 },
-      visibility: { email: false },
-      density: "comfortable",
-    }),
+    JSON.stringify({ visibility: { email: false } }),
   );
 
-  expect(readTablePreferences(key)).toEqual({
-    sizing: { name: 240 },
-    visibility: { email: false },
-    density: "comfortable",
-  });
+  expect(readTablePreferences(key)).toEqual({ visibility: { email: false } });
 });
 
-test("falls back to compact defaults for broken storage", () => {
+test("falls back to defaults for broken storage", () => {
   localStorage.setItem(storageKey, "{broken");
   expect(readTablePreferences(key)).toEqual(defaultTablePreferences);
-
-  localStorage.setItem(storageKey, JSON.stringify({ density: "huge" }));
-  expect(readTablePreferences(key).density).toBe("compact");
 });
 
 function PreferencesProbe() {
@@ -40,24 +29,18 @@ function PreferencesProbe() {
   return (
     <>
       <output data-testid="preferences">{JSON.stringify(controller.preferences())}</output>
-      <button type="button" onClick={() => controller.setSizing({ name: 320 })}>width</button>
       <button type="button" onClick={() => controller.setVisibility({ email: false })}>visibility</button>
-      <button type="button" onClick={() => controller.setDensity("normal")}>density</button>
     </>
   );
 }
 
-test("persists width, visibility and density changes", () => {
+test("persists visibility changes", () => {
   render(() => <PreferencesProbe />);
 
-  fireEvent.click(screen.getByRole("button", { name: "width" }));
   fireEvent.click(screen.getByRole("button", { name: "visibility" }));
-  fireEvent.click(screen.getByRole("button", { name: "density" }));
 
   expect(JSON.parse(localStorage.getItem(storageKey) ?? "{}")).toEqual({
-    sizing: { name: 320 },
     visibility: { email: false },
-    density: "normal",
   });
-  expect(screen.getByTestId("preferences").textContent).toContain('"density":"normal"');
+  expect(screen.getByTestId("preferences").textContent).toContain('"email":false');
 });

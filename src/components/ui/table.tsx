@@ -25,7 +25,7 @@ export function TableHeader(props: ParentProps<ComponentProps<"thead">>) {
 export function TableBody(props: ParentProps<ComponentProps<"tbody">>) {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
-    <tbody class={cn("[&_tr:last-child]:border-0 [&_tr:nth-child(even)]:bg-muted/22", local.class)} {...rest}>
+    <tbody class={cn("[&_tr:last-child]:border-0", local.class)} {...rest}>
       {local.children}
     </tbody>
   );
@@ -35,7 +35,7 @@ export function TableRow(props: ParentProps<ComponentProps<"tr">>) {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
     <tr
-      class={cn("border-b border-border/70 transition-colors hover:bg-muted/55 data-[state=selected]:bg-muted", local.class)}
+      class={cn("border-b border-border/70 transition-colors hover:bg-muted/65 data-[state=selected]:bg-muted", local.class)}
       {...rest}
     >
       {local.children}
@@ -48,7 +48,7 @@ export function TableHead(props: ParentProps<ComponentProps<"th">>) {
   return (
     <th
       class={cn(
-        "sticky top-0 z-20 h-11 whitespace-nowrap px-3 text-left align-middle text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground first:pl-4 last:pr-4 has-[[role=checkbox]]:pr-0 [&_*]:uppercase",
+        "sticky top-0 z-20 h-11 whitespace-nowrap px-3 text-left align-middle text-xs font-medium tracking-normal text-muted-foreground first:pl-4 last:pr-4 has-[[role=checkbox]]:pr-0",
         local.class,
       )}
       {...rest}

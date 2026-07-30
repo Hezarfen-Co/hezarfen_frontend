@@ -20,6 +20,14 @@ export type MessageKey =
   | "ai.suggest2"
   | "ai.suggest3"
   | "ai.suggest4"
+  | "ai.suggestStaff1"
+  | "ai.suggestStaff2"
+  | "ai.suggestStaff3"
+  | "ai.suggestStaff4"
+  | "ai.suggestParent1"
+  | "ai.suggestParent2"
+  | "ai.suggestParent3"
+  | "ai.suggestParent4"
   | "nav.home"
   | "nav.today"
   | "nav.classes"
@@ -94,11 +102,6 @@ export type MessageKey =
   | "common.actions"
   | "common.columns"
   | "common.visibleColumns"
-  | "common.rowDensity"
-  | "common.densityCompact"
-  | "common.densityNormal"
-  | "common.densityComfortable"
-  | "common.resetColumnWidths"
   | "common.pageRange"
   | "common.rowsPerPage"
   | "common.moreFilters"
@@ -715,6 +718,9 @@ export type MessageKey =
   | "courses.kind.course"
   | "courses.kind.study"
   | "courses.kind.club"
+  | "courses.kind.courseSingular"
+  | "courses.kind.studySingular"
+  | "courses.kind.clubSingular"
   | "courses.capacity"
   | "courses.capacityOptional"
   | "courses.teachers"
@@ -1197,6 +1203,14 @@ const en: Dict = {
   "ai.suggest2": "Which exams are coming up?",
   "ai.suggest3": "Do I have any missing homework?",
   "ai.suggest4": "How is my attendance this term?",
+  "ai.suggestStaff1": "What is on the schedule today?",
+  "ai.suggestStaff2": "Which exams are coming up?",
+  "ai.suggestStaff3": "Which students have low attendance?",
+  "ai.suggestStaff4": "Summarize this week's events.",
+  "ai.suggestParent1": "What are my child's classes today?",
+  "ai.suggestParent2": "Which exams does my child have soon?",
+  "ai.suggestParent3": "How is my child's attendance this term?",
+  "ai.suggestParent4": "What is on this week's meal menu?",
   "nav.home": "Home",
   "nav.today": "Today",
   "nav.classes": "Education",
@@ -1226,7 +1240,7 @@ const en: Dict = {
   "nav.attendance": "Attendance",
   "nav.questions": "Question Pool",
   "nav.work": "Work Log",
-  "nav.staffWork": "Staff work",
+  "nav.staffWork": "Staff Shifts",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
@@ -1245,7 +1259,7 @@ const en: Dict = {
   "nav.preferences": "Preferences",
   "nav.group.students": "Student Management",
   "nav.group.school": "Management",
-  "nav.group.classes": "Education",
+  "nav.group.classes": "Academics",
   "nav.group.grades": "Grades",
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
@@ -1271,11 +1285,6 @@ const en: Dict = {
   "common.actions": "Actions",
   "common.columns": "Columns",
   "common.visibleColumns": "Visible columns",
-  "common.rowDensity": "Row density",
-  "common.densityCompact": "Compact",
-  "common.densityNormal": "Normal",
-  "common.densityComfortable": "Comfortable",
-  "common.resetColumnWidths": "Reset column widths",
   "common.pageRange": "{start}-{end} of {total}",
   "common.rowsPerPage": "{size} / page",
   "common.moreFilters": "More filters",
@@ -1978,6 +1987,9 @@ const en: Dict = {
   "courses.kind.course": "Classes",
   "courses.kind.study": "Study",
   "courses.kind.club": "Club",
+  "courses.kind.courseSingular": "Class",
+  "courses.kind.studySingular": "Study session",
+  "courses.kind.clubSingular": "Club",
   "courses.capacity": "Capacity",
   "courses.capacityOptional": "Optional seat cap",
   "courses.teachers": "Teachers",
@@ -2386,6 +2398,14 @@ const tr: Dict = {
   "ai.suggest2": "Yaklaşan sınavlarım neler?",
   "ai.suggest3": "Eksik ödevim var mı?",
   "ai.suggest4": "Bu dönem devamsızlığım nasıl?",
+  "ai.suggestStaff1": "Bugün programda neler var?",
+  "ai.suggestStaff2": "Yaklaşan sınavlar neler?",
+  "ai.suggestStaff3": "Hangi öğrencilerin devamsızlığı yüksek?",
+  "ai.suggestStaff4": "Bu haftanın etkinliklerini özetle.",
+  "ai.suggestParent1": "Çocuğumun bugün hangi dersleri var?",
+  "ai.suggestParent2": "Çocuğumun yaklaşan sınavları neler?",
+  "ai.suggestParent3": "Çocuğumun bu dönem devamsızlığı nasıl?",
+  "ai.suggestParent4": "Bu haftanın yemek menüsünde ne var?",
   "nav.home": "Ana sayfa",
   "nav.today": "Bugün",
   "nav.classes": "Eğitim",
@@ -2415,7 +2435,7 @@ const tr: Dict = {
   "nav.attendance": "Yoklama",
   "nav.questions": "Soru Havuzu",
   "nav.work": "Çalışma Kaydı",
-  "nav.staffWork": "Mesailer",
+  "nav.staffWork": "Personel Mesaisi",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
   "nav.studentAttendance": "Öğrenci yoklamaları",
@@ -2434,7 +2454,7 @@ const tr: Dict = {
   "nav.preferences": "Tercihler",
   "nav.group.students": "Öğrenci Yönetimi",
   "nav.group.school": "Yönetim",
-  "nav.group.classes": "Eğitim",
+  "nav.group.classes": "Akademik",
   "nav.group.grades": "Notlar",
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
@@ -2460,11 +2480,6 @@ const tr: Dict = {
   "common.actions": "İşlemler",
   "common.columns": "Sütunlar",
   "common.visibleColumns": "Görünür sütunlar",
-  "common.rowDensity": "Satır yoğunluğu",
-  "common.densityCompact": "Sıkı",
-  "common.densityNormal": "Normal",
-  "common.densityComfortable": "Rahat",
-  "common.resetColumnWidths": "Sütun genişliklerini sıfırla",
   "common.pageRange": "{total} kayıttan {start}-{end}",
   "common.rowsPerPage": "{size} / sayfa",
   "common.moreFilters": "Daha fazla filtre",
@@ -3167,6 +3182,9 @@ const tr: Dict = {
   "courses.kind.course": "Dersler",
   "courses.kind.study": "Etüt",
   "courses.kind.club": "Kulüp",
+  "courses.kind.courseSingular": "Ders",
+  "courses.kind.studySingular": "Etüt",
+  "courses.kind.clubSingular": "Kulüp",
   "courses.capacity": "Kapasite",
   "courses.capacityOptional": "İsteğe bağlı kontenjan",
   "courses.teachers": "Öğretmenler",

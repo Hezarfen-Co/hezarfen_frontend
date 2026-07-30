@@ -60,18 +60,20 @@ display-font, translucent surface, or custom shadow rules.
 ## DataTable
 
 - Table shell: `rounded-lg border bg-card`
-- Header: sticky, `11px` bold uppercase, `tracking-[0.16em]`, muted background
-- Body: compact by default, even-row muted zebra, restrained hover
-- Cell padding: compact `py-1.5`; normal `py-3`; comfortable `py-5`
-- The rightmost action/update column is `w-28`, centered, sticky right, and
-  inherits the exact opaque zebra/hover row surface
-- Data columns start at a consistent width, fill the available table width, and
-  expose mouse, touch, and keyboard resize handles; action/update stays fixed
-- Search and column controls: `h-9`; search remains pill-shaped like bDash
+- Header: sticky, `text-xs` medium **Title Case** (no uppercase transform),
+  `tracking-normal`, muted foreground/background
+- Body: flat rows (no zebra), restrained hover, `tabular-nums` cells so digits
+  align vertically without a monospace font
+- Cell padding: fixed `py-3` (no density / row-height toggle)
+- The rightmost action/update column stays fixed at `110×45px`, centered, sticky
+  right, and inherits the exact opaque row surface
+- Data columns fill the available table width at a consistent proportional width.
+  Column resizing is not offered (no resize handles, no width persistence)
+- Search and column controls: `h-9 rounded-lg` (not pill)
 - Pagination includes range, optional page-size selector, previous/next, and page
   count
-- `storageKey` remains optional. When provided, column widths, visibility, and
-  density persist under `hezarfen.table.<storageKey>` and resizing is enabled.
+- `storageKey` remains optional. When provided, only column visibility persists
+  under `hezarfen.table.<storageKey>`.
 - Application tables use `DataTable`; page/domain components do not render table
   primitives directly.
 

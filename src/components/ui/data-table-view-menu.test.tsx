@@ -10,8 +10,6 @@ test("opens the columns menu from its trigger", async () => {
     <PreferencesProvider>
       <DataTableViewMenu
         columns={[{ id: "email", label: "E-posta", visible: true, toggle: () => undefined }]}
-        density="compact"
-        onDensityChange={() => undefined}
       />
     </PreferencesProvider>
   ));
