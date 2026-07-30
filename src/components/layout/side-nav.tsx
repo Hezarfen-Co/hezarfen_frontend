@@ -77,11 +77,13 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                       title={t(item.labelKey)}
                       aria-current={itemActive() ? "page" : undefined}
                       class={cn(
-                        "relative flex h-9 items-center rounded-md text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                        // Active submenu item: bold foreground text + a bright segment over
+                        // the group's left guide line (no filled pill).
+                        "relative flex h-9 items-center rounded-md text-[13px] outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                         props.collapsed ? "mx-auto h-10 w-12 justify-center px-0" : "gap-3 px-3",
                         itemActive()
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                          ? "font-semibold text-foreground before:absolute before:-left-[9px] before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-foreground"
+                          : "font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                       )}
                     >
                       <Show when={showIcon}>
