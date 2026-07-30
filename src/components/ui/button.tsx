@@ -8,12 +8,12 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md",
+        // Flat (no shadows), neutral fills, subtle hairline outlines.
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-input bg-background/85 shadow-sm hover:border-primary/35 hover:bg-accent hover:text-accent-foreground hover:shadow-md",
-        secondary: "border border-border/60 bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/85 hover:shadow-md",
+          "border border-border/70 bg-transparent hover:border-border hover:bg-muted/60 hover:text-foreground",
+        secondary: "border border-border/60 bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "text-foreground/75 hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
         link: "text-primary underline-offset-4 hover:underline active:scale-100",
       },
