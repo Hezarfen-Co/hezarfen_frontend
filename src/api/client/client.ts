@@ -349,7 +349,9 @@ function errorMessageFromPayload(data: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function client<T>(path: string, options: RequestOptions = {}): Promise<T> {
+const pendingGets = new Map<string, Promise<unknown>>();
+
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {};
   let body: string | undefined;
 
@@ -419,6 +421,24 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
   }
 
   return data as T;
+}
+
+/**
+ * Coalesce only overlapping, non-cancellable GETs. This is deliberately not a
+ * cache: once settled the entry disappears, so every later resource refetch
+ * still reaches the backend and mutation consistency stays unchanged.
+ */
+export function client<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const method = options.method ?? "GET";
+  if (method !== "GET" || options.body !== undefined || options.signal || options.cache === "no-store") {
+    return request<T>(path, options);
+  }
+  const key = `${path}\u0000${options.cache ?? "default"}`;
+  const pending = pendingGets.get(key);
+  if (pending) return pending as Promise<T>;
+  const next = request<T>(path, options).finally(() => pendingGets.delete(key));
+  pendingGets.set(key, next);
+  return next;
 }
 
 export async function formClient<T>(path: string, body: FormData, signal?: AbortSignal): Promise<T> {

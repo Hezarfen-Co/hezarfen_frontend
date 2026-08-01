@@ -18,6 +18,18 @@ describe("client", () => {
       expect(init?.credentials).toBe("same-origin");
     });
 
+    it("coalesces simultaneous identical GETs without caching later reads", async () => {
+      let resolve!: (value: Response) => void;
+      vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((done) => { resolve = done; })));
+      const first = client("/shared");
+      const second = client("/shared");
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+      resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+      await expect(Promise.all([first, second])).resolves.toEqual([{ ok: true }, { ok: true }]);
+      mockFetchSuccess({ fresh: true });
+      await expect(client("/shared")).resolves.toEqual({ fresh: true });
+    });
+
     it("makes POST request with JSON body", async () => {
       mockFetchSuccess({ ok: true });
       const body = { foo: "bar" };
