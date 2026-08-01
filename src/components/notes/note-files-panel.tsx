@@ -218,7 +218,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
                 return (
                   <li class="group overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-xs transition-colors hover:border-amber-500/40">
                     <div class="relative h-28 bg-muted/25">
-                      <button type="button" class="flex h-full w-full items-center justify-center rounded-t-xl transition-colors hover:bg-muted/40" onClick={() => setPreviewFile(file)}>
+                      <button type="button" class="flex h-full w-full items-center justify-center rounded-t-xl transition-colors hover:bg-muted/40" aria-label={`${t("common.view")}: ${file.name}`} onClick={() => setPreviewFile(file)}>
                         <span class={cn("flex h-16 w-16 items-center justify-center rounded-lg border", meta.class)}>
                           {meta.icon}
                         </span>

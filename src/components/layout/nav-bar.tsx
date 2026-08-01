@@ -3,7 +3,7 @@ import { Show, createSignal } from "solid-js";
 import { Button } from "@/components/ui/button";
 import { SideNav } from "@/components/layout/side-nav";
 import { UserMenu } from "@/components/layout/user-menu";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { ThemeModeControl } from "@/components/layout/theme-mode-control";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { IconMenu, IconX } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
@@ -43,7 +43,7 @@ export function NavBar() {
           <div class="ml-auto flex shrink-0 items-center gap-2">
             <Show when={!auth.user()}>
               <LocaleSwitcher />
-              <ThemeToggle />
+              <ThemeModeControl variant="toggle" />
             </Show>
             <Show when={auth.user()}>
               <UserMenu />

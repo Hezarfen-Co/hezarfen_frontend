@@ -20,7 +20,6 @@ import {
   IconEdit,
   IconNote,
   IconReportAnalytics,
-  IconSchool,
   IconSettings,
   IconUserCog,
   IconUsers,
@@ -69,28 +68,12 @@ const CALENDAR_ITEM: NavItem = {
   Icon: IconCalendarDays,
 };
 
-const STUDENTS_ITEM: NavItem = {
-  id: "students",
-  to: "/students",
-  labelKey: "nav.students",
-  Icon: IconUsers,
-  minRole: "teacher",
-};
-
 const CHILDREN_ITEM: NavItem = {
   id: "children",
   to: "/students",
   labelKey: "nav.children",
   Icon: IconUsers,
   exactRole: "parent",
-};
-
-const SCHOOL_ITEM: NavItem = {
-  id: "school",
-  to: "/school",
-  labelKey: "nav.school",
-  Icon: IconSchool,
-  minRole: "manager",
 };
 
 const PROGRESS_ITEM: NavItem = {
@@ -110,9 +93,9 @@ const MEALS_ITEM: NavItem = {
 
 const PRIMARY_BY_ROLE: Record<Role, NavItem[]> = {
   student: [HOME_ITEM, CLASSES_ITEM, CALENDAR_ITEM, PROGRESS_ITEM],
-  teacher: [HOME_ITEM, CLASSES_ITEM, STUDENTS_ITEM, CALENDAR_ITEM],
-  manager: [HOME_ITEM, CLASSES_ITEM, STUDENTS_ITEM, CALENDAR_ITEM, SCHOOL_ITEM],
-  admin: [HOME_ITEM, CLASSES_ITEM, STUDENTS_ITEM, CALENDAR_ITEM, SCHOOL_ITEM],
+  teacher: [HOME_ITEM, CLASSES_ITEM, CALENDAR_ITEM],
+  manager: [HOME_ITEM, CLASSES_ITEM, CALENDAR_ITEM],
+  admin: [HOME_ITEM, CLASSES_ITEM, CALENDAR_ITEM],
   parent: [HOME_ITEM, CHILDREN_ITEM, CALENDAR_ITEM, MEALS_ITEM],
 };
 
@@ -140,7 +123,6 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.students",
     Icon: IconReportAnalytics,
     items: [
-      STUDENTS_ITEM,
       CHILDREN_ITEM,
       { id: "student-marks", to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
@@ -164,7 +146,6 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "nav.group.school",
     Icon: IconGrid,
     items: [
-      SCHOOL_ITEM,
       { id: "staff-work", to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager" },
       { id: "settings", to: "/management/settings", labelKey: "nav.settings", Icon: IconSettings, minRole: "manager" },
       { id: "terms", to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendarDays, minRole: "manager" },
@@ -178,7 +159,7 @@ function itemVisible(item: NavItem, role: Role | undefined) {
   if (!role) return false;
   if (item.exactRole) return hasExactRole(role, item.exactRole);
   if (item.minRole || item.maxRole) return roleInRange(role, item.minRole, item.maxRole);
-  return role !== "parent" || ["/", "/students", "/calendar", "/appointments", "/meals", "/messages"].includes(item.to);
+  return role !== "parent" || ["/", "/calendar", "/appointments", "/meals", "/messages"].includes(item.to);
 }
 
 export function primaryNavItems(role: Role | undefined): NavItem[] {
@@ -212,10 +193,8 @@ export function primaryPathActive(pathname: string, item: NavItem) {
   if (pathActive(pathname, item.to, item.exact)) return true;
   const prefixes: Partial<Record<string, string[]>> = {
     classes: ["/homework", "/exams", "/question-bank"],
-    students: ["/management/student-", "/management/pomodoros"],
     calendar: ["/events", "/appointments"],
     progress: ["/attendance", "/pomodoro"],
-    school: ["/management/settings", "/management/terms", "/management/staff-work", "/admin/users"],
   };
   return (prefixes[item.id] ?? []).some((prefix) => pathname.startsWith(prefix));
 }

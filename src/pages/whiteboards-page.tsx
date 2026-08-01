@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import { getBoards, postBoard, type Board } from "@/api/boards";
 import { getUsers } from "@/api/users";
 import { formatApiError, type User } from "@/api/client";
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
+import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -144,6 +145,37 @@ function CreateBoardPanel(props: {
 
   const label = (u: User) => [u.name, u.surname].filter(Boolean).join(" ") || u.username;
 
+  // Keyboard navigation over the suggestion list: highlight moves with the
+  // arrow keys, Enter adds the highlighted user. Reset to the top whenever the
+  // query changes so the highlight never points past the filtered list.
+  const [activeIndex, setActiveIndex] = createSignal(0);
+  createEffect(() => {
+    query();
+    setActiveIndex(0);
+  });
+  const addParticipant = (u: User) => {
+    setSelected((prev) => [...prev, u]);
+    setQuery("");
+  };
+  const onPickerKeyDown = (e: KeyboardEvent) => {
+    const list = filtered();
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(list.length - 1, i + 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(0, i - 1));
+    } else if (e.key === "Enter") {
+      if (list.length > 0) {
+        e.preventDefault();
+        const u = list[Math.min(activeIndex(), list.length - 1)];
+        if (u) addParticipant(u);
+      }
+    } else if (e.key === "Escape") {
+      setQuery("");
+    }
+  };
+
   const submit = async () => {
     if (!title().trim()) return;
     setPending(true);
@@ -198,18 +230,20 @@ function CreateBoardPanel(props: {
             placeholder={t("whiteboard.addParticipant")}
             value={query()}
             onInput={(e) => setQuery(e.currentTarget.value)}
+            onKeyDown={onPickerKeyDown}
           />
           <Show when={query().trim() && filtered().length > 0}>
             <div class="rounded-lg border">
               <For each={filtered()}>
-                {(u) => (
+                {(u, i) => (
                   <button
                     type="button"
-                    class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
-                    onClick={() => {
-                      setSelected((prev) => [...prev, u]);
-                      setQuery("");
-                    }}
+                    class={cn(
+                      "flex w-full items-center justify-between px-3 py-2 text-left text-sm",
+                      activeIndex() === i() ? "bg-accent" : "hover:bg-accent",
+                    )}
+                    onMouseEnter={() => setActiveIndex(i())}
+                    onClick={() => addParticipant(u)}
                   >
                     <span class="truncate">{label(u)}</span>
                     <span class="text-xs text-muted-foreground">{u.role}</span>

@@ -11,6 +11,7 @@ import {
 } from "@/api/boards";
 import { getUsers } from "@/api/users";
 import { formatApiError } from "@/api/client";
+import type { MessageKey } from "@/i18n/messages";
 import { WhiteboardRoom, type BoardLiveState } from "@/components/whiteboard/whiteboard-room-ws";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -97,6 +98,10 @@ function WhiteboardContent() {
     const u = (users() ?? []).find((x) => x.id === userId);
     if (!u) return userId;
     return [u.name, u.surname].filter(Boolean).join(" ") || u.username;
+  };
+  const roleOf = (userId: string) => {
+    const u = (users() ?? []).find((x) => x.id === userId);
+    return u ? t(`role.${u.role}` as MessageKey) : "";
   };
   const roster = () => {
     const creator = live().creator;
@@ -203,10 +208,13 @@ function WhiteboardContent() {
                   <For each={roster()}>
                     {(userId) => (
                       <li class="flex items-center justify-between gap-2 text-sm">
-                        <span class="min-w-0 truncate">{nameOf(userId)}</span>
-                        <Show when={userId === live().creator}>
-                          <Badge variant="outline" class="rounded-full text-xs">{t("whiteboard.creator")}</Badge>
-                        </Show>
+                        <span class="flex min-w-0 items-center gap-1.5">
+                          <span class="truncate">{nameOf(userId)}</span>
+                          <Show when={userId === live().creator}>
+                            <Badge variant="outline" class="rounded-full text-[10px]">{t("whiteboard.creator")}</Badge>
+                          </Show>
+                        </span>
+                        <span class="shrink-0 text-xs text-muted-foreground">{roleOf(userId)}</span>
                       </li>
                     )}
                   </For>

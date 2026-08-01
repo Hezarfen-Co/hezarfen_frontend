@@ -65,8 +65,8 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
       <For each={groups()}>
         {(group) => {
           const active = () => group.items.some((item) => current()?.id === item.id);
-          const renderLinks = (showIcon: boolean) => (
-            <div class="grid gap-1">
+          const renderLinks = () => (
+            <div class="grid gap-px">
               <For each={group.items}>
                 {(item: NavItem) => {
                   const itemActive = () => current()?.id === item.id;
@@ -79,17 +79,14 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                       class={cn(
                         // Active submenu item: bold foreground text + a bright segment over
                         // the group's left guide line (no filled pill).
-                        "relative flex h-9 items-center rounded-md text-[13px] outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-                        props.collapsed ? "mx-auto h-10 w-12 justify-center px-0" : "gap-3 px-3",
+                        "relative flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                         itemActive()
-                          ? "font-semibold text-foreground before:absolute before:-left-[9px] before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-foreground"
+                          ? "font-semibold text-foreground before:absolute before:-left-[9px] before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:bg-foreground"
                           : "font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                       )}
                     >
-                      <Show when={showIcon}>
-                        <item.Icon class="h-4 w-4 shrink-0" />
-                      </Show>
-                      <span class={props.collapsed ? "sr-only" : "truncate"}>{t(item.labelKey)}</span>
+                      <item.Icon class="h-4 w-4 shrink-0 opacity-80" />
+                      <span class="truncate">{t(item.labelKey)}</span>
                       <Show when={badgeFor(item) > 0}>
                         <Show
                           when={!props.collapsed}
@@ -127,7 +124,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                     <span class="truncate">{t(group.labelKey)}</span>
                     <IconChevronRight class="ml-auto h-3.5 w-3.5 shrink-0 opacity-60 transition-transform duration-200 group-open/nav:rotate-90" />
                   </summary>
-                  <div class="mt-1 ml-[1.15rem] border-l border-border/70 pl-2">{renderLinks(false)}</div>
+                  <div class="mt-0.5 ml-[1.15rem] border-l border-border/70 pl-2">{renderLinks()}</div>
                 </details>
               }
             >

@@ -51,8 +51,7 @@ const AdminUserDetailPage = lazyRoute(() => import("@/pages/admin-user-detail-pa
 const SettingsPage = lazyRoute(() => import("@/pages/settings-page"));
 const TermsPage = lazyRoute(() => import("@/pages/terms-page"));
 const GuidePage = lazyRoute(() => import("@/pages/guide-page"));
-const StudentsHubPage = lazyRoute(() => import("@/pages/students-hub-page"));
-const SchoolHubPage = lazyRoute(() => import("@/pages/school-hub-page"));
+const MyStudentsPage = lazyRoute(() => import("@/pages/my-students-page"));
 const QuestionsPage = lazyRoute(() => import("@/pages/questions-page"));
 const QuestionDetailPage = lazyRoute(() => import("@/pages/question-detail-page"));
 const CalendarPage = lazyRoute(() => import("@/pages/calendar-page"));
@@ -296,13 +295,7 @@ const guideRoute = createRoute({
 const myStudentsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/students",
-  component: StudentsHubPage,
-});
-
-const schoolRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/school",
-  component: SchoolHubPage,
+  component: MyStudentsPage,
 });
 
 const questionsRoute = createRoute({
@@ -405,7 +398,6 @@ const routeTree = rootRoute.addChildren([
   adminUserDetailRoute,
   guideRoute,
   myStudentsRoute,
-  schoolRoute,
   questionsRoute,
   questionDetailRoute,
   calendarRoute,

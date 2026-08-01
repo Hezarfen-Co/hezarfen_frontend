@@ -451,18 +451,27 @@ function AppointmentsContent() {
         value={section()}
         onChange={(value) => setSection(value === "availability" ? "availability" : "appointments")}
       >
-        <TabsList class="w-fit">
-          <TabsTrigger value="appointments" class="h-9 rounded-lg">
+        <TabsList
+          class="grid w-full grid-cols-2 gap-1 rounded-xl border border-border/70 border-b-0 bg-card/80 p-1 shadow-xs sm:w-fit"
+          aria-label={t("appointments.title")}
+        >
+          <TabsTrigger
+            value="appointments"
+            class="mb-0 h-9 min-w-0 rounded-lg border-0 px-3 py-0 transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 data-selected:border data-selected:border-border data-selected:bg-secondary data-selected:text-secondary-foreground data-selected:shadow-xs"
+          >
             <IconCalendarDays class="h-4 w-4" />
             {isStaff() ? t("appointments.requests") : t("appointments.myBookings")}
-            <Badge variant="secondary" class="rounded-full px-1.5 text-[10px]">
+            <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">
               {isStaff() ? requests().length : myBookings().length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="availability" class="h-9 rounded-lg">
+          <TabsTrigger
+            value="availability"
+            class="mb-0 h-9 min-w-0 rounded-lg border-0 px-3 py-0 transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 data-selected:border data-selected:border-border data-selected:bg-secondary data-selected:text-secondary-foreground data-selected:shadow-xs"
+          >
             <IconClock class="h-4 w-4" />
             {isStaff() ? t("appointments.mySlots") : t("appointments.availableSlots")}
-            <Badge variant="secondary" class="rounded-full px-1.5 text-[10px]">
+            <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">
               {isStaff() ? mySlots().length : availableSlots().length}
             </Badge>
           </TabsTrigger>

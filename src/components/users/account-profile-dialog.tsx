@@ -1,6 +1,7 @@
 import { For, Match, Show, Switch, createSignal, type JSX } from "solid-js";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { IconCheck, IconSparkles, IconUserCog } from "@/components/ui/icons";
+import { IconCheck, IconSun, IconUserCog } from "@/components/ui/icons";
+import { ThemeModeControl } from "@/components/layout/theme-mode-control";
 import { ProfileForm } from "@/components/users/profile-form";
 import { cn } from "@/lib/cn";
 import { TRENDING_PALETTES } from "@/lib/palettes";
@@ -58,7 +59,7 @@ export function AccountProfileDialog(props: { open: boolean; onOpenChange: (open
               <nav class="flex w-40 shrink-0 flex-col gap-1 border-r border-border/70 bg-muted/20 p-2">
                 <DialogTitle class="px-3 pb-2 pt-1.5 text-sm">{t("nav.settings")}</DialogTitle>
                 {navItem("account", t("nav.account"), <IconUserCog class="h-4 w-4 shrink-0" />)}
-                {navItem("appearance", t("settings.tabAppearance"), <IconSparkles class="h-4 w-4 shrink-0" />)}
+                {navItem("appearance", t("settings.tabAppearance"), <IconSun class="h-4 w-4 shrink-0" />)}
               </nav>
 
               <div class="min-w-0 flex-1 overflow-y-auto p-5 pr-12">
@@ -77,15 +78,12 @@ export function AccountProfileDialog(props: { open: boolean; onOpenChange: (open
                     <div class="space-y-6">
                       <div class="space-y-2">
                         <p class="text-sm font-semibold">{t("theme.toggle")}</p>
-                        <div class="flex max-w-xs gap-0.5 rounded-lg bg-muted p-0.5">
-                          {seg(prefs.theme() === "light", t("theme.light"), () => prefs.setTheme("light"))}
-                          {seg(prefs.theme() === "dark", t("theme.dark"), () => prefs.setTheme("dark"))}
-                        </div>
+                        <ThemeModeControl variant="segmented" />
                       </div>
 
                       <div class="space-y-2">
                         <p class="text-sm font-semibold">{t("lang.label")}</p>
-                        <div class="flex max-w-xs gap-0.5 rounded-lg bg-muted p-0.5">
+                        <div class="flex w-full gap-0.5 rounded-lg bg-muted p-0.5">
                           {seg(prefs.locale() === "tr", t("lang.tr"), () => prefs.setLocale("tr"))}
                           {seg(prefs.locale() === "en", t("lang.en"), () => prefs.setLocale("en"))}
                         </div>
