@@ -11,6 +11,18 @@ export type Page<T> = {
 };
 
 /**
+ * A list route returned a successful response, but not the list shape the UI
+ * can safely render. Keeping this distinct from an empty list prevents a
+ * backend DTO regression from looking like "there is no data".
+ */
+export class PageShapeError extends Error {
+  constructor() {
+    super("Unexpected paginated response from the server");
+    this.name = "PageShapeError";
+  }
+}
+
+/**
  * Schedule-window filters, UTC unix ms. Only `/events` and `/exams` honour
  * them; both are optional and AND-ed when both sent, and a row with no
  * schedule at all is excluded by either. Sending either flips the server
@@ -42,7 +54,7 @@ export function appendPageParams(base: URLSearchParams, params?: PageParams): vo
   if (params.offset != null) base.set("offset", String(params.offset));
 }
 
-/** Accept Page envelope or legacy bare array so lists never crash on shape mismatch. */
+/** Accept the documented page envelope or a legacy bare array during backend rollouts. */
 export function normalizePage<T>(data: unknown): Page<T> {
   if (Array.isArray(data)) {
     return { items: data as T[], total: data.length, limit: null, offset: 0 };
@@ -57,5 +69,5 @@ export function normalizePage<T>(data: unknown): Page<T> {
       return { items, total, limit, offset };
     }
   }
-  return { items: [], total: 0, limit: null, offset: 0 };
+  throw new PageShapeError();
 }

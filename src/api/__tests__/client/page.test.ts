@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendPageParams, normalizePage, pageQuery } from "../../client";
+import { appendPageParams, normalizePage, PageShapeError, pageQuery } from "../../client";
 
 describe("page helpers", () => {
   describe("pageQuery", () => {
@@ -76,11 +76,10 @@ describe("page helpers", () => {
       expect(normalized.offset).toBe(0);
     });
 
-    it("handles invalid data gracefully", () => {
-      expect(normalizePage(null)).toEqual({ items: [], total: 0, limit: null, offset: 0 });
-      expect(normalizePage(undefined)).toEqual({ items: [], total: 0, limit: null, offset: 0 });
-      expect(normalizePage("string")).toEqual({ items: [], total: 0, limit: null, offset: 0 });
-      expect(normalizePage({ foo: "bar" })).toEqual({ items: [], total: 0, limit: null, offset: 0 });
+    it("rejects an invalid response instead of rendering a false empty list", () => {
+      for (const data of [null, undefined, "string", { foo: "bar" }]) {
+        expect(() => normalizePage(data)).toThrow(PageShapeError);
+      }
     });
   });
 });

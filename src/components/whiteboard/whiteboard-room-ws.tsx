@@ -4,6 +4,7 @@ import { formatApiErrorMessage } from "@/api/client";
 import { IconAlert } from "@/components/ui/icons";
 import { encodeStrokeSegments, decodeSegment, segmentToStroke } from "@/lib/board-stroke-codec";
 import type { Stroke } from "@/lib/draw-stroke";
+import { parseBoardWsMessage, type BoardWsMessage } from "@/lib/websocket-messages";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { WhiteboardCanvas, type WhiteboardCanvasController } from "./whiteboard-canvas";
 
@@ -18,20 +19,6 @@ export type BoardLiveState = {
   participants?: string[];
   epoch?: number;
 };
-
-type WsIn =
-  | { type: "state"; board: string; epoch: number; locked: boolean; closed_at: number | null; creator: string; participants: string[]; now: number }
-  | { type: "strokes"; epoch: number; strokes: { id: string; author: string; payload: string }[] }
-  | { type: "synced"; epoch: number; cursor: string | null }
-  | { type: "stroke"; id: string; author: string; payload: string; epoch: number }
-  | { type: "saved"; id: string; client_seq?: number }
-  | { type: "pong" }
-  | { type: "cleared"; epoch: number; by: string | null }
-  | { type: "locked"; locked: boolean; by: string }
-  | { type: "closed"; closed_at: number | null }
-  | { type: "participants"; creator: string; participants: string[] }
-  | { type: "deleted" }
-  | { type: "error"; code: string; message: string; client_seq?: number };
 
 const MAX_RECONNECT = 6;
 
@@ -143,7 +130,8 @@ export function WhiteboardRoom(props: {
     socket.onerror = dropped;
     socket.onmessage = (event) => {
       try {
-        handle(JSON.parse(event.data) as WsIn);
+        const msg = parseBoardWsMessage(JSON.parse(event.data));
+        if (msg) handle(msg);
       } catch {
         // ignore malformed frame
       }
@@ -156,7 +144,7 @@ export function WhiteboardRoom(props: {
 
   const pushState = (patch: BoardLiveState) => props.onState?.(patch);
 
-  const handle = (msg: WsIn) => {
+  const handle = (msg: BoardWsMessage) => {
     switch (msg.type) {
       case "state": {
         epoch = msg.epoch;
