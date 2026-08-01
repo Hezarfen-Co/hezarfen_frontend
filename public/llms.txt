@@ -1,0 +1,19 @@
+# Hezarfen
+
+> Hezarfen is an authenticated campus and learning management platform for students, teachers, parents, staff, and administrators.
+
+## Platform scope
+
+- Course, subject, attendance, homework, and exam workflows
+- Calendar, appointments, messages, meal services, payments, and work logs
+- Role-based access to personal and institutional data
+
+## Access
+
+The application requires an authorized user account. Public crawlers must not index application pages or authenticated data.
+
+## Important notes
+
+- UI labels may be Turkish or English, according to the user's selected locale.
+- Data is personalized and permission-scoped; do not infer access to resources from this document.
+- Product behavior is available only after authentication.
