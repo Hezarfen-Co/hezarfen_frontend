@@ -3,6 +3,8 @@
  * none of its own in bun/node) plus a hard timeout so a dead port fails fast
  * instead of hanging the run. Boot recipe: see vitest.contract.config.ts.
  */
+import { expect } from "vitest";
+
 // The app's tsconfig has no node types (browser build), so reach env this way.
 const env: Record<string, string | undefined> =
   (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {};
@@ -16,9 +18,16 @@ export const SKIP_MESSAGE =
   "CONTRACT_BASE_URL=http://127.0.0.1:8081 bun run test:contract";
 
 const TIMEOUT_MS = 10_000;
+const MAX_RATE_LIMIT_RETRIES = 12;
 let cookie = "";
 
 type Init = { method?: string; body?: unknown; headers?: Record<string, string> };
+
+function retryDelayMs(response: Response, attempt: number): number {
+  const retryAfter = Number(response.headers.get("Retry-After"));
+  if (Number.isFinite(retryAfter) && retryAfter > 0) return retryAfter * 1_000;
+  return Math.min(1_000 * 2 ** attempt, 5_000);
+}
 
 /** Raw request — returns the Response so tests can assert on status codes. */
 export async function api(path: string, init: Init = {}): Promise<Response> {
@@ -33,20 +42,27 @@ export async function api(path: string, init: Init = {}): Promise<Response> {
     body = JSON.stringify(init.body);
   }
 
-  const res = await fetch(`${contractBaseUrl}${path}`, {
-    method: init.method ?? "GET",
-    headers,
-    body,
-    redirect: "manual",
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
+  let res: Response | undefined;
+  for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt += 1) {
+    res = await fetch(`${contractBaseUrl}${path}`, {
+      method: init.method ?? "GET",
+      headers,
+      body,
+      redirect: "manual",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    // A 429 has not executed the request, so retrying it is safe even for
+    // contract-suite POST/PATCH probes. Production calls remain unchanged.
+    if (res.status !== 429 || attempt === MAX_RATE_LIMIT_RETRIES) break;
+    await new Promise<void>((resolve) => setTimeout(resolve, retryDelayMs(res!, attempt)));
+  }
 
-  const setCookies = res.headers.getSetCookie?.() ?? [];
+  const setCookies = res!.headers.getSetCookie?.() ?? [];
   for (const raw of setCookies) {
     const pair = raw.split(";")[0];
     if (pair.startsWith("session=")) cookie = pair;
   }
-  return res;
+  return res!;
 }
 
 /** Request + JSON body, throwing on a non-2xx so setup failures are loud. */
@@ -70,6 +86,14 @@ export async function loginAdmin(): Promise<void> {
   });
 }
 
+/** Exam kinds are school policy, not a globally fixed enum. */
+export async function configuredExamKind(): Promise<string> {
+  const settings = await json<{ exam_kinds?: Array<{ name?: unknown }> }>("/settings");
+  const kind = settings.exam_kinds?.find((entry) => typeof entry.name === "string" && entry.name.trim())?.name;
+  if (!kind || typeof kind !== "string") throw new Error("GET /settings returned no configured exam kind");
+  return kind;
+}
+
 /** Smallest valid 1x1 PNG, for the image-upload steps. */
 export function pngFile(name: string): File {
   const bytes = Uint8Array.from(
@@ -79,4 +103,19 @@ export function pngFile(name: string): File {
     (c) => c.charCodeAt(0),
   );
   return new File([bytes], name, { type: "image/png" });
+}
+
+/** Assert the list envelope shared by all paginated REST routes. */
+export function expectPage(data: unknown): asserts data is {
+  items: unknown[];
+  total: number;
+  limit: number | null;
+  offset: number;
+} {
+  expect(data).toMatchObject({});
+  expect(Array.isArray((data as { items?: unknown }).items)).toBe(true);
+  expect(typeof (data as { total?: unknown }).total).toBe("number");
+  const limit = (data as { limit?: unknown }).limit;
+  expect(limit === null || typeof limit === "number").toBe(true);
+  expect(typeof (data as { offset?: unknown }).offset).toBe("number");
 }

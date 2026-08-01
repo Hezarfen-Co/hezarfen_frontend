@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "check": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "test:watch": "vitest",
     "test:contract": "vitest run --config vitest.contract.config.ts",
     "sync-skills": "bun run scripts/sync-skills.ts",
@@ -26,6 +27,7 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@solidjs/testing-library": "^0.8.10",
     "@tailwindcss/postcss": "^4.3.3",
     "@tanstack/solid-router-devtools": "^1.167.0",
