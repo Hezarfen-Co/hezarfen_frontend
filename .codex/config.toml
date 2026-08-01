@@ -1,5 +1,2 @@
 [plugins."browser@openai-bundled"]
 enabled = true
-
-[mcp_servers.node_repl]
-enabled = true
