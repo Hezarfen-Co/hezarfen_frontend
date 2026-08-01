@@ -8,9 +8,9 @@ import {
   getMealBalanceByUserId,
   getMealLedgerByUserId,
   getMealMenuBookings,
+  getMealMenuAttendance,
   getMealMenuById,
   getMealMenus,
-  getMealServiceRoster,
   getMyDietaryProfile,
   getMyMealBalance,
   getMyMealBookings,
@@ -63,7 +63,7 @@ describe("meals API", () => {
   it("lists own bookings", async () => { page(); await getMyMealBookings({ limit: 20 }); expect(lastFetchCall()[0]).toBe("/api/meals/bookings/me?limit=20"); });
   it("cancels a booking", async () => { json(); await deleteMealBookingById("b1"); expect(lastFetchCall()).toMatchObject(["/api/meals/bookings/b1", { method: "DELETE" }]); });
   it("lists booking audit", async () => { page(); await getMealMenuBookings("m1", { limit: 20 }); expect(lastFetchCall()[0]).toBe("/api/meals/menus/m1/bookings?limit=20"); });
-  it("lists the service roster", async () => { page(); await getMealServiceRoster("m1", { limit: 20 }); expect(lastFetchCall()[0]).toBe("/api/meals/menus/m1/service-roster?limit=20"); });
+  it("lists menu attendance", async () => { page(); await getMealMenuAttendance("m1", { limit: 20 }); expect(lastFetchCall()[0]).toBe("/api/meals/menus/m1/attendance?limit=20"); });
   it("marks service", async () => {
     json(); await postMealAttendance("m1", "u1", "served");
     expect(lastFetchCall()).toMatchObject(["/api/meals/menus/m1/attendance", { method: "POST", body: JSON.stringify({ student_id: "u1", status: "served" }) }]);

@@ -9,9 +9,9 @@ import {
   getMealAttendanceByUserId,
   getMealBalanceByUserId,
   getMealLedgerByUserId,
+  getMealMenuAttendance,
   getMealMenuBookings,
   getMealMenuById,
-  getMealServiceRoster,
   getMyDietaryProfile,
   getMyMealBalance,
   getMyMealBookings,
@@ -26,7 +26,7 @@ import {
 import { getMyStudents } from "@/api/parents";
 import { getSettings } from "@/api/settings";
 import { getTime } from "@/api/time";
-import { formatApiError, type MealDish } from "@/api/client";
+import { formatApiError, type MealAttendance, type MealBooking, type MealDish, type PersonRef } from "@/api/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
@@ -104,14 +104,32 @@ function MealDetailContent() {
   );
   const [ledger, { refetch: refetchLedger }] = createResource(targetId, (userId) => getMealLedgerByUserId(userId, { limit: 20 }));
   const [attendance] = createResource(targetId, (userId) => getMealAttendanceByUserId(userId, { limit: 20 }));
-  const [service, { refetch: refetchService }] = createResource(
+  // The backend does not expose a teacher-visible service-roster endpoint.
+  // Teachers can still see and amend recorded service; managers additionally
+  // receive the supported booking audit and get the combined operational list.
+  const [serviceAttendance, { refetch: refetchServiceAttendance }] = createResource(
     () => canServe() ? id() : null,
-    (menuId) => getMealServiceRoster(menuId, { limit: 100 }),
+    (menuId) => getMealMenuAttendance(menuId, { limit: 100 }),
+  );
+  const [serviceBookings, { refetch: refetchServiceBookings }] = createResource(
+    () => canManage() ? id() : null,
+    (menuId) => getMealMenuBookings(menuId, { limit: 100 }),
   );
   const [audit] = createResource(
     () => canManage() ? id() : null,
     (menuId) => getMealMenuBookings(menuId, { limit: 100 }),
   );
+
+  const serviceEntries = createMemo(() => {
+    const entries = new Map<string, { student: PersonRef; booking: MealBooking | null; attendance: MealAttendance | null }>();
+    for (const booking of serviceBookings()?.items ?? []) entries.set(booking.student.id, { student: booking.student, booking, attendance: null });
+    for (const attendanceRow of serviceAttendance()?.items ?? []) {
+      const existing = entries.get(attendanceRow.student.id);
+      entries.set(attendanceRow.student.id, { student: attendanceRow.student, booking: existing?.booking ?? null, attendance: attendanceRow });
+    }
+    return [...entries.values()];
+  });
+  const refetchService = () => Promise.all([refetchServiceAttendance(), refetchServiceBookings()]);
 
   const total = () => menu()?.dishes.reduce((sum, dish) => sum + dish.price_minor, 0) ?? 0;
   const conflicts = () => [...new Set(menu()?.dishes.flatMap((dish) => dish.conflicts) ?? [])];
@@ -224,9 +242,9 @@ function MealDetailContent() {
                   <h2 class="font-semibold">{t("meals.walkIn")}</h2>
                   <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end"><div class="min-w-0 flex-1"><UserSearchSelect id="meal-walkin" value={walkIn()} onChange={setWalkIn} placeholder={t("form.selectStudent")} /></div><Button disabled={!walkIn() || pending()} onClick={() => void run(async () => { await postMealAttendance(id(), walkIn(), "served"); setWalkIn(""); await refetchService(); })}>{t("meals.served")}</Button></div>
                 </div>
-                <Show when={service.error}><ErrorAlert message={formatApiError(service.error)} onRetry={() => void refetchService()} /></Show>
+                <Show when={serviceAttendance.error || serviceBookings.error}><ErrorAlert message={formatApiError(serviceAttendance.error || serviceBookings.error)} onRetry={() => void refetchService()} /></Show>
                 <div class="space-y-2">
-                  <For each={service()?.items ?? []}>{(entry) => <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-3"><div><p class="font-medium">{personLabel(entry.student)}</p><p class="text-xs text-muted-foreground">{entry.booking ? t("meals.booked") : t("meals.walkIn")} · {entry.attendance?.status ?? t("meals.notMarked")}</p></div><div class="flex gap-2"><Button size="sm" variant={entry.attendance?.status === "served" ? "default" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "served"); await refetchService(); })}>{t("meals.served")}</Button><Button size="sm" variant={entry.attendance?.status === "missed" ? "destructive" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "missed"); await refetchService(); })}>{t("meals.missed")}</Button></div></div>}</For>
+                  <For each={serviceEntries()}>{(entry) => <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-3"><div><p class="font-medium">{personLabel(entry.student)}</p><p class="text-xs text-muted-foreground">{entry.booking ? t("meals.booked") : t("meals.walkIn")} · {entry.attendance?.status ?? t("meals.notMarked")}</p></div><div class="flex gap-2"><Button size="sm" variant={entry.attendance?.status === "served" ? "default" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "served"); await refetchService(); })}>{t("meals.served")}</Button><Button size="sm" variant={entry.attendance?.status === "missed" ? "destructive" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "missed"); await refetchService(); })}>{t("meals.missed")}</Button></div></div>}</For>
                 </div>
               </TabsContent>
 
