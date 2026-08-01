@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getChatbotMessageById, postChatbotMessage, postChatbotThread } from "../../chatbot";
-import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
+import { deleteChatbotThreadById, getChatbotMessageById, getChatbotThreadMessages, getChatbotThreads, patchChatbotThreadById, postChatbotMessage, postChatbotThread } from "../../chatbot";
+import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("chatbot API", () => {
   afterEach(() => vi.restoreAllMocks());
@@ -12,6 +12,14 @@ describe("chatbot API", () => {
     expect(url).toBe("/api/chatbot/threads");
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe("{}");
+  });
+  it("lists threads and a selected thread's messages", async () => {
+    mockFetchSuccess({ items: [], total: 0 }); await getChatbotThreads({ limit: 20 }); expect(lastFetchCall()[0]).toBe("/api/chatbot/threads?limit=20");
+    mockFetchSuccess({ items: [], total: 0 }); await getChatbotThreadMessages("thread 1", { limit: 20 }); expect(lastFetchCall()[0]).toBe("/api/chatbot/threads/thread%201/messages?limit=20");
+  });
+  it("renames and deletes a thread", async () => {
+    mockFetchSuccess({}); await patchChatbotThreadById("thread 1", { title: "Physics" }); expect(lastFetchCall()).toMatchObject(["/api/chatbot/threads/thread%201", { method: "PATCH", body: JSON.stringify({ title: "Physics" }) }]);
+    mockFetch204(); await deleteChatbotThreadById("thread 1"); expect(lastFetchCall()).toMatchObject(["/api/chatbot/threads/thread%201", { method: "DELETE" }]);
   });
 
   it("sends a message to its thread", async () => {

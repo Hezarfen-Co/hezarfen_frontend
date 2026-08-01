@@ -7,6 +7,8 @@ export type ChatbotThread = {
   updated_at: number;
 };
 
+export type ChatbotThreadBody = { title?: string | null };
+
 export type ChatbotMessage = {
   id: string;
   thread_id: string;
@@ -23,3 +25,8 @@ export type AcceptedChatbotMessage = {
   message_id: string;
   status: "pending";
 };
+
+export type ChatbotStreamEvent =
+  | { type: "delta"; text: string }
+  | { type: "done"; message: ChatbotMessage }
+  | { type: "error"; code: string; message: string };

@@ -697,12 +697,6 @@ export type MealAttendance = {
   marked_at: number;
 };
 
-export type MealServiceRosterEntry = {
-  student: PersonRef;
-  booking: MealBooking | null;
-  attendance: MealAttendance | null;
-};
-
 export type DietaryProfile = {
   student: PersonRef;
   tags: string[];
