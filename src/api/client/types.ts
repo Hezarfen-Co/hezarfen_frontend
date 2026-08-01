@@ -23,6 +23,7 @@ export type User = {
   birth_date: string | null;
   theme: UserTheme | null;
   language: UserLanguage | null;
+  palette_color: string | null;
 };
 
 export type ProfileUpdate = {

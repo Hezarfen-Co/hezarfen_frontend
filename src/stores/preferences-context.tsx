@@ -20,7 +20,7 @@ type PreferencesContextValue = {
   paletteColor: Accessor<string | null>;
   setPaletteColor: (color: string | null) => void;
   toggleTheme: () => void;
-  hydratePreferences: (user: Pick<User, "theme" | "language">) => void;
+  hydratePreferences: (user: Pick<User, "theme" | "language" | "palette_color">) => void;
   sidebarCollapsed: Accessor<boolean>;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
@@ -182,15 +182,22 @@ export function PreferencesProvider(props: ParentProps) {
     persistPreferences({ theme: th });
   };
   const setPaletteColor = (color: string | null) => {
-    setPaletteColorSignal(color && HEX_COLOR.test(color) ? color.toLowerCase() : null);
+    const next = color && HEX_COLOR.test(color) ? color.toLowerCase() : null;
+    setPaletteColorSignal(next);
+    // Empty string clears the accent back to "never chose" on the backend; a
+    // valid hex sets it. Mirrors the theme/language sync.
+    persistPreferences({ palette_color: next ?? "" });
   };
   const toggleTheme = () => {
     const next = theme() === "dark" ? "light" : "dark";
     setTheme(next);
   };
-  const hydratePreferences = (user: Pick<User, "theme" | "language">) => {
+  const hydratePreferences = (user: Pick<User, "theme" | "language" | "palette_color">) => {
     if (user.language === "en" || user.language === "tr") setLocaleSignal(user.language);
     if (user.theme === "light" || user.theme === "dark") setThemeSignal(user.theme);
+    if (user.palette_color && HEX_COLOR.test(user.palette_color)) {
+      setPaletteColorSignal(user.palette_color.toLowerCase());
+    }
   };
   const setSidebarCollapsed = (v: boolean) => setSidebarCollapsedSignal(v);
   const toggleSidebar = () => setSidebarCollapsedSignal((v) => !v);

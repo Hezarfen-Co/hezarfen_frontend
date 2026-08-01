@@ -61,6 +61,8 @@ const MealsPage = lazyRoute(() => import("@/pages/meals-page"));
 const MealDetailPage = lazyRoute(() => import("@/pages/meal-detail-page"));
 const PaymentsPage = lazyRoute(() => import("@/pages/payments-page"));
 const PaymentStatementPage = lazyRoute(() => import("@/pages/payment-statement-page"));
+const WhiteboardsPage = lazyRoute(() => import("@/pages/whiteboards-page"));
+const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
 
 function RootComponent() {
   return (
@@ -357,6 +359,18 @@ const paymentStatementRoute = createRoute({
   component: PaymentStatementPage,
 });
 
+const whiteboardsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/whiteboards",
+  component: WhiteboardsPage,
+});
+
+const whiteboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/whiteboards/$id",
+  component: WhiteboardPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -401,6 +415,8 @@ const routeTree = rootRoute.addChildren([
   paymentsRoute,
   managedPaymentDetailRoute,
   paymentStatementRoute,
+  whiteboardsRoute,
+  whiteboardRoute,
 ]);
 
 function RouterPending() {

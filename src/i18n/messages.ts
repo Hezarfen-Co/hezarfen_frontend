@@ -953,6 +953,41 @@ export type MessageKey =
   | "meals.priceTry"
   | "nav.payments"
   | "nav.paymentStatement"
+  | "nav.whiteboards"
+  | "whiteboard.title"
+  | "whiteboard.subtitle"
+  | "whiteboard.empty"
+  | "whiteboard.create"
+  | "whiteboard.titleLabel"
+  | "whiteboard.participants"
+  | "whiteboard.participantsHint"
+  | "whiteboard.open"
+  | "whiteboard.createdAt"
+  | "whiteboard.limitReached"
+  | "whiteboard.canvasHint"
+  | "whiteboard.closedBadge"
+  | "whiteboard.lockedBadge"
+  | "whiteboard.readOnlyBadge"
+  | "whiteboard.lock"
+  | "whiteboard.unlock"
+  | "whiteboard.clear"
+  | "whiteboard.clearConfirm"
+  | "whiteboard.close"
+  | "whiteboard.closeConfirm"
+  | "whiteboard.delete"
+  | "whiteboard.deleteConfirm"
+  | "whiteboard.creator"
+  | "whiteboard.roster"
+  | "whiteboard.addParticipant"
+  | "whiteboard.removeParticipant"
+  | "whiteboard.history"
+  | "whiteboard.noHistory"
+  | "whiteboard.replaySession"
+  | "whiteboard.play"
+  | "whiteboard.pause"
+  | "whiteboard.restart"
+  | "whiteboard.notFound"
+  | "whiteboard.back"
   | "payments.title"
   | "payments.subtitle"
   | "payments.empty"
@@ -2222,6 +2257,41 @@ const en: Dict = {
   "meals.priceTry": "Price (TRY)",
   "nav.payments": "Fees",
   "nav.paymentStatement": "My Fees",
+  "nav.whiteboards": "Whiteboards",
+  "whiteboard.title": "Whiteboards",
+  "whiteboard.subtitle": "Live collaborative sketch boards.",
+  "whiteboard.empty": "No whiteboards yet.",
+  "whiteboard.create": "New whiteboard",
+  "whiteboard.titleLabel": "Title",
+  "whiteboard.participants": "Participants",
+  "whiteboard.participantsHint": "Invite students and staff who may draw.",
+  "whiteboard.open": "Open",
+  "whiteboard.createdAt": "Created",
+  "whiteboard.limitReached": "You have reached your whiteboard limit.",
+  "whiteboard.canvasHint": "Draw here — everyone on the board sees it live.",
+  "whiteboard.closedBadge": "Closed",
+  "whiteboard.lockedBadge": "Locked",
+  "whiteboard.readOnlyBadge": "Read-only",
+  "whiteboard.lock": "Lock",
+  "whiteboard.unlock": "Unlock",
+  "whiteboard.clear": "Clear",
+  "whiteboard.clearConfirm": "Clear the live canvas? The history is kept and stays replayable.",
+  "whiteboard.close": "Close board",
+  "whiteboard.closeConfirm": "Close this board? It becomes permanently read-only.",
+  "whiteboard.delete": "Delete board",
+  "whiteboard.deleteConfirm": "Delete this board and its whole history? This cannot be undone.",
+  "whiteboard.creator": "Creator",
+  "whiteboard.roster": "Participants",
+  "whiteboard.addParticipant": "Add participant",
+  "whiteboard.removeParticipant": "Remove",
+  "whiteboard.history": "History",
+  "whiteboard.noHistory": "No past sessions yet.",
+  "whiteboard.replaySession": "Replay session",
+  "whiteboard.play": "Play",
+  "whiteboard.pause": "Pause",
+  "whiteboard.restart": "Restart",
+  "whiteboard.notFound": "This whiteboard does not exist or you are not on it.",
+  "whiteboard.back": "Back to whiteboards",
   "payments.title": "School fees",
   "payments.subtitle": "Fee plans, assignments, and the payment ledger.",
   "payments.empty": "No fee plans yet.",
@@ -3417,6 +3487,41 @@ const tr: Dict = {
   "meals.priceTry": "Fiyat (TRY)",
   "nav.payments": "Ücretler",
   "nav.paymentStatement": "Ücretlerim",
+  "nav.whiteboards": "Beyaz Tahtalar",
+  "whiteboard.title": "Beyaz Tahtalar",
+  "whiteboard.subtitle": "Canlı ortak çizim tahtaları.",
+  "whiteboard.empty": "Henüz beyaz tahta yok.",
+  "whiteboard.create": "Yeni tahta",
+  "whiteboard.titleLabel": "Başlık",
+  "whiteboard.participants": "Katılımcılar",
+  "whiteboard.participantsHint": "Çizebilecek öğrenci ve personeli davet edin.",
+  "whiteboard.open": "Aç",
+  "whiteboard.createdAt": "Oluşturuldu",
+  "whiteboard.limitReached": "Beyaz tahta sınırına ulaştınız.",
+  "whiteboard.canvasHint": "Buraya çizin — tahtadaki herkes anlık görür.",
+  "whiteboard.closedBadge": "Kapalı",
+  "whiteboard.lockedBadge": "Kilitli",
+  "whiteboard.readOnlyBadge": "Salt okunur",
+  "whiteboard.lock": "Kilitle",
+  "whiteboard.unlock": "Kilidi aç",
+  "whiteboard.clear": "Temizle",
+  "whiteboard.clearConfirm": "Canlı tuval temizlensin mi? Geçmiş korunur ve tekrar oynatılabilir.",
+  "whiteboard.close": "Tahtayı kapat",
+  "whiteboard.closeConfirm": "Bu tahta kapatılsın mı? Kalıcı olarak salt okunur olur.",
+  "whiteboard.delete": "Tahtayı sil",
+  "whiteboard.deleteConfirm": "Bu tahta ve tüm geçmişi silinsin mi? Geri alınamaz.",
+  "whiteboard.creator": "Oluşturan",
+  "whiteboard.roster": "Katılımcılar",
+  "whiteboard.addParticipant": "Katılımcı ekle",
+  "whiteboard.removeParticipant": "Çıkar",
+  "whiteboard.history": "Geçmiş",
+  "whiteboard.noHistory": "Henüz geçmiş oturum yok.",
+  "whiteboard.replaySession": "Oturumu oynat",
+  "whiteboard.play": "Oynat",
+  "whiteboard.pause": "Duraklat",
+  "whiteboard.restart": "Baştan",
+  "whiteboard.notFound": "Bu beyaz tahta yok ya da üzerinde değilsiniz.",
+  "whiteboard.back": "Beyaz tahtalara dön",
   "payments.title": "Okul ücretleri",
   "payments.subtitle": "Ücret planları, atamalar ve ödeme hareketleri.",
   "payments.empty": "Henüz ücret planı yok.",
