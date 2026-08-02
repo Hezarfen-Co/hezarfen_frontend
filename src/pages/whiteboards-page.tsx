@@ -1,8 +1,8 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import { getBoards, postBoard, type Board } from "@/api/boards";
-import { getUsers } from "@/api/users";
-import { formatApiError, type User } from "@/api/client";
+import { getUserSearch } from "@/api/users";
+import { formatApiError, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
+import { personLabel } from "@/lib/person";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -124,26 +125,44 @@ function CreateBoardPanel(props: {
   const { locale } = usePreferences();
   const [title, setTitle] = createSignal("");
   const [query, setQuery] = createSignal("");
-  const [selected, setSelected] = createSignal<User[]>([]);
+  const [selected, setSelected] = createSignal<PersonRef[]>([]);
   const [pending, setPending] = createSignal(false);
   const [error, setError] = createSignal("");
 
-  // Parents can never be on a roster (backend 400s them), so they are filtered out.
-  const [candidates] = createResource(async () =>
-    (await getUsers({ limit: 500 })).items.filter((u) => u.role !== "parent"),
-  );
-
-  const selectedIds = createMemo(() => new Set(selected().map((u) => u.id)));
-  const filtered = createMemo(() => {
-    const q = query().trim().toLowerCase();
-    const me = undefined;
-    return (candidates() ?? [])
-      .filter((u) => u !== me && !selectedIds().has(u.id))
-      .filter((u) => !q || u.username.toLowerCase().includes(q) || (u.name ?? "").toLowerCase().includes(q))
-      .slice(0, 8);
+  // `/users/search` (teacher+) rather than the admin-only `/users` list: a
+  // student or teacher creating a board would otherwise 403 the moment this
+  // panel mounted, before they'd even typed anything.
+  const [searchResults, setSearchResults] = createSignal<PersonRef[]>([]);
+  let searchController: AbortController | null = null;
+  let searchTimer: ReturnType<typeof setTimeout> | undefined;
+  createEffect(() => {
+    const q = query().trim();
+    searchController?.abort();
+    clearTimeout(searchTimer);
+    if (q.length === 0) {
+      setSearchResults([]);
+      return;
+    }
+    searchTimer = setTimeout(() => {
+      const ctrl = new AbortController();
+      searchController = ctrl;
+      void getUserSearch(q, ctrl.signal)
+        .then((page) => setSearchResults(page.items))
+        .catch(() => {
+          if (!ctrl.signal.aborted) setSearchResults([]);
+        });
+    }, 300);
+  });
+  onCleanup(() => {
+    searchController?.abort();
+    clearTimeout(searchTimer);
   });
 
-  const label = (u: User) => [u.name, u.surname].filter(Boolean).join(" ") || u.username;
+  const selectedIds = createMemo(() => new Set(selected().map((u) => u.id)));
+  // `/users/search` doesn't expose role, so a parent can still show up here —
+  // the backend rejects one as a participant at submit time (see `submit`)
+  // instead, same as it already does for course rosters.
+  const filtered = createMemo(() => searchResults().filter((u) => !selectedIds().has(u.id)).slice(0, 8));
 
   // Keyboard navigation over the suggestion list: highlight moves with the
   // arrow keys, Enter adds the highlighted user. Reset to the top whenever the
@@ -153,7 +172,7 @@ function CreateBoardPanel(props: {
     query();
     setActiveIndex(0);
   });
-  const addParticipant = (u: User) => {
+  const addParticipant = (u: PersonRef) => {
     setSelected((prev) => [...prev, u]);
     setQuery("");
   };
@@ -219,7 +238,7 @@ function CreateBoardPanel(props: {
                     class="inline-flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 text-xs"
                     onClick={() => setSelected((prev) => prev.filter((x) => x.id !== u.id))}
                   >
-                    {label(u)}
+                    {personLabel(u)}
                     <IconX class="h-3 w-3" />
                   </button>
                 )}
@@ -245,8 +264,8 @@ function CreateBoardPanel(props: {
                     onMouseEnter={() => setActiveIndex(i())}
                     onClick={() => addParticipant(u)}
                   >
-                    <span class="truncate">{label(u)}</span>
-                    <span class="text-xs text-muted-foreground">{u.role}</span>
+                    <span class="truncate">{personLabel(u)}</span>
+                    <span class="text-xs text-muted-foreground">@{u.username}</span>
                   </button>
                 )}
               </For>
