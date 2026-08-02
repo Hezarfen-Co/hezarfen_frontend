@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import type { Role } from "@/api/client";
 import { formatApiError } from "@/api/client";
 import { getAppointments } from "@/api/appointments";
+import { getMyClasses } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
@@ -125,6 +126,11 @@ function DashboardContent() {
     () => role() === "student" ? true : null,
     () => getMyAttendance(),
   );
+  const [myClasses] = createResource(
+    () => role() === "student" ? true : null,
+    () => getMyClasses({ limit: 1 }),
+  );
+  const myClass = () => myClasses.latest?.items[0] ?? null;
 
   const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
   const now = () => clock()?.now ?? Date.now();
@@ -289,7 +295,7 @@ function DashboardContent() {
   };
 
   const error = createMemo(() => {
-    const problem = courses.error || events.error || exams.error || homework.error || children.error || appointments.error || menus.error || marks.error || attendance.error;
+    const problem = courses.error || events.error || exams.error || homework.error || children.error || appointments.error || menus.error || marks.error || attendance.error || myClasses.error;
     return problem ? formatApiError(problem, locale()) : "";
   });
 
@@ -302,6 +308,9 @@ function DashboardContent() {
           </div>
           <div class="flex items-center gap-2">
             <Badge variant="outline" class="rounded-full bg-muted/40">{t(roleKeys[role()])}</Badge>
+            <Show when={myClass()}>
+              {(cls) => <Badge variant="outline" class="rounded-full bg-muted/40">{cls().name}</Badge>}
+            </Show>
             <time class="text-sm tabular-nums text-muted-foreground">
               {new Intl.DateTimeFormat(locale() === "tr" ? "tr-TR" : "en-GB", { dateStyle: "medium" }).format(now())}
             </time>

@@ -85,6 +85,9 @@ vi.mock("@/api/parents", () => ({
 vi.mock("@/api/meals", () => ({
   getMealMenus: async () => page([{ id: "menu-1" }]),
 }));
+vi.mock("@/api/classes", () => ({
+  getMyClasses: async () => page([{ id: "class-1", name: "9-A" }]),
+}));
 
 afterEach(() => {
   cleanup();

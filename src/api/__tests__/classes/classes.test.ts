@@ -3,6 +3,8 @@ import {
   postClass,
   getClasses,
   getClassById,
+  getMyClasses,
+  getClassesByUserId,
   patchClassById,
   deleteClassById,
   postClassMember,
@@ -42,6 +44,21 @@ describe("classes API", () => {
     await getClassById("c1");
     const [url] = lastFetchCall();
     expect(url).toBe("/api/classes/c1");
+  });
+
+  it("getMyClasses GETs /classes/me with pagination", async () => {
+    mockFetchSuccess({ items: [{ id: "c1" }], total: 1 });
+    await getMyClasses({ limit: 5, offset: 10 });
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/classes/me?limit=5&offset=10");
+    expect(init?.method ?? "GET").toBe("GET");
+  });
+
+  it("getClassesByUserId GETs /classes/user/:id with pagination", async () => {
+    mockFetchSuccess({ items: [{ id: "c1" }], total: 1 });
+    await getClassesByUserId("u1", { limit: 5, offset: 10 });
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/classes/user/u1?limit=5&offset=10");
   });
 
   it("patchClassById PATCHes /classes/:id with the body", async () => {

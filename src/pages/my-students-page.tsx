@@ -1,5 +1,6 @@
 import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
+import { getClassesByUserId } from "@/api/classes";
 import { getMyStudents } from "@/api/parents";
 import { getUserMarks } from "@/api/reports";
 import { getUserAttendance } from "@/api/reports";
@@ -97,6 +98,12 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
     async (id) => getUserAttendance(id)
   );
 
+  const [classesRes] = createResource(
+    () => props.student?.id,
+    async (id) => (await getClassesByUserId(id, { limit: 1 })).items,
+  );
+  const studentClass = () => classesRes()?.[0] ?? null;
+
   createEffect(() => {
     if (props.student?.id) setActiveTab("overview");
   });
@@ -176,19 +183,31 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
           <Suspense fallback={<PageSpinner />}>
             <Switch>
               <Match when={activeTab() === "overview"}>
-                <div class="grid gap-3 sm:grid-cols-3">
-                  <article class="rounded-xl border border-border/80 bg-card p-4">
-                    <p class="text-xs font-medium text-muted-foreground">{t("dashboard.stats.average")}</p>
-                    <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatNumber(report()?.overall_average ?? null)}</p>
-                  </article>
-                  <article class="rounded-xl border border-border/80 bg-card p-4">
-                    <p class="text-xs font-medium text-muted-foreground">{t("nav.courses")}</p>
-                    <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{courseRows().length}</p>
-                  </article>
-                  <article class="rounded-xl border border-border/80 bg-card p-4">
-                    <p class="text-xs font-medium text-muted-foreground">{t("attendance.rate")}</p>
-                    <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatPercent(attendanceRate())}</p>
-                  </article>
+                <div class="space-y-3">
+                  <div class="grid gap-3 sm:grid-cols-3">
+                    <article class="rounded-xl border border-border/80 bg-card p-4">
+                      <p class="text-xs font-medium text-muted-foreground">{t("dashboard.stats.average")}</p>
+                      <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatNumber(report()?.overall_average ?? null)}</p>
+                    </article>
+                    <article class="rounded-xl border border-border/80 bg-card p-4">
+                      <p class="text-xs font-medium text-muted-foreground">{t("nav.courses")}</p>
+                      <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{courseRows().length}</p>
+                    </article>
+                    <article class="rounded-xl border border-border/80 bg-card p-4">
+                      <p class="text-xs font-medium text-muted-foreground">{t("attendance.rate")}</p>
+                      <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatPercent(attendanceRate())}</p>
+                    </article>
+                  </div>
+                  <Show when={studentClass()}>
+                    {(cls) => (
+                      <article class="flex flex-wrap items-center gap-2 rounded-xl border border-border/80 bg-card p-4 text-sm">
+                        <Badge variant="secondary" class="rounded-full">{cls().name}</Badge>
+                        <span class="text-muted-foreground">
+                          {t("classGroups.homeroomTeacher")}: {cls().teacher ? personLabel(cls().teacher!) : t("classGroups.noTeacher")}
+                        </span>
+                      </article>
+                    )}
+                  </Show>
                 </div>
               </Match>
 

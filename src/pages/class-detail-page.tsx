@@ -59,6 +59,7 @@ function ClassDetailContent() {
   const [name, setName] = createSignal("");
   const [grade, setGrade] = createSignal("");
   const [termId, setTermId] = createSignal("");
+  const [teacherId, setTeacherId] = createSignal("");
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [showAddMember, setShowAddMember] = createSignal(false);
   const [addUserId, setAddUserId] = createSignal("");
@@ -164,11 +165,13 @@ function ClassDetailContent() {
                   <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     <Show when={c().grade}><Badge variant="secondary" class="rounded-full">{c().grade}</Badge></Show>
                     <span>{termName(c().term)}</span>
+                    <span>·</span>
+                    <span>{t("classGroups.homeroomTeacher")}: {c().teacher ? personLabel(c().teacher!) : t("classGroups.noTeacher")}</span>
                   </div>
                 </div>
                 <Show when={canManage()}>
                   <div class="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" class="rounded-lg" onClick={() => { setName(c().name); setGrade(c().grade ?? ""); setTermId(c().term ?? ""); setEditing(true); }}>{t("common.edit")}</Button>
+                    <Button size="sm" variant="outline" class="rounded-lg" onClick={() => { setName(c().name); setGrade(c().grade ?? ""); setTermId(c().term ?? ""); setTeacherId(c().teacher?.id ?? ""); setEditing(true); }}>{t("common.edit")}</Button>
                     <Button size="sm" variant="outline" class="rounded-lg text-destructive" onClick={() => setDeleteOpen(true)}>{t("classGroups.deleteClass")}</Button>
                   </div>
                 </Show>
@@ -208,11 +211,12 @@ function ClassDetailContent() {
 
               {/* Edit class */}
               <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().name}>
-                <form class="space-y-4" onSubmit={(e) => { e.preventDefault(); void wrap(async () => { await patchClassById(id(), { name: name().trim(), grade: grade().trim() || null, term_id: termId() || null }); setEditing(false); await refetchClass(); }, "common.saved"); }}>
+                <form class="space-y-4" onSubmit={(e) => { e.preventDefault(); void wrap(async () => { await patchClassById(id(), { name: name().trim(), grade: grade().trim() || null, term_id: termId() || null, teacher_id: teacherId() || null }); setEditing(false); await refetchClass(); }, "common.saved"); }}>
                   <div class="space-y-3">
                     <div class="space-y-1.5"><Label for="edit-class-name">{t("classGroups.className")}</Label><Input id="edit-class-name" maxlength={limits.latest?.course.max_class_name_len} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
                     <div class="space-y-1.5"><Label for="edit-class-grade">{t("classGroups.grade")}</Label><Input id="edit-class-grade" maxlength={limits.latest?.course.max_class_grade_len} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
                     <div class="space-y-1.5"><Label for="edit-class-term">{t("terms.term")}</Label><Select id="edit-class-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}><option value="">{t("terms.unassigned")}</option><For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For></Select></div>
+                    <UserSearchSelect id="edit-class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
                   </div>
                   <div class="flex gap-2 border-t pt-4"><Button type="submit" disabled={pending()}>{t("common.save")}</Button><Button type="button" variant="outline" onClick={() => setEditing(false)}>{t("common.cancel")}</Button></div>
                 </form>
