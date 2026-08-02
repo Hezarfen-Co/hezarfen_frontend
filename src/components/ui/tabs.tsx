@@ -12,8 +12,10 @@ export function TabsList<T extends ValidComponent = "div">(
   return (
     <TabsPrimitive.List
       class={cn(
-        // Underline tab bar: flat, bottom-ruled, no pill container.
-        "flex h-auto w-full max-w-full items-center gap-6 overflow-x-auto border-b border-border/70 text-muted-foreground",
+        // Segmented pill bar: a bordered "well" the active tab sits inside,
+        // reading as a switch control rather than a subtle underline —
+        // matches what appointments/marks/course-detail already used ad hoc.
+        "inline-flex h-auto w-full max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-border/70 bg-card/80 p-1 text-muted-foreground shadow-xs sm:w-fit",
         local.class,
       )}
       {...rest}
@@ -28,7 +30,7 @@ export function TabsTrigger<T extends ValidComponent = "button">(
   return (
     <TabsPrimitive.Trigger
       class={cn(
-        "group -mb-px inline-flex h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap border-b-2 border-transparent px-1 pb-2.5 pt-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-selected:border-foreground data-selected:text-foreground",
+        "group inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent px-3 text-sm font-medium text-muted-foreground transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-selected:border-border data-selected:bg-secondary data-selected:text-secondary-foreground data-selected:shadow-xs",
         local.class,
       )}
       {...rest}

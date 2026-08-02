@@ -9,12 +9,11 @@ import type { Subject } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
@@ -160,7 +159,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
 
       {error() && <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
-      <Suspense fallback={<PageSpinner />}>
+      <Suspense fallback={<DataTableSkeleton />}>
         <Show when={(subjects() ?? []).length > 0} fallback={<EmptyState title={t("subjects.empty")} />}>
           <DataTable columns={columns()} data={subjects() ?? []} filterColumn="name" enablePagination pageSize={10} />
         </Show>
