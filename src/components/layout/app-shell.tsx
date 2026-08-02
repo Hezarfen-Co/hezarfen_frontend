@@ -170,10 +170,12 @@ export function AppShell(props: ParentProps) {
                 <button
                   type="button"
                   class="topbar-ai-control hidden h-9 shrink-0 items-center justify-center gap-2 rounded-md px-3 text-xs font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] sm:flex"
+                  aria-label={t("ai.askCelebi")}
+                  title={t("ai.askCelebi")}
                   onClick={() => setCelebiOpen(true)}
                 >
                   <IconSparkles class="h-4 w-4" />
-                  <span class="hidden sm:inline">{t("ai.askCelebi")}</span>
+                  <span>{t("ai.askCelebi")}</span>
                 </button>
               </div>
             </header>

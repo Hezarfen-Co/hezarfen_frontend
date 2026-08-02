@@ -103,6 +103,11 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+
   *,
   ::after,
   ::before,
@@ -120,13 +125,10 @@
   @apply border border-border/70 bg-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground;
 }
 
-/* AI action button: violet→indigo gradient + indigo glow. */
+/* AI action button: follows the active product palette instead of introducing
+   a separate violet brand color in the top bar. */
 @utility topbar-ai-control {
-  color: #fff;
-  background-image: linear-gradient(to right, #7c3aed, #4f46e5, #7c3aed);
-  border: 1px solid rgb(129 140 248 / 0.5);
-  box-shadow: 0 0 20px rgb(99 102 241 / 0.35);
-  @apply transition-[filter,box-shadow,transform] hover:brightness-110 hover:shadow-[0_0_24px_rgb(99_102_241_/_0.5)];
+  @apply border border-primary/20 bg-primary/10 text-primary transition-colors hover:bg-primary/16 hover:text-primary;
 }
 
 @utility data-shell {

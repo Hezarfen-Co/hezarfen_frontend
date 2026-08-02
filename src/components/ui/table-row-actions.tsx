@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { IconDotsVertical } from "@/components/ui/icons";
+import { useT } from "@/stores/preferences-context";
 
 type TableRowAction = {
   label: string;
@@ -17,15 +18,18 @@ type TableRowAction = {
 };
 
 export function TableRowActions(props: { label: string; actions: TableRowAction[] }) {
+  const t = useT();
+
   return (
     <div class="flex justify-center">
       <DropdownMenu placement="bottom-end" gutter={6}>
         <DropdownMenuTrigger
-          class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border/70 bg-transparent text-muted-foreground outline-hidden transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-muted data-expanded:text-foreground"
+          class="inline-flex h-8 min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-border/80 bg-muted/45 px-2 text-xs font-semibold text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary"
           aria-label={props.label}
           title={props.label}
         >
-          <IconDotsVertical class="h-4 w-4" />
+          <span>{t("common.action")}</span>
+          <IconDotsVertical class="h-3.5 w-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent class="w-48">
           <For each={props.actions}>

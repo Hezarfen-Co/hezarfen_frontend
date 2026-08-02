@@ -99,6 +99,7 @@ export type MessageKey =
   | "common.reply"
   | "common.approve"
   | "common.reject"
+  | "common.action"
   | "common.actions"
   | "common.columns"
   | "common.visibleColumns"
@@ -1317,6 +1318,7 @@ const en: Dict = {
   "common.reply": "Reply",
   "common.approve": "Approve",
   "common.reject": "Reject",
+  "common.action": "Action",
   "common.actions": "Actions",
   "common.columns": "Columns",
   "common.visibleColumns": "Visible columns",
@@ -2547,6 +2549,7 @@ const tr: Dict = {
   "common.reply": "Yanıtla",
   "common.approve": "Onayla",
   "common.reject": "Reddet",
+  "common.action": "İşlem",
   "common.actions": "İşlemler",
   "common.columns": "Sütunlar",
   "common.visibleColumns": "Görünür sütunlar",
