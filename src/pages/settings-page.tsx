@@ -111,6 +111,18 @@ function SettingsContent() {
       setError(t("settings.maxFileSizeInvalid"));
       return;
     }
+    // A meal-slot name becomes a URL path segment on the backend, so these
+    // characters are rejected there — but a name already on the saved list is
+    // grandfathered in, so only newly-typed names are blocked client-side.
+    const savedSlotNames = new Set((baseline()?.meal_slots ?? []).map((slot) => slot.name));
+    const badSlot = mealSlots().find((slot) => {
+      const name = slot.name.trim();
+      return name !== "" && /[/\\?#%]/.test(name) && !savedSlotNames.has(name);
+    });
+    if (badSlot) {
+      setError(t("settings.mealSlotNameInvalid"));
+      return;
+    }
     setPending(true);
     try {
       const before = baseline();

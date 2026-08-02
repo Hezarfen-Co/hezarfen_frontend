@@ -68,6 +68,9 @@ function MealDetailContent() {
   const isParent = () => role() === "parent";
   const canServe = () => hasMinRole(role(), "teacher");
   const canManage = () => hasMinRole(role(), "manager");
+  // Canteen balance/ledger are family-money reads: self, a parent of the
+  // student, or manager+. Teachers are no longer allowed (backend 403s).
+  const canReadMoney = () => isStudent() || isParent() || canManage();
   const isAdmin = () => role() === "admin";
   const moneyLocale = () => locale() === "tr" ? "tr-TR" : "en-US";
 
@@ -99,10 +102,10 @@ function MealDetailContent() {
     async (userId) => userId === auth.user()!.id ? getMyDietaryProfile() : getDietaryProfileByUserId(userId),
   );
   const [balance, { refetch: refetchBalance }] = createResource(
-    targetId,
+    () => canReadMoney() ? targetId() : null,
     async (userId) => userId === auth.user()!.id ? getMyMealBalance() : getMealBalanceByUserId(userId),
   );
-  const [ledger, { refetch: refetchLedger }] = createResource(targetId, (userId) => getMealLedgerByUserId(userId, { limit: 20 }));
+  const [ledger, { refetch: refetchLedger }] = createResource(() => canReadMoney() ? targetId() : null, (userId) => getMealLedgerByUserId(userId, { limit: 20 }));
   const [attendance] = createResource(targetId, (userId) => getMealAttendanceByUserId(userId, { limit: 20 }));
   // The backend does not expose a teacher-visible service-roster endpoint.
   // Teachers can still see and amend recorded service; managers additionally
@@ -231,9 +234,9 @@ function MealDetailContent() {
               <TabsContent value="account" class="space-y-4">
                 <div class="grid gap-4 lg:grid-cols-2">
                   <section class="data-shell p-4"><h2 class="font-semibold">{t("meals.dietaryProfile")}</h2><div class="mt-3 flex flex-wrap gap-1.5"><For each={profile()?.tags ?? []}>{(tag) => <Badge variant="outline" class="border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200">⚠ {tag}</Badge>}</For></div><p class="mt-3 text-sm text-muted-foreground">{profile()?.note || t("meals.noDietaryNotes")}</p></section>
-                  <section class="data-shell p-4"><h2 class="font-semibold">{t("meals.balance")}</h2><p class="mt-3 text-2xl font-semibold tabular-nums">{formatTry(balance()?.balance_minor ?? 0, moneyLocale())}</p></section>
+                  <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold">{t("meals.balance")}</h2><p class="mt-3 text-2xl font-semibold tabular-nums">{formatTry(balance()?.balance_minor ?? 0, moneyLocale())}</p></section></Show>
                 </div>
-                <section class="data-shell p-4"><h2 class="font-semibold">{t("meals.ledger")}</h2><div class="mt-3 divide-y divide-border/60"><For each={ledger()?.items ?? []}>{(line) => <div class="flex justify-between gap-3 py-3 text-sm"><div><p class="font-medium">{t(`meals.ledger.${line.kind}` as never)}</p><p class="text-xs text-muted-foreground">{line.note || line.method || "—"} · {formatDateTime(line.created_at, locale())}</p></div><span class="font-semibold tabular-nums">{line.kind === "charge" ? "−" : "+"}{formatTry(line.amount_minor, moneyLocale())}</span></div>}</For></div><Show when={(ledger()?.items.length ?? 0) === 0}><p class="mt-3 text-sm text-muted-foreground">{t("meals.noLedger")}</p></Show></section>
+                <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold">{t("meals.ledger")}</h2><div class="mt-3 divide-y divide-border/60"><For each={ledger()?.items ?? []}>{(line) => <div class="flex justify-between gap-3 py-3 text-sm"><div><p class="font-medium">{t(`meals.ledger.${line.kind}` as never)}</p><p class="text-xs text-muted-foreground">{line.note || line.method || "—"} · {formatDateTime(line.created_at, locale())}</p></div><span class="font-semibold tabular-nums">{line.kind === "charge" ? "−" : "+"}{formatTry(line.amount_minor, moneyLocale())}</span></div>}</For></div><Show when={(ledger()?.items.length ?? 0) === 0}><p class="mt-3 text-sm text-muted-foreground">{t("meals.noLedger")}</p></Show></section></Show>
                 <section class="data-shell p-4"><h2 class="font-semibold">{t("meals.attendance")}</h2><div class="mt-3 divide-y divide-border/60"><For each={attendance()?.items ?? []}>{(row) => <div class="flex justify-between gap-3 py-3 text-sm"><span>{row.status}</span><span class="text-muted-foreground">{formatDateTime(row.marked_at, locale())}</span></div>}</For></div></section>
               </TabsContent>
 

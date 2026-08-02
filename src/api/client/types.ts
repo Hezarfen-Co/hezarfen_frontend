@@ -159,6 +159,10 @@ export type Enrollment = {
   course: string;
   user: PersonRef;
   enrolled_by: PersonRef;
+  // The class (ClassGroup id) that pumped this enrollment, or null for a
+  // hand-placed row. A row with a source is swept when that class drops the
+  // student or detaches the course; a null row is permanent.
+  source: string | null;
 };
 
 export type CourseSession = {
@@ -492,6 +496,11 @@ export type Limits = {
     max_subject_description_len: number;
     max_session_topic_len: number;
     max_term_name_len: number;
+    max_class_name_len: number;
+    max_class_grade_len: number;
+    max_class_members: number;
+    max_class_courses: number;
+    max_class_bytes: number;
   };
   exam: {
     max_title_len: number;

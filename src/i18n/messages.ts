@@ -816,6 +816,7 @@ export type MessageKey =
   | "exams.attemptN"
   | "exams.currentAttempt"
   | "exams.pastAttemptReadOnly"
+  | "exams.reviewInProgress"
   | "exams.uploadAnswerImage"
   | "exams.playDrawing"
   | "exams.showImage"
@@ -870,6 +871,7 @@ export type MessageKey =
   | "settings.maxFileSize"
   | "settings.maxFileSizeHelp"
   | "settings.maxFileSizeInvalid"
+  | "settings.mealSlotNameInvalid"
   | "settings.aiPolicy"
   | "settings.aiPolicyHelp"
   | "settings.chatHistory"
@@ -2123,6 +2125,7 @@ const en: Dict = {
   "exams.attemptN": "Attempt {n}",
   "exams.currentAttempt": "current",
   "exams.pastAttemptReadOnly": "Viewing a previous attempt — read-only. Grading applies to the current attempt.",
+  "exams.reviewInProgress": "Submit your current attempt before you can review it.",
   "exams.uploadAnswerImage": "Upload image",
   "exams.playDrawing": "Play drawing",
   "exams.showImage": "Show image",
@@ -2177,6 +2180,7 @@ const en: Dict = {
   "settings.maxFileSize": "Max note file size",
   "settings.maxFileSizeHelp": "Per-file upload cap for note attachments, in MiB. Backend accepts 0.001-25 MiB.",
   "settings.maxFileSizeInvalid": "Enter a valid file size.",
+  "settings.mealSlotNameInvalid": "A meal slot name can't contain / \\ ? # or %.",
   "settings.aiPolicy": "AI policy",
   "settings.aiPolicyHelp": "Limits for conversation context, threads, and message length.",
   "settings.chatHistory": "History turns",
@@ -3356,6 +3360,7 @@ const tr: Dict = {
   "exams.attemptN": "{n}. deneme",
   "exams.currentAttempt": "güncel",
   "exams.pastAttemptReadOnly": "Önceki bir deneme görüntüleniyor — salt okunur. Puanlama güncel denemeye uygulanır.",
+  "exams.reviewInProgress": "İncelemek için önce mevcut denemeni gönder.",
   "exams.uploadAnswerImage": "Görsel yükle",
   "exams.playDrawing": "Çizimi oynat",
   "exams.showImage": "Görseli göster",
@@ -3410,6 +3415,7 @@ const tr: Dict = {
   "settings.maxFileSize": "Not dosyası boyut sınırı",
   "settings.maxFileSizeHelp": "Not ekleri için dosya başına yükleme sınırı, MiB cinsinden. Backend 0.001-25 MiB kabul eder.",
   "settings.maxFileSizeInvalid": "Geçerli bir dosya boyutu gir.",
+  "settings.mealSlotNameInvalid": "Öğün adı / \\ ? # veya % içeremez.",
   "settings.aiPolicy": "Yapay zekâ politikası",
   "settings.aiPolicyHelp": "Konuşma bağlamı, konu sayısı ve mesaj uzunluğu sınırları.",
   "settings.chatHistory": "Geçmiş turu",

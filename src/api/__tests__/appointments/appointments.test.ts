@@ -168,12 +168,14 @@ describe("appointments API", () => {
     const mockAppt = { id: "a1" };
     mockFetchSuccess(mockAppt);
 
-    const result = await patchAcceptReschedule("a1");
+    const body = { proposed_starts_at: 1000, proposed_ends_at: 2000 };
+    const result = await patchAcceptReschedule("a1", body);
     expect(result).toEqual(mockAppt);
 
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/appointments/a1/reschedule/accept");
     expect(init?.method).toBe("PATCH");
+    expect(init?.body).toBe(JSON.stringify(body));
   });
 
   it("patchDeclineReschedule calls /appointments/:id/reschedule/decline", async () => {

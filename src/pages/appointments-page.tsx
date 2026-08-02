@@ -355,7 +355,7 @@ function AppointmentsContent() {
         const a = cell.row.original;
         const actions = [] as { label: string; icon: import("solid-js").JSX.Element; destructive?: boolean; onSelect: () => void }[];
         for (const action of appointmentActions(a, "requester", now())) {
-          if (action === "acceptReschedule") actions.push({ label: t("appointments.acceptReschedule"), icon: <IconCheck class="h-4 w-4" />, onSelect: () => void act(() => patchAcceptReschedule(a.id), "appointments.status.approved") });
+          if (action === "acceptReschedule" && a.proposed_starts_at != null && a.proposed_ends_at != null) actions.push({ label: t("appointments.acceptReschedule"), icon: <IconCheck class="h-4 w-4" />, onSelect: () => void act(() => patchAcceptReschedule(a.id, { proposed_starts_at: a.proposed_starts_at!, proposed_ends_at: a.proposed_ends_at! }), "appointments.status.approved") });
           if (action === "declineReschedule") actions.push({ label: t("appointments.declineReschedule"), icon: <IconX class="h-4 w-4" />, destructive: true, onSelect: () => askCancel(() => patchDeclineReschedule(a.id), false) });
           if (action === "cancel") actions.push({ label: t("appointments.cancel"), icon: <IconX class="h-4 w-4" />, destructive: true, onSelect: () => askCancel((reason) => patchCancelAppointment(a.id, reason ? { reason } : undefined)) });
         }

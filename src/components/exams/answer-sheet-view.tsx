@@ -22,6 +22,11 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
   // /review routes (no userId in path). Everything below is identical either way.
   const mode = () => props.mode ?? "grader";
 
+  // Self-review reads 409 while the caller's latest sitting is still in
+  // progress — a retake must submit before it can read the answer key. We
+  // degrade to a friendly banner instead of erroring the panel.
+  const [reviewInProgress, setReviewInProgress] = createSignal(false);
+
   // Which sitting the grader is viewing. null = the latest (grade-of-record), the default.
   const [selectedSeq, setSelectedSeq] = createSignal<number | null>(null);
   // Switch sittings inside a transition so the current sheet stays on screen
@@ -34,10 +39,15 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
   const [attempts] = createResource(
     () => [props.examId, props.userId] as const,
     async ([examId, userId]) => {
+      if (mode() === "self") setReviewInProgress(false);
       try {
         return mode() === "self" ? await getExamReviewAttempts(examId) : await getStudentAttempts(examId, userId);
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) return [] as number[];
+        if (mode() === "self" && err instanceof ApiError && err.status === 409) {
+          setReviewInProgress(true);
+          return [] as number[];
+        }
         throw err;
       }
     },
@@ -94,7 +104,8 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
             : await getStudentAttemptAnswers(examId, userId, seq);
         }
       } catch (err) {
-        if (err instanceof ApiError && err.status === 404) {
+        if (err instanceof ApiError && (err.status === 404 || (mode() === "self" && err.status === 409))) {
+          if (mode() === "self" && err instanceof ApiError && err.status === 409) setReviewInProgress(true);
           sheet = {
             exam: examId,
             user: { id: userId, username: userId, display_name: null },
@@ -136,6 +147,9 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
     // unmount and its portalled menu would flash unpositioned (top-left) on
     // every select. Only the answer sheet suspends.
     <div class="space-y-4">
+      <Show when={reviewInProgress()}>
+        <p class="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-sm text-muted-foreground">{t("exams.reviewInProgress")}</p>
+      </Show>
       <Show when={(attempts() ?? []).length > 1}>
         <div class="flex flex-col gap-1.5">
           <span class="text-xs font-medium text-muted-foreground">{t("exams.previousAttempts")}</span>
@@ -148,7 +162,7 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
         </div>
       </Show>
       <Suspense fallback={<PageSpinner />}>
-      <Show when={data()}>
+      <Show when={!reviewInProgress() && data()}>
         {(d) => (
           <div class={cn("space-y-4 transition-opacity", switching() && "opacity-60")}>
             <Show when={!isLatest()}>
