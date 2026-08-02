@@ -17,18 +17,20 @@ type TableRowAction = {
   disabled?: boolean;
 };
 
-export function TableRowActions(props: { label: string; actions: TableRowAction[] }) {
+export function TableRowActions(props: { label: string; actions: TableRowAction[]; compact?: boolean }) {
   const t = useT();
 
   return (
     <div class="flex justify-center">
       <DropdownMenu placement="bottom-end" gutter={6}>
         <DropdownMenuTrigger
-          class="inline-flex h-8 min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-border/80 bg-muted/45 px-2 text-xs font-semibold text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary"
+          class={props.compact
+            ? "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/80 bg-muted/45 text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary"
+            : "inline-flex h-8 min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-border/80 bg-muted/45 px-2 text-xs font-semibold text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary"}
           aria-label={props.label}
           title={props.label}
         >
-          <span>{t("common.action")}</span>
+          {!props.compact && <span>{t("common.action")}</span>}
           <IconDotsVertical class="h-3.5 w-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent class="w-48">

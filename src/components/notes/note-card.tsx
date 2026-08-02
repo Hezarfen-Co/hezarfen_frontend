@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
 import { formatApiError } from "@/api/client";
 import type { Note } from "@/api/client";
 import { NoteForm } from "@/components/notes/note-form";
@@ -55,9 +55,12 @@ export function NoteCard(props: {
           </div>
         </div>
         <div class="flex flex-1 flex-col gap-4 bg-[linear-gradient(90deg,rgba(245,158,11,0.12)_0,rgba(245,158,11,0.12)_2.25rem,transparent_2.25rem),repeating-linear-gradient(0deg,transparent_0,transparent_2.05rem,rgba(120,113,108,0.14)_2.1rem)] px-4 py-4 pl-12 dark:bg-[linear-gradient(90deg,rgba(245,158,11,0.1)_0,rgba(245,158,11,0.1)_2.25rem,transparent_2.25rem),repeating-linear-gradient(0deg,transparent_0,transparent_2.05rem,rgba(214,211,209,0.1)_2.1rem)]">
-          <p class="line-clamp-6 whitespace-pre-wrap text-[13px] leading-8 text-muted-foreground group-hover:text-foreground">
-            {props.note.content || t("notes.noContent")}
-          </p>
+          <Show
+            when={props.note.content?.trim()}
+            fallback={<p class="text-[13px] leading-8 text-muted-foreground">{t("notes.noContent")}</p>}
+          >
+            <div class="line-clamp-6 whitespace-pre-wrap text-[13px] leading-8 text-muted-foreground group-hover:text-foreground [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc" innerHTML={props.note.content} />
+          </Show>
           {error() && <p class="text-sm text-destructive">{error()}</p>}
         </div>
       </article>

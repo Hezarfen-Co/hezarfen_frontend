@@ -9,7 +9,8 @@ import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
 
@@ -36,6 +37,7 @@ export function NoteForm(props: {
   const isUpdate = () => !!props.initial?.id;
   const [title, setTitle] = createSignal(props.initial?.title ?? "");
   const [content, setContent] = createSignal(props.initial?.content ?? "");
+  const [contentView, setContentView] = createSignal<"write" | "preview">("write");
   const [files, setFiles] = createSignal<File[]>([]);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -123,15 +125,34 @@ export function NoteForm(props: {
           />
         </div>
         <div class="space-y-1.5 rounded-xl border border-border/80 bg-card p-4 shadow-xs">
-          <Label for="note-content">{t("form.content")}</Label>
-          <Textarea
-            id="note-content"
-            class="min-h-32 rounded-lg bg-background/80"
-            value={content()}
-            maxlength={10000}
-            rows={4}
-            onInput={(e) => setContent(e.currentTarget.value)}
-          />
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <Label for="note-content">{t("form.content")}</Label>
+            <Tabs value={contentView()} onChange={(value) => setContentView(value as "write" | "preview")}>
+              <TabsList class="w-auto">
+                <TabsTrigger value="write" class="h-8 px-2.5 text-xs">{t("notes.write")}</TabsTrigger>
+                <TabsTrigger value="preview" class="h-8 px-2.5 text-xs">{t("notes.preview")}</TabsTrigger>
+              </TabsList>
+              <TabsContent value="write" class="hidden" />
+              <TabsContent value="preview" class="hidden" />
+            </Tabs>
+          </div>
+          <Show
+            when={contentView() === "write"}
+            fallback={
+              <div class="min-h-40 rounded-lg border border-input bg-background/80 p-3 text-sm leading-relaxed text-foreground [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc">
+                <Show when={content().trim()} fallback={<p class="text-muted-foreground">{t("notes.noContent")}</p>}>
+                  <div innerHTML={content()} />
+                </Show>
+              </div>
+            }
+          >
+            <RichTextEditor
+              value={content()}
+              onChange={setContent}
+              placeholder={t("form.content")}
+              minHeight="min-h-40"
+            />
+          </Show>
         </div>
 
         <Show when={showFiles()}>

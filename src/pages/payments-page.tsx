@@ -406,15 +406,16 @@ function PaymentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-40 min-w-40 text-right whitespace-nowrap", cellClass: "text-right" },
+      meta: { headerClass: "text-center", cellClass: "text-center" },
       cell: (cell) => (
-        <div class="flex items-center justify-end gap-1">
-          <Button size="sm" variant="outline" class="rounded-lg" onClick={() => openAssign(cell.row.original)}>
+        <div class="flex items-center justify-center gap-1">
+          <Button size="sm" variant="outline" class="h-8 gap-1 rounded-lg px-2 text-xs" onClick={() => openAssign(cell.row.original)}>
             <IconPlus class="h-4 w-4" />
             {t("payments.assign")}
           </Button>
           <TableRowActions
             label={t("common.actions")}
+            compact
             actions={[
               { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setViewPlan(cell.row.original) },
               { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => startEdit(cell.row.original) },

@@ -72,7 +72,8 @@ export function ComboboxContent<T extends ValidComponent = "div">(
         )}
         {...rest}
       >
-        {local.children ?? <ComboboxPrimitive.Listbox class="max-h-64 overflow-y-auto" />}
+        <ComboboxPrimitive.Listbox class="max-h-64 overflow-y-auto" />
+        {local.children}
       </ComboboxPrimitive.Content>
     </ComboboxPrimitive.Portal>
   );
