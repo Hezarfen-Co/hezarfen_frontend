@@ -507,11 +507,6 @@ export function IconExam(props: IconProps) {
   );
 }
 
-/** @deprecated Prefer IconExam — kept as stable alias. */
-export function IconPencilQuestion(props: IconProps) {
-  return <IconExam {...props} />;
-}
-
 export function IconGuide(props: IconProps) {
   return (
     <Svg {...props}>

@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconCalendarDays, IconChart, IconChevronDown, IconClipboardCheck, IconClock, IconEdit, IconExam, IconEye, IconPencilQuestion, IconRefresh, IconTrash } from "@/components/ui/icons";
+import { IconCalendarDays, IconChart, IconChevronDown, IconClipboardCheck, IconClock, IconEdit, IconExam, IconEye, IconRefresh, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -637,7 +637,7 @@ function ExamDetailContent() {
               <Tabs value={examTab()} onChange={setExamTab} class="space-y-3">
                 <TabsList class="border-primary/10 bg-card/80 shadow-sm">
                   <TabsTrigger value="statistics"><IconChart class="h-4 w-4" />{t("exams.statistics")}</TabsTrigger>
-                  <TabsTrigger value="questions"><IconPencilQuestion class="h-4 w-4" />{t("questions.title")}</TabsTrigger>
+                  <TabsTrigger value="questions"><IconExam class="h-4 w-4" />{t("questions.title")}</TabsTrigger>
                   <TabsTrigger value="results"><IconClipboardCheck class="h-4 w-4" />{t("exams.results")}</TabsTrigger>
                 </TabsList>
 
