@@ -37,6 +37,8 @@ const QuestionBankPage = lazyRoute(() => import("@/pages/question-bank-page"));
 const BankQuestionDetailPage = lazyRoute(() => import("@/pages/bank-question-detail-page"));
 const CoursesPage = lazyRoute(() => import("@/pages/courses-page"));
 const CourseDetailPage = lazyRoute(() => import("@/pages/course-detail-page"));
+const ClassesPage = lazyRoute(() => import("@/pages/classes-page"));
+const ClassDetailPage = lazyRoute(() => import("@/pages/class-detail-page"));
 const MarksPage = lazyRoute(() => import("@/pages/marks-page"));
 const MessagesPage = lazyRoute(() => import("@/pages/messages-page"));
 const PomodoroPage = lazyRoute(() => import("@/pages/pomodoro-page"));
@@ -262,6 +264,18 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 });
 
+const classesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/classes",
+  component: ClassesPage,
+});
+
+const classDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/classes/$id",
+  component: ClassDetailPage,
+});
+
 const termsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/management/terms",
@@ -393,6 +407,8 @@ const routeTree = rootRoute.addChildren([
   workRoute,
   staffWorkRoute,
   settingsRoute,
+  classesRoute,
+  classDetailRoute,
   termsRoute,
   adminUsersRoute,
   adminUserDetailRoute,

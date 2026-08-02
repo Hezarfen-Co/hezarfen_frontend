@@ -31,6 +31,33 @@ export type MessageKey =
   | "nav.home"
   | "nav.today"
   | "nav.classes"
+  | "nav.classGroups"
+  | "classGroups.title"
+  | "classGroups.subtitle"
+  | "classGroups.newClass"
+  | "classGroups.className"
+  | "classGroups.grade"
+  | "classGroups.empty"
+  | "classGroups.open"
+  | "classGroups.student"
+  | "classGroups.addedBy"
+  | "classGroups.courseColumn"
+  | "classGroups.attachedBy"
+  | "classGroups.membersTab"
+  | "classGroups.coursesTab"
+  | "classGroups.addStudent"
+  | "classGroups.addStudentHelp"
+  | "classGroups.attachCourse"
+  | "classGroups.attachCourseHelp"
+  | "classGroups.removeStudent"
+  | "classGroups.removeStudentConfirm"
+  | "classGroups.detachCourse"
+  | "classGroups.detachCourseConfirm"
+  | "classGroups.deleteClass"
+  | "classGroups.deleteConfirm"
+  | "classGroups.selectCourse"
+  | "classGroups.noMembers"
+  | "classGroups.noCourses"
   | "nav.progress"
   | "nav.students"
   | "nav.children"
@@ -1254,6 +1281,33 @@ const en: Dict = {
   "nav.home": "Home",
   "nav.today": "Today",
   "nav.classes": "Education",
+  "nav.classGroups": "Classes",
+  "classGroups.title": "Classes",
+  "classGroups.subtitle": "Groups of students that share a set of courses.",
+  "classGroups.newClass": "New class",
+  "classGroups.className": "Name",
+  "classGroups.grade": "Grade",
+  "classGroups.empty": "No classes yet.",
+  "classGroups.open": "Open",
+  "classGroups.student": "Student",
+  "classGroups.addedBy": "Added by",
+  "classGroups.courseColumn": "Course",
+  "classGroups.attachedBy": "Attached by",
+  "classGroups.membersTab": "Members",
+  "classGroups.coursesTab": "Courses",
+  "classGroups.addStudent": "Add student",
+  "classGroups.addStudentHelp": "Enrolls the student into every course attached to this class.",
+  "classGroups.attachCourse": "Attach course",
+  "classGroups.attachCourseHelp": "Enrolls every student in this class into the course.",
+  "classGroups.removeStudent": "Remove student",
+  "classGroups.removeStudentConfirm": "Remove {name} from this class? Enrollments this class added for them will be removed too.",
+  "classGroups.detachCourse": "Detach course",
+  "classGroups.detachCourseConfirm": "Detach {course}? Enrollments this class added for it will be removed too.",
+  "classGroups.deleteClass": "Delete class",
+  "classGroups.deleteConfirm": "Delete this class? It must have no students or courses left.",
+  "classGroups.selectCourse": "Select a course",
+  "classGroups.noMembers": "No students in this class yet.",
+  "classGroups.noCourses": "No courses attached yet.",
   "nav.progress": "Progress",
   "nav.students": "Students",
   "nav.children": "Children",
@@ -2489,6 +2543,33 @@ const tr: Dict = {
   "nav.home": "Ana sayfa",
   "nav.today": "Bugün",
   "nav.classes": "Eğitim",
+  "nav.classGroups": "Şubeler",
+  "classGroups.title": "Şubeler",
+  "classGroups.subtitle": "Aynı dersleri paylaşan öğrenci grupları.",
+  "classGroups.newClass": "Yeni şube",
+  "classGroups.className": "Ad",
+  "classGroups.grade": "Sınıf",
+  "classGroups.empty": "Henüz şube yok.",
+  "classGroups.open": "Aç",
+  "classGroups.student": "Öğrenci",
+  "classGroups.addedBy": "Ekleyen",
+  "classGroups.courseColumn": "Ders",
+  "classGroups.attachedBy": "Ekleyen",
+  "classGroups.membersTab": "Öğrenciler",
+  "classGroups.coursesTab": "Dersler",
+  "classGroups.addStudent": "Öğrenci ekle",
+  "classGroups.addStudentHelp": "Öğrenciyi bu şubeye bağlı tüm derslere kaydeder.",
+  "classGroups.attachCourse": "Ders ekle",
+  "classGroups.attachCourseHelp": "Bu şubedeki tüm öğrencileri derse kaydeder.",
+  "classGroups.removeStudent": "Öğrenciyi çıkar",
+  "classGroups.removeStudentConfirm": "{name} bu şubeden çıkarılsın mı? Bu şubenin onun için eklediği kayıtlar da silinir.",
+  "classGroups.detachCourse": "Dersi çıkar",
+  "classGroups.detachCourseConfirm": "{course} çıkarılsın mı? Bu şubenin bu ders için eklediği kayıtlar da silinir.",
+  "classGroups.deleteClass": "Şubeyi sil",
+  "classGroups.deleteConfirm": "Bu şube silinsin mi? Şubede öğrenci veya ders kalmamış olmalı.",
+  "classGroups.selectCourse": "Bir ders seç",
+  "classGroups.noMembers": "Bu şubede henüz öğrenci yok.",
+  "classGroups.noCourses": "Henüz ders eklenmemiş.",
   "nav.progress": "İlerleme",
   "nav.students": "Öğrenciler",
   "nav.children": "Çocuklar",

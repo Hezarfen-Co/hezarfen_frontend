@@ -165,6 +165,31 @@ export type Enrollment = {
   source: string | null;
 };
 
+// A class (şube): a named group of students, optionally tied to a term, that
+// pumps the Cartesian product of its members × attached courses into real
+// enrollment rows. See src/api/classes.
+export type ClassGroup = {
+  id: string;
+  creator: PersonRef;
+  name: string;
+  grade: string | null;
+  term: string | null;
+};
+
+export type ClassMember = {
+  id: string;
+  class: string;
+  user: PersonRef;
+  added_by: PersonRef;
+};
+
+export type ClassCourse = {
+  id: string;
+  class: string;
+  course: string;
+  attached_by: PersonRef;
+};
+
 export type CourseSession = {
   id: string;
   course: string;

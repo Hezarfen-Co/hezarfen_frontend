@@ -138,6 +138,7 @@ const NAV_GROUPS: NavGroup[] = [
     Icon: IconReportAnalytics,
     items: [
       CHILDREN_ITEM,
+      { id: "class-groups", to: "/management/classes", labelKey: "nav.classGroups", Icon: IconUsers, minRole: "teacher" },
       { id: "student-marks", to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher" },
       { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher" },
       { id: "student-pomodoro", to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher" },
