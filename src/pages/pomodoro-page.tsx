@@ -1,4 +1,4 @@
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getPomodoroMe } from "@/api/pomodoro";
 import { postPomodoroFinish } from "@/api/pomodoro";
@@ -9,15 +9,29 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconCheck, IconClock } from "@/components/ui/icons";
-import { PageSpinner } from "@/components/ui/page-spinner";
+import { Input } from "@/components/ui/input";
 import { createFlash } from "@/lib/flash";
 import { createNow } from "@/lib/create-now";
 import { triggerConfetti } from "@/lib/confetti";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatDurationClock } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+const DURATION_KEY = "hezarfen.pomodoro.targetMinutes";
+const PRESET_MINUTES = [15, 25, 45, 60];
+const DEFAULT_MINUTES = 25;
+const MAX_MINUTES = 180;
+
+function readTargetMinutes(): number {
+  try {
+    const saved = Number(localStorage.getItem(DURATION_KEY));
+    return Number.isFinite(saved) && saved > 0 && saved <= MAX_MINUTES ? saved : DEFAULT_MINUTES;
+  } catch {
+    return DEFAULT_MINUTES;
+  }
+}
 
 export default function PomodoroPage() {
   return (
@@ -39,6 +53,41 @@ function PomodoroContent() {
   const runningDuration = createMemo(() => {
     const current = running();
     return current ? now() - current.started_at : null;
+  });
+
+  // Pomodoro-style countdown: purely a client-side display target — the
+  // backend session is still just an open-ended start/finish stopwatch, so
+  // this only changes what the clock shows, not what gets recorded.
+  const [targetMinutes, setTargetMinutes] = createSignal(readTargetMinutes());
+  createEffect(() => {
+    try {
+      localStorage.setItem(DURATION_KEY, String(targetMinutes()));
+    } catch {
+      // Duration just won't be remembered next visit.
+    }
+  });
+  const targetMs = () => targetMinutes() * 60_000;
+  const remainingMs = createMemo(() => {
+    const dur = runningDuration();
+    return dur == null ? null : Math.max(0, targetMs() - dur);
+  });
+  const overtimeMs = createMemo(() => {
+    const dur = runningDuration();
+    return dur == null ? 0 : Math.max(0, dur - targetMs());
+  });
+  const isOvertime = () => overtimeMs() > 0;
+
+  // One flash when the countdown crosses zero, not one per tick.
+  const [targetNotified, setTargetNotified] = createSignal(false);
+  createEffect(() => {
+    if (!running()) {
+      setTargetNotified(false);
+      return;
+    }
+    if (isOvertime() && !targetNotified()) {
+      setTargetNotified(true);
+      setFlash(t("pomodoro.targetReached"));
+    }
   });
   const finishedSessions = createMemo(() => (log()?.items ?? []).filter((item) => item.finished_at != null));
   const todayFocus = createMemo(() => {
@@ -91,8 +140,7 @@ function PomodoroContent() {
   const progressPercent = createMemo(() => {
     const dur = runningDuration();
     if (!dur) return 0;
-    const targetMs = 25 * 60 * 1000;
-    return Math.min(1, dur / targetMs);
+    return Math.min(1, dur / targetMs());
   });
 
   const dashOffset = createMemo(() => {
@@ -157,27 +205,65 @@ function PomodoroContent() {
               </div>
 
               <div>
-                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{running() ? t("pomodoro.current") : t("pomodoro.total")}</p>
-                <p class="mono mt-2 text-5xl font-semibold leading-none tracking-tight tabular-nums sm:text-6xl">
-                  {formatDurationClock(running() ? runningDuration() : log()?.total_focus_ms)}
+                <p class={cn("text-xs font-medium uppercase tracking-[0.08em]", running() && isOvertime() ? "text-destructive" : "text-muted-foreground")}>
+                  {running() ? (isOvertime() ? t("pomodoro.overtime") : t("pomodoro.remaining")) : t("pomodoro.total")}
+                </p>
+                <p class={cn("mono mt-2 text-5xl font-semibold leading-none tracking-tight tabular-nums sm:text-6xl", running() && isOvertime() && "text-destructive")}>
+                  {running() && isOvertime() && "+"}
+                  {formatDurationClock(running() ? (isOvertime() ? overtimeMs() : remainingMs()) : log()?.total_focus_ms)}
                 </p>
               </div>
             </div>
 
-            <Show
-              when={running()}
-              fallback={
-                <Button type="button" size="sm" class="h-10 min-w-40 rounded-md text-base" disabled={pending()} onClick={() => void run(postPomodoroStart, t("pomodoro.started"))}>
-                  <IconClock class="h-4 w-4" />
-                  {t("pomodoro.start")}
+            <div class="flex flex-col items-center gap-3 md:items-end">
+              <Show
+                when={running()}
+                fallback={
+                  <Button type="button" size="sm" class="h-10 min-w-40 rounded-md text-base" disabled={pending()} onClick={() => void run(postPomodoroStart, t("pomodoro.started"))}>
+                    <IconClock class="h-4 w-4" />
+                    {t("pomodoro.start")}
+                  </Button>
+                }
+              >
+                <Button type="button" size="sm" variant="outline" class="h-10 min-w-40 rounded-md text-base" disabled={pending()} onClick={() => void run(postPomodoroFinish, t("pomodoro.finished"))}>
+                  <IconCheck class="h-4 w-4" />
+                  {t("pomodoro.finish")}
                 </Button>
-              }
-            >
-              <Button type="button" size="sm" variant="outline" class="h-10 min-w-40 rounded-md text-base" disabled={pending()} onClick={() => void run(postPomodoroFinish, t("pomodoro.finished"))}>
-                <IconCheck class="h-4 w-4" />
-                {t("pomodoro.finish")}
-              </Button>
-            </Show>
+              </Show>
+
+              {/* Session length: like the classic Pomodoro technique, this is
+                  configurable — locked once a session is running so it can't
+                  drift mid-focus. */}
+              <div class="flex flex-wrap items-center justify-center gap-1.5 md:justify-end">
+                <For each={PRESET_MINUTES}>
+                  {(minutes) => (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={targetMinutes() === minutes ? "default" : "outline"}
+                      class="h-7 min-w-11 rounded-lg px-2 text-xs"
+                      disabled={!!running()}
+                      onClick={() => setTargetMinutes(minutes)}
+                    >
+                      {minutes}
+                    </Button>
+                  )}
+                </For>
+                <Input
+                  type="number"
+                  min="1"
+                  max={MAX_MINUTES}
+                  value={targetMinutes()}
+                  disabled={!!running()}
+                  class="h-7 w-16 rounded-lg px-2 text-xs"
+                  title={t("pomodoro.customMinutes")}
+                  onInput={(event) => {
+                    const value = Number(event.currentTarget.value);
+                    if (Number.isFinite(value) && value > 0 && value <= MAX_MINUTES) setTargetMinutes(value);
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -208,7 +294,7 @@ function PomodoroContent() {
             </p>
           </div>
         </div>
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<DataTableSkeleton />}>
           <DataTable columns={columns()} data={log()?.items ?? []} empty={t("pomodoro.empty")} enablePagination pageSize={10} />
         </Suspense>
       </section>
