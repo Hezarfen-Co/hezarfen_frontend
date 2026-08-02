@@ -371,6 +371,8 @@ export type MessageKey =
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
+  | "notes.write"
+  | "notes.preview"
   | "notes.empty"
   | "notes.noContent"
   | "notes.files"
@@ -712,6 +714,7 @@ export type MessageKey =
   | "form.selectStudent"
   | "form.noStudents"
   | "form.noTeachers"
+  | "form.searchNoPermission"
   | "form.titleRequired"
   | "form.titleMax"
   | "form.contentMax"
@@ -1636,6 +1639,8 @@ const en: Dict = {
   "notes.title": "Notebook",
   "notes.subtitle": "Your private notebook for class ideas and reminders.",
   "notes.new": "New note",
+  "notes.write": "Write",
+  "notes.preview": "Preview",
   "notes.empty": "Nothing here yet. Write your first note.",
   "notes.noContent": "No content",
   "notes.files": "Attachments",
@@ -2063,6 +2068,7 @@ const en: Dict = {
   "form.selectStudent": "Select student",
   "form.noStudents": "No available students",
   "form.noTeachers": "No available teachers",
+  "form.searchNoPermission": "You do not have permission to search users.",
   "form.titleRequired": "Title is required",
   "form.titleMax": "Title must be at most 200 characters",
   "form.contentMax": "Content must be at most 10 000 characters",
@@ -2913,6 +2919,8 @@ const tr: Dict = {
   "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleriniz ve hatırlatmalarınız için özel defteriniz.",
   "notes.new": "Yeni not",
+  "notes.write": "Yaz",
+  "notes.preview": "Önizleme",
   "notes.empty": "Henüz bir şey yok. İlk notunu yaz.",
   "notes.noContent": "İçerik yok",
   "notes.files": "Ekler",
@@ -3340,6 +3348,7 @@ const tr: Dict = {
   "form.selectStudent": "Öğrenci seç",
   "form.noStudents": "Uygun öğrenci yok",
   "form.noTeachers": "Uygun öğretmen yok",
+  "form.searchNoPermission": "Kullanıcı aramak için yetkin yok.",
   "form.titleRequired": "Başlık gerekli",
   "form.titleMax": "Başlık en fazla 200 karakter olmalı",
   "form.contentMax": "İçerik en fazla 10 000 karakter olmalı",

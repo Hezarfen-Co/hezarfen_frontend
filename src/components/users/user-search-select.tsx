@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
 import { personLabelWithId } from "@/lib/person";
+import { hasMinRole } from "@/lib/roles";
+import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
 const MAX_VISIBLE_RESULTS = 8;
@@ -33,6 +35,13 @@ export function UserSearchSelect(props: {
   role?: Role;
 }) {
   const t = useT();
+  const auth = useAuth();
+  // `/users/search` is teacher+ on the backend, so this component must never
+  // fire it for a student or parent — they would only ever 403. Below teacher
+  // the input is disabled and the request is never sent; this is the single
+  // role gate for every UserSearchSelect in the app (messages compose, meal
+  // service, course/class management, …).
+  const canSearch = () => hasMinRole(auth.user()?.role, "teacher");
   const [query, setQuery] = createSignal("");
   const [users, setUsers] = createSignal<PersonRef[]>([]);
   const [selected, setSelected] = createSignal<PersonRef | null>(null);
@@ -56,9 +65,18 @@ export function UserSearchSelect(props: {
     const q = raw.trim();
     controller?.abort();
     clearTimeout(timer);
+    if (!canSearch()) {
+      // A sub-teacher role reached a picker (e.g. message compose): never call
+      // the teacher+ search endpoint.
+      setUsers([]);
+      setLoading(false);
+      setOpen(false);
+      return;
+    }
     if (q.length === 0) {
       setUsers([]);
       setLoading(false);
+      setOpen(false);
       return;
     }
     // Mark pending now, not after the debounce fires — otherwise the empty
@@ -97,8 +115,8 @@ export function UserSearchSelect(props: {
         // input) — allow it, and control open so the panel stays up while
         // loading, then results pop in.
         allowsEmptyCollection
-        open={open()}
-        onOpenChange={setOpen}
+        open={open() && query().trim().length > 0}
+        onOpenChange={(nextOpen) => setOpen(nextOpen && query().trim().length > 0)}
         value={selected()}
         onChange={(user) => {
           setSelected(user);
@@ -114,7 +132,7 @@ export function UserSearchSelect(props: {
         optionTextValue={(user) => personLabelWithId(user)}
         defaultFilter={() => true}
         placeholder={props.placeholder ?? t("common.searchPlaceholder")}
-        disabled={props.disabled}
+        disabled={props.disabled || !canSearch()}
         itemComponent={(itemProps) => (
           <ComboboxItem item={itemProps.item}>
             <ComboboxItemLabel>{personLabelWithId(itemProps.item.rawValue)}</ComboboxItemLabel>
@@ -125,10 +143,14 @@ export function UserSearchSelect(props: {
           <ComboboxInput id={props.id} autocomplete="off" />
           <ComboboxTrigger />
         </ComboboxControl>
-        <ComboboxContent />
+        <ComboboxContent>
+          <Show when={emptyText()}>
+            <p class="px-2 py-2 text-xs font-medium text-destructive">{emptyText()}</p>
+          </Show>
+        </ComboboxContent>
       </Combobox>
-      <Show when={emptyText()}>
-        <p class="mt-1 text-xs font-medium text-destructive">{emptyText()}</p>
+      <Show when={!canSearch()}>
+        <p class="text-xs text-muted-foreground">{t("form.searchNoPermission")}</p>
       </Show>
     </div>
   );
