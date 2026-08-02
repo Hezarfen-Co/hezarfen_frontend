@@ -24,7 +24,7 @@ import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const PEOPLE_PAGE_SIZE = 12;
+const PEOPLE_PAGE_SIZE = 10;
 const WORK_PAGE_SIZE = 15;
 function msToDateInput(ms: number): string {
   const d = new Date(ms);
@@ -126,14 +126,9 @@ function StaffWorkContent() {
       cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
     },
     {
-      accessorKey: "id",
-      header: t("admin.id"),
-      cell: (cell) => <span class="mono text-xs text-muted-foreground">{cell.row.original.id}</span>,
-    },
-    {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -153,16 +148,16 @@ function StaffWorkContent() {
   ]);
   const entryColumns = createMemo<ColumnDef<WorkEntry>[]>(() => [
     {
-      accessorKey: "check_in",
+      id: "time",
+      accessorFn: (row) => row.check_in,
       header: t("work.checkIn"),
       meta: { cellClass: "mono text-xs" },
-      cell: (cell) => formatDateTime(cell.row.original.check_in, locale()),
-    },
-    {
-      accessorKey: "check_out",
-      header: t("work.checkOut"),
-      meta: { cellClass: "mono text-xs" },
-      cell: (cell) => formatDateTime(cell.row.original.check_out, locale()),
+      cell: (cell) => (
+        <div class="whitespace-nowrap">
+          <p>{formatDateTime(cell.row.original.check_in, locale())}</p>
+          <p class="text-[11px] text-muted-foreground">→ {formatDateTime(cell.row.original.check_out, locale())}</p>
+        </div>
+      ),
     },
     {
       accessorKey: "duration_ms",
@@ -178,7 +173,7 @@ function StaffWorkContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -248,22 +243,23 @@ function StaffWorkContent() {
         <Alert variant="success">{flash()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Show when={error() && !viewUser() && !editTarget()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
-        <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+        <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
           <DataTable
             title={t("work.staffTitle")}
             description={`${t("work.staffSubtitle")} · ${peopleRows().length} / ${peopleTotal()}`}
             columns={peopleColumns()}
             data={peopleRows()}
-            tableClass="min-w-[36rem]"
+            tableClass="min-w-xl"
             empty={t("work.noTeachers")}
             searchPredicate={searchPerson}
             enablePagination
             pageSize={PEOPLE_PAGE_SIZE}
+            storageKey="staff-work-people"
             onRowClick={(person) => {
               setError("");
               setViewUser(person);
@@ -289,13 +285,13 @@ function StaffWorkContent() {
             {error()}
           </Alert>
         </Show>
-        <Show when={!entries.loading} fallback={<DataTableSkeleton columns={5} rows={4} />}>
+        <Show when={!entries.loading} fallback={<DataTableSkeleton columns={4} rows={4} />}>
           <Show
             when={entryRows().length > 0}
             fallback={<EmptyState title={t("work.empty")} />}
           >
             <div class="space-y-3">
-              <DataTable columns={entryColumns()} data={entryRows()} enablePagination pageSize={WORK_PAGE_SIZE} />
+              <DataTable columns={entryColumns()} data={entryRows()} storageKey="staff-work-entries" enablePagination pageSize={WORK_PAGE_SIZE} />
             </div>
           </Show>
         </Show>

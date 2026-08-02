@@ -13,10 +13,12 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconChevronDown, IconEdit, IconGlobe, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
+import { IconChevronDown, IconGlobe, IconLogout, IconMoon, IconSettings, IconSun } from "@/components/ui/icons";
+import { ThemeModeControl } from "@/components/layout/theme-mode-control";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
+import { personInitials } from "@/lib/person";
 import type { User } from "@/api/client";
 
 function titleCase(value: string) {
@@ -33,13 +35,6 @@ function displayName(user: User) {
   return titleCase(fullName || user.username);
 }
 
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
-}
-
 function ChoiceButton(props: {
   active?: boolean;
   label: string;
@@ -53,9 +48,9 @@ function ChoiceButton(props: {
       aria-checked={props.active}
       class={cn(
         "flex min-h-16 w-full flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2.5 text-center text-xs font-medium transition-colors",
-        "outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         props.active
-          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+          ? "border-primary bg-primary text-primary-foreground shadow-xs"
           : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground",
       )}
       onClick={props.onSelect}
@@ -85,15 +80,15 @@ export function UserMenu() {
           <DropdownMenu placement="bottom-end" gutter={8}>
           <DropdownMenuTrigger
             class={cn(
-              "inline-flex h-11 max-w-[16rem] items-center gap-2.5 rounded-lg border border-input bg-background px-2.5 pr-3 text-sm shadow-sm outline-none transition-colors sm:max-w-[22rem]",
+              "inline-flex h-9 max-w-[16rem] items-center gap-2.5 rounded-lg border border-input bg-background px-2.5 pr-3 text-sm shadow-xs outline-hidden transition-colors sm:max-w-88",
               "hover:bg-accent hover:text-accent-foreground",
               "focus-visible:ring-2 focus-visible:ring-ring",
-              "data-[expanded]:bg-accent data-[expanded]:text-accent-foreground",
+              "data-expanded:bg-accent data-expanded:text-accent-foreground",
             )}
             aria-label={t("nav.account")}
           >
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground shadow-sm">
-              {initials(displayName(u()))}
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground shadow-xs">
+              {personInitials(displayName(u()))}
             </span>
             <span class="hidden min-w-0 flex-col text-left leading-tight sm:flex">
               <span class="truncate font-semibold">{displayName(u())}</span>
@@ -104,8 +99,8 @@ export function UserMenu() {
 
           <DropdownMenuContent class="w-[min(20rem,calc(100vw-1.5rem))]">
             <div class="flex items-center gap-3 p-3">
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-sm">
-                {initials(displayName(u()))}
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-xs">
+                {personInitials(displayName(u()))}
               </span>
               <div class="flex min-w-0 flex-1 items-start justify-between gap-2">
                 <div class="min-w-0">
@@ -155,33 +150,20 @@ export function UserMenu() {
                   <IconMoon class="h-4 w-4 shrink-0" />
                 </Show>
                 <span class="min-w-0 flex-1 truncate text-left">{t("theme.toggle")}</span>
-                <span class="max-w-[4.5rem] shrink-0 truncate text-xs font-medium text-muted-foreground">
+                <span class="max-w-18 shrink-0 truncate text-xs font-medium text-muted-foreground">
                   {prefs.theme() === "dark" ? t("theme.dark") : t("theme.light")}
                 </span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent class="w-[min(12.5rem,calc(100vw-2rem))] p-2">
-                <div class="grid grid-cols-2 gap-2">
-                  <ChoiceButton
-                    active={prefs.theme() === "light"}
-                    label={t("theme.light")}
-                    icon={<IconSun class="h-5 w-5" />}
-                    onSelect={() => prefs.setTheme("light")}
-                  />
-                  <ChoiceButton
-                    active={prefs.theme() === "dark"}
-                    label={t("theme.dark")}
-                    icon={<IconMoon class="h-5 w-5" />}
-                    onSelect={() => prefs.setTheme("dark")}
-                  />
-                </div>
+                <ThemeModeControl variant="cards" />
               </DropdownMenuSubContent>
             </DropdownMenuSub>
 
             <DropdownMenuSeparator />
 
             <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
-              <IconEdit class="h-4 w-4 shrink-0" />
-              <span>{t("profile.edit")}</span>
+              <IconSettings class="h-4 w-4 shrink-0" />
+              <span>{t("nav.settings")}</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />

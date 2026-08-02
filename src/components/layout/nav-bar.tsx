@@ -3,7 +3,7 @@ import { Show, createSignal } from "solid-js";
 import { Button } from "@/components/ui/button";
 import { SideNav } from "@/components/layout/side-nav";
 import { UserMenu } from "@/components/layout/user-menu";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { ThemeModeControl } from "@/components/layout/theme-mode-control";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { IconMenu, IconX } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
@@ -16,7 +16,7 @@ export function NavBar() {
 
   return (
     <>
-      <header class="sticky top-0 z-40 h-14 border-b border-border/70 bg-background/90 backdrop-blur-xl">
+      <header class="sticky top-0 z-40 h-14 border-b border-border/70 bg-background">
         <div class="flex h-full items-center gap-3 px-4 lg:px-6">
           <Show when={auth.user()}>
             <Button
@@ -35,7 +35,7 @@ export function NavBar() {
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
               H
             </span>
-            <span class="truncate font-display text-base font-semibold tracking-tight sm:text-lg">
+            <span class="truncate text-base font-semibold tracking-tight sm:text-lg">
               {t("app.name")}
             </span>
           </Link>
@@ -43,7 +43,7 @@ export function NavBar() {
           <div class="ml-auto flex shrink-0 items-center gap-2">
             <Show when={!auth.user()}>
               <LocaleSwitcher />
-              <ThemeToggle />
+              <ThemeModeControl variant="toggle" />
             </Show>
             <Show when={auth.user()}>
               <UserMenu />
@@ -56,15 +56,15 @@ export function NavBar() {
         <div class="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            class="absolute inset-0 bg-foreground/30 backdrop-blur-sm"
+            class="absolute inset-0 bg-black/80"
             aria-label={t("nav.close")}
             onClick={() => setMobileOpen(false)}
           />
-          <aside class="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-sidebar shadow-soft">
+          <aside class="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-sidebar shadow-sm">
             <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
               <span class="flex min-w-0 items-center gap-2">
                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">H</span>
-                <span class="truncate font-display text-base font-semibold">{t("app.name")}</span>
+                <span class="truncate text-base font-semibold">{t("app.name")}</span>
               </span>
               <Button
                 type="button"

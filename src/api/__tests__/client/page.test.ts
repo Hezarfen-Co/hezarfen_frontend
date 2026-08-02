@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendPageParams, normalizePage, pageQuery } from "../../client";
+import { appendPageParams, normalizePage, PageShapeError, pageQuery } from "../../client";
 
 describe("page helpers", () => {
   describe("pageQuery", () => {
@@ -12,6 +12,19 @@ describe("page helpers", () => {
       expect(pageQuery({ limit: 10 })).toBe("?limit=10");
       expect(pageQuery({ offset: 20 })).toBe("?offset=20");
       expect(pageQuery({ limit: 10, offset: 20 })).toBe("?limit=10&offset=20");
+    });
+
+    it("formats the schedule window and omits undefined keys", () => {
+      expect(pageQuery({ ends_after: 1_700_000_000_000 })).toBe("?ends_after=1700000000000");
+      expect(pageQuery({ starts_after: 1_700_000_000_000 })).toBe("?starts_after=1700000000000");
+      expect(pageQuery({ limit: 50, ends_after: 1_700_000_000_000 })).toBe(
+        "?limit=50&ends_after=1700000000000"
+      );
+      // Present-but-empty (`?ends_after=`) is a hard 400 server-side, so an
+      // undefined filter must drop the key, not serialize as a blank value.
+      expect(pageQuery({ limit: 50, ends_after: undefined, starts_after: undefined })).toBe(
+        "?limit=50"
+      );
     });
   });
 
@@ -63,11 +76,10 @@ describe("page helpers", () => {
       expect(normalized.offset).toBe(0);
     });
 
-    it("handles invalid data gracefully", () => {
-      expect(normalizePage(null)).toEqual({ items: [], total: 0, limit: null, offset: 0 });
-      expect(normalizePage(undefined)).toEqual({ items: [], total: 0, limit: null, offset: 0 });
-      expect(normalizePage("string")).toEqual({ items: [], total: 0, limit: null, offset: 0 });
-      expect(normalizePage({ foo: "bar" })).toEqual({ items: [], total: 0, limit: null, offset: 0 });
+    it("rejects an invalid response instead of rendering a false empty list", () => {
+      for (const data of [null, undefined, "string", { foo: "bar" }]) {
+        expect(() => normalizePage(data)).toThrow(PageShapeError);
+      }
     });
   });
 });

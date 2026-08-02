@@ -1,7 +1,9 @@
 import { Dialog as DialogPrimitive } from "@kobalte/core/dialog";
-import type { ParentProps } from "solid-js";
+import { createEffect, onCleanup, type ParentProps } from "solid-js";
 import { IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+
+let openPanelCount = 0;
 
 export function SidePanel(
   props: ParentProps<{
@@ -14,6 +16,22 @@ export function SidePanel(
     size?: "default" | "wide" | "xl";
   }>,
 ) {
+  // Kobalte's modal Dialog hides the app with aria-hidden before its focus
+  // scope can move focus into this portalled panel. Chromium correctly blocks
+  // that transition when the opener still owns focus. `inert` makes the app
+  // unfocusable as well as hidden to assistive tech, while the portal remains
+  // interactive outside #root.
+  createEffect(() => {
+    if (!props.open || typeof document === "undefined") return;
+    const root = document.getElementById("root");
+    openPanelCount += 1;
+    root?.setAttribute("inert", "");
+    onCleanup(() => {
+      openPanelCount -= 1;
+      if (openPanelCount === 0) root?.removeAttribute("inert");
+    });
+  });
+
   const width = () => {
     if (props.size === "xl") return "max-w-[min(48rem,100vw)]";
     if (props.size === "wide") return "max-w-[min(42rem,100vw)]";
@@ -21,21 +39,20 @@ export function SidePanel(
   };
 
   return (
-    <DialogPrimitive open={props.open} onOpenChange={props.onOpenChange}>
+    <DialogPrimitive open={props.open} onOpenChange={props.onOpenChange} modal={false} preventScroll>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/40 backdrop-blur-md transition-opacity duration-200 data-[closed]:opacity-0 data-[expanded]:opacity-100" />
+        <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/80 transition-opacity duration-200 data-closed:opacity-0 data-expanded:opacity-100" />
         <DialogPrimitive.Content
           class={cn(
-            "fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l border-black/[0.08] dark:border-white/[0.12] bg-background text-foreground shadow-apple outline-none",
-            "sm:inset-y-3 sm:right-3 sm:h-auto sm:max-h-[calc(100vh-1.5rem)] sm:rounded-3xl sm:border",
-            "transition-[transform,opacity] duration-200 ease-out data-[closed]:translate-x-full data-[closed]:opacity-0 data-[expanded]:translate-x-0 data-[expanded]:opacity-100",
+            "fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l border-border bg-background text-foreground shadow-2xl shadow-black/20 outline-hidden",
+            "transition-[transform,opacity] duration-200 ease-out data-closed:translate-x-full data-closed:opacity-0 data-expanded:translate-x-0 data-expanded:opacity-100",
             width(),
             props.class,
           )}
         >
-          <div class="flex shrink-0 items-start justify-between gap-4 border-b border-black/[0.06] dark:border-white/[0.08] bg-card/90 backdrop-blur-xl px-5 py-4 sm:rounded-t-3xl sm:px-6 sm:py-5">
+          <div class="flex shrink-0 items-start justify-between gap-4 border-b border-border px-5 py-4">
             <div class="min-w-0 flex-1 space-y-1">
-              <DialogPrimitive.Title class="truncate font-display text-base font-semibold leading-6 tracking-tight">
+              <DialogPrimitive.Title class="truncate text-base font-semibold leading-6 tracking-tight">
                 {props.title}
               </DialogPrimitive.Title>
               {props.description && (
@@ -44,11 +61,11 @@ export function SidePanel(
                 </DialogPrimitive.Description>
               )}
             </div>
-            <DialogPrimitive.CloseButton class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/[0.08] dark:border-white/[0.12] bg-background text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <DialogPrimitive.CloseButton class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70">
               <IconX class="h-4 w-4" />
             </DialogPrimitive.CloseButton>
           </div>
-          <div class="side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-muted/20 px-5 py-5 sm:px-6 sm:pb-6">
+          <div class="side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-5">
             {props.children}
           </div>
         </DialogPrimitive.Content>

@@ -21,7 +21,22 @@ type RequestOptions = {
 
 const API_PREFIX = "/api";
 
+// Deadline for a JSON request. Generous enough for the slowest real call
+// (login's Argon2 hash under load), short enough that a hung socket surfaces
+// as an error instead of a permanently disabled button.
+const REQUEST_TIMEOUT_MS = 20_000;
+
 const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
+  // Settings lists reject two entries that fold to the same word — İZİN/izin,
+  // ÖDEV/odev. Keyed on the whole normalized string, so both fields are listed.
+  "exam_kinds: two entries are the same word apart from upper/lower case or turkish letters — keep only one of them": {
+    en: "Two exam kinds are the same word apart from upper/lower case or Turkish letters. Keep only one of them.",
+    tr: "İki sınav türü, büyük/küçük harf veya Türkçe harf farkı dışında aynı. Sadece birini bırak.",
+  },
+  "attendance_statuses: two entries are the same word apart from upper/lower case or turkish letters — keep only one of them": {
+    en: "Two attendance statuses are the same word apart from upper/lower case or Turkish letters. Keep only one of them.",
+    tr: "İki yoklama durumu, büyük/küçük harf veya Türkçe harf farkı dışında aynı. Sadece birini bırak.",
+  },
   "request failed": {
     en: "Request failed.",
     tr: "İşlem tamamlanamadı.",
@@ -77,6 +92,79 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
   "note file limit reached": {
     en: "This note already has the maximum number of files.",
     tr: "Bu notta en fazla dosya sayısına ulaşılmış.",
+  },
+  "this time overlaps a slot you have already published": {
+    en: "This time overlaps a slot you already published.",
+    tr: "Bu zaman aralığı, daha önce yayınladığın bir müsaitlikle çakışıyor.",
+  },
+  "a repeated slot overlaps one you have already published": {
+    en: "One of the repeated slots overlaps a slot you already published.",
+    tr: "Tekrarlanan müsaitliklerden biri, daha önce yayınladığın bir müsaitlikle çakışıyor.",
+  },
+  "the repeated slots overlap each other": {
+    en: "The repeated slots overlap each other.",
+    tr: "Tekrarlanan müsaitlikler birbiriyle çakışıyor.",
+  },
+  // Booking/decision conflicts from domain/appointment.rs — byte-exact.
+  "the slot is already booked": {
+    en: "Someone else booked this time first.",
+    tr: "Bu saati senden önce başkası aldı.",
+  },
+  "the slot has already started": {
+    en: "This time has already started, so it can no longer be booked.",
+    tr: "Bu saat başladığı için artık randevu alınamaz.",
+  },
+  "you already have an appointment at that time": {
+    en: "You already have an appointment at that time.",
+    tr: "O saatte zaten bir randevun var.",
+  },
+  "the appointment is already settled": {
+    en: "This appointment is already settled.",
+    tr: "Bu randevu zaten sonuçlanmış.",
+  },
+  "the appointment has already started": {
+    en: "This appointment has already started.",
+    tr: "Bu randevu çoktan başladı.",
+  },
+  "that time has already started": {
+    en: "That time has already started. Pick a later one.",
+    tr: "O saat çoktan başladı. Daha ileri bir saat seç.",
+  },
+  "no time has been proposed": {
+    en: "No time has been proposed for this appointment yet.",
+    tr: "Bu randevu için henüz bir saat önerilmedi.",
+  },
+  "the appointment is no longer pending": {
+    en: "This appointment is no longer waiting for an answer.",
+    tr: "Bu randevu artık yanıt bekliyor değil.",
+  },
+  "question: this question did not come from a bank template": {
+    en: "This question was not copied from a bank template, so there is nothing to refresh it from.",
+    tr: "Bu soru bir banka şablonundan kopyalanmadığı için yenilenecek bir kaynağı yok.",
+  },
+  "request timed out": {
+    en: "The server did not respond in time. Check your connection and try again.",
+    tr: "Sunucu zamanında yanıt vermedi. Bağlantını kontrol edip tekrar dene.",
+  },
+  "only the template's owner or an admin can change it": {
+    en: "Only the teacher who created this template (or an admin) can change it.",
+    tr: "Bu şablonu yalnızca onu oluşturan öğretmen (veya bir yönetici) değiştirebilir.",
+  },
+  "only the course creator, an assigned teacher, or a manager/admin can author questions": {
+    en: "Only this course's teachers or a manager can add questions to this exam.",
+    tr: "Bu sınava yalnızca dersin öğretmenleri veya bir müdür soru ekleyebilir.",
+  },
+  "only the course creator, an assigned teacher, or a manager/admin can save questions to the bank": {
+    en: "Only this course's teachers or a manager can save this question to the bank.",
+    tr: "Bu soruyu bankaya yalnızca dersin öğretmenleri veya bir müdür kaydedebilir.",
+  },
+  "cannot change questions after attempts have started": {
+    en: "Students have already started this exam, so its questions can no longer change.",
+    tr: "Öğrenciler bu sınava başladığı için soruları artık değiştirilemez.",
+  },
+  "bank questions still reference this subject — re-tag or delete them first": {
+    en: "Question bank templates still use this subject. Re-tag or delete them first.",
+    tr: "Soru bankasındaki şablonlar hâlâ bu konuyu kullanıyor. Önce onları başka konuya taşı veya sil.",
   },
   "course not found": {
     en: "Course not found.",
@@ -198,6 +286,24 @@ function sentenceCase(message: string): string {
   return trimmed[0].toLocaleUpperCase("en-US") + trimmed.slice(1);
 }
 
+function formatRuntimeErrorMessage(message: string, locale: Locale): string | null {
+  const normalized = normalizeApiMessage(message);
+  if (/^(failed to fetch|load failed|networkerror|network request failed)/.test(normalized)) {
+    return locale === "tr"
+      ? "Sunucuya ulaşılamadı. Bağlantını kontrol edip tekrar dene."
+      : "Could not reach the server. Check your connection and try again.";
+  }
+  if (
+    /^(typeerror:\s*)?cannot (read|set) propert(y|ies) of (null|undefined)/.test(normalized) ||
+    /^use\w+ must be used within \w+provider/.test(normalized)
+  ) {
+    return locale === "tr"
+      ? "Sayfa yüklenirken bir sorun oluştu. Sayfayı yeniden yükleyip tekrar dene."
+      : "Something went wrong while loading the page. Reload the page and try again.";
+  }
+  return null;
+}
+
 function formatNumber(value: string, locale: Locale): string {
   return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US").format(Number(value));
 }
@@ -243,7 +349,9 @@ function errorMessageFromPayload(data: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function client<T>(path: string, options: RequestOptions = {}): Promise<T> {
+const pendingGets = new Map<string, Promise<unknown>>();
+
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {};
   let body: string | undefined;
 
@@ -252,20 +360,42 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
     body = JSON.stringify(options.body);
   }
 
-  const res = await fetch(`${API_PREFIX}${path}`, {
-    method: options.method ?? "GET",
-    headers,
-    body,
-    credentials: "same-origin",
-    signal: options.signal,
-    cache: options.cache,
-  });
+  // JSON calls only — uploads (formClient) and downloads (blobClient) stay
+  // untimed. Without this a dead connection leaves callers (exam-room REST
+  // autosave) stuck on "saving…" until the browser gives up.
+  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+  // Caller-initiated aborts keep their original AbortError so cancellation
+  // handling upstream is untouched; only our own deadline becomes an ApiError.
+  const asDeadlineError = (err: unknown) =>
+    timeout.aborted && !options.signal?.aborted ? new ApiError(408, "request timed out") : err;
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_PREFIX}${path}`, {
+      method: options.method ?? "GET",
+      headers,
+      body,
+      credentials: "same-origin",
+      signal: options.signal ? AbortSignal.any([options.signal, timeout]) : timeout,
+      cache: options.cache,
+    });
+  } catch (err) {
+    throw asDeadlineError(err);
+  }
 
   if (res.status === 204) {
     return undefined as T;
   }
 
-  const text = await res.text();
+  // The deadline aborts the body stream too, so headers can arrive in time and
+  // res.text() still blow up mid-download on a multi-MB response.
+  let text: string;
+  try {
+    text = await res.text();
+  } catch (err) {
+    throw asDeadlineError(err);
+  }
+
   let data: unknown = null;
   if (text) {
     try {
@@ -291,6 +421,24 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
   }
 
   return data as T;
+}
+
+/**
+ * Coalesce only overlapping, non-cancellable GETs. This is deliberately not a
+ * cache: once settled the entry disappears, so every later resource refetch
+ * still reaches the backend and mutation consistency stays unchanged.
+ */
+export function client<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const method = options.method ?? "GET";
+  if (method !== "GET" || options.body !== undefined || options.signal || options.cache === "no-store") {
+    return request<T>(path, options);
+  }
+  const key = `${path}\u0000${options.cache ?? "default"}`;
+  const pending = pendingGets.get(key);
+  if (pending) return pending as Promise<T>;
+  const next = request<T>(path, options).finally(() => pendingGets.delete(key));
+  pendingGets.set(key, next);
+  return next;
 }
 
 export async function formClient<T>(path: string, body: FormData, signal?: AbortSignal): Promise<T> {
@@ -345,10 +493,16 @@ export function formatApiErrorMessage(message: string, locale: Locale = currentL
   const normalized = normalizeApiMessage(message);
   const known = API_ERROR_MESSAGES[normalized]?.[locale];
   if (known) return known;
+  const runtime = formatRuntimeErrorMessage(message, locale);
+  if (runtime) return runtime;
   const validation = formatValidationMessage(message, locale);
   if (validation) return validation;
-  if (locale === "tr") return `İşlem tamamlanamadı: ${sentenceCase(message)}`;
-  return sentenceCase(message);
+  // Unmapped backend text is raw English/technical — never surface it to the
+  // user. Fall back to a clean localized line; add a mapping in
+  // API_ERROR_MESSAGES when a specific message deserves its own wording.
+  return locale === "tr"
+    ? "İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene."
+    : "Something went wrong. Please check your input and try again.";
 }
 
 export function formatApiError(err: unknown, locale: Locale = currentLocale()): string {
@@ -356,14 +510,22 @@ export function formatApiError(err: unknown, locale: Locale = currentLocale()): 
     if ((err.status === 429 || err.status === 503) && err.retryAfter != null) {
       return locale === "tr" ? `${err.retryAfter} sn sonra tekrar dene.` : `Try again in ${err.retryAfter}s.`;
     }
+    // The specific backend message wins over the per-status generic one —
+    // otherwise every 401/403/404/413/5xx entry in the table is dead code.
+    const known = API_ERROR_MESSAGES[normalizeApiMessage(err.message)]?.[locale];
+    if (known) return known;
     if (err.status === 401) return API_ERROR_MESSAGES.unauthorized[locale];
     if (err.status === 403) return API_ERROR_MESSAGES.forbidden[locale];
     if (err.status === 404) return API_ERROR_MESSAGES["not found"][locale];
-    if (err.status === 409) return formatApiErrorMessage(err.message, locale);
     if (err.status === 413) return API_ERROR_MESSAGES["payload too large"][locale];
-    if (err.status === 422) return formatApiErrorMessage(err.message, locale);
     if (err.status >= 500) return locale === "tr" ? "Sunucuda bir sorun oluştu. Lütfen tekrar dene." : "Server error. Please try again.";
     return formatApiErrorMessage(err.message, locale);
+  }
+  if (err instanceof TypeError) {
+    return formatRuntimeErrorMessage(err.message, locale) ??
+      (locale === "tr"
+        ? "Sayfa yüklenirken bir sorun oluştu. Sayfayı yeniden yükleyip tekrar dene."
+        : "Something went wrong while loading the page. Reload the page and try again.");
   }
   if (err instanceof Error) return formatApiErrorMessage(err.message, locale);
   return locale === "tr" ? "Bir şeyler ters gitti." : "Something went wrong.";

@@ -5,6 +5,7 @@ import { postExamResult } from "../../exams";
 import { deleteExamResultByUserId } from "../../exams";
 import { getExamStatistics } from "../../exams";
 import { getStudentAnswers, getStudentAnswerImage } from "../../exams";
+import { getStudentAttempts, getStudentAttemptAnswers, getStudentAttemptAnswerImage, getStudentMarksHistory } from "../../exams";
 import { lastFetchCall, mockFetch204, mockFetchBlob, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - results", () => {
@@ -94,5 +95,50 @@ describe("exams API - results", () => {
     // "Play drawing" fetches different bytes than the static image already on screen.
     const [url] = lastFetchCall();
     expect(url).toBe("/api/exams/ex1/attempts/u1/answers/q1/image");
+  });
+
+  it("getStudentAttempts calls /exams/:id/students/:userId/attempts", async () => {
+    mockFetchSuccess([1, 2]);
+
+    const result = await getStudentAttempts("ex1", "u1");
+    expect(result).toEqual([1, 2]);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/exams/ex1/students/u1/attempts");
+    expect(init?.method).toBe("GET");
+  });
+
+  it("getStudentAttemptAnswers calls the per-seq answers route", async () => {
+    const mockAnswers = { exam: "ex1", answers: [] };
+    mockFetchSuccess(mockAnswers);
+
+    const result = await getStudentAttemptAnswers("ex1", "u1", 2);
+    expect(result).toEqual(mockAnswers);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/exams/ex1/students/u1/attempts/2/answers");
+    expect(init?.method).toBe("GET");
+  });
+
+  it("getStudentAttemptAnswerImage calls the per-seq answer-image route", async () => {
+    mockFetchBlob(new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], { type: "image/png" }));
+
+    const result = await getStudentAttemptAnswerImage("ex1", "u1", 2, "q1");
+    expect(result).toBeInstanceOf(Blob);
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/exams/ex1/students/u1/attempts/2/answers/q1/image");
+  });
+
+  it("getStudentMarksHistory calls /exams/:id/students/:userId/marks", async () => {
+    const mockMarks = [{ id: "r1", mark: 60 }, { id: "r2", mark: 80 }];
+    mockFetchSuccess(mockMarks);
+
+    const result = await getStudentMarksHistory("ex1", "u1");
+    expect(result).toEqual(mockMarks);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/exams/ex1/students/u1/marks");
+    expect(init?.method).toBe("GET");
   });
 });

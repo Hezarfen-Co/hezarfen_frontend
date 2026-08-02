@@ -60,10 +60,10 @@ describe("exams API - attempts", () => {
   });
 
   it("postExamAttemptAnswer calls /exams/:id/attempt/answers with data", async () => {
-    const mockAnswer = { selected: 1 };
+    const mockAnswer = { selected: "c1" };
     mockFetchSuccess(mockAnswer);
 
-    const data = { question_id: "q1", selected: 1 };
+    const data = { question_id: "q1", selected: "c1" };
     const result = await postExamAttemptAnswer("ex1", data);
     expect(result).toEqual(mockAnswer);
 

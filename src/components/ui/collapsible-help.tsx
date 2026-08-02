@@ -11,10 +11,10 @@ export function CollapsibleHelp(
   }>,
 ) {
   return (
-    <Collapsible class={cn("group/help rounded-md border bg-card text-card-foreground shadow-sm", props.class)}>
+    <Collapsible class={cn("group/help rounded-md border bg-card text-card-foreground shadow-xs", props.class)}>
       <Collapsible.Trigger
         class={cn(
-          "flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium outline-none transition-colors",
+          "flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium outline-hidden transition-colors",
           "hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring",
           "ui-expanded:border-b ui-expanded:border-border",
         )}
@@ -23,7 +23,7 @@ export function CollapsibleHelp(
           <IconGuide class="h-3.5 w-3.5" />
         </span>
         <span class="flex-1">{props.title}</span>
-        <IconChevronDown class="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[expanded]/help:rotate-180" />
+        <IconChevronDown class="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-expanded/help:rotate-180" />
       </Collapsible.Trigger>
       <Collapsible.Content>
         <div class="border-t border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">

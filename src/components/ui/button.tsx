@@ -4,25 +4,24 @@ import { type ComponentProps, type ValidComponent, splitProps } from "solid-js";
 import { cn } from "@/lib/cn";
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:-translate-y-0.5 hover:scale-[1.015] active:translate-y-0 active:scale-[0.97] active:opacity-90",
+  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/75 focus-visible:ring-offset-1 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
-        default:
-          "border border-primary/40 bg-primary/15 text-primary ring-1 ring-primary/25 shadow-xs hover:bg-primary/25 hover:border-primary/60 hover:ring-primary/40 dark:bg-primary/20 dark:text-foreground dark:hover:bg-primary/30",
-        destructive:
-          "border border-destructive/40 bg-destructive/15 text-destructive ring-1 ring-destructive/25 shadow-xs hover:bg-destructive/25 hover:border-destructive/60 hover:ring-destructive/40 dark:bg-destructive/20 dark:text-destructive-foreground dark:hover:bg-destructive/30",
+        // Flat (no shadows), neutral fills, subtle hairline outlines.
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-black/[0.08] dark:border-indigo-500/30 bg-background/80 shadow-xs hover:bg-secondary hover:text-foreground hover:border-black/20 dark:hover:border-indigo-400/60 dark:hover:ring-1 dark:hover:ring-indigo-400/30",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:hover:bg-secondary/90",
-        ghost: "hover:bg-secondary/80 hover:text-foreground dark:hover:bg-white/[0.08]",
-        link: "text-primary underline-offset-4 hover:underline hover:translate-y-0 hover:scale-100",
+          "border border-border/70 bg-transparent hover:border-border hover:bg-muted/60 hover:text-foreground",
+        secondary: "border border-border/60 bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "text-foreground/75 hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
+        link: "text-primary underline-offset-4 hover:underline active:scale-100",
       },
       size: {
-        default: "h-11 px-4 py-2",
-        sm: "h-9 rounded-lg px-3 text-xs",
-        lg: "h-12 rounded-2xl px-6 text-base font-semibold",
-        icon: "h-11 w-11 rounded-xl",
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
+        icon: "h-9 w-9",
       },
     },
     defaultVariants: {

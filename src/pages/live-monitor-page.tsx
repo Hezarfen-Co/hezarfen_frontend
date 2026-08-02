@@ -2,7 +2,6 @@ import { Show, Suspense, createEffect, createMemo, createResource, createSignal,
 import { Link, useLocation, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getExamLive } from "@/api/exams";
-import { getExamLiveStreamUrl } from "@/api/exams";
 import { getExamById } from "@/api/exams";
 import { formatApiError } from "@/api/client";
 import type { LiveMonitor, LiveRosterEntry } from "@/api/client";
@@ -13,13 +12,16 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { IconAlert, IconCheck, IconChevronLeft, IconClock, IconExam, IconUsers } from "@/components/ui/icons";
+import { DetailField } from "@/components/ui/detail-field";
+import { IconAlert, IconCheck, IconChevronLeft, IconClock, IconExam, IconEye, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { createNow } from "@/lib/create-now";
 import { cn } from "@/lib/cn";
 import { attemptLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
+import { examStatusTone, liveDisplayStatus, type LiveDisplayStatus } from "@/lib/exam-status";
 import { formatDateTime } from "@/lib/format";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 
@@ -43,7 +45,6 @@ const STATUS_KEY: Record<string, MessageKey> = {
   no_attempts_left: "attempt.noAttemptsLeft",
 };
 
-type LiveDisplayStatus = LiveRosterEntry["status"] | ExamDisplayStatus | "left";
 type LiveRosterRow = LiveRosterEntry & { displayStatus: LiveDisplayStatus };
 
 function labelFromStatus(status: string, t: (key: MessageKey) => string): string {
@@ -63,17 +64,6 @@ function liveTone(status: LiveDisplayStatus): string {
   if (status === "expired") return "finished";
   if (status === "absent" || status === "left" || status === "not_started") return statusTone(status);
   return examStatusTone(status);
-}
-
-function liveDisplayStatus(entry: LiveRosterEntry, exam: LiveMonitor["exam"], now: number): LiveDisplayStatus {
-  if (entry.status === "absent") return "absent";
-  if (entry.status === "not_started") return "not_started";
-  if (entry.status === "in_progress" && entry.left_at != null) {
-    return exam.max_attempts > 0 && entry.attempts_used >= exam.max_attempts ? "no_attempts_left" : "left";
-  }
-  if (entry.status !== "submitted" && entry.status !== "expired" && exam.max_attempts > 0 && entry.attempts_used >= exam.max_attempts) return "no_attempts_left";
-  const status = examDisplayStatus(exam, now, { status: entry.status, attempts_used: entry.attempts_used, max_attempts: exam.max_attempts });
-  return status === "active" ? "in_progress" : status;
 }
 
 function progressPercent(entry: LiveRosterEntry, questionCount: number): number {
@@ -136,6 +126,7 @@ function LiveMonitorContent() {
   const [exam] = createResource(id, (eid) => getExamById(eid));
   const [snapshot, setSnapshot] = createSignal<LiveMonitor | null>(null);
   const [error, setError] = createSignal("");
+  const [selectedUserId, setSelectedUserId] = createSignal<string | null>(null);
 
   const isFinished = () => {
     const e = exam();
@@ -154,15 +145,6 @@ function LiveMonitorContent() {
     }
   };
 
-  const applyStreamEvent = (event: MessageEvent) => {
-    try {
-      setSnapshot(JSON.parse(event.data) as LiveMonitor);
-      setError("");
-    } catch (err) {
-      console.error("[live-monitor] stream parse error:", err);
-    }
-  };
-
   createEffect(() => {
     const eid = id();
     const e = exam();
@@ -170,51 +152,23 @@ function LiveMonitorContent() {
     void fetchSnapshot();
     if (e.ends_at != null && e.ends_at < untrack(now)) return;
 
-    let interval: ReturnType<typeof setInterval> | null = null;
-    const startPolling = () => {
-      if (interval) return;
-      interval = setInterval(() => {
-        if (e.ends_at != null && e.ends_at < untrack(now)) {
-          if (interval) clearInterval(interval);
-          interval = null;
-          void fetchSnapshot();
-          return;
-        }
-        void fetchSnapshot();
-      }, 2000);
-    };
-
-    // ponytail: keep polling even with SSE; some live proxies accept EventSource
-    // but never flush events. 2s GET is cheaper than stale teacher screen.
-    startPolling();
-
-    if (!("EventSource" in window)) {
-      onCleanup(() => {
-        if (interval) clearInterval(interval);
-      });
-      return;
-    }
-
-    const source = new EventSource(getExamLiveStreamUrl(eid), { withCredentials: true });
-    source.addEventListener("snapshot", applyStreamEvent);
-    source.onmessage = applyStreamEvent;
-    source.onerror = () => {
-      source.close();
-      startPolling();
-    };
-
-    onCleanup(() => {
-      source.close();
-      if (interval) {
+    const interval = setInterval(() => {
+      if (e.ends_at != null && e.ends_at < untrack(now)) {
         clearInterval(interval);
+        void fetchSnapshot();
+        return;
       }
-    });
+      void fetchSnapshot();
+    }, 2000);
+
+    onCleanup(() => clearInterval(interval));
   });
 
   const liveRows = createMemo<LiveRosterRow[]>(() => {
     const m = snapshot();
     return m && Array.isArray(m.students) ? m.students.map((entry) => ({ ...entry, displayStatus: liveDisplayStatus(entry, m.exam, m.now) })) : [];
   });
+  const selectedRow = createMemo(() => liveRows().find((row) => row.user.id === selectedUserId()) ?? null);
 
   const counts = createMemo(() => liveRows().reduce(
     (acc, entry) => {
@@ -231,7 +185,6 @@ function LiveMonitorContent() {
 
   const columns = createMemo<ColumnDef<LiveRosterRow>[]>(() => {
     const m = snapshot();
-    const maxAttempts = m?.exam.max_attempts ?? 0;
     const questionCount = m?.question_count ?? 0;
     return [
       {
@@ -255,13 +208,6 @@ function LiveMonitorContent() {
             {labelFromStatus(cell.row.original.displayStatus, t)}
           </Badge>
         ),
-      },
-      {
-        id: "attempt",
-        accessorFn: (entry) => entry.attempts_used ?? entry.attempt ?? 0,
-        header: t("attempt.attempt"),
-        meta: { headerClass: "text-center", cellClass: "text-center tabular-nums" },
-        cell: (cell) => attemptLabel(cell.row.original, maxAttempts),
       },
       {
         id: "progress",
@@ -289,21 +235,19 @@ function LiveMonitorContent() {
         ),
       },
       {
-        id: "left",
-        accessorFn: (entry) => entry.finished_at ?? entry.left_at ?? 0,
-        header: t("attempt.left"),
-        meta: { headerClass: "text-center", cellClass: "text-center text-xs" },
-        cell: (cell) => {
-          const at = cell.row.original.finished_at ?? cell.row.original.left_at;
-          return at ? formatDateTime(at, locale()) : "—";
-        },
-      },
-      {
-        id: "mark",
-        accessorFn: (entry) => entry.mark ?? -1,
-        header: t("marks.mark"),
-        meta: { headerClass: "text-center", cellClass: "text-center font-semibold tabular-nums" },
-        cell: (cell) => cell.row.original.mark != null ? cell.row.original.mark : "—",
+        id: "actions",
+        header: t("common.actions"),
+        meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+        cell: (cell) => (
+          <TableRowActions
+            label={t("common.actions")}
+            actions={[{
+              label: t("common.view"),
+              icon: <IconEye class="h-4 w-4" />,
+              onSelect: () => setSelectedUserId(cell.row.original.user.id),
+            }]}
+          />
+        ),
       },
     ];
   });
@@ -319,12 +263,11 @@ function LiveMonitorContent() {
             <div class="space-y-2">
               <PageHeader
                 compact
-                accent="rose"
                 eyebrow={isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                 title={ex().title}
                 description={isFinished() ? t("exams.finalStateDesc") : t("exams.liveMonitorDesc")}
                 actions={
-                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-sm sm:w-auto">
+                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-xs sm:w-auto">
                     <Link to="/exams/$id" params={{ id: id() }}>
                       <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
@@ -343,30 +286,30 @@ function LiveMonitorContent() {
         <Show when={snapshot()}>
               <>
                 <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                  <div class="surface-card bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5" />{t("exams.notStarted")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts().not_started}</p>
+                  <div class="data-shell bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5" />{t("exams.notStarted")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().not_started}</p>
                   </div>
-                  <div class="surface-card bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconExam class="h-3.5 w-3.5 text-info" />{t("attempt.inProgress")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts().in_progress}</p>
+                  <div class="data-shell bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconExam class="h-3.5 w-3.5 text-info" />{t("attempt.inProgress")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().in_progress}</p>
                   </div>
-                  <div class="surface-card bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconCheck class="h-3.5 w-3.5 text-success" />{t("attempt.submitted")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts().submitted}</p>
+                  <div class="data-shell bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconCheck class="h-3.5 w-3.5 text-success" />{t("attempt.submitted")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().submitted}</p>
                   </div>
-                  <div class="surface-card bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5 text-destructive" />{t("attempt.expired")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts().expired}</p>
+                  <div class="data-shell bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5 text-destructive" />{t("attempt.expired")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().expired}</p>
                   </div>
-                  <div class="surface-card bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconAlert class="h-3.5 w-3.5 text-destructive" />{t("attempt.noAttemptsLeft")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts().no_attempts_left}</p>
+                  <div class="data-shell bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconAlert class="h-3.5 w-3.5 text-destructive" />{t("attempt.noAttemptsLeft")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().no_attempts_left}</p>
                   </div>
-                  <div class="surface-card bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconUsers class="h-3.5 w-3.5" />{t("attempt.absent")}</p><p class="mt-1 font-display text-2xl font-semibold tabular-nums">{counts().absent}</p>
+                  <div class="data-shell bg-card/80 p-3">
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconUsers class="h-3.5 w-3.5" />{t("attempt.absent")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().absent}</p>
                   </div>
                 </section>
 
-                <section class="surface-card space-y-4 p-5">
+                <section class="data-shell space-y-4 p-5">
                   <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 class="font-display text-lg font-semibold">{t("exams.liveRoster")}</h2>
+                      <h2 class="text-lg font-semibold">{t("exams.liveRoster")}</h2>
                       <p class="mt-1 text-sm text-muted-foreground">{t("attempt.progress")}</p>
                     </div>
                   </div>
@@ -378,9 +321,36 @@ function LiveMonitorContent() {
                       </p>
                     }
                   >
-                    <DataTable columns={columns()} data={liveRows()} filterColumn="username" enablePagination pageSize={PAGE_SIZE} />
+                    <DataTable
+                      columns={columns()}
+                      data={liveRows()}
+                      filterColumn="username"
+                      storageKey="live-exam-roster"
+                      enablePagination
+                      pageSize={PAGE_SIZE}
+                      onRowClick={(row) => setSelectedUserId(row.user.id)}
+                    />
                   </Show>
                 </section>
+                <SidePanel
+                  open={selectedRow() != null}
+                  onOpenChange={(open) => { if (!open) setSelectedUserId(null); }}
+                  title={selectedRow() ? liveRosterName(selectedRow()!, t("exams.nameless")) : t("exams.liveRoster")}
+                  description={selectedRow() ? labelFromStatus(selectedRow()!.displayStatus, t) : ""}
+                >
+                  <Show when={selectedRow()} keyed>
+                    {(row) => (
+                      <div class="grid gap-4 sm:grid-cols-2">
+                        <DetailField label={t("attempt.attempt")} value={attemptLabel(row, snapshot()?.exam.max_attempts ?? 0)} />
+                        <DetailField label={t("marks.mark")} value={row.mark == null ? "—" : String(row.mark)} mono />
+                        <DetailField label={t("events.starts")} value={formatDateTime(row.started_at, locale())} />
+                        <DetailField label={t("events.ends")} value={formatDateTime(row.finished_at, locale())} />
+                        <DetailField label={t("attempt.left")} value={formatDateTime(row.left_at, locale())} />
+                        <DetailField label={t("exams.lastActivity")} value={formatDateTime(row.last_activity, locale())} />
+                      </div>
+                    )}
+                  </Show>
+                </SidePanel>
               </>
         </Show>
       </div>

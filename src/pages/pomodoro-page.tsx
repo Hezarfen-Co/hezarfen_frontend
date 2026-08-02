@@ -103,7 +103,6 @@ function PomodoroContent() {
   return (
     <div class="space-y-6">
       <PageHeader
-        accent="mint"
         eyebrow={t("nav.pomodoro")}
         title={t("pomodoro.title")}
         description={t("pomodoro.subtitle")}
@@ -115,7 +114,7 @@ function PomodoroContent() {
       {error() && <Alert variant="destructive">{error()}</Alert>}
 
       <section class="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.55fr)]">
-        <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div class="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-5 py-4">
             <div class="flex min-w-0 items-center gap-3">
               <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-muted/40 text-muted-foreground">
@@ -168,13 +167,13 @@ function PomodoroContent() {
             <Show
               when={running()}
               fallback={
-                <Button type="button" size="sm" class="h-12 min-w-[10rem] rounded-xl text-base tactile-press" disabled={pending()} onClick={() => void run(postPomodoroStart, t("pomodoro.started"))}>
+                <Button type="button" size="sm" class="h-10 min-w-40 rounded-md text-base" disabled={pending()} onClick={() => void run(postPomodoroStart, t("pomodoro.started"))}>
                   <IconClock class="h-4 w-4" />
                   {t("pomodoro.start")}
                 </Button>
               }
             >
-              <Button type="button" size="sm" variant="outline" class="h-12 min-w-[10rem] rounded-xl text-base tactile-press" disabled={pending()} onClick={() => void run(postPomodoroFinish, t("pomodoro.finished"))}>
+              <Button type="button" size="sm" variant="outline" class="h-10 min-w-40 rounded-md text-base" disabled={pending()} onClick={() => void run(postPomodoroFinish, t("pomodoro.finished"))}>
                 <IconCheck class="h-4 w-4" />
                 {t("pomodoro.finish")}
               </Button>
@@ -198,10 +197,10 @@ function PomodoroContent() {
         </div>
       </section>
 
-      <section class="data-shell space-y-4 border-rose-500/15 bg-rose-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-rose-500/15 bg-rose-500/2.5 p-4">
         <div class="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h2 class="font-display text-lg font-semibold">{t("pomodoro.history")}</h2>
+            <h2 class="text-lg font-semibold">{t("pomodoro.history")}</h2>
             <p class="mt-1 text-sm text-muted-foreground">
               <Show when={lastFinished()} fallback={t("pomodoro.noRecentSession")}>
                 {(at) => t("pomodoro.lastSession", { time: formatDateTime(at(), locale()) })}

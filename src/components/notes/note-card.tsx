@@ -24,7 +24,7 @@ export function NoteCard(props: {
       <article
         role="button"
         tabindex="0"
-        class="group flex h-full min-h-72 cursor-pointer flex-col overflow-hidden rounded-2xl border border-amber-500/40 bg-card shadow-sm card-lift hover:border-amber-400/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-amber-500/30 dark:hover:border-amber-400/60"
+        class="group flex h-full min-h-72 cursor-pointer flex-col overflow-hidden rounded-lg border border-amber-500/40 bg-card shadow-sm transition-shadow hover:border-amber-400/60 hover:shadow-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring dark:border-amber-500/30 dark:hover:border-amber-400/60"
         onClick={() => props.onOpen(props.note)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -34,7 +34,7 @@ export function NoteCard(props: {
         }}
       >
         <div class="flex items-start justify-between gap-3 border-b border-amber-500/30 bg-muted/40 px-4 py-3 dark:border-amber-500/30 dark:bg-muted/30">
-          <h3 class="line-clamp-2 min-w-0 font-display text-base font-semibold leading-snug">{props.note.title}</h3>
+          <h3 class="line-clamp-2 min-w-0 text-base font-semibold leading-snug">{props.note.title}</h3>
           <div class="shrink-0" onClick={(event) => event.stopPropagation()}>
             <TableRowActions
               label={t("common.actions")}

@@ -27,3 +27,8 @@ dist-ssr
 *.tsbuildinfo
 .od-skills/
 critique.json
+playwright-report
+test-results
+
+# SurrealDB CLI REPL history (kb queries); see .claude/kb-sync.sh
+history.txt

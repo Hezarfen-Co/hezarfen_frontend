@@ -1,9 +1,9 @@
-import { createSignal, Show } from "solid-js";
+import { createEffect, createSignal, Show, untrack } from "solid-js";
 import type { Message, MessageFolder } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { IconSend, IconTrash, IconMessage, IconArchive, IconChevronLeft } from "@/components/ui/icons";
+import { IconSend, IconTrash, IconMessage, IconArchive, IconChevronLeft, IconCheck } from "@/components/ui/icons";
 import { postMessage } from "@/api/messages";
 import { formatApiError } from "@/api/client";
 import { personLabel } from "@/lib/person";
@@ -14,7 +14,7 @@ interface GmailMailDetailProps {
   currentUserId?: string;
   folder: string;
   onBack: () => void;
-  onAction: (action: { folder?: MessageFolder; delete?: boolean }) => Promise<void>;
+  onAction: (action: { folder?: MessageFolder; delete?: boolean; read?: boolean }) => Promise<void>;
   onSuccess: () => void;
   setFlash: (text: string) => void;
 }
@@ -27,15 +27,37 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
   const [error, setError] = createSignal("");
 
   const isSent = () => props.folder === "sent" || props.message.sender.id === props.currentUserId;
+
+  // Auto-mark an opened received message as read, once per message. Gated on
+  // message id (not `read`) so a manual "mark as unread" is not undone.
+  let autoReadId: string | undefined;
+  createEffect(() => {
+    const id = props.message?.id;
+    if (!id || id === autoReadId) return;
+    autoReadId = id;
+    untrack(() => {
+      if (!isSent() && !props.message.read) {
+        void props.onAction({ read: true });
+      }
+    });
+  });
+
   const peer = () => (isSent() ? props.message.recipient : props.message.sender);
   const peerName = () => personLabel(peer());
   const role = () => (isSent() ? props.message.recipient_role : props.message.sender_role);
 
   const restoreFolder = (): MessageFolder => {
-    if (props.message.previous_folder && (props.message.previous_folder as string) !== "deleted") {
+    if (isSent()) {
+      return "sent";
+    }
+    if (
+      props.message.previous_folder &&
+      (props.message.previous_folder as string) !== "deleted" &&
+      (props.message.previous_folder as string) !== "archive"
+    ) {
       return props.message.previous_folder as MessageFolder;
     }
-    return isSent() ? "sent" : "inbox";
+    return "inbox";
   };
 
   const formattedDate = (ts: number) => {
@@ -100,10 +122,29 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
             Gelen Kutusu
           </Button>
 
-          <div class="h-4 w-[1px] bg-border mx-1" />
+          <div class="h-4 w-px bg-border mx-1" />
+
+          {/* Mark as Read / Unread (received messages only) */}
+          <Show when={!isSent()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              class="h-8 rounded-lg text-xs"
+              onClick={() => props.onAction({ read: !props.message.read })}
+              title={props.message.read ? t("messages.markAsUnread") : t("messages.markAsRead")}
+            >
+              <Show
+                when={props.message.read}
+                fallback={<IconCheck class="mr-1.5 h-3.5 w-3.5" />}
+              >
+                <IconMessage class="mr-1.5 h-3.5 w-3.5" />
+              </Show>
+              {props.message.read ? t("messages.markAsUnread") : t("messages.markAsRead")}
+            </Button>
+          </Show>
 
           {/* Move to Archive Action */}
-          <Show when={!isSent() && props.folder !== "archive" && props.folder !== "trash"}>
+          <Show when={props.folder !== "archive" && props.folder !== "trash"}>
             <Button
               variant="ghost"
               size="sm"
@@ -197,7 +238,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
         {/* Sender Info Card */}
         <div class="flex items-start justify-between gap-4">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-sm text-primary-foreground shadow-xs">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-sm text-primary-foreground shadow-2xs">
               {peerName().charAt(0).toUpperCase()}
             </div>
             <div class="min-w-0">
@@ -232,7 +273,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
         </div>
 
         {/* Email Body Card */}
-        <div class="rounded-2xl border border-border/80 bg-card p-6 shadow-xs leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
+        <div class="rounded-lg border border-border/80 bg-card p-6 shadow-2xs leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
           <div innerHTML={props.message.body} />
         </div>
 
@@ -258,7 +299,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               {/* Gmail Inline Reply Editor */}
               <form
                 onSubmit={handleSendReply}
-                class="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-3"
+                class="rounded-lg border border-border bg-card p-4 shadow-xs space-y-3"
               >
                 <div class="flex items-center justify-between text-xs border-b pb-2">
                   <div class="flex items-center gap-2">
@@ -291,7 +332,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                   <Button
                     type="submit"
                     size="sm"
-                    class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-xs hover:bg-primary/90"
+                    class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-2xs hover:bg-primary/90"
                     disabled={sending() || !replyBody().trim()}
                   >
                     <IconSend class="mr-2 h-4 w-4" />

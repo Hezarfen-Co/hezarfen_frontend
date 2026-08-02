@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/solid-router";
-import { createSignal, Show } from "solid-js";
+import { createResource, createSignal, Show } from "solid-js";
 import { postRegister } from "@/api/auth";
+import { getLimits } from "@/api/limits";
 import { formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,17 +27,19 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  const [limits] = createResource(() => getLimits().catch(() => null));
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     const u = username().trim();
     const p = password();
     const cp = confirmPassword();
-    if (u.length < 3 || u.length > 32) {
+    const userLimits = limits()?.user;
+    if (userLimits && (u.length < userLimits.min_username_len || u.length > userLimits.max_username_len)) {
       setError(t("auth.usernameHint"));
       return;
     }
-    if (p.length < 6 || p.length > 128) {
+    if (userLimits && (p.length < userLimits.min_password_len || p.length > userLimits.max_password_len)) {
       setError(t("auth.passwordHint"));
       return;
     }
@@ -58,9 +61,9 @@ function RegisterForm() {
 
   return (
     <div class="-mx-4 -my-6 flex min-h-[calc(100dvh-3.5rem)] items-center justify-center overflow-hidden px-4 py-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-my-8 lg:px-8">
-      <div class="surface-card w-full max-w-sm p-6 shadow-lg sm:p-8">
+      <div class="data-shell w-full max-w-sm p-6 shadow-lg sm:p-8">
         <div class="mb-8 text-center">
-          <h1 class="font-display text-3xl font-semibold tracking-tight">{t("auth.registerTitle")}</h1>
+          <h1 class="text-3xl font-semibold tracking-tight">{t("auth.registerTitle")}</h1>
           <p class="mt-1.5 text-sm text-muted-foreground">{t("auth.registerSubtitle")}</p>
         </div>
 
@@ -69,10 +72,10 @@ function RegisterForm() {
             <Label for="register-username">{t("auth.username")}</Label>
             <Input
               id="register-username"
-              class="h-11"
+              class="h-9"
               autocomplete="username"
-              minlength={3}
-              maxlength={32}
+              minlength={limits()?.user.min_username_len}
+              maxlength={limits()?.user.max_username_len}
               required
               value={username()}
               onInput={(e) => setUsername(e.currentTarget.value)}
@@ -84,11 +87,11 @@ function RegisterForm() {
             <div class="relative">
               <Input
                 id="register-password"
-                class="h-11 pr-10"
+                class="h-9 pr-10"
                 type={showPassword() ? "text" : "password"}
                 autocomplete="new-password"
-                minlength={6}
-                maxlength={128}
+                minlength={limits()?.user.min_password_len}
+                maxlength={limits()?.user.max_password_len}
                 required
                 value={password()}
                 onInput={(e) => setPassword(e.currentTarget.value)}
@@ -110,11 +113,11 @@ function RegisterForm() {
             <Label for="register-confirm">{t("auth.confirmPassword")}</Label>
             <Input
               id="register-confirm"
-              class="h-11"
+              class="h-9"
               type={showPassword() ? "text" : "password"}
               autocomplete="new-password"
-              minlength={6}
-              maxlength={128}
+              minlength={limits()?.user.min_password_len}
+              maxlength={limits()?.user.max_password_len}
               required
               value={confirmPassword()}
               onInput={(e) => setConfirmPassword(e.currentTarget.value)}
@@ -125,7 +128,7 @@ function RegisterForm() {
             <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
           )}
 
-          <Button type="submit" class="h-11 w-full text-base" disabled={pending()}>
+          <Button type="submit" class="h-9 w-full text-base" disabled={pending()}>
             {t("auth.register")}
           </Button>
         </form>

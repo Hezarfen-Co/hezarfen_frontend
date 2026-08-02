@@ -51,7 +51,7 @@ function MyStudentsContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <PageHeader accent="violet" eyebrow={t("nav.group.students")} title={t("nav.myStudents")} description={t("parents.subtitle")} />
+        <PageHeader eyebrow={t("nav.group.students")} title={t("nav.myStudents")} description={t("parents.subtitle")} />
       </div>
 
       <Suspense fallback={<PageSpinner />}>
@@ -132,14 +132,14 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
     },
     {
       accessorKey: "weight",
-      header: () => <span class="block text-right">{t("marks.weight")}</span>,
-      meta: { cellClass: "mono text-right tabular-nums" },
+      header: t("marks.weight"),
+      meta: { align: "right", cellClass: "mono tabular-nums" },
       cell: (cell) => cell.row.original.weight,
     },
     {
       accessorKey: "mark",
-      header: () => <span class="block text-right">{t("marks.mark")}</span>,
-      meta: { cellClass: "mono text-right font-semibold tabular-nums" },
+      header: t("marks.mark"),
+      meta: { align: "right", cellClass: "mono font-semibold tabular-nums" },
       cell: (cell) => formatNumber(cell.row.original.mark),
     },
   ]);
@@ -179,15 +179,15 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
                 <div class="grid gap-3 sm:grid-cols-3">
                   <article class="rounded-xl border border-border/80 bg-card p-4">
                     <p class="text-xs font-medium text-muted-foreground">{t("dashboard.stats.average")}</p>
-                    <p class="mt-2 font-display text-2xl font-semibold tabular-nums text-foreground">{formatNumber(report()?.overall_average ?? null)}</p>
+                    <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatNumber(report()?.overall_average ?? null)}</p>
                   </article>
                   <article class="rounded-xl border border-border/80 bg-card p-4">
                     <p class="text-xs font-medium text-muted-foreground">{t("nav.courses")}</p>
-                    <p class="mt-2 font-display text-2xl font-semibold tabular-nums text-foreground">{courseRows().length}</p>
+                    <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{courseRows().length}</p>
                   </article>
                   <article class="rounded-xl border border-border/80 bg-card p-4">
                     <p class="text-xs font-medium text-muted-foreground">{t("attendance.rate")}</p>
-                    <p class="mt-2 font-display text-2xl font-semibold tabular-nums text-foreground">{formatPercent(attendanceRate())}</p>
+                    <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatPercent(attendanceRate())}</p>
                   </article>
                 </div>
               </Match>
@@ -216,7 +216,7 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
 
               <Match when={activeTab() === "exams"}>
                 <Show when={examRows().length > 0} fallback={<DataTableEmpty>{t("exams.noResults")}</DataTableEmpty>}>
-                  <DataTable class="min-w-0" columns={examColumns()} data={examRows()} tableClass="w-full min-w-[44rem] text-sm" enableSorting={false} />
+                  <DataTable class="min-w-0" columns={examColumns()} data={examRows()} tableClass="w-full min-w-176 text-sm" enableSorting={false} />
                 </Show>
               </Match>
 

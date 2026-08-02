@@ -1,11 +1,28 @@
 import { Combobox as ComboboxPrimitive } from "@kobalte/core/combobox";
 import type { ComponentProps, ValidComponent } from "solid-js";
 import { splitProps } from "solid-js";
+import { IconCheck, IconChevronDown } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
 export const Combobox = ComboboxPrimitive;
-export const ComboboxTrigger = ComboboxPrimitive.Control;
-export const ComboboxDisclosure = ComboboxPrimitive.Trigger;
+export const ComboboxItemLabel = ComboboxPrimitive.ItemLabel;
+export const ComboboxHiddenSelect = ComboboxPrimitive.HiddenSelect;
+
+export function ComboboxControl<T extends ValidComponent = "div">(
+  props: ComponentProps<typeof ComboboxPrimitive.Control<T>>,
+) {
+  const [local, rest] = splitProps(props as ComponentProps<typeof ComboboxPrimitive.Control>, ["class"]);
+  return (
+    <ComboboxPrimitive.Control
+      class={cn(
+        "relative flex h-9 w-full items-center rounded-md border border-input bg-background/90 shadow-sm transition-all",
+        "hover:border-ring/45 focus-within:ring-2 focus-within:ring-ring/70 focus-within:ring-offset-1 data-disabled:cursor-not-allowed data-disabled:opacity-50",
+        local.class,
+      )}
+      {...rest}
+    />
+  );
+}
 
 export function ComboboxInput<T extends ValidComponent = "input">(
   props: ComponentProps<typeof ComboboxPrimitive.Input<T>>,
@@ -14,12 +31,27 @@ export function ComboboxInput<T extends ValidComponent = "input">(
   return (
     <ComboboxPrimitive.Input
       class={cn(
-        "flex h-11 w-full rounded-xl border border-border/80 bg-muted/30 px-3.5 py-2 text-sm text-foreground shadow-sm outline-none transition-all duration-150",
-        "placeholder:text-muted-foreground hover:bg-muted/50 hover:border-border focus:bg-background focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-full min-w-0 flex-1 bg-transparent pl-3.5 pr-1 text-xs font-medium text-foreground outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed",
         local.class,
       )}
       {...rest}
     />
+  );
+}
+
+export function ComboboxTrigger<T extends ValidComponent = "button">(
+  props: ComponentProps<typeof ComboboxPrimitive.Trigger<T>>,
+) {
+  const [local, rest] = splitProps(props as ComponentProps<typeof ComboboxPrimitive.Trigger>, ["class"]);
+  return (
+    <ComboboxPrimitive.Trigger
+      class={cn("flex h-full shrink-0 items-center pr-3 pl-1 text-muted-foreground/70 outline-hidden", local.class)}
+      {...rest}
+    >
+      <ComboboxPrimitive.Icon>
+        <IconChevronDown class="h-4 w-4" />
+      </ComboboxPrimitive.Icon>
+    </ComboboxPrimitive.Trigger>
   );
 }
 
@@ -34,8 +66,8 @@ export function ComboboxContent<T extends ValidComponent = "div">(
     <ComboboxPrimitive.Portal>
       <ComboboxPrimitive.Content
         class={cn(
-          "z-50 mt-1.5 max-h-72 min-w-[var(--kb-popper-anchor-width)] overflow-hidden rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-1.5 text-popover-foreground shadow-apple outline-none",
-          "origin-[var(--kb-combobox-content-transform-origin)] animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
+        "z-50 mt-1.5 max-h-72 min-w-(--kb-popper-anchor-width) overflow-hidden rounded-md border border-border/80 bg-popover p-1 text-popover-foreground shadow-xl shadow-black/10 outline-hidden",
+          "origin-(--kb-combobox-content-transform-origin) animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,
         )}
         {...rest}
@@ -49,15 +81,20 @@ export function ComboboxContent<T extends ValidComponent = "div">(
 export function ComboboxItem<T extends ValidComponent = "li">(
   props: ComponentProps<typeof ComboboxPrimitive.Item<T>>,
 ) {
-  const [local, rest] = splitProps(props as ComponentProps<typeof ComboboxPrimitive.Item>, ["class"]);
+  const [local, rest] = splitProps(props as ComponentProps<typeof ComboboxPrimitive.Item>, ["class", "children"]);
   return (
     <ComboboxPrimitive.Item
       class={cn(
-        "relative flex min-h-[2.5rem] cursor-pointer select-none items-center rounded-xl px-3 py-2 text-sm font-medium outline-none transition-all duration-150",
-        "data-[highlighted]:bg-primary/10 data-[highlighted]:text-primary active:scale-[0.98] data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+        "relative flex cursor-pointer select-none items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors",
+        "data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
         local.class,
       )}
       {...rest}
-    />
+    >
+      {local.children}
+      <ComboboxPrimitive.ItemIndicator>
+        <IconCheck class="h-3.5 w-3.5 shrink-0 text-primary" />
+      </ComboboxPrimitive.ItemIndicator>
+    </ComboboxPrimitive.Item>
   );
 }

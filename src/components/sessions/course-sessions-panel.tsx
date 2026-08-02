@@ -15,9 +15,10 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable } from "@/components/ui/data-table";
+import { DetailField } from "@/components/ui/detail-field";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconClipboardCheck, IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconClipboardCheck, IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -75,6 +76,7 @@ export function CourseSessionsPanel(props: {
     async (courseId) => (courseId ? (await getCourseSessions(courseId)).items : []),
   );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
+  const [detailSession, setDetailSession] = createSignal<CourseSession | null>(null);
   const [editingSession, setEditingSession] = createSignal<CourseSession | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<CourseSession | null>(null);
   const [topic, setTopic] = createSignal("");
@@ -86,6 +88,10 @@ export function CourseSessionsPanel(props: {
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
+  const [detailAttendance] = createResource(
+    () => detailSession()?.id ?? null,
+    async (sessionId) => (await getSessionAttendance(sessionId)).items,
+  );
 
   const resetForm = () => {
     setTopic("");
@@ -182,18 +188,18 @@ export function CourseSessionsPanel(props: {
       cell: (cell) => cell.row.original.topic || t("sessions.untitled"),
     },
     {
-      id: "starts_at",
+      id: "time",
       accessorFn: (row) => row.starts_at,
-      header: t("events.starts"),
+      header: t("appointments.time"),
       meta: { cellClass: "mono text-xs text-muted-foreground" },
-      cell: (cell) => formatDateTime(cell.row.original.starts_at, locale()),
-    },
-    {
-      id: "ends_at",
-      accessorFn: (row) => row.ends_at ?? 0,
-      header: t("events.ends"),
-      meta: { cellClass: "mono text-xs text-muted-foreground" },
-      cell: (cell) => (cell.row.original.ends_at ? formatDateTime(cell.row.original.ends_at, locale()) : "—"),
+      cell: (cell) => (
+        <div class="whitespace-nowrap">
+          <p>{formatDateTime(cell.row.original.starts_at, locale())}</p>
+          <Show when={cell.row.original.ends_at}>
+            <p class="text-[11px]">→ {formatDateTime(cell.row.original.ends_at, locale())}</p>
+          </Show>
+        </div>
+      ),
     },
     {
       id: "teacher",
@@ -210,6 +216,7 @@ export function CourseSessionsPanel(props: {
             <TableRowActions
               label={t("common.actions")}
               actions={[
+                { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setDetailSession(cell.row.original) },
                 { label: t("sessions.rollCall"), icon: <IconClipboardCheck class="h-4 w-4" />, onSelect: () => setSelectedSession(cell.row.original) },
                 { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => startEdit(cell.row.original) },
                 { label: t("common.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
@@ -233,7 +240,16 @@ export function CourseSessionsPanel(props: {
         <Show when={sessions.error}>
           <ErrorAlert message={formatApiError(sessions.error)} onRetry={() => void refetch()} />
         </Show>
-        <DataTable columns={columns()} data={sessions() ?? []} filterColumn="topic" enablePagination pageSize={10} empty={t("sessions.empty")} />
+        <DataTable
+          columns={columns()}
+          data={sessions() ?? []}
+          filterColumn="topic"
+          storageKey={`course-sessions-${props.courseId}`}
+          enablePagination
+          pageSize={10}
+          empty={t("sessions.empty")}
+          onRowClick={setDetailSession}
+        />
       </Suspense>
 
       <SidePanel
@@ -290,6 +306,38 @@ export function CourseSessionsPanel(props: {
             </Button>
           </div>
         </form>
+      </SidePanel>
+
+      <SidePanel
+        open={detailSession() != null}
+        onOpenChange={(open) => { if (!open) setDetailSession(null); }}
+        title={detailSession()?.topic || t("sessions.untitled")}
+        description={detailSession() ? formatDateTime(detailSession()!.starts_at, locale()) : ""}
+      >
+        <Show when={detailSession()} keyed>
+          {(session) => (
+            <div class="space-y-5">
+              <div class="grid gap-4 sm:grid-cols-2">
+                <DetailField label={t("sessions.teacher")} value={personLabel(session.teacher)} />
+                <DetailField label={t("events.starts")} value={formatDateTime(session.starts_at, locale())} />
+                <DetailField label={t("events.ends")} value={formatDateTime(session.ends_at, locale())} />
+                <DetailField label={t("attendance.title")} value={`${detailAttendance()?.length ?? 0} / ${props.roster.length}`} mono />
+              </div>
+              <Show when={props.canManage}>
+                <div class="flex gap-2">
+                  <Button variant="outline" onClick={() => { setDetailSession(null); startEdit(session); }}>
+                    <IconEdit class="h-4 w-4" />
+                    {t("common.edit")}
+                  </Button>
+                  <Button onClick={() => { setDetailSession(null); setSelectedSession(session); }}>
+                    <IconClipboardCheck class="h-4 w-4" />
+                    {t("sessions.rollCall")}
+                  </Button>
+                </div>
+              </Show>
+            </div>
+          )}
+        </Show>
       </SidePanel>
 
       <SidePanel

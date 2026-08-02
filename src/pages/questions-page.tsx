@@ -78,7 +78,6 @@ function QuestionsContent() {
   return (
     <div class="space-y-6">
       <PageHeader
-        accent="violet"
         eyebrow={t("nav.group.community")}
         title={t("pool.title")}
         description={t("pool.subtitle")}
@@ -297,7 +296,7 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
             {t("questions.draw")}
           </Button>
           <Show when={drawing()}>
-            <Suspense fallback={<div class="h-[22rem] animate-pulse rounded-lg border bg-muted/20" />}>
+            <Suspense fallback={<div class="h-88 animate-pulse rounded-lg border bg-muted/20" />}>
               <DrawCanvas
                 fileName="question.png"
                 onSave={(drawn) => {

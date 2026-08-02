@@ -114,9 +114,9 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
   };
 
   return (
-    <section class="surface-card space-y-4 p-5">
+    <section class="data-shell space-y-4 p-5">
       <div>
-        <h2 class="font-display text-lg font-semibold">{t("homework.submit")}</h2>
+        <h2 class="text-lg font-semibold">{t("homework.submit")}</h2>
         <p class="mt-1 text-sm text-muted-foreground">{t("homework.submitHelp")}</p>
       </div>
       <Show when={flash()}>

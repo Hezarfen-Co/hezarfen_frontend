@@ -3,7 +3,7 @@ import type { AttemptAnswer } from "../client";
 
 export type PostExamAttemptAnswerBody = {
   question_id: string;
-  selected?: number | null;
+  selected?: string | null; // choice id
   text?: string | null;
 };
 

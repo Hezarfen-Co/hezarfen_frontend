@@ -1,9 +1,6 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
-import { getEvents } from "@/api/events";
-import { getExams } from "@/api/exams";
-import { getHomework } from "@/api/homework";
-import { getMessages, patchMessageById } from "@/api/messages";
+import { patchMessageById } from "@/api/messages";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -24,57 +21,39 @@ import {
   type NotificationItem,
 } from "@/lib/notifications";
 import { useT } from "@/stores/preferences-context";
+import { useShellFeed } from "@/stores/shell-feed-context";
 
 export function NotificationCenter() {
   const t = useT();
   const navigate = useNavigate();
+  const feed = useShellFeed();
   const [open, setOpen] = createSignal(false);
   const [dismissedIds, setDismissedIds] = createSignal<Set<string>>(getDismissedNotificationIds());
 
-  // Fetch data sources
-  const [messagesRes, { refetch: refetchMessages }] = createResource(
-    async () => {
-      try {
-        return await getMessages("inbox", { read: false, limit: 10 });
-      } catch {
-        return { items: [], total: 0 };
-      }
-    }
-  );
+  // Shell feed data comes from the shared poller (ShellFeedProvider): one fetch
+  // per source for the whole shell instead of a duplicate set here. Every read
+  // below is `feed.x()` which returns `resource.latest` — non-suspending on the
+  // 60s refetch, so the unread badge (outside the popover's <Suspense>) never
+  // blanks the page beside <Outlet> (AGENTS.md #6).
+  const refetchMessages = feed.refetchMessages;
+  const refreshAll = feed.refreshAll;
+  const nowMs = feed.nowMs;
 
-  const [eventsRes] = createResource(async () => {
-    try {
-      return await getEvents();
-    } catch {
-      return { items: [], total: 0 };
-    }
+  createEffect(() => {
+    if (open()) refreshAll();
   });
 
-  const [examsRes] = createResource(async () => {
-    try {
-      return await getExams();
-    } catch {
-      return { items: [], total: 0 };
-    }
-  });
-
-  const [homeworkRes] = createResource(async () => {
-    try {
-      return await getHomework();
-    } catch {
-      return { items: [], total: 0 };
-    }
-  });
-
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  // An item is still notifiable until it has ended (ends_at, else starts_at).
+  const notEnded = (starts: number, ends?: number | null) => (ends ?? starts) >= nowMs();
 
   // Combine notification items
   const allNotifications = createMemo<NotificationItem[]>(() => {
     const list: NotificationItem[] = [];
 
-    // 1. Unread Messages
-    const msgs = messagesRes()?.items ?? [];
+    // 1. Unread messages — the dedicated `read=false` page from the shell feed.
+    // Never filter the shared inbox page instead: it is capped and ordered by
+    // id DESC, so an older unread message is simply not in it.
+    const msgs = feed.unreadMessages().items;
     for (const m of msgs) {
       list.push({
         id: `msg_${m.id}`,
@@ -87,11 +66,11 @@ export function NotificationCenter() {
     }
 
     // 2. Events starting today or upcoming
-    const evts = eventsRes()?.items ?? [];
+    const evts = feed.events().items;
     for (const e of evts) {
       if (!e.starts_at) continue;
       const t = new Date(e.starts_at).getTime();
-      if (t >= startOfDay) {
+      if (notEnded(t, e.ends_at ? new Date(e.ends_at).getTime() : null)) {
         list.push({
           id: `evt_${e.id}`,
           type: "event",
@@ -111,11 +90,11 @@ export function NotificationCenter() {
     }
 
     // 3. Exams starting today or upcoming
-    const exms = examsRes()?.items ?? [];
+    const exms = feed.exams().items;
     for (const ex of exms) {
       if (!ex.starts_at || ex.draft) continue;
       const t = new Date(ex.starts_at).getTime();
-      if (t >= startOfDay) {
+      if (notEnded(t, ex.ends_at ? new Date(ex.ends_at).getTime() : null)) {
         list.push({
           id: `ex_${ex.id}`,
           type: "exam",
@@ -135,10 +114,10 @@ export function NotificationCenter() {
     }
 
     // 4. Homework due upcoming
-    const hws = homeworkRes()?.items ?? [];
+    const hws = feed.homework().items;
     for (const hw of hws) {
       if (!hw.due_at) continue;
-      if (hw.due_at >= startOfDay) {
+      if (hw.due_at >= nowMs()) {
         list.push({
           id: `hw_${hw.id}`,
           type: "homework",
@@ -165,7 +144,26 @@ export function NotificationCenter() {
     return allNotifications().filter((item) => !dismissed.has(item.id));
   });
 
-  const unreadCount = () => activeNotifications().length;
+  // The list only holds the newest 10 unread messages; `total` is the real
+  // server-side unread count, so the rest still counts towards the badge.
+  // Those extra rows have no id here, so they cannot be dismissed one by one:
+  // "dismiss all" snapshots the unread total instead. Everything at or below the
+  // snapshot counts as dismissed; anything above it arrived afterwards and still
+  // raises the badge (minus the new rows already listed, which the active list
+  // counts). Without the snapshot, 11 unread → dismiss all → badge stuck at 1
+  // over an empty popover.
+  // ponytail: the snapshot is in-memory while dismissed ids are persisted, so a
+  // reload re-shows unlisted unread — upgrade path is storing it next to the ids
+  // in `lib/notifications`.
+  const [dismissedUnreadTotal, setDismissedUnreadTotal] = createSignal(0);
+  const activeMessageCount = () => activeNotifications().filter((item) => item.type === "message").length;
+  const unlistedUnread = () => {
+    const page = feed.unreadMessages();
+    const beyondPage = page.total - page.items.length;
+    const sinceDismissAll = page.total - dismissedUnreadTotal() - activeMessageCount();
+    return Math.max(0, Math.min(beyondPage, sinceDismissAll));
+  };
+  const unreadCount = () => activeNotifications().length + unlistedUnread();
 
   const handleDismissSingle = (evt: MouseEvent, id: string) => {
     evt.stopPropagation();
@@ -177,6 +175,7 @@ export function NotificationCenter() {
     const ids = activeNotifications().map((item) => item.id);
     const updated = dismissAllNotificationIds(ids);
     setDismissedIds(new Set(updated));
+    setDismissedUnreadTotal(feed.unreadMessages().total);
   };
 
   const handleSelectNotification = async (item: NotificationItem) => {
@@ -201,21 +200,21 @@ export function NotificationCenter() {
     <Popover open={open()} onOpenChange={setOpen} placement="bottom-end" gutter={8}>
       <PopoverTrigger
         class={cn(
-          "relative flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/60 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground shrink-0 cursor-pointer outline-none",
-          open() && "bg-secondary text-foreground"
+          "topbar-control relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+          open() && "bg-muted text-foreground"
         )}
         title={t("rightPanel.messagesTitle")}
         aria-label="Bildirimler"
       >
         <IconBell class="h-4 w-4" />
         <Show when={unreadCount() > 0}>
-          <span class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-xs ring-2 ring-background">
+          <span class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-2xs ring-2 ring-background">
             {unreadCount() > 9 ? "9+" : unreadCount()}
           </span>
         </Show>
       </PopoverTrigger>
 
-      <PopoverContent class="w-80 sm:w-96 rounded-2xl p-0 shadow-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl overflow-hidden">
+      <PopoverContent class="w-80 sm:w-96 rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95 overflow-hidden">
         {/* Header */}
         <div class="flex items-center justify-between border-b border-border/80 px-4 py-3 bg-muted/40">
           <div class="flex items-center gap-2">

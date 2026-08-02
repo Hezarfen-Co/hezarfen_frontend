@@ -1,15 +1,19 @@
 import { Show, Suspense, createMemo, createResource } from "solid-js";
+import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getHomeworkReport } from "@/api/homework";
 import type { HomeworkReportEntry } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { IconEye } from "@/components/ui/icons";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 export function HomeworkReportView(props: { userId: string }) {
   const t = useT();
+  const navigate = useNavigate();
   const { locale } = usePreferences();
   const [report] = createResource(() => props.userId, async (userId) => getHomeworkReport(userId, { limit: 100 }));
   const statusLabel = (row: HomeworkReportEntry) => {
@@ -20,8 +24,16 @@ export function HomeworkReportView(props: { userId: string }) {
     return t("homework.submitted");
   };
   const columns = createMemo<ColumnDef<HomeworkReportEntry>[]>(() => [
-    { accessorKey: "title", header: t("form.title"), meta: { cellClass: "font-medium" } },
-    { accessorKey: "subject", header: t("subjects.subject") },
+    {
+      accessorKey: "title",
+      header: t("form.title"),
+      cell: (cell) => (
+        <div class="min-w-0">
+          <p class="truncate font-medium">{cell.row.original.title}</p>
+          <p class="truncate text-xs text-muted-foreground">{cell.row.original.subject || "—"}</p>
+        </div>
+      ),
+    },
     {
       id: "due_at",
       accessorFn: (row) => row.due_at,
@@ -32,25 +44,51 @@ export function HomeworkReportView(props: { userId: string }) {
     {
       id: "status",
       header: t("events.status"),
-      cell: (cell) => <Badge variant="outline" class="rounded-full">{statusLabel(cell.row.original)}</Badge>,
-    },
-    {
-      id: "late",
-      header: t("homework.late"),
-      cell: (cell) => cell.row.original.late ? t("common.done") : "—",
+      cell: (cell) => (
+        <div class="space-y-1">
+          <Badge variant="outline" class="rounded-full">{statusLabel(cell.row.original)}</Badge>
+          <Show when={cell.row.original.late}>
+            <p class="text-[11px] text-destructive">{t("homework.late")}</p>
+          </Show>
+        </div>
+      ),
     },
     {
       id: "mark",
       header: t("form.mark"),
-      meta: { cellClass: "text-right font-medium tabular-nums" },
+      meta: { align: "right", cellClass: "font-medium tabular-nums" },
       cell: (cell) => cell.row.original.result?.mark ?? "—",
+    },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      cell: (cell) => (
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[{
+            label: t("common.view"),
+            icon: <IconEye class="h-4 w-4" />,
+            onSelect: () => navigate({ to: "/homework/$id", params: { id: cell.row.original.homework } }),
+          }]}
+        />
+      ),
     },
   ]);
 
   return (
     <Suspense fallback={<DataTableSkeleton />}>
       <Show when={(report()?.items ?? []).length > 0} fallback={<EmptyState title={t("homework.empty")} />}>
-        <DataTable columns={columns()} data={report()?.items ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("homework.empty")} />
+        <DataTable
+          columns={columns()}
+          data={report()?.items ?? []}
+          filterColumn="title"
+          storageKey={`homework-report-${props.userId}`}
+          enablePagination
+          pageSize={10}
+          empty={t("homework.empty")}
+          onRowClick={(row) => navigate({ to: "/homework/$id", params: { id: row.homework } })}
+        />
       </Show>
     </Suspense>
   );

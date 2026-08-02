@@ -1,8 +1,7 @@
-import { For, Index, Show, Suspense, createEffect, createResource, createSignal, lazy } from "solid-js";
+import { For, Index, Show, Suspense, createEffect, createResource, createSignal, lazy, untrack } from "solid-js";
 import { formatApiError } from "@/api/client";
-import type { ExamQuestion, QuestionKind, Subject } from "@/api/client";
-import { QUESTION_KINDS } from "@/api/client";
-import { getExamQuestionImageBlob } from "@/api/exams";
+import type { Choice, ImageMeta, QuestionKind, Subject } from "@/api/client";
+import { BANK_QUESTION_LIMITS, QUESTION_KINDS } from "@/api/client";
 import { getSettings } from "@/api/settings";
 import type { DrawScene } from "@/lib/draw-stroke";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  addChoice as addChoiceRow,
+  blankChoiceSet,
+  removeChoice as removeChoiceRow,
+  setChoiceImage as setChoiceImageIn,
+  setChoiceText,
+  setCorrect as setCorrectIn,
+  storedChoiceSet,
+  submitChoices,
+  type ChoiceSet,
+} from "@/lib/choice-set";
 import { cn } from "@/lib/cn";
 import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
@@ -23,30 +33,55 @@ export type QuestionValues = {
   text: string;
   kind: QuestionKind;
   points: number;
-  choices: string[] | null;
-  correct: number | null;
+  /** Each row keeps its key: a stored id keeps that option, a `new:` id is a new one. */
+  choices: Choice[] | null;
+  /** Choice id, never an index. */
+  correct: string | null;
   image: File | null;
+  /** Freshly picked files, aligned to `choices`. */
   choice_images: (File | null)[] | null;
 };
 
+/** Shape both `ExamQuestion` and `BankQuestion` satisfy — the form only needs these. */
+export type QuestionFormInitial = {
+  /** Null for a bank template whose origin subject has since been deleted. */
+  subject: string | null;
+  text: string;
+  kind: QuestionKind;
+  points: number;
+  choices: Choice[] | null;
+  correct: string | null;
+  image?: ImageMeta | null;
+  choice_images?: (ImageMeta | null)[] | null;
+};
+
 export function QuestionForm(props: {
-  initial?: ExamQuestion;
+  initial?: QuestionFormInitial;
   subjects: Subject[];
+  /** True while `subjects` is still loading, so a missing subject is not misreported. */
+  subjectsPending?: boolean;
+  /** Existing stored image, as a URL the browser can GET (exam or bank path). */
+  imageSrc?: string;
+  choiceImageSrc?: (choiceId: string) => string;
+  /** Reload the stored image so an existing drawing can be edited, not redrawn. */
+  loadImageBlob?: () => Promise<Blob>;
+  submitLabel?: string;
   onSubmit: (values: QuestionValues) => Promise<void>;
   onCancel: () => void;
 }) {
   const t = useT();
   let textAreaRef: HTMLTextAreaElement | undefined;
   const [text, setText] = createSignal(props.initial?.text ?? "");
-  const [subjectId, setSubjectId] = createSignal(props.initial?.subject ?? props.subjects[0]?.id ?? "");
+  // No first-subject default: the subject is submitted, so the user picks it.
+  const [subjectId, setSubjectId] = createSignal(props.initial?.subject ?? "");
   const [kind, setKind] = createSignal<QuestionKind>(props.initial?.kind ?? "choice");
   const [points, setPoints] = createSignal(String(props.initial?.points ?? 1));
-  const [choices, setChoices] = createSignal<string[]>(props.initial?.choices ?? ["", "", "", ""]);
-  const [correct, setCorrect] = createSignal(props.initial?.correct ?? 0);
+  const [choiceSet, setChoiceSet] = createSignal<ChoiceSet>(
+    props.initial ? storedChoiceSet(props.initial.choices, props.initial.correct) : blankChoiceSet(),
+  );
   const [image, setImage] = createSignal<File | null>(null);
   const [drawing, setDrawing] = createSignal(false);
   const [editScene, setEditScene] = createSignal<DrawScene | null>(null);
-  const [choiceImages, setChoiceImages] = createSignal<(File | null)[]>(choices().map(() => null));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [settings] = createResource(async () => {
@@ -58,20 +93,34 @@ export function QuestionForm(props: {
   });
   const maxFileBytes = () => maxUploadBytes(settings());
 
+  // Reset on a new `initial` only — `props.subjects` may arrive after the form is
+  // open (async course subjects), and re-running then would wipe what was typed.
   createEffect(() => {
     const initial = props.initial;
-    setText(initial?.text ?? "");
-    setSubjectId(initial?.subject ?? props.subjects[0]?.id ?? "");
-    setKind(initial?.kind ?? "choice");
-    setPoints(String(initial?.points ?? 1));
-    setChoices(initial?.choices ?? ["", "", "", ""]);
-    setCorrect(initial?.correct ?? 0);
-    setImage(null);
-    setDrawing(false);
-    setEditScene(null);
-    setChoiceImages((initial?.choices ?? ["", "", "", ""]).map(() => null));
-    setError("");
+    untrack(() => {
+      setText(initial?.text ?? "");
+      setSubjectId(initial?.subject ?? "");
+      setKind(initial?.kind ?? "choice");
+      setPoints(String(initial?.points ?? 1));
+      setChoiceSet(initial ? storedChoiceSet(initial.choices, initial.correct) : blankChoiceSet());
+      setImage(null);
+      setDrawing(false);
+      setEditScene(null);
+      setError("");
+    });
   });
+
+  // The stored subject is not in the list this user can pick from (foreign course,
+  // or they lost access to it). Never swap it silently — show it, and make them pick.
+  const subjectUnavailable = () => {
+    const current = props.initial?.subject;
+    return (
+      !!current &&
+      !props.subjectsPending &&
+      subjectId() === current &&
+      !props.subjects.some((subject) => subject.id === current)
+    );
+  };
 
   // Blank pad for a fresh drawing; reload the stored scene to edit an existing one.
   const startDrawing = () => {
@@ -80,11 +129,11 @@ export function QuestionForm(props: {
   };
 
   const editDrawing = async () => {
-    const q = props.initial;
-    if (!q?.image) return;
+    const load = props.loadImageBlob;
+    if (!props.initial?.image || !load) return;
     setError("");
     try {
-      const blob = await getExamQuestionImageBlob(q.exam, q.id);
+      const blob = await load();
       const { pngBytesToScene } = await import("@/lib/drawing-file");
       setEditScene(pngBytesToScene(new Uint8Array(await blob.arrayBuffer())));
     } catch {
@@ -105,8 +154,12 @@ export function QuestionForm(props: {
     resizeTextArea();
   });
 
-  const setChoice = (index: number, value: string) => {
-    setChoices((current) => current.map((choice, i) => (i === index ? value : choice)));
+  const rows = () => choiceSet().rows;
+  // Stored option images arrive as an array aligned to `initial.choices`, so look
+  // one up by the row's id — the row's display position may have moved.
+  const storedImage = (id: string) => {
+    const index = props.initial?.choices?.findIndex((choice) => choice.id === id) ?? -1;
+    return index >= 0 ? props.initial?.choice_images?.[index] ?? null : null;
   };
 
   const validImage = (file: File | null): file is File => {
@@ -125,46 +178,52 @@ export function QuestionForm(props: {
     if (validImage(file)) setImage(file);
   };
 
-  const setChoiceImage = (index: number, file: File | null) => {
+  const addChoice = () => setChoiceSet((set) => addChoiceRow(set, BANK_QUESTION_LIMITS.maxChoices));
+  const removeChoice = (id: string) => setChoiceSet((set) => removeChoiceRow(set, id));
+  const setChoice = (id: string, value: string) => setChoiceSet((set) => setChoiceText(set, id, value));
+  const setCorrect = (id: string) => setChoiceSet((set) => setCorrectIn(set, id));
+
+  const setChoiceImage = (id: string, file: File | null) => {
     if (file) {
       setError("");
       if (!validImage(file)) return;
     }
-    setChoiceImages((current) => choices().map((_, i) => (i === index ? file : current[i] ?? null)));
-  };
-
-  const addChoice = () => {
-    setChoices((current) => (current.length >= 10 ? current : [...current, ""]));
-    setChoiceImages((current) => (current.length >= 10 ? current : [...current, null]));
-  };
-
-  const removeChoice = (index: number) => {
-    setChoices((current) => current.filter((_, i) => i !== index));
-    setChoiceImages((current) => current.filter((_, i) => i !== index));
-    setCorrect((current) => Math.max(0, Math.min(current, choices().length - 2)));
+    setChoiceSet((set) => setChoiceImageIn(set, id, file));
   };
 
   const validate = (): QuestionValues | string => {
     const body = text().trim();
     const subject = subjectId().trim();
     if (!subject) return t("questions.subjectRequired");
+    if (subjectUnavailable()) return t("questions.subjectUnavailableHelp");
     if (!body) return t("questions.textRequired");
-    if (body.length > 2000) return t("form.descriptionMax");
+    if (body.length > BANK_QUESTION_LIMITS.textMaxLen) return t("form.descriptionMax");
     const p = Number(points());
-    if (!Number.isInteger(p) || p < 1 || p > 100) return t("questions.pointsRange");
+    if (!Number.isInteger(p) || p < BANK_QUESTION_LIMITS.minPoints || p > BANK_QUESTION_LIMITS.maxPoints) return t("questions.pointsRange");
     if (kind() === "text") {
       return { subject_id: subject, text: body, kind: "text", points: p, choices: null, correct: null, image: image(), choice_images: null };
     }
-    const indexedChoices = choices()
-      .map((choice, index) => ({ choice: choice.trim(), image: choiceImages()[index] ?? null }))
-      .filter((item) => item.choice);
-    const cleanChoices = indexedChoices.map((item) => item.choice);
-    if (cleanChoices.length < 2 || cleanChoices.length > 10 || cleanChoices.some((choice) => choice.length > 500)) {
+    const submitted = submitChoices(choiceSet());
+    if (
+      submitted.choices.length < BANK_QUESTION_LIMITS.minChoices ||
+      submitted.choices.length > BANK_QUESTION_LIMITS.maxChoices ||
+      submitted.choices.some((choice) => choice.text.length > BANK_QUESTION_LIMITS.choiceTextMaxLen)
+    ) {
       return t("questions.choicesRange");
     }
-    const c = correct();
-    if (!Number.isInteger(c) || c < 0 || c >= cleanChoices.length) return t("questions.correctRange");
-    return { subject_id: subject, text: body, kind: "choice", points: p, choices: cleanChoices, correct: c, image: image(), choice_images: indexedChoices.map((item) => item.image) };
+    // Nothing is marked for the user: either they never picked, or they blanked
+    // the row they had picked. Both end here, and both need a deliberate pick.
+    if (!submitted.correct) return t("questions.correctRequired");
+    return {
+      subject_id: subject,
+      text: body,
+      kind: "choice",
+      points: p,
+      choices: submitted.choices,
+      correct: submitted.correct,
+      image: image(),
+      choice_images: submitted.images,
+    };
   };
 
   const submit = async (e: SubmitEvent) => {
@@ -187,13 +246,13 @@ export function QuestionForm(props: {
 
   return (
     <form class="space-y-3" onSubmit={(e) => void submit(e)}>
-      <div class="rounded-lg border bg-card p-3.5 shadow-sm">
+      <div class="rounded-lg border bg-card p-3.5 shadow-xs">
         <div class="space-y-2">
           <Label for="question-text" class="text-sm font-semibold">{t("questions.text")}</Label>
           <Textarea
             id="question-text"
             ref={textAreaRef}
-            class="min-h-[7rem] resize-none overflow-hidden bg-background text-base"
+            class="min-h-28 resize-none overflow-hidden bg-background text-base"
             value={text()}
             maxlength={2000}
             rows={3}
@@ -205,10 +264,10 @@ export function QuestionForm(props: {
             }}
           />
           <div class="flex items-center gap-3">
-            <Show when={props.initial?.image}>
+            <Show when={props.initial?.image && props.imageSrc}>
               <div class="relative shrink-0">
                 <img
-                  src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/image`}
+                  src={props.imageSrc}
                   alt={t("questions.image")}
                   class="h-14 w-24 rounded border bg-muted/20 object-contain"
                 />
@@ -235,7 +294,7 @@ export function QuestionForm(props: {
                 <IconEdit class="h-3.5 w-3.5" />
                 {t("questions.draw")}
               </button>
-              <Show when={props.initial?.image}>
+              <Show when={props.initial?.image && props.loadImageBlob}>
                 <button
                   type="button"
                   class="flex items-center gap-1.5 rounded-md border border-dashed bg-muted/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
@@ -250,7 +309,7 @@ export function QuestionForm(props: {
           <Show when={drawing()}>
             <div class="mt-3 border-t border-border/50 pt-3">
               <Label class="mb-2 block text-xs font-semibold text-muted-foreground">{t("questions.drawTitle")}</Label>
-              <Suspense fallback={<div class="h-[22rem] animate-pulse rounded-lg border bg-muted/20" />}>
+              <Suspense fallback={<div class="h-88 animate-pulse rounded-lg border bg-muted/20" />}>
                 <DrawCanvas
                   fileName="question.png"
                   initialScene={editScene()}
@@ -267,13 +326,19 @@ export function QuestionForm(props: {
         </div>
       </div>
 
-      <div class="flex flex-wrap items-end gap-3 rounded-lg border bg-card px-3.5 py-3 shadow-sm">
-        <div class="min-w-0 flex-1 basis-[10rem]">
+      <div class="flex flex-wrap items-end gap-3 rounded-lg border bg-card px-3.5 py-3 shadow-xs">
+        <div class="min-w-0 flex-1 basis-40">
           <Label for="question-subject" class="mb-1 block text-xs font-semibold text-muted-foreground">{t("subjects.subject")}</Label>
           <Select id="question-subject" class="h-9 py-1.5 text-sm" value={subjectId()} required onChange={(e) => setSubjectId(e.currentTarget.value)}>
             <option value="">{t("subjects.select")}</option>
+            <Show when={subjectUnavailable()}>
+              <option value={props.initial?.subject ?? ""} disabled>{t("questions.subjectUnavailable")}</option>
+            </Show>
             <For each={props.subjects}>{(subject) => <option value={subject.id}>{subject.name}</option>}</For>
           </Select>
+          <Show when={subjectUnavailable()}>
+            <p class="mt-1 text-[11px] text-destructive">{t("questions.subjectUnavailableHelp")}</p>
+          </Show>
         </div>
         <div>
           <Label class="mb-1 block text-xs font-semibold text-muted-foreground">{t("questions.kind")}</Label>
@@ -285,7 +350,7 @@ export function QuestionForm(props: {
                   class={cn(
                     "h-7 rounded-sm px-2.5 text-xs font-semibold transition-colors",
                     kind() === k
-                      ? "bg-primary text-primary-foreground shadow-xs"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                   onClick={() => setKind(k)}
@@ -312,20 +377,24 @@ export function QuestionForm(props: {
       </div>
 
       <Show when={kind() === "choice"}>
-        <div class="rounded-lg border bg-card p-3.5 shadow-sm">
+        <div class="rounded-lg border bg-card p-3.5 shadow-xs">
           <div class="mb-3 flex items-center justify-between gap-2 border-b border-border/50 pb-2">
             <Label class="text-sm font-semibold">{t("questions.choices")}</Label>
-            <Button type="button" variant="outline" size="sm" class="h-7 gap-1 text-xs" disabled={choices().length >= 10} onClick={addChoice}>
+            <Button type="button" variant="outline" size="sm" class="h-7 gap-1 text-xs" disabled={rows().length >= BANK_QUESTION_LIMITS.maxChoices} onClick={addChoice}>
               <IconPlus class="h-3.5 w-3.5" />
               {t("questions.addChoice")}
             </Button>
           </div>
           <div class="space-y-2">
-            <Index each={choices()}>
-              {(choice, index) => {
-                const isCorrect = () => correct() === index;
+            <Index each={rows()}>
+              {(row, index) => {
+                const isCorrect = () => choiceSet().correct === row().id;
+                // Keyed by the row's own id, so a stored option keeps its picture no
+                // matter where it sits now; null = a row the server has never seen.
+                const stored = () => storedImage(row().id);
                 return (
                   <div
+                    data-choice-id={row().id}
                     class={cn(
                       "flex items-start gap-2 rounded-md border p-2 transition-colors",
                       isCorrect() ? "border-emerald-400/60 bg-emerald-50/60" : "border-border bg-background",
@@ -336,10 +405,10 @@ export function QuestionForm(props: {
                       class={cn(
                         "mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold transition-colors",
                         isCorrect()
-                          ? "bg-emerald-600 text-white shadow-xs"
+                          ? "bg-emerald-600 text-white shadow-2xs"
                           : "border bg-background text-muted-foreground hover:border-emerald-400 hover:text-emerald-600",
                       )}
-                      onClick={() => setCorrect(index)}
+                      onClick={() => setCorrect(row().id)}
                       title={t("questions.correct")}
                     >
                       {isCorrect() ? <IconCheck class="h-3.5 w-3.5" /> : String.fromCharCode(65 + index)}
@@ -347,10 +416,10 @@ export function QuestionForm(props: {
                     <div class="min-w-0 flex-1 space-y-1.5">
                       <Input
                         class="h-8 text-sm"
-                        value={choice()}
+                        value={row().text}
                         maxlength={500}
                         placeholder={t("questions.choicePlaceholder", { index: String.fromCharCode(65 + index) })}
-                        onInput={(e) => setChoice(index, e.currentTarget.value)}
+                        onInput={(e) => setChoice(row().id, e.currentTarget.value)}
                       />
                       <div class="flex items-center gap-2">
                         <input
@@ -358,15 +427,15 @@ export function QuestionForm(props: {
                           type="file"
                           accept="image/png,image/jpeg,image/webp,image/gif"
                           class="sr-only"
-                          onChange={(event) => setChoiceImage(index, event.currentTarget.files?.[0] ?? null)}
+                          onChange={(event) => setChoiceImage(row().id, event.currentTarget.files?.[0] ?? null)}
                         />
                         <label for={`choice-image-${index}`} class="flex cursor-pointer items-center gap-1 rounded-md border border-dashed bg-muted/20 px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
                           <IconFileImage class="h-3 w-3" />
-                          {choiceImages()[index]?.name ?? t("questions.choiceImage")}
+                          {row().image?.name ?? t("questions.choiceImage")}
                         </label>
-                        <Show when={props.initial?.choice_images?.[index]}>
+                        <Show when={stored() && props.choiceImageSrc}>
                           <img
-                            src={`/api/exams/${props.initial!.exam}/questions/${props.initial!.id}/choices/${index}/image`}
+                            src={props.choiceImageSrc?.(row().id)}
                             alt={t("questions.choiceImage")}
                             class="h-8 w-12 rounded border bg-muted/20 object-contain"
                           />
@@ -377,9 +446,9 @@ export function QuestionForm(props: {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      disabled={choices().length <= 2}
+                      disabled={rows().length <= BANK_QUESTION_LIMITS.minChoices}
                       class="mt-0.5 h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeChoice(index)}
+                      onClick={() => removeChoice(row().id)}
                     >
                       <IconTrash class="h-3.5 w-3.5" />
                     </Button>
@@ -395,7 +464,7 @@ export function QuestionForm(props: {
 
       <div class="flex flex-wrap items-center gap-2 pt-1">
         <Button type="submit" class="h-8 text-xs font-semibold" disabled={pending()}>
-          {props.initial ? t("common.update") : t("common.create")}
+          {props.submitLabel ?? (props.initial ? t("common.update") : t("common.create"))}
         </Button>
         <Button type="button" variant="outline" class="h-8 text-xs font-semibold" onClick={props.onCancel}>
           {t("common.cancel")}

@@ -46,4 +46,21 @@ describe("settings API", () => {
     expect(cached).toEqual(mockSettings);
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
+
+  it("patchSettings preserves nullable meal cutoff and expanded policy fields", async () => {
+    mockFetchSuccess({ meal_cancel_cutoff_minutes: null });
+    const updates = {
+      chatbot_history_turns: 8,
+      max_chatbot_threads: 20,
+      max_chatbot_message_len: 3000,
+      meal_slots: [{ name: "lunch", serving_minute: 540 }],
+      dietary_tags: ["nuts"],
+      meal_cancel_cutoff_minutes: null,
+    };
+    await patchSettings(updates);
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/settings");
+    expect(init?.method).toBe("PATCH");
+    expect(init?.body).toBe(JSON.stringify(updates));
+  });
 });

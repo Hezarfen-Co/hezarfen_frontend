@@ -15,7 +15,7 @@ import { formatDateTime, formatDurationClock } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 export default function StudentPomodoroPage() {
   return (
@@ -78,14 +78,9 @@ function StudentPomodoroContent() {
       cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
     },
     {
-      accessorKey: "id",
-      header: t("admin.id"),
-      cell: (cell) => <span class="mono text-xs text-muted-foreground">{cell.row.original.id}</span>,
-    },
-    {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -123,22 +118,23 @@ function StudentPomodoroContent() {
 
   return (
     <div class="space-y-6">
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Show when={error() && !viewUser()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
-        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
           <DataTable
             title={t("nav.studentPomodoro")}
             description={`${t("pomodoro.lookup")} · ${rows().length} / ${total()}`}
             columns={studentColumns()}
             data={rows()}
-            tableClass="min-w-[36rem]"
+            tableClass="min-w-xl"
             empty={t("form.noStudents")}
             searchPredicate={searchPerson}
             enablePagination
             pageSize={PAGE_SIZE}
+            storageKey="student-pomodoro"
             onRowClick={(person) => {
               setError("");
               setViewUser(person);

@@ -24,7 +24,7 @@ import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const TERM_PAGE_SIZE = 12;
+const TERM_PAGE_SIZE = 10;
 
 function dateInputFromMs(ms: number): string {
   const date = new Date(ms);
@@ -85,7 +85,7 @@ function TermsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -166,12 +166,11 @@ function TermsContent() {
     <div class="space-y-6">
       <div class="space-y-2">
         <PageHeader
-          accent="violet"
           eyebrow={t("nav.admin")}
           title={t("terms.title")}
           description={t("terms.subtitle")}
           actions={
-            <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
+            <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={openCreate}>
               <IconPlus class="h-4 w-4" />
               {t("terms.create")}
             </Button>
@@ -186,7 +185,7 @@ function TermsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-violet-500/15 bg-violet-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
@@ -199,7 +198,7 @@ function TermsContent() {
               />
             }
           >
-            <DataTable columns={columns()} data={terms()} tableClass="min-w-[40rem]" filterColumn="name" enablePagination pageSize={TERM_PAGE_SIZE} />
+            <DataTable columns={columns()} data={terms()} tableClass="min-w-160" filterColumn="name" enablePagination pageSize={TERM_PAGE_SIZE} />
           </Show>
         </Suspense>
       </section>

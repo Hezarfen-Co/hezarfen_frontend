@@ -122,7 +122,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap", cellClass: "px-1 text-center" },
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap", cellClass: "px-1 text-center" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -141,9 +141,9 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
   ]);
 
   return (
-    <section class="surface-card space-y-4 p-5">
+    <section class="data-shell space-y-4 p-5">
       <div>
-        <h2 class="font-display text-lg font-semibold">{t("homework.submissions")}</h2>
+        <h2 class="text-lg font-semibold">{t("homework.submissions")}</h2>
         <p class="mt-1 text-sm text-muted-foreground">{t("homework.submissionsHelp")}</p>
       </div>
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>

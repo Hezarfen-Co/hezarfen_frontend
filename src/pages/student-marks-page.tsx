@@ -3,7 +3,8 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { getUserMarks } from "@/api/reports";
 import { getUserSearch } from "@/api/users";
 import { ApiError, formatApiError } from "@/api/client";
-import type { PersonRef } from "@/api/client";
+import type { MarksReport, PersonRef } from "@/api/client";
+import { cn } from "@/lib/cn";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
@@ -15,7 +16,11 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
+const round = (n: number) => (Math.round(n * 100) / 100).toString();
+// ponytail: display-only color tiers (70/40 on a 0-100 scale), not a pass/fail rule
+const avgTone = (v: number) =>
+  v >= 70 ? "text-emerald-600 dark:text-emerald-400" : v >= 40 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
 
 export default function StudentMarksPage() {
   return (
@@ -43,6 +48,31 @@ function StudentMarksContent() {
     { initialValue: [] },
   );
 
+  // Per-student overall marks for the inline "average" column. No bulk endpoint
+  // exists, so this is one getUserMarks call per listed student, bounded by cap.
+  // ponytail: N+1 marks fetch, capped at 200; add a bulk /reports/marks endpoint
+  // if whole-school listing is needed. Mirrors the payments roster balance fetch.
+  const MARKS_FETCH_CAP = 200;
+  const [marksMapRes] = createResource(
+    () => {
+      const ids = list().map((user) => user.id);
+      return ids.length > 0 && ids.length <= MARKS_FETCH_CAP ? ids : null;
+    },
+    async (ids) => {
+      const pairs = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            return [id, await getUserMarks(id)] as const;
+          } catch {
+            return [id, null] as const;
+          }
+        }),
+      );
+      return Object.fromEntries(pairs) as Record<string, MarksReport | null>;
+    },
+  );
+  const marksOf = (id: string) => marksMapRes()?.[id];
+
   const [report, { refetch: refetchReport }] = createResource(
     () => viewUser()?.id ?? null,
     async (id) => {
@@ -61,7 +91,15 @@ function StudentMarksContent() {
   );
 
   const total = () => list().length;
-  const rows = () => list();
+  // The inline "average" column reads the separate marksMapRes resource, which
+  // resolves AFTER this table first renders. TanStack caches cell values by the
+  // data-array identity, so without a new reference the averages only appear once
+  // something forces a re-derive (e.g. sorting). Track marksMapRes and hand back a
+  // fresh array so the column fills in as soon as the marks load.
+  const rows = () => {
+    marksMapRes();
+    return [...list()];
+  };
   const listLoading = () => list.loading;
   const searchPerson = (person: PersonRef, query: string) =>
     [person.username, person.display_name, person.id].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase());
@@ -77,14 +115,27 @@ function StudentMarksContent() {
       cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
     },
     {
-      accessorKey: "id",
-      header: t("admin.id"),
-      cell: (cell) => <span class="mono text-xs text-muted-foreground">{cell.row.original.id}</span>,
+      id: "average",
+      header: t("marks.overall"),
+      accessorFn: (user) => marksOf(user.id)?.overall_average ?? -1,
+      meta: { align: "right" },
+      cell: (cell) => {
+        const rep = marksOf(cell.row.original.id);
+        if (rep == null) return <span class="text-sm text-muted-foreground">—</span>;
+        if (rep.overall_average == null)
+          return <span class="text-sm text-muted-foreground">{rep.overall_grade ?? "—"}</span>;
+        return (
+          <span class={cn("mono font-semibold tabular-nums", avgTone(rep.overall_average))}>
+            {round(rep.overall_average)}
+            <Show when={rep.overall_grade}>{(g) => <span class="ml-1 font-medium text-muted-foreground">/ {g()}</span>}</Show>
+          </span>
+        );
+      },
     },
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -105,7 +156,7 @@ function StudentMarksContent() {
 
   return (
     <div class="space-y-6">
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Show when={error() && !viewUser()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
@@ -116,11 +167,12 @@ function StudentMarksContent() {
             description={`${t("marks.lookup")} · ${rows().length} / ${total()}`}
             columns={columns()}
             data={rows()}
-            tableClass="min-w-[36rem]"
+            tableClass="min-w-xl"
             empty={t("form.noStudents")}
             searchPredicate={searchPerson}
             enablePagination
             pageSize={PAGE_SIZE}
+            storageKey="student-marks"
             onRowClick={(person) => {
               setError("");
               setViewUser(person);

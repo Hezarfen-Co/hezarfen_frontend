@@ -18,7 +18,7 @@ export default defineConfig({
     // reloads its cache entries wedge and every later request queues in the
     // browser forever — no bytes ever reach vite. `no-store` stops Chromium
     // from creating the cache entries at all. Dev-only; the production build
-    // is served by nginx with its own cache headers.
+    // is served by Bun (server.ts) with its own cache headers.
     headers: {
       "Cache-Control": "no-store",
     },

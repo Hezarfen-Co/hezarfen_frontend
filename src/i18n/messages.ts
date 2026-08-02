@@ -10,14 +10,67 @@ export type MessageKey =
   | "ai.placeholder"
   | "ai.send"
   | "ai.unavailable"
+  | "ai.copy"
+  | "ai.copied"
+  | "ai.thinking1"
+  | "ai.thinking2"
+  | "ai.thinking3"
+  | "ai.hint"
+  | "ai.suggest1"
+  | "ai.suggest2"
+  | "ai.suggest3"
+  | "ai.suggest4"
+  | "ai.suggestStaff1"
+  | "ai.suggestStaff2"
+  | "ai.suggestStaff3"
+  | "ai.suggestStaff4"
+  | "ai.suggestParent1"
+  | "ai.suggestParent2"
+  | "ai.suggestParent3"
+  | "ai.suggestParent4"
   | "nav.home"
+  | "nav.today"
+  | "nav.classes"
+  | "nav.classGroups"
+  | "classGroups.title"
+  | "classGroups.subtitle"
+  | "classGroups.newClass"
+  | "classGroups.className"
+  | "classGroups.grade"
+  | "classGroups.empty"
+  | "classGroups.open"
+  | "classGroups.student"
+  | "classGroups.addedBy"
+  | "classGroups.courseColumn"
+  | "classGroups.attachedBy"
+  | "classGroups.membersTab"
+  | "classGroups.coursesTab"
+  | "classGroups.addStudent"
+  | "classGroups.addStudentHelp"
+  | "classGroups.attachCourse"
+  | "classGroups.attachCourseHelp"
+  | "classGroups.removeStudent"
+  | "classGroups.removeStudentConfirm"
+  | "classGroups.detachCourse"
+  | "classGroups.detachCourseConfirm"
+  | "classGroups.deleteClass"
+  | "classGroups.deleteConfirm"
+  | "classGroups.selectCourse"
+  | "classGroups.noMembers"
+  | "classGroups.noCourses"
+  | "nav.progress"
+  | "nav.students"
+  | "nav.children"
+  | "nav.school"
   | "nav.notes"
   | "nav.events"
   | "nav.exams"
+  | "nav.questionBank"
   | "nav.homework"
   | "nav.courses"
   | "nav.studies"
   | "nav.clubs"
+  | "nav.meals"
   | "nav.marks"
   | "nav.messages"
   | "nav.pomodoro"
@@ -42,11 +95,15 @@ export type MessageKey =
   | "nav.account"
   | "nav.preferences"
   | "nav.group.students"
+  | "nav.group.school"
   | "nav.group.classes"
+  | "nav.group.planning"
+  | "nav.group.workspace"
   | "nav.group.grades"
   | "nav.group.reports"
   | "nav.group.settings"
   | "nav.group.community"
+  | "nav.darkMode"
   | "rightPanel.messagesTitle"
   | "rightPanel.calendarTitle"
   | "rightPanel.openFullMessages"
@@ -71,8 +128,12 @@ export type MessageKey =
   | "common.reply"
   | "common.approve"
   | "common.reject"
+  | "common.action"
   | "common.actions"
   | "common.columns"
+  | "common.visibleColumns"
+  | "common.pageRange"
+  | "common.rowsPerPage"
   | "common.moreFilters"
   | "common.lessFilters"
   | "common.search"
@@ -256,6 +317,48 @@ export type MessageKey =
   | "dashboard.portal.studentMarksDesc"
   | "dashboard.portal.settingsDesc"
   | "dashboard.portal.termsDesc"
+  | "dashboard.portal.mealsDesc"
+  | "dashboard.highlights"
+  | "dashboard.progressOverview"
+  | "dashboard.progressOverviewDesc"
+  | "dashboard.activitySplit"
+  | "dashboard.activitySplitDesc"
+  | "dashboard.workloadSplit"
+  | "dashboard.workloadSplitDesc"
+  | "dashboard.deadlines"
+  | "dashboard.courseCapacities"
+  | "dashboard.courseAverages"
+  | "dashboard.chartEmpty"
+  | "dashboard.chartEmptyHint"
+  | "dashboard.col.task"
+  | "dashboard.col.dueDate"
+  | "dashboard.col.type"
+  | "dashboard.col.status"
+  | "dashboard.type.exam"
+  | "dashboard.type.event"
+  | "dashboard.type.appointment"
+  | "dashboard.type.homework"
+  | "dashboard.stats.attendance"
+  | "dashboard.stats.homework"
+  | "dashboard.stats.students"
+  | "dashboard.stats.children"
+  | "dashboard.stats.meals"
+  | "dashboard.stats.appointments"
+  | "dashboard.attend.present"
+  | "dashboard.attend.absent"
+  | "dashboard.attend.late"
+  | "dashboard.attend.excused"
+  | "dashboard.welcomeBack"
+  | "dashboard.welcomeHint"
+  | "dashboard.teachingResources"
+  | "dashboard.teachingResourcesDesc"
+  | "dashboard.questionBankDesc"
+  | "dashboard.questionPoolDesc"
+  | "dashboard.quickReview.title"
+  | "dashboard.quickReview.subtitle"
+  | "dashboard.quickReview.placeholder"
+  | "dashboard.quickReview.practice"
+  | "dashboard.quickReview.startQuiz"
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
@@ -382,6 +485,8 @@ export type MessageKey =
   | "exams.retakesHelp"
   | "exams.allowRejoin"
   | "exams.allowRejoinHelp"
+  | "exams.allowReview"
+  | "exams.allowReviewHelp"
   | "exams.draft"
   | "exams.draftHelp"
   | "exams.publish"
@@ -425,10 +530,59 @@ export type MessageKey =
   | "questions.editDrawing"
   | "questions.choiceImage"
   | "questions.subjectRequired"
+  | "questions.subjectUnavailable"
+  | "questions.subjectUnavailableHelp"
   | "questions.textRequired"
   | "questions.pointsRange"
   | "questions.choicesRange"
+  | "questions.correctRequired"
   | "questions.correctRange"
+  | "bank.title"
+  | "bank.subtitle"
+  | "bank.empty"
+  | "bank.create"
+  | "bank.edit"
+  | "bank.owner"
+  | "bank.mine"
+  | "bank.created"
+  | "bank.copyNotice"
+  | "bank.courseHint"
+  | "bank.courseSelect"
+  | "bank.courseUnavailable"
+  | "bank.targetSubjectHint"
+  | "bank.fromBank"
+  | "bank.pickTemplate"
+  | "bank.targetSubject"
+  | "bank.insert"
+  | "bank.inserted"
+  | "bank.saveToBank"
+  | "bank.saveCopyToBank"
+  | "bank.saveCopyTitle"
+  | "bank.saveCopyBody"
+  | "bank.saveCopyConfirm"
+  | "bank.savedToBank"
+  | "bank.fromBankBadge"
+  | "bank.savedToBankBadge"
+  | "bank.search"
+  | "bank.pickerEmpty"
+  | "bank.noSubjects"
+  | "bank.countTotal"
+  | "bank.countShown"
+  | "bank.whoCanSee"
+  | "bank.onlyMe"
+  | "bank.sharedWithSchool"
+  | "bank.onlyMeHint"
+  | "bank.sharedWithSchoolHint"
+  | "bank.shareTitle"
+  | "bank.shareBody"
+  | "bank.shareConfirm"
+  | "bank.startsPrivate"
+  | "bank.usedInExams"
+  | "bank.refresh"
+  | "bank.refreshTitle"
+  | "bank.refreshBody"
+  | "bank.refreshConfirm"
+  | "bank.refreshed"
   | "subjects.title"
   | "subjects.item"
   | "subjects.subject"
@@ -468,6 +622,8 @@ export type MessageKey =
   | "attempt.start"
   | "attempt.resume"
   | "attempt.finish"
+  | "attempt.finishConfirm"
+  | "attempt.finishHint"
   | "attempt.status"
   | "attempt.remaining"
   | "attempt.attempt"
@@ -477,6 +633,12 @@ export type MessageKey =
   | "attempt.notStarted"
   | "attempt.unscheduled"
   | "attempt.saved"
+  | "attempt.saving"
+  | "attempt.notSaved"
+  | "attempt.notSavedHint"
+  | "attempt.saveTimeout"
+  | "attempt.saveDisconnected"
+  | "attempt.saveAnswerRetry"
   | "attempt.savedAt"
   | "attempt.serverNow"
   | "attempt.mark"
@@ -570,6 +732,7 @@ export type MessageKey =
   | "courses.title"
   | "courses.listTitle"
   | "courses.subtitle"
+  | "courses.pageSubtitle"
   | "courses.create"
   | "courses.empty"
   | "courses.enrolled"
@@ -585,7 +748,11 @@ export type MessageKey =
   | "courses.kind.course"
   | "courses.kind.study"
   | "courses.kind.club"
+  | "courses.kind.courseSingular"
+  | "courses.kind.studySingular"
+  | "courses.kind.clubSingular"
   | "courses.capacity"
+  | "courses.unlimited"
   | "courses.capacityOptional"
   | "courses.teachers"
   | "courses.assignTeacher"
@@ -594,6 +761,13 @@ export type MessageKey =
   | "courses.teacherAssigned"
   | "courses.teacherUnassigned"
   | "courses.noTeachers"
+  | "courses.overview"
+  | "courses.work"
+  | "courses.people"
+  | "courses.upcoming"
+  | "courses.noUpcoming"
+  | "courses.nextExam"
+  | "courses.nextHomework"
   | "homework.title"
   | "homework.item"
   | "homework.add"
@@ -657,11 +831,20 @@ export type MessageKey =
   | "exams.lastActivity"
   | "exams.answerSheet"
   | "exams.autoScore"
+  | "exams.answersRight"
+  | "exams.answersWrong"
+  | "exams.answersEmpty"
+  | "exams.answersPending"
   | "exams.earned"
   | "exams.possible"
   | "exams.isCorrect"
   | "exams.textAnswer"
   | "exams.drawAnswer"
+  | "exams.previousAttempts"
+  | "exams.attemptN"
+  | "exams.currentAttempt"
+  | "exams.pastAttemptReadOnly"
+  | "exams.reviewInProgress"
   | "exams.uploadAnswerImage"
   | "exams.playDrawing"
   | "exams.showImage"
@@ -693,6 +876,7 @@ export type MessageKey =
   | "ws.error"
   | "ws.ping"
   | "course.removeStudent"
+  | "course.fromClass"
   | "course.removeStudentConfirm"
   | "events.userIdRequired"
   | "settings.title"
@@ -716,6 +900,200 @@ export type MessageKey =
   | "settings.maxFileSize"
   | "settings.maxFileSizeHelp"
   | "settings.maxFileSizeInvalid"
+  | "settings.mealSlotNameInvalid"
+  | "settings.aiPolicy"
+  | "settings.aiPolicyHelp"
+  | "settings.chatHistory"
+  | "settings.chatThreads"
+  | "settings.chatMessage"
+  | "settings.foodPolicy"
+  | "settings.foodPolicyHelp"
+  | "settings.mealCutoff"
+  | "settings.noCutoff"
+  | "settings.mealSlot"
+  | "settings.servingTimeUtc"
+  | "settings.addMealSlot"
+  | "settings.dietaryTags"
+  | "settings.addDietaryTag"
+  | "settings.tabAssessment"
+  | "settings.tabMeals"
+  | "settings.tabSystem"
+  | "settings.tabAppearance"
+  | "settings.colorPalette"
+  | "settings.colorPaletteHelp"
+  | "settings.colorPaletteSource"
+  | "settings.defaultColor"
+  | "meals.title"
+  | "meals.subtitle"
+  | "meals.publish"
+  | "meals.publishHelp"
+  | "meals.date"
+  | "meals.slot"
+  | "meals.capacity"
+  | "meals.from"
+  | "meals.empty"
+  | "meals.dishes"
+  | "meals.conflict"
+  | "meals.menu"
+  | "meals.detailHelp"
+  | "meals.total"
+  | "meals.cutoff"
+  | "meals.noCutoff"
+  | "meals.bookingStatus"
+  | "meals.closed"
+  | "meals.open"
+  | "meals.child"
+  | "meals.myAccount"
+  | "meals.service"
+  | "meals.manage"
+  | "meals.noDishes"
+  | "meals.booked"
+  | "meals.notBooked"
+  | "meals.cutoffPassed"
+  | "meals.bookingHelp"
+  | "meals.book"
+  | "meals.cancelBooking"
+  | "meals.cancelSummary"
+  | "meals.cancelled"
+  | "meals.dietaryProfile"
+  | "meals.noDietaryNotes"
+  | "meals.balance"
+  | "meals.ledger"
+  | "meals.ledger.charge"
+  | "meals.ledger.credit"
+  | "meals.ledger.reversal"
+  | "meals.noLedger"
+  | "meals.attendance"
+  | "meals.walkIn"
+  | "meals.served"
+  | "meals.missed"
+  | "meals.notMarked"
+  | "meals.addDish"
+  | "meals.studentRecord"
+  | "meals.student"
+  | "meals.dietaryNote"
+  | "meals.bookingAudit"
+  | "meals.recordCredit"
+  | "meals.creditAppendOnly"
+  | "meals.amountTry"
+  | "meals.method"
+  | "meals.note"
+  | "meals.creditRecorded"
+  | "meals.deleteMenu"
+  | "meals.deleteDish"
+  | "meals.editMenu"
+  | "meals.editDish"
+  | "meals.dishName"
+  | "meals.priceTry"
+  | "nav.payments"
+  | "nav.paymentStatement"
+  | "nav.whiteboards"
+  | "whiteboard.title"
+  | "whiteboard.subtitle"
+  | "whiteboard.empty"
+  | "whiteboard.create"
+  | "whiteboard.titleLabel"
+  | "whiteboard.participants"
+  | "whiteboard.participantsHint"
+  | "whiteboard.open"
+  | "whiteboard.createdAt"
+  | "whiteboard.limitReached"
+  | "whiteboard.canvasHint"
+  | "whiteboard.closedBadge"
+  | "whiteboard.lockedBadge"
+  | "whiteboard.readOnlyBadge"
+  | "whiteboard.lock"
+  | "whiteboard.unlock"
+  | "whiteboard.clear"
+  | "whiteboard.clearConfirm"
+  | "whiteboard.close"
+  | "whiteboard.closeConfirm"
+  | "whiteboard.delete"
+  | "whiteboard.deleteConfirm"
+  | "whiteboard.creator"
+  | "whiteboard.roster"
+  | "whiteboard.addParticipant"
+  | "whiteboard.removeParticipant"
+  | "whiteboard.history"
+  | "whiteboard.noHistory"
+  | "whiteboard.replaySession"
+  | "whiteboard.play"
+  | "whiteboard.pause"
+  | "whiteboard.restart"
+  | "whiteboard.notFound"
+  | "whiteboard.back"
+  | "payments.title"
+  | "payments.subtitle"
+  | "payments.empty"
+  | "payments.createPlan"
+  | "payments.editPlan"
+  | "payments.deletePlan"
+  | "payments.planName"
+  | "payments.installments"
+  | "payments.addInstallment"
+  | "payments.amountTry"
+  | "payments.dueDate"
+  | "payments.total"
+  | "payments.assign"
+  | "payments.assignHelp"
+  | "payments.selectStudent"
+  | "payments.assignments"
+  | "payments.noAssignments"
+  | "payments.outcomeAssigned"
+  | "payments.outcomeAlready"
+  | "payments.outcomeRejected"
+  | "payments.studentLedger"
+  | "payments.balance"
+  | "payments.ledger"
+  | "payments.noLedger"
+  | "payments.recordPayment"
+  | "payments.recordRefund"
+  | "payments.reverse"
+  | "payments.method"
+  | "payments.note"
+  | "payments.reason"
+  | "payments.kindCharge"
+  | "payments.kindCredit"
+  | "payments.kindRefund"
+  | "payments.kindReversal"
+  | "payments.statementTitle"
+  | "payments.statementSubtitle"
+  | "payments.noStatement"
+  | "payments.due"
+  | "payments.credited"
+  | "payments.refunded"
+  | "payments.outstanding"
+  | "payments.status"
+  | "payments.overdue"
+  | "payments.reversed"
+  | "payments.paid"
+  | "payments.appendOnly"
+  | "payments.tabCollect"
+  | "payments.tabPlans"
+  | "payments.collect"
+  | "payments.collectFrom"
+  | "payments.totalDebt"
+  | "payments.collected"
+  | "payments.overdueCount"
+  | "payments.statusPending"
+  | "payments.statusPartial"
+  | "payments.statusCancelled"
+  | "payments.noDebt"
+  | "payments.noDebtHint"
+  | "payments.methodCash"
+  | "payments.methodTransfer"
+  | "payments.methodCard"
+  | "payments.methodCheck"
+  | "payments.ledgerAudit"
+  | "payments.showLedger"
+  | "payments.hideLedger"
+  | "payments.plan"
+  | "payments.student"
+  | "payments.username"
+  | "payments.allStudents"
+  | "payments.allPlans"
+  | "payments.inDebt"
+  | "payments.settled"
   | "terms.title"
   | "terms.subtitle"
   | "terms.create"
@@ -795,12 +1173,82 @@ export type MessageKey =
   | "messages.sentToast"
   | "messages.to"
   | "messages.from"
+  | "messages.markAsRead"
+  | "messages.markAsUnread"
   | "messages.selectRecipient"
   | "calendar.title"
   | "calendar.today"
   | "calendar.noEvents"
   | "calendar.events"
-  | "calendar.exams";
+  | "calendar.exams"
+  | "calendar.appointments"
+  | "nav.appointments"
+  | "appointments.title"
+  | "appointments.calendar"
+  | "appointments.subtitle"
+  | "appointments.empty"
+  | "appointments.mySlots"
+  | "appointments.availableSlots"
+  | "appointments.requests"
+  | "appointments.myBookings"
+  | "appointments.publish"
+  | "appointments.book"
+  | "appointments.approve"
+  | "appointments.reject"
+  | "appointments.cancel"
+  | "appointments.reschedule"
+  | "appointments.acceptReschedule"
+  | "appointments.declineReschedule"
+  | "appointments.deleteSlot"
+  | "appointments.deleteSeries"
+  | "appointments.note"
+  | "appointments.reason"
+  | "appointments.repeatWeekly"
+  | "appointments.until"
+  | "appointments.starts"
+  | "appointments.ends"
+  | "appointments.teacher"
+  | "appointments.student"
+  | "appointments.proposedTime"
+  | "appointments.newTime"
+  | "appointments.status.pending"
+  | "appointments.status.approved"
+  | "appointments.status.rejected"
+  | "appointments.status.cancelled"
+  | "appointments.confirmCancel"
+  | "appointments.confirmDeleteSlot"
+  | "appointments.confirmDeleteSeries"
+  | "appointments.rescheduleProposed"
+  | "appointments.slotTaken"
+  | "appointments.noSlots"
+  | "appointments.series"
+  | "appointments.time"
+  | "appointments.status"
+  | "appointments.publishSubtitle"
+  | "appointments.bookSubtitle"
+  | "appointments.rescheduleSubtitle"
+  | "appointments.reasonPlaceholder"
+  | "appointments.notePlaceholder"
+  | "appointments.noRequests"
+  | "appointments.noBookings"
+  | "appointments.repeatWeeklyHelp"
+  | "appointments.untilRequired"
+  | "appointments.tooManyOccurrences"
+  | "appointments.cancelTitle"
+  | "appointments.cancelAction"
+  | "appointments.cancelReasonLabel"
+  | "appointments.cancelReasonPlaceholder"
+  | "appointments.cancelledBy"
+  | "appointments.details"
+  | "appointments.cancelReason"
+  | "appointments.rejectTitle"
+  | "appointments.rejectAction"
+  | "appointments.confirmReject"
+  | "appointments.rejectReasonLabel"
+  | "appointments.rejectReasonPlaceholder"
+  | "appointments.rejectReason"
+  | "appointments.rejectedBy"
+  | "appointments.reasonRequired";
 
 type Dict = Record<MessageKey, string>;
 
@@ -810,18 +1258,71 @@ const en: Dict = {
   "ai.askCelebi": "Ask Çelebi",
   "ai.title": "Çelebi",
   "ai.description": "Campus assistant",
-  "ai.empty": "Ask Çelebi about this workspace. AI answers will be enabled when the backend is connected.",
+  "ai.empty": "Ask Çelebi about your school day, courses, exams, or attendance.",
   "ai.placeholder": "Ask about courses, exams, attendance...",
   "ai.send": "Send",
-  "ai.unavailable": "Çelebi is not connected yet. Backend AI endpoint is needed for real answers.",
+  "ai.unavailable": "Çelebi is temporarily unavailable. Please try again shortly.",
+  "ai.copy": "Copy",
+  "ai.copied": "Copied",
+  "ai.thinking1": "Çelebi is thinking…",
+  "ai.thinking2": "Looking into it…",
+  "ai.thinking3": "Almost there…",
+  "ai.hint": "Enter to send · Shift+Enter for a new line · AI-generated",
+  "ai.suggest1": "What are my classes today?",
+  "ai.suggest2": "Which exams are coming up?",
+  "ai.suggest3": "Do I have any missing homework?",
+  "ai.suggest4": "How is my attendance this term?",
+  "ai.suggestStaff1": "What is on the schedule today?",
+  "ai.suggestStaff2": "Which exams are coming up?",
+  "ai.suggestStaff3": "Which students have low attendance?",
+  "ai.suggestStaff4": "Summarize this week's events.",
+  "ai.suggestParent1": "What are my child's classes today?",
+  "ai.suggestParent2": "Which exams does my child have soon?",
+  "ai.suggestParent3": "How is my child's attendance this term?",
+  "ai.suggestParent4": "What is on this week's meal menu?",
   "nav.home": "Home",
-  "nav.notes": "Notes",
+  "nav.today": "Today",
+  "nav.classes": "Education",
+  "nav.classGroups": "Classes",
+  "classGroups.title": "Classes",
+  "classGroups.subtitle": "Groups of students that share a set of courses.",
+  "classGroups.newClass": "New class",
+  "classGroups.className": "Name",
+  "classGroups.grade": "Grade",
+  "classGroups.empty": "No classes yet.",
+  "classGroups.open": "Open",
+  "classGroups.student": "Student",
+  "classGroups.addedBy": "Added by",
+  "classGroups.courseColumn": "Course",
+  "classGroups.attachedBy": "Attached by",
+  "classGroups.membersTab": "Members",
+  "classGroups.coursesTab": "Courses",
+  "classGroups.addStudent": "Add student",
+  "classGroups.addStudentHelp": "Enrolls the student into every course attached to this class.",
+  "classGroups.attachCourse": "Attach course",
+  "classGroups.attachCourseHelp": "Enrolls every student in this class into the course.",
+  "classGroups.removeStudent": "Remove student",
+  "classGroups.removeStudentConfirm": "Remove {name} from this class? Enrollments this class added for them will be removed too.",
+  "classGroups.detachCourse": "Detach course",
+  "classGroups.detachCourseConfirm": "Detach {course}? Enrollments this class added for it will be removed too.",
+  "classGroups.deleteClass": "Delete class",
+  "classGroups.deleteConfirm": "Delete this class? It must have no students or courses left.",
+  "classGroups.selectCourse": "Select a course",
+  "classGroups.noMembers": "No students in this class yet.",
+  "classGroups.noCourses": "No courses attached yet.",
+  "nav.progress": "Progress",
+  "nav.students": "Students",
+  "nav.children": "Children",
+  "nav.school": "School",
+  "nav.notes": "Notebook",
   "nav.events": "Events",
   "nav.exams": "Exams",
+  "nav.questionBank": "Question bank",
   "nav.homework": "Homework",
   "nav.courses": "Courses",
   "nav.studies": "Study sessions",
   "nav.clubs": "Clubs",
+  "nav.meals": "Meals",
   "nav.marks": "Report card",
   "nav.messages": "Messages",
   "rightPanel.messagesTitle": "Messages",
@@ -835,7 +1336,7 @@ const en: Dict = {
   "nav.attendance": "Attendance",
   "nav.questions": "Question Pool",
   "nav.work": "Work Log",
-  "nav.staffWork": "Staff work",
+  "nav.staffWork": "Staff Shifts",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
@@ -852,15 +1353,19 @@ const en: Dict = {
   "nav.expand": "Expand sidebar",
   "nav.account": "Account",
   "nav.preferences": "Preferences",
-  "nav.group.students": "Students",
-  "nav.group.classes": "Education",
+  "nav.group.students": "Student Management",
+  "nav.group.school": "Management",
+  "nav.group.classes": "Academics",
+  "nav.group.planning": "Planning",
+  "nav.group.workspace": "Workspace",
   "nav.group.grades": "Grades",
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
   "nav.group.community": "Community",
+  "nav.darkMode": "Dark mode",
   "nav.myStudents": "My Students",
   "parents.title": "My Students",
-  "parents.subtitle": "View records for your linked students.",
+  "parents.subtitle": "Review academic records for the students linked to your account.",
   "common.loading": "Loading…",
   "common.cancel": "Cancel",
   "common.save": "Save",
@@ -875,8 +1380,12 @@ const en: Dict = {
   "common.reply": "Reply",
   "common.approve": "Approve",
   "common.reject": "Reject",
+  "common.action": "Action",
   "common.actions": "Actions",
   "common.columns": "Columns",
+  "common.visibleColumns": "Visible columns",
+  "common.pageRange": "{start}-{end} of {total}",
+  "common.rowsPerPage": "{size} / page",
   "common.moreFilters": "More filters",
   "common.lessFilters": "Less filters",
   "common.search": "Search",
@@ -921,7 +1430,7 @@ const en: Dict = {
   "common.createItem": "Create new {item}",
   "common.countItem": "{count} {item}",
   "pool.title": "Question Pool",
-  "pool.subtitle": "Ask questions and discuss solutions.",
+  "pool.subtitle": "Post questions and discuss solutions with teachers and classmates.",
   "pool.ask": "Ask Question",
   "pool.subject": "Subject",
   "pool.body": "Question details",
@@ -958,7 +1467,7 @@ const en: Dict = {
   "auth.welcomeBack": "Good to see you again",
   "auth.createStudent": "Create student account",
   "dashboard.greeting": "Hello, {name}",
-  "dashboard.subtitle": "Here’s what’s happening across your workspace.",
+  "dashboard.subtitle": "A quick overview of what’s happening across your school today.",
   "dashboard.overview": "Overview",
   "dashboard.quickActions": "Quick actions",
   "dashboard.action.note": "New note",
@@ -1060,8 +1569,50 @@ const en: Dict = {
   "dashboard.portal.studentMarksDesc": "View and grade student results.",
   "dashboard.portal.settingsDesc": "System preferences and configuration.",
   "dashboard.portal.termsDesc": "Manage academic terms and periods.",
+  "dashboard.portal.mealsDesc": "Menus, bookings, dietary alerts, and meal balance.",
+  "dashboard.highlights": "Highlights",
+  "dashboard.progressOverview": "Progress overview",
+  "dashboard.progressOverviewDesc": "Your performance across courses.",
+  "dashboard.activitySplit": "Attendance split",
+  "dashboard.activitySplitDesc": "Your attendance breakdown.",
+  "dashboard.workloadSplit": "Workload split",
+  "dashboard.workloadSplitDesc": "Courses, exams, events, and more.",
+  "dashboard.deadlines": "Upcoming deadlines",
+  "dashboard.courseCapacities": "Course capacities",
+  "dashboard.courseAverages": "Course averages",
+  "dashboard.chartEmpty": "No records found",
+  "dashboard.chartEmptyHint": "Not enough data to display yet.",
+  "dashboard.col.task": "Task",
+  "dashboard.col.dueDate": "Due date",
+  "dashboard.col.type": "Type",
+  "dashboard.col.status": "Status",
+  "dashboard.type.exam": "Exam",
+  "dashboard.type.event": "Event",
+  "dashboard.type.appointment": "Appointment",
+  "dashboard.type.homework": "Homework",
+  "dashboard.stats.attendance": "Attendance",
+  "dashboard.stats.homework": "Homework",
+  "dashboard.stats.students": "Students",
+  "dashboard.stats.children": "Children",
+  "dashboard.stats.meals": "Meal menus",
+  "dashboard.stats.appointments": "Appointments",
+  "dashboard.attend.present": "Present",
+  "dashboard.attend.absent": "Absent",
+  "dashboard.attend.late": "Late",
+  "dashboard.attend.excused": "Excused",
+  "dashboard.welcomeBack": "Welcome back, {name}!",
+  "dashboard.welcomeHint": "Here's what needs your attention today.",
+  "dashboard.teachingResources": "Teaching resources",
+  "dashboard.teachingResourcesDesc": "Review reusable material and student questions.",
+  "dashboard.questionBankDesc": "Build and reuse question templates for exams.",
+  "dashboard.questionPoolDesc": "Review questions submitted by students.",
+  "dashboard.quickReview.title": "Quick review",
+  "dashboard.quickReview.subtitle": "Refresh what you’ve learned in just two minutes.",
+  "dashboard.quickReview.placeholder": "Choose a topic to review…",
+  "dashboard.quickReview.practice": "Practice",
+  "dashboard.quickReview.startQuiz": "Start quiz",
   "notes.title": "Notebook",
-  "notes.subtitle": "Private scratchpad for class ideas and reminders.",
+  "notes.subtitle": "Your private notebook for class ideas and reminders.",
   "notes.new": "New note",
   "notes.empty": "Nothing here yet. Write your first note.",
   "notes.noContent": "No content",
@@ -1102,7 +1653,7 @@ const en: Dict = {
   "notes.helpBody":
     "Notes are private to you only. Title max 200 characters, content max 10,000. Delete and update open a confirmation dialog with a short summary before they run.",
   "events.title": "Events",
-  "events.subtitle": "Events and student attendance records in one list.",
+  "events.subtitle": "See all school events and their student attendance records in one place.",
   "events.create": "Create event",
   "events.empty": "No events yet.",
   "events.starts": "Starts",
@@ -1147,12 +1698,80 @@ const en: Dict = {
   "calendar.noEvents": "No events or exams on this day.",
   "calendar.events": "Events",
   "calendar.exams": "Exams",
+  "calendar.appointments": "Appointments",
+  "nav.appointments": "Appointments",
+  "appointments.title": "Appointments",
+  "appointments.calendar": "Appointment calendar",
+  "appointments.subtitle": "Book a meeting with a teacher, or publish the times you’re available.",
+  "appointments.empty": "No appointments yet.",
+  "appointments.mySlots": "My available times",
+  "appointments.availableSlots": "Available times",
+  "appointments.requests": "Booking requests",
+  "appointments.myBookings": "My bookings",
+  "appointments.publish": "Publish times",
+  "appointments.book": "Book",
+  "appointments.approve": "Approve",
+  "appointments.reject": "Reject",
+  "appointments.cancel": "Cancel",
+  "appointments.reschedule": "Propose new time",
+  "appointments.acceptReschedule": "Accept new time",
+  "appointments.declineReschedule": "Decline new time",
+  "appointments.deleteSlot": "Delete this time",
+  "appointments.deleteSeries": "Delete whole series",
+  "appointments.note": "Note",
+  "appointments.reason": "Reason",
+  "appointments.repeatWeekly": "Repeat weekly",
+  "appointments.until": "Repeat until",
+  "appointments.starts": "Start",
+  "appointments.ends": "End",
+  "appointments.teacher": "Teacher",
+  "appointments.student": "Requested by",
+  "appointments.proposedTime": "Proposed time",
+  "appointments.newTime": "New time",
+  "appointments.status.pending": "Pending",
+  "appointments.status.approved": "Approved",
+  "appointments.status.rejected": "Rejected",
+  "appointments.status.cancelled": "Cancelled",
+  "appointments.confirmCancel": "Cancel this appointment? This cannot be undone.",
+  "appointments.confirmDeleteSlot": "Delete this available time? Any pending request for it will be dropped.",
+  "appointments.confirmDeleteSeries": "Delete the whole weekly series? All of its times will be removed.",
+  "appointments.rescheduleProposed": "A new time has been proposed and is waiting for the requester to accept.",
+  "appointments.slotTaken": "This time was just taken by someone else. Please pick another.",
+  "appointments.noSlots": "No available times right now.",
+  "appointments.series": "Series",
+  "appointments.time": "Time",
+  "appointments.status": "Status",
+  "appointments.publishSubtitle": "Offer a time window students can book. Repeat it weekly if you like.",
+  "appointments.bookSubtitle": "Tell the teacher why you would like to meet.",
+  "appointments.rescheduleSubtitle": "Propose a different time; the requester can accept or decline it.",
+  "appointments.reasonPlaceholder": "What would you like to talk about?",
+  "appointments.notePlaceholder": "Optional note for students (e.g. topic, location).",
+  "appointments.noRequests": "No booking requests.",
+  "appointments.noBookings": "You have no bookings yet.",
+  "appointments.repeatWeeklyHelp": "Creates the same time every week until the chosen date (max 52 times).",
+  "appointments.untilRequired": "Pick a date to repeat until.",
+  "appointments.tooManyOccurrences": "This range would create {count} weekly slots; the limit is {max}. Choose an earlier end date.",
+  "appointments.cancelTitle": "Cancel appointment?",
+  "appointments.cancelAction": "Yes, cancel",
+  "appointments.cancelReasonLabel": "Reason (optional)",
+  "appointments.cancelReasonPlaceholder": "Why are you cancelling?",
+  "appointments.cancelledBy": "Cancelled by",
+  "appointments.details": "Details",
+  "appointments.cancelReason": "Cancellation reason",
+  "appointments.rejectTitle": "Reject booking?",
+  "appointments.rejectAction": "Reject",
+  "appointments.confirmReject": "Reject this booking request? The slot frees up for others.",
+  "appointments.rejectReasonLabel": "Reason (optional)",
+  "appointments.rejectReasonPlaceholder": "Why are you rejecting?",
+  "appointments.rejectReason": "Rejection reason",
+  "appointments.rejectedBy": "Rejected by",
+  "appointments.reasonRequired": "Please give a reason for the meeting.",
   "events.clearStart": "Will clear start time",
   "events.clearEnd": "Will clear end time",
   "events.upcoming": "Upcoming",
   "events.past": "Past",
   "exams.title": "Exams",
-  "exams.subtitle": "All exams across education items — create them under an education item.",
+  "exams.subtitle": "Every exam across your classes. Create a new exam from within its class.",
   "exams.create": "Create exam",
   "exams.searchPlaceholder": "Search exams…",
   "exams.selectCourse": "Select course",
@@ -1193,6 +1812,8 @@ const en: Dict = {
   "exams.retakesHelp": "Students can retake the exam this many times before the window closes.",
   "exams.allowRejoin": "Allow rejoin",
   "exams.allowRejoinHelp": "If off, a student who leaves the exam room cannot return to answer.",
+  "exams.allowReview": "Let students review their answers",
+  "exams.allowReviewHelp": "Students can see their own paper and past attempts once you've marked this exam.",
   "exams.draft": "Draft",
   "exams.draftHelp": "Keep hidden from students until published.",
   "exams.publish": "Publish exam",
@@ -1236,10 +1857,59 @@ const en: Dict = {
   "questions.editDrawing": "Edit drawing",
   "questions.choiceImage": "Choice image",
   "questions.subjectRequired": "Select a subject for this question",
+  "questions.subjectUnavailable": "Current subject — no longer available to you",
+  "questions.subjectUnavailableHelp": "The subject saved on this question is not in the list you can pick from. Choose a subject from the list to save.",
   "questions.textRequired": "Question text is required",
   "questions.pointsRange": "Points must be an integer from 1 to 100",
   "questions.choicesRange": "Choice questions need 2–10 choices, each at most 500 characters",
+  "questions.correctRequired": "Mark one choice as the correct answer before saving.",
   "questions.correctRange": "Correct index must point to one of the choices",
+  "bank.title": "Question bank",
+  "bank.subtitle": "Shared, reusable question templates that any teacher can add to an exam.",
+  "bank.empty": "No templates yet.",
+  "bank.create": "New template",
+  "bank.edit": "Edit template",
+  "bank.owner": "Added by",
+  "bank.mine": "Mine",
+  "bank.created": "Created",
+  "bank.copyNotice": "Adding a template to an exam makes a copy. Editing the template later does not change questions already added.",
+  "bank.courseSelect": "Select course",
+  "bank.courseUnavailable": "Original course — not one of your courses",
+  "bank.targetSubjectHint": "Pick the subject this copy belongs to in this exam.",
+  "bank.courseHint": "Templates are tagged with a subject, so pick the course that subject belongs to. The template stays usable in every course.",
+  "bank.fromBank": "Add from bank",
+  "bank.pickTemplate": "Pick a template",
+  "bank.targetSubject": "Subject in this exam",
+  "bank.insert": "Add to exam",
+  "bank.inserted": "Question copied from the bank.",
+  "bank.saveToBank": "Save to bank",
+  "bank.saveCopyToBank": "Save another copy to bank",
+  "bank.saveCopyTitle": "Save a second copy?",
+  "bank.saveCopyBody": "This question is already linked to a bank template. Saving creates a second, separate template instead of updating the existing one. The two copies are independent: editing one never changes the other. The new template is private: only you can see it until you choose to share it.",
+  "bank.saveCopyConfirm": "Save another copy",
+  "bank.savedToBank": "Question copied to the bank. Only you can see it until you share it.",
+  "bank.fromBankBadge": "Added from bank",
+  "bank.savedToBankBadge": "Saved to bank",
+  "bank.search": "Search question text",
+  "bank.pickerEmpty": "No matching template.",
+  "bank.noSubjects": "This exam's course has no subjects yet. Add a subject to the course first.",
+  "bank.countTotal": "{total} templates in total.",
+  "bank.countShown": "Showing {shown} of {total} — search to narrow it down.",
+  "bank.whoCanSee": "Who can see it",
+  "bank.onlyMe": "Only me",
+  "bank.sharedWithSchool": "Shared with the school",
+  "bank.onlyMeHint": "Only you can see this question and its answer. This is the safe choice.",
+  "bank.sharedWithSchoolHint": "Every teacher in the school can see this question and its correct answer.",
+  "bank.shareTitle": "Share this question with the whole school?",
+  "bank.shareBody": "Every teacher in the school will be able to see this question and its correct answer. If the question is on an exam that has not finished yet, they can see the answer before your students sit it. Other teachers can copy it into their own exams, and those copies stay with them even if you make the question private again or delete it. You cannot take a copy back.",
+  "bank.shareConfirm": "Yes, share it",
+  "bank.startsPrivate": "The saved template starts private: only you can see it until you choose to share it.",
+  "bank.usedInExams": "Copies in exams",
+  "bank.refresh": "Update from template",
+  "bank.refreshTitle": "Update this question from its template?",
+  "bank.refreshBody": "This question is a copy made from a bank template. Updating replaces its text, points, options, correct answer and pictures with what the template says today. Anything you changed on this copy is lost. It only works before anyone starts the exam, so no student's answers can be affected.",
+  "bank.refreshConfirm": "Yes, update it",
+  "bank.refreshed": "Question updated from its template.",
   "subjects.title": "Subjects",
   "subjects.item": "Subject",
   "subjects.subject": "Subject",
@@ -1250,7 +1920,7 @@ const en: Dict = {
   "subjects.select": "Select subject",
   "subjects.help": "Curriculum topics for this education item. Every exam question must be tagged with one.",
   "pomodoro.title": "Pomodoro",
-  "pomodoro.subtitle": "Start and finish server-stamped study focus sessions.",
+  "pomodoro.subtitle": "Run focused study sessions and track the time you spend.",
   "pomodoro.total": "Total focus",
   "pomodoro.running": "Running",
   "pomodoro.idle": "Idle",
@@ -1279,6 +1949,8 @@ const en: Dict = {
   "attempt.start": "Start exam",
   "attempt.resume": "Resume exam",
   "attempt.finish": "Finish exam",
+  "attempt.finishConfirm": "Yes, finish exam",
+  "attempt.finishHint": "This ends the exam and turns in your answers. You can't change them afterwards.",
   "attempt.status": "Status",
   "attempt.remaining": "Remaining",
   "attempt.attempt": "Attempt",
@@ -1288,6 +1960,12 @@ const en: Dict = {
   "attempt.notStarted": "Start the scheduled exam to see questions.",
   "attempt.unscheduled": "This exam is not scheduled for online sitting.",
   "attempt.saved": "Saved",
+  "attempt.saving": "Saving…",
+  "attempt.notSaved": "Not saved",
+  "attempt.notSavedHint": "Your answer was not saved. It is still written here — press \"Save answer again\" to try once more.",
+  "attempt.saveTimeout": "The exam did not confirm your answer, so it is not saved yet. Your answer is still on screen — please try saving again.",
+  "attempt.saveDisconnected": "The connection dropped before your answer was saved. Your answer is still on screen — please try saving again.",
+  "attempt.saveAnswerRetry": "Save answer again",
   "attempt.savedAt": "Saved at",
   "attempt.serverNow": "Server time",
   "attempt.mark": "Mark",
@@ -1308,7 +1986,7 @@ const en: Dict = {
   "exams.helpBody":
     "Exams belong to an education item. Teachers add them from that detail page with a kind; weighting is defined by the exam kind. Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
   "admin.title": "People & roles",
-  "admin.subtitle": "Promote or demote accounts. You can’t change your own role.",
+  "admin.subtitle": "Promote or demote accounts. You cannot change your own role.",
   "admin.username": "Username",
   "admin.id": "Id",
   "admin.role": "Role",
@@ -1318,7 +1996,7 @@ const en: Dict = {
     "student < teacher < manager < admin. Higher roles inherit lower permissions. Registration always creates a student. Only admins list users and change roles.",
   "admin.noUsers": "No users registered yet.",
   "guide.title": "Product guide",
-  "guide.subtitle": "Campus flow: education → exams → report card, plus notes and events.",
+  "guide.subtitle": "How the platform fits together, from classes and exams to report cards, notes, and events.",
   "guide.step1.title": "1. Home overview",
   "guide.step1.body":
     "Live counts and shortcuts for notes, events, courses, exams, and your report card.",
@@ -1391,7 +2069,8 @@ const en: Dict = {
   "role.admin": "ADMIN",
   "courses.title": "Education",
   "courses.listTitle": "{item} records",
-  "courses.subtitle": "Manage {item}, enrollment, and exams here.",
+  "courses.subtitle": "Manage {item}, enrollment, and exams in one place.",
+  "courses.pageSubtitle": "Classes, study groups, and clubs, all in one place.",
   "courses.create": "New education item",
   "courses.empty": "No {item} yet.",
   "courses.enrolled": "Enrolled",
@@ -1404,10 +2083,14 @@ const en: Dict = {
   "courses.weight": "Weight",
   "courses.delete": "Delete course",
   "courses.kind": "Course type",
-  "courses.kind.course": "Course",
+  "courses.kind.course": "Classes",
   "courses.kind.study": "Study",
   "courses.kind.club": "Club",
+  "courses.kind.courseSingular": "Class",
+  "courses.kind.studySingular": "Study session",
+  "courses.kind.clubSingular": "Club",
   "courses.capacity": "Capacity",
+  "courses.unlimited": "Unlimited",
   "courses.capacityOptional": "Optional seat cap",
   "courses.teachers": "Teachers",
   "courses.assignTeacher": "Assign teacher",
@@ -1416,6 +2099,13 @@ const en: Dict = {
   "courses.teacherAssigned": "Teacher assigned successfully.",
   "courses.teacherUnassigned": "Teacher unassigned successfully.",
   "courses.noTeachers": "No assigned teachers.",
+  "courses.overview": "Overview",
+  "courses.work": "Work",
+  "courses.people": "People",
+  "courses.upcoming": "Upcoming work",
+  "courses.noUpcoming": "No upcoming work.",
+  "courses.nextExam": "Next exam",
+  "courses.nextHomework": "Next homework",
   "homework.title": "Homework",
   "homework.item": "Homework",
   "homework.add": "Add homework",
@@ -1449,7 +2139,7 @@ const en: Dict = {
   "homework.status.incomplete": "Incomplete",
   "homework.status.missing": "Missing",
   "marks.title": "Report card",
-  "marks.subtitle": "Weighted averages across enrolled courses.",
+  "marks.subtitle": "Your weighted grade averages across every course you’re enrolled in.",
   "marks.overall": "Overall average",
   "marks.courseAvg": "Course average",
   "marks.empty": "Not enrolled in any course yet.",
@@ -1479,11 +2169,20 @@ const en: Dict = {
   "exams.lastActivity": "Last activity",
   "exams.answerSheet": "Answer Sheet",
   "exams.autoScore": "Auto-score",
+  "exams.answersRight": "Correct",
+  "exams.answersWrong": "Wrong",
+  "exams.answersEmpty": "Empty",
+  "exams.answersPending": "Ungraded",
   "exams.earned": "Earned",
   "exams.possible": "Possible",
   "exams.isCorrect": "Correct",
   "exams.textAnswer": "Text answer",
   "exams.drawAnswer": "Draw answer",
+  "exams.previousAttempts": "Previous attempts",
+  "exams.attemptN": "Attempt {n}",
+  "exams.currentAttempt": "current",
+  "exams.pastAttemptReadOnly": "Viewing a previous attempt — read-only. Grading applies to the current attempt.",
+  "exams.reviewInProgress": "Submit your current attempt before you can review it.",
   "exams.uploadAnswerImage": "Upload image",
   "exams.playDrawing": "Play drawing",
   "exams.showImage": "Show image",
@@ -1497,7 +2196,7 @@ const en: Dict = {
   "exams.selectStudent": "Select a student from the roster",
   "exams.viewSheet": "View answers",
   "profile.title": "My Profile",
-  "profile.subtitle": "Personal information (optional).",
+  "profile.subtitle": "Your personal information. All fields are optional.",
   "profile.name": "Name",
   "profile.surname": "Surname",
   "profile.email": "Email",
@@ -1515,10 +2214,11 @@ const en: Dict = {
   "ws.error": "Connection error",
   "ws.ping": "Ping",
   "course.removeStudent": "Remove student",
+  "course.fromClass": "from {name}",
   "course.removeStudentConfirm": "Are you sure you want to remove",
   "events.userIdRequired": "Please select a student first.",
   "settings.title": "School settings",
-  "settings.subtitle": "Manage exam kinds, attendance statuses, and grade bands.",
+  "settings.subtitle": "Configure exam types, attendance statuses, and grade bands used across the school.",
   "settings.saved": "Settings saved.",
   "settings.examKinds": "Exam kinds",
   "settings.examKindsHelp": "Kinds and weights used in course averages.",
@@ -1538,8 +2238,202 @@ const en: Dict = {
   "settings.maxFileSize": "Max note file size",
   "settings.maxFileSizeHelp": "Per-file upload cap for note attachments, in MiB. Backend accepts 0.001-25 MiB.",
   "settings.maxFileSizeInvalid": "Enter a valid file size.",
+  "settings.mealSlotNameInvalid": "A meal slot name can't contain / \\ ? # or %.",
+  "settings.aiPolicy": "AI policy",
+  "settings.aiPolicyHelp": "Limits for conversation context, threads, and message length.",
+  "settings.chatHistory": "History turns",
+  "settings.chatThreads": "Maximum threads",
+  "settings.chatMessage": "Message length",
+  "settings.foodPolicy": "Food policy",
+  "settings.foodPolicyHelp": "Meal slots use UTC serving times. Empty lists disable the meal program.",
+  "settings.mealCutoff": "Booking/cancellation cutoff (minutes)",
+  "settings.noCutoff": "No cutoff",
+  "settings.mealSlot": "Meal slot",
+  "settings.servingTimeUtc": "Serving time (UTC)",
+  "settings.addMealSlot": "Add meal slot",
+  "settings.dietaryTags": "Dietary tags",
+  "settings.addDietaryTag": "Add dietary tag",
+  "settings.tabAssessment": "Assessment",
+  "settings.tabMeals": "Meals",
+  "settings.tabSystem": "System",
+  "settings.tabAppearance": "Appearance",
+  "settings.colorPalette": "Colour palette",
+  "settings.colorPaletteHelp": "Choose an accent from Coolors trending palettes. Saved only in this browser.",
+  "settings.colorPaletteSource": "Browse trending palettes",
+  "settings.defaultColor": "Use default colour",
+  "meals.title": "Meals",
+  "meals.subtitle": "Browse menus by date, manage dietary requirements, and track meal accounts.",
+  "meals.publish": "Publish menu",
+  "meals.publishHelp": "One menu per date and meal slot.",
+  "meals.date": "Menu date",
+  "meals.slot": "Meal slot",
+  "meals.capacity": "Capacity",
+  "meals.from": "Starting date",
+  "meals.empty": "No menus in this date range.",
+  "meals.dishes": "dishes",
+  "meals.conflict": "Dietary warning",
+  "meals.menu": "Menu",
+  "meals.detailHelp": "Dishes, booking state, dietary warnings, service, and account records.",
+  "meals.total": "Total price",
+  "meals.cutoff": "Cutoff",
+  "meals.noCutoff": "No cutoff",
+  "meals.bookingStatus": "Booking",
+  "meals.closed": "Closed",
+  "meals.open": "Open",
+  "meals.child": "Child",
+  "meals.myAccount": "Account",
+  "meals.service": "Service register",
+  "meals.manage": "Manage",
+  "meals.noDishes": "No dishes have been added.",
+  "meals.booked": "Booked",
+  "meals.notBooked": "Not booked",
+  "meals.cutoffPassed": "The booking and cancellation cutoff has passed.",
+  "meals.bookingHelp": "The backend confirms capacity, cutoff, conflicts, and price.",
+  "meals.book": "Book seat",
+  "meals.cancelBooking": "Cancel booking",
+  "meals.cancelSummary": "Cancellation releases the seat and appends an exact reversal of the original charge. It is refused after cutoff.",
+  "meals.cancelled": "Booking cancelled.",
+  "meals.dietaryProfile": "Dietary profile",
+  "meals.noDietaryNotes": "No dietary notes recorded.",
+  "meals.balance": "Balance",
+  "meals.ledger": "Ledger",
+  "meals.ledger.charge": "Meal charge",
+  "meals.ledger.credit": "Credit",
+  "meals.ledger.reversal": "Refund",
+  "meals.noLedger": "No ledger entries.",
+  "meals.attendance": "Meal attendance",
+  "meals.walkIn": "Walk-in",
+  "meals.served": "Served",
+  "meals.missed": "Missed",
+  "meals.notMarked": "Not marked",
+  "meals.addDish": "Add dish",
+  "meals.studentRecord": "Student meal record",
+  "meals.student": "Student",
+  "meals.dietaryNote": "Kitchen note",
+  "meals.bookingAudit": "Booking audit",
+  "meals.recordCredit": "Record credit",
+  "meals.creditAppendOnly": "Credits are append-only. Corrections require a compensating entry.",
+  "meals.amountTry": "Amount (TRY)",
+  "meals.method": "Method",
+  "meals.note": "Note",
+  "meals.creditRecorded": "Credit recorded.",
+  "meals.deleteMenu": "Delete menu",
+  "meals.deleteDish": "Delete dish",
+  "meals.editMenu": "Edit menu",
+  "meals.editDish": "Edit dish",
+  "meals.dishName": "Dish name",
+  "meals.priceTry": "Price (TRY)",
+  "nav.payments": "Fees",
+  "nav.paymentStatement": "My Fees",
+  "nav.whiteboards": "Whiteboards",
+  "whiteboard.title": "Whiteboards",
+  "whiteboard.subtitle": "Live collaborative sketch boards.",
+  "whiteboard.empty": "No whiteboards yet.",
+  "whiteboard.create": "New whiteboard",
+  "whiteboard.titleLabel": "Title",
+  "whiteboard.participants": "Participants",
+  "whiteboard.participantsHint": "Invite students and staff who may draw.",
+  "whiteboard.open": "Open",
+  "whiteboard.createdAt": "Created",
+  "whiteboard.limitReached": "You have reached your whiteboard limit.",
+  "whiteboard.canvasHint": "Draw here — everyone on the board sees it live.",
+  "whiteboard.closedBadge": "Closed",
+  "whiteboard.lockedBadge": "Locked",
+  "whiteboard.readOnlyBadge": "Read-only",
+  "whiteboard.lock": "Lock",
+  "whiteboard.unlock": "Unlock",
+  "whiteboard.clear": "Clear",
+  "whiteboard.clearConfirm": "Clear the live canvas? The history is kept and stays replayable.",
+  "whiteboard.close": "Close board",
+  "whiteboard.closeConfirm": "Close this board? It becomes permanently read-only.",
+  "whiteboard.delete": "Delete board",
+  "whiteboard.deleteConfirm": "Delete this board and its whole history? This cannot be undone.",
+  "whiteboard.creator": "Creator",
+  "whiteboard.roster": "Participants",
+  "whiteboard.addParticipant": "Add participant",
+  "whiteboard.removeParticipant": "Remove",
+  "whiteboard.history": "History",
+  "whiteboard.noHistory": "No past sessions yet.",
+  "whiteboard.replaySession": "Replay session",
+  "whiteboard.play": "Play",
+  "whiteboard.pause": "Pause",
+  "whiteboard.restart": "Restart",
+  "whiteboard.notFound": "This whiteboard does not exist or you are not on it.",
+  "whiteboard.back": "Back to whiteboards",
+  "payments.title": "School fees",
+  "payments.subtitle": "Fee plans, assignments, and the payment ledger.",
+  "payments.empty": "No fee plans yet.",
+  "payments.createPlan": "New plan",
+  "payments.editPlan": "Edit plan",
+  "payments.deletePlan": "Delete plan",
+  "payments.planName": "Plan name",
+  "payments.installments": "Installments",
+  "payments.addInstallment": "Add installment",
+  "payments.amountTry": "Amount (TRY)",
+  "payments.dueDate": "Due date",
+  "payments.total": "Total",
+  "payments.assign": "Assign",
+  "payments.assignHelp": "Assigning bills every installment as a charge at once. Students already on the plan are not billed again.",
+  "payments.selectStudent": "Select student",
+  "payments.assignments": "Assigned students",
+  "payments.noAssignments": "No students assigned yet.",
+  "payments.outcomeAssigned": "Assigned",
+  "payments.outcomeAlready": "Already assigned",
+  "payments.outcomeRejected": "Rejected",
+  "payments.studentLedger": "Student ledger",
+  "payments.balance": "Balance",
+  "payments.ledger": "Ledger",
+  "payments.noLedger": "No ledger entries.",
+  "payments.recordPayment": "Record payment",
+  "payments.recordRefund": "Refund",
+  "payments.reverse": "Reverse",
+  "payments.method": "Method",
+  "payments.note": "Note",
+  "payments.reason": "Reason",
+  "payments.kindCharge": "Charge",
+  "payments.kindCredit": "Payment",
+  "payments.kindRefund": "Refund",
+  "payments.kindReversal": "Reversal",
+  "payments.statementTitle": "My fees",
+  "payments.statementSubtitle": "What you owe the school and every charge behind it.",
+  "payments.noStatement": "No charges yet.",
+  "payments.due": "Due",
+  "payments.credited": "Paid",
+  "payments.refunded": "Refunded",
+  "payments.outstanding": "Outstanding",
+  "payments.status": "Status",
+  "payments.overdue": "Overdue",
+  "payments.reversed": "Reversed",
+  "payments.paid": "Paid",
+  "payments.appendOnly": "The ledger is append-only. A correction needs a balancing entry, never an edit.",
+  "payments.tabCollect": "Collection",
+  "payments.tabPlans": "Fee plans",
+  "payments.collect": "Collect",
+  "payments.collectFrom": "Collect payment",
+  "payments.totalDebt": "Total billed",
+  "payments.collected": "Collected",
+  "payments.overdueCount": "Overdue",
+  "payments.statusPending": "Pending",
+  "payments.statusPartial": "Partial",
+  "payments.statusCancelled": "Cancelled",
+  "payments.noDebt": "No charges for this student yet.",
+  "payments.noDebtHint": "Assign a fee plan from the Fee plans tab to bill this student.",
+  "payments.methodCash": "Cash",
+  "payments.methodTransfer": "Transfer / EFT",
+  "payments.methodCard": "Card",
+  "payments.methodCheck": "Cheque",
+  "payments.ledgerAudit": "Account activity",
+  "payments.showLedger": "Show account activity",
+  "payments.hideLedger": "Hide account activity",
+  "payments.plan": "Plan",
+  "payments.student": "Student",
+  "payments.username": "Username",
+  "payments.allStudents": "All students",
+  "payments.allPlans": "All plans",
+  "payments.inDebt": "In debt",
+  "payments.settled": "Settled",
   "terms.title": "Academic terms",
-  "terms.subtitle": "Manage calendar terms and assign courses to them.",
+  "terms.subtitle": "Manage academic terms and assign courses to each one.",
   "terms.create": "Create term",
   "terms.edit": "Edit term",
   "terms.empty": "No terms yet.",
@@ -1548,7 +2442,7 @@ const en: Dict = {
   "terms.dateRequired": "Start and end dates are required.",
   "sessions.title": "Lesson sessions",
   "sessions.item": "Session",
-  "sessions.subtitle": "Create lessons and take course roll call.",
+  "sessions.subtitle": "Schedule lesson sessions and record roll call for each class.",
   "sessions.topic": "Topic",
   "sessions.add": "Add session",
   "sessions.edit": "Edit session",
@@ -1560,7 +2454,7 @@ const en: Dict = {
   "sessions.startRequired": "Session start date and time are required.",
   "sessions.endInvalid": "Enter both end date and end time, or leave both empty.",
   "attendance.title": "Attendance report",
-  "attendance.subtitle": "Event attendance and lesson roll-call rates.",
+  "attendance.subtitle": "Your attendance rates for events and lesson roll calls.",
   "attendance.events": "Events",
   "attendance.sessions": "Lesson sessions",
   "attendance.rate": "Rate",
@@ -1570,7 +2464,7 @@ const en: Dict = {
   "attendance.show": "Show attendance",
   "attendance.forUser": "Attendance for {user}",
   "work.title": "Work log",
-  "work.subtitle": "Check in and out with server-stamped work entries.",
+  "work.subtitle": "Check in and out to log your working hours.",
   "work.checkIn": "Check in",
   "work.checkOut": "Check out",
   "work.checkedIn": "Checked in",
@@ -1617,6 +2511,8 @@ const en: Dict = {
   "messages.sentToast": "Message sent.",
   "messages.to": "To: ",
   "messages.from": "From: ",
+  "messages.markAsRead": "Mark as read",
+  "messages.markAsUnread": "Mark as unread",
   "messages.selectRecipient": "Please select a recipient.",
 };
 
@@ -1626,18 +2522,71 @@ const tr: Dict = {
   "ai.askCelebi": "Çelebi’ye sor",
   "ai.title": "Çelebi",
   "ai.description": "Kampüs asistanı",
-  "ai.empty": "Bu çalışma alanı hakkında Çelebi’ye sor. Backend bağlanınca gerçek yanıtlar aktif olacak.",
+  "ai.empty": "Okul günün, derslerin, sınavların veya yoklamaların hakkında Çelebi’ye sor.",
   "ai.placeholder": "Dersler, sınavlar, yoklamalar hakkında sor...",
   "ai.send": "Gönder",
-  "ai.unavailable": "Çelebi henüz bağlı değil. Gerçek yanıtlar için backend AI endpoint’i gerekli.",
+  "ai.unavailable": "Çelebi şu anda kullanılamıyor. Lütfen biraz sonra tekrar dene.",
+  "ai.copy": "Kopyala",
+  "ai.copied": "Kopyalandı",
+  "ai.thinking1": "Çelebi düşünüyor…",
+  "ai.thinking2": "Araştırıyor…",
+  "ai.thinking3": "Neredeyse hazır…",
+  "ai.hint": "Enter gönder · Shift+Enter alt satır · Yapay zekâ üretimi",
+  "ai.suggest1": "Bugün hangi derslerim var?",
+  "ai.suggest2": "Yaklaşan sınavlarım neler?",
+  "ai.suggest3": "Eksik ödevim var mı?",
+  "ai.suggest4": "Bu dönem devamsızlığım nasıl?",
+  "ai.suggestStaff1": "Bugün programda neler var?",
+  "ai.suggestStaff2": "Yaklaşan sınavlar neler?",
+  "ai.suggestStaff3": "Hangi öğrencilerin devamsızlığı yüksek?",
+  "ai.suggestStaff4": "Bu haftanın etkinliklerini özetle.",
+  "ai.suggestParent1": "Çocuğumun bugün hangi dersleri var?",
+  "ai.suggestParent2": "Çocuğumun yaklaşan sınavları neler?",
+  "ai.suggestParent3": "Çocuğumun bu dönem devamsızlığı nasıl?",
+  "ai.suggestParent4": "Bu haftanın yemek menüsünde ne var?",
   "nav.home": "Ana sayfa",
+  "nav.today": "Bugün",
+  "nav.classes": "Eğitim",
+  "nav.classGroups": "Şubeler",
+  "classGroups.title": "Şubeler",
+  "classGroups.subtitle": "Aynı dersleri paylaşan öğrenci grupları.",
+  "classGroups.newClass": "Yeni şube",
+  "classGroups.className": "Ad",
+  "classGroups.grade": "Sınıf",
+  "classGroups.empty": "Henüz şube yok.",
+  "classGroups.open": "Aç",
+  "classGroups.student": "Öğrenci",
+  "classGroups.addedBy": "Ekleyen",
+  "classGroups.courseColumn": "Ders",
+  "classGroups.attachedBy": "Ekleyen",
+  "classGroups.membersTab": "Öğrenciler",
+  "classGroups.coursesTab": "Dersler",
+  "classGroups.addStudent": "Öğrenci ekle",
+  "classGroups.addStudentHelp": "Öğrenciyi bu şubeye bağlı tüm derslere kaydeder.",
+  "classGroups.attachCourse": "Ders ekle",
+  "classGroups.attachCourseHelp": "Bu şubedeki tüm öğrencileri derse kaydeder.",
+  "classGroups.removeStudent": "Öğrenciyi çıkar",
+  "classGroups.removeStudentConfirm": "{name} bu şubeden çıkarılsın mı? Bu şubenin onun için eklediği kayıtlar da silinir.",
+  "classGroups.detachCourse": "Dersi çıkar",
+  "classGroups.detachCourseConfirm": "{course} çıkarılsın mı? Bu şubenin bu ders için eklediği kayıtlar da silinir.",
+  "classGroups.deleteClass": "Şubeyi sil",
+  "classGroups.deleteConfirm": "Bu şube silinsin mi? Şubede öğrenci veya ders kalmamış olmalı.",
+  "classGroups.selectCourse": "Bir ders seç",
+  "classGroups.noMembers": "Bu şubede henüz öğrenci yok.",
+  "classGroups.noCourses": "Henüz ders eklenmemiş.",
+  "nav.progress": "İlerleme",
+  "nav.students": "Öğrenciler",
+  "nav.children": "Çocuklar",
+  "nav.school": "Okul",
   "nav.notes": "Defter",
   "nav.events": "Etkinlikler",
   "nav.exams": "Sınavlar",
+  "nav.questionBank": "Soru bankası",
   "nav.homework": "Ödevler",
   "nav.courses": "Ders",
   "nav.studies": "Etüt",
   "nav.clubs": "Kulüp",
+  "nav.meals": "Yemekler",
   "nav.marks": "Karnem",
   "nav.messages": "Mesajlar",
   "rightPanel.messagesTitle": "Mesajlar",
@@ -1651,10 +2600,10 @@ const tr: Dict = {
   "nav.attendance": "Yoklama",
   "nav.questions": "Soru Havuzu",
   "nav.work": "Çalışma Kaydı",
-  "nav.staffWork": "Mesailer",
+  "nav.staffWork": "Personel Mesaisi",
   "nav.users": "Kullanıcılar",
-  "nav.studentMarks": "Notlar",
-  "nav.studentAttendance": "Yoklamalar",
+  "nav.studentMarks": "Öğrenci notları",
+  "nav.studentAttendance": "Öğrenci yoklamaları",
   "nav.studentPomodoro": "Pomodorolar",
   "nav.settings": "Ayarlar",
   "nav.terms": "Dönemler",
@@ -1668,12 +2617,16 @@ const tr: Dict = {
   "nav.expand": "Kenar çubuğunu genişlet",
   "nav.account": "Hesap",
   "nav.preferences": "Tercihler",
-  "nav.group.students": "Öğrenciler",
-  "nav.group.classes": "Eğitim",
+  "nav.group.students": "Öğrenci Yönetimi",
+  "nav.group.school": "Yönetim",
+  "nav.group.classes": "Akademik",
+  "nav.group.planning": "Planlama",
+  "nav.group.workspace": "Çalışma Alanı",
   "nav.group.grades": "Notlar",
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
   "nav.group.community": "Topluluk",
+  "nav.darkMode": "Karanlık mod",
   "nav.myStudents": "Öğrencilerim",
   "parents.title": "Öğrencilerim",
   "parents.subtitle": "Size bağlı öğrencilerin akademik kayıtlarını inceleyin.",
@@ -1691,8 +2644,12 @@ const tr: Dict = {
   "common.reply": "Yanıtla",
   "common.approve": "Onayla",
   "common.reject": "Reddet",
+  "common.action": "İşlem",
   "common.actions": "İşlemler",
-  "common.columns": "Kolonlar",
+  "common.columns": "Sütunlar",
+  "common.visibleColumns": "Görünür sütunlar",
+  "common.pageRange": "{total} kayıttan {start}-{end}",
+  "common.rowsPerPage": "{size} / sayfa",
   "common.moreFilters": "Daha fazla filtre",
   "common.lessFilters": "Daha az filtre",
   "common.search": "Ara",
@@ -1737,7 +2694,7 @@ const tr: Dict = {
   "common.createItem": "Yeni {item} oluştur",
   "common.countItem": "{count} {item}",
   "pool.title": "Soru Havuzu",
-  "pool.subtitle": "Soru sorun ve çözümleri tartışın.",
+  "pool.subtitle": "Öğretmenlerinize ve arkadaşlarınıza soru sorun, çözümleri birlikte tartışın.",
   "pool.ask": "Soru Sor",
   "pool.subject": "Konu",
   "pool.body": "Soru detayı",
@@ -1774,7 +2731,7 @@ const tr: Dict = {
   "auth.welcomeBack": "Seni yeniden görmek güzel",
   "auth.createStudent": "Öğrenci hesabı oluştur",
   "dashboard.greeting": "Merhaba, {name}",
-  "dashboard.subtitle": "Çalışma alanındaki güncel durum burada.",
+  "dashboard.subtitle": "Okulunuzda bugün olup bitenlerin kısa bir özeti.",
   "dashboard.overview": "Özet",
   "dashboard.quickActions": "Hızlı işlemler",
   "dashboard.action.note": "Yeni not",
@@ -1876,8 +2833,50 @@ const tr: Dict = {
   "dashboard.portal.studentMarksDesc": "Öğrenci sonuçlarını görüntüle ve notlandır.",
   "dashboard.portal.settingsDesc": "Sistem tercihleri ve yapılandırma.",
   "dashboard.portal.termsDesc": "Akademik dönemleri ve periyotları yönet.",
+  "dashboard.portal.mealsDesc": "Menüler, rezervasyonlar, beslenme uyarıları ve bakiye.",
+  "dashboard.highlights": "Öne çıkanlar",
+  "dashboard.progressOverview": "Performans özeti",
+  "dashboard.progressOverviewDesc": "Derslere göre performansın.",
+  "dashboard.activitySplit": "Yoklama dağılımı",
+  "dashboard.activitySplitDesc": "Yoklama dağılımın.",
+  "dashboard.workloadSplit": "İş yükü dağılımı",
+  "dashboard.workloadSplitDesc": "Dersler, sınavlar, etkinlikler ve dahası.",
+  "dashboard.deadlines": "Yaklaşan son tarihler",
+  "dashboard.courseCapacities": "Eğitim kapasiteleri",
+  "dashboard.courseAverages": "Ders ortalamaları",
+  "dashboard.chartEmpty": "Kayıt bulunamadı",
+  "dashboard.chartEmptyHint": "Gösterilecek yeterli veri yok.",
+  "dashboard.col.task": "Görev",
+  "dashboard.col.dueDate": "Son tarih",
+  "dashboard.col.type": "Tür",
+  "dashboard.col.status": "Durum",
+  "dashboard.type.exam": "Sınav",
+  "dashboard.type.event": "Etkinlik",
+  "dashboard.type.appointment": "Randevu",
+  "dashboard.type.homework": "Ödev",
+  "dashboard.stats.attendance": "Yoklama",
+  "dashboard.stats.homework": "Ödev",
+  "dashboard.stats.students": "Öğrenciler",
+  "dashboard.stats.children": "Çocuklar",
+  "dashboard.stats.meals": "Yemek menüleri",
+  "dashboard.stats.appointments": "Randevular",
+  "dashboard.attend.present": "Var",
+  "dashboard.attend.absent": "Yok",
+  "dashboard.attend.late": "Geç",
+  "dashboard.attend.excused": "İzinli",
+  "dashboard.welcomeBack": "Tekrar hoş geldin, {name}!",
+  "dashboard.welcomeHint": "Bugün dikkat etmen gerekenler burada.",
+  "dashboard.teachingResources": "Öğretim kaynakları",
+  "dashboard.teachingResourcesDesc": "Yeniden kullanılabilir içerikleri ve öğrenci sorularını incele.",
+  "dashboard.questionBankDesc": "Sınavlar için soru şablonları oluştur ve yeniden kullan.",
+  "dashboard.questionPoolDesc": "Öğrencilerin gönderdiği soruları incele.",
+  "dashboard.quickReview.title": "Hızlı tekrar",
+  "dashboard.quickReview.subtitle": "Öğrendiklerinizi yalnızca iki dakikada tazeleyin.",
+  "dashboard.quickReview.placeholder": "Tekrar için konu seç…",
+  "dashboard.quickReview.practice": "Alıştır",
+  "dashboard.quickReview.startQuiz": "Teste başla",
   "notes.title": "Defter",
-  "notes.subtitle": "Ders fikirleri ve hatırlatmalar için özel defter.",
+  "notes.subtitle": "Ders fikirleriniz ve hatırlatmalarınız için özel defteriniz.",
   "notes.new": "Yeni not",
   "notes.empty": "Henüz bir şey yok. İlk notunu yaz.",
   "notes.noContent": "İçerik yok",
@@ -1918,7 +2917,7 @@ const tr: Dict = {
   "notes.helpBody":
     "Notlar yalnızca sana aittir. Başlık en fazla 200, içerik 10.000 karakter. Silme ve güncelleme özetli onay penceresi ister.",
   "events.title": "Etkinlikler",
-  "events.subtitle": "Etkinlikler ve öğrenci yoklama kayıtları tek listede.",
+  "events.subtitle": "Tüm okul etkinliklerini ve öğrenci yoklama kayıtlarını tek bir listede görün.",
   "events.create": "Etkinlik oluştur",
   "events.empty": "Henüz etkinlik yok.",
   "events.starts": "Başlangıç",
@@ -1963,12 +2962,80 @@ const tr: Dict = {
   "calendar.noEvents": "Bu günde etkinlik veya sınav yok.",
   "calendar.events": "Etkinlikler",
   "calendar.exams": "Sınavlar",
+  "calendar.appointments": "Randevular",
+  "nav.appointments": "Randevular",
+  "appointments.title": "Randevular",
+  "appointments.calendar": "Randevu takvimi",
+  "appointments.subtitle": "Bir öğretmenle görüşme ayarlayın ya da uygun olduğunuz saatleri yayımlayın.",
+  "appointments.empty": "Henüz randevu yok.",
+  "appointments.mySlots": "Uygun saatlerim",
+  "appointments.availableSlots": "Uygun saatler",
+  "appointments.requests": "Randevu talepleri",
+  "appointments.myBookings": "Randevularım",
+  "appointments.publish": "Saat yayımla",
+  "appointments.book": "Randevu al",
+  "appointments.approve": "Onayla",
+  "appointments.reject": "Reddet",
+  "appointments.cancel": "İptal et",
+  "appointments.reschedule": "Yeni saat öner",
+  "appointments.acceptReschedule": "Yeni saati kabul et",
+  "appointments.declineReschedule": "Yeni saati reddet",
+  "appointments.deleteSlot": "Bu saati sil",
+  "appointments.deleteSeries": "Tüm seriyi sil",
+  "appointments.note": "Not",
+  "appointments.reason": "Sebep",
+  "appointments.repeatWeekly": "Haftalık tekrarla",
+  "appointments.until": "Şu tarihe kadar tekrarla",
+  "appointments.starts": "Başlangıç",
+  "appointments.ends": "Bitiş",
+  "appointments.teacher": "Öğretmen",
+  "appointments.student": "Talep eden",
+  "appointments.proposedTime": "Önerilen saat",
+  "appointments.newTime": "Yeni saat",
+  "appointments.status.pending": "Bekliyor",
+  "appointments.status.approved": "Onaylandı",
+  "appointments.status.rejected": "Reddedildi",
+  "appointments.status.cancelled": "İptal edildi",
+  "appointments.confirmCancel": "Bu randevu iptal edilsin mi? Bu işlem geri alınamaz.",
+  "appointments.confirmDeleteSlot": "Bu uygun saat silinsin mi? Bekleyen talepleri de düşecektir.",
+  "appointments.confirmDeleteSeries": "Tüm haftalık seri silinsin mi? Serinin bütün saatleri kaldırılacak.",
+  "appointments.rescheduleProposed": "Yeni bir saat önerildi ve talep edenin kabul etmesi bekleniyor.",
+  "appointments.slotTaken": "Bu saat az önce başka biri tarafından alındı. Lütfen başka bir saat seçin.",
+  "appointments.noSlots": "Şu anda uygun saat yok.",
+  "appointments.series": "Seri",
+  "appointments.time": "Saat",
+  "appointments.status": "Durum",
+  "appointments.publishSubtitle": "Öğrencilerin alabileceği bir saat aralığı sunun. İsterseniz haftalık tekrarlayın.",
+  "appointments.bookSubtitle": "Öğretmene neden görüşmek istediğinizi belirtin.",
+  "appointments.rescheduleSubtitle": "Farklı bir saat önerin; talep eden bunu kabul edebilir ya da reddedebilir.",
+  "appointments.reasonPlaceholder": "Ne hakkında konuşmak istiyorsunuz?",
+  "appointments.notePlaceholder": "Öğrenciler için isteğe bağlı not (ör. konu, yer).",
+  "appointments.noRequests": "Randevu talebi yok.",
+  "appointments.noBookings": "Henüz randevunuz yok.",
+  "appointments.repeatWeeklyHelp": "Seçilen tarihe kadar her hafta aynı saati oluşturur (en fazla 52 kez).",
+  "appointments.untilRequired": "Tekrarlanacak son tarihi seçin.",
+  "appointments.tooManyOccurrences": "Bu aralık {count} haftalık saat oluşturur; sınır {max}. Daha yakın bir bitiş tarihi seçin.",
+  "appointments.cancelTitle": "Randevu iptal edilsin mi?",
+  "appointments.cancelAction": "Evet, iptal et",
+  "appointments.cancelReasonLabel": "Neden (isteğe bağlı)",
+  "appointments.cancelReasonPlaceholder": "Neden iptal ediyorsunuz?",
+  "appointments.cancelledBy": "İptal eden",
+  "appointments.details": "Detaylar",
+  "appointments.cancelReason": "İptal nedeni",
+  "appointments.rejectTitle": "Randevu talebi reddedilsin mi?",
+  "appointments.rejectAction": "Reddet",
+  "appointments.confirmReject": "Bu randevu talebi reddedilsin mi? Saat başkalarına açılır.",
+  "appointments.rejectReasonLabel": "Neden (isteğe bağlı)",
+  "appointments.rejectReasonPlaceholder": "Neden reddediyorsunuz?",
+  "appointments.rejectReason": "Ret nedeni",
+  "appointments.rejectedBy": "Reddeden",
+  "appointments.reasonRequired": "Lütfen görüşme için bir sebep belirtin.",
   "events.clearStart": "Başlangıç saati temizlenecek",
   "events.clearEnd": "Bitiş saati temizlenecek",
   "events.upcoming": "Yaklaşan",
   "events.past": "Geçmiş",
   "exams.title": "Sınavlar",
-  "exams.subtitle": "Tüm eğitim sınavları — yeni sınav eğitim kaydı içinden eklenir.",
+  "exams.subtitle": "Derslerinizdeki tüm sınavlar. Yeni bir sınavı ilgili dersin içinden ekleyebilirsiniz.",
   "exams.create": "Sınav oluştur",
   "exams.searchPlaceholder": "Sınav ara…",
   "exams.selectCourse": "Ders seç",
@@ -2009,6 +3076,8 @@ const tr: Dict = {
   "exams.retakesHelp": "Öğrenciler sınav bitmeden bu kadar kez deneme yapabilir.",
   "exams.allowRejoin": "Yeniden girişe izin ver",
   "exams.allowRejoinHelp": "Kapalıysa sınav odasından çıkan öğrenci cevap vermek için geri giremez.",
+  "exams.allowReview": "Öğrenciler cevaplarını inceleyebilsin",
+  "exams.allowReviewHelp": "Bu sınavı notlandırdığınızda öğrenciler kendi kağıtlarını ve geçmiş denemelerini görebilir.",
   "exams.draft": "Taslak",
   "exams.draftHelp": "Yayınlanana kadar öğrencilerden gizle.",
   "exams.publish": "Sınavı yayınla",
@@ -2052,10 +3121,59 @@ const tr: Dict = {
   "questions.editDrawing": "Çizimi düzenle",
   "questions.choiceImage": "Seçenek görseli",
   "questions.subjectRequired": "Bu soru için konu seç",
+  "questions.subjectUnavailable": "Şu anki konu — artık sana açık değil",
+  "questions.subjectUnavailableHelp": "Bu soruda kayıtlı konu, seçebileceğin listede yok. Kaydetmek için listeden bir konu seç.",
   "questions.textRequired": "Soru metni gerekli",
   "questions.pointsRange": "Puan 1–100 arası tam sayı olmalı",
   "questions.choicesRange": "Seçmeli soruda 2–10 seçenek gerekir; her biri en fazla 500 karakter olmalı",
+  "questions.correctRequired": "Kaydetmeden önce bir seçeneği doğru cevap olarak işaretle.",
   "questions.correctRange": "Doğru indeks seçeneklerden birini göstermeli",
+  "bank.title": "Soru bankası",
+  "bank.subtitle": "Her öğretmenin sınavlarında kullanabileceği, paylaşımlı ve yeniden kullanılabilir soru şablonları.",
+  "bank.empty": "Henüz şablon yok.",
+  "bank.create": "Yeni şablon",
+  "bank.edit": "Şablonu düzenle",
+  "bank.owner": "Ekleyen",
+  "bank.mine": "Benimkiler",
+  "bank.created": "Eklenme",
+  "bank.copyNotice": "Şablonu sınava eklemek bir kopya oluşturur. Şablonu sonradan düzenlemek, daha önce eklenmiş soruları değiştirmez.",
+  "bank.courseSelect": "Ders seç",
+  "bank.courseUnavailable": "Özgün ders — senin derslerinden değil",
+  "bank.targetSubjectHint": "Bu kopyanın bu sınavda hangi konuya gireceğini seç.",
+  "bank.courseHint": "Şablonlar bir konuyla etiketlenir; o konunun bağlı olduğu dersi seç. Şablon yine de her derste kullanılabilir.",
+  "bank.fromBank": "Bankadan ekle",
+  "bank.pickTemplate": "Şablon seç",
+  "bank.targetSubject": "Bu sınavdaki konu",
+  "bank.insert": "Sınava ekle",
+  "bank.inserted": "Soru bankadan kopyalandı.",
+  "bank.saveToBank": "Bankaya kaydet",
+  "bank.saveCopyToBank": "Bankaya yeni bir kopya kaydet",
+  "bank.saveCopyTitle": "İkinci bir kopya kaydedilsin mi?",
+  "bank.saveCopyBody": "Bu soru bir banka şablonuna zaten bağlı. Kaydetmek mevcut şablonu güncellemez; bankada ikinci, ayrı bir şablon oluşturur. İki kopya birbirinden bağımsızdır: birini düzenlemek diğerini hiçbir zaman değiştirmez. Yeni şablon gizlidir: sen paylaşmayı seçene kadar onu yalnızca sen görebilirsin.",
+  "bank.saveCopyConfirm": "Yeni kopya kaydet",
+  "bank.savedToBank": "Soru bankaya kopyalandı. Sen paylaşana kadar onu yalnızca sen görebilirsin.",
+  "bank.fromBankBadge": "Bankadan eklendi",
+  "bank.savedToBankBadge": "Bankaya kaydedildi",
+  "bank.search": "Soru metninde ara",
+  "bank.pickerEmpty": "Eşleşen şablon yok.",
+  "bank.noSubjects": "Bu sınavın dersinde henüz konu yok. Önce derse bir konu ekle.",
+  "bank.countTotal": "Toplam {total} şablon.",
+  "bank.countShown": "{total} şablondan {shown} tanesi gösteriliyor — daraltmak için arama yap.",
+  "bank.whoCanSee": "Kimler görebilir",
+  "bank.onlyMe": "Yalnızca ben",
+  "bank.sharedWithSchool": "Okulla paylaşıldı",
+  "bank.onlyMeHint": "Bu soruyu ve cevabını yalnızca sen görebilirsin. Güvenli seçenek budur.",
+  "bank.sharedWithSchoolHint": "Okuldaki bütün öğretmenler bu soruyu ve doğru cevabını görebilir.",
+  "bank.shareTitle": "Bu soru bütün okulla paylaşılsın mı?",
+  "bank.shareBody": "Okuldaki bütün öğretmenler bu soruyu ve doğru cevabını görebilecek. Soru henüz bitmemiş bir sınavdaysa, öğrencilerin sınava girmeden önce cevabı görebilirler. Diğer öğretmenler soruyu kendi sınavlarına kopyalayabilir; sen soruyu sonradan yeniden gizlesen ya da silsen bile o kopyalar onlarda kalır. Alınan kopyaları geri alamazsın.",
+  "bank.shareConfirm": "Evet, paylaş",
+  "bank.startsPrivate": "Kaydedilen şablon gizli başlar: sen paylaşmayı seçene kadar onu yalnızca sen görebilirsin.",
+  "bank.usedInExams": "Sınavlardaki kopyalar",
+  "bank.refresh": "Şablondan güncelle",
+  "bank.refreshTitle": "Bu soru şablonundan güncellensin mi?",
+  "bank.refreshBody": "Bu soru, bir soru bankası şablonundan alınmış bir kopya. Güncellersen sorunun metni, puanı, seçenekleri, doğru cevabı ve resimleri şablonun bugünkü hâliyle değiştirilir. Bu kopyada yaptığın değişiklikler kaybolur. Bu işlem yalnızca sınava kimse başlamadan önce yapılabilir, bu yüzden hiçbir öğrencinin cevabı etkilenmez.",
+  "bank.refreshConfirm": "Evet, güncelle",
+  "bank.refreshed": "Soru şablonundan güncellendi.",
   "subjects.title": "Konular",
   "subjects.item": "Konu",
   "subjects.subject": "Konu",
@@ -2066,7 +3184,7 @@ const tr: Dict = {
   "subjects.select": "Konu seç",
   "subjects.help": "Bu eğitim kaydının müfredat konuları. Her sınav sorusu bir konuya bağlanmalı.",
   "pomodoro.title": "Pomodoro",
-  "pomodoro.subtitle": "Sunucu zamanıyla odaklı çalışma oturumu başlat ve bitir.",
+  "pomodoro.subtitle": "Odaklı çalışma oturumları başlatın ve harcadığınız süreyi takip edin.",
   "pomodoro.total": "Toplam odak",
   "pomodoro.running": "Devam ediyor",
   "pomodoro.idle": "Boşta",
@@ -2095,6 +3213,8 @@ const tr: Dict = {
   "attempt.start": "Sınava başla",
   "attempt.resume": "Sınava devam et",
   "attempt.finish": "Sınavı bitir",
+  "attempt.finishConfirm": "Evet, sınavı bitir",
+  "attempt.finishHint": "Bu, sınavı bitirir ve cevaplarını teslim eder. Sonrasında cevaplarını değiştiremezsin.",
   "attempt.status": "Durum",
   "attempt.remaining": "Kalan süre",
   "attempt.attempt": "Deneme",
@@ -2104,6 +3224,12 @@ const tr: Dict = {
   "attempt.notStarted": "Soruları görmek için zamanlı sınavı başlat.",
   "attempt.unscheduled": "Bu sınav çevrim içi oturum için zamanlanmamış.",
   "attempt.saved": "Kaydedildi",
+  "attempt.saving": "Kaydediliyor…",
+  "attempt.notSaved": "Kaydedilmedi",
+  "attempt.notSavedHint": "Cevabın kaydedilmedi. Yazdığın cevap burada duruyor — \"Cevabı tekrar kaydet\"e basıp yeniden dene.",
+  "attempt.saveTimeout": "Sınav cevabını onaylamadı, yani cevabın henüz kaydedilmedi. Cevabın ekranda duruyor — lütfen tekrar kaydetmeyi dene.",
+  "attempt.saveDisconnected": "Cevabın kaydedilmeden bağlantı koptu. Cevabın ekranda duruyor — lütfen tekrar kaydetmeyi dene.",
+  "attempt.saveAnswerRetry": "Cevabı tekrar kaydet",
   "attempt.savedAt": "Kayıt zamanı",
   "attempt.serverNow": "Sunucu saati",
   "attempt.mark": "Not",
@@ -2124,7 +3250,7 @@ const tr: Dict = {
   "exams.helpBody":
     "Sınavlar bir eğitim kaydına aittir. Öğretmenler detay sayfasından tür seçerek ekler; ağırlık sınav türünde tanımlıdır. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",
   "admin.title": "Kişiler ve roller",
-  "admin.subtitle": "Hesapları yükselt / düşür. Kendi rolünü değiştiremezsin.",
+  "admin.subtitle": "Hesapların rolünü yükseltin veya düşürün. Kendi rolünüzü değiştiremezsiniz.",
   "admin.username": "Kullanıcı adı",
   "admin.id": "Id",
   "admin.role": "Rol",
@@ -2134,7 +3260,7 @@ const tr: Dict = {
     "öğrenci < öğretmen < yönetici < admin. Üst roller alt yetkileri miras alır. Kayıt her zaman öğrenci oluşturur. Rolleri yalnız admin değiştirir.",
   "admin.noUsers": "Henüz kayıtlı kullanıcı yok.",
   "guide.title": "Ürün rehberi",
-  "guide.subtitle": "Kampüs akışı: eğitim → sınav → karne; artı notlar ve etkinlikler.",
+  "guide.subtitle": "Derslerden sınavlara, karnelerden notlara ve etkinliklere kadar platformun nasıl bir arada çalıştığı.",
   "guide.step1.title": "1. Ana sayfa",
   "guide.step1.body":
     "Not, etkinlik, ders, sınav ve karne için canlı sayılar ve kısayollar.",
@@ -2207,7 +3333,8 @@ const tr: Dict = {
   "role.admin": "ADMIN",
   "courses.title": "Eğitim",
   "courses.listTitle": "{item} kayıtları",
-  "courses.subtitle": "{item}, kayıtlar ve sınavlar burada.",
+  "courses.subtitle": "{item}, kayıtları ve sınavları tek bir yerden yönetin.",
+  "courses.pageSubtitle": "Dersler, etütler ve kulüplerin tümü tek bir yerde.",
   "courses.create": "Yeni eğitim kaydı",
   "courses.empty": "Henüz {item} yok.",
   "courses.enrolled": "Kayıtlı",
@@ -2220,10 +3347,14 @@ const tr: Dict = {
   "courses.weight": "Ağırlık",
   "courses.delete": "Dersi sil",
   "courses.kind": "Ders türü",
-  "courses.kind.course": "Ders",
+  "courses.kind.course": "Dersler",
   "courses.kind.study": "Etüt",
   "courses.kind.club": "Kulüp",
+  "courses.kind.courseSingular": "Ders",
+  "courses.kind.studySingular": "Etüt",
+  "courses.kind.clubSingular": "Kulüp",
   "courses.capacity": "Kapasite",
+  "courses.unlimited": "Sınırsız",
   "courses.capacityOptional": "İsteğe bağlı kontenjan",
   "courses.teachers": "Öğretmenler",
   "courses.assignTeacher": "Öğretmen ata",
@@ -2232,6 +3363,13 @@ const tr: Dict = {
   "courses.teacherAssigned": "Öğretmen başarıyla atandı.",
   "courses.teacherUnassigned": "Öğretmen başarıyla çıkarıldı.",
   "courses.noTeachers": "Atanmış öğretmen yok.",
+  "courses.overview": "Genel Bakış",
+  "courses.work": "Çalışmalar",
+  "courses.people": "Kişiler",
+  "courses.upcoming": "Yaklaşan çalışmalar",
+  "courses.noUpcoming": "Yaklaşan çalışma yok.",
+  "courses.nextExam": "Sıradaki sınav",
+  "courses.nextHomework": "Sıradaki ödev",
   "homework.title": "Ödevler",
   "homework.item": "Ödev",
   "homework.add": "Ödev ekle",
@@ -2265,7 +3403,7 @@ const tr: Dict = {
   "homework.status.incomplete": "Eksik",
   "homework.status.missing": "Yok",
   "marks.title": "Karnem",
-  "marks.subtitle": "Kayıtlı derslerdeki ağırlıklı ortalamalar.",
+  "marks.subtitle": "Kayıtlı olduğunuz tüm derslerdeki ağırlıklı not ortalamalarınız.",
   "marks.overall": "Genel ortalama",
   "marks.courseAvg": "Ders ortalaması",
   "marks.empty": "Henüz hiçbir derse kayıtlı değilsin.",
@@ -2295,11 +3433,20 @@ const tr: Dict = {
   "exams.lastActivity": "Son hareket",
   "exams.answerSheet": "Cevap Kâğıdı",
   "exams.autoScore": "Otomatik puan",
+  "exams.answersRight": "Doğru",
+  "exams.answersWrong": "Yanlış",
+  "exams.answersEmpty": "Boş",
+  "exams.answersPending": "Değerlendirilmedi",
   "exams.earned": "Alınan",
   "exams.possible": "Mümkün",
   "exams.isCorrect": "Doğru",
   "exams.textAnswer": "Metin cevap",
   "exams.drawAnswer": "Cevabı çiz",
+  "exams.previousAttempts": "Önceki denemeler",
+  "exams.attemptN": "{n}. deneme",
+  "exams.currentAttempt": "güncel",
+  "exams.pastAttemptReadOnly": "Önceki bir deneme görüntüleniyor — salt okunur. Puanlama güncel denemeye uygulanır.",
+  "exams.reviewInProgress": "İncelemek için önce mevcut denemeni gönder.",
   "exams.uploadAnswerImage": "Görsel yükle",
   "exams.playDrawing": "Çizimi oynat",
   "exams.showImage": "Görseli göster",
@@ -2313,7 +3460,7 @@ const tr: Dict = {
   "exams.selectStudent": "Listeden bir öğrenci seç",
   "exams.viewSheet": "Cevapları gör",
   "profile.title": "Profilim",
-  "profile.subtitle": "Kişisel bilgiler (isteğe bağlı).",
+  "profile.subtitle": "Kişisel bilgileriniz. Tüm alanların doldurulması isteğe bağlıdır.",
   "profile.name": "Ad",
   "profile.surname": "Soyad",
   "profile.email": "E-posta",
@@ -2331,10 +3478,11 @@ const tr: Dict = {
   "ws.error": "Bağlantı hatası",
   "ws.ping": "Ping",
   "course.removeStudent": "Öğrenciyi çıkar",
+  "course.fromClass": "{name} şubesinden",
   "course.removeStudentConfirm": "Bu öğrenciyi çıkarmak istediğine emin misin?",
   "events.userIdRequired": "Önce bir öğrenci seçmelisin.",
   "settings.title": "Okul ayarları",
-  "settings.subtitle": "Sınav türleri, yoklama durumları ve not bantlarını yönet.",
+  "settings.subtitle": "Okul genelinde kullanılan sınav türlerini, yoklama durumlarını ve not bantlarını buradan yapılandırın.",
   "settings.saved": "Ayarlar kaydedildi.",
   "settings.examKinds": "Sınav türleri",
   "settings.examKindsHelp": "Ders ortalamalarında kullanılan tür ve ağırlıklar.",
@@ -2354,8 +3502,202 @@ const tr: Dict = {
   "settings.maxFileSize": "Not dosyası boyut sınırı",
   "settings.maxFileSizeHelp": "Not ekleri için dosya başına yükleme sınırı, MiB cinsinden. Backend 0.001-25 MiB kabul eder.",
   "settings.maxFileSizeInvalid": "Geçerli bir dosya boyutu gir.",
+  "settings.mealSlotNameInvalid": "Öğün adı / \\ ? # veya % içeremez.",
+  "settings.aiPolicy": "Yapay zekâ politikası",
+  "settings.aiPolicyHelp": "Konuşma bağlamı, konu sayısı ve mesaj uzunluğu sınırları.",
+  "settings.chatHistory": "Geçmiş turu",
+  "settings.chatThreads": "En fazla konu",
+  "settings.chatMessage": "Mesaj uzunluğu",
+  "settings.foodPolicy": "Yemek politikası",
+  "settings.foodPolicyHelp": "Öğün saatleri UTC girilir. Boş listeler yemek programını kapatır.",
+  "settings.mealCutoff": "Rezervasyon/iptal kapanışı (dakika)",
+  "settings.noCutoff": "Kapanış yok",
+  "settings.mealSlot": "Öğün",
+  "settings.servingTimeUtc": "Servis saati (UTC)",
+  "settings.addMealSlot": "Öğün ekle",
+  "settings.dietaryTags": "Beslenme etiketleri",
+  "settings.addDietaryTag": "Beslenme etiketi ekle",
+  "settings.tabAssessment": "Değerlendirme",
+  "settings.tabMeals": "Yemekhane",
+  "settings.tabSystem": "Sistem",
+  "settings.tabAppearance": "Görünüm",
+  "settings.colorPalette": "Renk paleti",
+  "settings.colorPaletteHelp": "Coolors trend paletlerinden bir vurgu rengi seç. Yalnızca bu tarayıcıda saklanır.",
+  "settings.colorPaletteSource": "Trend paletlere göz at",
+  "settings.defaultColor": "Varsayılan rengi kullan",
+  "meals.title": "Yemekler",
+  "meals.subtitle": "Menüleri tarihe göre inceleyin, beslenme gereksinimlerini yönetin ve yemek hesaplarını takip edin.",
+  "meals.publish": "Menü yayınla",
+  "meals.publishHelp": "Her tarih ve öğün için tek menü.",
+  "meals.date": "Menü tarihi",
+  "meals.slot": "Öğün",
+  "meals.capacity": "Kapasite",
+  "meals.from": "Başlangıç tarihi",
+  "meals.empty": "Bu tarih aralığında menü yok.",
+  "meals.dishes": "yemek",
+  "meals.conflict": "Beslenme uyarısı",
+  "meals.menu": "Menü",
+  "meals.detailHelp": "Yemekler, rezervasyon, beslenme uyarıları, servis ve hesap kayıtları.",
+  "meals.total": "Toplam fiyat",
+  "meals.cutoff": "Kapanış",
+  "meals.noCutoff": "Kapanış yok",
+  "meals.bookingStatus": "Rezervasyon",
+  "meals.closed": "Kapalı",
+  "meals.open": "Açık",
+  "meals.child": "Çocuk",
+  "meals.myAccount": "Hesap",
+  "meals.service": "Servis kaydı",
+  "meals.manage": "Yönet",
+  "meals.noDishes": "Henüz yemek eklenmedi.",
+  "meals.booked": "Rezerve edildi",
+  "meals.notBooked": "Rezervasyon yok",
+  "meals.cutoffPassed": "Rezervasyon ve iptal süresi geçti.",
+  "meals.bookingHelp": "Kapasiteyi, kapanışı, çakışmaları ve fiyatı sunucu doğrular.",
+  "meals.book": "Yer ayır",
+  "meals.cancelBooking": "Rezervasyonu iptal et",
+  "meals.cancelSummary": "İptal yeri serbest bırakır ve ilk ücretin tam ters kaydını ekler. Kapanıştan sonra reddedilir.",
+  "meals.cancelled": "Rezervasyon iptal edildi.",
+  "meals.dietaryProfile": "Beslenme profili",
+  "meals.noDietaryNotes": "Beslenme notu yok.",
+  "meals.balance": "Bakiye",
+  "meals.ledger": "Hesap hareketleri",
+  "meals.ledger.charge": "Yemek ücreti",
+  "meals.ledger.credit": "Kredi",
+  "meals.ledger.reversal": "İade",
+  "meals.noLedger": "Hesap hareketi yok.",
+  "meals.attendance": "Yemek katılımı",
+  "meals.walkIn": "Rezervasyonsuz",
+  "meals.served": "Servis edildi",
+  "meals.missed": "Gelmedi",
+  "meals.notMarked": "İşaretlenmedi",
+  "meals.addDish": "Yemek ekle",
+  "meals.studentRecord": "Öğrenci yemek kaydı",
+  "meals.student": "Öğrenci",
+  "meals.dietaryNote": "Mutfak notu",
+  "meals.bookingAudit": "Rezervasyon denetimi",
+  "meals.recordCredit": "Kredi kaydet",
+  "meals.creditAppendOnly": "Krediler yalnızca eklenir. Düzeltme dengeleyici yeni kayıt gerektirir.",
+  "meals.amountTry": "Tutar (TRY)",
+  "meals.method": "Yöntem",
+  "meals.note": "Not",
+  "meals.creditRecorded": "Kredi kaydedildi.",
+  "meals.deleteMenu": "Menüyü sil",
+  "meals.deleteDish": "Yemeği sil",
+  "meals.editMenu": "Menüyü düzenle",
+  "meals.editDish": "Yemeği düzenle",
+  "meals.dishName": "Yemek adı",
+  "meals.priceTry": "Fiyat (TRY)",
+  "nav.payments": "Ücretler",
+  "nav.paymentStatement": "Ücretlerim",
+  "nav.whiteboards": "Beyaz Tahtalar",
+  "whiteboard.title": "Beyaz Tahtalar",
+  "whiteboard.subtitle": "Canlı ortak çizim tahtaları.",
+  "whiteboard.empty": "Henüz beyaz tahta yok.",
+  "whiteboard.create": "Yeni tahta",
+  "whiteboard.titleLabel": "Başlık",
+  "whiteboard.participants": "Katılımcılar",
+  "whiteboard.participantsHint": "Çizebilecek öğrenci ve personeli davet edin.",
+  "whiteboard.open": "Aç",
+  "whiteboard.createdAt": "Oluşturuldu",
+  "whiteboard.limitReached": "Beyaz tahta sınırına ulaştınız.",
+  "whiteboard.canvasHint": "Buraya çizin — tahtadaki herkes anlık görür.",
+  "whiteboard.closedBadge": "Kapalı",
+  "whiteboard.lockedBadge": "Kilitli",
+  "whiteboard.readOnlyBadge": "Salt okunur",
+  "whiteboard.lock": "Kilitle",
+  "whiteboard.unlock": "Kilidi aç",
+  "whiteboard.clear": "Temizle",
+  "whiteboard.clearConfirm": "Canlı tuval temizlensin mi? Geçmiş korunur ve tekrar oynatılabilir.",
+  "whiteboard.close": "Tahtayı kapat",
+  "whiteboard.closeConfirm": "Bu tahta kapatılsın mı? Kalıcı olarak salt okunur olur.",
+  "whiteboard.delete": "Tahtayı sil",
+  "whiteboard.deleteConfirm": "Bu tahta ve tüm geçmişi silinsin mi? Geri alınamaz.",
+  "whiteboard.creator": "Oluşturan",
+  "whiteboard.roster": "Katılımcılar",
+  "whiteboard.addParticipant": "Katılımcı ekle",
+  "whiteboard.removeParticipant": "Çıkar",
+  "whiteboard.history": "Geçmiş",
+  "whiteboard.noHistory": "Henüz geçmiş oturum yok.",
+  "whiteboard.replaySession": "Oturumu oynat",
+  "whiteboard.play": "Oynat",
+  "whiteboard.pause": "Duraklat",
+  "whiteboard.restart": "Baştan",
+  "whiteboard.notFound": "Bu beyaz tahta yok ya da üzerinde değilsiniz.",
+  "whiteboard.back": "Beyaz tahtalara dön",
+  "payments.title": "Okul ücretleri",
+  "payments.subtitle": "Ücret planları, atamalar ve ödeme hareketleri.",
+  "payments.empty": "Henüz ücret planı yok.",
+  "payments.createPlan": "Yeni plan",
+  "payments.editPlan": "Planı düzenle",
+  "payments.deletePlan": "Planı sil",
+  "payments.planName": "Plan adı",
+  "payments.installments": "Taksitler",
+  "payments.addInstallment": "Taksit ekle",
+  "payments.amountTry": "Tutar (TRY)",
+  "payments.dueDate": "Vade tarihi",
+  "payments.total": "Toplam",
+  "payments.assign": "Ata",
+  "payments.assignHelp": "Atama, tüm taksitleri anında ücret olarak yansıtır. Planda olan öğrenciye tekrar ücret çıkmaz.",
+  "payments.selectStudent": "Öğrenci seç",
+  "payments.assignments": "Atanan öğrenciler",
+  "payments.noAssignments": "Henüz öğrenci atanmadı.",
+  "payments.outcomeAssigned": "Atandı",
+  "payments.outcomeAlready": "Zaten atanmış",
+  "payments.outcomeRejected": "Reddedildi",
+  "payments.studentLedger": "Öğrenci hesabı",
+  "payments.balance": "Bakiye",
+  "payments.ledger": "Hesap hareketleri",
+  "payments.noLedger": "Hesap hareketi yok.",
+  "payments.recordPayment": "Ödeme kaydet",
+  "payments.recordRefund": "İade et",
+  "payments.reverse": "Ters kaydet",
+  "payments.method": "Yöntem",
+  "payments.note": "Not",
+  "payments.reason": "Gerekçe",
+  "payments.kindCharge": "Ücret",
+  "payments.kindCredit": "Ödeme",
+  "payments.kindRefund": "İade",
+  "payments.kindReversal": "Ters kayıt",
+  "payments.statementTitle": "Ücretlerim",
+  "payments.statementSubtitle": "Okula borcunuz ve arkasındaki tüm ücretler.",
+  "payments.noStatement": "Henüz ücret yok.",
+  "payments.due": "Vade",
+  "payments.credited": "Ödenen",
+  "payments.refunded": "İade",
+  "payments.outstanding": "Kalan",
+  "payments.status": "Durum",
+  "payments.overdue": "Gecikmiş",
+  "payments.reversed": "Ters kaydedildi",
+  "payments.paid": "Ödendi",
+  "payments.appendOnly": "Hesap yalnızca eklenir. Düzeltme, düzenleme değil dengeleyici kayıt gerektirir.",
+  "payments.tabCollect": "Tahsilat",
+  "payments.tabPlans": "Ücret planları",
+  "payments.collect": "Tahsilat Al",
+  "payments.collectFrom": "Tahsilat al",
+  "payments.totalDebt": "Toplam borç",
+  "payments.collected": "Tahsil edilen",
+  "payments.overdueCount": "Gecikmiş",
+  "payments.statusPending": "Bekliyor",
+  "payments.statusPartial": "Kısmi",
+  "payments.statusCancelled": "İptal edildi",
+  "payments.noDebt": "Bu öğrenci için henüz borç yok.",
+  "payments.noDebtHint": "Bu öğrenciye borç çıkmak için Ücret planları sekmesinden bir plan atayın.",
+  "payments.methodCash": "Nakit",
+  "payments.methodTransfer": "Havale / EFT",
+  "payments.methodCard": "Kredi kartı",
+  "payments.methodCheck": "Çek",
+  "payments.ledgerAudit": "Hesap hareketleri",
+  "payments.showLedger": "Hesap hareketlerini göster",
+  "payments.hideLedger": "Hesap hareketlerini gizle",
+  "payments.plan": "Plan",
+  "payments.student": "Öğrenci",
+  "payments.username": "Kullanıcı adı",
+  "payments.allStudents": "Tüm öğrenciler",
+  "payments.allPlans": "Tüm planlar",
+  "payments.inDebt": "Borçlu",
+  "payments.settled": "Borçsuz",
   "terms.title": "Akademik dönemler",
-  "terms.subtitle": "Takvim dönemlerini yönet ve dersleri dönemlere bağla.",
+  "terms.subtitle": "Akademik dönemleri yönetin ve dersleri ilgili dönemlere atayın.",
   "terms.create": "Dönem oluştur",
   "terms.edit": "Dönemi düzenle",
   "terms.empty": "Henüz dönem yok.",
@@ -2364,7 +3706,7 @@ const tr: Dict = {
   "terms.dateRequired": "Başlangıç ve bitiş tarihi gerekli.",
   "sessions.title": "Ders oturumları",
   "sessions.item": "Oturum",
-  "sessions.subtitle": "Ders oluştur ve ders yoklaması al.",
+  "sessions.subtitle": "Ders oturumlarını planlayın ve her ders için yoklama alın.",
   "sessions.topic": "Konu",
   "sessions.add": "Oturum ekle",
   "sessions.edit": "Oturumu düzenle",
@@ -2376,7 +3718,7 @@ const tr: Dict = {
   "sessions.startRequired": "Oturum başlangıç tarihi ve saati gerekli.",
   "sessions.endInvalid": "Bitiş için tarih ve saati birlikte gir ya da ikisini de boş bırak.",
   "attendance.title": "Yoklama raporu",
-  "attendance.subtitle": "Etkinlik yoklaması ve ders oturumu devam oranları.",
+  "attendance.subtitle": "Etkinlik yoklamalarınız ve ders oturumu devam oranlarınız.",
   "attendance.events": "Etkinlikler",
   "attendance.sessions": "Ders oturumları",
   "attendance.rate": "Oran",
@@ -2386,7 +3728,7 @@ const tr: Dict = {
   "attendance.show": "Yoklamayı göster",
   "attendance.forUser": "{user} yoklaması",
   "work.title": "Mesai kaydı",
-  "work.subtitle": "Sunucu saatli giriş ve çıkış kayıtları.",
+  "work.subtitle": "Mesai saatlerinizi kaydetmek için giriş ve çıkış yapın.",
   "work.checkIn": "Giriş yap",
   "work.checkOut": "Çıkış yap",
   "work.checkedIn": "Giriş yapılmış",
@@ -2433,6 +3775,8 @@ const tr: Dict = {
   "messages.sentToast": "Mesaj gönderildi.",
   "messages.to": "Kime: ",
   "messages.from": "Kimden: ",
+  "messages.markAsRead": "Okundu olarak işaretle",
+  "messages.markAsUnread": "Okunmadı olarak işaretle",
   "messages.selectRecipient": "Lütfen bir alıcı seçin.",
 };
 

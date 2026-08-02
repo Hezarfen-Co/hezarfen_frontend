@@ -1,170 +1,114 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
-import type { ColumnDef } from "@tanstack/solid-table";
-import { useLocation, useNavigate } from "@tanstack/solid-router";
+import { useNavigate, useSearch } from "@tanstack/solid-router";
 import { getCourses, postCourse, postCourseTeacher } from "@/api/courses";
 import { getMyCourses } from "@/api/reports";
 import { getTerms } from "@/api/terms";
-import { formatApiError } from "@/api/client";
-import type { Course, CourseKind } from "@/api/client";
-import { Alert } from "@/components/ui/alert";
+import { getLimits } from "@/api/limits";
+import { formatApiError, type CourseKind } from "@/api/client";
+import { CourseCard } from "@/components/courses/course-card";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconEye, IconPlus } from "@/components/ui/icons";
+import { DataToolbar } from "@/components/ui/data-toolbar";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DropdownSelect, Select } from "@/components/ui/select";
+import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
-import { TableRowActions } from "@/components/ui/table-row-actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
 import { personLabel } from "@/lib/person";
+import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
-import { hasMinRole } from "@/lib/roles";
 
-const COURSE_PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 export default function CoursesPage() {
-  return (
-    <RouteGuard>
-      <CoursesContent />
-    </RouteGuard>
-  );
+  return <RouteGuard><CoursesContent /></RouteGuard>;
 }
 
 function CoursesContent() {
   const auth = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const routeSearch = useSearch({ from: "/courses" });
   const t = useT();
-  const [showForm, setShowForm] = createSignal(location().searchStr.includes("action=new"));
-  createEffect(() => {
-    if (location().searchStr.includes("action=new")) {
-      setShowForm(true);
-    }
-  });
+  const [pageKind, setPageKind] = createSignal<CourseKind | undefined>(routeSearch().kind);
+  const createKind = (): CourseKind => pageKind() ?? "course";
+  const pageLabel = () => t("nav.classes");
+  const kindLabel = () => createKind() === "study" ? t("courses.kind.study") : createKind() === "club" ? t("courses.kind.club") : t("courses.kind.course");
+  const kindLabelSingular = () => createKind() === "study" ? t("courses.kind.studySingular") : createKind() === "club" ? t("courses.kind.clubSingular") : t("courses.kind.courseSingular");
+  const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
+  const [showForm, setShowForm] = createSignal(routeSearch().action === "new");
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
   const [termId, setTermId] = createSignal("");
   const [capacity, setCapacity] = createSignal("");
   const [teacherId, setTeacherId] = createSignal("");
-  const [error, setError] = createSignal("");
-  const [flash, setFlash] = createFlash();
-  const [pending, setPending] = createSignal(false);
   const [termFilter, setTermFilter] = createSignal("all");
+  const [page, setPage] = createSignal(0);
+  const [search, setSearch] = createSignal("");
+  const [error, setError] = createSignal("");
+  const [pending, setPending] = createSignal(false);
+  const [flash, setFlash] = createFlash();
 
-  const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
-  const isStudent = () => auth.user()?.role === "student";
+  createEffect(() => {
+    routeSearch().action === "new" && setShowForm(true);
+  });
+  createEffect(() => {
+    setPageKind(routeSearch().kind);
+  });
+  createEffect(() => {
+    pageKind(); termFilter(); search(); setPage(0);
+  });
 
   const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
-
-  const termName = (id: string | null | undefined) => terms()?.find((term) => term.id === id)?.name ?? t("terms.unassigned");
-  const courseKindLabel = (value: CourseKind | undefined) =>
-    value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
-  const pageKind = (): CourseKind => location().pathname.startsWith("/studies") ? "study" : location().pathname.startsWith("/clubs") ? "club" : "course";
-  const pageLabel = () => courseKindLabel(pageKind());
-  const filterCourses = (items: Course[]) => {
-    const selectedTerm = termFilter();
-    return items.filter((course) => {
-      if (selectedTerm === "unassigned" && course.term) return false;
-      if (selectedTerm !== "all" && selectedTerm !== "unassigned" && course.term !== selectedTerm) return false;
-      return course.kind === pageKind();
-    });
-  };
-  const searchCourse = (course: Course, query: string) =>
-    [course.title, course.description, personLabel(course.creator), course.creator.username, termName(course.term), courseKindLabel(course.kind)]
-      .join(" ")
-      .toLocaleLowerCase()
-      .includes(query.toLocaleLowerCase());
-
+  const [limits, { refetch: refetchLimits }] = createResource(() => canCreate() ? getLimits() : null);
   const [list, { refetch }] = createResource(
     () => auth.user()?.role ?? null,
-    async (role) => (role === "student" ? (await getMyCourses({ limit: 100 })).items : (await getCourses({ limit: 100 })).items),
+    async (role) => role === "student" ? getMyCourses() : getCourses(),
   );
+  const listData = () => list.latest ?? list();
+  const termName = (id: string | null) => terms.latest?.find((term) => term.id === id)?.name ?? (id || t("terms.unassigned"));
+  const filteredCourses = createMemo(() => {
+    const query = search().trim().toLocaleLowerCase();
+    return (listData()?.items ?? []).filter((course) => {
+      if (pageKind() && course.kind !== pageKind()) return false;
+      if (termFilter() === "unassigned" && course.term) return false;
+      if (termFilter() !== "all" && termFilter() !== "unassigned" && course.term !== termFilter()) return false;
+      if (!query) return true;
+      return [
+        course.title,
+        course.description,
+        personLabel(course.creator),
+        ...(course.teachers ?? []).map(personLabel),
+        termName(course.term),
+      ].join(" ").toLocaleLowerCase().includes(query);
+    });
+  });
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredCourses().length / PAGE_SIZE)));
+  const visibleCourses = createMemo(() => filteredCourses().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE));
 
-  const rows = () => filterCourses(list() ?? []);
-  const columns = createMemo<ColumnDef<Course>[]>(() => [
-    {
-      accessorKey: "title",
-      header: pageLabel(),
-      cell: (cell) => (
-        <div class="min-w-0 space-y-1">
-          <p class="truncate font-medium">{cell.row.original.title}</p>
-          <Show when={isStudent()}>
-            <Badge variant="secondary" class="rounded-full">{t("courses.enrolled")}</Badge>
-          </Show>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "description",
-      header: t("form.description"),
-      meta: { cellClass: "truncate text-muted-foreground" },
-      cell: (cell) => cell.row.original.description || "—",
-    },
-    {
-      id: "term",
-      accessorFn: (course) => termName(course.term),
-      header: t("terms.term"),
-      cell: (cell) => <Badge variant="outline" class="mono max-w-full rounded-full text-[11px]"><span class="truncate">{termName(cell.row.original.term)}</span></Badge>,
-    },
-    {
-      id: "creator",
-      accessorFn: (course) => personLabel(course.creator),
-      header: t("common.creator"),
-      meta: { cellClass: "truncate text-muted-foreground" },
-      cell: (cell) => personLabel(cell.row.original.creator),
-    },
-    {
-      id: "capacity",
-      accessorFn: (course) => course.capacity,
-      header: t("courses.capacity"),
-      meta: { headerClass: "text-right", cellClass: "text-right tabular-nums text-muted-foreground" },
-      cell: (cell) => cell.row.original.capacity ?? "—",
-    },
-    {
-      id: "actions",
-      header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "px-1 text-center" },
-      cell: (cell) => (
-        <TableRowActions
-          label={t("common.actions")}
-          actions={[{
-            label: t("common.view"),
-            icon: <IconEye class="h-4 w-4" />,
-            onSelect: () => void navigate({ to: "/courses/$id", params: { id: cell.row.original.id } }),
-          }]}
-        />
-      ),
-    },
-  ]);
-
-  const onCreate = async (e: SubmitEvent) => {
-    e.preventDefault();
+  const createCourse = async (event: SubmitEvent) => {
+    event.preventDefault();
     setError("");
     setPending(true);
     try {
-      const cap = capacity().trim();
-      const newCourse = await postCourse({
+      const course = await postCourse({
         title: title().trim(),
         description: description().trim() || undefined,
-        kind: pageKind(),
+        kind: createKind(),
         term_id: termId() || null,
-        capacity: cap ? Number(cap) : null,
+        capacity: capacity().trim() ? Number(capacity()) : null,
       });
-      const tid = teacherId();
-      if (tid && hasMinRole(auth.user()?.role, "manager")) {
-        await postCourseTeacher(newCourse.id, tid);
-      }
-      setTitle("");
-      setDescription("");
-      setTermId("");
-      setCapacity("");
-      setTeacherId("");
-      setShowForm(false);
+      if (teacherId() && hasMinRole(auth.user()?.role, "manager")) await postCourseTeacher(course.id, teacherId());
+      setTitle(""); setDescription(""); setTermId(""); setCapacity(""); setTeacherId(""); setShowForm(false);
       await refetch();
       setFlash(t("common.created"));
     } catch (err) {
@@ -175,100 +119,109 @@ function CoursesContent() {
   };
 
   return (
-    <div class="space-y-6">
-      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: pageLabel() })} description={t("courses.subtitle", { item: pageLabel() })}>
-        <form class="space-y-4" onSubmit={onCreate}>
-          <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
-            <div class="space-y-1.5">
-              <Label for="course-title">{t("form.title")}</Label>
-              <Input id="course-title" required maxlength={200} value={title()} onInput={(e) => setTitle(e.currentTarget.value)} />
-            </div>
-            <div class="space-y-1.5">
-              <Label for="course-desc">{t("form.description")}</Label>
-              <Textarea id="course-desc" maxlength={2000} rows={3} value={description()} onInput={(e) => setDescription(e.currentTarget.value)} />
-            </div>
+    <div class="space-y-5">
+      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: kindLabelSingular() })} description={t("courses.subtitle", { item: kindLabel() })}>
+        <form class="space-y-4" onSubmit={createCourse}>
+          <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
+          <div class="flex items-center justify-between rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+            <span>{t("exams.kind")}</span>
+            <span class="font-medium text-foreground">{kindLabelSingular()}</span>
           </div>
-          <div class="space-y-3 rounded-2xl border border-violet-500/15 bg-violet-500/[0.03] p-4 shadow-sm">
-            <div class="space-y-1.5">
-              <Label for="course-term">{t("terms.term")}</Label>
-              <Select id="course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
-                <option value="">{t("terms.unassigned")}</option>
-                <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
-              </Select>
-            </div>
-            <div class="space-y-1.5">
-              <Label for="course-capacity">{t("courses.capacity")}</Label>
-              <Input id="course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
-            </div>
-            <Show when={hasMinRole(auth.user()?.role, "manager")}>
-              <div class="space-y-1.5">
-                <UserSearchSelect
-                  id="course-create-teacher"
-                  role="teacher"
-                  value={teacherId()}
-                  onChange={setTeacherId}
-                  placeholder={t("courses.assignTeacher")}
-                  label={t("courses.teachers")}
-                />
-              </div>
-            </Show>
+          <div class="space-y-3">
+            <div class="space-y-1.5"><Label for="course-title">{t("form.title")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="course-title" required maxlength={limits.latest?.course.max_title_len} value={title()} onInput={(e) => setTitle(e.currentTarget.value)} /></div>
+            <div class="space-y-1.5"><Label for="course-description">{t("form.description")}</Label><Textarea id="course-description" maxlength={limits.latest?.course.max_description_len} rows={3} value={description()} onInput={(e) => setDescription(e.currentTarget.value)} /></div>
+            <div class="space-y-1.5"><Label for="course-term">{t("terms.term")}</Label><Select id="course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}><option value="">{t("terms.unassigned")}</option><For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For></Select></div>
+            <div class="space-y-1.5"><Label for="course-capacity">{t("courses.capacity")}</Label><Input id="course-capacity" type="number" min={1} value={capacity()} onInput={(e) => setCapacity(e.currentTarget.value)} /></div>
+            <Show when={hasMinRole(auth.user()?.role, "manager")}><UserSearchSelect id="course-teacher" role="teacher" value={teacherId()} onChange={setTeacherId} placeholder={t("courses.assignTeacher")} label={t("courses.teachers")} /></Show>
           </div>
-          {error() && <p class="text-sm text-destructive">{error()}</p>}
-          <div class="sticky bottom-0 -mx-5 flex flex-wrap gap-2 border-t border-border bg-background px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
-            <Button type="submit" class="flex-1 rounded-xl sm:flex-none" disabled={pending()}>
-              {t("common.create")}
-            </Button>
-            <Button type="button" variant="outline" class="flex-1 rounded-xl sm:flex-none" onClick={() => setShowForm(false)}>
-              {t("common.cancel")}
-            </Button>
-          </div>
+          <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
+          <div class="flex gap-2 border-t pt-4"><Button type="submit" disabled={pending()}>{t("common.create")}</Button><Button type="button" variant="outline" onClick={() => setShowForm(false)}>{t("common.cancel")}</Button></div>
         </form>
       </SidePanel>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
-        <Show when={flash()}>
-          <Alert variant="success">{flash()}</Alert>
+      <header class="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
+        <div class="space-y-1">
+          <h1 class="text-2xl font-semibold tracking-tight">{pageLabel()}</h1>
+          <p class="text-sm text-muted-foreground">{t("courses.pageSubtitle")}</p>
+        </div>
+        <Show when={canCreate()}>
+          <Button size="sm" class="min-w-30 rounded-lg" onClick={() => setShowForm(true)}>
+            <IconPlus class="h-4 w-4" />
+            {t("common.createItem", { item: kindLabelSingular() })}
+          </Button>
         </Show>
-        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-          <Show when={list.error}>
-            <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-          </Show>
-          <div class="space-y-4">
-            <DataTable
-              title={pageLabel()}
-              description={t("courses.subtitle", { item: pageLabel() })}
-              actions={
-                canCreate() ? (
-                  <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowForm(true)}>
-                    <IconPlus class="h-4 w-4" />
-                    {t("common.createItem", { item: pageLabel() })}
-                  </Button>
-                ) : undefined
-              }
-              columns={columns()}
-              data={rows()}
-              tableClass="table-fixed min-w-[44rem]"
-              searchPredicate={searchCourse}
-              enablePagination
-              pageSize={COURSE_PAGE_SIZE}
-              empty={t("courses.empty", { item: pageLabel() })}
-              onRowClick={(course) => void navigate({ to: "/courses/$id", params: { id: course.id } })}
+      </header>
+
+      <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
+
+      <Tabs
+        value={pageKind() ?? "all"}
+        onChange={(value) => {
+          const kind = value === "course" || value === "study" || value === "club" ? value : undefined;
+          setPageKind(kind);
+          void navigate({
+            to: "/courses",
+            search: { action: undefined, kind },
+            replace: true,
+          });
+        }}
+      >
+        <TabsList aria-label={t("nav.classes")}>
+          <TabsTrigger value="all">{t("common.all")}</TabsTrigger>
+          <TabsTrigger value="course">{t("courses.kind.course")}</TabsTrigger>
+          <TabsTrigger value="study">{t("courses.kind.study")}</TabsTrigger>
+          <TabsTrigger value="club">{t("courses.kind.club")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={pageKind() ?? "all"} class="mt-4 space-y-4 border-0 bg-transparent p-0 shadow-none">
+          <section class="rounded-lg border border-border bg-card p-3 shadow-xs" aria-label={t("common.search")}>
+            <DataToolbar
+              inline
+              searchValue={search()}
+              searchPlaceholder={t("common.searchPlaceholder")}
+              onSearchInput={setSearch}
               filters={
-                <DropdownSelect
-                  labelPrefix={t("terms.term")}
-                  value={termFilter()}
-                  onChange={(val) => setTermFilter(val)}
-                  options={[
-                    { value: "all", label: t("common.all") },
-                    { value: "unassigned", label: t("terms.unassigned") },
-                    ...(terms() ?? []).map((term) => ({ value: term.id, label: term.name })),
-                  ]}
-                />
+                <Select wrapperClass="w-40 shrink-0 sm:w-52" class="h-9 rounded-md" aria-label={t("terms.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)}>
+                  <option value="all">{t("common.all")}</option>
+                  <option value="unassigned">{t("terms.unassigned")}</option>
+                  <For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+                </Select>
               }
             />
-          </div>
-        </Suspense>
-      </section>
+          </section>
+
+          <Suspense fallback={<PageSpinner />}>
+            <Show
+              when={!list.error}
+              fallback={<ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />}
+            >
+              <Show
+                when={filteredCourses().length > 0}
+                fallback={<EmptyState kind="courses" title={t("courses.empty", { item: kindLabel() })} />}
+              >
+                <div class={list.loading ? "space-y-2 opacity-60 transition-opacity" : "space-y-2 transition-opacity"}>
+                  <For each={visibleCourses()}>
+                    {(course) => (
+                      <CourseCard
+                        course={course}
+                        term={termName(course.term)}
+                        enrolled={auth.user()?.role === "student"}
+                        labels={{
+                          capacity: t("courses.capacity"),
+                          unlimited: t("courses.unlimited"),
+                          enrolled: t("courses.enrolled"),
+                          kind: course.kind === "study" ? t("courses.kind.study") : course.kind === "club" ? t("courses.kind.club") : t("courses.kind.course"),
+                        }}
+                      />
+                    )}
+                  </For>
+                </div>
+                <PaginationControls page={page()} totalPages={totalPages()} onPageChange={setPage} />
+              </Show>
+            </Show>
+          </Suspense>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

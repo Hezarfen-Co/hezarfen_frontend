@@ -118,6 +118,30 @@ describe("users API", () => {
     expect(init?.body).toBe(JSON.stringify(updates));
   });
 
+  it("patchMyPreferences sends palette_color to set the accent", async () => {
+    const mockUser = { id: "u1", palette_color: "#fefae0" };
+    mockFetchSuccess(mockUser);
+
+    const updates = { palette_color: "#fefae0" };
+    await patchMyPreferences(updates);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/users/me/preferences");
+    expect(init?.method).toBe("PATCH");
+    expect(init?.body).toBe(JSON.stringify(updates));
+  });
+
+  it("patchMyPreferences sends empty palette_color to clear the accent", async () => {
+    const mockUser = { id: "u1", palette_color: null };
+    mockFetchSuccess(mockUser);
+
+    const updates = { palette_color: "" };
+    await patchMyPreferences(updates);
+
+    const [, init] = lastFetchCall();
+    expect(init?.body).toBe(JSON.stringify({ palette_color: "" }));
+  });
+
   it("patchUserPreferences calls /users/:id/preferences", async () => {
     const mockUser = { id: "u1", language: "tr" };
     mockFetchSuccess(mockUser);

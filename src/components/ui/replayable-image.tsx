@@ -50,7 +50,7 @@ export function ReplayableImage(props: {
     <div class={cn("space-y-2", props.class)}>
       {/* local boundary: the lazy playback chunk must not suspend the page around it */}
       {/* min-h reserves the box while the chunk loads: imgClass alone can be height:auto → 0px */}
-      <Suspense fallback={<div class={cn("min-h-[16rem]", props.imgClass)} />}>
+      <Suspense fallback={<div class={cn("min-h-64", props.imgClass)} />}>
         <Show when={mode() === "playback" && scene()} fallback={<img src={props.src} alt={props.alt} class={props.imgClass} />}>
           {(s) => <DrawingPlayback scene={s()} canvasClass={props.imgClass} />}
         </Show>

@@ -63,6 +63,7 @@ export type ExamFormValues = {
   duration_ms: number | null;
   max_attempts: number;
   allow_rejoin: boolean;
+  allow_review: boolean;
   draft: boolean;
 };
 
@@ -80,6 +81,7 @@ export function ExamForm(props: {
   const [hasRetakes, setHasRetakes] = createSignal((props.initial?.max_attempts ?? 1) !== 1);
   const [maxAttempts, setMaxAttempts] = createSignal(String(props.initial?.max_attempts ?? 1));
   const [allowRejoin, setAllowRejoin] = createSignal(props.initial?.allow_rejoin ?? true);
+  const [allowReview, setAllowReview] = createSignal(props.initial?.allow_review ?? false);
   const [draft, setDraft] = createSignal(props.initial?.draft ?? false);
   const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
@@ -188,6 +190,7 @@ export function ExamForm(props: {
       duration_ms,
       max_attempts: hasRetakes() ? Number(maxAttempts()) : 1,
       allow_rejoin: allowRejoin(),
+      allow_review: allowReview(),
       draft: draft(),
     } satisfies ExamFormValues;
 
@@ -203,7 +206,7 @@ export function ExamForm(props: {
     <>
       <form class="space-y-4" onSubmit={handleSubmit}>
         {/* Section 1: Basic Info */}
-        <div class="space-y-3 rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-3 rounded-lg border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionBasic")}</h3>
           <div class="space-y-1.5">
             <Label for="exam-title">{t("form.title")}</Label>
@@ -238,7 +241,7 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 2: Mode & Schedule */}
-        <div class="space-y-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-3 rounded-lg border border-amber-500/15 bg-amber-500/3 p-4 shadow-xs">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionSchedule")}</h3>
           <div class="space-y-1.5">
             <Label for="exam-mode">{t("exams.mode")}</Label>
@@ -268,7 +271,7 @@ export function ExamForm(props: {
                 <div class="grid grid-cols-2 gap-2">
                   <DatePicker
                     id="exam-starts"
-                    class="h-11"
+                    class="h-9"
                     placeholder={t("form.datePlaceholder")}
                     value={startsDate()}
                     required
@@ -276,7 +279,7 @@ export function ExamForm(props: {
                   />
                   <Input
                     id="exam-starts-time"
-                    class="h-11 font-mono placeholder:text-muted-foreground/45"
+                    class="h-9 font-mono placeholder:text-muted-foreground/45"
                     inputMode="numeric"
                     placeholder="14:30"
                     pattern="[0-2][0-9]:[0-5][0-9]"
@@ -292,7 +295,7 @@ export function ExamForm(props: {
                 <div class="grid grid-cols-2 gap-2">
                   <DatePicker
                     id="exam-ends"
-                    class="h-11"
+                    class="h-9"
                     placeholder={t("form.datePlaceholder")}
                     value={endsDate()}
                     required
@@ -300,7 +303,7 @@ export function ExamForm(props: {
                   />
                   <Input
                     id="exam-ends-time"
-                    class="h-11 font-mono placeholder:text-muted-foreground/45"
+                    class="h-9 font-mono placeholder:text-muted-foreground/45"
                     inputMode="numeric"
                     placeholder="15:30"
                     pattern="[0-2][0-9]:[0-5][0-9]"
@@ -316,7 +319,7 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 3: Time Limit / Duration */}
-        <div class="space-y-3 rounded-2xl border border-indigo-500/15 bg-indigo-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-3 rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-4 shadow-xs">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionDuration")}</h3>
           <label class="flex items-center gap-2 text-sm font-medium">
             <input
@@ -336,7 +339,7 @@ export function ExamForm(props: {
                 type="number"
                 min={1}
                 max={1440}
-                class="mt-1.5 h-11 bg-background/60"
+                class="mt-1.5 h-9 bg-background/60"
                 placeholder="60"
                 value={durationMinutes()}
                 onInput={(e) => setDurationMinutes(e.currentTarget.value)}
@@ -346,7 +349,7 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 4: Participation & Attempts */}
-        <div class="space-y-3 rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.03] p-4 shadow-sm">
+        <div class="space-y-3 rounded-lg border border-emerald-500/15 bg-emerald-500/3 p-4 shadow-xs">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionAccess")}</h3>
 
           <div class="rounded-xl border bg-background/60 px-3 py-2">
@@ -392,6 +395,19 @@ export function ExamForm(props: {
             <div>
               <span class="font-medium">{t("exams.allowRejoin")}</span>
               <p class="text-xs font-normal text-muted-foreground">{t("exams.allowRejoinHelp")}</p>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-2 rounded-xl border bg-background/60 px-3 py-2 text-sm">
+            <input
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 shrink-0 rounded border-border"
+              checked={allowReview()}
+              onChange={(e) => setAllowReview(e.currentTarget.checked)}
+            />
+            <div>
+              <span class="font-medium">{t("exams.allowReview")}</span>
+              <p class="text-xs font-normal text-muted-foreground">{t("exams.allowReviewHelp")}</p>
             </div>
           </label>
 

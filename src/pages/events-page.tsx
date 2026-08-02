@@ -16,6 +16,7 @@ import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { cn } from "@/lib/cn";
+import { createNow } from "@/lib/create-now";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -48,14 +49,15 @@ function EventsContent() {
     }
   });
   const [timeFilter, setTimeFilter] = createSignal("all");
+  const now = createNow();
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
 
   const filterEvents = (items: Event[]) => {
     const scope = timeFilter();
-    const now = Date.now();
+    const nowMs = now();
     return items.filter((event) => {
-      if (scope === "upcoming" && event.ends_at != null && event.ends_at < now) return false;
-      if (scope === "past" && (event.ends_at == null || event.ends_at >= now)) return false;
+      if (scope === "upcoming" && event.ends_at != null && event.ends_at < nowMs) return false;
+      if (scope === "past" && (event.ends_at == null || event.ends_at >= nowMs)) return false;
       return true;
     });
   };
@@ -63,9 +65,9 @@ function EventsContent() {
   const [list, { refetch }] = createResource(async () => (await getEvents({ limit: 100 })).items);
   const rows = () => filterEvents(list() ?? []);
   const eventStatus = (event: Event) => {
-    const now = Date.now();
-    if (event.ends_at != null && event.ends_at < now) return "past";
-    if (event.starts_at != null && event.starts_at > now) return "upcoming";
+    const nowMs = now();
+    if (event.ends_at != null && event.ends_at < nowMs) return "past";
+    if (event.starts_at != null && event.starts_at > nowMs) return "upcoming";
     return "active";
   };
   const statusLabel = (status: string) => status === "past" ? t("events.past") : status === "upcoming" ? t("events.upcoming") : t("exams.active");
@@ -94,18 +96,18 @@ function EventsContent() {
       ),
     },
     {
-      id: "starts_at",
-      accessorFn: (event) => event.starts_at ?? 0,
+      id: "time",
+      accessorFn: (event) => event.starts_at ?? event.ends_at ?? 0,
       header: t("events.starts"),
       meta: { cellClass: "mono text-xs text-muted-foreground" },
-      cell: (cell) => formatDateTime(cell.row.original.starts_at, locale()),
-    },
-    {
-      id: "ends_at",
-      accessorFn: (event) => event.ends_at ?? 0,
-      header: t("events.ends"),
-      meta: { cellClass: "mono text-xs text-muted-foreground" },
-      cell: (cell) => formatDateTime(cell.row.original.ends_at, locale()),
+      cell: (cell) => (
+        <div class="whitespace-nowrap">
+          <p>{formatDateTime(cell.row.original.starts_at, locale())}</p>
+          <Show when={cell.row.original.ends_at}>
+            <p class="text-[11px]">→ {formatDateTime(cell.row.original.ends_at, locale())}</p>
+          </Show>
+        </div>
+      ),
     },
     {
       id: "audience",
@@ -183,7 +185,7 @@ function EventsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/[0.025] p-4">
+      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -193,7 +195,7 @@ function EventsContent() {
             description={t("events.subtitle")}
             actions={
               canCreate() ? (
-                <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowForm(true)}>
+                <Button type="button" size="sm" class="min-w-30" onClick={() => setShowForm(true)}>
                   <IconPlus class="h-4 w-4" />
                   {t("events.create")}
                 </Button>
@@ -201,11 +203,12 @@ function EventsContent() {
             }
             columns={columns()}
             data={rows()}
-            tableClass="table-fixed min-w-[58rem]"
+            tableClass="table-fixed min-w-232"
             searchPredicate={searchEvent}
             enablePagination
             pageSize={EVENT_PAGE_SIZE}
             empty={t("events.empty")}
+            storageKey="events"
             onRowClick={(event) => void navigate({ to: "/events/$id", params: { id: event.id } })}
             filters={
               <DropdownSelect

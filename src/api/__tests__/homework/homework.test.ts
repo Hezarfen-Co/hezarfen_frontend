@@ -37,6 +37,12 @@ describe("homework API", () => {
     expect(init?.method).toBe("GET");
   });
 
+  it("getHomework sends due_after", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getHomework({ limit: 1, due_after: 1_700_000_000_000 });
+    expect(lastFetchCall()[0]).toBe("/api/homework?limit=1&due_after=1700000000000");
+  });
+
   it("getHomeworkById calls /homework/:id", async () => {
     const mockHomework = { id: "hw1" };
     mockFetchSuccess(mockHomework);

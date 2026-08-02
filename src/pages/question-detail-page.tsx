@@ -98,7 +98,7 @@ function QuestionDetailContent() {
               <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <Button variant="link" class="px-0 h-auto text-muted-foreground mb-2" onClick={() => router.history.back()}>&larr; {t("common.back")}</Button>
-                  <h1 class="text-2xl font-bold font-display">{q().title}</h1>
+                  <h1 class="text-2xl font-semibold ">{q().title}</h1>
                   <div class="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                     <span>{personLabel(q().asker)}</span>
                     <span>&bull;</span>
@@ -123,7 +123,7 @@ function QuestionDetailContent() {
 
               {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
-              <div class="rounded-xl border bg-card p-6 shadow-sm">
+              <div class="rounded-xl border bg-card p-6 shadow-xs">
                 <p class="whitespace-pre-wrap text-foreground">{q().body}</p>
                 <Show when={q().image}>
                   <div class="mt-4 overflow-hidden rounded-lg border bg-muted/30 p-2">
@@ -140,7 +140,7 @@ function QuestionDetailContent() {
               <Show when={q().status === "approved"}>
                 <div class="mt-8">
                   <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold font-display">{t("pool.solutions")}</h2>
+                    <h2 class="text-xl font-semibold ">{t("pool.solutions")}</h2>
                     <Button variant="outline" onClick={() => setOfferOpen(true)}>
                       <IconMessage class="mr-2 h-4 w-4" />
                       {t("pool.offerSolution")}
@@ -352,7 +352,7 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
               {t("questions.draw")}
             </Button>
             <Show when={drawing()}>
-              <Suspense fallback={<div class="h-[22rem] animate-pulse rounded-lg border bg-muted/20" />}>
+              <Suspense fallback={<div class="h-88 animate-pulse rounded-lg border bg-muted/20" />}>
                 <DrawCanvas
                   fileName="solution.png"
                   onSave={(drawn) => {

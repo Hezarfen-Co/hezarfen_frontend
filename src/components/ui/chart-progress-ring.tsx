@@ -1,5 +1,6 @@
 import { For, Show, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
+import { useT } from "@/stores/preferences-context";
 
 export type ProgressRingSegment = {
   id: string;
@@ -19,12 +20,13 @@ export type ChartProgressRingProps = {
 };
 
 export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
+  const t = useT();
   const calculatedTotal = () => props.total ?? props.segments.reduce((acc, s) => acc + s.value, 0);
 
   return (
-    <div class={cn("flex flex-col gap-3.5 rounded-3xl border border-border/60 bg-card/60 p-4 sm:p-5 dark:border-white/[0.08] dark:bg-card/40 shadow-sm backdrop-blur-sm", props.class)}>
+    <div class={cn("flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm", props.class)}>
       <Show when={props.title}>
-        <div class="flex items-center justify-between gap-2 border-b border-border/40 pb-3">
+        <div class="border-b border-border pb-3">
           <div>
             <h3 class="text-sm font-semibold tracking-tight text-foreground">{props.title}</h3>
             <Show when={props.subtitle}>
@@ -37,15 +39,9 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
       <Show
         when={calculatedTotal() > 0}
         fallback={
-          <div class="flex flex-col items-center justify-center py-8 px-4 text-center">
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted/40 border border-border/50 text-muted-foreground/60 mb-2">
-              <svg class="h-5 w-5 stroke-[1.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
-              </svg>
-            </div>
-            <p class="text-xs font-semibold text-foreground/80">Kayıt Bulunamadı</p>
-            <p class="text-[11px] text-muted-foreground mt-0.5">Analiz için henüz yeterli veri eklenmedi</p>
+          <div class="px-4 py-8 text-center">
+            <p class="text-xs font-semibold text-foreground/80">{t("dashboard.chartEmpty")}</p>
+            <p class="text-[11px] text-muted-foreground mt-0.5">{t("dashboard.chartEmptyHint")}</p>
           </div>
         }
       >

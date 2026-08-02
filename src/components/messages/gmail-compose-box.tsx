@@ -81,11 +81,11 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
   return (
     <Show when={props.open}>
       <div
-        class="fixed bottom-0 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[560px] rounded-t-2xl border border-border/80 bg-card shadow-2xl transition-all duration-200"
+        class="fixed bottom-0 right-2 z-50 w-[calc(100vw-1rem)] rounded-t-lg border border-border/80 bg-card shadow-2xl transition-all duration-200 sm:right-6 sm:w-[560px]"
         style={{ "max-height": isMinimized() ? "44px" : "640px" }}
       >
         {/* Gmail Header */}
-        <div class="flex h-11 items-center justify-between border-b bg-muted/80 px-4 rounded-t-2xl">
+        <div class="flex h-9 items-center justify-between rounded-t-lg border-b bg-muted/80 px-4">
           <div class="flex items-center gap-2">
             <span class="h-2.5 w-2.5 rounded-full bg-primary" />
             <h3 class="text-xs font-bold text-foreground truncate max-w-[340px]">
@@ -179,7 +179,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
               <Button
                 type="submit"
                 size="sm"
-                class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-xs hover:bg-primary/90"
+                class="h-9 rounded-md bg-primary px-5 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                 disabled={pending()}
               >
                 <IconSend class="mr-2 h-4 w-4" />

@@ -24,17 +24,17 @@ function dismissToast(id: number) {
 export function Toaster() {
   return (
     <Portal>
-      <div class="pointer-events-none fixed inset-x-3 top-4 z-[80] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:w-96">
+      <div class="pointer-events-none fixed inset-x-3 top-4 z-80 flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:w-96">
         <For each={toasts()}>
           {(toast) => (
-            <div class="pointer-events-auto flex w-full items-center gap-3 rounded-xl border border-black/[0.08] bg-card/95 px-3.5 py-2.5 text-card-foreground shadow-apple backdrop-blur-xl dark:border-white/[0.12]">
+            <div class="pointer-events-auto flex w-full items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5 text-foreground shadow-lg">
               <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                 <IconCheck class="h-3.5 w-3.5" />
               </span>
               <p class="min-w-0 flex-1 text-xs font-medium leading-relaxed">{toast.title}</p>
               <button
                 type="button"
-                class={cn("inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")}
+                class={cn("inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-[0.96] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring")}
                 aria-label="Dismiss"
                 onClick={() => dismissToast(toast.id)}
               >

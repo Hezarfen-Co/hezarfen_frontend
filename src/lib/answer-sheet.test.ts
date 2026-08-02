@@ -10,8 +10,8 @@ function question(id: string, overrides: Partial<ExamQuestion> = {}): ExamQuesti
     text: `Question ${id}`,
     kind: "choice",
     points: 10,
-    choices: ["a", "b"],
-    correct: 0,
+    choices: [{ id: "cA", text: "a" }, { id: "cB", text: "b" }],
+    correct: "cA",
     ...overrides,
   };
 }
@@ -19,7 +19,7 @@ function question(id: string, overrides: Partial<ExamQuestion> = {}): ExamQuesti
 function answer(questionId: string, overrides: Partial<StudentAnswer> = {}): StudentAnswer {
   return {
     question: questionId,
-    selected: 0,
+    selected: "cA",
     text: null,
     updated_at: 1,
     is_correct: true,
@@ -30,11 +30,11 @@ function answer(questionId: string, overrides: Partial<StudentAnswer> = {}): Stu
 test("pairs each question with its answer by id, keeping question order", () => {
   const rows = joinAnswerSheet(
     [question("q1"), question("q2")],
-    [answer("q2", { selected: 1, is_correct: false }), answer("q1")],
+    [answer("q2", { selected: "cB", is_correct: false }), answer("q1")],
   );
   expect(rows.map((r) => r.question.id)).toEqual(["q1", "q2"]);
   expect(rows[0].answer?.is_correct).toBe(true);
-  expect(rows[1].answer?.selected).toBe(1);
+  expect(rows[1].answer?.selected).toBe("cB");
 });
 
 test("unanswered question yields a null answer", () => {

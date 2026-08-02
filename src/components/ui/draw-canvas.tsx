@@ -15,8 +15,25 @@ const ZOOM_STEP = 1.25;
 const EXPORT_MARGIN = 8;
 // Floating glass overlays that live inside the canvas, matching the bottom-right
 // zoom control. Position/size utilities are appended per overlay via cn().
-const OVERLAY_CARD = "absolute z-10 flex gap-1.5 rounded-lg border bg-card/90 p-1.5 shadow-sm backdrop-blur-sm";
+const OVERLAY_CARD = "absolute z-10 flex gap-1.5 rounded-lg border bg-card/90 p-1.5 shadow-xs backdrop-blur-xs";
 const OVERLAY_BTN = "flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
+// Per-tool canvas cursors. Pen uses the built-in crosshair; the eraser is a
+// lucide-eraser SVG data-URI (black glyph on a white halo so it stays visible
+// over any stroke colour), hotspot centred on the block. Pan falls back to
+// grab/grabbing in the reactive cursor() below.
+// Halo-under-glyph cursor: draw each lucide path once thick-white for contrast,
+// then thin-black on top, baked into ONE svg (a cursor value list only picks the
+// first url, it can't composite two). Hotspot is per glyph — pen at its writing
+// tip, eraser at its centre.
+const haloCursor = (glyph: string, hx: number, hy: number) =>
+  `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23fff' stroke-width='4'%3E${glyph}%3C/g%3E%3Cg stroke='%23000' stroke-width='2'%3E${glyph}%3C/g%3E%3C/svg%3E") ${hx} ${hy}`;
+// lucide "pencil" — nib points to bottom-left, so the hotspot rides its tip.
+const PEN_GLYPH =
+  "%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E";
+const PEN_CURSOR = `${haloCursor(PEN_GLYPH, 3, 21)}, crosshair`;
+const ERASER_GLYPH =
+  "%3Cpath d='m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21'/%3E%3Cpath d='M22 21H7'/%3E%3Cpath d='m5 11 9 9'/%3E";
+const ERASER_CURSOR = `${haloCursor(ERASER_GLYPH, 12, 12)}, crosshair`;
 
 /**
  * Freehand drawing pad. `props.onSave` receives a PNG `File` that both displays
@@ -50,6 +67,8 @@ export function DrawCanvas(props: {
   // The pad is unbounded — strokes live in world coords; pan is the world→screen
   // offset in CSS px so you can move around a drawing larger than the viewport.
   const [pan, setPan] = createSignal({ x: 0, y: 0 });
+  // Reactive flag for an in-progress pan drag, so the pan cursor flips grab→grabbing.
+  const [panning, setPanning] = createSignal(false);
   // View-only magnification: screenCSS = world * zoom + pan. Strokes stay in world
   // px, so stroke widths scale with the transform — never multiply them by hand.
   const [zoom, setZoom] = createSignal(1);
@@ -71,6 +90,15 @@ export function DrawCanvas(props: {
     if (hand()) return "pan";
     if (erasing()) return "erase";
     return "pen";
+  };
+
+  // Canvas cursor mirrors the active tool: pen → crosshair, eraser → its glyph,
+  // pan → grab (grabbing mid-drag). Set inline so all three read from one place.
+  const cursor = () => {
+    const tool = activeTool();
+    if (tool === "pan") return panning() ? "grabbing" : "grab";
+    if (tool === "erase") return ERASER_CURSOR;
+    return PEN_CURSOR;
   };
 
   const redraw = () => {
@@ -187,6 +215,7 @@ export function DrawCanvas(props: {
       if (e.button === 1) setOverride("pan"); // transient middle-button pan
       const p = pan();
       panStart = { x: e.clientX, y: e.clientY, px: p.x, py: p.y };
+      setPanning(true);
       return;
     }
     // Right button (2) forces an erase stroke regardless of the selected tool.
@@ -216,6 +245,7 @@ export function DrawCanvas(props: {
     setOverride(null);
     if (panStart) {
       panStart = undefined;
+      setPanning(false);
       return;
     }
     const done = current;
@@ -324,7 +354,7 @@ export function DrawCanvas(props: {
     cn(
       "flex h-11 w-11 items-center justify-center rounded-lg border transition-colors",
       active
-        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+        ? "border-primary bg-primary text-primary-foreground shadow-xs"
         : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
     );
 
@@ -365,11 +395,11 @@ export function DrawCanvas(props: {
 
   return (
     <div class={cn("space-y-3", props.class)}>
-      <div ref={wrap} class="relative h-[26rem] overflow-hidden rounded-lg border bg-white shadow-inner sm:h-[30rem]" style={paperStyle()}>
+      <div ref={wrap} class="relative h-104 overflow-hidden rounded-lg border bg-white shadow-inner sm:h-120" style={paperStyle()}>
         <canvas
           ref={canvas}
           class="h-full w-full touch-none"
-          classList={{ "cursor-grab": activeTool() === "pan" }}
+          style={{ cursor: cursor() }}
           onMouseDown={(e) => {
             // preventDefault in pointerdown does not stop the middle-click autoscroll widget.
             if (e.button === 1) e.preventDefault();
@@ -591,7 +621,7 @@ export function DrawCanvas(props: {
           </button>
         </div>
 
-        <div class="absolute bottom-2 right-2 z-10 flex flex-col divide-y divide-border overflow-hidden rounded-lg border bg-card/90 shadow-sm backdrop-blur-sm">
+        <div class="absolute bottom-2 right-2 z-10 flex flex-col divide-y divide-border overflow-hidden rounded-lg border bg-card/90 shadow-xs backdrop-blur-xs">
           <button
             type="button"
             class="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

@@ -11,6 +11,7 @@ export type PatchExamBody = {
   duration_ms?: number | null;
   max_attempts?: number | null;
   allow_rejoin?: boolean | null;
+  allow_review?: boolean | null;
   draft?: boolean | null;
 };
 

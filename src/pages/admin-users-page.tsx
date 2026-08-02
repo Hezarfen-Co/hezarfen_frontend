@@ -1,18 +1,15 @@
+import { useNavigate } from "@tanstack/solid-router";
 import { For, Show, Suspense, createResource, createSignal } from "solid-js";
 import { getUsers } from "@/api/users";
-import { patchUserProfile } from "@/api/users";
 import { patchUserRole } from "@/api/users";
 import { formatApiError } from "@/api/client";
 import type { Role, User } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
-import { ProfileForm } from "@/components/users/profile-form";
 import { UserTable } from "@/components/users/user-table";
 import { ParentStudentsPanel } from "@/components/users/parent-students-panel";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { DataTableEmpty, DataTableSkeleton } from "@/components/ui/data-table";
-import { FormDialog } from "@/components/ui/form-dialog";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { createFlash } from "@/lib/flash";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -29,9 +26,9 @@ export default function AdminUsersPage() {
 
 function AdminUsersContent() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const t = useT();
   const [error, setError] = createSignal("");
-  const [editUser, setEditUser] = createSignal<User | null>(null);
   const [selectedParent, setSelectedParent] = createSignal<User | null>(null);
 
   const [list, { refetch }] = createResource(async () => (await getUsers({ limit: 200 })).items);
@@ -54,7 +51,7 @@ function AdminUsersContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <PageHeader accent="violet" eyebrow={t("nav.users")} title={t("admin.title")} description={t("admin.subtitle")} />
+        <PageHeader eyebrow={t("nav.users")} title={t("admin.title")} description={t("admin.subtitle")} />
       </div>
 
       <Show when={flash()}>
@@ -66,48 +63,19 @@ function AdminUsersContent() {
         <For each={ROLES}>{(role) => <Metric role={role} label={t(`role.${role}` as MessageKey)} value={roleCount(role)} />}</For>
       </section>
 
-      <div class="data-shell space-y-4 border-violet-500/15 bg-violet-500/[0.025] p-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="font-display text-lg font-semibold">{t("nav.users")}</h2>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {visibleUsers().length}
-            </p>
-          </div>
-          <Badge variant="outline" class="mono rounded-full uppercase tracking-[0.08em]">
-            {t("admin.directory")}
-          </Badge>
-        </div>
+      <div class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list()}>
-            <Show when={visibleUsers().length > 0} fallback={<DataTableEmpty>{t("admin.noUsers")}</DataTableEmpty>}>
-              <UserTable 
-                users={visibleUsers() as User[]} 
-                currentUserId={auth.user()!.id} 
-                onRoleChange={onRoleChange} 
-                onUserClick={setEditUser}
-                onParentClick={setSelectedParent}
-              />
-            </Show>
+            <UserTable
+              users={visibleUsers() as User[]}
+              currentUserId={auth.user()!.id}
+              onRoleChange={onRoleChange}
+              onUserClick={(user) => navigate({ to: "/admin/users/$id", params: { id: user.id } })}
+              onParentClick={setSelectedParent}
+            />
           </Show>
         </Suspense>
       </div>
-      <Show when={editUser()} keyed>
-        {(user) => (
-          <FormDialog open onOpenChange={(open) => !open && setEditUser(null)} title={user.username} description={t("profile.subtitle")}>
-            <ProfileForm
-              user={user}
-              onSave={(body) => patchUserProfile(user.id, body)}
-              onSaved={async () => {
-                await refetch();
-                setEditUser(null);
-                setFlash(t("common.saved"));
-              }}
-            />
-          </FormDialog>
-        )}
-      </Show>
-
       <Show when={selectedParent()} keyed>
         {(u) => (
           <ParentStudentsPanel 
@@ -121,17 +89,9 @@ function AdminUsersContent() {
   );
 }
 
-const ROLE_METRIC_TONE: Record<Role, string> = {
-  student: "border-sky-500/20 bg-sky-500/[0.03]",
-  parent: "border-violet-500/20 bg-violet-500/[0.03]",
-  teacher: "border-emerald-500/20 bg-emerald-500/[0.03]",
-  manager: "border-amber-500/20 bg-amber-500/[0.03]",
-  admin: "border-rose-500/20 bg-rose-500/[0.03]",
-};
-
 function Metric(props: { role: Role; label: string; value: number }) {
   return (
-    <article class={`data-shell p-4 ${ROLE_METRIC_TONE[props.role]}`}>
+    <article class="data-shell p-4">
       <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{props.label}</p>
       <p class="mono mt-2 text-2xl font-semibold tabular-nums">{props.value}</p>
     </article>

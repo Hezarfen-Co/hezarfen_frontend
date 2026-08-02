@@ -17,8 +17,8 @@ export function PopoverContent<T extends ValidComponent = "div">(
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         class={cn(
-          "z-50 rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-popover/95 backdrop-blur-xl p-2 text-popover-foreground shadow-apple outline-none",
-          "origin-[var(--kb-popover-content-transform-origin)] animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
+          "z-50 w-72 rounded-md border border-border/80 bg-popover p-4 text-popover-foreground shadow-xl shadow-black/10 outline-hidden",
+          "origin-(--kb-popover-content-transform-origin) animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,
         )}
         {...rest}
