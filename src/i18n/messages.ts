@@ -107,6 +107,7 @@ export type MessageKey =
   | "nav.group.reports"
   | "nav.group.settings"
   | "nav.group.community"
+  | "nav.group.services"
   | "nav.darkMode"
   | "rightPanel.messagesTitle"
   | "rightPanel.calendarTitle"
@@ -1370,6 +1371,7 @@ const en: Dict = {
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
   "nav.group.community": "Community",
+  "nav.group.services": "Services",
   "nav.darkMode": "Dark mode",
   "nav.myStudents": "My Students",
   "parents.title": "My Students",
@@ -2638,6 +2640,7 @@ const tr: Dict = {
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
   "nav.group.community": "Topluluk",
+  "nav.group.services": "Hizmetler",
   "nav.darkMode": "Karanlık mod",
   "nav.myStudents": "Öğrencilerim",
   "parents.title": "Öğrencilerim",
