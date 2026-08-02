@@ -6,6 +6,7 @@ import { deleteCourseEnrollmentByUserId } from "@/api/courses";
 import { getCourseById } from "@/api/courses";
 import { getCourseEnrollments } from "@/api/courses";
 import { getCourseExams } from "@/api/courses";
+import { getClasses } from "@/api/classes";
 import { getMyCourses } from "@/api/reports";
 import { getSettings } from "@/api/settings";
 import { getTerms } from "@/api/terms";
@@ -159,13 +160,25 @@ function CourseDetailContent() {
   const countDescription = (count: number, item: string) => t("common.countItem", { count, item });
 
   const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
+  // Resolve a pumped enrollment's `source` (class id) to a class name so a
+  // manager can see which rows a class change will sweep. One list call,
+  // teacher+ only (matches roster visibility); null-source rows show nothing.
+  const [classList] = createResource(() => hasCourseManagementRights() ? getClasses().then((page) => page.items) : null);
+  const className = (source: string | null) => source ? (classList.latest?.find((c) => c.id === source)?.name ?? null) : null;
   const rosterColumns = createMemo<ColumnDef<Enrollment>[]>(() => [
     {
       id: "username",
       accessorFn: (row) => row.user.display_name || row.user.username,
       header: t("admin.username"),
       meta: { cellClass: "font-medium" },
-      cell: (cell) => cell.row.original.user.display_name || cell.row.original.user.username,
+      cell: (cell) => (
+        <span class="flex items-center gap-2">
+          {cell.row.original.user.display_name || cell.row.original.user.username}
+          <Show when={className(cell.row.original.source)}>
+            {(name) => <Badge variant="secondary" class="rounded-full text-xs font-normal">{t("course.fromClass", { name: name() })}</Badge>}
+          </Show>
+        </span>
+      ),
     },
     {
       id: "actions",

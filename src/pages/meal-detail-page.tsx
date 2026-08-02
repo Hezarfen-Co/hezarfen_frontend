@@ -86,6 +86,9 @@ function MealDetailContent() {
   const [success, setSuccess] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [cancelOpen, setCancelOpen] = createSignal(false);
+  // Manager-only: cancel any student's booking from the service list (backend
+  // lets manager+ bypass the cutoff). Holds the booking pending confirmation.
+  const [cancelBooking, setCancelBooking] = createSignal<MealBooking | null>(null);
   const [deleteMenuOpen, setDeleteMenuOpen] = createSignal(false);
   const [deleteDish, setDeleteDish] = createSignal<MealDish | null>(null);
 
@@ -247,7 +250,7 @@ function MealDetailContent() {
                 </div>
                 <Show when={serviceAttendance.error || serviceBookings.error}><ErrorAlert message={formatApiError(serviceAttendance.error || serviceBookings.error)} onRetry={() => void refetchService()} /></Show>
                 <div class="space-y-2">
-                  <For each={serviceEntries()}>{(entry) => <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-3"><div><p class="font-medium">{personLabel(entry.student)}</p><p class="text-xs text-muted-foreground">{entry.booking ? t("meals.booked") : t("meals.walkIn")} · {entry.attendance?.status ?? t("meals.notMarked")}</p></div><div class="flex gap-2"><Button size="sm" variant={entry.attendance?.status === "served" ? "default" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "served"); await refetchService(); })}>{t("meals.served")}</Button><Button size="sm" variant={entry.attendance?.status === "missed" ? "destructive" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "missed"); await refetchService(); })}>{t("meals.missed")}</Button></div></div>}</For>
+                  <For each={serviceEntries()}>{(entry) => <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-3"><div><p class="font-medium">{personLabel(entry.student)}</p><p class="text-xs text-muted-foreground">{entry.booking ? t("meals.booked") : t("meals.walkIn")} · {entry.attendance?.status ?? t("meals.notMarked")}</p></div><div class="flex gap-2"><Button size="sm" variant={entry.attendance?.status === "served" ? "default" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "served"); await refetchService(); })}>{t("meals.served")}</Button><Button size="sm" variant={entry.attendance?.status === "missed" ? "destructive" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "missed"); await refetchService(); })}>{t("meals.missed")}</Button><Show when={canManage() && entry.booking?.status === "booked"}><Button size="sm" variant="ghost" class="text-destructive" onClick={() => setCancelBooking(entry.booking)}>{t("meals.cancelBooking")}</Button></Show></div></div>}</For>
                 </div>
               </TabsContent>
 
@@ -272,6 +275,7 @@ function MealDetailContent() {
             </Tabs>
 
             <ConfirmDialog open={cancelOpen()} onOpenChange={setCancelOpen} title={t("meals.cancelBooking")} variant="destructive" summary={t("meals.cancelSummary")} onConfirm={() => run(async () => { const booking = activeBooking(); if (!booking) return; await deleteMealBookingById(booking.id); await Promise.all([refetchBookings(), refetchBalance(), refetchLedger()]); }, t("meals.cancelled"))} />
+            <ConfirmDialog open={cancelBooking() !== null} onOpenChange={(open) => !open && setCancelBooking(null)} title={t("meals.cancelBooking")} variant="destructive" summary={cancelBooking() ? `${t("meals.cancelSummary")} · ${personLabel(cancelBooking()!.student)}` : ""} onConfirm={() => run(async () => { const booking = cancelBooking(); if (!booking) return; await deleteMealBookingById(booking.id); setCancelBooking(null); await Promise.all([refetchService(), refetchServiceBookings()]); }, t("meals.cancelled"))} />
             <ConfirmDialog open={deleteMenuOpen()} onOpenChange={setDeleteMenuOpen} title={t("meals.deleteMenu")} variant="destructive" summary={`${current().date} · ${current().slot}`} onConfirm={() => run(async () => { await deleteMealMenuById(id()); void navigate({ to: "/meals" }); }, t("common.deleted"))} />
             <ConfirmDialog open={deleteDish() !== null} onOpenChange={(open) => !open && setDeleteDish(null)} title={t("meals.deleteDish")} variant="destructive" summary={deleteDish()?.name ?? ""} onConfirm={() => run(async () => { if (!deleteDish()) return; await deleteMealDishById(deleteDish()!.id); setDeleteDish(null); await refetchMenu(); }, t("common.deleted"))} />
 

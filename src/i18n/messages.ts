@@ -875,6 +875,7 @@ export type MessageKey =
   | "ws.error"
   | "ws.ping"
   | "course.removeStudent"
+  | "course.fromClass"
   | "course.removeStudentConfirm"
   | "events.userIdRequired"
   | "settings.title"
@@ -2211,6 +2212,7 @@ const en: Dict = {
   "ws.error": "Connection error",
   "ws.ping": "Ping",
   "course.removeStudent": "Remove student",
+  "course.fromClass": "from {name}",
   "course.removeStudentConfirm": "Are you sure you want to remove",
   "events.userIdRequired": "Please select a student first.",
   "settings.title": "School settings",
@@ -3473,6 +3475,7 @@ const tr: Dict = {
   "ws.error": "Bağlantı hatası",
   "ws.ping": "Ping",
   "course.removeStudent": "Öğrenciyi çıkar",
+  "course.fromClass": "{name} şubesinden",
   "course.removeStudentConfirm": "Bu öğrenciyi çıkarmak istediğine emin misin?",
   "events.userIdRequired": "Önce bir öğrenci seçmelisin.",
   "settings.title": "Okul ayarları",
