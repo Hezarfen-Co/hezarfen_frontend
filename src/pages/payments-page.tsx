@@ -19,8 +19,8 @@ import {
   type PaymentLine,
   type StatementEntry,
 } from "@/api/payments";
-import { getUserById, getUsers } from "@/api/users";
-import { formatApiError, type User } from "@/api/client";
+import { getUserSearch } from "@/api/users";
+import { formatApiError, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -71,7 +71,7 @@ function dateInputToMs(value: string): number | null {
 }
 
 type LineAction = { line: PaymentLine; kind: "refund" | "reverse" };
-type PaymentStudentRow = User & { balance_minor: number | null };
+type PaymentStudentRow = PersonRef & { balance_minor: number | null };
 
 export default function PaymentsPage() {
   return (
@@ -93,27 +93,32 @@ function PaymentsContent() {
   const [pending, setPending] = createSignal(false);
 
   // ============================ Collection ============================
-  const [selectedStudent, setSelectedStudent] = createSignal<User | null>(null);
+  const [selectedStudent, setSelectedStudent] = createSignal<PersonRef | null>(null);
   const routeStudentId = createMemo(() => {
     const prefix = "/management/payments/";
     return location().pathname.startsWith(prefix) ? decodeURIComponent(location().pathname.slice(prefix.length)) : null;
   });
-  const [routeStudent] = createResource(routeStudentId, (userId) => getUserById(userId));
+  // `GET /users` and `GET /users/{id}` are admin-only on the backend, so a
+  // manager (the page's actual minimum role) 403'd the moment either fired —
+  // `/users/search` is teacher+, and a blank query with `role` set lists the
+  // whole role, which is exactly the roster this table needs. The route's
+  // student (deep link from `/management/payments/$userId`) is resolved from
+  // that same roster instead of a second per-id fetch, since there is no
+  // non-admin "read one user" endpoint to fall back on.
+  const [students, { refetch: refetchStudents }] = createResource(async () =>
+    (await getUserSearch("", undefined, "student", { limit: 500 })).items,
+  );
+  const studentList = () => students() ?? [];
   createEffect(() => {
     const routeId = routeStudentId();
     if (!routeId) {
       setSelectedStudent(null);
       return;
     }
-    if (routeStudent()?.id === routeId) setSelectedStudent(routeStudent()!);
+    const match = studentList().find((user) => user.id === routeId);
+    if (match) setSelectedStudent(match);
   });
   const student = () => selectedStudent()?.id ?? "";
-  const studentLabel = (user: User) => `${user.name ?? ""} ${user.surname ?? ""}`.trim() || user.username;
-
-  const [students, { refetch: refetchStudents }] = createResource(async () =>
-    (await getUsers({ limit: 500 })).items.filter((user) => user.role === "student"),
-  );
-  const studentList = () => students() ?? [];
 
   // Filter the student list by fee plan (via that plan's assignment roster).
   const [planFilter, setPlanFilter] = createSignal("");
@@ -134,7 +139,7 @@ function PaymentsContent() {
     const query = studentQuery().trim().toLocaleLowerCase(locale());
     if (!query) return filteredStudents();
     return filteredStudents().filter((user) =>
-      [studentLabel(user), user.username, user.email, user.id]
+      [personLabel(user), user.username, user.id]
         .join(" ")
         .toLocaleLowerCase(locale())
         .includes(query),
@@ -172,7 +177,7 @@ function PaymentsContent() {
     {
       id: "name",
       header: t("payments.student"),
-      cell: (cell) => <span class="font-medium">{studentLabel(cell.row.original)}</span>,
+      cell: (cell) => <span class="font-medium">{personLabel(cell.row.original)}</span>,
     },
     {
       accessorKey: "username",
@@ -560,7 +565,7 @@ function PaymentsContent() {
             {(current) => (<>
             <div class="flex items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold">{studentLabel(current())}</h2>
+                <h2 class="text-lg font-semibold">{personLabel(current())}</h2>
                 <p class="text-sm text-muted-foreground">@{current().username}</p>
               </div>
               <Button variant="outline" size="sm" class="rounded-lg" onClick={() => navigate({ to: "/management/payments" })}>
