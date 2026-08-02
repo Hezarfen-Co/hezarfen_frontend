@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "@tanstack/solid-router";
-import { For, Index, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Index, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
   deletePaymentPlanById,
@@ -98,60 +98,71 @@ function PaymentsContent() {
     const prefix = "/management/payments/";
     return location().pathname.startsWith(prefix) ? decodeURIComponent(location().pathname.slice(prefix.length)) : null;
   });
-  // `GET /users` and `GET /users/{id}` are admin-only on the backend, so a
-  // manager (the page's actual minimum role) 403'd the moment either fired —
-  // `/users/search` is teacher+, and a blank query with `role` set lists the
-  // whole role, which is exactly the roster this table needs. The route's
-  // student (deep link from `/management/payments/$userId`) is resolved from
-  // that same roster instead of a second per-id fetch, since there is no
-  // non-admin "read one user" endpoint to fall back on.
-  const [students, { refetch: refetchStudents }] = createResource(async () =>
-    (await getUserSearch("", undefined, "student", { limit: 500 })).items,
+  const student = () => selectedStudent()?.id ?? "";
+
+  const [planFilter, setPlanFilter] = createSignal("");
+  const [studentQuery, setStudentQuery] = createSignal("");
+  // Debounced so typing doesn't fire a search request per keystroke.
+  const [debouncedQuery, setDebouncedQuery] = createSignal("");
+  let queryTimer: ReturnType<typeof setTimeout> | undefined;
+  createEffect(() => {
+    const q = studentQuery();
+    clearTimeout(queryTimer);
+    queryTimer = setTimeout(() => setDebouncedQuery(q.trim()), 300);
+  });
+  onCleanup(() => clearTimeout(queryTimer));
+
+  const [studentPage, setStudentPage] = createSignal(0);
+  const [studentPageSize, setStudentPageSize] = createSignal(STUDENT_PAGE_SIZE);
+  // Reset to page 1 whenever the query or plan filter changes underneath it.
+  createEffect(() => {
+    debouncedQuery();
+    planFilter();
+    setStudentPage(0);
+  });
+
+  // `GET /users` is admin-only on the backend (this page is manager+), and a
+  // full-roster fetch doesn't scale past a few hundred students anyway — so
+  // this is server-side paged search (`/users/search`, teacher+; a blank
+  // query with `role` set lists the whole role) rather than one big fetch
+  // filtered/paged in memory. A plan filter is the one case with no matching
+  // search+membership endpoint on the backend, so that path instead reads the
+  // (already name-resolved) plan roster and filters/pages it client-side —
+  // a plan's assignees are a small, bounded list on their own.
+  const [studentsPage, { refetch: refetchStudents }] = createResource(
+    () => ({ plan: planFilter(), q: debouncedQuery(), page: studentPage(), size: studentPageSize(), loc: locale() }),
+    async ({ plan, q, page, size, loc }): Promise<{ items: PersonRef[]; total: number }> => {
+      if (plan) {
+        const assignments = await getPlanAssignments(plan, { limit: 500 });
+        const needle = q.toLocaleLowerCase(loc);
+        const all = assignments.items
+          .map((row) => row.student)
+          .filter((user) => !needle || [personLabel(user), user.username, user.id].join(" ").toLocaleLowerCase(loc).includes(needle));
+        const start = page * size;
+        return { items: all.slice(start, start + size), total: all.length };
+      }
+      return getUserSearch(q, undefined, "student", { limit: size, offset: page * size });
+    },
   );
-  const studentList = () => students() ?? [];
+  const pagedStudents = () => studentsPage()?.items ?? [];
+  const studentsTotal = () => studentsPage()?.total ?? 0;
+
   createEffect(() => {
     const routeId = routeStudentId();
     if (!routeId) {
       setSelectedStudent(null);
       return;
     }
-    const match = studentList().find((user) => user.id === routeId);
-    if (match) setSelectedStudent(match);
-  });
-  const student = () => selectedStudent()?.id ?? "";
-
-  // Filter the student list by fee plan (via that plan's assignment roster).
-  const [planFilter, setPlanFilter] = createSignal("");
-  const [filterAssignments] = createResource(
-    () => planFilter() || null,
-    (planId) => getPlanAssignments(planId, { limit: 500 }),
-  );
-  const filteredStudents = createMemo(() => {
-    const all = studentList();
-    if (!planFilter()) return all;
-    const ids = new Set((filterAssignments()?.items ?? []).map((row) => row.student.id));
-    return all.filter((user) => ids.has(user.id));
-  });
-  const [studentQuery, setStudentQuery] = createSignal("");
-  const [studentPage, setStudentPage] = createSignal(0);
-  const [studentPageSize, setStudentPageSize] = createSignal(STUDENT_PAGE_SIZE);
-  const searchedStudents = createMemo(() => {
-    const query = studentQuery().trim().toLocaleLowerCase(locale());
-    if (!query) return filteredStudents();
-    return filteredStudents().filter((user) =>
-      [personLabel(user), user.username, user.id]
-        .join(" ")
-        .toLocaleLowerCase(locale())
-        .includes(query),
-    );
-  });
-  const pagedStudents = createMemo(() => {
-    const start = studentPage() * studentPageSize();
-    return searchedStudents().slice(start, start + studentPageSize());
-  });
-  createEffect(() => {
-    const lastPage = Math.max(0, Math.ceil(searchedStudents().length / studentPageSize()) - 1);
-    if (studentPage() > lastPage) setStudentPage(lastPage);
+    const match = pagedStudents().find((user) => user.id === routeId);
+    if (match) {
+      setSelectedStudent(match);
+      return;
+    }
+    // A direct visit/refresh on /management/payments/$userId whose student
+    // isn't on the currently loaded page — there's no non-admin "read one
+    // user" endpoint to resolve a name from, so fall back to the id itself.
+    // The statement/balance/ledger reads below only need the id to work.
+    setSelectedStudent((prev) => (prev?.id === routeId ? prev : { id: routeId, username: routeId, display_name: null }));
   });
 
   // The backend has no bulk balance endpoint. Fetch only the visible page so
@@ -521,10 +532,10 @@ function PaymentsContent() {
             fallback={
               <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
               <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-                <Show when={students.error}>
-                  <ErrorAlert message={formatApiError(students.error)} onRetry={() => void refetchStudents()} />
+                <Show when={studentsPage.error}>
+                  <ErrorAlert message={formatApiError(studentsPage.error)} onRetry={() => void refetchStudents()} />
                 </Show>
-                <Show when={studentList().length > 0} fallback={<EmptyState title={t("payments.selectStudent")} />}>
+                <Show when={pagedStudents().length > 0} fallback={<EmptyState title={t("payments.selectStudent")} />}>
                   <DataTable
                     columns={studentColumns()}
                     data={paymentStudentRows() ?? []}
@@ -549,7 +560,7 @@ function PaymentsContent() {
                     manualPagination={{
                       pageIndex: studentPage(),
                       pageSize: studentPageSize(),
-                      total: searchedStudents().length,
+                      total: studentsTotal(),
                       onPageChange: setStudentPage,
                       onPageSizeChange: (size) => {
                         setStudentPageSize(size);
