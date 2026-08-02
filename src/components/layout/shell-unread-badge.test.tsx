@@ -84,7 +84,7 @@ test("dismiss all clears the badge, a later message raises it again", () => {
 
   expect(badges()).toEqual(["9+"]);
 
-  fireEvent.click(screen.getByTitle("Tüm Bildirimleri Temizle"));
+  fireEvent.click(screen.getByTitle("Clear all"));
   expect(badges()).toEqual([]);
 
   // A genuinely new message pushes the oldest listed one off the page.

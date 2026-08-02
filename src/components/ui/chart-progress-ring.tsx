@@ -1,5 +1,6 @@
-import { For, Show, type Component } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useT } from "@/stores/preferences-context";
 
 export type ProgressRingSegment = {
@@ -17,11 +18,28 @@ export type ChartProgressRingProps = {
   segments: ProgressRingSegment[];
   total?: number;
   class?: string;
+  /** When set and segments.length exceeds it, the legend is paged with Prev/Next controls. */
+  itemsPerPage?: number;
 };
 
 export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
   const t = useT();
+  const [pageIndex, setPageIndex] = createSignal(0);
+  // The gauge bar above always renders every segment's share of the total —
+  // only the legend cards below it are paged.
   const calculatedTotal = () => props.total ?? props.segments.reduce((acc, s) => acc + s.value, 0);
+
+  const pageCount = createMemo(() =>
+    props.itemsPerPage ? Math.max(1, Math.ceil(props.segments.length / props.itemsPerPage)) : 1,
+  );
+  createEffect(() => {
+    if (pageIndex() >= pageCount()) setPageIndex(Math.max(0, pageCount() - 1));
+  });
+  const visibleSegments = createMemo(() => {
+    if (!props.itemsPerPage) return props.segments;
+    const start = pageIndex() * props.itemsPerPage;
+    return props.segments.slice(start, start + props.itemsPerPage);
+  });
 
   return (
     <div class={cn("flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm", props.class)}>
@@ -76,7 +94,7 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
 
           {/* Legend Grid */}
           <div class="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-2">
-            <For each={props.segments}>
+            <For each={visibleSegments()}>
               {(segment) => (
                 <div class="flex items-center justify-between rounded-xl border border-border/40 bg-muted/30 px-3 py-2 text-xs">
                   <div class="flex items-center gap-2 truncate">
@@ -88,6 +106,16 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
               )}
             </For>
           </div>
+
+          <Show when={props.itemsPerPage && pageCount() > 1}>
+            <TablePagination
+              pageIndex={pageIndex()}
+              pageCount={pageCount()}
+              pageSize={props.itemsPerPage!}
+              total={props.segments.length}
+              onPageChange={setPageIndex}
+            />
+          </Show>
         </div>
       </Show>
     </div>

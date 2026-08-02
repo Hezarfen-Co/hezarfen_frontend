@@ -704,7 +704,7 @@ function ExamDetailContent() {
                       </Button>
                     </div>
                   </div>
-                  <Suspense fallback={<PageSpinner />}>
+                  <Suspense fallback={<DataTableSkeleton />}>
                     <Show
                       when={(results()?.items ?? []).length > 0}
                       fallback={<EmptyState kind="exams" title={t("exams.noResults")} />}

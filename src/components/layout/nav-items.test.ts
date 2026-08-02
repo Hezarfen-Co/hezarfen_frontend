@@ -5,7 +5,7 @@ test.each([
   ["teacher", ["/", "/courses", "/calendar"]],
   ["manager", ["/", "/courses", "/calendar"]],
   ["admin", ["/", "/courses", "/calendar"]],
-  ["parent", ["/", "/students", "/calendar", "/meals"]],
+  ["parent", ["/", "/students", "/calendar"]],
 ] as const)("%s gets role-specific primary destinations", (role, expected) => {
   expect(primaryNavItems(role).map((item) => item.to)).toEqual(expected);
 });
@@ -16,7 +16,7 @@ test("invalid role destinations stay hidden", () => {
   expect(visibleNavItems("teacher").map((item) => item.to)).not.toContain("/admin/users");
 });
 
-test("student secondary navigation follows the academic, planning, workspace, community flow", () => {
+test("student secondary navigation follows the academic, planning, workspace, services, community flow", () => {
   expect(
     sidebarNavGroups("student").map((group) => ({
       id: group.id,
@@ -26,8 +26,14 @@ test("student secondary navigation follows the academic, planning, workspace, co
     { id: "classes", items: ["homework", "exams"] },
     { id: "planning", items: ["events", "appointments"] },
     { id: "workspace", items: ["notes", "whiteboards", "pomodoro"] },
-    { id: "community", items: ["meals", "payment-statement", "messages", "questions"] },
+    { id: "services", items: ["meals", "payment-statement"] },
+    { id: "community", items: ["messages", "questions"] },
   ]);
+});
+
+test("parent's services group includes meals and payment-statement, consistent with every other role", () => {
+  const services = sidebarNavGroups("parent").find((group) => group.id === "services");
+  expect(services?.items.map((item) => item.id)).toEqual(["meals", "payment-statement"]);
 });
 
 test.each(["student", "parent", "teacher", "manager", "admin"] as const)(

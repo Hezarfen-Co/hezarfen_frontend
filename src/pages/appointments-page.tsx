@@ -452,23 +452,17 @@ function AppointmentsContent() {
         onChange={(value) => setSection(value === "availability" ? "availability" : "appointments")}
       >
         <TabsList
-          class="grid w-full grid-cols-2 gap-1 rounded-xl border border-border/70 border-b-0 bg-card/80 p-1 shadow-xs sm:w-fit"
+          class="grid w-full grid-cols-2 sm:w-fit"
           aria-label={t("appointments.title")}
         >
-          <TabsTrigger
-            value="appointments"
-            class="mb-0 h-9 min-w-0 rounded-lg border-0 px-3 py-0 transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 data-selected:border data-selected:border-border data-selected:bg-secondary data-selected:text-secondary-foreground data-selected:shadow-xs"
-          >
+          <TabsTrigger value="appointments" class="min-w-0">
             <IconCalendarDays class="h-4 w-4" />
             {isStaff() ? t("appointments.requests") : t("appointments.myBookings")}
             <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">
               {isStaff() ? requests().length : myBookings().length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger
-            value="availability"
-            class="mb-0 h-9 min-w-0 rounded-lg border-0 px-3 py-0 transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 data-selected:border data-selected:border-border data-selected:bg-secondary data-selected:text-secondary-foreground data-selected:shadow-xs"
-          >
+          <TabsTrigger value="availability" class="min-w-0">
             <IconClock class="h-4 w-4" />
             {isStaff() ? t("appointments.mySlots") : t("appointments.availableSlots")}
             <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">

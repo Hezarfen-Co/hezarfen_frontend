@@ -10,13 +10,12 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
@@ -207,7 +206,7 @@ export function CourseHomeworkPanel(props: {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <Suspense fallback={<PageSpinner />}>
+      <Suspense fallback={<DataTableSkeleton />}>
         <Show when={(homework() ?? []).length > 0} fallback={<EmptyState title={t("homework.empty")} />}>
           <DataTable columns={columns()} data={homework() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("homework.empty")} onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })} />
         </Show>

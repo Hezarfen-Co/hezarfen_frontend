@@ -20,11 +20,12 @@ import {
   getDismissedNotificationIds,
   type NotificationItem,
 } from "@/lib/notifications";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences } from "@/stores/preferences-context";
 import { useShellFeed } from "@/stores/shell-feed-context";
 
 export function NotificationCenter() {
-  const t = useT();
+  const { t, locale } = usePreferences();
+  const dateLocale = () => (locale() === "tr" ? "tr-TR" : "en-US");
   const navigate = useNavigate();
   const feed = useShellFeed();
   const [open, setOpen] = createSignal(false);
@@ -76,7 +77,7 @@ export function NotificationCenter() {
           type: "event",
           title: e.title,
           description: e.starts_at
-            ? new Date(e.starts_at).toLocaleString([], {
+            ? new Date(e.starts_at).toLocaleString(dateLocale(), {
                 month: "short",
                 day: "numeric",
                 hour: "2-digit",
@@ -100,7 +101,7 @@ export function NotificationCenter() {
           type: "exam",
           title: ex.title,
           description: ex.starts_at
-            ? new Date(ex.starts_at).toLocaleString([], {
+            ? new Date(ex.starts_at).toLocaleString(dateLocale(), {
                 month: "short",
                 day: "numeric",
                 hour: "2-digit",
@@ -123,7 +124,7 @@ export function NotificationCenter() {
           type: "homework",
           title: hw.title,
           description: hw.due_at
-            ? `${t("homework.dueAt")}: ${new Date(hw.due_at).toLocaleDateString([], {
+            ? `${t("homework.dueAt")}: ${new Date(hw.due_at).toLocaleDateString(dateLocale(), {
                 month: "short",
                 day: "numeric",
               })}`
@@ -203,8 +204,8 @@ export function NotificationCenter() {
           "topbar-control relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
           open() && "bg-muted text-foreground"
         )}
-        title={t("rightPanel.messagesTitle")}
-        aria-label="Bildirimler"
+        title={t("notifications.title")}
+        aria-label={t("notifications.title")}
       >
         <IconBell class="h-4 w-4" />
         <Show when={unreadCount() > 0}>
@@ -219,7 +220,7 @@ export function NotificationCenter() {
         <div class="flex items-center justify-between border-b border-border/80 px-4 py-3 bg-muted/40">
           <div class="flex items-center gap-2">
             <IconBell class="h-4 w-4 text-primary" />
-            <h3 class="text-xs font-bold text-foreground">Bildirimler</h3>
+            <h3 class="text-xs font-bold text-foreground">{t("notifications.title")}</h3>
             <Show when={unreadCount() > 0}>
               <span class="rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[10px] font-bold text-primary">
                 {unreadCount()}
@@ -234,10 +235,10 @@ export function NotificationCenter() {
               size="sm"
               class="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
               onClick={handleDismissAll}
-              title="Tüm Bildirimleri Temizle"
+              title={t("notifications.clearAll")}
             >
               <IconTrash class="mr-1 h-3 w-3" />
-              Tümünü Sil
+              {t("notifications.clearAll")}
             </Button>
           </Show>
         </div>
@@ -259,7 +260,7 @@ export function NotificationCenter() {
                     <IconBell class="h-5 w-5" />
                   </div>
                   <p class="text-xs font-medium text-muted-foreground">
-                    Henüz yeni bir bildiriminiz yok.
+                    {t("notifications.empty")}
                   </p>
                 </div>
               }
@@ -302,7 +303,7 @@ export function NotificationCenter() {
                     <button
                       type="button"
                       class="absolute right-2 top-2.5 flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/60 opacity-80 sm:opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
-                      title="Sil"
+                      title={t("notifications.dismiss")}
                       onClick={(e) => handleDismissSingle(e, item.id)}
                     >
                       <IconX class="h-3.5 w-3.5" />

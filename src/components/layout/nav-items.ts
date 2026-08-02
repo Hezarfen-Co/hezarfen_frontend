@@ -20,6 +20,7 @@ import {
   IconEdit,
   IconNote,
   IconReportAnalytics,
+  IconSchool,
   IconSettings,
   IconUserCog,
   IconUsers,
@@ -96,14 +97,16 @@ const PRIMARY_BY_ROLE: Record<Role, NavItem[]> = {
   teacher: [HOME_ITEM, CLASSES_ITEM, CALENDAR_ITEM],
   manager: [HOME_ITEM, CLASSES_ITEM, CALENDAR_ITEM],
   admin: [HOME_ITEM, CLASSES_ITEM, CALENDAR_ITEM],
-  parent: [HOME_ITEM, CHILDREN_ITEM, CALENDAR_ITEM, MEALS_ITEM],
+  // Meals stays out of the primary strip so it lives under "Community" for
+  // every role consistently, same as teacher/manager/admin/student.
+  parent: [HOME_ITEM, CHILDREN_ITEM, CALENDAR_ITEM],
 };
 
 const NAV_GROUPS: NavGroup[] = [
   {
     id: "classes",
     labelKey: "nav.group.classes",
-    Icon: IconGuide,
+    Icon: IconSchool,
     items: [
       CLASSES_ITEM,
       { id: "homework", to: "/homework", labelKey: "nav.homework", Icon: IconHomework },
@@ -145,12 +148,19 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    id: "services",
+    labelKey: "nav.group.services",
+    Icon: IconGuide,
+    items: [
+      MEALS_ITEM,
+      { id: "payment-statement", to: "/payments", labelKey: "nav.paymentStatement", Icon: IconChart, maxRole: "student" },
+    ],
+  },
+  {
     id: "community",
     labelKey: "nav.group.community",
     Icon: IconGlobe,
     items: [
-      MEALS_ITEM,
-      { id: "payment-statement", to: "/payments", labelKey: "nav.paymentStatement", Icon: IconChart, maxRole: "student" },
       { id: "messages", to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
       { id: "questions", to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
       { id: "work", to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },

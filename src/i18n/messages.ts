@@ -107,6 +107,7 @@ export type MessageKey =
   | "nav.group.reports"
   | "nav.group.settings"
   | "nav.group.community"
+  | "nav.group.services"
   | "nav.darkMode"
   | "rightPanel.messagesTitle"
   | "rightPanel.calendarTitle"
@@ -115,6 +116,10 @@ export type MessageKey =
   | "rightPanel.noUnread"
   | "rightPanel.noUpcoming"
   | "rightPanel.unreadBadge"
+  | "notifications.title"
+  | "notifications.clearAll"
+  | "notifications.dismiss"
+  | "notifications.empty"
   | "nav.myStudents"
   | "parents.title"
   | "parents.subtitle"
@@ -621,6 +626,10 @@ export type MessageKey =
   | "pomodoro.runningSince"
   | "pomodoro.lastSession"
   | "pomodoro.noRecentSession"
+  | "pomodoro.remaining"
+  | "pomodoro.overtime"
+  | "pomodoro.targetReached"
+  | "pomodoro.customMinutes"
   | "attempt.title"
   | "attempt.openRoom"
   | "attempt.start"
@@ -1340,6 +1349,10 @@ const en: Dict = {
   "rightPanel.noUnread": "No unread messages",
   "rightPanel.noUpcoming": "No upcoming events or exams",
   "rightPanel.unreadBadge": "Unread",
+  "notifications.title": "Notifications",
+  "notifications.clearAll": "Clear all",
+  "notifications.dismiss": "Dismiss",
+  "notifications.empty": "No new notifications yet.",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
   "nav.questions": "Question Pool",
@@ -1370,6 +1383,7 @@ const en: Dict = {
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
   "nav.group.community": "Community",
+  "nav.group.services": "Services",
   "nav.darkMode": "Dark mode",
   "nav.myStudents": "My Students",
   "parents.title": "My Students",
@@ -1952,6 +1966,10 @@ const en: Dict = {
   "pomodoro.runningSince": "Started {time}",
   "pomodoro.lastSession": "Last finished {time}",
   "pomodoro.noRecentSession": "No completed session yet.",
+  "pomodoro.remaining": "Time remaining",
+  "pomodoro.overtime": "Overtime",
+  "pomodoro.targetReached": "Time's up! Wrap up or keep going.",
+  "pomodoro.customMinutes": "Custom (min)",
   "attempt.title": "Exam room",
   "attempt.openRoom": "Open exam room",
   "attempt.start": "Start exam",
@@ -2608,6 +2626,10 @@ const tr: Dict = {
   "rightPanel.noUnread": "Okunmamış mesaj yok",
   "rightPanel.noUpcoming": "Yaklaşan etkinlik veya sınav yok",
   "rightPanel.unreadBadge": "Okunmamış",
+  "notifications.title": "Bildirimler",
+  "notifications.clearAll": "Tümünü sil",
+  "notifications.dismiss": "Sil",
+  "notifications.empty": "Henüz yeni bir bildiriminiz yok.",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Yoklama",
   "nav.questions": "Soru Havuzu",
@@ -2638,6 +2660,7 @@ const tr: Dict = {
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
   "nav.group.community": "Topluluk",
+  "nav.group.services": "Hizmetler",
   "nav.darkMode": "Karanlık mod",
   "nav.myStudents": "Öğrencilerim",
   "parents.title": "Öğrencilerim",
@@ -3220,6 +3243,10 @@ const tr: Dict = {
   "pomodoro.runningSince": "Başlangıç: {time}",
   "pomodoro.lastSession": "Son bitiş: {time}",
   "pomodoro.noRecentSession": "Henüz tamamlanmış oturum yok.",
+  "pomodoro.remaining": "Kalan süre",
+  "pomodoro.overtime": "Ek süre",
+  "pomodoro.targetReached": "Süre doldu! Bitirebilir ya da devam edebilirsin.",
+  "pomodoro.customMinutes": "Özel (dk)",
   "attempt.title": "Sınav odası",
   "attempt.openRoom": "Sınav odasını aç",
   "attempt.start": "Sınava başla",
