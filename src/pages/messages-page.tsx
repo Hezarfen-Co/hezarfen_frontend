@@ -168,10 +168,11 @@ export default function MessagesPage() {
           <div class="flex flex-col md:flex-row min-h-[calc(100vh-7rem)]">
             {/* Gmail Left Sidebar */}
             <aside class="w-full md:w-60 border-r bg-card/60 p-4 shrink-0 space-y-6">
-              {/* Gmail Compose Button */}
-              <button
-                type="button"
-                class="flex h-12 px-6 items-center gap-3 rounded-2xl bg-card border border-border/80 shadow-md hover:shadow-lg hover:bg-accent text-foreground font-bold text-xs tracking-tight transition-all duration-200"
+              {/* Compose Button */}
+              <Button
+                variant="outline"
+                size="lg"
+                class="w-full justify-start gap-3 text-xs"
                 onClick={() => {
                   setReplyData(null);
                   setComposeOpen(true);
@@ -179,7 +180,7 @@ export default function MessagesPage() {
               >
                 <IconPlus class="h-5 w-5 text-primary" />
                 <span>{t("messages.newMessage")}</span>
-              </button>
+              </Button>
 
               {/* Gmail Folder Navigation List */}
               <nav class="space-y-1">

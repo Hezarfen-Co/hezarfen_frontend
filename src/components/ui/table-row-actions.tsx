@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { IconDotsVertical } from "@/components/ui/icons";
+import { useT } from "@/stores/preferences-context";
 
 type TableRowAction = {
   label: string;
@@ -17,23 +18,31 @@ type TableRowAction = {
 };
 
 export function TableRowActions(props: { label: string; actions: TableRowAction[] }) {
+  const t = useT();
+
   return (
     <div class="flex justify-center">
       <DropdownMenu placement="bottom-end" gutter={6}>
         <DropdownMenuTrigger
-          class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-foreground/80 opacity-90 outline-hidden transition-all duration-150 hover:bg-secondary hover:text-foreground hover:opacity-100 active:scale-[0.96] focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-secondary data-expanded:text-foreground data-expanded:opacity-100 sm:group-hover:opacity-100 sm:group-hover/row:opacity-100"
+          class="inline-flex h-8 min-w-[78px] items-center justify-center gap-1.5 rounded-lg border border-border/80 bg-muted/45 px-2 text-xs font-semibold text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary"
           aria-label={props.label}
+          title={props.label}
         >
-          <IconDotsVertical class="h-4 w-4" />
+          <span>{t("common.action")}</span>
+          <IconDotsVertical class="h-3.5 w-3.5" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent class="w-48 rounded-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl p-1.5 shadow-apple">
+        <DropdownMenuContent class="w-48">
           <For each={props.actions}>
             {(action) => (
               <DropdownMenuItem
-                class="flex h-10 items-center gap-2.5 rounded-xl px-3 text-xs font-medium"
+                class="flex items-center gap-2.5 text-xs"
                 destructive={action.destructive}
                 disabled={action.disabled}
-                onSelect={action.onSelect}
+                // Defer to the next macrotask so the menu fully closes (and
+                // restores focus to its trigger) before the action opens a
+                // panel/dialog — otherwise the non-modal SidePanel reads that
+                // focus-restore as an outside interaction and instantly closes.
+                onSelect={() => setTimeout(action.onSelect, 0)}
               >
                 {action.icon}
                 <span>{action.label}</span>

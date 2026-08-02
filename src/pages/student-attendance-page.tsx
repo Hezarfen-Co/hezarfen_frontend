@@ -15,7 +15,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 export default function StudentAttendancePage() {
   return (
@@ -77,11 +77,6 @@ function StudentAttendanceContent() {
       cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
     },
     {
-      accessorKey: "id",
-      header: t("admin.id"),
-      cell: (cell) => <span class="mono text-xs text-muted-foreground">{cell.row.original.id}</span>,
-    },
-    {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
@@ -110,7 +105,7 @@ function StudentAttendanceContent() {
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
-        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
+        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
           <DataTable
             title={t("nav.studentAttendance")}
             description={`${t("attendance.lookup")} · ${rows().length} / ${total()}`}
@@ -121,6 +116,7 @@ function StudentAttendanceContent() {
             searchPredicate={searchPerson}
             enablePagination
             pageSize={PAGE_SIZE}
+            storageKey="student-attendance"
             onRowClick={(person) => {
               setError("");
               setViewUser(person);

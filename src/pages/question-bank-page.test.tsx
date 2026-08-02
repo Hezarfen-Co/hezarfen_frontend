@@ -3,8 +3,8 @@ import { Show } from "solid-js";
 import QuestionBankPage from "@/pages/question-bank-page";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
-// 13 templates, page size 12: the last page holds exactly one row.
-let templates = Array.from({ length: 13 }, (_, index) => ({
+// 11 templates, page size 10: the last page holds exactly one row.
+let templates = Array.from({ length: 11 }, (_, index) => ({
   id: `bq-${index}`,
   text: `Template ${index}`,
   kind: "text",
@@ -39,8 +39,8 @@ vi.mock("@/stores/auth-context", () => ({
 // Kobalte's dropdown/dialog chrome is not what this test is about — flatten both
 // to plain buttons so the delete path can be driven in jsdom.
 vi.mock("@/components/ui/table-row-actions", () => ({
-  TableRowActions: (props: { actions: { label: string; onSelect: () => void }[] }) => (
-    <button type="button" onClick={() => props.actions[1].onSelect()}>
+  TableRowActions: (props: { actions: { label: string; destructive?: boolean; onSelect: () => void }[] }) => (
+    <button type="button" onClick={() => props.actions.find((action) => action.destructive)?.onSelect()}>
       delete-row
     </button>
   ),
@@ -67,7 +67,7 @@ test("deleting the last row of the last page clamps back instead of stranding th
   ));
 
   fireEvent.click(await screen.findByRole("button", { name: "Next" }));
-  expect(await screen.findByText("Template 12")).toBeTruthy();
+  expect(await screen.findByText("Template 10")).toBeTruthy();
   expect(screen.getByText("2 / 2")).toBeTruthy();
 
   fireEvent.click(screen.getByRole("button", { name: "delete-row" }));
@@ -75,7 +75,7 @@ test("deleting the last row of the last page clamps back instead of stranding th
   await tick();
   await tick();
 
-  // 12 left → one page: the user must be on it, not on the vanished page 2.
-  expect(screen.queryByText("Template 12")).toBeNull();
+  // 10 left → one page: the user must be on it, not on the vanished page 2.
+  expect(screen.queryByText("Template 10")).toBeNull();
   expect(await screen.findByText("Template 0")).toBeTruthy();
 });

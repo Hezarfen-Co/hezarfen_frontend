@@ -86,7 +86,7 @@ export function NoteImportPanel(props: {
     <div class="space-y-5">
       <Show when={!file()}>
         <div
-          class="flex min-h-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-amber-500/50 ring-1 ring-amber-500/25 bg-muted/30 p-6 text-center transition-all hover:border-amber-400 hover:ring-amber-400/40 hover:bg-muted/50"
+          class="flex min-h-56 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-amber-500/50 ring-1 ring-amber-500/25 bg-muted/30 p-6 text-center transition-all hover:border-amber-400 hover:ring-amber-400/40 hover:bg-muted/50"
           onClick={() => fileInput?.click()}
         >
           <input
@@ -98,7 +98,7 @@ export function NoteImportPanel(props: {
             class="hidden"
             onChange={(e) => void handleFileSelect(e.currentTarget.files?.[0])}
           />
-          <span class="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/50 ring-1 ring-amber-500/30 bg-muted/40 text-foreground shadow-xs">
+          <span class="flex h-12 w-12 items-center justify-center rounded-lg border border-amber-500/50 ring-1 ring-amber-500/30 bg-muted/40 text-foreground shadow-xs">
             <IconUploadCloud class="h-6 w-6" />
           </span>
           <div class="space-y-1 max-w-sm mx-auto">

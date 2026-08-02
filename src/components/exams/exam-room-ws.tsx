@@ -24,23 +24,13 @@ import { createNow } from "@/lib/create-now";
 import { triggerConfetti } from "@/lib/confetti";
 import { formatDateTime } from "@/lib/format";
 import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
+import { parseExamWsMessage, type ExamWsMessage } from "@/lib/websocket-messages";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 // Lazy so the drawing pad rides its own chunk, off the exam room's initial load.
 const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
 type WsState = "connecting" | "connected" | "disconnected";
-type WsMessage =
-  | { type: "state"; status: string; deadline: number | null; remaining_ms: number | null; now: number; answered: number; question_count: number }
-  // `client_seq` is the value we minted on the `answer` frame this replies to,
-  // echoed back verbatim — the only exact link between a send and its outcome.
-  | { type: "saved"; question_id: string; updated_at: number; client_seq?: number }
-  | { type: "finished"; finished_at: number }
-  | { type: "expired" }
-  | { type: "pong" }
-  // `question_id` is present only when the server could blame one save.
-  | { type: "error"; message: string; question_id?: string; client_seq?: number };
-
 function formatRemaining(ms: number | null): string {
   if (ms == null) return "—";
   const safe = Math.max(0, ms);
@@ -174,15 +164,15 @@ export function ExamRoomWS(props: { exam: Exam }) {
 
     socket.onmessage = (event) => {
       try {
-        const msg: WsMessage = JSON.parse(event.data);
-        handleWsMessage(msg);
+        const msg = parseExamWsMessage(JSON.parse(event.data));
+        if (msg) handleWsMessage(msg);
       } catch {
         // ignore
       }
     };
   };
 
-  const handleWsMessage = (msg: WsMessage) => {
+  const handleWsMessage = (msg: ExamWsMessage) => {
     switch (msg.type) {
       case "state": {
         // `left_at` clears with the frame: the snapshot `start`/`resume` read
@@ -197,7 +187,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
         const over = attempt()?.status === "submitted" || attempt()?.status === "expired";
         setAttempt((prev) =>
           prev
-            ? { ...prev, status: over ? prev.status : (msg.status as any), left_at: null, deadline: msg.deadline, remaining_ms: over ? 0 : msg.remaining_ms, answered: msg.answered, question_count: msg.question_count, now: msg.now }
+            ? { ...prev, status: over ? prev.status : msg.status, left_at: null, deadline: msg.deadline, remaining_ms: over ? 0 : msg.remaining_ms, answered: msg.answered, question_count: msg.question_count, now: msg.now }
             : prev,
         );
         setRemainingMs(over ? 0 : msg.remaining_ms);
@@ -217,12 +207,12 @@ export function ExamRoomWS(props: { exam: Exam }) {
         break;
       }
       case "finished": {
-        setAttempt((prev) => (prev ? { ...prev, status: "submitted" as any, remaining_ms: 0 } : prev));
+        setAttempt((prev) => (prev ? { ...prev, status: "submitted", remaining_ms: 0 } : prev));
         setRemainingMs(0);
         break;
       }
       case "expired": {
-        setAttempt((prev) => (prev ? { ...prev, status: "expired" as any, remaining_ms: 0 } : prev));
+        setAttempt((prev) => (prev ? { ...prev, status: "expired", remaining_ms: 0 } : prev));
         setRemainingMs(0);
         break;
       }
@@ -417,7 +407,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
       const next = Math.max(0, initial - (Date.now() - startedAt));
       setRemainingMs(next);
       if (next <= 0) {
-        setAttempt((prev) => (prev && prev.status === "in_progress" ? { ...prev, status: "expired" as any, remaining_ms: 0 } : prev));
+        setAttempt((prev) => (prev && prev.status === "in_progress" ? { ...prev, status: "expired", remaining_ms: 0 } : prev));
         setFinishOpen(false);
         window.clearInterval(timer);
       }
@@ -426,11 +416,11 @@ export function ExamRoomWS(props: { exam: Exam }) {
   });
 
   return (
-    <section class="surface-card space-y-5 p-5">
+    <section class="data-shell space-y-5 p-5">
       <Show when={!roomOpen()}>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 class="font-display text-lg font-semibold">{t("attempt.title")}</h2>
+            <h2 class="text-lg font-semibold">{t("attempt.title")}</h2>
             <p class="mt-1 text-sm text-muted-foreground">
               {props.exam.mode === "sync" ? t("exams.mode.sync") : props.exam.mode === "async" ? t("exams.mode.async") : props.exam.mode === "open" ? t("exams.mode.open") : t("attempt.unscheduled")}
             </p>
@@ -558,9 +548,9 @@ export function ExamRoomWS(props: { exam: Exam }) {
                   </div>
                 )}
               </Show>
-              <aside class="surface-card order-first space-y-3 p-3 lg:sticky lg:top-4 lg:order-0">
+              <aside class="data-shell order-first space-y-3 p-3 lg:sticky lg:top-4 lg:order-0">
               <div>
-                <h3 class="font-display text-sm font-semibold">{t("questions.title")}</h3>
+                <h3 class="text-sm font-semibold">{t("questions.title")}</h3>
                 <p class="mt-1 text-xs text-muted-foreground">
                   {attempt()?.answered ?? 0} / {attempt()?.question_count ?? questions().length} {t("attempt.progress").toLowerCase()}
                 </p>
@@ -805,7 +795,7 @@ function QuestionAnswerCardWS(props: {
   };
 
   return (
-    <article id={`question-${props.question.id}`} class="surface-card min-h-[calc(100vh-16rem)] p-5 sm:p-6 lg:p-8">
+    <article id={`question-${props.question.id}`} class="data-shell min-h-[calc(100vh-16rem)] p-5 sm:p-6 lg:p-8">
       <div class="mb-3 flex flex-wrap items-center gap-2">
         <span class="text-xs font-semibold text-muted-foreground">#{props.index}</span>
         <Badge variant="outline" class="rounded-full">{props.question.points} {t("questions.points")}</Badge>

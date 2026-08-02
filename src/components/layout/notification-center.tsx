@@ -200,8 +200,8 @@ export function NotificationCenter() {
     <Popover open={open()} onOpenChange={setOpen} placement="bottom-end" gutter={8}>
       <PopoverTrigger
         class={cn(
-          "relative flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/60 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground shrink-0 cursor-pointer outline-hidden",
-          open() && "bg-secondary text-foreground"
+          "topbar-control relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+          open() && "bg-muted text-foreground"
         )}
         title={t("rightPanel.messagesTitle")}
         aria-label="Bildirimler"
@@ -214,7 +214,7 @@ export function NotificationCenter() {
         </Show>
       </PopoverTrigger>
 
-      <PopoverContent class="w-80 sm:w-96 rounded-2xl p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95 backdrop-blur-xl overflow-hidden">
+      <PopoverContent class="w-80 sm:w-96 rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95 overflow-hidden">
         {/* Header */}
         <div class="flex items-center justify-between border-b border-border/80 px-4 py-3 bg-muted/40">
           <div class="flex items-center gap-2">

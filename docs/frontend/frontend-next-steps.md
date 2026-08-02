@@ -4,14 +4,20 @@ This document records the completed frontend backlog after backend alignment,
 role/request audits, dense table work, side panels, notebook UI, schedule
 validation, and list filtering cleanup.
 
-Active backend-refresh work is tracked in
-`docs/backend/backend-contract-refresh-plan.md`.
+Active backend/class/meals alignment is tracked in:
+
+- `docs/backend/backend-feature-contract-2026-07-28.md`
+- `docs/superpowers/specs/2026-07-28-class-and-meals-design.md`
+- `docs/superpowers/plans/2026-07-28-backend-alignment.md`
+- `docs/research/2026-07-28-classroom-meals-benchmark.md`
 
 ## Completed State
 
 - Backend alignment is complete for settings, terms, course subjects/capacity, draft exams, course sessions, attendance reports, pomodoro focus logs, work logs, exam attempts, and grade bands.
 - Shared UI primitives cover dense tables, data toolbars, row action menus, side panels, confirm dialogs, date picking, and animated disclosures.
-- Dashboard is a monochrome, role-aware, read-only status board: workspace portal cards (`Title | count` on desktop) + needs-attention / upcoming lists. No create CTAs, no vanity charts, no duplicate KPI strip. Admin sees global course/exam scope; other roles use own/enrolled/related scope where the backend supports it.
+- Dashboard is a role-aware, read-only status board: live highlights, truthful
+  per-course bars, attendance/workload splits, and navigable deadlines. No create
+  CTA, sparkline, inferred priority, or manual refresh.
 - Table and card actions use narrow centered three-dot menus through `TableRowActions`.
 - Dense tables have subtle column separators, fixed action columns, and stable date/number alignment.
 - Course creator display uses a username/display label when available; raw ids are fallback only.
@@ -31,7 +37,11 @@ Active backend-refresh work is tracked in
 - Current design refresh is complete: icon system, shell/nav, dashboard, lists, detail pages, and forms/feedback all use shared primitives and token-derived radius/border/focus patterns.
 - Note Import Assistant (`src/lib/note-importer.ts`): PDF/TXT/MD file conversion with noise stripping (page numbers, watermarks, footers), PDF line-wrap joining, Markdown section formatting (`##`), bullet points, garbled OCR detection warning banners, and dedicated `SidePanel` triggered from the Notes page header.
 - Drawing Canvas (`DrawCanvas`): freehand drawing with pan/zoom, eraser, quadratic smoothing, grid ruling default, PNG scene embedding (`.hzdraw.png`), and stroke state preservation during active drawing.
-- Dashboard portal cards support drag-and-drop and 1-click `← / →` delta move reordering in edit mode with jiggle animations and role defaults.
+- Shell navigation is role-specific. Shared metadata drives desktop, mobile,
+  route labels, and command search; Education and Community are collapsible
+  sidebar groups. Account settings sit in the bottom menu.
+- Dashboard panels use fixed role order. Unsupported/fabricated trends and
+  card-order state were removed; categorical live data stays in bar/split charts.
 - Dropdown primitives (`DropdownMenu`, `Combobox`, `Popover`, `Select`) elevated with Apple HIG squircle containers (`rounded-2xl`), backdrop blur (`backdrop-blur-xl`), 44pt touch targets, and subtle tactile press feedback.
 - Application table action headers standardized to `w-28 min-w-[7rem] text-center whitespace-nowrap` across all report and management tables to ensure localized headers like `"İŞLEMLER"` fit without truncation.
 
@@ -54,11 +64,13 @@ Active backend-refresh work is tracked in
 - Shared helpers: `src/api/page.ts` + `src/lib/list-page.ts` (`loadListPage`).
 - All paged list API files return `Page<T>` and accept optional page params.
 - Main lists use real server paging (`limit`/`offset` + `total`) when no client-only filter is active:
-  - courses, exams, events (hybrid: full fetch only while search/status/term filters need it)
+  - exams and events (hybrid: full fetch only while client-only filters need it)
   - notes, terms, work log, admin users (server page; admin metrics still load full list once)
+- Courses temporarily load the visible list once and filter/paginate locally because
+  backend course filters remain a documented prerequisite.
 - Nested/deferred lists unwrap full `.items` (sessions, enrollments, attendance, exam results/questions).
 - `/exams/:id/live`: client-paginated roster over snapshot/SSE (not the list envelope).
-- `/attendance` and marks reports: not paged; aggregate report shapes.
+- Progress Report card and Attendance tabs: not paged; aggregate report shapes.
 
 ## Active Backlog
 
@@ -67,7 +79,7 @@ Active backend-refresh work is tracked in
 | Item | Fix |
 |---|---|
 | Course term read | FE reads `Course.term` (write still `term_id`) |
-| Student-only pages | `RouteGuard exactRole="student"` + nav `exactRole` + `beforeLoad` on `/marks`, `/attendance` |
+| Student Progress | Report card + Attendance tabs on `/marks`; `/attendance` compatibility redirect |
 | Session edit | `patchSessionById` + edit SidePanel in course sessions |
 | Manager work log | `/management/staff-work` + get/patch/delete work APIs |
 | Work route guard | `beforeLoad` teacher+ on `/work` |
@@ -91,17 +103,20 @@ Active backend-refresh work is tracked in
 - Detail pages: course, exam, and event detail routes share breadcrumb, header action group, and metric-card utilities.
 - Forms/feedback: inputs, selects, textareas, destructive alerts, empty states, and confirm summaries share the same form surface rhythm.
 - Session delete uses ConfirmDialog; exam room guards stale id on route change.
-- Mobile bottom tab bar (home/courses/exams/notes/menu); exam-room hides tab chrome.
+- Mobile bottom bar mirrors each role's primary destinations and ends with Account;
+  exam-room hides tab chrome.
 - Shared ErrorAlert with try-again; lookup pages show person labels; profile shows localized role.
-- Dashboard portal cards are role-ordered workspace links (manager/admin include management tools); guide stays in the account menu, not on the homepage.
-- Dashboard layout: portal grid on top; attention + upcoming below (two columns from `lg`); grayscale cards with semantic status only.
+- Dashboard layout: highlights, progress + split charts, then upcoming deadlines;
+  described teaching resources appear only for teacher+, while appointments stay
+  linked and included in deadlines for every role.
 - Terms page: SidePanel create/edit + dense table row actions; header create buttons use shared min-width/radius.
 - Settings: dirty-state save gate and auto-clearing success message.
 - Nested breadcrumbs on exam room and live monitor.
 
 ### UX batch (2026-07, observation UI + feedback)
 
-- Homepage is a monochrome observation board: workspace portal cards (`Title | N` on desktop), needs-attention + upcoming lists, no create CTAs or vanity charts.
+- Homepage is an observation board using API-backed highlights/charts/deadlines,
+  with no mutation CTA or fabricated trend.
 - `EmptyState` component with optional primary action; wired on notes, courses, exams, events, terms, marks, work log, staff work, and course-detail sections (exams/roster/sessions).
 - `createFlash` + `Alert variant="success"` for short auto-clearing confirmations after create/save/delete (lists, detail pages, profile, admin roles, sessions, questions, note files). Settings keeps its own dirty-state saved chip.
 - Shared `schedule-status` tones for exam/event active/upcoming/finished chips (list, card, detail, dashboard attention).

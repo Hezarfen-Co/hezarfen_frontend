@@ -46,9 +46,9 @@ Active project reference docs (read the relevant one before changing that area):
 ## Tables
 
 - Application tables must use `src/components/ui/data-table.tsx` `DataTable`.
-- Actions columns use `w-28 min-w-[7rem] text-center whitespace-nowrap` to prevent truncation of localized headers like `"İŞLEMLER"`.
+- Actions columns stay fixed at `w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap` to prevent localized headers like `"İŞLEMLER"` from changing their size.
 - Table-page headers fold into the `DataTable` title/description/actions area; do not render a separate `PageHeader` above table-primary pages.
-- Search inputs, dropdown filters, filter buttons, and toolbar actions share the same height/radius (`h-9 rounded-lg` unless the shared component changes the standard globally).
+- Search inputs, dropdown filters, filter buttons, and column controls share the same compact height/radius (`h-8 rounded-lg`, `text-[13px]`) unless the shared component changes the standard globally. Page-header primary actions may stay `h-9`.
 - Pages/domain components must not import or render `Table` primitives directly; only the `DataTable` wrapper and table primitive files may.
 
 ## Date/time & attendance

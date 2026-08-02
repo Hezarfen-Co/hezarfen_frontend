@@ -1,6 +1,6 @@
 ---
 name: dashboard-design
-description: Rules for the hezarfen_frontend dashboard/homepage — a read-only status board (no mutations), monochrome palette with semantic-only status color, portal-card layout, grid, and role scoping. Load before editing src/pages/dashboard-page.tsx or the homepage.
+description: Rules for the hezarfen_frontend dashboard/homepage — a read-only board (no mutations), Knowvio-style stat cards + real-data charts + deadlines table, and role scoping. Load before editing src/pages/dashboard-page.tsx or the homepage.
 ---
 
 # Dashboard / homepage design
@@ -8,13 +8,27 @@ description: Rules for the hezarfen_frontend dashboard/homepage — a read-only 
 Reference: `src/pages/dashboard-page.tsx`. The homepage is a **read-only status board**, not a marketing landing or action hub.
 
 - **No mutations:** no create/edit/delete buttons, no primary CTAs that open forms. Links only navigate to existing list/detail routes.
-- **Palette:** monochrome / grayscale surfaces (border, card, muted). No decorative color accents, gradients, activity charts, or multi-tone portal cards. **Semantic color only** for status (active / today / soon / danger).
+- **Charts are allowed, on real data only.** The homepage follows the Knowvio-style
+  layout: a Highlights stat-card row, a Progress-overview chart, an Activity/attendance
+  split, and an Upcoming-deadlines table. Charts use `ChartBar` and
+  `ChartProgressRing` from `src/components/ui/` (accent =
+  `hsl(var(--primary))`, semantic tints for status).
+  **Every chart/stat must be backed by a live API field** — no fabricated trends,
+  streak counters, sparklines, or `+%` delta badges the backend can't produce.
+  Categorical series use bars, with a plain empty state when no records exist.
 - **Layout order (top → bottom):**
   1. Compact header — greeting, role chip (neutral), date.
-  2. Role-scoped **workspace portal cards** (section links with optional counts).
-  3. **Needs attention** + **Upcoming** side by side on `lg+`, stacked on mobile.
-- **Portal cards:** horizontal dense rows — icon | title + short desc | optional count. On desktop, title and count share one line as `Title | 12` (pipe separator, mono tabular count). No separate KPI strip repeating the same numbers.
-- **Grid:** `1` col mobile → `2` sm → `3` lg → `4` xl. Equal-ish min height; avoid uneven multi-line stat stacks.
-- **Role scoping:** card set matches nav/role matrix (student personal tools; teacher teaching tools; manager+ management; admin gets staff-work + users, not personal `/work`). Optional min-role badge is muted/neutral, not rainbow.
-- **Attention list:** active / today / soon exams and events only; rows navigate to detail. Empty state is plain text, not a create CTA.
-- Do not reintroduce guide marketing blocks, vanity charts, or redundant bottom KPI tiles.
+  2. **Highlights** — role-scoped stat cards (icon + label + mono value).
+  3. **Progress overview** chart + **Activity split** on `lg+`.
+  4. **Upcoming deadlines** `DataTable` (exams / events / homework / appointments).
+  5. Optional teacher+ Question Bank / Question Pool links.
+- **Grid:** stat row `1 → 2 sm → 4 lg`; charts `lg:grid-cols-3` (progress spans 2).
+- **Role scoping:** stat/chart set matches nav/role matrix (student personal tools +
+  marks/attendance; teacher teaching tools; manager+ management; parent children/meals).
+  Show only panels whose data exists for the role.
+- **Deadlines table:** active / today / soon items only, semantic status badge, rows
+  navigate by pointer, Enter, or Space. Empty state is plain text, not a create CTA.
+- **Semantics:** student progress = per-course averages; staff progress =
+  `Course.capacity` labeled as course capacity, never enrollment/class size.
+- **Role privacy:** question navigation is teacher+ only. Student/parent deadlines
+  span full width. No inferred priority or manual refresh.

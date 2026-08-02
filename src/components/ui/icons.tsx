@@ -345,6 +345,33 @@ export function IconChevronDown(props: IconProps) {
   );
 }
 
+export function IconArrowUp(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 19V5" />
+      <path d="m5 12 7-7 7 7" />
+    </Svg>
+  );
+}
+
+export function IconArrowDown(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 5v14" />
+      <path d="m19 12-7 7-7-7" />
+    </Svg>
+  );
+}
+
+export function IconChevronsUpDown(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="m7 15 5 5 5-5" />
+      <path d="m7 9 5-5 5 5" />
+    </Svg>
+  );
+}
+
 export function IconHome(props: IconProps) {
   return (
     <Svg {...props}>
@@ -478,11 +505,6 @@ export function IconExam(props: IconProps) {
       <path d="M8 16h.01" />
     </Svg>
   );
-}
-
-/** @deprecated Prefer IconExam — kept as stable alias. */
-export function IconPencilQuestion(props: IconProps) {
-  return <IconExam {...props} />;
 }
 
 export function IconGuide(props: IconProps) {
@@ -642,6 +664,18 @@ export function IconBriefcase(props: IconProps) {
   );
 }
 
+export function IconUtensils(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 2v7a3 3 0 0 0 3 3V2" />
+      <path d="M3 6h3" />
+      <path d="M6 12v10" />
+      <path d="M17 2v20" />
+      <path d="M17 2c3 2 4 5 4 8h-4" />
+    </Svg>
+  );
+}
+
 export function IconSearch(props: IconProps) {
   return (
     <Svg {...props}>
@@ -725,4 +759,3 @@ export function IconBell(props: IconProps) {
     </Svg>
   );
 }
-

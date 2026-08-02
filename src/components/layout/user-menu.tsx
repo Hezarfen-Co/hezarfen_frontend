@@ -13,10 +13,12 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconChevronDown, IconEdit, IconGlobe, IconLogout, IconMoon, IconSun } from "@/components/ui/icons";
+import { IconChevronDown, IconGlobe, IconLogout, IconMoon, IconSettings, IconSun } from "@/components/ui/icons";
+import { ThemeModeControl } from "@/components/layout/theme-mode-control";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
+import { personInitials } from "@/lib/person";
 import type { User } from "@/api/client";
 
 function titleCase(value: string) {
@@ -31,13 +33,6 @@ function titleCase(value: string) {
 function displayName(user: User) {
   const fullName = [user.name, user.surname].filter(Boolean).join(" ");
   return titleCase(fullName || user.username);
-}
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
 }
 
 function ChoiceButton(props: {
@@ -85,7 +80,7 @@ export function UserMenu() {
           <DropdownMenu placement="bottom-end" gutter={8}>
           <DropdownMenuTrigger
             class={cn(
-              "inline-flex h-11 max-w-[16rem] items-center gap-2.5 rounded-lg border border-input bg-background px-2.5 pr-3 text-sm shadow-xs outline-hidden transition-colors sm:max-w-88",
+              "inline-flex h-9 max-w-[16rem] items-center gap-2.5 rounded-lg border border-input bg-background px-2.5 pr-3 text-sm shadow-xs outline-hidden transition-colors sm:max-w-88",
               "hover:bg-accent hover:text-accent-foreground",
               "focus-visible:ring-2 focus-visible:ring-ring",
               "data-expanded:bg-accent data-expanded:text-accent-foreground",
@@ -93,7 +88,7 @@ export function UserMenu() {
             aria-label={t("nav.account")}
           >
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground shadow-xs">
-              {initials(displayName(u()))}
+              {personInitials(displayName(u()))}
             </span>
             <span class="hidden min-w-0 flex-col text-left leading-tight sm:flex">
               <span class="truncate font-semibold">{displayName(u())}</span>
@@ -105,7 +100,7 @@ export function UserMenu() {
           <DropdownMenuContent class="w-[min(20rem,calc(100vw-1.5rem))]">
             <div class="flex items-center gap-3 p-3">
               <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-xs">
-                {initials(displayName(u()))}
+                {personInitials(displayName(u()))}
               </span>
               <div class="flex min-w-0 flex-1 items-start justify-between gap-2">
                 <div class="min-w-0">
@@ -160,28 +155,15 @@ export function UserMenu() {
                 </span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent class="w-[min(12.5rem,calc(100vw-2rem))] p-2">
-                <div class="grid grid-cols-2 gap-2">
-                  <ChoiceButton
-                    active={prefs.theme() === "light"}
-                    label={t("theme.light")}
-                    icon={<IconSun class="h-5 w-5" />}
-                    onSelect={() => prefs.setTheme("light")}
-                  />
-                  <ChoiceButton
-                    active={prefs.theme() === "dark"}
-                    label={t("theme.dark")}
-                    icon={<IconMoon class="h-5 w-5" />}
-                    onSelect={() => prefs.setTheme("dark")}
-                  />
-                </div>
+                <ThemeModeControl variant="cards" />
               </DropdownMenuSubContent>
             </DropdownMenuSub>
 
             <DropdownMenuSeparator />
 
             <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
-              <IconEdit class="h-4 w-4 shrink-0" />
-              <span>{t("profile.edit")}</span>
+              <IconSettings class="h-4 w-4 shrink-0" />
+              <span>{t("nav.settings")}</span>
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />

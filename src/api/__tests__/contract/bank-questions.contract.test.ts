@@ -1,4 +1,4 @@
-import { api, contractBaseUrl, isLive, json, loginAdmin, pngFile, SKIP_MESSAGE } from "./helpers/live-client";
+import { api, configuredExamKind, contractBaseUrl, isLive, json, loginAdmin, pngFile, SKIP_MESSAGE } from "./helpers/live-client";
 import type { BankQuestion, Course, ExamQuestion, Subject } from "@/api/client";
 
 if (!isLive) console.warn(SKIP_MESSAGE);
@@ -228,7 +228,7 @@ describe.skipIf(!isLive)(`bank-questions contract @ ${contractBaseUrl}`, () => {
     const template = await createTemplate(`${tag} original text`);
     const exam = await json<{ id: string }>(`/courses/${courseId}/exams`, {
       method: "POST",
-      body: { title: tag, kind: "final" },
+      body: { title: tag, kind: await configuredExamKind() },
     });
 
     const copy = await json<ExamQuestion>(

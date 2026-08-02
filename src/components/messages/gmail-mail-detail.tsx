@@ -273,7 +273,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
         </div>
 
         {/* Email Body Card */}
-        <div class="rounded-2xl border border-border/80 bg-card p-6 shadow-2xs leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
+        <div class="rounded-lg border border-border/80 bg-card p-6 shadow-2xs leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
           <div innerHTML={props.message.body} />
         </div>
 
@@ -299,7 +299,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               {/* Gmail Inline Reply Editor */}
               <form
                 onSubmit={handleSendReply}
-                class="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-3"
+                class="rounded-lg border border-border bg-card p-4 shadow-xs space-y-3"
               >
                 <div class="flex items-center justify-between text-xs border-b pb-2">
                   <div class="flex items-center gap-2">

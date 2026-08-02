@@ -23,6 +23,12 @@ describe("reports API", () => {
     expect(init?.method).toBe("GET");
   });
 
+  it("getMyCourses sends course filters", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getMyCourses({ kind: "club", q: "robot", term_id: "t1" });
+    expect(lastFetchCall()[0]).toBe("/api/courses/me?kind=club&q=robot&term_id=t1");
+  });
+
   it("getMyAttendance calls /attendance/me", async () => {
     const mockAttendance = { courses: [] };
     mockFetchSuccess(mockAttendance);

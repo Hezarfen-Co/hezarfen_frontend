@@ -23,7 +23,7 @@ export function FormDialog(props: {
           <DialogTitle>{props.title}</DialogTitle>
           {props.description && <DialogDescription>{props.description}</DialogDescription>}
         </DialogHeader>
-        <DialogBody>{props.children}</DialogBody>
+        <DialogBody class="side-panel-body">{props.children}</DialogBody>
       </DialogContent>
     </Dialog>
   );

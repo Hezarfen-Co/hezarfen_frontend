@@ -1,4 +1,9 @@
-# Backend Contract Refresh Plan
+# Backend Contract Refresh Plan (Superseded)
+
+Superseded on 2026-07-28 by
+[`backend-feature-contract-2026-07-28.md`](./backend-feature-contract-2026-07-28.md)
+and
+[`2026-07-28-backend-alignment.md`](../superpowers/plans/2026-07-28-backend-alignment.md).
 
 ## Context
 

@@ -21,7 +21,7 @@ import { createFlash } from "@/lib/flash";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { useT } from "@/stores/preferences-context";
 
-const NOTE_PAGE_SIZE = 12;
+const NOTE_PAGE_SIZE = 10;
 
 export default function NotesPage() {
   return (
@@ -75,7 +75,6 @@ function NotesContent() {
     <div class="space-y-6">
       <div class="space-y-2">
         <PageHeader
-          accent="amber"
           eyebrow={t("nav.notes")}
           title={t("notes.title")}
           description={t("notes.subtitle")}
@@ -141,7 +140,7 @@ function NotesContent() {
       </SidePanel>
 
       <div class="space-y-5">
-        <section class="min-w-0 space-y-4 rounded-3xl border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs">
+        <section class="min-w-0 space-y-4 rounded-lg border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs">
           <Show when={flash()}>
             <Alert variant="success">{flash()}</Alert>
           </Show>

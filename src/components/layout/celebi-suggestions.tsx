@@ -1,14 +1,24 @@
 import { For } from "solid-js";
 import type { MessageKey } from "@/i18n/messages";
+import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
-const SUGGESTION_KEYS: MessageKey[] = ["ai.suggest1", "ai.suggest2", "ai.suggest3", "ai.suggest4"];
+const STUDENT_KEYS: MessageKey[] = ["ai.suggest1", "ai.suggest2", "ai.suggest3", "ai.suggest4"];
+const STAFF_KEYS: MessageKey[] = ["ai.suggestStaff1", "ai.suggestStaff2", "ai.suggestStaff3", "ai.suggestStaff4"];
+const PARENT_KEYS: MessageKey[] = ["ai.suggestParent1", "ai.suggestParent2", "ai.suggestParent3", "ai.suggestParent4"];
 
 export function CelebiSuggestions(props: { onPick: (text: string) => void }) {
   const t = useT();
+  const auth = useAuth();
+  const keys = () => {
+    const role = auth.user()?.role;
+    if (role === "parent") return PARENT_KEYS;
+    if (role === "teacher" || role === "manager" || role === "admin") return STAFF_KEYS;
+    return STUDENT_KEYS;
+  };
   return (
     <div class="grid gap-2 sm:grid-cols-2">
-      <For each={SUGGESTION_KEYS}>
+      <For each={keys()}>
         {(key) => (
           <button
             type="button"

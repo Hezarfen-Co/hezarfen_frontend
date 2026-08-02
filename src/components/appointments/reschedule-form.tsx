@@ -49,14 +49,14 @@ export function RescheduleForm(props: {
 
   return (
     <form class="space-y-4" onSubmit={handleSubmit}>
-      <div class="grid gap-3 rounded-2xl border border-amber-500/15 bg-amber-500/3 p-4">
+      <div class="grid gap-3 rounded-lg border border-amber-500/15 bg-amber-500/3 p-4">
         <div class="space-y-1.5">
           <Label for="resched-starts">{t("appointments.starts")}</Label>
           <div class="grid grid-cols-2 gap-2">
-            <DatePicker id="resched-starts" class="h-11" placeholder={t("form.datePlaceholder")} value={startsDate()} onChange={setStartsDate} />
+            <DatePicker id="resched-starts" class="h-9" placeholder={t("form.datePlaceholder")} value={startsDate()} onChange={setStartsDate} />
             <Input
               id="resched-starts-time"
-              class="h-11 font-mono placeholder:text-muted-foreground/45"
+              class="h-9 font-mono placeholder:text-muted-foreground/45"
               inputMode="numeric"
               placeholder="09:00"
               pattern="[0-2][0-9]:[0-5][0-9]"
@@ -69,10 +69,10 @@ export function RescheduleForm(props: {
         <div class="space-y-1.5">
           <Label for="resched-ends">{t("appointments.ends")}</Label>
           <div class="grid grid-cols-2 gap-2">
-            <DatePicker id="resched-ends" class="h-11" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
+            <DatePicker id="resched-ends" class="h-9" placeholder={t("form.datePlaceholder")} value={endsDate()} onChange={setEndsDate} />
             <Input
               id="resched-ends-time"
-              class="h-11 font-mono placeholder:text-muted-foreground/45"
+              class="h-9 font-mono placeholder:text-muted-foreground/45"
               inputMode="numeric"
               placeholder="10:00"
               pattern="[0-2][0-9]:[0-5][0-9]"

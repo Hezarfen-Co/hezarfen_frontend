@@ -1,4 +1,5 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Link } from "@tanstack/solid-router";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import { getAppointments } from "@/api/appointments";
@@ -8,15 +9,15 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { IconCalendarDays, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
+import { IconCalendarDays, IconChevronLeft, IconChevronRight, IconClock } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { appointmentCounterpart } from "@/lib/person";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const DAY_NAMES_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const DAY_NAMES_SHORT_TR = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+const DAY_NAMES_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_NAMES_SHORT_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const MONTH_NAMES_TR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
@@ -53,7 +54,8 @@ function CalendarContent() {
     return `${names[viewMonth()]} ${viewYear()}`;
   };
   const dayNames = () => locale() === "tr" ? DAY_NAMES_SHORT_TR : DAY_NAMES_SHORT;
-  const firstDay = () => new Date(viewYear(), viewMonth(), 1).getDay();
+  // Monday-first: shift Sunday (0) to the end of the week.
+  const firstDay = () => (new Date(viewYear(), viewMonth(), 1).getDay() + 6) % 7;
   const daysInMonth = () => new Date(viewYear(), viewMonth() + 1, 0).getDate();
 
   const grid = createMemo(() => {
@@ -117,21 +119,30 @@ function CalendarContent() {
       <section class="data-shell space-y-3 border-sky-500/15 bg-sky-500/2.5 p-3">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
-            <h1 class="truncate font-display text-xl font-semibold tracking-tight text-foreground">{t("calendar.title")}</h1>
+            <h1 class="truncate text-xl font-semibold tracking-tight text-foreground">{t("calendar.title")}</h1>
             <div class="mt-1.5 flex items-center gap-2">
               <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={prevMonth}>
                 <IconChevronLeft class="h-4 w-4" />
               </Button>
-              <span class="font-display text-base font-semibold tracking-tight">{monthLabel()}</span>
+              <span class="text-base font-semibold tracking-tight">{monthLabel()}</span>
               <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={nextMonth}>
                 <IconChevronRight class="h-4 w-4" />
               </Button>
             </div>
           </div>
-          <Button type="button" variant="outline" size="sm" class="h-9 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
-            <IconCalendarDays class="h-3.5 w-3.5" />
-            {t("calendar.today")}
-          </Button>
+          <div class="flex items-center gap-2">
+            <Link
+              to="/appointments"
+              class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-semibold outline-hidden transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <IconClock class="h-3.5 w-3.5" />
+              {t("nav.appointments")}
+            </Link>
+            <Button type="button" variant="outline" size="sm" class="h-9 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
+              <IconCalendarDays class="h-3.5 w-3.5" />
+              {t("calendar.today")}
+            </Button>
+          </div>
         </div>
         <Suspense fallback={<PageSpinner />}>
           <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
@@ -221,7 +232,7 @@ function CalendarContent() {
 
             <div class="space-y-3">
               <div class="rounded-xl border border-border/80 bg-card p-3 shadow-xs">
-                <h3 class="font-display text-sm font-semibold">
+                <h3 class="text-sm font-semibold">
                   {selectedDay().toLocaleDateString(locale() === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "long", year: "numeric" })}
                 </h3>
 

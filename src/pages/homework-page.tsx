@@ -1,22 +1,20 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getCourseById, getCourseSubjects, getCourses, postCourseHomework } from "@/api/courses";
 import { getHomework } from "@/api/homework";
-import { getSubjectById } from "@/api/subjects";
 import { getTime } from "@/api/time";
 import { formatApiError } from "@/api/client";
 import type { Course, Homework } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { IconEye, IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
@@ -70,13 +68,10 @@ function HomeworkContent() {
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [courseNames, setCourseNames] = createSignal<Record<string, string>>({});
-  const [subjectNames, setSubjectNames] = createSignal<Record<string, string>>({});
   const [list, { refetch }] = createResource(async () => {
     const items = (await getHomework({ limit: 100 })).items;
     const courses = [...new Set(items.map((item) => item.course))];
-    const subjects = [...new Set(items.map((item) => item.subject))];
     await Promise.all(courses.map((id) => getCourseById(id).then((course) => setCourseNames((current) => ({ ...current, [id]: course.title }))).catch(() => {})));
-    await Promise.all(subjects.map((id) => getSubjectById(id).then((subject) => setSubjectNames((current) => ({ ...current, [id]: subject.name }))).catch(() => {})));
     return items;
   });
   const [courses] = createResource(
@@ -94,7 +89,6 @@ function HomeworkContent() {
   );
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
   const courseName = (id: string) => courseNames()[id] ?? id;
-  const subjectName = (id: string) => subjectNames()[id] ?? id;
   const canCreate = () => manageableCourses().length > 0;
   const pageTitle = () => auth.user()?.role === "student" ? t("homework.mineTitle") : t("homework.title");
 
@@ -162,12 +156,6 @@ function HomeworkContent() {
       cell: (cell) => courseName(cell.row.original.course),
     },
     {
-      id: "subject",
-      accessorFn: (row) => subjectName(row.subject),
-      header: t("subjects.subject"),
-      cell: (cell) => <Badge variant="outline" class="rounded-full">{subjectName(cell.row.original.subject)}</Badge>,
-    },
-    {
       id: "due_at",
       accessorFn: (row) => row.due_at,
       header: t("homework.dueAt"),
@@ -206,15 +194,11 @@ function HomeworkContent() {
           </Show>
           <div class="space-y-1.5">
             <Label for="homework-course">{t("nav.courses")}</Label>
-            <Select id="homework-course" required value={selectedCourseId()} onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
-              <For each={manageableCourses()}>{(course) => <option value={course.id}>{course.title}</option>}</For>
-            </Select>
+            <SearchableSelect id="homework-course" required value={selectedCourseId()} onChange={setSelectedCourseId} placeholder={t("exams.selectCourse")} options={manageableCourses().map((course) => ({ value: course.id, label: course.title }))} />
           </div>
           <div class="space-y-1.5">
             <Label for="homework-subject-global">{t("subjects.subject")}</Label>
-            <Select id="homework-subject-global" required value={subjectId()} onChange={(event) => setSubjectId(event.currentTarget.value)}>
-              <For each={subjects() ?? []}>{(subject) => <option value={subject.id}>{subject.name}</option>}</For>
-            </Select>
+            <SearchableSelect id="homework-subject-global" required value={subjectId()} onChange={setSubjectId} placeholder={t("subjects.select")} options={(subjects() ?? []).map((subject) => ({ value: subject.id, label: subject.name }))} />
           </div>
           <div class="space-y-1.5">
             <Label for="homework-title-global">{t("form.title")}</Label>
@@ -239,7 +223,7 @@ function HomeworkContent() {
         </form>
       </SidePanel>
       <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
@@ -259,8 +243,9 @@ function HomeworkContent() {
             tableClass="table-fixed min-w-5xl"
             filterColumn="title"
             enablePagination
-            pageSize={12}
+            pageSize={10}
             empty={t("homework.empty")}
+            storageKey="homework"
             onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
           />
         </Suspense>

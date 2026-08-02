@@ -23,6 +23,7 @@ export type User = {
   birth_date: string | null;
   theme: UserTheme | null;
   language: UserLanguage | null;
+  palette_color: string | null;
 };
 
 export type ProfileUpdate = {
@@ -158,6 +159,35 @@ export type Enrollment = {
   course: string;
   user: PersonRef;
   enrolled_by: PersonRef;
+  // The class (ClassGroup id) that pumped this enrollment, or null for a
+  // hand-placed row. A row with a source is swept when that class drops the
+  // student or detaches the course; a null row is permanent.
+  source: string | null;
+};
+
+// A class (şube): a named group of students, optionally tied to a term, that
+// pumps the Cartesian product of its members × attached courses into real
+// enrollment rows. See src/api/classes.
+export type ClassGroup = {
+  id: string;
+  creator: PersonRef;
+  name: string;
+  grade: string | null;
+  term: string | null;
+};
+
+export type ClassMember = {
+  id: string;
+  class: string;
+  user: PersonRef;
+  added_by: PersonRef;
+};
+
+export type ClassCourse = {
+  id: string;
+  class: string;
+  course: string;
+  attached_by: PersonRef;
 };
 
 export type CourseSession = {
@@ -437,24 +467,151 @@ export type GradeBand = {
   label: string;
 };
 
+export type MealSlot = {
+  name: string;
+  serving_minute: number | null;
+};
+
 export type SchoolSettings = {
   exam_kinds: ExamKindSetting[];
   attendance_statuses: string[];
   grade_bands: GradeBand[];
   max_file_bytes: number;
+  chatbot_history_turns: number;
+  max_chatbot_threads: number;
+  max_chatbot_message_len: number;
+  meal_slots: MealSlot[];
+  dietary_tags: string[];
+  meal_cancel_cutoff_minutes: number | null;
 };
 
-export const EXAM_KINDS: KnownExamKind[] = [
-  "homework",
-  "quiz",
-  "midterm",
-  "final",
-  "project",
-  "oral",
-];
+export type Limits = {
+  user: {
+    min_username_len: number;
+    max_username_len: number;
+    username_separators: string[];
+    reserved_usernames: string[];
+    min_password_len: number;
+    max_password_len: number;
+    max_name_len: number;
+    max_email_len: number;
+    min_phone_digits: number;
+    max_phone_digits: number;
+    roles: Role[];
+    themes: UserTheme[];
+    languages: UserLanguage[];
+    session_duration_days: number;
+  };
+  note: { max_title_len: number; max_content_len: number; max_files: number };
+  file: {
+    max_name_len: number;
+    max_content_type_len: number;
+    min_max_file_bytes: number;
+    max_max_file_bytes: number;
+    default_max_file_bytes: number;
+    image_content_types: string[];
+  };
+  message: { max_subject_len: number; max_body_len: number; max_label_len: number };
+  event: { max_title_len: number; max_description_len: number };
+  course: {
+    max_title_len: number;
+    max_description_len: number;
+    kinds: CourseKind[];
+    max_subject_name_len: number;
+    max_subject_description_len: number;
+    max_session_topic_len: number;
+    max_term_name_len: number;
+    max_class_name_len: number;
+    max_class_grade_len: number;
+    max_class_members: number;
+    max_class_courses: number;
+    max_class_bytes: number;
+  };
+  exam: {
+    max_title_len: number;
+    max_description_len: number;
+    modes: ExamMode[];
+    min_duration_ms: number;
+    max_duration_ms: number;
+    max_attempts: number;
+    unlimited_attempts: number;
+    question_kinds: QuestionKind[];
+    max_question_text_len: number;
+    min_question_points: number;
+    max_question_points: number;
+    min_question_choices: number;
+    max_question_choices: number;
+    max_choice_text_len: number;
+    max_answer_text_len: number;
+    min_mark: number;
+    max_mark: number;
+    ws_tick_secs: number;
+    ws_max_question_id_len: number;
+  };
+  homework: {
+    max_title_len: number;
+    max_description_len: number;
+    max_text_len: number;
+    max_files_per_submission: number;
+    max_assigned: number;
+    statuses: string[];
+  };
+  question_pool: { max_title_len: number; max_body_len: number; max_solution_body_len: number };
+  appointment: { max_note_len: number; max_reason_len: number; max_slot_occurrences: number };
+  meal: {
+    max_dish_name_len: number;
+    max_dish_description_len: number;
+    max_dishes_per_menu: number;
+    max_dish_tags: number;
+    max_menu_capacity: number;
+    max_dietary_tags: number;
+    max_dietary_note_len: number;
+    max_dish_price_minor: number;
+    max_ledger_amount_minor: number;
+    max_ledger_method_len: number;
+    max_ledger_note_len: number;
+    max_cancel_cutoff_minutes: number;
+    max_serving_minute: number;
+    booking_statuses: string[];
+    attendance_statuses: string[];
+    ledger_kinds: string[];
+  };
+  payment: {
+    max_plan_name_len: number;
+    max_plan_installments: number;
+    max_assign_students: number;
+    max_request_key_len: number;
+    ledger_kinds: string[];
+  };
+  chatbot: {
+    max_message_len: number;
+    max_thread_title_len: number;
+    min_max_message_len: number;
+    max_max_message_len: number;
+    default_max_message_len: number;
+    min_history_turns: number;
+    max_history_turns: number;
+    default_history_turns: number;
+    min_max_threads: number;
+    max_max_threads: number;
+    default_max_threads: number;
+  };
+  settings: {
+    max_list_len: number;
+    max_item_len: number;
+    min_exam_kind_weight: number;
+    max_exam_kind_weight: number;
+    max_grade_bands: number;
+    max_grade_label_len: number;
+    required_attendance_statuses: string[];
+  };
+  request: { max_page_limit: number; schedule_past_grace_ms: number; request_timeout_secs: number };
+  rate: { window_secs: number; auth_per_minute: number; api_per_minute: number; chatbot_per_minute: number };
+};
 
+// Fallbacks keep forms usable when the unauthenticated metadata request fails.
+export const EXAM_KINDS: KnownExamKind[] = ["homework", "quiz", "midterm", "final", "project", "oral"];
 export const EXAM_MODES: ExamMode[] = ["sync", "async", "open"];
-
 export const QUESTION_KINDS: QuestionKind[] = ["choice", "text"];
 
 export type MessageFolder = "inbox" | "sent" | "archive" | "trash";
@@ -533,4 +690,68 @@ export type HomeworkReportEntry = {
   late: boolean;
   missing: boolean;
   result: HomeworkResult | null;
+};
+
+export type MealDish = {
+  id: string;
+  name: string;
+  description: string | null;
+  price_minor: number;
+  tags: string[];
+  conflicts: string[];
+  created_at: number;
+};
+
+export type MealMenu = {
+  id: string;
+  date: string;
+  slot: string;
+  capacity: number | null;
+  dishes: MealDish[];
+  created_by: PersonRef;
+  created_at: number;
+};
+
+export type MealBooking = {
+  id: string;
+  menu_id: string;
+  student: PersonRef;
+  booked_by: PersonRef;
+  status: string;
+  cancelled_at: number | null;
+  created_at: number;
+};
+
+export type MealAttendance = {
+  id: string;
+  menu_id: string;
+  student: PersonRef;
+  status: string;
+  marked_by: PersonRef;
+  marked_at: number;
+};
+
+export type DietaryProfile = {
+  student: PersonRef;
+  tags: string[];
+  note: string | null;
+  updated_by: PersonRef | null;
+  updated_at: number | null;
+};
+
+export type MealBalance = {
+  student: PersonRef;
+  balance_minor: number;
+};
+
+export type MealLedgerEntry = {
+  id: string;
+  student: PersonRef;
+  kind: string;
+  amount_minor: number;
+  source: string | null;
+  method: string | null;
+  note: string | null;
+  recorded_by: PersonRef;
+  created_at: number;
 };

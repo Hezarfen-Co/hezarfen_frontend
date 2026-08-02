@@ -18,6 +18,18 @@ describe("client", () => {
       expect(init?.credentials).toBe("same-origin");
     });
 
+    it("coalesces simultaneous identical GETs without caching later reads", async () => {
+      let resolve!: (value: Response) => void;
+      vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((done) => { resolve = done; })));
+      const first = client("/shared");
+      const second = client("/shared");
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+      resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+      await expect(Promise.all([first, second])).resolves.toEqual([{ ok: true }, { ok: true }]);
+      mockFetchSuccess({ fresh: true });
+      await expect(client("/shared")).resolves.toEqual({ fresh: true });
+    });
+
     it("makes POST request with JSON body", async () => {
       mockFetchSuccess({ ok: true });
       const body = { foo: "bar" };
@@ -242,9 +254,13 @@ describe("client", () => {
       ).toBe("Bu sınava yalnızca dersin öğretmenleri veya bir müdür soru ekleyebilir.");
     });
 
-    it("handles unknown messages with sentence case", () => {
-      expect(formatApiErrorMessage("custom error occurred", "en")).toBe("Custom error occurred");
-      expect(formatApiErrorMessage("custom error occurred", "tr")).toBe("İşlem tamamlanamadı: Custom error occurred");
+    it("falls back to a clean localized message for unmapped errors (no raw leak)", () => {
+      expect(formatApiErrorMessage("custom error occurred", "en")).toBe(
+        "Something went wrong. Please check your input and try again.",
+      );
+      expect(formatApiErrorMessage("custom error occurred", "tr")).toBe(
+        "İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene.",
+      );
     });
 
     it("localizes backend max-length validation messages", () => {
@@ -330,8 +346,20 @@ describe("client", () => {
     });
 
     it("formats generic Error", () => {
-      expect(formatApiError(new Error("generic"), "en")).toBe("Generic");
-      expect(formatApiError(new Error("generic"), "tr")).toBe("İşlem tamamlanamadı: Generic");
+      expect(formatApiError(new Error("generic"), "en")).toBe("Something went wrong. Please check your input and try again.");
+      expect(formatApiError(new Error("generic"), "tr")).toBe("İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene.");
+    });
+
+    it("does not expose network, runtime, or provider errors to users", () => {
+      expect(formatApiError(new TypeError("Failed to fetch"), "tr")).toBe(
+        "Sunucuya ulaşılamadı. Bağlantını kontrol edip tekrar dene.",
+      );
+      expect(formatApiError(new TypeError("Cannot read properties of null (reading 'user')"), "tr")).toBe(
+        "Sayfa yüklenirken bir sorun oluştu. Sayfayı yeniden yükleyip tekrar dene.",
+      );
+      expect(formatApiError(new Error("useAuth must be used within AuthProvider"), "en")).toBe(
+        "Something went wrong while loading the page. Reload the page and try again.",
+      );
     });
   });
 });

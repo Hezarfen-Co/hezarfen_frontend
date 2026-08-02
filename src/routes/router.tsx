@@ -3,6 +3,7 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  redirect,
 } from "@tanstack/solid-router";
 import { Suspense, createRenderEffect, createRoot, lazy, type Component } from "solid-js";
 import { AppShell } from "@/components/layout/app-shell";
@@ -33,19 +34,22 @@ const ExamsPage = lazyRoute(() => import("@/pages/exams-page"));
 const ExamDetailPage = lazyRoute(() => import("@/pages/exam-detail-page"));
 const ExamRoomPage = lazyRoute(() => import("@/pages/exam-room-page"));
 const QuestionBankPage = lazyRoute(() => import("@/pages/question-bank-page"));
+const BankQuestionDetailPage = lazyRoute(() => import("@/pages/bank-question-detail-page"));
 const CoursesPage = lazyRoute(() => import("@/pages/courses-page"));
 const CourseDetailPage = lazyRoute(() => import("@/pages/course-detail-page"));
+const ClassesPage = lazyRoute(() => import("@/pages/classes-page"));
+const ClassDetailPage = lazyRoute(() => import("@/pages/class-detail-page"));
 const MarksPage = lazyRoute(() => import("@/pages/marks-page"));
 const MessagesPage = lazyRoute(() => import("@/pages/messages-page"));
 const PomodoroPage = lazyRoute(() => import("@/pages/pomodoro-page"));
 const StudentMarksPage = lazyRoute(() => import("@/pages/student-marks-page"));
 const StudentPomodoroPage = lazyRoute(() => import("@/pages/student-pomodoro-page"));
-const AttendancePage = lazyRoute(() => import("@/pages/attendance-page"));
 const StudentAttendancePage = lazyRoute(() => import("@/pages/student-attendance-page"));
 const WorkLogPage = lazyRoute(() => import("@/pages/work-log-page"));
 const StaffWorkPage = lazyRoute(() => import("@/pages/staff-work-page"));
 const LiveMonitorPage = lazyRoute(() => import("@/pages/live-monitor-page"));
 const AdminUsersPage = lazyRoute(() => import("@/pages/admin-users-page"));
+const AdminUserDetailPage = lazyRoute(() => import("@/pages/admin-user-detail-page"));
 const SettingsPage = lazyRoute(() => import("@/pages/settings-page"));
 const TermsPage = lazyRoute(() => import("@/pages/terms-page"));
 const GuidePage = lazyRoute(() => import("@/pages/guide-page"));
@@ -54,6 +58,12 @@ const QuestionsPage = lazyRoute(() => import("@/pages/questions-page"));
 const QuestionDetailPage = lazyRoute(() => import("@/pages/question-detail-page"));
 const CalendarPage = lazyRoute(() => import("@/pages/calendar-page"));
 const AppointmentsPage = lazyRoute(() => import("@/pages/appointments-page"));
+const MealsPage = lazyRoute(() => import("@/pages/meals-page"));
+const MealDetailPage = lazyRoute(() => import("@/pages/meal-detail-page"));
+const PaymentsPage = lazyRoute(() => import("@/pages/payments-page"));
+const PaymentStatementPage = lazyRoute(() => import("@/pages/payment-statement-page"));
+const WhiteboardsPage = lazyRoute(() => import("@/pages/whiteboards-page"));
+const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
 
 function RootComponent() {
   return (
@@ -151,22 +161,36 @@ const questionBankRoute = createRoute({
   component: QuestionBankPage,
 });
 
+const bankQuestionDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/question-bank/$id",
+  component: BankQuestionDetailPage,
+});
+
 const coursesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/courses",
+  validateSearch: (search: Record<string, unknown>) => ({
+    action: search.action === "new" ? "new" : undefined,
+    kind: search.kind === "course" || search.kind === "study" || search.kind === "club" ? search.kind : undefined,
+  }),
   component: CoursesPage,
 });
 
 const studiesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/studies",
-  component: CoursesPage,
+  beforeLoad: ({ location }) => {
+    throw redirect({ to: "/courses", search: { ...location.search, kind: "study" } as never });
+  },
 });
 
 const clubsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/clubs",
-  component: CoursesPage,
+  beforeLoad: ({ location }) => {
+    throw redirect({ to: "/courses", search: { ...location.search, kind: "club" } as never });
+  },
 });
 
 const courseDetailRoute = createRoute({
@@ -178,6 +202,9 @@ const courseDetailRoute = createRoute({
 const marksRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/marks",
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: search.tab === "attendance" ? "attendance" as const : "marks" as const,
+  }),
   component: MarksPage,
 });
 
@@ -208,7 +235,9 @@ const studentPomodoroRoute = createRoute({
 const attendanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/attendance",
-  component: AttendancePage,
+  beforeLoad: () => {
+    throw redirect({ to: "/marks", search: { tab: "attendance" } });
+  },
 });
 
 const studentAttendanceRoute = createRoute({
@@ -235,6 +264,18 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 });
 
+const classesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/classes",
+  component: ClassesPage,
+});
+
+const classDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/classes/$id",
+  component: ClassDetailPage,
+});
+
 const termsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/management/terms",
@@ -251,6 +292,12 @@ const adminUsersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin/users",
   component: AdminUsersPage,
+});
+
+const adminUserDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/users/$id",
+  component: AdminUserDetailPage,
 });
 
 const guideRoute = createRoute({
@@ -289,6 +336,48 @@ const appointmentsRoute = createRoute({
   component: AppointmentsPage,
 });
 
+const mealsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/meals",
+  component: MealsPage,
+});
+
+const mealDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/meals/$id",
+  component: MealDetailPage,
+});
+
+const paymentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/payments",
+  component: PaymentsPage,
+});
+
+const managedPaymentDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/payments/$userId",
+  component: PaymentsPage,
+});
+
+const paymentStatementRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payments",
+  component: PaymentStatementPage,
+});
+
+const whiteboardsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/whiteboards",
+  component: WhiteboardsPage,
+});
+
+const whiteboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/whiteboards/$id",
+  component: WhiteboardPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -303,6 +392,7 @@ const routeTree = rootRoute.addChildren([
   liveMonitorRoute,
   examsRoute,
   questionBankRoute,
+  bankQuestionDetailRoute,
   coursesRoute,
   studiesRoute,
   clubsRoute,
@@ -317,14 +407,24 @@ const routeTree = rootRoute.addChildren([
   workRoute,
   staffWorkRoute,
   settingsRoute,
+  classesRoute,
+  classDetailRoute,
   termsRoute,
   adminUsersRoute,
+  adminUserDetailRoute,
   guideRoute,
   myStudentsRoute,
   questionsRoute,
   questionDetailRoute,
   calendarRoute,
   appointmentsRoute,
+  mealsRoute,
+  mealDetailRoute,
+  paymentsRoute,
+  managedPaymentDetailRoute,
+  paymentStatementRoute,
+  whiteboardsRoute,
+  whiteboardRoute,
 ]);
 
 function RouterPending() {

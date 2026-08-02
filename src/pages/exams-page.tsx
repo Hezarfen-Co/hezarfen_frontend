@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourseById } from "@/api/courses";
@@ -17,7 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconCheck, IconEdit, IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
-import { DropdownSelect, Select } from "@/components/ui/select";
+import { DropdownSelect } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createNow } from "@/lib/create-now";
@@ -31,7 +32,7 @@ import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const EXAM_PAGE_SIZE = 12;
+const EXAM_PAGE_SIZE = 10;
 
 type ExamRow = Exam & { displayStatus: ExamDisplayStatus };
 
@@ -184,12 +185,6 @@ function ExamsContent() {
       },
     },
     {
-      accessorKey: "kind",
-      header: t("exams.kind"),
-      meta: { cellClass: "truncate text-muted-foreground" },
-      cell: (cell) => examKindLabel(String(cell.row.original.kind), t),
-    },
-    {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "text-center", cellClass: "text-center" },
@@ -271,7 +266,7 @@ function ExamsContent() {
       </Show>
 
       <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
@@ -294,6 +289,7 @@ function ExamsContent() {
             enablePagination
             pageSize={EXAM_PAGE_SIZE}
             empty={t("exams.empty")}
+            storageKey="exams"
             onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
             filters={
               <div class="flex flex-wrap items-center gap-2.5">
@@ -328,7 +324,7 @@ function ExamsContent() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    class="h-11 rounded-xl px-3 text-xs font-medium text-muted-foreground hover:text-foreground tactile-press"
+                    class="h-9 rounded-md px-3 text-xs font-medium text-muted-foreground hover:text-foreground"
                     onClick={() => {
                       setStatusFilter("all");
                       setCourseFilter("all");
@@ -357,7 +353,7 @@ function ExamsContent() {
         description={createdExam() ? t("exams.step2Questions") : t("exams.subtitle")}
         size={createStep() === "questions" ? "wide" : "default"}
       >
-        <div class="mb-4 flex rounded-2xl border border-indigo-500/15 bg-indigo-500/3 p-1">
+        <div class="mb-4 flex rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-1">
           <button
             type="button"
             class={cn(
@@ -389,14 +385,11 @@ function ExamsContent() {
 
         <Show when={createStep() === "details"}>
           <Show when={!createdExam()}>
-            <div class="mb-4 space-y-1.5 rounded-2xl border border-sky-500/15 bg-sky-500/3 p-4">
+            <div class="mb-4 space-y-1.5 rounded-lg border border-sky-500/15 bg-sky-500/2.5 p-4">
               <label class="text-sm font-medium" for="exam-course">
                 {t("exams.selectCourse")}
               </label>
-              <Select id="exam-course" value={selectedCourseId()} required onChange={(event) => setSelectedCourseId(event.currentTarget.value)}>
-                <option value="">{t("exams.selectCourse")}</option>
-                <For each={manageableCourses()}>{(course: Course) => <option value={course.id}>{course.title}</option>}</For>
-              </Select>
+              <SearchableSelect id="exam-course" value={selectedCourseId()} required onChange={setSelectedCourseId} placeholder={t("exams.selectCourse")} options={manageableCourses().map((course: Course) => ({ value: course.id, label: course.title }))} />
             </div>
           </Show>
           <ExamForm
@@ -438,7 +431,7 @@ function ExamsContent() {
         <Show when={editingExam()}>
           {(exam) => (
             <div class="space-y-4">
-              <div class="flex rounded-2xl border border-indigo-500/15 bg-indigo-500/3 p-1">
+              <div class="flex rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-1">
                 <button
                   type="button"
                   class={cn(

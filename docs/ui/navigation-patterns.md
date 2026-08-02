@@ -5,6 +5,36 @@ Use one of two patterns for every new interaction:
 - Full page: resources with a durable detail view, such as a course, exam, event, user, exam room, or live monitor. Full pages must include breadcrumbs when nested.
 - Side panel: short contained work that should return the user to the same list context, such as create, quick edit, and filters.
 
+## Application shell
+
+- Desktop uses one fixed role navigation: `15rem` expanded and `4rem`
+  collapsed. Collapse preference persists.
+- Primary destinations come from `src/components/layout/nav-items.ts`; sidebar,
+  mobile bar, header route labels, and command search reuse that metadata.
+- Student: Today, Classes, Calendar, Progress.
+- Teacher: Today, Classes, Students, Calendar.
+- Manager/admin: Today, Classes, Students, Calendar, School.
+- Parent: Today, Children, Calendar, Meals.
+- Unsupported destinations are hidden. Secondary destinations are ordered by
+  user intent: Academics (course work), Planning (events and appointments),
+  Workspace (personal tools), Community, then role-specific management.
+  Appointments is always visible under Planning.
+- Account stays at sidebar bottom; profile, theme, language, guide, and logout
+  live in its menu. Messages and notifications live in the top header.
+- Mobile keeps the primary bottom bar and ends with Account, which opens the
+  complete grouped navigation drawer.
+
+## Hubs
+
+- `/courses` is the Classes hub. `kind=course|study|club` filters one list.
+- `/studies` and `/clubs` redirect to the matching `/courses?kind=...` view.
+- `/marks` is the student Progress hub; Report card and Attendance share tabs.
+- `/attendance` redirects to the Attendance tab for old links.
+- `/students` is parent Children for parents and the staff lookup/report hub for
+  teacher+.
+- `/school` groups settings, terms, staff work, meals, and admin-only users.
+- Course workspaces stay shallow: Overview, Work, Sessions, People.
+
 ## Dashboard (homepage)
 
 Dashboard pages are **observation-only**. They must not contain create, edit,
@@ -15,17 +45,23 @@ Structure (see `docs/ui/ui-redesign-tokens.md` → Dashboard and
 `src/pages/dashboard-page.tsx`):
 
 1. Compact header (greeting, neutral role chip, date).
-2. Role-scoped workspace portal cards (section navigation + optional counts).
-3. Needs attention + Upcoming lists (side by side on large screens).
+2. Role-scoped highlights backed by current API totals.
+3. Real-data progress + attendance/workload charts.
+4. Navigable upcoming-deadlines table.
+5. Optional teacher+ Question Bank / Question Pool links.
 
 Rules:
 
-- Monochrome/grayscale chrome; semantic color only for status badges.
-- Portal cards: horizontal dense row; desktop title and count as `Title | N`.
-- No redundant KPI strip under cards, no activity charts, no guide/marketing CTA blocks on the homepage.
-- Card set is role-scoped and must stay aligned with nav/`docs/auth/role-scope-matrix.md`
-  (e.g. personal `/work` for teacher–manager only; admin uses staff-work + users).
-- Attention items are time-sensitive exams/events only; empty states are informational text.
+- Monochrome/grayscale surfaces; chart accent and semantic status colors only.
+- Categorical values use bars or split charts, never sparklines/trend lines.
+- Student progress is per-course averages. Staff progress is `Course.capacity`,
+  labeled as capacity rather than current class size.
+- Deadline rows navigate by kind and support pointer, Enter, and Space activation.
+- Appointments feed deadlines for every role, with a persistent appointments link.
+- Question Bank links are teacher+ only; student/parent deadline tables use full width.
+- No card reordering or dashboard preference state.
+- Highlights and panels stay aligned with `docs/auth/role-scope-matrix.md`.
+- Empty states are informational text. No manual refresh or inferred priority.
 
 Role scope rules:
 

@@ -286,6 +286,24 @@ function sentenceCase(message: string): string {
   return trimmed[0].toLocaleUpperCase("en-US") + trimmed.slice(1);
 }
 
+function formatRuntimeErrorMessage(message: string, locale: Locale): string | null {
+  const normalized = normalizeApiMessage(message);
+  if (/^(failed to fetch|load failed|networkerror|network request failed)/.test(normalized)) {
+    return locale === "tr"
+      ? "Sunucuya ulaşılamadı. Bağlantını kontrol edip tekrar dene."
+      : "Could not reach the server. Check your connection and try again.";
+  }
+  if (
+    /^(typeerror:\s*)?cannot (read|set) propert(y|ies) of (null|undefined)/.test(normalized) ||
+    /^use\w+ must be used within \w+provider/.test(normalized)
+  ) {
+    return locale === "tr"
+      ? "Sayfa yüklenirken bir sorun oluştu. Sayfayı yeniden yükleyip tekrar dene."
+      : "Something went wrong while loading the page. Reload the page and try again.";
+  }
+  return null;
+}
+
 function formatNumber(value: string, locale: Locale): string {
   return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US").format(Number(value));
 }
@@ -331,7 +349,9 @@ function errorMessageFromPayload(data: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function client<T>(path: string, options: RequestOptions = {}): Promise<T> {
+const pendingGets = new Map<string, Promise<unknown>>();
+
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {};
   let body: string | undefined;
 
@@ -403,6 +423,24 @@ export async function client<T>(path: string, options: RequestOptions = {}): Pro
   return data as T;
 }
 
+/**
+ * Coalesce only overlapping, non-cancellable GETs. This is deliberately not a
+ * cache: once settled the entry disappears, so every later resource refetch
+ * still reaches the backend and mutation consistency stays unchanged.
+ */
+export function client<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const method = options.method ?? "GET";
+  if (method !== "GET" || options.body !== undefined || options.signal || options.cache === "no-store") {
+    return request<T>(path, options);
+  }
+  const key = `${path}\u0000${options.cache ?? "default"}`;
+  const pending = pendingGets.get(key);
+  if (pending) return pending as Promise<T>;
+  const next = request<T>(path, options).finally(() => pendingGets.delete(key));
+  pendingGets.set(key, next);
+  return next;
+}
+
 export async function formClient<T>(path: string, body: FormData, signal?: AbortSignal): Promise<T> {
   const res = await fetch(`${API_PREFIX}${path}`, {
     method: "POST",
@@ -455,10 +493,16 @@ export function formatApiErrorMessage(message: string, locale: Locale = currentL
   const normalized = normalizeApiMessage(message);
   const known = API_ERROR_MESSAGES[normalized]?.[locale];
   if (known) return known;
+  const runtime = formatRuntimeErrorMessage(message, locale);
+  if (runtime) return runtime;
   const validation = formatValidationMessage(message, locale);
   if (validation) return validation;
-  if (locale === "tr") return `İşlem tamamlanamadı: ${sentenceCase(message)}`;
-  return sentenceCase(message);
+  // Unmapped backend text is raw English/technical — never surface it to the
+  // user. Fall back to a clean localized line; add a mapping in
+  // API_ERROR_MESSAGES when a specific message deserves its own wording.
+  return locale === "tr"
+    ? "İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene."
+    : "Something went wrong. Please check your input and try again.";
 }
 
 export function formatApiError(err: unknown, locale: Locale = currentLocale()): string {
@@ -476,6 +520,12 @@ export function formatApiError(err: unknown, locale: Locale = currentLocale()): 
     if (err.status === 413) return API_ERROR_MESSAGES["payload too large"][locale];
     if (err.status >= 500) return locale === "tr" ? "Sunucuda bir sorun oluştu. Lütfen tekrar dene." : "Server error. Please try again.";
     return formatApiErrorMessage(err.message, locale);
+  }
+  if (err instanceof TypeError) {
+    return formatRuntimeErrorMessage(err.message, locale) ??
+      (locale === "tr"
+        ? "Sayfa yüklenirken bir sorun oluştu. Sayfayı yeniden yükleyip tekrar dene."
+        : "Something went wrong while loading the page. Reload the page and try again.");
   }
   if (err instanceof Error) return formatApiErrorMessage(err.message, locale);
   return locale === "tr" ? "Bir şeyler ters gitti." : "Something went wrong.";

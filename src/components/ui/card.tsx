@@ -7,7 +7,7 @@ export function Card(props: ParentProps<ComponentProps<"div">>) {
   return (
     <div
       class={cn(
-        "rounded-2xl border border-black/6 dark:border-white/8 bg-card text-card-foreground shadow-[0_4px_20px_rgb(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.25)] transition-all duration-200",
+        "rounded-lg border bg-card text-card-foreground shadow-sm",
         local.class,
       )}
       {...rest}
@@ -29,7 +29,7 @@ export function CardHeader(props: ParentProps<ComponentProps<"div">>) {
 export function CardTitle(props: ParentProps<ComponentProps<"h3">>) {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
-    <h3 class={cn("text-lg font-semibold leading-none tracking-tight", local.class)} {...rest}>
+    <h3 class={cn("font-semibold leading-none tracking-tight", local.class)} {...rest}>
       {local.children}
     </h3>
   );

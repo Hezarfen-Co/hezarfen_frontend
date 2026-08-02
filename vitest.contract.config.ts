@@ -25,6 +25,9 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["src/api/__tests__/contract/**/*.contract.test.ts"],
+    // The scratch backend rate-limits all requests from its loopback client.
+    // Running files serially keeps a contract run deterministic and realistic.
+    fileParallelism: false,
     testTimeout: 30_000,
     hookTimeout: 30_000,
   },
