@@ -352,6 +352,7 @@ function DashboardContent() {
                   subtitle={t("dashboard.courseAverages")}
                   items={courseAverages()}
                   maxScale={100}
+                  itemsPerPage={5}
                 />
               </Show>
               <Show when={role() !== "student"}>
@@ -360,6 +361,7 @@ function DashboardContent() {
                   title={t("dashboard.progressOverview")}
                   subtitle={t("dashboard.courseCapacities")}
                   items={courseCapacities()}
+                  itemsPerPage={5}
                 />
               </Show>
               <Show when={role() === "student"}>
@@ -367,6 +369,7 @@ function DashboardContent() {
                   title={t("dashboard.activitySplit")}
                   subtitle={t("dashboard.activitySplitDesc")}
                   segments={attendanceSegments()}
+                  itemsPerPage={3}
                 />
               </Show>
               <Show when={role() !== "student"}>
@@ -374,6 +377,7 @@ function DashboardContent() {
                   title={t("dashboard.workloadSplit")}
                   subtitle={t("dashboard.workloadSplitDesc")}
                   segments={workloadSegments()}
+                  itemsPerPage={3}
                 />
               </Show>
             </div>
