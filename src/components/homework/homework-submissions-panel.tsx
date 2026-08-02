@@ -16,6 +16,7 @@ import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
+import { fileTypeMeta } from "@/lib/file-type";
 import { formatDateTime } from "@/lib/format";
 import { formatBytes } from "@/lib/upload-limits";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -179,31 +180,43 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
             <div class="space-y-4">
               <div class="rounded-lg border bg-muted/20 p-3">
                 <p class="text-xs text-muted-foreground">{t("exams.textAnswer")}</p>
-                <p class="mt-2 whitespace-pre-wrap text-sm">{submission().text || t("homework.noAnswer")}</p>
-              </div>
-              <div class="space-y-2 rounded-lg border bg-background/70 p-3">
-                <p class="text-sm font-medium">{t("notes.files")}</p>
-                <Show when={submission().files.length > 0} fallback={<p class="text-sm text-muted-foreground">{t("notes.noFiles")}</p>}>
-                  <ul class="space-y-2">
-                    <For each={submission().files}>
-                      {(file) => (
-                        <li class="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-sm">
-                          <div class="min-w-0">
-                            <p class="truncate font-medium">{file.name}</p>
-                            <p class="text-xs text-muted-foreground">{formatBytes(file.size)}</p>
-                          </div>
-                          <a href={getHomeworkRosterSubmissionFileUrl(props.homeworkId, viewTarget()!.user, file.id)} download={file.name}>
-                            <Button type="button" size="sm" variant="ghost" class="rounded-lg">
-                              <IconDownload class="h-4 w-4" />
-                              {t("notes.downloadFile")}
-                            </Button>
-                          </a>
-                        </li>
-                      )}
-                    </For>
-                  </ul>
+                <Show
+                  when={submission().text}
+                  fallback={<p class="mt-2 text-sm text-muted-foreground">{t("homework.noAnswer")}</p>}
+                >
+                  {(text) => <div class="mt-2 text-sm leading-relaxed" innerHTML={text()} />}
                 </Show>
               </div>
+              {/* Skipped entirely (not just an empty placeholder) when there are no files — this is a read-only view, so a "no files" row would just be dead weight. */}
+              <Show when={submission().files.length > 0}>
+                <div class="space-y-2 rounded-lg border bg-background/70 p-3">
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-medium">{t("notes.files")}</p>
+                    <Badge variant="secondary" class="rounded-full">{submission().files.length}</Badge>
+                  </div>
+                  <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <For each={submission().files}>
+                      {(file) => {
+                        const meta = fileTypeMeta(file);
+                        return (
+                          <li class="flex items-center gap-2 rounded-lg border bg-card px-2.5 py-2 text-sm">
+                            <span class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border ${meta.class}`}>{meta.icon}</span>
+                            <div class="min-w-0 flex-1">
+                              <p class="truncate font-medium">{file.name}</p>
+                              <p class="text-xs text-muted-foreground">{formatBytes(file.size)}</p>
+                            </div>
+                            <a href={getHomeworkRosterSubmissionFileUrl(props.homeworkId, viewTarget()!.user, file.id)} download={file.name}>
+                              <Button type="button" size="icon" variant="ghost" class="h-7 w-7 rounded-lg" title={t("notes.downloadFile")}>
+                                <IconDownload class="h-3.5 w-3.5" />
+                              </Button>
+                            </a>
+                          </li>
+                        );
+                      }}
+                    </For>
+                  </ul>
+                </div>
+              </Show>
             </div>
           )}
         </Show>

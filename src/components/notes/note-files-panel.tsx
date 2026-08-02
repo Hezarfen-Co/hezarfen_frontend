@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, lazy, type JSX } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, lazy } from "solid-js";
 import { deleteNoteFileById } from "@/api/notes";
 import { getNoteFileBlob } from "@/api/notes";
 import { getNoteFileUrl } from "@/api/notes";
@@ -14,23 +14,12 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { createFlash } from "@/lib/flash";
-import {
-  IconDownload,
-  IconEdit,
-  IconEye,
-  IconFileAudio,
-  IconFileImage,
-  IconFileSpreadsheet,
-  IconFileText,
-  IconFileVideo,
-  IconNote,
-  IconPlus,
-  IconTrash,
-} from "@/components/ui/icons";
+import { IconDownload, IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { cn } from "@/lib/cn";
+import { fileTypeMeta } from "@/lib/file-type";
 import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 import { useT } from "@/stores/preferences-context";
 
@@ -43,23 +32,6 @@ const FILE_PAGE_SIZE = 4;
 /** Drawings are saved with this suffix so the grid can offer "Edit" without fetching every blob. */
 const DRAWING_SUFFIX = ".hzdraw.png";
 const isDrawing = (file: NoteFile) => file.name.toLowerCase().endsWith(DRAWING_SUFFIX);
-
-function extension(name: string): string {
-  const ext = name.split(".").pop()?.toLowerCase();
-  return ext && ext !== name.toLowerCase() ? ext : "file";
-}
-
-function fileMeta(file: NoteFile): { label: string; class: string; icon: JSX.Element } {
-  const type = file.content_type.toLowerCase();
-  const ext = extension(file.name);
-  if (type.startsWith("image/")) return { label: ext, class: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300", icon: <IconFileImage class="h-8 w-8" /> };
-  if (type.startsWith("video/")) return { label: ext, class: "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300", icon: <IconFileVideo class="h-8 w-8" /> };
-  if (type.startsWith("audio/")) return { label: ext, class: "border-fuchsia-500/25 bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300", icon: <IconFileAudio class="h-8 w-8" /> };
-  if (type === "application/pdf" || ext === "pdf") return { label: "pdf", class: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300", icon: <IconFileText class="h-8 w-8" /> };
-  if (["xls", "xlsx", "csv"].includes(ext) || type.includes("spreadsheet")) return { label: ext, class: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300", icon: <IconFileSpreadsheet class="h-8 w-8" /> };
-  if (["doc", "docx", "txt", "md", "rtf"].includes(ext) || type.startsWith("text/") || type.includes("word")) return { label: ext, class: "border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-blue-300", icon: <IconFileText class="h-8 w-8" /> };
-  return { label: ext, class: "border-border bg-background text-muted-foreground", icon: <IconNote class="h-8 w-8" /> };
-}
 
 export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   let input: HTMLInputElement | undefined;
@@ -214,7 +186,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           <ul class="grid grid-cols-1 gap-3 rounded-md border border-border/70 bg-background/70 p-2 sm:grid-cols-2">
             <For each={pageFiles()}>
               {(file) => {
-                const meta = fileMeta(file);
+                const meta = fileTypeMeta(file, "h-8 w-8");
                 return (
                   <li class="group overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-xs transition-colors hover:border-amber-500/40">
                     <div class="relative h-28 bg-muted/25">
