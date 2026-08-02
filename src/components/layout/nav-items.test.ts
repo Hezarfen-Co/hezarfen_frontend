@@ -16,6 +16,20 @@ test("invalid role destinations stay hidden", () => {
   expect(visibleNavItems("teacher").map((item) => item.to)).not.toContain("/admin/users");
 });
 
+test("student secondary navigation follows the academic, planning, workspace, community flow", () => {
+  expect(
+    sidebarNavGroups("student").map((group) => ({
+      id: group.id,
+      items: group.items.map((item) => item.id),
+    })),
+  ).toEqual([
+    { id: "classes", items: ["homework", "exams"] },
+    { id: "planning", items: ["events", "appointments"] },
+    { id: "workspace", items: ["notes", "whiteboards", "pomodoro"] },
+    { id: "community", items: ["meals", "payment-statement", "messages", "questions"] },
+  ]);
+});
+
 test.each(["student", "parent", "teacher", "manager", "admin"] as const)(
   "%s can reach every visible feature and appointments from the sidebar",
   (role) => {

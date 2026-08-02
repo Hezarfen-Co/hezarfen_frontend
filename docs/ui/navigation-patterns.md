@@ -15,9 +15,10 @@ Use one of two patterns for every new interaction:
 - Teacher: Today, Classes, Students, Calendar.
 - Manager/admin: Today, Classes, Students, Calendar, School.
 - Parent: Today, Children, Calendar, Meals.
-- Unsupported destinations are hidden. Education and Community are collapsible
-  groups; other role-valid secondary destinations are grouped below the primary
-  list. Appointments is always visible under Education.
+- Unsupported destinations are hidden. Secondary destinations are ordered by
+  user intent: Academics (course work), Planning (events and appointments),
+  Workspace (personal tools), Community, then role-specific management.
+  Appointments is always visible under Planning.
 - Account stays at sidebar bottom; profile, theme, language, guide, and logout
   live in its menu. Messages and notifications live in the top header.
 - Mobile keeps the primary bottom bar and ends with Account, which opens the

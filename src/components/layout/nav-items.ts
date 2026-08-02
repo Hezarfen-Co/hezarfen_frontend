@@ -109,12 +109,26 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "homework", to: "/homework", labelKey: "nav.homework", Icon: IconHomework },
       { id: "exams", to: "/exams", labelKey: "nav.exams", Icon: IconExam },
       { id: "question-bank", to: "/question-bank", labelKey: "nav.questionBank", Icon: IconArchive, minRole: "teacher" },
+      { id: "marks", to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
+    ],
+  },
+  {
+    id: "planning",
+    labelKey: "nav.group.planning",
+    Icon: IconCalendarDays,
+    items: [
       { id: "events", to: "/events", labelKey: "nav.events", Icon: IconCalendar },
       CALENDAR_ITEM,
       { id: "appointments", to: "/appointments", labelKey: "nav.appointments", Icon: IconClock },
+    ],
+  },
+  {
+    id: "workspace",
+    labelKey: "nav.group.workspace",
+    Icon: IconNote,
+    items: [
       { id: "notes", to: "/notes", labelKey: "nav.notes", Icon: IconNote },
       { id: "whiteboards", to: "/whiteboards", labelKey: "nav.whiteboards", Icon: IconEdit, minRole: "student" },
-      { id: "marks", to: "/marks", labelKey: "nav.marks", Icon: IconChart, exactRole: "student" },
       { id: "pomodoro", to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
     ],
   },
@@ -130,7 +144,7 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    id: "workspace",
+    id: "community",
     labelKey: "nav.group.community",
     Icon: IconGlobe,
     items: [

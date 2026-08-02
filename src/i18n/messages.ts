@@ -70,6 +70,8 @@ export type MessageKey =
   | "nav.group.students"
   | "nav.group.school"
   | "nav.group.classes"
+  | "nav.group.planning"
+  | "nav.group.workspace"
   | "nav.group.grades"
   | "nav.group.reports"
   | "nav.group.settings"
@@ -1296,6 +1298,8 @@ const en: Dict = {
   "nav.group.students": "Student Management",
   "nav.group.school": "Management",
   "nav.group.classes": "Academics",
+  "nav.group.planning": "Planning",
+  "nav.group.workspace": "Workspace",
   "nav.group.grades": "Grades",
   "nav.group.reports": "Reports",
   "nav.group.settings": "Settings",
@@ -2527,6 +2531,8 @@ const tr: Dict = {
   "nav.group.students": "Öğrenci Yönetimi",
   "nav.group.school": "Yönetim",
   "nav.group.classes": "Akademik",
+  "nav.group.planning": "Planlama",
+  "nav.group.workspace": "Çalışma Alanı",
   "nav.group.grades": "Notlar",
   "nav.group.reports": "Raporlar",
   "nav.group.settings": "Ayarlar",
