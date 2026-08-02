@@ -752,6 +752,7 @@ export type MessageKey =
   | "courses.kind.studySingular"
   | "courses.kind.clubSingular"
   | "courses.capacity"
+  | "courses.unlimited"
   | "courses.capacityOptional"
   | "courses.teachers"
   | "courses.assignTeacher"
@@ -2089,6 +2090,7 @@ const en: Dict = {
   "courses.kind.studySingular": "Study session",
   "courses.kind.clubSingular": "Club",
   "courses.capacity": "Capacity",
+  "courses.unlimited": "Unlimited",
   "courses.capacityOptional": "Optional seat cap",
   "courses.teachers": "Teachers",
   "courses.assignTeacher": "Assign teacher",
@@ -3352,6 +3354,7 @@ const tr: Dict = {
   "courses.kind.studySingular": "Etüt",
   "courses.kind.clubSingular": "Kulüp",
   "courses.capacity": "Kapasite",
+  "courses.unlimited": "Sınırsız",
   "courses.capacityOptional": "İsteğe bağlı kontenjan",
   "courses.teachers": "Öğretmenler",
   "courses.assignTeacher": "Öğretmen ata",

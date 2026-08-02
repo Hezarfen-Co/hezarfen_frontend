@@ -46,12 +46,12 @@ function MarksContent() {
           void navigate({ to: "/marks", search: { tab: next } });
         }}
       >
-        <TabsList class="w-fit max-w-full rounded-xl bg-card p-1 shadow-xs">
-          <TabsTrigger value="marks" class="h-9 rounded-lg">
+        <TabsList class="grid w-full grid-cols-2 gap-1 rounded-xl border border-border/70 border-b-0 bg-card/80 p-1 shadow-xs sm:w-fit">
+          <TabsTrigger value="marks" class="mb-0 h-9 min-w-0 rounded-lg border-0 px-3 py-0 transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 data-selected:border data-selected:border-border data-selected:bg-secondary data-selected:text-secondary-foreground data-selected:shadow-xs">
             <IconChart class="h-4 w-4" />
             {t("nav.group.grades")}
           </TabsTrigger>
-          <TabsTrigger value="attendance" class="h-9 rounded-lg">
+          <TabsTrigger value="attendance" class="mb-0 h-9 min-w-0 rounded-lg border-0 px-3 py-0 transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 data-selected:border data-selected:border-border data-selected:bg-secondary data-selected:text-secondary-foreground data-selected:shadow-xs">
             <IconClipboardCheck class="h-4 w-4" />
             {t("nav.attendance")}
           </TabsTrigger>

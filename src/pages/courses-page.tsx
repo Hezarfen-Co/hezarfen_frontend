@@ -208,6 +208,7 @@ function CoursesContent() {
                         enrolled={auth.user()?.role === "student"}
                         labels={{
                           capacity: t("courses.capacity"),
+                          unlimited: t("courses.unlimited"),
                           enrolled: t("courses.enrolled"),
                           kind: course.kind === "study" ? t("courses.kind.study") : course.kind === "club" ? t("courses.kind.club") : t("courses.kind.course"),
                         }}
