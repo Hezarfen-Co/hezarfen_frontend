@@ -26,6 +26,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { reassembleStrokes } from "@/lib/board-stroke-codec";
 import { strokesBounds, type DrawScene } from "@/lib/draw-stroke";
 import { formatDateTime } from "@/lib/format";
+import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -65,13 +66,21 @@ function WhiteboardContent() {
   }, "");
 
   const [board] = createResource(id, (boardId) => getBoardById(boardId));
-  const [users] = createResource(async () => {
-    try {
-      return (await getUsers({ limit: 500 })).items;
-    } catch {
-      return [];
-    }
-  });
+  // `GET /users` is admin-only, so only an admin can resolve the roster's ids
+  // to names — every other role would just 403 the moment this page mounts.
+  // Gate the call by role: below admin it is never sent, and names fall back to
+  // the id (with the current user resolved from their own auth record below).
+  const isAdmin = () => hasMinRole(auth.user()?.role, "admin");
+  const [users] = createResource(
+    () => (isAdmin() ? "admin" : null),
+    async () => {
+      try {
+        return (await getUsers({ limit: 500 })).items;
+      } catch {
+        return [];
+      }
+    },
+  );
 
   // Live board state, seeded from the REST read and updated by the room's socket.
   const [live, setLive] = createSignal<BoardLiveState>({});
@@ -95,6 +104,12 @@ function WhiteboardContent() {
   const closed = () => live().closed ?? false;
 
   const nameOf = (userId: string) => {
+    // The current user is always resolvable from their own auth record, even
+    // when the admin-only roster lookup didn't run.
+    if (userId === meId()) {
+      const me = auth.user();
+      if (me) return [me.name, me.surname].filter(Boolean).join(" ") || me.username;
+    }
     const u = (users() ?? []).find((x) => x.id === userId);
     if (!u) return userId;
     return [u.name, u.surname].filter(Boolean).join(" ") || u.username;
