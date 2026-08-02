@@ -328,7 +328,10 @@
 @layer base {
   /* Hue-neutral gray scale + Carbon-style semantic colors. */
   :root {
-    --ui-accent: 0 0% 13%;
+    /* --accent-light / --accent-light-fg are set inline by preferences-context
+       when the user picks an accent color; the fallback here is the neutral
+       default for everyone else. */
+    --ui-accent: var(--accent-light, 0 0% 13%);
     --background: 0 0% 98%;
     --foreground: 0 0% 8%;
     --card: 0 0% 100%;
@@ -336,7 +339,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 8%;
     --primary: var(--ui-accent);
-    --primary-foreground: 0 0% 98%;
+    --primary-foreground: var(--accent-light-fg, 0 0% 98%);
     --secondary: 0 0% 94%;
     --secondary-foreground: 0 0% 16%;
     --muted: 0 0% 96%;
@@ -347,7 +350,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 89%;
     --input: 0 0% 82%;
-    --ring: 0 0% 45%;
+    --ring: var(--accent-light, 0 0% 45%);
     --radius: 0.5rem;
     --success: 137 63% 39%;
     --warning: 38 92% 50%;
@@ -358,7 +361,10 @@
   }
 
   [data-kb-theme="dark"] {
-    --ui-accent: 0 0% 92%;
+    /* --accent-dark / --accent-dark-fg are set inline by preferences-context —
+       a separate, lighter-lightness variant of the same picked hue so it stays
+       legible against this theme's near-black background. */
+    --ui-accent: var(--accent-dark, 0 0% 92%);
     --background: 0 0% 4%;
     --foreground: 0 0% 98%;
     --card: 0 0% 8%;
@@ -366,7 +372,7 @@
     --popover: 0 0% 8%;
     --popover-foreground: 0 0% 98%;
     --primary: var(--ui-accent);
-    --primary-foreground: 0 0% 6%;
+    --primary-foreground: var(--accent-dark-fg, 0 0% 6%);
     --secondary: 0 0% 16%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 13%;
@@ -377,7 +383,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 17%;
     --input: 0 0% 24%;
-    --ring: 0 0% 45%;
+    --ring: var(--accent-dark, 0 0% 45%);
     --success: 137 58% 58%;
     --warning: 38 92% 54%;
     --info: 219 98% 60%;

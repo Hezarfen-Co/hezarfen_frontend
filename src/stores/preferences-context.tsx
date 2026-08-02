@@ -93,14 +93,14 @@ function readPaletteColor(): string | null {
   }
 }
 
-function hexToHsl(hex: string): string {
+function hexToHslParts(hex: string): { h: number; s: number; l: number } {
   const [red, green, blue] = hex.slice(1).match(/.{2}/g)!.map((value) => parseInt(value, 16) / 255);
   const max = Math.max(red, green, blue);
   const min = Math.min(red, green, blue);
   const delta = max - min;
   const lightness = (max + min) / 2;
 
-  if (delta === 0) return `0 0% ${Math.round(lightness * 100)}%`;
+  if (delta === 0) return { h: 0, s: 0, l: lightness * 100 };
 
   const saturation = delta / (1 - Math.abs(2 * lightness - 1));
   const hue =
@@ -110,17 +110,54 @@ function hexToHsl(hex: string): string {
         ? 60 * ((blue - red) / delta + 2)
         : 60 * ((red - green) / delta + 4);
 
-  return `${Math.round(hue < 0 ? hue + 360 : hue)} ${Math.round(saturation * 100)}% ${Math.round(lightness * 100)}%`;
+  return { h: hue < 0 ? hue + 360 : hue, s: saturation * 100, l: lightness * 100 };
 }
 
-function paletteForeground(hex: string): string {
-  const [red, green, blue] = hex.slice(1).match(/.{2}/g)!.map((value) => {
-    const channel = parseInt(value, 16) / 255;
-    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-  });
-  return red * 0.2126 + green * 0.7152 + blue * 0.0722 > 0.179
-    ? "210 10.8% 14.5%"
-    : "210 16.7% 97.6%";
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  const sat = s / 100;
+  const light = l / 100;
+  const chroma = (1 - Math.abs(2 * light - 1)) * sat;
+  const x = chroma * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = light - chroma / 2;
+  const [r1, g1, b1] =
+    h < 60 ? [chroma, x, 0]
+    : h < 120 ? [x, chroma, 0]
+    : h < 180 ? [0, chroma, x]
+    : h < 240 ? [0, x, chroma]
+    : h < 300 ? [x, 0, chroma]
+    : [chroma, 0, x];
+  return [(r1 + m) * 255, (g1 + m) * 255, (b1 + m) * 255];
+}
+
+function relativeLuminance(r: number, g: number, b: number): number {
+  const channel = (value: number) => {
+    const c = value / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return channel(r) * 0.2126 + channel(g) * 0.7152 + channel(b) * 0.0722;
+}
+
+function foregroundFor(h: number, s: number, l: number): string {
+  const [r, g, b] = hslToRgb(h, s, l);
+  return relativeLuminance(r, g, b) > 0.179 ? "210 10.8% 14.5%" : "210 16.7% 97.6%";
+}
+
+/**
+ * A theme-appropriate variant of the user's chosen accent: the hue is kept,
+ * saturation is clamped into a tasteful range, but lightness is pinned to a
+ * value known to read well against that theme's background — the swatch's own
+ * lightness is deliberately ignored. Without this, a pastel pick (e.g.
+ * `#fefae0`) would be nearly invisible as a light-mode button, and a near-black
+ * pick (e.g. `#023047`) would vanish against the near-black dark background.
+ */
+function themedAccent(hex: string, mode: ThemeMode): { hsl: string; fg: string } {
+  const { h, s } = hexToHslParts(hex);
+  const sat = Math.min(88, Math.max(30, s));
+  const lightness = mode === "light" ? 40 : 68;
+  return {
+    hsl: `${Math.round(h)} ${Math.round(sat)}% ${lightness}%`,
+    fg: foregroundFor(h, sat, lightness),
+  };
 }
 
 function readSidebarCollapsed(): boolean {
@@ -154,15 +191,25 @@ export function PreferencesProvider(props: ParentProps) {
 
   createEffect(() => {
     const color = paletteColor();
+    const root = document.documentElement.style;
     if (!color) {
       removeStorage(PALETTE_COLOR_KEY);
-      document.documentElement.style.removeProperty("--ui-accent");
-      document.documentElement.style.removeProperty("--primary-foreground");
+      root.removeProperty("--accent-light");
+      root.removeProperty("--accent-light-fg");
+      root.removeProperty("--accent-dark");
+      root.removeProperty("--accent-dark-fg");
       return;
     }
     writeStorage(PALETTE_COLOR_KEY, color);
-    document.documentElement.style.setProperty("--ui-accent", hexToHsl(color));
-    document.documentElement.style.setProperty("--primary-foreground", paletteForeground(color));
+    // Both variants are always set, regardless of the active theme, so a live
+    // light/dark toggle picks up the right one immediately via the CSS
+    // `[data-kb-theme="dark"]` cascade — no need to recompute on theme change.
+    const light = themedAccent(color, "light");
+    const dark = themedAccent(color, "dark");
+    root.setProperty("--accent-light", light.hsl);
+    root.setProperty("--accent-light-fg", light.fg);
+    root.setProperty("--accent-dark", dark.hsl);
+    root.setProperty("--accent-dark-fg", dark.fg);
   });
 
   createEffect(() => {

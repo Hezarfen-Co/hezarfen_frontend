@@ -46,16 +46,21 @@ test("preferences stay usable when browser storage writes fail", () => {
   setItem.mockRestore();
 });
 
-test("palette color applies, persists, and resets", () => {
+test("palette color applies theme-aware light/dark variants, persists, and resets", () => {
   localStorage.removeItem("hezarfen.paletteColor");
   render(() => <PreferencesProvider><PalettePreferenceProbe /></PreferencesProvider>);
 
   fireEvent.click(screen.getByRole("button"));
   expect(localStorage.getItem("hezarfen.paletteColor")).toBe("#fefae0");
-  expect(document.documentElement.style.getPropertyValue("--ui-accent")).toBe("52 94% 94%");
-  expect(document.documentElement.style.getPropertyValue("--primary-foreground")).toBe("210 10.8% 14.5%");
+  // Same hue for both themes, but lightness is pinned per theme (not the
+  // swatch's own near-white lightness) so the accent stays legible either way.
+  expect(document.documentElement.style.getPropertyValue("--accent-light")).toBe("52 88% 40%");
+  expect(document.documentElement.style.getPropertyValue("--accent-light-fg")).toBe("210 10.8% 14.5%");
+  expect(document.documentElement.style.getPropertyValue("--accent-dark")).toBe("52 88% 68%");
+  expect(document.documentElement.style.getPropertyValue("--accent-dark-fg")).toBe("210 10.8% 14.5%");
 
   fireEvent.click(screen.getByRole("button"));
   expect(localStorage.getItem("hezarfen.paletteColor")).toBeNull();
-  expect(document.documentElement.style.getPropertyValue("--ui-accent")).toBe("");
+  expect(document.documentElement.style.getPropertyValue("--accent-light")).toBe("");
+  expect(document.documentElement.style.getPropertyValue("--accent-dark")).toBe("");
 });
