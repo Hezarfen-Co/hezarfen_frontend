@@ -58,6 +58,10 @@ export type MessageKey =
   | "classGroups.selectCourse"
   | "classGroups.noMembers"
   | "classGroups.noCourses"
+  | "classGroups.homeroomTeacher"
+  | "classGroups.noTeacher"
+  | "classGroups.selectTeacher"
+  | "classGroups.yourClass"
   | "nav.progress"
   | "nav.students"
   | "nav.children"
@@ -1310,6 +1314,10 @@ const en: Dict = {
   "classGroups.selectCourse": "Select a course",
   "classGroups.noMembers": "No students in this class yet.",
   "classGroups.noCourses": "No courses attached yet.",
+  "classGroups.homeroomTeacher": "Homeroom teacher",
+  "classGroups.noTeacher": "Not assigned",
+  "classGroups.selectTeacher": "Select a teacher",
+  "classGroups.yourClass": "Class",
   "nav.progress": "Progress",
   "nav.students": "Students",
   "nav.children": "Children",
@@ -2574,6 +2582,10 @@ const tr: Dict = {
   "classGroups.selectCourse": "Bir ders seç",
   "classGroups.noMembers": "Bu şubede henüz öğrenci yok.",
   "classGroups.noCourses": "Henüz ders eklenmemiş.",
+  "classGroups.homeroomTeacher": "Sınıf öğretmeni",
+  "classGroups.noTeacher": "Atanmadı",
+  "classGroups.selectTeacher": "Bir öğretmen seç",
+  "classGroups.yourClass": "Şube",
   "nav.progress": "İlerleme",
   "nav.students": "Öğrenciler",
   "nav.children": "Çocuklar",

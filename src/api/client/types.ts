@@ -170,10 +170,15 @@ export type Enrollment = {
 // enrollment rows. See src/api/classes.
 export type ClassGroup = {
   id: string;
-  creator: PersonRef;
+  // null for a caller below teacher+ — the office's account names are not
+  // theirs to learn (a student's own GET /classes/me, a parent's
+  // GET /classes/user/{user}).
+  creator: PersonRef | null;
   name: string;
   grade: string | null;
   term: string | null;
+  // The class's homeroom teacher (sınıf öğretmeni); null when none is assigned.
+  teacher: PersonRef | null;
 };
 
 export type ClassMember = {

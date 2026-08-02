@@ -15,7 +15,9 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
+import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -34,6 +36,7 @@ function ClassesContent() {
   const [name, setName] = createSignal("");
   const [grade, setGrade] = createSignal("");
   const [termId, setTermId] = createSignal("");
+  const [teacherId, setTeacherId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [flash, setFlash] = createFlash();
@@ -60,6 +63,11 @@ function ClassesContent() {
       id: "term",
       accessorFn: (row) => termName(row.term),
       header: t("terms.term"),
+    },
+    {
+      id: "teacher",
+      accessorFn: (row) => (row.teacher ? personLabel(row.teacher) : t("classGroups.noTeacher")),
+      header: t("classGroups.homeroomTeacher"),
     },
     {
       id: "actions",
@@ -89,8 +97,9 @@ function ClassesContent() {
         name: name().trim(),
         grade: grade().trim() || undefined,
         term_id: termId() || undefined,
+        teacher_id: teacherId() || undefined,
       });
-      setName(""); setGrade(""); setTermId(""); setShowForm(false);
+      setName(""); setGrade(""); setTermId(""); setTeacherId(""); setShowForm(false);
       await refetch();
       setFlash(t("common.created"));
       void navigate({ to: "/management/classes/$id", params: { id: created.id } });
@@ -109,6 +118,7 @@ function ClassesContent() {
             <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="class-name" required maxlength={limits.latest?.course.max_class_name_len} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
             <div class="space-y-1.5"><Label for="class-grade">{t("classGroups.grade")}</Label><Input id="class-grade" maxlength={limits.latest?.course.max_class_grade_len} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
             <div class="space-y-1.5"><Label for="class-term">{t("terms.term")}</Label><Select id="class-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}><option value="">{t("terms.unassigned")}</option><For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For></Select></div>
+            <UserSearchSelect id="class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
           </div>
           <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
           <div class="flex gap-2 border-t pt-4"><Button type="submit" disabled={pending()}>{t("common.create")}</Button><Button type="button" variant="outline" onClick={() => setShowForm(false)}>{t("common.cancel")}</Button></div>
