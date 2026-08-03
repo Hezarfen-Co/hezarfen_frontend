@@ -28,7 +28,6 @@ export type MessageKey =
   | "ai.suggestParent2"
   | "ai.suggestParent3"
   | "ai.suggestParent4"
-  | "nav.home"
   | "nav.today"
   | "nav.classes"
   | "nav.classGroups"
@@ -62,8 +61,6 @@ export type MessageKey =
   | "classGroups.noTeacher"
   | "classGroups.selectTeacher"
   | "classGroups.yourClass"
-  | "nav.progress"
-  | "nav.students"
   | "nav.children"
   | "nav.school"
   | "nav.notes"
@@ -72,8 +69,6 @@ export type MessageKey =
   | "nav.questionBank"
   | "nav.homework"
   | "nav.courses"
-  | "nav.studies"
-  | "nav.clubs"
   | "nav.meals"
   | "nav.marks"
   | "nav.messages"
@@ -104,8 +99,6 @@ export type MessageKey =
   | "nav.group.planning"
   | "nav.group.workspace"
   | "nav.group.grades"
-  | "nav.group.reports"
-  | "nav.group.settings"
   | "nav.group.community"
   | "nav.group.services"
   | "nav.darkMode"
@@ -1323,7 +1316,6 @@ const en: Dict = {
   "ai.suggestParent2": "Which exams does my child have soon?",
   "ai.suggestParent3": "How is my child's attendance this term?",
   "ai.suggestParent4": "What is on this week's meal menu?",
-  "nav.home": "Home",
   "nav.today": "Today",
   "nav.classes": "Education",
   "nav.classGroups": "Classes",
@@ -1357,8 +1349,6 @@ const en: Dict = {
   "classGroups.noTeacher": "Not assigned",
   "classGroups.selectTeacher": "Select a teacher",
   "classGroups.yourClass": "Class",
-  "nav.progress": "Progress",
-  "nav.students": "Students",
   "nav.children": "Children",
   "nav.school": "School",
   "nav.notes": "Notebook",
@@ -1367,8 +1357,6 @@ const en: Dict = {
   "nav.questionBank": "Question bank",
   "nav.homework": "Homework",
   "nav.courses": "Courses",
-  "nav.studies": "Study sessions",
-  "nav.clubs": "Clubs",
   "nav.meals": "Meals",
   "nav.marks": "Report card",
   "nav.messages": "Messages",
@@ -1385,13 +1373,13 @@ const en: Dict = {
   "notifications.empty": "No new notifications yet.",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
-  "nav.questions": "Question Pool",
-  "nav.work": "Work Log",
-  "nav.staffWork": "Staff Shifts",
+  "nav.questions": "Question pool",
+  "nav.work": "Work log",
+  "nav.staffWork": "Staff shifts",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
-  "nav.studentPomodoro": "Pomodoros",
+  "nav.studentPomodoro": "Student pomodoros",
   "nav.settings": "Settings",
   "nav.terms": "Terms",
   "nav.guide": "Guide",
@@ -1404,18 +1392,16 @@ const en: Dict = {
   "nav.expand": "Expand sidebar",
   "nav.account": "Account",
   "nav.preferences": "Preferences",
-  "nav.group.students": "Student Management",
-  "nav.group.school": "Management",
+  "nav.group.students": "Student management",
+  "nav.group.school": "School management",
   "nav.group.classes": "Academics",
   "nav.group.planning": "Planning",
   "nav.group.workspace": "Workspace",
   "nav.group.grades": "Grades",
-  "nav.group.reports": "Reports",
-  "nav.group.settings": "Settings",
   "nav.group.community": "Community",
-  "nav.group.services": "Services",
+  "nav.group.services": "School services",
   "nav.darkMode": "Dark mode",
-  "nav.myStudents": "My Students",
+  "nav.myStudents": "My students",
   "parents.title": "My Students",
   "parents.subtitle": "Review academic records for the students linked to your account.",
   "common.loading": "Loading…",
@@ -2630,7 +2616,6 @@ const tr: Dict = {
   "ai.suggestParent2": "Çocuğumun yaklaşan sınavları neler?",
   "ai.suggestParent3": "Çocuğumun bu dönem devamsızlığı nasıl?",
   "ai.suggestParent4": "Bu haftanın yemek menüsünde ne var?",
-  "nav.home": "Ana sayfa",
   "nav.today": "Bugün",
   "nav.classes": "Eğitim",
   "nav.classGroups": "Şubeler",
@@ -2664,8 +2649,6 @@ const tr: Dict = {
   "classGroups.noTeacher": "Atanmadı",
   "classGroups.selectTeacher": "Bir öğretmen seç",
   "classGroups.yourClass": "Şube",
-  "nav.progress": "İlerleme",
-  "nav.students": "Öğrenciler",
   "nav.children": "Çocuklar",
   "nav.school": "Okul",
   "nav.notes": "Defter",
@@ -2674,8 +2657,6 @@ const tr: Dict = {
   "nav.questionBank": "Soru bankası",
   "nav.homework": "Ödevler",
   "nav.courses": "Ders",
-  "nav.studies": "Etüt",
-  "nav.clubs": "Kulüp",
   "nav.meals": "Yemekler",
   "nav.marks": "Karnem",
   "nav.messages": "Mesajlar",
@@ -2692,13 +2673,13 @@ const tr: Dict = {
   "notifications.empty": "Henüz yeni bir bildiriminiz yok.",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Yoklama",
-  "nav.questions": "Soru Havuzu",
-  "nav.work": "Çalışma Kaydı",
-  "nav.staffWork": "Personel Mesaisi",
+  "nav.questions": "Soru havuzu",
+  "nav.work": "Çalışma kaydı",
+  "nav.staffWork": "Personel mesaisi",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
   "nav.studentAttendance": "Öğrenci yoklamaları",
-  "nav.studentPomodoro": "Pomodorolar",
+  "nav.studentPomodoro": "Öğrenci pomodoroları",
   "nav.settings": "Ayarlar",
   "nav.terms": "Dönemler",
   "nav.guide": "Rehber",
@@ -2711,16 +2692,14 @@ const tr: Dict = {
   "nav.expand": "Kenar çubuğunu genişlet",
   "nav.account": "Hesap",
   "nav.preferences": "Tercihler",
-  "nav.group.students": "Öğrenci Yönetimi",
-  "nav.group.school": "Yönetim",
+  "nav.group.students": "Öğrenci yönetimi",
+  "nav.group.school": "Okul yönetimi",
   "nav.group.classes": "Akademik",
   "nav.group.planning": "Planlama",
-  "nav.group.workspace": "Çalışma Alanı",
+  "nav.group.workspace": "Çalışma alanı",
   "nav.group.grades": "Notlar",
-  "nav.group.reports": "Raporlar",
-  "nav.group.settings": "Ayarlar",
   "nav.group.community": "Topluluk",
-  "nav.group.services": "Hizmetler",
+  "nav.group.services": "Okul hizmetleri",
   "nav.darkMode": "Karanlık mod",
   "nav.myStudents": "Öğrencilerim",
   "parents.title": "Öğrencilerim",
@@ -3711,7 +3690,7 @@ const tr: Dict = {
   "meals.priceTry": "Fiyat (TRY)",
   "nav.payments": "Ücretler",
   "nav.paymentStatement": "Ücretlerim",
-  "nav.whiteboards": "Beyaz Tahtalar",
+  "nav.whiteboards": "Beyaz tahtalar",
   "whiteboard.title": "Beyaz Tahtalar",
   "whiteboard.subtitle": "Canlı ortak çizim tahtaları.",
   "whiteboard.empty": "Henüz beyaz tahta yok.",
