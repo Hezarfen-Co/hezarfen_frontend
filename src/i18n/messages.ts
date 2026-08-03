@@ -809,6 +809,8 @@ export type MessageKey =
   | "homework.mineTitle"
   | "homework.submit"
   | "homework.submitHelp"
+  | "homework.withdraw"
+  | "homework.withdrawHint"
   | "homework.answerPlaceholder"
   | "homework.fileUploaded"
   | "homework.submittedAt"
@@ -868,6 +870,7 @@ export type MessageKey =
   | "exams.drawAnswer"
   | "exams.previousAttempts"
   | "exams.attemptN"
+  | "exams.markHistory"
   | "exams.currentAttempt"
   | "exams.pastAttemptReadOnly"
   | "exams.reviewInProgress"
@@ -2180,6 +2183,8 @@ const en: Dict = {
   "homework.mineTitle": "My homework",
   "homework.submit": "Submit homework",
   "homework.submitHelp": "Save a text answer and attach files if needed.",
+  "homework.withdraw": "Withdraw submission",
+  "homework.withdrawHint": "Deletes your answer and every attached file. Not possible once the homework is graded.",
   "homework.answerPlaceholder": "Write an optional answer...",
   "homework.fileUploaded": "File uploaded.",
   "homework.submittedAt": "Submitted at",
@@ -2239,6 +2244,7 @@ const en: Dict = {
   "exams.drawAnswer": "Draw answer",
   "exams.previousAttempts": "Previous attempts",
   "exams.attemptN": "Attempt {n}",
+  "exams.markHistory": "Mark history",
   "exams.currentAttempt": "current",
   "exams.pastAttemptReadOnly": "Viewing a previous attempt — read-only. Grading applies to the current attempt.",
   "exams.reviewInProgress": "Submit your current attempt before you can review it.",
@@ -3477,6 +3483,8 @@ const tr: Dict = {
   "homework.mineTitle": "Ödevlerim",
   "homework.submit": "Ödevi teslim et",
   "homework.submitHelp": "İstersen yazılı cevap kaydet ve dosya ekle.",
+  "homework.withdraw": "Teslimi geri çek",
+  "homework.withdrawHint": "Cevabını ve eklediğin tüm dosyaları siler. Ödev notlandırıldıysa yapılamaz.",
   "homework.answerPlaceholder": "İsteğe bağlı cevabını yaz...",
   "homework.fileUploaded": "Dosya yüklendi.",
   "homework.submittedAt": "Teslim zamanı",
@@ -3536,6 +3544,7 @@ const tr: Dict = {
   "exams.drawAnswer": "Cevabı çiz",
   "exams.previousAttempts": "Önceki denemeler",
   "exams.attemptN": "{n}. deneme",
+  "exams.markHistory": "Not geçmişi",
   "exams.currentAttempt": "güncel",
   "exams.pastAttemptReadOnly": "Önceki bir deneme görüntüleniyor — salt okunur. Puanlama güncel denemeye uygulanır.",
   "exams.reviewInProgress": "İncelemek için önce mevcut denemeni gönder.",

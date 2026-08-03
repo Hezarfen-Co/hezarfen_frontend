@@ -1,6 +1,6 @@
 import { For, Show, Suspense, createResource, createSignal, lazy } from "solid-js";
 import { useParams, useRouter } from "@tanstack/solid-router";
-import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl, getQuestionImageBlob } from "@/api/shared";
+import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl, getQuestionImageBlob, postQuestionImage, deleteQuestionImage } from "@/api/shared";
 import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl, getSolutionImageBlob, postSolutionImage, deleteSolutionImage } from "@/api/shared";
 import { getSettings } from "@/api/settings";
 import type { SolutionResponse } from "@/api/shared";
@@ -53,6 +53,27 @@ function QuestionDetailContent() {
   const [deleteConfirmS, setDeleteConfirmS] = createSignal<SolutionResponse | null>(null);
 
   const isModerator = () => hasMinRole(auth.user()?.role, "teacher");
+  // The backend lets only the asker touch the image, and only while the
+  // question is still pending — approval freezes the content (409).
+  const canEditImage = () => {
+    const current = question();
+    return !!current && current.status === "pending" && current.asker.id === auth.user()?.id;
+  };
+  const [imageBusy, setImageBusy] = createSignal(false);
+  const swapQuestionImage = async (next: File | null) => {
+    if (imageBusy()) return;
+    setError("");
+    setImageBusy(true);
+    try {
+      if (next) await postQuestionImage(params().id, next);
+      else await deleteQuestionImage(params().id);
+      await refetchQ();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setImageBusy(false);
+    }
+  };
 
   const handleApprove = async () => {
     setError("");
@@ -133,6 +154,44 @@ function QuestionDetailContent() {
                       alt="Question Attachment"
                       imgClass="max-h-[500px] w-auto object-contain mx-auto"
                     />
+                  </div>
+                </Show>
+                {/* Attachment stays editable until the question is approved. */}
+                <Show when={canEditImage()}>
+                  <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <Button
+                      as="label"
+                      variant="outline"
+                      size="sm"
+                      class="relative cursor-pointer"
+                      aria-disabled={imageBusy()}
+                    >
+                      <IconPhoto class="mr-2 h-4 w-4" />
+                      {q().image ? t("common.edit") : t("pool.image")}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                        disabled={imageBusy()}
+                        onChange={(e) => {
+                          const picked = e.currentTarget.files?.[0];
+                          e.currentTarget.value = "";
+                          if (picked) void swapQuestionImage(picked);
+                        }}
+                      />
+                    </Button>
+                    <Show when={q().image}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        class="text-destructive hover:bg-destructive/10"
+                        disabled={imageBusy()}
+                        onClick={() => void swapQuestionImage(null)}
+                      >
+                        <IconX class="mr-1 h-4 w-4" />
+                        {t("common.remove")}
+                      </Button>
+                    </Show>
                   </div>
                 </Show>
               </div>

@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
-import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteExamById } from "@/api/exams";
 import { deleteExamResultByUserId } from "@/api/exams";
@@ -8,6 +8,7 @@ import { getExamAttempt } from "@/api/exams";
 import { getExamLive } from "@/api/exams";
 import { getExamResult } from "@/api/exams";
 import { getExamResults } from "@/api/exams";
+import { getStudentMarksHistory } from "@/api/exams";
 import { getExamStatistics } from "@/api/exams";
 import { getCourseEnrollments } from "@/api/courses";
 import { getMyCourses } from "@/api/reports";
@@ -520,6 +521,12 @@ function ExamDetailContent() {
               <Show when={answerSheetUserId()}>
                 {(userId) => {
                   const [markOpen, setMarkOpen] = createSignal(false);
+                  // Retakes each keep their own mark; the header only ever shows
+                  // the grade of record, so the earlier sittings live here.
+                  const [markHistory] = createResource(
+                    () => [id(), userId()] as const,
+                    ([examId, student]) => getStudentMarksHistory(examId, student).catch(() => []),
+                  );
                   return (
                   <div class="space-y-4">
                     <button
@@ -560,6 +567,21 @@ function ExamDetailContent() {
                           {(msg) => <p class="text-sm text-destructive">{msg()}</p>}
                         </Show>
                       </form>
+                    </Show>
+                    <Show when={(markHistory()?.length ?? 0) > 1}>
+                      <div class="rounded-lg border border-border bg-card px-4 py-3">
+                        <p class="text-xs font-medium text-muted-foreground">{t("exams.markHistory")}</p>
+                        <ul class="mt-2 space-y-1">
+                          <For each={markHistory()}>
+                            {(row, index) => (
+                              <li class="flex items-center justify-between text-sm">
+                                <span class="text-muted-foreground">{t("exams.attemptN", { n: String(index() + 1) })}</span>
+                                <span class="tabular-nums font-semibold">{row.mark}/100</span>
+                              </li>
+                            )}
+                          </For>
+                        </ul>
+                      </div>
                     </Show>
                     <AnswerSheetView examId={id()} userId={userId()} />
                   </div>
