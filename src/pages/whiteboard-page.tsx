@@ -13,6 +13,7 @@ import { getUsers } from "@/api/users";
 import { formatApiError } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { WhiteboardRoom, type BoardLiveState } from "@/components/whiteboard/whiteboard-room-ws";
+import { BoardSettingsPanel } from "@/components/whiteboard/board-settings-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -20,12 +21,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DrawingPlayback } from "@/components/ui/drawing-playback";
-import { IconChevronLeft, IconTrash } from "@/components/ui/icons";
+import { IconChevronLeft, IconLock, IconTrash, IconX } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { reassembleStrokes } from "@/lib/board-stroke-codec";
 import { strokesBounds, type DrawScene } from "@/lib/draw-stroke";
 import { formatDateTime } from "@/lib/format";
+import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -65,16 +67,26 @@ function WhiteboardContent() {
   }, "");
 
   const [board] = createResource(id, (boardId) => getBoardById(boardId));
-  const [users] = createResource(async () => {
-    try {
-      return (await getUsers({ limit: 500 })).items;
-    } catch {
-      return [];
-    }
-  });
+  // `GET /users` is admin-only, so only an admin can resolve the roster's ids
+  // to names — every other role would just 403 the moment this page mounts.
+  // Gate the call by role: below admin it is never sent, and names fall back to
+  // the id (with the current user resolved from their own auth record below).
+  const isAdmin = () => hasMinRole(auth.user()?.role, "admin");
+  const [users] = createResource(
+    () => (isAdmin() ? "admin" : null),
+    async () => {
+      try {
+        return (await getUsers({ limit: 500 })).items;
+      } catch {
+        return [];
+      }
+    },
+  );
 
   // Live board state, seeded from the REST read and updated by the room's socket.
   const [live, setLive] = createSignal<BoardLiveState>({});
+  const [boardTitle, setBoardTitle] = createSignal("");
+  const [connection, setConnection] = createSignal<"connecting" | "connected" | "disconnected">("connecting");
   createEffect(() => {
     const b = board();
     if (b) {
@@ -85,6 +97,7 @@ function WhiteboardContent() {
         participants: b.participants,
         epoch: b.epoch,
       });
+      setBoardTitle(b.title);
     }
   });
   const mergeLive = (patch: BoardLiveState) => setLive((prev) => ({ ...prev, ...patch }));
@@ -95,6 +108,12 @@ function WhiteboardContent() {
   const closed = () => live().closed ?? false;
 
   const nameOf = (userId: string) => {
+    // The current user is always resolvable from their own auth record, even
+    // when the admin-only roster lookup didn't run.
+    if (userId === meId()) {
+      const me = auth.user();
+      if (me) return [me.name, me.surname].filter(Boolean).join(" ") || me.username;
+    }
     const u = (users() ?? []).find((x) => x.id === userId);
     if (!u) return userId;
     return [u.name, u.surname].filter(Boolean).join(" ") || u.username;
@@ -108,6 +127,7 @@ function WhiteboardContent() {
     const parts = live().participants ?? [];
     return creator ? [creator, ...parts] : parts;
   };
+  const isParticipant = () => roster().includes(meId());
 
   const [error, setError] = createSignal("");
   const [busy, setBusy] = createSignal(false);
@@ -115,6 +135,7 @@ function WhiteboardContent() {
   const [closeOpen, setCloseOpen] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [historyOpen, setHistoryOpen] = createSignal(false);
+  const [settingsOpen, setSettingsOpen] = createSignal(false);
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -146,6 +167,21 @@ function WhiteboardContent() {
       navigate({ to: "/whiteboards" });
     });
 
+  const updateBoard = async (body: { title?: string; participants?: string[] }) => {
+    setBusy(true);
+    setError("");
+    try {
+      const updated = await patchBoardById(id(), body);
+      setBoardTitle(updated.title);
+      mergeLive({ creator: updated.creator, participants: updated.participants, locked: updated.locked, closed: updated.closed_at != null, epoch: updated.epoch });
+    } catch (err) {
+      setError(formatApiError(err, locale()));
+      throw err;
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <Suspense fallback={<PageSpinner />}>
       <Show
@@ -160,7 +196,7 @@ function WhiteboardContent() {
           <div class="space-y-4">
             <PageHeader
               compact
-              title={b().title}
+              title={boardTitle()}
               actions={
                 <div class="flex flex-wrap items-center gap-1.5">
                   <Button type="button" variant="ghost" size="sm" onClick={() => navigate({ to: "/whiteboards" })}>
@@ -170,6 +206,9 @@ function WhiteboardContent() {
                   <Button type="button" variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
                     {t("whiteboard.history")}
                   </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+                    {t("whiteboard.edit")}
+                  </Button>
                   <Show when={isCreator() && !closed()}>
                     <Button type="button" variant="outline" size="sm" disabled={busy()} onClick={() => void toggleLock()}>
                       {locked() ? t("whiteboard.unlock") : t("whiteboard.lock")}
@@ -177,7 +216,8 @@ function WhiteboardContent() {
                     <Button type="button" variant="outline" size="sm" disabled={busy()} onClick={() => setClearOpen(true)}>
                       {t("whiteboard.clear")}
                     </Button>
-                    <Button type="button" variant="outline" size="sm" disabled={busy()} onClick={() => setCloseOpen(true)}>
+                    <Button type="button" variant="outline" size="sm" class="border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 hover:text-amber-800 dark:text-amber-400" disabled={busy()} onClick={() => setCloseOpen(true)}>
+                      <IconLock class="h-4 w-4" />
                       {t("whiteboard.close")}
                     </Button>
                   </Show>
@@ -195,32 +235,80 @@ function WhiteboardContent() {
               <Alert variant="destructive">{error()}</Alert>
             </Show>
 
-            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_15rem]">
+            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
               <WhiteboardRoom
                 board={b()}
                 meId={meId()}
                 onState={mergeLive}
+                onConnectionChange={setConnection}
                 onDeleted={() => navigate({ to: "/whiteboards" })}
               />
-              <aside class="space-y-2 rounded-xl border bg-card p-3">
-                <h3 class="text-sm font-semibold">{t("whiteboard.roster")}</h3>
-                <ul class="space-y-1">
+              <aside class="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-xs">
+                <div class="space-y-2 border-b border-border/70 bg-muted/30 px-4 py-3">
+                  <div class="flex items-center justify-between gap-2">
+                    <h3 class="text-sm font-semibold">{t("whiteboard.roster")}</h3>
+                    <Badge variant="secondary" class="rounded-full">{roster().length}</Badge>
+                  </div>
+                  <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <span class={connection() === "connected" ? "h-2 w-2 rounded-full bg-success" : "h-2 w-2 rounded-full bg-warning"} />
+                    {connection() === "connected" ? t("ws.connected") : connection() === "connecting" ? t("ws.connecting") : t("ws.disconnected")}
+                  </span>
+                  <div class="flex flex-wrap gap-1.5">
+                    <Show when={closed()}><Badge variant="outline" class="rounded-full border-amber-500/40 bg-amber-500/10 text-amber-700">{t("whiteboard.closedBadge")}</Badge></Show>
+                    <Show when={locked() && !closed()}><Badge variant="outline" class="rounded-full">{t("whiteboard.lockedBadge")}</Badge></Show>
+                    <Show when={!isParticipant()}><Badge variant="outline" class="rounded-full">{t("whiteboard.readOnlyBadge")}</Badge></Show>
+                  </div>
+                </div>
+                <ul class="space-y-1 p-2">
                   <For each={roster()}>
                     {(userId) => (
-                      <li class="flex items-center justify-between gap-2 text-sm">
-                        <span class="flex min-w-0 items-center gap-1.5">
-                          <span class="truncate">{nameOf(userId)}</span>
-                          <Show when={userId === live().creator}>
-                            <Badge variant="outline" class="rounded-full text-[10px]">{t("whiteboard.creator")}</Badge>
-                          </Show>
+                      <li class="group flex items-center gap-2 rounded-xl px-2 py-2 transition-colors hover:bg-muted/60">
+                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                          {nameOf(userId).slice(0, 1).toLocaleUpperCase(locale())}
                         </span>
-                        <span class="shrink-0 text-xs text-muted-foreground">{roleOf(userId)}</span>
+                        <span class="min-w-0 flex-1">
+                          <span class="flex min-w-0 items-center gap-1.5">
+                            <span class="truncate text-sm font-medium">{nameOf(userId)}</span>
+                            <Show when={userId === live().creator}>
+                              <Badge variant="outline" class="shrink-0 rounded-full text-[10px]">{t("whiteboard.creator")}</Badge>
+                            </Show>
+                          </span>
+                          <span class="block truncate text-xs text-muted-foreground">{roleOf(userId) || userId}</span>
+                        </span>
+                        <Show when={isCreator() && !closed() && userId !== live().creator}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            class="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            disabled={busy()}
+                            title={t("whiteboard.removeParticipant")}
+                            aria-label={t("whiteboard.removeParticipant")}
+                            onClick={() => void updateBoard({ participants: (live().participants ?? []).filter((id) => id !== userId) })}
+                          >
+                            <IconX class="h-4 w-4" />
+                          </Button>
+                        </Show>
                       </li>
                     )}
                   </For>
                 </ul>
               </aside>
             </div>
+
+            <BoardSettingsPanel
+              open={settingsOpen()}
+              onOpenChange={setSettingsOpen}
+              title={boardTitle}
+              participants={roster}
+              creatorId={() => live().creator ?? ""}
+              canManageParticipants={() => isCreator() && !closed()}
+              canSearchPeople={() => hasMinRole(auth.user()?.role, "teacher")}
+              nameOf={nameOf}
+              roleOf={roleOf}
+              onTitleSave={(title) => updateBoard({ title })}
+              onParticipantsSave={(participants) => updateBoard({ participants: participants.filter((participant) => participant !== live().creator) })}
+            />
 
             <HistoryPanel open={historyOpen()} onOpenChange={setHistoryOpen} boardId={id()} />
 
@@ -230,6 +318,7 @@ function WhiteboardContent() {
               title={t("whiteboard.clear")}
               description={t("whiteboard.clearConfirm")}
               summary={b().title}
+              confirmLabel={t("whiteboard.clear")}
               onConfirm={doClear}
             />
             <ConfirmDialog
@@ -239,6 +328,9 @@ function WhiteboardContent() {
               title={t("whiteboard.close")}
               description={t("whiteboard.closeConfirm")}
               summary={b().title}
+              confirmLabel={t("whiteboard.close")}
+              icon={<IconLock class="h-4 w-4" />}
+              iconClass="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
               onConfirm={doClose}
             />
             <ConfirmDialog

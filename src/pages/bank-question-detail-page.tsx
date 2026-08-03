@@ -1,6 +1,11 @@
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
-import { deleteBankQuestionById, getBankQuestionById } from "@/api/bank-questions";
+import {
+  deleteBankChoiceImage,
+  deleteBankQuestionById,
+  deleteBankQuestionImage,
+  getBankQuestionById,
+} from "@/api/bank-questions";
 import { getCourses } from "@/api/courses";
 import { formatApiError } from "@/api/client";
 import { BankQuestionForm } from "@/components/exams/bank-question-form";
@@ -54,6 +59,23 @@ function BankQuestionDetailContent() {
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [error, setError] = createSignal("");
   const canEdit = () => question()?.owner === auth.user()?.id || hasMinRole(auth.user()?.role, "admin");
+
+  // The form can attach a picture but never drop one, so removal lives here
+  // beside the image it deletes — same owner/admin gate as every other edit.
+  const [imagePending, setImagePending] = createSignal("");
+  const removeImage = async (key: string, remove: () => Promise<void>) => {
+    if (imagePending()) return;
+    setError("");
+    setImagePending(key);
+    try {
+      await remove();
+      await refetch();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setImagePending("");
+    }
+  };
 
   return (
     <Suspense fallback={<PageSpinner />}>
@@ -109,11 +131,25 @@ function BankQuestionDetailContent() {
               </div>
 
               <Show when={current().image}>
-                <img
-                  src={`/api/bank-questions/${current().id}/image`}
-                  alt={t("questions.image")}
-                  class="max-h-80 rounded-lg border object-contain"
-                />
+                <div class="space-y-2">
+                  <img
+                    src={`/api/bank-questions/${current().id}/image`}
+                    alt={t("questions.image")}
+                    class="max-h-80 rounded-lg border object-contain"
+                  />
+                  <Show when={canEdit()}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      class="text-destructive hover:text-destructive"
+                      disabled={imagePending() === "question"}
+                      onClick={() => void removeImage("question", () => deleteBankQuestionImage(current().id))}
+                    >
+                      <IconTrash class="h-4 w-4" />
+                      {t("common.remove")}
+                    </Button>
+                  </Show>
+                </div>
               </Show>
 
               <Show when={current().choices?.length}>
@@ -130,6 +166,18 @@ function BankQuestionDetailContent() {
                             alt=""
                             class="h-12 w-12 rounded-md border object-cover"
                           />
+                          <Show when={canEdit()}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              class="h-8 w-8 text-destructive hover:bg-destructive/10"
+                              aria-label={t("common.remove")}
+                              disabled={imagePending() === choice.id}
+                              onClick={() => void removeImage(choice.id, () => deleteBankChoiceImage(current().id, choice.id))}
+                            >
+                              <IconTrash class="h-4 w-4" />
+                            </Button>
+                          </Show>
                         </Show>
                       </div>
                     )}

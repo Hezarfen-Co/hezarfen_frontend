@@ -45,6 +45,15 @@ export function IconTrash(props: IconProps) {
   );
 }
 
+export function IconLock(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="4" y="10" width="16" height="11" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </Svg>
+  );
+}
+
 /** Delete-whole-series: a calendar with an ✕ — distinct silhouette from the
  *  single-slot trash, signalling "remove these recurring dated slots". */
 export function IconCalendarX(props: IconProps) {

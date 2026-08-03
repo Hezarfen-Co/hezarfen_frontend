@@ -1,7 +1,7 @@
 import { For, Show, Suspense, createResource, createSignal, lazy } from "solid-js";
 import { useParams, useRouter } from "@tanstack/solid-router";
-import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl, getQuestionImageBlob } from "@/api/shared";
-import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl, getSolutionImageBlob } from "@/api/shared";
+import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl, getQuestionImageBlob, postQuestionImage, deleteQuestionImage } from "@/api/shared";
+import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl, getSolutionImageBlob, postSolutionImage, deleteSolutionImage } from "@/api/shared";
 import { getSettings } from "@/api/settings";
 import type { SolutionResponse } from "@/api/shared";
 import { formatApiError } from "@/api/client";
@@ -53,6 +53,27 @@ function QuestionDetailContent() {
   const [deleteConfirmS, setDeleteConfirmS] = createSignal<SolutionResponse | null>(null);
 
   const isModerator = () => hasMinRole(auth.user()?.role, "teacher");
+  // The backend lets only the asker touch the image, and only while the
+  // question is still pending — approval freezes the content (409).
+  const canEditImage = () => {
+    const current = question();
+    return !!current && current.status === "pending" && current.asker.id === auth.user()?.id;
+  };
+  const [imageBusy, setImageBusy] = createSignal(false);
+  const swapQuestionImage = async (next: File | null) => {
+    if (imageBusy()) return;
+    setError("");
+    setImageBusy(true);
+    try {
+      if (next) await postQuestionImage(params().id, next);
+      else await deleteQuestionImage(params().id);
+      await refetchQ();
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      setImageBusy(false);
+    }
+  };
 
   const handleApprove = async () => {
     setError("");
@@ -133,6 +154,44 @@ function QuestionDetailContent() {
                       alt="Question Attachment"
                       imgClass="max-h-[500px] w-auto object-contain mx-auto"
                     />
+                  </div>
+                </Show>
+                {/* Attachment stays editable until the question is approved. */}
+                <Show when={canEditImage()}>
+                  <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <Button
+                      as="label"
+                      variant="outline"
+                      size="sm"
+                      class="relative cursor-pointer"
+                      aria-disabled={imageBusy()}
+                    >
+                      <IconPhoto class="mr-2 h-4 w-4" />
+                      {q().image ? t("common.edit") : t("pool.image")}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                        disabled={imageBusy()}
+                        onChange={(e) => {
+                          const picked = e.currentTarget.files?.[0];
+                          e.currentTarget.value = "";
+                          if (picked) void swapQuestionImage(picked);
+                        }}
+                      />
+                    </Button>
+                    <Show when={q().image}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        class="text-destructive hover:bg-destructive/10"
+                        disabled={imageBusy()}
+                        onClick={() => void swapQuestionImage(null)}
+                      >
+                        <IconX class="mr-1 h-4 w-4" />
+                        {t("common.remove")}
+                      </Button>
+                    </Show>
                   </div>
                 </Show>
               </div>
@@ -254,7 +313,10 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
   const [error, setError] = createSignal("");
   const [body, setBody] = createSignal(props.initialData?.body || "");
   const [file, setFile] = createSignal<File | null>(null);
+  const [removeImage, setRemoveImage] = createSignal(false);
   const [drawing, setDrawing] = createSignal(false);
+  /** The already-uploaded attachment, until it is dropped or superseded. */
+  const keptImage = () => Boolean(props.initialData?.image) && !removeImage() && !file();
   const [settings] = createResource(async () => {
     try {
       return await getSettings();
@@ -283,7 +345,13 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
     setError("");
     try {
       if (props.initialData) {
-        await patchSolutionById(props.questionId, props.initialData.id, { body: body().trim() });
+        const solutionId = props.initialData.id;
+        await patchSolutionById(props.questionId, solutionId, { body: body().trim() });
+        // A re-upload replaces the stored image, so only an untouched picker
+        // with the remove flag set needs the explicit DELETE.
+        const picked = file();
+        if (picked) await postSolutionImage(props.questionId, solutionId, picked);
+        else if (removeImage()) await deleteSolutionImage(props.questionId, solutionId);
       } else {
         await postSolution(props.questionId, { body: body().trim() }, file() || undefined);
       }
@@ -301,9 +369,31 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
           <Label for="s-body">{t("pool.body")}</Label>
           <Textarea id="s-body" value={body()} onInput={(e) => setBody(e.currentTarget.value)} required rows={5} />
         </div>
-        <Show when={!props.initialData}>
-          <div class="space-y-2">
+        <div class="space-y-2">
             <Label>{t("pool.image")}</Label>
+            {/* Editing keeps the attachment editable too: the backend replaces
+                the image on re-upload and drops it on DELETE, so the form must
+                offer both rather than silently keeping whatever was there. */}
+            <Show when={keptImage()}>
+              <div class="flex items-center gap-3 rounded-lg border border-border p-2">
+                <ReplayableImage
+                  fetchBlob={() => getSolutionImageBlob(props.questionId, props.initialData!.id)}
+                  src={getSolutionImageUrl(props.questionId, props.initialData!.id)}
+                  alt=""
+                  imgClass="max-h-20 w-auto rounded object-contain"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  class="ml-auto text-destructive hover:bg-destructive/10"
+                  onClick={() => setRemoveImage(true)}
+                >
+                  <IconX class="mr-1 h-4 w-4" />
+                  {t("common.remove")}
+                </Button>
+              </div>
+            </Show>
             <div class="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-6 transition-colors hover:bg-muted/50 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
               <Show
                 when={!file()}
@@ -362,8 +452,7 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
                 />
               </Suspense>
             </Show>
-          </div>
-        </Show>
+        </div>
         <div class="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={props.onClose}>
             {t("common.cancel")}

@@ -21,8 +21,10 @@ describe.skipIf(!isLive)(`learning contract @ ${contractBaseUrl}`, () => {
     if (courseId) await api(`/courses/${courseId}`, { method: "DELETE" });
   });
 
-  it("returns filtered courses through the standard page envelope", async () => {
-    const page = await json<{ items: Array<{ id: string }> }>(`/courses?kind=course&q=contract-learning&limit=10`);
+  // `/courses` takes limit/offset only — kind/term/search filtering is the
+  // caller's job, so this asserts the envelope, not a server-side filter.
+  it("returns courses through the standard page envelope", async () => {
+    const page = await json<{ items: Array<{ id: string }> }>(`/courses?limit=10`);
     expectPage(page);
     expect(page.items.some((course) => course.id === courseId)).toBe(true);
   });

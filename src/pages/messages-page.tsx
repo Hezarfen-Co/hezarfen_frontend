@@ -165,14 +165,14 @@ export default function MessagesPage() {
     <RouteGuard>
       <div class="min-h-[calc(100vh-7rem)] bg-background">
         <section class="data-shell overflow-hidden p-0 border-none">
-          <div class="flex flex-col md:flex-row min-h-[calc(100vh-7rem)]">
-            {/* Gmail Left Sidebar */}
-            <aside class="w-full md:w-60 border-r bg-card/60 p-4 shrink-0 space-y-6">
+          <div class="flex min-h-[calc(100vh-7rem)] flex-col">
+            {/* Folder toolbar — the app shell already owns the global sidebar. */}
+            <aside class="flex flex-wrap items-center gap-2 border-b bg-card/60 px-3 py-2.5">
               {/* Compose Button */}
               <Button
                 variant="outline"
-                size="lg"
-                class="w-full justify-start gap-3 text-xs"
+                size="sm"
+                class="order-2 ml-auto h-9 shrink-0 rounded-lg text-xs"
                 onClick={() => {
                   setReplyData(null);
                   setComposeOpen(true);
@@ -182,14 +182,14 @@ export default function MessagesPage() {
                 <span>{t("messages.newMessage")}</span>
               </Button>
 
-              {/* Gmail Folder Navigation List */}
-              <nav class="space-y-1">
+              {/* Folder navigation stays compact, leaving the only sidebar to the app shell. */}
+              <nav class="order-1 flex min-w-0 max-w-full flex-1 items-center gap-1 overflow-x-auto">
                 <button
                   type="button"
                   class={cn(
-                    "flex h-9 w-full items-center justify-between rounded-r-full px-4 text-xs font-semibold transition-colors",
+                    "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
                     folder() === "inbox"
-                      ? "bg-primary/10 text-primary font-bold"
+                      ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                   onClick={() =>
@@ -214,9 +214,9 @@ export default function MessagesPage() {
                 <button
                   type="button"
                   class={cn(
-                    "flex h-9 w-full items-center justify-between rounded-r-full px-4 text-xs font-semibold transition-colors",
+                    "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
                     folder() === "sent"
-                      ? "bg-primary/10 text-primary font-bold"
+                      ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                   onClick={() =>
@@ -236,9 +236,9 @@ export default function MessagesPage() {
                 <button
                   type="button"
                   class={cn(
-                    "flex h-9 w-full items-center justify-between rounded-r-full px-4 text-xs font-semibold transition-colors",
+                    "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
                     folder() === "archive"
-                      ? "bg-primary/10 text-primary font-bold"
+                      ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                   onClick={() =>
@@ -258,9 +258,9 @@ export default function MessagesPage() {
                 <button
                   type="button"
                   class={cn(
-                    "flex h-9 w-full items-center justify-between rounded-r-full px-4 text-xs font-semibold transition-colors",
+                    "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
                     folder() === "trash"
-                      ? "bg-destructive/10 text-destructive font-bold"
+                      ? "bg-destructive/10 text-destructive"
                       : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                   onClick={() =>

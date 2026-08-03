@@ -28,7 +28,6 @@ export type MessageKey =
   | "ai.suggestParent2"
   | "ai.suggestParent3"
   | "ai.suggestParent4"
-  | "nav.home"
   | "nav.today"
   | "nav.classes"
   | "nav.classGroups"
@@ -62,8 +61,6 @@ export type MessageKey =
   | "classGroups.noTeacher"
   | "classGroups.selectTeacher"
   | "classGroups.yourClass"
-  | "nav.progress"
-  | "nav.students"
   | "nav.children"
   | "nav.school"
   | "nav.notes"
@@ -72,8 +69,6 @@ export type MessageKey =
   | "nav.questionBank"
   | "nav.homework"
   | "nav.courses"
-  | "nav.studies"
-  | "nav.clubs"
   | "nav.meals"
   | "nav.marks"
   | "nav.messages"
@@ -104,8 +99,6 @@ export type MessageKey =
   | "nav.group.planning"
   | "nav.group.workspace"
   | "nav.group.grades"
-  | "nav.group.reports"
-  | "nav.group.settings"
   | "nav.group.community"
   | "nav.group.services"
   | "nav.darkMode"
@@ -332,11 +325,25 @@ export type MessageKey =
   | "dashboard.progressOverviewDesc"
   | "dashboard.activitySplit"
   | "dashboard.activitySplitDesc"
-  | "dashboard.workloadSplit"
-  | "dashboard.workloadSplitDesc"
   | "dashboard.deadlines"
-  | "dashboard.courseCapacities"
   | "dashboard.courseAverages"
+  | "dashboard.successTrend"
+  | "dashboard.successTrendMine"
+  | "dashboard.successTrendSchool"
+  | "dashboard.courseAveragesSchool"
+  | "dashboard.examGraded"
+  | "dashboard.focusHeatmap"
+  | "dashboard.focusHeatmapDesc"
+  | "dashboard.activityHeatmap"
+  | "dashboard.activityHeatmapDesc"
+  | "dashboard.heatmapLess"
+  | "dashboard.heatmapMore"
+  | "dashboard.heatmapFocusDay"
+  | "dashboard.heatmapFocusEmpty"
+  | "dashboard.heatmapRecordDay"
+  | "dashboard.heatmapRecordEmpty"
+  | "dashboard.heatmapFocusTotal"
+  | "dashboard.heatmapRecordTotal"
   | "dashboard.chartEmpty"
   | "dashboard.chartEmptyHint"
   | "dashboard.col.task"
@@ -359,10 +366,6 @@ export type MessageKey =
   | "dashboard.attend.excused"
   | "dashboard.welcomeBack"
   | "dashboard.welcomeHint"
-  | "dashboard.teachingResources"
-  | "dashboard.teachingResourcesDesc"
-  | "dashboard.questionBankDesc"
-  | "dashboard.questionPoolDesc"
   | "dashboard.quickReview.title"
   | "dashboard.quickReview.subtitle"
   | "dashboard.quickReview.placeholder"
@@ -371,6 +374,8 @@ export type MessageKey =
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
+  | "notes.write"
+  | "notes.preview"
   | "notes.empty"
   | "notes.noContent"
   | "notes.files"
@@ -712,6 +717,7 @@ export type MessageKey =
   | "form.selectStudent"
   | "form.noStudents"
   | "form.noTeachers"
+  | "form.searchNoPermission"
   | "form.titleRequired"
   | "form.titleMax"
   | "form.contentMax"
@@ -796,6 +802,8 @@ export type MessageKey =
   | "homework.mineTitle"
   | "homework.submit"
   | "homework.submitHelp"
+  | "homework.withdraw"
+  | "homework.withdrawHint"
   | "homework.answerPlaceholder"
   | "homework.fileUploaded"
   | "homework.submittedAt"
@@ -855,6 +863,7 @@ export type MessageKey =
   | "exams.drawAnswer"
   | "exams.previousAttempts"
   | "exams.attemptN"
+  | "exams.markHistory"
   | "exams.currentAttempt"
   | "exams.pastAttemptReadOnly"
   | "exams.reviewInProgress"
@@ -1005,6 +1014,7 @@ export type MessageKey =
   | "whiteboard.subtitle"
   | "whiteboard.empty"
   | "whiteboard.create"
+  | "whiteboard.edit"
   | "whiteboard.titleLabel"
   | "whiteboard.participants"
   | "whiteboard.participantsHint"
@@ -1097,6 +1107,12 @@ export type MessageKey =
   | "payments.methodTransfer"
   | "payments.methodCard"
   | "payments.methodCheck"
+  | "payments.methodOther"
+  | "payments.methodRequired"
+  | "payments.addStudent"
+  | "payments.selectedStudents"
+  | "payments.assignSelected"
+  | "payments.assignmentSummary"
   | "payments.ledgerAudit"
   | "payments.showLedger"
   | "payments.hideLedger"
@@ -1195,10 +1211,17 @@ export type MessageKey =
   | "calendar.events"
   | "calendar.exams"
   | "calendar.appointments"
+  | "calendar.lessons"
+  | "calendar.studies"
+  | "calendar.homework"
   | "nav.appointments"
   | "appointments.title"
-  | "appointments.calendar"
   | "appointments.subtitle"
+  | "appointments.subtitleStaff"
+  | "appointments.myBookingsHint"
+  | "appointments.requestsHint"
+  | "appointments.availableSlotsHint"
+  | "appointments.mySlotsHint"
   | "appointments.empty"
   | "appointments.mySlots"
   | "appointments.availableSlots"
@@ -1293,7 +1316,6 @@ const en: Dict = {
   "ai.suggestParent2": "Which exams does my child have soon?",
   "ai.suggestParent3": "How is my child's attendance this term?",
   "ai.suggestParent4": "What is on this week's meal menu?",
-  "nav.home": "Home",
   "nav.today": "Today",
   "nav.classes": "Education",
   "nav.classGroups": "Classes",
@@ -1327,8 +1349,6 @@ const en: Dict = {
   "classGroups.noTeacher": "Not assigned",
   "classGroups.selectTeacher": "Select a teacher",
   "classGroups.yourClass": "Class",
-  "nav.progress": "Progress",
-  "nav.students": "Students",
   "nav.children": "Children",
   "nav.school": "School",
   "nav.notes": "Notebook",
@@ -1337,8 +1357,6 @@ const en: Dict = {
   "nav.questionBank": "Question bank",
   "nav.homework": "Homework",
   "nav.courses": "Courses",
-  "nav.studies": "Study sessions",
-  "nav.clubs": "Clubs",
   "nav.meals": "Meals",
   "nav.marks": "Report card",
   "nav.messages": "Messages",
@@ -1355,13 +1373,13 @@ const en: Dict = {
   "notifications.empty": "No new notifications yet.",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
-  "nav.questions": "Question Pool",
-  "nav.work": "Work Log",
-  "nav.staffWork": "Staff Shifts",
+  "nav.questions": "Question pool",
+  "nav.work": "Work log",
+  "nav.staffWork": "Staff shifts",
   "nav.users": "Users",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
-  "nav.studentPomodoro": "Pomodoros",
+  "nav.studentPomodoro": "Student pomodoros",
   "nav.settings": "Settings",
   "nav.terms": "Terms",
   "nav.guide": "Guide",
@@ -1374,18 +1392,16 @@ const en: Dict = {
   "nav.expand": "Expand sidebar",
   "nav.account": "Account",
   "nav.preferences": "Preferences",
-  "nav.group.students": "Student Management",
-  "nav.group.school": "Management",
+  "nav.group.students": "Student management",
+  "nav.group.school": "School management",
   "nav.group.classes": "Academics",
   "nav.group.planning": "Planning",
   "nav.group.workspace": "Workspace",
   "nav.group.grades": "Grades",
-  "nav.group.reports": "Reports",
-  "nav.group.settings": "Settings",
   "nav.group.community": "Community",
-  "nav.group.services": "Services",
+  "nav.group.services": "School services",
   "nav.darkMode": "Dark mode",
-  "nav.myStudents": "My Students",
+  "nav.myStudents": "My students",
   "parents.title": "My Students",
   "parents.subtitle": "Review academic records for the students linked to your account.",
   "common.loading": "Loading…",
@@ -1597,10 +1613,24 @@ const en: Dict = {
   "dashboard.progressOverviewDesc": "Your performance across courses.",
   "dashboard.activitySplit": "Attendance split",
   "dashboard.activitySplitDesc": "Your attendance breakdown.",
-  "dashboard.workloadSplit": "Workload split",
-  "dashboard.workloadSplitDesc": "Courses, exams, events, and more.",
+  "dashboard.successTrend": "Success trend",
+  "dashboard.successTrendMine": "Your exam marks over time.",
+  "dashboard.successTrendSchool": "Class averages of recent exams.",
+  "dashboard.courseAveragesSchool": "Average of recent exams, by course.",
+  "dashboard.examGraded": "{count} graded",
+  "dashboard.focusHeatmap": "Focus activity",
+  "dashboard.focusHeatmapDesc": "Your pomodoro sessions, day by day.",
+  "dashboard.activityHeatmap": "School activity",
+  "dashboard.activityHeatmapDesc": "Exams, events, and homework, day by day.",
+  "dashboard.heatmapLess": "Less",
+  "dashboard.heatmapMore": "More",
+  "dashboard.heatmapFocusDay": "{date}: {count} min focus",
+  "dashboard.heatmapFocusEmpty": "{date}: no focus session",
+  "dashboard.heatmapRecordDay": "{date}: {count} records",
+  "dashboard.heatmapRecordEmpty": "{date}: no records",
+  "dashboard.heatmapFocusTotal": "{count} min in the last {weeks} weeks",
+  "dashboard.heatmapRecordTotal": "{count} records in the last {weeks} weeks",
   "dashboard.deadlines": "Upcoming deadlines",
-  "dashboard.courseCapacities": "Course capacities",
   "dashboard.courseAverages": "Course averages",
   "dashboard.chartEmpty": "No records found",
   "dashboard.chartEmptyHint": "Not enough data to display yet.",
@@ -1624,10 +1654,6 @@ const en: Dict = {
   "dashboard.attend.excused": "Excused",
   "dashboard.welcomeBack": "Welcome back, {name}!",
   "dashboard.welcomeHint": "Here's what needs your attention today.",
-  "dashboard.teachingResources": "Teaching resources",
-  "dashboard.teachingResourcesDesc": "Review reusable material and student questions.",
-  "dashboard.questionBankDesc": "Build and reuse question templates for exams.",
-  "dashboard.questionPoolDesc": "Review questions submitted by students.",
   "dashboard.quickReview.title": "Quick review",
   "dashboard.quickReview.subtitle": "Refresh what you’ve learned in just two minutes.",
   "dashboard.quickReview.placeholder": "Choose a topic to review…",
@@ -1636,6 +1662,8 @@ const en: Dict = {
   "notes.title": "Notebook",
   "notes.subtitle": "Your private notebook for class ideas and reminders.",
   "notes.new": "New note",
+  "notes.write": "Write",
+  "notes.preview": "Preview",
   "notes.empty": "Nothing here yet. Write your first note.",
   "notes.noContent": "No content",
   "notes.files": "Attachments",
@@ -1717,20 +1745,27 @@ const en: Dict = {
     "Teachers and managers record attendance for students only. Managers can edit any event.",
   "calendar.title": "Calendar",
   "calendar.today": "Today",
-  "calendar.noEvents": "No events or exams on this day.",
+  "calendar.noEvents": "Nothing scheduled on this day.",
   "calendar.events": "Events",
   "calendar.exams": "Exams",
   "calendar.appointments": "Appointments",
+  "calendar.lessons": "Lessons",
+  "calendar.studies": "Studies & clubs",
+  "calendar.homework": "Homework due",
   "nav.appointments": "Appointments",
   "appointments.title": "Appointments",
-  "appointments.calendar": "Appointment calendar",
-  "appointments.subtitle": "Book a meeting with a teacher, or publish the times you’re available.",
+  "appointments.subtitle": "Pick one of the times a teacher opened for meetings, then follow your request here.",
+  "appointments.subtitleStaff": "Open the hours you can meet, then approve or decline the requests that come in.",
+  "appointments.myBookingsHint": "Meetings you booked or asked for, and where each request stands.",
+  "appointments.requestsHint": "Requests from students and parents waiting on your answer.",
+  "appointments.availableSlotsHint": "Hours teachers opened for meetings. Pick one to send a booking request.",
+  "appointments.mySlotsHint": "Hours you opened. Anyone who picks one reaches you as a request.",
   "appointments.empty": "No appointments yet.",
-  "appointments.mySlots": "My available times",
-  "appointments.availableSlots": "Available times",
+  "appointments.mySlots": "Times I opened",
+  "appointments.availableSlots": "Teachers’ open times",
   "appointments.requests": "Booking requests",
   "appointments.myBookings": "My bookings",
-  "appointments.publish": "Publish times",
+  "appointments.publish": "Open a time",
   "appointments.book": "Book",
   "appointments.approve": "Approve",
   "appointments.reject": "Reject",
@@ -2063,6 +2098,7 @@ const en: Dict = {
   "form.selectStudent": "Select student",
   "form.noStudents": "No available students",
   "form.noTeachers": "No available teachers",
+  "form.searchNoPermission": "You do not have permission to search users.",
   "form.titleRequired": "Title is required",
   "form.titleMax": "Title must be at most 200 characters",
   "form.contentMax": "Content must be at most 10 000 characters",
@@ -2147,6 +2183,8 @@ const en: Dict = {
   "homework.mineTitle": "My homework",
   "homework.submit": "Submit homework",
   "homework.submitHelp": "Save a text answer and attach files if needed.",
+  "homework.withdraw": "Withdraw submission",
+  "homework.withdrawHint": "Deletes your answer and every attached file. Not possible once the homework is graded.",
   "homework.answerPlaceholder": "Write an optional answer...",
   "homework.fileUploaded": "File uploaded.",
   "homework.submittedAt": "Submitted at",
@@ -2206,6 +2244,7 @@ const en: Dict = {
   "exams.drawAnswer": "Draw answer",
   "exams.previousAttempts": "Previous attempts",
   "exams.attemptN": "Attempt {n}",
+  "exams.markHistory": "Mark history",
   "exams.currentAttempt": "current",
   "exams.pastAttemptReadOnly": "Viewing a previous attempt — read-only. Grading applies to the current attempt.",
   "exams.reviewInProgress": "Submit your current attempt before you can review it.",
@@ -2356,6 +2395,7 @@ const en: Dict = {
   "whiteboard.subtitle": "Live collaborative sketch boards.",
   "whiteboard.empty": "No whiteboards yet.",
   "whiteboard.create": "New whiteboard",
+  "whiteboard.edit": "Edit whiteboard",
   "whiteboard.titleLabel": "Title",
   "whiteboard.participants": "Participants",
   "whiteboard.participantsHint": "Invite students and staff who may draw.",
@@ -2448,6 +2488,12 @@ const en: Dict = {
   "payments.methodTransfer": "Transfer / EFT",
   "payments.methodCard": "Card",
   "payments.methodCheck": "Cheque",
+  "payments.methodOther": "Other",
+  "payments.methodRequired": "Enter a payment method.",
+  "payments.addStudent": "Add student",
+  "payments.selectedStudents": "Selected students ({count})",
+  "payments.assignSelected": "Assign selected",
+  "payments.assignmentSummary": "Assigned: {assigned} · Already assigned: {alreadyAssigned} · Rejected: {rejected}",
   "payments.ledgerAudit": "Account activity",
   "payments.showLedger": "Show account activity",
   "payments.hideLedger": "Hide account activity",
@@ -2570,7 +2616,6 @@ const tr: Dict = {
   "ai.suggestParent2": "Çocuğumun yaklaşan sınavları neler?",
   "ai.suggestParent3": "Çocuğumun bu dönem devamsızlığı nasıl?",
   "ai.suggestParent4": "Bu haftanın yemek menüsünde ne var?",
-  "nav.home": "Ana sayfa",
   "nav.today": "Bugün",
   "nav.classes": "Eğitim",
   "nav.classGroups": "Şubeler",
@@ -2604,8 +2649,6 @@ const tr: Dict = {
   "classGroups.noTeacher": "Atanmadı",
   "classGroups.selectTeacher": "Bir öğretmen seç",
   "classGroups.yourClass": "Şube",
-  "nav.progress": "İlerleme",
-  "nav.students": "Öğrenciler",
   "nav.children": "Çocuklar",
   "nav.school": "Okul",
   "nav.notes": "Defter",
@@ -2614,8 +2657,6 @@ const tr: Dict = {
   "nav.questionBank": "Soru bankası",
   "nav.homework": "Ödevler",
   "nav.courses": "Ders",
-  "nav.studies": "Etüt",
-  "nav.clubs": "Kulüp",
   "nav.meals": "Yemekler",
   "nav.marks": "Karnem",
   "nav.messages": "Mesajlar",
@@ -2632,13 +2673,13 @@ const tr: Dict = {
   "notifications.empty": "Henüz yeni bir bildiriminiz yok.",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Yoklama",
-  "nav.questions": "Soru Havuzu",
-  "nav.work": "Çalışma Kaydı",
-  "nav.staffWork": "Personel Mesaisi",
+  "nav.questions": "Soru havuzu",
+  "nav.work": "Çalışma kaydı",
+  "nav.staffWork": "Personel mesaisi",
   "nav.users": "Kullanıcılar",
   "nav.studentMarks": "Öğrenci notları",
   "nav.studentAttendance": "Öğrenci yoklamaları",
-  "nav.studentPomodoro": "Pomodorolar",
+  "nav.studentPomodoro": "Öğrenci pomodoroları",
   "nav.settings": "Ayarlar",
   "nav.terms": "Dönemler",
   "nav.guide": "Rehber",
@@ -2651,16 +2692,14 @@ const tr: Dict = {
   "nav.expand": "Kenar çubuğunu genişlet",
   "nav.account": "Hesap",
   "nav.preferences": "Tercihler",
-  "nav.group.students": "Öğrenci Yönetimi",
-  "nav.group.school": "Yönetim",
+  "nav.group.students": "Öğrenci yönetimi",
+  "nav.group.school": "Okul yönetimi",
   "nav.group.classes": "Akademik",
   "nav.group.planning": "Planlama",
-  "nav.group.workspace": "Çalışma Alanı",
+  "nav.group.workspace": "Çalışma alanı",
   "nav.group.grades": "Notlar",
-  "nav.group.reports": "Raporlar",
-  "nav.group.settings": "Ayarlar",
   "nav.group.community": "Topluluk",
-  "nav.group.services": "Hizmetler",
+  "nav.group.services": "Okul hizmetleri",
   "nav.darkMode": "Karanlık mod",
   "nav.myStudents": "Öğrencilerim",
   "parents.title": "Öğrencilerim",
@@ -2874,10 +2913,24 @@ const tr: Dict = {
   "dashboard.progressOverviewDesc": "Derslere göre performansın.",
   "dashboard.activitySplit": "Yoklama dağılımı",
   "dashboard.activitySplitDesc": "Yoklama dağılımın.",
-  "dashboard.workloadSplit": "İş yükü dağılımı",
-  "dashboard.workloadSplitDesc": "Dersler, sınavlar, etkinlikler ve dahası.",
+  "dashboard.successTrend": "Başarı eğilimi",
+  "dashboard.successTrendMine": "Sınav notlarının zaman içindeki seyri.",
+  "dashboard.successTrendSchool": "Son sınavların sınıf ortalamaları.",
+  "dashboard.courseAveragesSchool": "Son sınavlara göre ders bazında ortalama.",
+  "dashboard.examGraded": "{count} notlandırıldı",
+  "dashboard.focusHeatmap": "Odaklanma etkinliği",
+  "dashboard.focusHeatmapDesc": "Gün gün pomodoro oturumların.",
+  "dashboard.activityHeatmap": "Okul etkinliği",
+  "dashboard.activityHeatmapDesc": "Gün gün sınav, etkinlik ve ödevler.",
+  "dashboard.heatmapLess": "Az",
+  "dashboard.heatmapMore": "Çok",
+  "dashboard.heatmapFocusDay": "{date}: {count} dk odaklanma",
+  "dashboard.heatmapFocusEmpty": "{date}: odaklanma yok",
+  "dashboard.heatmapRecordDay": "{date}: {count} kayıt",
+  "dashboard.heatmapRecordEmpty": "{date}: kayıt yok",
+  "dashboard.heatmapFocusTotal": "Son {weeks} haftada {count} dk",
+  "dashboard.heatmapRecordTotal": "Son {weeks} haftada {count} kayıt",
   "dashboard.deadlines": "Yaklaşan son tarihler",
-  "dashboard.courseCapacities": "Eğitim kapasiteleri",
   "dashboard.courseAverages": "Ders ortalamaları",
   "dashboard.chartEmpty": "Kayıt bulunamadı",
   "dashboard.chartEmptyHint": "Gösterilecek yeterli veri yok.",
@@ -2901,10 +2954,6 @@ const tr: Dict = {
   "dashboard.attend.excused": "İzinli",
   "dashboard.welcomeBack": "Tekrar hoş geldin, {name}!",
   "dashboard.welcomeHint": "Bugün dikkat etmen gerekenler burada.",
-  "dashboard.teachingResources": "Öğretim kaynakları",
-  "dashboard.teachingResourcesDesc": "Yeniden kullanılabilir içerikleri ve öğrenci sorularını incele.",
-  "dashboard.questionBankDesc": "Sınavlar için soru şablonları oluştur ve yeniden kullan.",
-  "dashboard.questionPoolDesc": "Öğrencilerin gönderdiği soruları incele.",
   "dashboard.quickReview.title": "Hızlı tekrar",
   "dashboard.quickReview.subtitle": "Öğrendiklerinizi yalnızca iki dakikada tazeleyin.",
   "dashboard.quickReview.placeholder": "Tekrar için konu seç…",
@@ -2913,6 +2962,8 @@ const tr: Dict = {
   "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleriniz ve hatırlatmalarınız için özel defteriniz.",
   "notes.new": "Yeni not",
+  "notes.write": "Yaz",
+  "notes.preview": "Önizleme",
   "notes.empty": "Henüz bir şey yok. İlk notunu yaz.",
   "notes.noContent": "İçerik yok",
   "notes.files": "Ekler",
@@ -2994,20 +3045,27 @@ const tr: Dict = {
     "Öğretmenler ve yöneticiler yalnız öğrenciler için yoklama kaydeder. Yöneticiler her etkinliği düzenleyebilir.",
   "calendar.title": "Takvim",
   "calendar.today": "Bugün",
-  "calendar.noEvents": "Bu günde etkinlik veya sınav yok.",
+  "calendar.noEvents": "Bu güne ait bir şey yok.",
   "calendar.events": "Etkinlikler",
   "calendar.exams": "Sınavlar",
   "calendar.appointments": "Randevular",
+  "calendar.lessons": "Dersler",
+  "calendar.studies": "Etütler ve kulüpler",
+  "calendar.homework": "Ödev teslimi",
   "nav.appointments": "Randevular",
   "appointments.title": "Randevular",
-  "appointments.calendar": "Randevu takvimi",
-  "appointments.subtitle": "Bir öğretmenle görüşme ayarlayın ya da uygun olduğunuz saatleri yayımlayın.",
+  "appointments.subtitle": "Bir öğretmenin görüşmeye açtığı saatlerden birini seç, talebini buradan takip et.",
+  "appointments.subtitleStaff": "Görüşebileceğin saatleri aç, gelen randevu taleplerini onayla ya da reddet.",
+  "appointments.myBookingsHint": "Aldığın ve talep ettiğin görüşmeler ile her talebin son durumu.",
+  "appointments.requestsHint": "Öğrenci ve velilerden gelen, cevabını bekleyen talepler.",
+  "appointments.availableSlotsHint": "Öğretmenlerin görüşmeye açtığı saatler. Birini seçip randevu talebi gönder.",
+  "appointments.mySlotsHint": "Görüşmeye açtığın saatler. Birini seçen kişi sana talep olarak ulaşır.",
   "appointments.empty": "Henüz randevu yok.",
-  "appointments.mySlots": "Uygun saatlerim",
-  "appointments.availableSlots": "Uygun saatler",
+  "appointments.mySlots": "Açtığım saatler",
+  "appointments.availableSlots": "Öğretmenlerin açık saatleri",
   "appointments.requests": "Randevu talepleri",
   "appointments.myBookings": "Randevularım",
-  "appointments.publish": "Saat yayımla",
+  "appointments.publish": "Saat aç",
   "appointments.book": "Randevu al",
   "appointments.approve": "Onayla",
   "appointments.reject": "Reddet",
@@ -3340,6 +3398,7 @@ const tr: Dict = {
   "form.selectStudent": "Öğrenci seç",
   "form.noStudents": "Uygun öğrenci yok",
   "form.noTeachers": "Uygun öğretmen yok",
+  "form.searchNoPermission": "Kullanıcı aramak için yetkin yok.",
   "form.titleRequired": "Başlık gerekli",
   "form.titleMax": "Başlık en fazla 200 karakter olmalı",
   "form.contentMax": "İçerik en fazla 10 000 karakter olmalı",
@@ -3424,6 +3483,8 @@ const tr: Dict = {
   "homework.mineTitle": "Ödevlerim",
   "homework.submit": "Ödevi teslim et",
   "homework.submitHelp": "İstersen yazılı cevap kaydet ve dosya ekle.",
+  "homework.withdraw": "Teslimi geri çek",
+  "homework.withdrawHint": "Cevabını ve eklediğin tüm dosyaları siler. Ödev notlandırıldıysa yapılamaz.",
   "homework.answerPlaceholder": "İsteğe bağlı cevabını yaz...",
   "homework.fileUploaded": "Dosya yüklendi.",
   "homework.submittedAt": "Teslim zamanı",
@@ -3483,6 +3544,7 @@ const tr: Dict = {
   "exams.drawAnswer": "Cevabı çiz",
   "exams.previousAttempts": "Önceki denemeler",
   "exams.attemptN": "{n}. deneme",
+  "exams.markHistory": "Not geçmişi",
   "exams.currentAttempt": "güncel",
   "exams.pastAttemptReadOnly": "Önceki bir deneme görüntüleniyor — salt okunur. Puanlama güncel denemeye uygulanır.",
   "exams.reviewInProgress": "İncelemek için önce mevcut denemeni gönder.",
@@ -3628,11 +3690,12 @@ const tr: Dict = {
   "meals.priceTry": "Fiyat (TRY)",
   "nav.payments": "Ücretler",
   "nav.paymentStatement": "Ücretlerim",
-  "nav.whiteboards": "Beyaz Tahtalar",
+  "nav.whiteboards": "Beyaz tahtalar",
   "whiteboard.title": "Beyaz Tahtalar",
   "whiteboard.subtitle": "Canlı ortak çizim tahtaları.",
   "whiteboard.empty": "Henüz beyaz tahta yok.",
   "whiteboard.create": "Yeni tahta",
+  "whiteboard.edit": "Tahtayı düzenle",
   "whiteboard.titleLabel": "Başlık",
   "whiteboard.participants": "Katılımcılar",
   "whiteboard.participantsHint": "Çizebilecek öğrenci ve personeli davet edin.",
@@ -3725,6 +3788,12 @@ const tr: Dict = {
   "payments.methodTransfer": "Havale / EFT",
   "payments.methodCard": "Kredi kartı",
   "payments.methodCheck": "Çek",
+  "payments.methodOther": "Diğer",
+  "payments.methodRequired": "Bir ödeme yöntemi girin.",
+  "payments.addStudent": "Öğrenci ekle",
+  "payments.selectedStudents": "Seçilen öğrenciler ({count})",
+  "payments.assignSelected": "Seçilenleri ata",
+  "payments.assignmentSummary": "Atandı: {assigned} · Zaten atanmış: {alreadyAssigned} · Reddedildi: {rejected}",
   "payments.ledgerAudit": "Hesap hareketleri",
   "payments.showLedger": "Hesap hareketlerini göster",
   "payments.hideLedger": "Hesap hareketlerini gizle",

@@ -51,6 +51,8 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 const PLAN_PAGE_SIZE = 10;
 const STATEMENT_PAGE_SIZE = 15;
 const STUDENT_PAGE_SIZE = 10;
+const MAX_PLAN_ASSIGNMENT_STUDENTS = 200;
+const CUSTOM_PAYMENT_METHOD = "__custom__";
 
 function dateInputFromMs(ms: number): string {
   const date = new Date(ms);
@@ -261,12 +263,14 @@ function PaymentsContent() {
   const [viewEntry, setViewEntry] = createSignal<StatementEntry | null>(null);
   const [collectAmount, setCollectAmount] = createSignal("");
   const [collectMethod, setCollectMethod] = createSignal("");
+  const [collectCustomMethod, setCollectCustomMethod] = createSignal("");
   const [collectNote, setCollectNote] = createSignal("");
 
   const openCollect = (entry: StatementEntry) => {
     setCollectEntry(entry);
     setCollectAmount(entry.outstanding_minor > 0 ? String(entry.outstanding_minor / 100) : "");
     setCollectMethod(t("payments.methodCash"));
+    setCollectCustomMethod("");
     setCollectNote("");
     setError("");
   };
@@ -279,13 +283,18 @@ function PaymentsContent() {
       setError(t("payments.amountTry"));
       return;
     }
+    const method = collectMethod() === CUSTOM_PAYMENT_METHOD ? collectCustomMethod().trim() : collectMethod().trim();
+    if (collectMethod() === CUSTOM_PAYMENT_METHOD && !method) {
+      setError(t("payments.methodRequired"));
+      return;
+    }
     setPending(true);
     setError("");
     try {
       await postPaymentCredit({
         charge_id: entry.charge_id,
         amount_minor,
-        method: collectMethod().trim() || undefined,
+        method: method || undefined,
         note: collectNote().trim() || undefined,
         request_key: crypto.randomUUID(),
       });
@@ -393,6 +402,8 @@ function PaymentsContent() {
   const [assignPlan, setAssignPlan] = createSignal<FeePlan | null>(null);
   const [viewPlan, setViewPlan] = createSignal<FeePlan | null>(null);
   const [assignStudent, setAssignStudent] = createSignal("");
+  const [assignCandidate, setAssignCandidate] = createSignal<PersonRef | null>(null);
+  const [assignStudents, setAssignStudents] = createSignal<PersonRef[]>([]);
   const [assignments, { refetch: refetchAssignments }] = createResource(
     () => assignPlan()?.id ?? viewPlan()?.id ?? null,
     (planId) => getPlanAssignments(planId, { limit: 200 }),
@@ -406,15 +417,16 @@ function PaymentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-40 min-w-40 text-right whitespace-nowrap", cellClass: "text-right" },
+      meta: { headerClass: "text-center", cellClass: "text-center" },
       cell: (cell) => (
-        <div class="flex items-center justify-end gap-1">
-          <Button size="sm" variant="outline" class="rounded-lg" onClick={() => openAssign(cell.row.original)}>
+        <div class="flex items-center justify-center gap-1">
+          <Button size="sm" variant="outline" class="h-8 gap-1 rounded-lg px-2 text-xs" onClick={() => openAssign(cell.row.original)}>
             <IconPlus class="h-4 w-4" />
             {t("payments.assign")}
           </Button>
           <TableRowActions
             label={t("common.actions")}
+            compact
             actions={[
               { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setViewPlan(cell.row.original) },
               { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => startEdit(cell.row.original) },
@@ -484,20 +496,33 @@ function PaymentsContent() {
   const openAssign = (plan: FeePlan) => {
     setAssignPlan(plan);
     setAssignStudent("");
+    setAssignCandidate(null);
+    setAssignStudents([]);
     setError("");
   };
+  const addAssignStudent = () => {
+    const candidate = assignCandidate();
+    if (!candidate || assignStudents().length >= MAX_PLAN_ASSIGNMENT_STUDENTS || assignStudents().some((student) => student.id === candidate.id)) return;
+    setAssignStudents([...assignStudents(), candidate]);
+    setAssignStudent("");
+    setAssignCandidate(null);
+  };
+  const removeAssignStudent = (id: string) => setAssignStudents(assignStudents().filter((student) => student.id !== id));
   const submitAssign = async () => {
     const plan = assignPlan();
-    const target = assignStudent();
-    if (!plan || !target) return;
+    const students = assignStudents();
+    if (!plan || students.length === 0) return;
     setPending(true);
     setError("");
     try {
-      const outcomes = await postPlanAssignment(plan.id, { student_ids: [target] });
-      const outcome = outcomes[0];
-      const key = outcome?.status === "assigned" ? "payments.outcomeAssigned" : outcome?.status === "already_assigned" ? "payments.outcomeAlready" : "payments.outcomeRejected";
-      setFlash(t(key as never));
+      const outcomes = await postPlanAssignment(plan.id, { student_ids: students.map((student) => student.id) });
+      const assigned = outcomes.filter((outcome) => outcome.status === "assigned").length;
+      const alreadyAssigned = outcomes.filter((outcome) => outcome.status === "already_assigned").length;
+      const rejected = outcomes.length - assigned - alreadyAssigned;
+      setFlash(t("payments.assignmentSummary", { assigned, alreadyAssigned, rejected }));
+      setAssignStudents([]);
       setAssignStudent("");
+      setAssignCandidate(null);
       await refetchAssignments();
     } catch (err) {
       setError(formatApiError(err));
@@ -769,8 +794,15 @@ function PaymentsContent() {
             <Label for="collect-method">{t("payments.method")}</Label>
             <Select id="collect-method" value={collectMethod()} onChange={(e) => setCollectMethod(e.currentTarget.value)}>
               <For each={PAYMENT_METHOD_KEYS}>{(key) => <option value={t(key)}>{t(key)}</option>}</For>
+              <option value={CUSTOM_PAYMENT_METHOD}>{t("payments.methodOther")}</option>
             </Select>
           </div>
+          <Show when={collectMethod() === CUSTOM_PAYMENT_METHOD}>
+            <div class="space-y-1.5">
+              <Label for="collect-custom-method">{t("payments.methodOther")}</Label>
+              <Input id="collect-custom-method" maxlength={50} required value={collectCustomMethod()} onInput={(e) => setCollectCustomMethod(e.currentTarget.value)} />
+            </div>
+          </Show>
           <div class="space-y-1.5">
             <Label for="collect-note">{t("payments.note")}</Label>
             <Textarea id="collect-note" maxlength={500} value={collectNote()} onInput={(e) => setCollectNote(e.currentTarget.value)} />
@@ -864,10 +896,21 @@ function PaymentsContent() {
           <p class="text-sm text-muted-foreground">{t("payments.assignHelp")}</p>
           <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
             <div class="min-w-0 flex-1">
-              <UserSearchSelect id="assign-student" role="student" value={assignStudent()} onChange={setAssignStudent} label={t("payments.selectStudent")} placeholder={t("payments.selectStudent")} />
+              <UserSearchSelect id="assign-student" role="student" value={assignStudent()} onChange={setAssignStudent} onSelect={setAssignCandidate} excludeIds={assignStudents().map((student) => student.id)} label={t("payments.selectStudent")} placeholder={t("payments.selectStudent")} />
             </div>
-            <Button disabled={!assignStudent() || pending()} onClick={() => void submitAssign()}>{t("payments.assign")}</Button>
+            <Button type="button" variant="outline" disabled={!assignCandidate() || assignStudents().length >= MAX_PLAN_ASSIGNMENT_STUDENTS || pending()} onClick={addAssignStudent}>{t("payments.addStudent")}</Button>
           </div>
+          <Show when={assignStudents().length > 0}>
+            <div class="space-y-2">
+              <Label>{t("payments.selectedStudents", { count: assignStudents().length })}</Label>
+              <div class="flex flex-wrap gap-2">
+                <For each={assignStudents()}>
+                  {(student) => <Badge variant="secondary" class="gap-1.5 py-1 pr-1">{personLabel(student)}<Button type="button" variant="ghost" size="sm" class="h-5 w-5 rounded-md p-0" onClick={() => removeAssignStudent(student.id)} aria-label={t("common.remove")}><IconTrash class="h-3.5 w-3.5" /></Button></Badge>}
+                </For>
+              </div>
+              <Button disabled={pending()} onClick={() => void submitAssign()}>{t("payments.assignSelected")}</Button>
+            </div>
+          </Show>
           <div class="space-y-2">
             <Label>{t("payments.assignments")}</Label>
             <div class="divide-y divide-border/60">

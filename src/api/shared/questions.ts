@@ -50,13 +50,22 @@ export async function postQuestion(body: AskQuestion, image?: File): Promise<Poo
     body,
   });
 
-  if (image) {
-    const fd = new FormData();
-    fd.append("file", image);
-    await formClient(`/questions/${res.id}/image`, fd);
-  }
+  if (image) await postQuestionImage(res.id, image);
 
   return res;
+}
+
+/** Attaches or replaces the question's single illustration. */
+export async function postQuestionImage(id: string, image: File): Promise<void> {
+  const fd = new FormData();
+  fd.append("file", image);
+  await formClient(`/questions/${id}/image`, fd);
+}
+
+export async function deleteQuestionImage(id: string): Promise<void> {
+  return client(`/questions/${id}/image`, {
+    method: "DELETE",
+  });
 }
 
 export async function postQuestionApprove(id: string): Promise<PoolQuestionResponse> {

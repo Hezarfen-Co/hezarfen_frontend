@@ -1,6 +1,7 @@
 import { For, Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
 import { ApiError, formatApiError } from "@/api/client";
 import {
+  deleteHomeworkSubmission,
   deleteHomeworkSubmissionFile,
   getHomeworkResult,
   getHomeworkSubmission,
@@ -12,6 +13,7 @@ import { getSettings } from "@/api/settings";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconDownload, IconTrash, IconUploadCloud } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -29,6 +31,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
   const [pending, setPending] = createSignal(false);
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
+  const [withdrawOpen, setWithdrawOpen] = createSignal(false);
   let input: HTMLInputElement | undefined;
 
   const [settings] = createResource(() => getSettings().catch(() => null));
@@ -108,6 +111,25 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
     }
   };
 
+  // The backend refuses a withdrawal once a grade exists (409), so the button
+  // only shows while there is a submission and no result on it.
+  const canWithdraw = () => submission() != null && result() == null;
+  const withdraw = async () => {
+    setError("");
+    setPending(true);
+    try {
+      await deleteHomeworkSubmission(props.homeworkId);
+      await refetchSubmission();
+      setText("");
+      setFlash(t("common.deleted"));
+    } catch (err) {
+      setError(formatApiError(err, locale()));
+    } finally {
+      setPending(false);
+      setWithdrawOpen(false);
+    }
+  };
+
   const statusLabel = (status: string) => {
     if (status === "done") return t("homework.status.done");
     if (status === "incomplete") return t("homework.status.incomplete");
@@ -142,7 +164,21 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
         </Show>
         <form class="space-y-3" onSubmit={(event) => void save(event)}>
           <RichTextEditor value={text()} onChange={setText} placeholder={t("homework.answerPlaceholder")} minHeight="min-h-32" />
-          <Button type="submit" class="rounded-lg" disabled={pending()}>{t("common.save")}</Button>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button type="submit" class="rounded-lg" disabled={pending()}>{t("common.save")}</Button>
+            <Show when={canWithdraw()}>
+              <Button
+                type="button"
+                variant="ghost"
+                class="rounded-lg text-destructive hover:bg-destructive/10"
+                disabled={pending()}
+                onClick={() => setWithdrawOpen(true)}
+              >
+                <IconTrash class="h-4 w-4" />
+                {t("homework.withdraw")}
+              </Button>
+            </Show>
+          </div>
         </form>
         <div class={cn("rounded-lg border bg-background/70 p-3", hasFiles() && "space-y-3")}>
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -195,6 +231,15 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
           </Show>
         </div>
       </Suspense>
+
+      <ConfirmDialog
+        open={withdrawOpen()}
+        onOpenChange={setWithdrawOpen}
+        title={t("homework.withdraw")}
+        summary={t("homework.withdrawHint")}
+        onConfirm={() => void withdraw()}
+        variant="destructive"
+      />
     </section>
   );
 }

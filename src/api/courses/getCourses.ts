@@ -1,20 +1,19 @@
 import { client } from "../client";
 import { appendPageParams, normalizePage, type Page, type PageParams } from "../client";
-import type { Course, CourseKind } from "../client";
+import type { Course } from "../client";
 
-export type CourseListParams = PageParams & {
-  kind?: CourseKind;
-  q?: string;
-  term_id?: string;
-};
+/**
+ * `GET /courses` and `GET /courses/me` take `limit`/`offset` and nothing else —
+ * the backend has no kind/term/search filter, and serde drops unknown query
+ * keys silently, so any extra param would look applied while doing nothing.
+ * Narrow the list in the caller instead (see `courses-page.tsx`).
+ */
+export type CourseListParams = PageParams;
 
 export function courseListQuery(params?: CourseListParams): string {
   if (!params) return "";
   const query = new URLSearchParams();
   appendPageParams(query, params);
-  if (params.kind) query.set("kind", params.kind);
-  if (params.q) query.set("q", params.q);
-  if (params.term_id) query.set("term_id", params.term_id);
   const value = query.toString();
   return value ? `?${value}` : "";
 }

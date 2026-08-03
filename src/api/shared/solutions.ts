@@ -41,13 +41,22 @@ export async function postSolution(
     body,
   });
 
-  if (image) {
-    const fd = new FormData();
-    fd.append("file", image);
-    await formClient(`/questions/${id}/solutions/${res.id}/image`, fd);
-  }
+  if (image) await postSolutionImage(id, res.id, image);
 
   return res;
+}
+
+/** Attaches or replaces the solution's single attachment. */
+export async function postSolutionImage(id: string, sid: string, image: File): Promise<void> {
+  const fd = new FormData();
+  fd.append("file", image);
+  await formClient(`/questions/${id}/solutions/${sid}/image`, fd);
+}
+
+export async function deleteSolutionImage(id: string, sid: string): Promise<void> {
+  return client(`/questions/${id}/solutions/${sid}/image`, {
+    method: "DELETE",
+  });
 }
 
 export async function patchSolutionById(

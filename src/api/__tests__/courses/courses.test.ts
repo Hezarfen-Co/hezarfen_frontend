@@ -60,10 +60,10 @@ describe("courses API", () => {
     expect(init?.method).toBe("GET");
   });
 
-  it("getCourses sends server-side kind, search, and term filters", async () => {
+  it("getCourses sends pagination only — the endpoint has no kind/term/search filter", async () => {
     mockFetchSuccess({ items: [], total: 0 });
-    await getCourses({ limit: 12, offset: 24, kind: "course", q: "math", term_id: "none" });
-    expect(lastFetchCall()[0]).toBe("/api/courses?limit=12&offset=24&kind=course&q=math&term_id=none");
+    await getCourses({ limit: 12, offset: 24 });
+    expect(lastFetchCall()[0]).toBe("/api/courses?limit=12&offset=24");
   });
 
   it("getCourseById calls /courses/:id", async () => {

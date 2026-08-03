@@ -133,6 +133,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "notes", to: "/notes", labelKey: "nav.notes", Icon: IconNote },
       { id: "whiteboards", to: "/whiteboards", labelKey: "nav.whiteboards", Icon: IconEdit, minRole: "student" },
       { id: "pomodoro", to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student" },
+      { id: "work", to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
     ],
   },
   {
@@ -163,7 +164,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "messages", to: "/messages", labelKey: "nav.messages", Icon: IconMessage },
       { id: "questions", to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle },
-      { id: "work", to: "/work", labelKey: "nav.work", Icon: IconBriefcase, minRole: "teacher", maxRole: "manager" },
     ],
   },
   {

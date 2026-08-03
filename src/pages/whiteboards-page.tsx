@@ -17,6 +17,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { personLabel } from "@/lib/person";
+import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -122,6 +123,7 @@ function CreateBoardPanel(props: {
   onCreated: (board: Board) => void;
 }) {
   const t = useT();
+  const auth = useAuth();
   const { locale } = usePreferences();
   const [title, setTitle] = createSignal("");
   const [query, setQuery] = createSignal("");
@@ -129,9 +131,11 @@ function CreateBoardPanel(props: {
   const [pending, setPending] = createSignal(false);
   const [error, setError] = createSignal("");
 
-  // `/users/search` (teacher+) rather than the admin-only `/users` list: a
-  // student or teacher creating a board would otherwise 403 the moment this
-  // panel mounted, before they'd even typed anything.
+  // `/users/search` is teacher+, so a student (boards are student+) can't search
+  // for participants — the picker is disabled for them, and they create a board
+  // for themselves that a teacher can later add people to. Teacher+ uses the
+  // live search below (the admin-only `/users` list would 403 a manager/teacher).
+  const canSearch = () => hasMinRole(auth.user()?.role, "teacher");
   const [searchResults, setSearchResults] = createSignal<PersonRef[]>([]);
   let searchController: AbortController | null = null;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
@@ -139,7 +143,7 @@ function CreateBoardPanel(props: {
     const q = query().trim();
     searchController?.abort();
     clearTimeout(searchTimer);
-    if (q.length === 0) {
+    if (!canSearch() || q.length === 0) {
       setSearchResults([]);
       return;
     }
@@ -248,9 +252,13 @@ function CreateBoardPanel(props: {
           <Input
             placeholder={t("whiteboard.addParticipant")}
             value={query()}
+            disabled={!canSearch()}
             onInput={(e) => setQuery(e.currentTarget.value)}
             onKeyDown={onPickerKeyDown}
           />
+          <Show when={!canSearch()}>
+            <p class="text-xs text-muted-foreground">{t("form.searchNoPermission")}</p>
+          </Show>
           <Show when={query().trim() && filtered().length > 0}>
             <div class="rounded-lg border">
               <For each={filtered()}>

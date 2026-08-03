@@ -1,6 +1,7 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteSessionById } from "@/api/sessions";
+import { deleteSessionAttendanceByUserId } from "@/api/sessions";
 import { getCourseSessions } from "@/api/courses";
 import { getSessionAttendance } from "@/api/sessions";
 import { getTime } from "@/api/time";
@@ -410,6 +411,23 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
       setError(formatApiError(err));
     }
   };
+  // Marking cannot undo itself — a wrong mark stays until the row is removed.
+  // Roster rows are students, so the session's teacher may clear them.
+  const clear = async (userId: string) => {
+    setError("");
+    try {
+      await deleteSessionAttendanceByUserId(props.sessionId, userId);
+      setLocal((current) => {
+        const next = { ...current };
+        delete next[userId];
+        return next;
+      });
+      await refetch();
+      setFlash(t("common.deleted"));
+    } catch (err) {
+      setError(formatApiError(err));
+    }
+  };
 
   return (
     <div class="space-y-3">
@@ -437,6 +455,18 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
                   <Button type="button" class="h-10 w-24 shrink-0 rounded-lg" variant={saved() ? "outline" : "default"} onClick={() => void save(row.user.id)}>
                     {saved() ? t("common.update") : t("common.save")}
                   </Button>
+                  <Show when={saved()}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      class="h-10 w-10 shrink-0 text-destructive hover:bg-destructive/10"
+                      aria-label={t("common.remove")}
+                      onClick={() => void clear(row.user.id)}
+                    >
+                      <IconTrash class="h-4 w-4" />
+                    </Button>
+                  </Show>
                 </div>
               </div>
             );
