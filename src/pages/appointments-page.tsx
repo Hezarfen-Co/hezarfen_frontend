@@ -18,7 +18,6 @@ import { APPOINTMENT_LIMITS, formatApiError } from "@/api/client";
 import { createLivePoll } from "@/lib/create-live-poll";
 import type { Appointment, AppointmentSlot, AppointmentStatus } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
-import { AppointmentCalendar } from "@/components/appointments/appointment-calendar";
 import { BookAppointmentForm } from "@/components/appointments/book-appointment-form";
 import { PublishSlotsForm } from "@/components/appointments/publish-slots-form";
 import { RescheduleForm } from "@/components/appointments/reschedule-form";
@@ -442,7 +441,11 @@ function AppointmentsContent() {
         </span>
         <div class="min-w-0">
           <h1 class="text-2xl font-semibold tracking-tight">{t("appointments.title")}</h1>
-          <p class="mt-0.5 text-sm text-muted-foreground">{t("appointments.subtitle")}</p>
+          {/* Staff publish times, everyone else consumes them — one sentence
+              cannot describe both without going vague. */}
+          <p class="mt-0.5 text-sm text-muted-foreground">
+            {isStaff() ? t("appointments.subtitleStaff") : t("appointments.subtitle")}
+          </p>
         </div>
       </header>
 
@@ -476,6 +479,7 @@ function AppointmentsContent() {
             <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
+                <p class="mb-3 text-sm text-muted-foreground">{t("appointments.myBookingsHint")}</p>
                 <DataTable
                   title={t("appointments.myBookings")}
                   columns={bookingColumns()}
@@ -493,6 +497,7 @@ function AppointmentsContent() {
             <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
+                <p class="mb-3 text-sm text-muted-foreground">{t("appointments.requestsHint")}</p>
                 <DataTable
                   title={t("appointments.requests")}
                   columns={requestColumns()}
@@ -507,10 +512,6 @@ function AppointmentsContent() {
               </Show>
             </section>
           </Show>
-
-          <Show when={loaded()}>
-            <AppointmentCalendar appointments={isStaff() ? requests() : myBookings()} userId={me()?.id} />
-          </Show>
         </TabsContent>
 
         <TabsContent value="availability" class="mt-0 border-0 bg-transparent p-0 shadow-none">
@@ -518,6 +519,7 @@ function AppointmentsContent() {
             <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
+                <p class="mb-3 text-sm text-muted-foreground">{t("appointments.availableSlotsHint")}</p>
                 <DataTable
                   title={t("appointments.availableSlots")}
                   columns={availableColumns()}
@@ -535,6 +537,7 @@ function AppointmentsContent() {
             <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
+                <p class="mb-3 text-sm text-muted-foreground">{t("appointments.mySlotsHint")}</p>
                 <DataTable
                   title={t("appointments.mySlots")}
                   actions={

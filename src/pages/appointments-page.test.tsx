@@ -43,11 +43,16 @@ test("separates bookings and available times into tabs", async () => {
 
   render(() => <PreferencesProvider><AppointmentsPage /></PreferencesProvider>);
 
-  expect(await screen.findByRole("heading", { name: "Appointment calendar" })).toBeTruthy();
-  const availableTab = screen.getByRole("tab", { name: /Available times/ });
+  expect(await screen.findByRole("heading", { name: "My bookings" })).toBeTruthy();
+  // The month grid moved to /calendar, which shows every dated record rather
+  // than appointments alone.
+  expect(screen.queryByRole("heading", { name: "Appointment calendar" })).toBeNull();
+
+  const availableTab = screen.getByRole("tab", { name: /Teachers’ open times/ });
   fireEvent.click(availableTab);
 
   expect(availableTab.getAttribute("aria-selected")).toBe("true");
-  expect(await screen.findByRole("heading", { name: "Available times" })).toBeTruthy();
-  expect(screen.queryByRole("heading", { name: "Appointment calendar" })).toBeNull();
+  expect(await screen.findByRole("heading", { name: "Teachers’ open times" })).toBeTruthy();
+  // Each tab explains itself — "open times" alone read as a bare label.
+  expect(screen.getByText("Hours teachers opened for meetings. Pick one to send a booking request.")).toBeTruthy();
 });

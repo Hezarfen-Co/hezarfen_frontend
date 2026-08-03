@@ -1218,10 +1218,17 @@ export type MessageKey =
   | "calendar.events"
   | "calendar.exams"
   | "calendar.appointments"
+  | "calendar.lessons"
+  | "calendar.studies"
+  | "calendar.homework"
   | "nav.appointments"
   | "appointments.title"
-  | "appointments.calendar"
   | "appointments.subtitle"
+  | "appointments.subtitleStaff"
+  | "appointments.myBookingsHint"
+  | "appointments.requestsHint"
+  | "appointments.availableSlotsHint"
+  | "appointments.mySlotsHint"
   | "appointments.empty"
   | "appointments.mySlots"
   | "appointments.availableSlots"
@@ -1752,20 +1759,27 @@ const en: Dict = {
     "Teachers and managers record attendance for students only. Managers can edit any event.",
   "calendar.title": "Calendar",
   "calendar.today": "Today",
-  "calendar.noEvents": "No events or exams on this day.",
+  "calendar.noEvents": "Nothing scheduled on this day.",
   "calendar.events": "Events",
   "calendar.exams": "Exams",
   "calendar.appointments": "Appointments",
+  "calendar.lessons": "Lessons",
+  "calendar.studies": "Studies & clubs",
+  "calendar.homework": "Homework due",
   "nav.appointments": "Appointments",
   "appointments.title": "Appointments",
-  "appointments.calendar": "Appointment calendar",
-  "appointments.subtitle": "Book a meeting with a teacher, or publish the times you’re available.",
+  "appointments.subtitle": "Pick one of the times a teacher opened for meetings, then follow your request here.",
+  "appointments.subtitleStaff": "Open the hours you can meet, then approve or decline the requests that come in.",
+  "appointments.myBookingsHint": "Meetings you booked or asked for, and where each request stands.",
+  "appointments.requestsHint": "Requests from students and parents waiting on your answer.",
+  "appointments.availableSlotsHint": "Hours teachers opened for meetings. Pick one to send a booking request.",
+  "appointments.mySlotsHint": "Hours you opened. Anyone who picks one reaches you as a request.",
   "appointments.empty": "No appointments yet.",
-  "appointments.mySlots": "My available times",
-  "appointments.availableSlots": "Available times",
+  "appointments.mySlots": "Times I opened",
+  "appointments.availableSlots": "Teachers’ open times",
   "appointments.requests": "Booking requests",
   "appointments.myBookings": "My bookings",
-  "appointments.publish": "Publish times",
+  "appointments.publish": "Open a time",
   "appointments.book": "Book",
   "appointments.approve": "Approve",
   "appointments.reject": "Reject",
@@ -3052,20 +3066,27 @@ const tr: Dict = {
     "Öğretmenler ve yöneticiler yalnız öğrenciler için yoklama kaydeder. Yöneticiler her etkinliği düzenleyebilir.",
   "calendar.title": "Takvim",
   "calendar.today": "Bugün",
-  "calendar.noEvents": "Bu günde etkinlik veya sınav yok.",
+  "calendar.noEvents": "Bu güne ait bir şey yok.",
   "calendar.events": "Etkinlikler",
   "calendar.exams": "Sınavlar",
   "calendar.appointments": "Randevular",
+  "calendar.lessons": "Dersler",
+  "calendar.studies": "Etütler ve kulüpler",
+  "calendar.homework": "Ödev teslimi",
   "nav.appointments": "Randevular",
   "appointments.title": "Randevular",
-  "appointments.calendar": "Randevu takvimi",
-  "appointments.subtitle": "Bir öğretmenle görüşme ayarlayın ya da uygun olduğunuz saatleri yayımlayın.",
+  "appointments.subtitle": "Bir öğretmenin görüşmeye açtığı saatlerden birini seç, talebini buradan takip et.",
+  "appointments.subtitleStaff": "Görüşebileceğin saatleri aç, gelen randevu taleplerini onayla ya da reddet.",
+  "appointments.myBookingsHint": "Aldığın ve talep ettiğin görüşmeler ile her talebin son durumu.",
+  "appointments.requestsHint": "Öğrenci ve velilerden gelen, cevabını bekleyen talepler.",
+  "appointments.availableSlotsHint": "Öğretmenlerin görüşmeye açtığı saatler. Birini seçip randevu talebi gönder.",
+  "appointments.mySlotsHint": "Görüşmeye açtığın saatler. Birini seçen kişi sana talep olarak ulaşır.",
   "appointments.empty": "Henüz randevu yok.",
-  "appointments.mySlots": "Uygun saatlerim",
-  "appointments.availableSlots": "Uygun saatler",
+  "appointments.mySlots": "Açtığım saatler",
+  "appointments.availableSlots": "Öğretmenlerin açık saatleri",
   "appointments.requests": "Randevu talepleri",
   "appointments.myBookings": "Randevularım",
-  "appointments.publish": "Saat yayımla",
+  "appointments.publish": "Saat aç",
   "appointments.book": "Randevu al",
   "appointments.approve": "Onayla",
   "appointments.reject": "Reddet",

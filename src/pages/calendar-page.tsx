@@ -1,15 +1,18 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
-import { Link } from "@tanstack/solid-router";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
+import { getHomework } from "@/api/homework";
 import { getAppointments } from "@/api/appointments";
-import type { Appointment, Event, Exam } from "@/api/client";
+import { getCourseSessions, getCourses } from "@/api/courses";
+import { getMyCourses } from "@/api/reports";
+import type { Appointment, AppointmentStatus, Course } from "@/api/client";
 import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { IconCalendarDays, IconChevronLeft, IconChevronRight, IconClock } from "@/components/ui/icons";
+import { IconCalendarDays, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
+import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
 import { appointmentCounterpart } from "@/lib/person";
@@ -20,6 +23,96 @@ const DAY_NAMES_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const DAY_NAMES_SHORT_TR = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const MONTH_NAMES_TR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+
+/** Courses whose sessions are pulled in. Sessions are per-course reads — there
+ *  is no school-wide session list — so the fan-out is bounded. */
+const SESSION_COURSE_CAP = 25;
+/** Chips a single day cell shows before collapsing the rest into "+N". */
+const CHIPS_PER_CELL = 3;
+
+type CalendarKind = "lesson" | "study" | "exam" | "homework" | "event" | "appointment";
+
+type CalendarItem = {
+  id: string;
+  kind: CalendarKind;
+  title: string;
+  at: number;
+  endsAt: number | null;
+  href: string;
+  /** Appointments carry their own badge instead of the plain category one. */
+  status?: AppointmentStatus;
+};
+
+type KindStyle = {
+  labelKey: MessageKey;
+  chip: string;
+  dot: string;
+  card: string;
+  hover: string;
+  heading: string;
+  titleHover: string;
+};
+
+// Ordered: this is also the order categories appear in a day cell and in the
+// side panel, so the school day reads top-down.
+const KIND_STYLES: Record<CalendarKind, KindStyle> = {
+  lesson: {
+    labelKey: "calendar.lessons",
+    chip: "bg-sky-100 text-sky-700 dark:border dark:border-sky-800/50 dark:bg-sky-950/60 dark:text-sky-300",
+    dot: "bg-sky-500",
+    card: "border-sky-500/40 dark:border-sky-500/30",
+    hover: "hover:border-sky-500/70 dark:hover:border-sky-500/70",
+    heading: "text-sky-500",
+    titleHover: "group-hover:text-sky-500",
+  },
+  study: {
+    labelKey: "calendar.studies",
+    chip: "bg-amber-100 text-amber-700 dark:border dark:border-amber-800/50 dark:bg-amber-950/60 dark:text-amber-300",
+    dot: "bg-amber-500",
+    card: "border-amber-500/40 dark:border-amber-500/30",
+    hover: "hover:border-amber-500/70 dark:hover:border-amber-500/70",
+    heading: "text-amber-500",
+    titleHover: "group-hover:text-amber-500",
+  },
+  exam: {
+    labelKey: "calendar.exams",
+    chip: "bg-rose-100 text-rose-700 dark:border dark:border-rose-800/50 dark:bg-rose-950/60 dark:text-rose-300",
+    dot: "bg-rose-500",
+    card: "border-rose-500/40 dark:border-rose-500/30",
+    hover: "hover:border-rose-500/70 dark:hover:border-rose-500/70",
+    heading: "text-rose-500",
+    titleHover: "group-hover:text-rose-500",
+  },
+  homework: {
+    labelKey: "calendar.homework",
+    chip: "bg-orange-100 text-orange-700 dark:border dark:border-orange-800/50 dark:bg-orange-950/60 dark:text-orange-300",
+    dot: "bg-orange-500",
+    card: "border-orange-500/40 dark:border-orange-500/30",
+    hover: "hover:border-orange-500/70 dark:hover:border-orange-500/70",
+    heading: "text-orange-500",
+    titleHover: "group-hover:text-orange-500",
+  },
+  event: {
+    labelKey: "calendar.events",
+    chip: "bg-emerald-100 text-emerald-700 dark:border dark:border-emerald-800/50 dark:bg-emerald-950/60 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    card: "border-emerald-500/40 dark:border-emerald-500/30",
+    hover: "hover:border-emerald-500/70 dark:hover:border-emerald-500/70",
+    heading: "text-emerald-500",
+    titleHover: "group-hover:text-emerald-500",
+  },
+  appointment: {
+    labelKey: "calendar.appointments",
+    chip: "bg-violet-100 text-violet-700 dark:border dark:border-violet-800/50 dark:bg-violet-950/60 dark:text-violet-300",
+    dot: "bg-violet-500",
+    card: "border-violet-500/40 dark:border-violet-500/30",
+    hover: "hover:border-violet-500/70 dark:hover:border-violet-500/70",
+    heading: "text-violet-500",
+    titleHover: "group-hover:text-violet-500",
+  },
+};
+
+const KIND_ORDER = Object.keys(KIND_STYLES) as CalendarKind[];
 
 function dateKey(d: Date) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -46,8 +139,86 @@ function CalendarContent() {
   const [events] = createResource(async () => (await getEvents({ limit: 100 })).items, { initialValue: [] });
   const [exams] = createResource(async () => (await getExams({ limit: 100 })).items, { initialValue: [] });
   const [appointments] = createResource(async () => (await getAppointments({ limit: 100 })).items, { initialValue: [] });
+  const [homework] = createResource(async () => (await getHomework({ limit: 100 })).items, { initialValue: [] });
+
+  // Lessons and study/club meetings both come from course sessions; the course's
+  // own `kind` is what separates them.
+  const [sessions] = createResource(
+    () => auth.user()?.role ?? null,
+    async (role) => {
+      const courses: Course[] = role === "student"
+        ? (await getMyCourses()).items
+        : (await getCourses()).items;
+      const pages = await Promise.all(
+        courses.slice(0, SESSION_COURSE_CAP).map(async (course) => {
+          try {
+            const page = await getCourseSessions(course.id, { limit: 100 });
+            return page.items.map((session) => ({ session, course }));
+          } catch {
+            // One unreadable course must not empty the whole calendar.
+            return [];
+          }
+        }),
+      );
+      return pages.flat();
+    },
+    { initialValue: [] },
+  );
 
   const counterpart = (a: Appointment) => appointmentCounterpart(a, auth.user()?.id);
+
+  const items = createMemo<CalendarItem[]>(() => {
+    const rows: CalendarItem[] = [];
+    for (const { session, course } of sessions()) {
+      rows.push({
+        id: session.id,
+        kind: course.kind === "course" ? "lesson" : "study",
+        title: session.topic?.trim() || course.title,
+        at: session.starts_at,
+        endsAt: session.ends_at,
+        href: `/courses/${course.id}`,
+      });
+    }
+    for (const exam of exams()) {
+      if (!exam.starts_at || exam.draft) continue;
+      rows.push({ id: exam.id, kind: "exam", title: exam.title, at: exam.starts_at, endsAt: exam.ends_at, href: `/exams/${exam.id}` });
+    }
+    for (const hw of homework()) {
+      rows.push({ id: hw.id, kind: "homework", title: hw.title, at: hw.due_at, endsAt: null, href: `/homework/${hw.id}` });
+    }
+    for (const event of events()) {
+      if (!event.starts_at) continue;
+      rows.push({ id: event.id, kind: "event", title: event.title, at: event.starts_at, endsAt: event.ends_at, href: `/events/${event.id}` });
+    }
+    for (const appointment of appointments()) {
+      if (!appointment.starts_at || (appointment.status !== "pending" && appointment.status !== "approved")) continue;
+      rows.push({
+        id: appointment.id,
+        kind: "appointment",
+        title: counterpart(appointment),
+        at: appointment.starts_at,
+        endsAt: appointment.ends_at,
+        href: "/appointments",
+        status: appointment.status,
+      });
+    }
+    return rows;
+  });
+
+  const itemsByDay = createMemo(() => {
+    const map = new Map<string, CalendarItem[]>();
+    for (const item of items()) {
+      const key = dateKey(new Date(item.at));
+      const bucket = map.get(key);
+      if (bucket) bucket.push(item);
+      else map.set(key, [item]);
+    }
+    // Category order first, then time — a day cell should read as a timetable.
+    for (const bucket of map.values()) {
+      bucket.sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.at - b.at);
+    }
+    return map;
+  });
 
   const monthLabel = () => {
     const names = locale() === "tr" ? MONTH_NAMES_TR : MONTH_NAMES;
@@ -65,37 +236,24 @@ function CalendarContent() {
     return cells;
   });
 
-  const itemsByDay = createMemo(() => {
-    const map = new Map<string, { events: Event[]; exams: Exam[]; appointments: Appointment[] }>();
-    const bucket = (k: string) => {
-      if (!map.has(k)) map.set(k, { events: [], exams: [], appointments: [] });
-      return map.get(k)!;
-    };
-    for (const e of events()) {
-      if (!e.starts_at) continue;
-      bucket(dateKey(new Date(e.starts_at))).events.push(e);
-    }
-    for (const e of exams()) {
-      if (!e.starts_at || e.draft) continue;
-      bucket(dateKey(new Date(e.starts_at))).exams.push(e);
-    }
-    for (const a of appointments()) {
-      if (!a.starts_at || (a.status !== "pending" && a.status !== "approved")) continue;
-      bucket(dateKey(new Date(a.starts_at))).appointments.push(a);
-    }
-    return map;
-  });
-
-  const selectedKey = () => selected();
   const selectedDay = () => {
     const [y, m, d] = selected().split("-").map(Number);
     return new Date(y, m, d);
   };
-  const selectedItems = () => itemsByDay().get(selectedKey()) ?? { events: [], exams: [], appointments: [] };
+  const selectedItems = () => itemsByDay().get(selected()) ?? [];
+  const selectedGroups = createMemo(() =>
+    KIND_ORDER
+      .map((kind) => ({ kind, rows: selectedItems().filter((item) => item.kind === kind) }))
+      .filter((group) => group.rows.length > 0),
+  );
   const isToday = (day: number) => {
     const n = nowDate();
     return n.getFullYear() === viewYear() && n.getMonth() === viewMonth() && n.getDate() === day;
   };
+
+  const clock = (ms: number | null) =>
+    ms == null ? "" : new Date(ms).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" });
+  const timeRange = (item: CalendarItem) => (item.endsAt ? `${clock(item.at)} — ${clock(item.endsAt)}` : clock(item.at));
 
   const goToday = () => {
     const n = nowDate();
@@ -116,7 +274,7 @@ function CalendarContent() {
 
   return (
     <div class="space-y-4">
-      <section class="data-shell space-y-3 border-sky-500/15 bg-sky-500/2.5 p-3">
+      <section class="data-shell flex flex-col space-y-3 border-sky-500/15 bg-sky-500/2.5 p-3 lg:h-[calc(100dvh-7.5rem)]">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
             <h1 class="truncate text-xl font-semibold tracking-tight text-foreground">{t("calendar.title")}</h1>
@@ -130,24 +288,28 @@ function CalendarContent() {
               </Button>
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <Link
-              to="/appointments"
-              class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-semibold outline-hidden transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <IconClock class="h-3.5 w-3.5" />
-              {t("nav.appointments")}
-            </Link>
-            <Button type="button" variant="outline" size="sm" class="h-9 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
-              <IconCalendarDays class="h-3.5 w-3.5" />
-              {t("calendar.today")}
-            </Button>
-          </div>
+          <Button type="button" variant="outline" size="sm" class="h-9 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
+            <IconCalendarDays class="h-3.5 w-3.5" />
+            {t("calendar.today")}
+          </Button>
         </div>
+
+        {/* Legend — six categories share one grid, so the colours need naming. */}
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <For each={KIND_ORDER}>
+            {(kind) => (
+              <span class="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span class={cn("h-2 w-2 rounded-full", KIND_STYLES[kind].dot)} />
+                {t(KIND_STYLES[kind].labelKey)}
+              </span>
+            )}
+          </For>
+        </div>
+
         <Suspense fallback={<PageSpinner />}>
-          <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-            <div class="rounded-lg border bg-card shadow-xs">
-              <div class="grid grid-cols-7 border-b">
+          <div class="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+            <div class="flex min-h-0 flex-col rounded-lg border bg-card shadow-xs">
+              <div class="grid shrink-0 grid-cols-7 border-b">
                 <For each={dayNames()}>
                   {(name) => (
                     <div class="border-r border-border/40 px-2 py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground last:border-r-0">
@@ -156,18 +318,18 @@ function CalendarContent() {
                   )}
                 </For>
               </div>
-              <div class="grid grid-cols-7">
+              <div class="grid min-h-0 flex-1 auto-rows-fr grid-cols-7">
                 <For each={grid()}>
                   {(cell) => {
                     const key = cell.other ? "" : dateKey(new Date(viewYear(), viewMonth(), cell.day));
-                    const items = () => cell.other ? null : itemsByDay().get(key);
+                    const dayItems = () => (cell.other ? [] : itemsByDay().get(key) ?? []);
                     const cellToday = !cell.other && isToday(cell.day);
-                    const cellSelected = () => !cell.other && key === selectedKey();
+                    const cellSelected = () => !cell.other && key === selected();
                     return (
                       <button
                         type="button"
                         class={cn(
-                          "relative flex min-h-17 flex-col border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40 xl:min-h-21 2xl:min-h-24",
+                          "relative flex min-h-17 min-w-0 flex-col overflow-hidden border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40 lg:min-h-0",
                           cell.other && "pointer-events-none bg-muted/20",
                           cellSelected() ? "bg-sky-50/60 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "",
                           cellToday ? "font-bold text-sky-600 dark:text-sky-400" : ""
@@ -184,44 +346,22 @@ function CalendarContent() {
                         >
                           {cell.day || ""}
                         </span>
-                        <Show when={items()}>
-                          {(dayItems) => (
-                            <div class="mt-1 flex min-h-0 flex-1 flex-col justify-end gap-0.5 overflow-hidden">
-                              <Show when={dayItems().events[0]}>
-                                {(event) => (
-                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-medium leading-none text-emerald-700 dark:border dark:border-emerald-800/50 dark:bg-emerald-950/60 dark:text-emerald-300">
-                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                                    <span class="truncate">{event().title}</span>
-                                    <Show when={dayItems().events.length > 1}>
-                                      <span class="shrink-0 opacity-70">+{dayItems().events.length - 1}</span>
-                                    </Show>
-                                  </span>
-                                )}
-                              </Show>
-                              <Show when={dayItems().exams[0]}>
-                                {(exam) => (
-                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-rose-100 px-1 py-0.5 text-[9px] font-medium leading-none text-rose-700 dark:border dark:border-rose-800/50 dark:bg-rose-950/60 dark:text-rose-300">
-                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
-                                    <span class="truncate">{exam().title}</span>
-                                    <Show when={dayItems().exams.length > 1}>
-                                      <span class="shrink-0 opacity-70">+{dayItems().exams.length - 1}</span>
-                                    </Show>
-                                  </span>
-                                )}
-                              </Show>
-                              <Show when={dayItems().appointments[0]}>
-                                {(appt) => (
-                                  <span class="inline-flex min-w-0 items-center gap-1 rounded bg-violet-100 px-1 py-0.5 text-[9px] font-medium leading-none text-violet-700 dark:border dark:border-violet-800/50 dark:bg-violet-950/60 dark:text-violet-300">
-                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
-                                    <span class="truncate">{counterpart(appt())}</span>
-                                    <Show when={dayItems().appointments.length > 1}>
-                                      <span class="shrink-0 opacity-70">+{dayItems().appointments.length - 1}</span>
-                                    </Show>
-                                  </span>
-                                )}
-                              </Show>
-                            </div>
-                          )}
+                        <Show when={dayItems().length > 0}>
+                          <div class="mt-1 flex min-h-0 flex-1 flex-col justify-end gap-0.5 overflow-hidden">
+                            <For each={dayItems().slice(0, CHIPS_PER_CELL)}>
+                              {(item) => (
+                                <span class={cn("inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-[9px] font-medium leading-none", KIND_STYLES[item.kind].chip)}>
+                                  <span class={cn("h-1.5 w-1.5 shrink-0 rounded-full", KIND_STYLES[item.kind].dot)} />
+                                  <span class="truncate">{item.title}</span>
+                                </span>
+                              )}
+                            </For>
+                            <Show when={dayItems().length > CHIPS_PER_CELL}>
+                              <span class="pl-1 text-[9px] font-medium leading-none text-muted-foreground">
+                                +{dayItems().length - CHIPS_PER_CELL}
+                              </span>
+                            </Show>
+                          </div>
                         </Show>
                       </button>
                     );
@@ -230,88 +370,54 @@ function CalendarContent() {
               </div>
             </div>
 
-            <div class="space-y-3">
+            <div class="min-h-0 space-y-3 overflow-y-auto">
               <div class="rounded-xl border border-border/80 bg-card p-3 shadow-xs">
                 <h3 class="text-sm font-semibold">
                   {selectedDay().toLocaleDateString(locale() === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "long", year: "numeric" })}
                 </h3>
 
                 <div class="mt-2 space-y-2.5">
-                  <Show when={selectedItems().events.length === 0 && selectedItems().exams.length === 0 && selectedItems().appointments.length === 0}>
+                  <Show when={selectedGroups().length === 0}>
                     <p class="text-xs text-muted-foreground">{t("calendar.noEvents")}</p>
                   </Show>
 
-                  <Show when={selectedItems().events.length > 0}>
-                    <div class="space-y-2">
-                      <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-500">{t("calendar.events")}</p>
-                      <For each={selectedItems().events}>
-                        {(ev) => (
-                          <a
-                            href={`/events/${ev.id}`}
-                            class="group flex items-start justify-between gap-2 rounded-lg border border-emerald-500/40 bg-card p-2.5 shadow-xs transition-all hover:border-emerald-500/70 hover:shadow-md dark:border-emerald-500/30 dark:hover:border-emerald-500/70"
-                          >
-                            <div class="min-w-0">
-                              <p class="truncate text-xs font-semibold group-hover:text-emerald-500">{ev.title}</p>
-                              <p class="mt-0.5 text-[11px] text-muted-foreground">
-                                {ev.starts_at ? new Date(ev.starts_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
-                                {ev.ends_at ? ` — ${new Date(ev.ends_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                              </p>
-                            </div>
-                            <Badge variant="outline" class="shrink-0 text-[10px]">{t("calendar.events")}</Badge>
-                          </a>
-                        )}
-                      </For>
-                    </div>
-                  </Show>
-
-                  <Show when={selectedItems().exams.length > 0}>
-                    <div class="space-y-2">
-                      <p class="text-[10px] font-semibold uppercase tracking-wider text-rose-500">{t("calendar.exams")}</p>
-                      <For each={selectedItems().exams}>
-                        {(exam) => (
-                          <a
-                            href={`/exams/${exam.id}`}
-                            class="group flex items-start justify-between gap-2 rounded-lg border border-rose-500/40 bg-card p-2.5 shadow-xs transition-all hover:border-rose-500/70 hover:shadow-md dark:border-rose-500/30 dark:hover:border-rose-500/70"
-                          >
-                            <div class="min-w-0">
-                              <p class="truncate text-xs font-semibold group-hover:text-rose-500">{exam.title}</p>
-                              <p class="mt-0.5 text-[11px] text-muted-foreground">
-                                {exam.starts_at ? new Date(exam.starts_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
-                                {exam.ends_at ? ` — ${new Date(exam.ends_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                              </p>
-                            </div>
-                            <Badge variant="outline" class="shrink-0 text-[10px]">{t("calendar.exams")}</Badge>
-                          </a>
-                        )}
-                      </For>
-                    </div>
-                  </Show>
-
-                  <Show when={selectedItems().appointments.length > 0}>
-                    <div class="space-y-2">
-                      <p class="text-[10px] font-semibold uppercase tracking-wider text-violet-500">{t("calendar.appointments")}</p>
-                      <For each={selectedItems().appointments}>
-                        {(appt) => (
-                          <a
-                            href="/appointments"
-                            class="group flex items-start justify-between gap-2 rounded-lg border border-violet-500/40 bg-card p-2.5 shadow-xs transition-all hover:border-violet-500/70 hover:shadow-md dark:border-violet-500/30 dark:hover:border-violet-500/70"
-                          >
-                            <div class="min-w-0">
-                              <p class="truncate text-xs font-semibold group-hover:text-violet-500">{counterpart(appt)}</p>
-                              <p class="mt-0.5 text-[11px] text-muted-foreground">
-                                {appt.starts_at ? new Date(appt.starts_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : ""}
-                                {appt.ends_at ? ` — ${new Date(appt.ends_at).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                              </p>
-                            </div>
-                            <Badge variant="outline" class={cn("shrink-0 gap-1 text-[10px]", appointmentStatusClass(appt.status))}>
-                              <span class={cn("h-1.5 w-1.5 rounded-full", appointmentStatusDotClass(appt.status))} />
-                              {t(appointmentStatusLabelKey(appt.status))}
-                            </Badge>
-                          </a>
-                        )}
-                      </For>
-                    </div>
-                  </Show>
+                  <For each={selectedGroups()}>
+                    {(group) => (
+                      <div class="space-y-2">
+                        <p class={cn("text-[10px] font-semibold uppercase tracking-wider", KIND_STYLES[group.kind].heading)}>
+                          {t(KIND_STYLES[group.kind].labelKey)}
+                        </p>
+                        <For each={group.rows}>
+                          {(item) => (
+                            <a
+                              href={item.href}
+                              class={cn(
+                                "group flex items-start justify-between gap-2 rounded-lg border bg-card p-2.5 shadow-xs transition-all hover:shadow-md",
+                                KIND_STYLES[item.kind].card,
+                                KIND_STYLES[item.kind].hover,
+                              )}
+                            >
+                              <div class="min-w-0">
+                                <p class={cn("truncate text-xs font-semibold", KIND_STYLES[item.kind].titleHover)}>{item.title}</p>
+                                <p class="mt-0.5 text-[11px] text-muted-foreground">{timeRange(item)}</p>
+                              </div>
+                              <Show
+                                when={item.status}
+                                fallback={<Badge variant="outline" class="shrink-0 text-[10px]">{t(KIND_STYLES[item.kind].labelKey)}</Badge>}
+                              >
+                                {(status) => (
+                                  <Badge variant="outline" class={cn("shrink-0 gap-1 text-[10px]", appointmentStatusClass(status()))}>
+                                    <span class={cn("h-1.5 w-1.5 rounded-full", appointmentStatusDotClass(status()))} />
+                                    {t(appointmentStatusLabelKey(status()))}
+                                  </Badge>
+                                )}
+                              </Show>
+                            </a>
+                          )}
+                        </For>
+                      </div>
+                    )}
+                  </For>
                 </div>
               </div>
             </div>
