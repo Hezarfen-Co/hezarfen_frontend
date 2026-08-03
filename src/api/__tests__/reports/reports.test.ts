@@ -23,10 +23,10 @@ describe("reports API", () => {
     expect(init?.method).toBe("GET");
   });
 
-  it("getMyCourses sends course filters", async () => {
+  it("getMyCourses sends pagination only — /courses/me takes no filters", async () => {
     mockFetchSuccess({ items: [], total: 0 });
-    await getMyCourses({ kind: "club", q: "robot", term_id: "t1" });
-    expect(lastFetchCall()[0]).toBe("/api/courses/me?kind=club&q=robot&term_id=t1");
+    await getMyCourses({ limit: 5 });
+    expect(lastFetchCall()[0]).toBe("/api/courses/me?limit=5");
   });
 
   it("getMyAttendance calls /attendance/me", async () => {

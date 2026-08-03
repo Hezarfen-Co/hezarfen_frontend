@@ -37,10 +37,10 @@ describe("homework API", () => {
     expect(init?.method).toBe("GET");
   });
 
-  it("getHomework sends due_after", async () => {
+  it("getHomework sends pagination only — the endpoint has no due-date window", async () => {
     mockFetchSuccess({ items: [], total: 0 });
-    await getHomework({ limit: 1, due_after: 1_700_000_000_000 });
-    expect(lastFetchCall()[0]).toBe("/api/homework?limit=1&due_after=1700000000000");
+    await getHomework({ limit: 1 });
+    expect(lastFetchCall()[0]).toBe("/api/homework?limit=1");
   });
 
   it("getHomeworkById calls /homework/:id", async () => {
