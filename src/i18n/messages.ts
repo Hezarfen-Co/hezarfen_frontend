@@ -332,11 +332,25 @@ export type MessageKey =
   | "dashboard.progressOverviewDesc"
   | "dashboard.activitySplit"
   | "dashboard.activitySplitDesc"
-  | "dashboard.workloadSplit"
-  | "dashboard.workloadSplitDesc"
   | "dashboard.deadlines"
-  | "dashboard.courseCapacities"
   | "dashboard.courseAverages"
+  | "dashboard.successTrend"
+  | "dashboard.successTrendMine"
+  | "dashboard.successTrendSchool"
+  | "dashboard.courseAveragesSchool"
+  | "dashboard.examGraded"
+  | "dashboard.focusHeatmap"
+  | "dashboard.focusHeatmapDesc"
+  | "dashboard.activityHeatmap"
+  | "dashboard.activityHeatmapDesc"
+  | "dashboard.heatmapLess"
+  | "dashboard.heatmapMore"
+  | "dashboard.heatmapFocusDay"
+  | "dashboard.heatmapFocusEmpty"
+  | "dashboard.heatmapRecordDay"
+  | "dashboard.heatmapRecordEmpty"
+  | "dashboard.heatmapFocusTotal"
+  | "dashboard.heatmapRecordTotal"
   | "dashboard.chartEmpty"
   | "dashboard.chartEmptyHint"
   | "dashboard.col.task"
@@ -359,10 +373,6 @@ export type MessageKey =
   | "dashboard.attend.excused"
   | "dashboard.welcomeBack"
   | "dashboard.welcomeHint"
-  | "dashboard.teachingResources"
-  | "dashboard.teachingResourcesDesc"
-  | "dashboard.questionBankDesc"
-  | "dashboard.questionPoolDesc"
   | "dashboard.quickReview.title"
   | "dashboard.quickReview.subtitle"
   | "dashboard.quickReview.placeholder"
@@ -1008,6 +1018,7 @@ export type MessageKey =
   | "whiteboard.subtitle"
   | "whiteboard.empty"
   | "whiteboard.create"
+  | "whiteboard.edit"
   | "whiteboard.titleLabel"
   | "whiteboard.participants"
   | "whiteboard.participantsHint"
@@ -1100,6 +1111,12 @@ export type MessageKey =
   | "payments.methodTransfer"
   | "payments.methodCard"
   | "payments.methodCheck"
+  | "payments.methodOther"
+  | "payments.methodRequired"
+  | "payments.addStudent"
+  | "payments.selectedStudents"
+  | "payments.assignSelected"
+  | "payments.assignmentSummary"
   | "payments.ledgerAudit"
   | "payments.showLedger"
   | "payments.hideLedger"
@@ -1600,10 +1617,24 @@ const en: Dict = {
   "dashboard.progressOverviewDesc": "Your performance across courses.",
   "dashboard.activitySplit": "Attendance split",
   "dashboard.activitySplitDesc": "Your attendance breakdown.",
-  "dashboard.workloadSplit": "Workload split",
-  "dashboard.workloadSplitDesc": "Courses, exams, events, and more.",
+  "dashboard.successTrend": "Success trend",
+  "dashboard.successTrendMine": "Your exam marks over time.",
+  "dashboard.successTrendSchool": "Class averages of recent exams.",
+  "dashboard.courseAveragesSchool": "Average of recent exams, by course.",
+  "dashboard.examGraded": "{count} graded",
+  "dashboard.focusHeatmap": "Focus activity",
+  "dashboard.focusHeatmapDesc": "Your pomodoro sessions, day by day.",
+  "dashboard.activityHeatmap": "School activity",
+  "dashboard.activityHeatmapDesc": "Exams, events, and homework, day by day.",
+  "dashboard.heatmapLess": "Less",
+  "dashboard.heatmapMore": "More",
+  "dashboard.heatmapFocusDay": "{date}: {count} min focus",
+  "dashboard.heatmapFocusEmpty": "{date}: no focus session",
+  "dashboard.heatmapRecordDay": "{date}: {count} records",
+  "dashboard.heatmapRecordEmpty": "{date}: no records",
+  "dashboard.heatmapFocusTotal": "{count} min in the last {weeks} weeks",
+  "dashboard.heatmapRecordTotal": "{count} records in the last {weeks} weeks",
   "dashboard.deadlines": "Upcoming deadlines",
-  "dashboard.courseCapacities": "Course capacities",
   "dashboard.courseAverages": "Course averages",
   "dashboard.chartEmpty": "No records found",
   "dashboard.chartEmptyHint": "Not enough data to display yet.",
@@ -1627,10 +1658,6 @@ const en: Dict = {
   "dashboard.attend.excused": "Excused",
   "dashboard.welcomeBack": "Welcome back, {name}!",
   "dashboard.welcomeHint": "Here's what needs your attention today.",
-  "dashboard.teachingResources": "Teaching resources",
-  "dashboard.teachingResourcesDesc": "Review reusable material and student questions.",
-  "dashboard.questionBankDesc": "Build and reuse question templates for exams.",
-  "dashboard.questionPoolDesc": "Review questions submitted by students.",
   "dashboard.quickReview.title": "Quick review",
   "dashboard.quickReview.subtitle": "Refresh what you’ve learned in just two minutes.",
   "dashboard.quickReview.placeholder": "Choose a topic to review…",
@@ -2362,6 +2389,7 @@ const en: Dict = {
   "whiteboard.subtitle": "Live collaborative sketch boards.",
   "whiteboard.empty": "No whiteboards yet.",
   "whiteboard.create": "New whiteboard",
+  "whiteboard.edit": "Edit whiteboard",
   "whiteboard.titleLabel": "Title",
   "whiteboard.participants": "Participants",
   "whiteboard.participantsHint": "Invite students and staff who may draw.",
@@ -2454,6 +2482,12 @@ const en: Dict = {
   "payments.methodTransfer": "Transfer / EFT",
   "payments.methodCard": "Card",
   "payments.methodCheck": "Cheque",
+  "payments.methodOther": "Other",
+  "payments.methodRequired": "Enter a payment method.",
+  "payments.addStudent": "Add student",
+  "payments.selectedStudents": "Selected students ({count})",
+  "payments.assignSelected": "Assign selected",
+  "payments.assignmentSummary": "Assigned: {assigned} · Already assigned: {alreadyAssigned} · Rejected: {rejected}",
   "payments.ledgerAudit": "Account activity",
   "payments.showLedger": "Show account activity",
   "payments.hideLedger": "Hide account activity",
@@ -2880,10 +2914,24 @@ const tr: Dict = {
   "dashboard.progressOverviewDesc": "Derslere göre performansın.",
   "dashboard.activitySplit": "Yoklama dağılımı",
   "dashboard.activitySplitDesc": "Yoklama dağılımın.",
-  "dashboard.workloadSplit": "İş yükü dağılımı",
-  "dashboard.workloadSplitDesc": "Dersler, sınavlar, etkinlikler ve dahası.",
+  "dashboard.successTrend": "Başarı eğilimi",
+  "dashboard.successTrendMine": "Sınav notlarının zaman içindeki seyri.",
+  "dashboard.successTrendSchool": "Son sınavların sınıf ortalamaları.",
+  "dashboard.courseAveragesSchool": "Son sınavlara göre ders bazında ortalama.",
+  "dashboard.examGraded": "{count} notlandırıldı",
+  "dashboard.focusHeatmap": "Odaklanma etkinliği",
+  "dashboard.focusHeatmapDesc": "Gün gün pomodoro oturumların.",
+  "dashboard.activityHeatmap": "Okul etkinliği",
+  "dashboard.activityHeatmapDesc": "Gün gün sınav, etkinlik ve ödevler.",
+  "dashboard.heatmapLess": "Az",
+  "dashboard.heatmapMore": "Çok",
+  "dashboard.heatmapFocusDay": "{date}: {count} dk odaklanma",
+  "dashboard.heatmapFocusEmpty": "{date}: odaklanma yok",
+  "dashboard.heatmapRecordDay": "{date}: {count} kayıt",
+  "dashboard.heatmapRecordEmpty": "{date}: kayıt yok",
+  "dashboard.heatmapFocusTotal": "Son {weeks} haftada {count} dk",
+  "dashboard.heatmapRecordTotal": "Son {weeks} haftada {count} kayıt",
   "dashboard.deadlines": "Yaklaşan son tarihler",
-  "dashboard.courseCapacities": "Eğitim kapasiteleri",
   "dashboard.courseAverages": "Ders ortalamaları",
   "dashboard.chartEmpty": "Kayıt bulunamadı",
   "dashboard.chartEmptyHint": "Gösterilecek yeterli veri yok.",
@@ -2907,10 +2955,6 @@ const tr: Dict = {
   "dashboard.attend.excused": "İzinli",
   "dashboard.welcomeBack": "Tekrar hoş geldin, {name}!",
   "dashboard.welcomeHint": "Bugün dikkat etmen gerekenler burada.",
-  "dashboard.teachingResources": "Öğretim kaynakları",
-  "dashboard.teachingResourcesDesc": "Yeniden kullanılabilir içerikleri ve öğrenci sorularını incele.",
-  "dashboard.questionBankDesc": "Sınavlar için soru şablonları oluştur ve yeniden kullan.",
-  "dashboard.questionPoolDesc": "Öğrencilerin gönderdiği soruları incele.",
   "dashboard.quickReview.title": "Hızlı tekrar",
   "dashboard.quickReview.subtitle": "Öğrendiklerinizi yalnızca iki dakikada tazeleyin.",
   "dashboard.quickReview.placeholder": "Tekrar için konu seç…",
@@ -3642,6 +3686,7 @@ const tr: Dict = {
   "whiteboard.subtitle": "Canlı ortak çizim tahtaları.",
   "whiteboard.empty": "Henüz beyaz tahta yok.",
   "whiteboard.create": "Yeni tahta",
+  "whiteboard.edit": "Tahtayı düzenle",
   "whiteboard.titleLabel": "Başlık",
   "whiteboard.participants": "Katılımcılar",
   "whiteboard.participantsHint": "Çizebilecek öğrenci ve personeli davet edin.",
@@ -3734,6 +3779,12 @@ const tr: Dict = {
   "payments.methodTransfer": "Havale / EFT",
   "payments.methodCard": "Kredi kartı",
   "payments.methodCheck": "Çek",
+  "payments.methodOther": "Diğer",
+  "payments.methodRequired": "Bir ödeme yöntemi girin.",
+  "payments.addStudent": "Öğrenci ekle",
+  "payments.selectedStudents": "Seçilen öğrenciler ({count})",
+  "payments.assignSelected": "Seçilenleri ata",
+  "payments.assignmentSummary": "Atandı: {assigned} · Zaten atanmış: {alreadyAssigned} · Reddedildi: {rejected}",
   "payments.ledgerAudit": "Hesap hareketleri",
   "payments.showLedger": "Hesap hareketlerini göster",
   "payments.hideLedger": "Hesap hareketlerini gizle",
