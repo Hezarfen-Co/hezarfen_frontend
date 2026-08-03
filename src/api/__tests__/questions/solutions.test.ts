@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl, getSolutionImageBlob } from "../../shared";
+import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl, getSolutionImageBlob, postSolutionImage, deleteSolutionImage } from "../../shared";
 import { lastFetchCall, mockFetch204, mockFetchBlob, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("solutions API", () => {
@@ -70,5 +70,27 @@ describe("solutions API", () => {
 
     const [url] = lastFetchCall();
     expect(url).toBe(getSolutionImageUrl("q1", "s1"));
+  });
+
+  it("postSolutionImage uploads multipart to /questions/:id/solutions/:sid/image", async () => {
+    mockFetch204();
+
+    await postSolutionImage("q1", "s1", new File(["x"], "work.png", { type: "image/png" }));
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/questions/q1/solutions/s1/image");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get("file")).toBeInstanceOf(File);
+  });
+
+  it("deleteSolutionImage calls /questions/:id/solutions/:sid/image", async () => {
+    mockFetch204();
+
+    await deleteSolutionImage("q1", "s1");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/questions/q1/solutions/s1/image");
+    expect(init?.method).toBe("DELETE");
   });
 });

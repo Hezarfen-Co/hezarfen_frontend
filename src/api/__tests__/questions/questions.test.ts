@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getQuestions, getQuestionById, postQuestion, postQuestionApprove, deleteQuestionById, getQuestionImageUrl, getQuestionImageBlob } from "../../shared";
+import { getQuestions, getQuestionById, postQuestion, postQuestionApprove, deleteQuestionById, getQuestionImageUrl, getQuestionImageBlob, postQuestionImage, deleteQuestionImage } from "../../shared";
 import { lastFetchCall, mockFetch204, mockFetchBlob, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("questions API", () => {
@@ -81,5 +81,27 @@ describe("questions API", () => {
 
     const [url] = lastFetchCall();
     expect(url).toBe(getQuestionImageUrl("q1"));
+  });
+
+  it("postQuestionImage uploads multipart to /questions/:id/image", async () => {
+    mockFetch204();
+
+    await postQuestionImage("q1", new File(["x"], "sketch.png", { type: "image/png" }));
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/questions/q1/image");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get("file")).toBeInstanceOf(File);
+  });
+
+  it("deleteQuestionImage calls /questions/:id/image", async () => {
+    mockFetch204();
+
+    await deleteQuestionImage("q1");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/questions/q1/image");
+    expect(init?.method).toBe("DELETE");
   });
 });
