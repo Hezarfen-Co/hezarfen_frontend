@@ -27,6 +27,7 @@ export function UserSearchSelect(props: {
   id: string;
   value: string;
   onChange: (value: string) => void;
+  onSelect?: (user: PersonRef | null) => void;
   label?: string;
   excludeIds?: string[];
   placeholder?: string;
@@ -121,6 +122,7 @@ export function UserSearchSelect(props: {
         onChange={(user) => {
           setSelected(user);
           props.onChange(user?.id ?? "");
+          props.onSelect?.(user ?? null);
         }}
         onInputChange={(value) => {
           setQuery(value);
