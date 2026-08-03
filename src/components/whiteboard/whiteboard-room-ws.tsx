@@ -1,11 +1,11 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { getBoardStrokes, type Board } from "@/api/boards";
 import { formatApiErrorMessage } from "@/api/client";
 import { IconAlert } from "@/components/ui/icons";
 import { encodeStrokeSegments, decodeSegment, segmentToStroke } from "@/lib/board-stroke-codec";
 import type { Stroke } from "@/lib/draw-stroke";
 import { parseBoardWsMessage, type BoardWsMessage } from "@/lib/websocket-messages";
-import { usePreferences, useT } from "@/stores/preferences-context";
+import { usePreferences } from "@/stores/preferences-context";
 import { WhiteboardCanvas, type WhiteboardCanvasController } from "./whiteboard-canvas";
 
 type WsState = "connecting" | "connected" | "disconnected";
@@ -26,9 +26,9 @@ export function WhiteboardRoom(props: {
   board: Board;
   meId: string;
   onState?: (patch: BoardLiveState) => void;
+  onConnectionChange?: (state: WsState) => void;
   onDeleted?: () => void;
 }) {
-  const t = useT();
   const { locale } = usePreferences();
 
   const [wsState, setWsState] = createSignal<WsState>("disconnected");
@@ -232,36 +232,10 @@ export function WhiteboardRoom(props: {
     if (ws) ws.close();
   });
 
-  const wsLabel = () => {
-    if (wsState() === "connecting") return t("ws.connecting");
-    if (wsState() === "connected") return t("ws.connected");
-    return t("ws.disconnected");
-  };
+  createEffect(() => props.onConnectionChange?.(wsState()));
 
   return (
     <div class="space-y-3">
-      <div class="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-3 py-2 text-xs text-muted-foreground">
-        <span class="inline-flex items-center gap-1.5">
-          <span class={wsState() === "connected" ? "h-2 w-2 rounded-full bg-success" : "h-2 w-2 rounded-full bg-warning"} />
-          {wsLabel()}
-        </span>
-        <Show when={closed()}>
-          <span class="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-medium text-amber-600">
-            {t("whiteboard.closedBadge")}
-          </span>
-        </Show>
-        <Show when={locked() && !closed()}>
-          <span class="rounded-full border border-border bg-muted px-2 py-0.5 font-medium">
-            {t("whiteboard.lockedBadge")}
-          </span>
-        </Show>
-        <Show when={!isParticipant()}>
-          <span class="rounded-full border border-border bg-muted px-2 py-0.5 font-medium">
-            {t("whiteboard.readOnlyBadge")}
-          </span>
-        </Show>
-      </div>
-
       <Show when={notice()}>
         {(msg) => (
           <div class="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">

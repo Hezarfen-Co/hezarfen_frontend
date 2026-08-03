@@ -27,6 +27,8 @@ export type ConfirmDialogProps = {
   variant?: "default" | "destructive";
   /** Header glyph. Defaults to trash (destructive) / alert (default). */
   icon?: JSX.Element;
+  /** Optional color treatment for a context-specific confirmation icon. */
+  iconClass?: string;
   /** When set, renders an optional free-text field; its value is passed to onConfirm. */
   prompt?: { label: string; placeholder?: string; maxLength?: number };
   onConfirm: (prompt?: string) => void | Promise<void>;
@@ -61,7 +63,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
           <span
             class={cn(
               "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border",
-              destructive() ? "border-destructive/20 bg-destructive/10 text-destructive" : "border-primary/20 bg-primary/10 text-primary",
+              props.iconClass ?? (destructive() ? "border-destructive/20 bg-destructive/10 text-destructive" : "border-primary/20 bg-primary/10 text-primary"),
             )}
           >
             <Show when={props.icon} fallback={
