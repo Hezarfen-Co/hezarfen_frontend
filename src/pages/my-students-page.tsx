@@ -1,4 +1,5 @@
 import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
+import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getClassesByUserId } from "@/api/classes";
 import { getMyStudents } from "@/api/parents";
@@ -16,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
-import { IconBook, IconChart, IconChevronRight, IconClipboardCheck, IconExam, IconHomework } from "@/components/ui/icons";
+import { IconBook, IconChart, IconChevronRight, IconClipboardCheck, IconExam, IconExternalLink, IconHomework } from "@/components/ui/icons";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { AttendanceReportView } from "@/components/attendance/attendance-report-view";
 import { examKindLabel } from "@/lib/exam-labels";
@@ -52,7 +53,7 @@ function MyStudentsContent() {
   return (
     <div class="space-y-6">
       <div class="space-y-2">
-        <PageHeader eyebrow={t("nav.group.students")} title={t("nav.myStudents")} description={t("parents.subtitle")} />
+        <PageHeader eyebrow={t("nav.group.students")} title={t("nav.children")} description={t("parents.subtitle")} />
       </div>
 
       <Suspense fallback={<PageSpinner />}>
@@ -86,6 +87,7 @@ function MyStudentsContent() {
 
 function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => void }) {
   const t = useT();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = createSignal<StudentTab>("overview");
 
   const [marksRes] = createResource(
@@ -164,6 +166,25 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
     <SidePanel open={!!props.student} onOpenChange={(open) => !open && props.onClose()} title={props.student ? personLabel(props.student) : ""} description={`@${props.student?.username}`}>
       <div class="flex h-full flex-col">
         <div class="border-b p-4">
+          {/* A parent may read their linked students' profiles, so this is safe
+              — it 403s only for someone else's child. Close the panel before
+              navigating: a click that stays inside this modal never leaves it. */}
+          <Show when={props.student}>
+            {(s) => (
+              <Button
+                variant="outline"
+                size="sm"
+                class="mb-3 rounded-lg"
+                onClick={() => {
+                  props.onClose();
+                  void navigate({ to: "/profile/$userId", params: { userId: s().id } });
+                }}
+              >
+                <IconExternalLink class="mr-2 h-4 w-4" />
+                {t("profile.viewProfile")}
+              </Button>
+            )}
+          </Show>
           <div class="flex flex-wrap gap-2">
             <For each={tabs}>
               {(tab) => {

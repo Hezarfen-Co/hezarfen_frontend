@@ -6,6 +6,7 @@ export * from "./getBoardStrokes";
 export * from "./getBoardHistory";
 export * from "./getBoardEpochs";
 export * from "./patchBoardById";
+export * from "./postBoardInvite";
 export * from "./postBoardClear";
 export * from "./postBoardClose";
 export * from "./deleteBoardById";

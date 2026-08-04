@@ -6,7 +6,7 @@ import { CommandPalette } from "@/components/layout/command-palette";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
 import { NotificationCenter } from "@/components/layout/notification-center";
-import { routeNavItem } from "@/components/layout/nav-items";
+import { routeLabelKey } from "@/components/layout/nav-items";
 import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
@@ -35,8 +35,8 @@ export function AppShell(props: ParentProps) {
   const wide = () => location().pathname.startsWith("/exam-room/") || location().searchStr.includes("answerUser=") || location().pathname === "/messages";
   const fullScreen = () => location().pathname.startsWith("/exam-room/");
   const routeLabel = createMemo(() => {
-    const item = routeNavItem(location().pathname, auth.user()?.role);
-    return item ? t(item.labelKey) : location().pathname;
+    const key = routeLabelKey(location().pathname, auth.user()?.role);
+    return key ? t(key) : "";
   });
   const logout = async () => {
     await auth.logout();

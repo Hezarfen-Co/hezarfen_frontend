@@ -61,6 +61,151 @@ export type MessageKey =
   | "classGroups.noTeacher"
   | "classGroups.selectTeacher"
   | "classGroups.yourClass"
+  | "classBlueprints.tab"
+  | "classBlueprints.classesTab"
+  | "classBlueprints.title"
+  | "classBlueprints.subtitle"
+  | "classBlueprints.new"
+  | "classBlueprints.edit"
+  | "classBlueprints.grade"
+  | "classBlueprints.gradeHint"
+  | "classBlueprints.courses"
+  | "classBlueprints.courseCount"
+  | "classBlueprints.courseCountColumn"
+  | "classBlueprints.selected"
+  | "classBlueprints.empty"
+  | "classBlueprints.selectCourses"
+  | "classBlueprints.wholeSetHint"
+  | "classBlueprints.filterCourses"
+  | "classBlueprints.noCourseMatch"
+  | "classBlueprints.saved"
+  | "classBlueprints.delete"
+  | "classBlueprints.deleteConfirm"
+  | "classBlueprints.deleted"
+  | "classBlueprints.apply"
+  | "classBlueprints.applyHint"
+  | "classBlueprints.applyNoGrade"
+  | "classBlueprints.applied"
+  | "classBlueprints.noBlueprintForGrade"
+  | "classBlueprints.conflictExists"
+  | "classBlueprints.staleReload"
+  | "classBlueprints.skippedSummary"
+  | "classBlueprints.skippedDetails"
+  | "classBlueprints.skippedTitle"
+  | "classBlueprints.skippedSubtitle"
+  | "classBlueprints.skippedClass"
+  | "classBlueprints.skippedCourse"
+  | "classBlueprints.skippedReason"
+  | "classBlueprints.skipClassGone"
+  | "classBlueprints.skipCoursePruned"
+  | "classBlueprints.skipCeiling"
+  | "classBlueprints.skipOverloaded"
+  | "classBlueprints.skipNoSeat"
+  | "classBlueprints.skipCourseGone"
+  | "classBlueprints.skipOther"
+  | "profile.myProfile"
+  | "profile.viewProfile"
+  | "profile.displayName"
+  | "profile.displayNameHint"
+  | "profile.bio"
+  | "profile.bioHint"
+  | "profile.bioEmpty"
+  | "profile.classes"
+  | "profile.noClasses"
+  | "profile.courses"
+  | "profile.noCourses"
+  | "profile.stats"
+  | "profile.statFocusHours"
+  | "profile.statSessions"
+  | "profile.statHomework"
+  | "profile.statOnTime"
+  | "profile.statExams"
+  | "profile.statCourses"
+  | "profile.statClasses"
+  | "common.clearSearch"
+  | "common.refresh"
+  | "editor.bold"
+  | "editor.italic"
+  | "editor.underline"
+  | "editor.strike"
+  | "editor.bulletList"
+  | "editor.numberedList"
+  | "editor.clearFormatting"
+  | "messages.refreshList"
+  | "messages.deleteDraft"
+  | "messages.restoreFromTrash"
+  | "messages.labelsPlaceholder"
+  | "messages.bodyPlaceholder"
+  | "messages.replyPlaceholder"
+  | "questions.deleteConfirm"
+  | "profile.forbiddenParent"
+  | "profile.notFound"
+  | "parentLink.manage"
+  | "parentLink.title"
+  | "parentLink.subtitle"
+  | "parentLink.selectStudent"
+  | "parentLink.add"
+  | "parentLink.empty"
+  | "parentLink.linked"
+  | "parentLink.remove"
+  | "parentLink.removeConfirm"
+  | "parentLink.removed"
+  | "avatar.title"
+  | "avatar.change"
+  | "avatar.upload"
+  | "avatar.remove"
+  | "avatar.removeConfirm"
+  | "avatar.removed"
+  | "avatar.uploaded"
+  | "avatar.hint"
+  | "avatar.typeInvalid"
+  | "avatar.tooLarge"
+  | "badges.title"
+  | "badges.subtitle"
+  | "badges.earnedOn"
+  | "badges.locked"
+  | "badges.remaining"
+  | "badges.remainingHours"
+  | "badges.none"
+  | "badges.earnedCount"
+  | "badge.homework_submitted_1.name"
+  | "badge.homework_submitted_1.desc"
+  | "badge.homework_submitted_10.name"
+  | "badge.homework_submitted_10.desc"
+  | "badge.homework_submitted_50.name"
+  | "badge.homework_submitted_50.desc"
+  | "badge.homework_on_time_10.name"
+  | "badge.homework_on_time_10.desc"
+  | "badge.homework_on_time_25.name"
+  | "badge.homework_on_time_25.desc"
+  | "badge.exam_sat_1.name"
+  | "badge.exam_sat_1.desc"
+  | "badge.exam_sat_10.name"
+  | "badge.exam_sat_10.desc"
+  | "badge.exam_sat_25.name"
+  | "badge.exam_sat_25.desc"
+  | "badge.pomodoro_finished_10.name"
+  | "badge.pomodoro_finished_10.desc"
+  | "badge.pomodoro_finished_50.name"
+  | "badge.pomodoro_finished_50.desc"
+  | "badge.pomodoro_finished_200.name"
+  | "badge.pomodoro_finished_200.desc"
+  | "badge.pomodoro_focus_ms_36000000.name"
+  | "badge.pomodoro_focus_ms_36000000.desc"
+  | "badge.pomodoro_focus_ms_180000000.name"
+  | "badge.pomodoro_focus_ms_180000000.desc"
+  | "whiteboard.bulkInvite"
+  | "whiteboard.bulkInviteHint"
+  | "whiteboard.inviteSourceClass"
+  | "whiteboard.inviteSourceCourse"
+  | "whiteboard.inviteSourceEvent"
+  | "whiteboard.inviteSelect"
+  | "whiteboard.inviteAction"
+  | "whiteboard.inviteAdded"
+  | "whiteboard.inviteNoneAdded"
+  | "whiteboard.inviteTooMany"
+  | "whiteboard.inviteNotFound"
+  | "whiteboard.inviteEmptySource"
   | "nav.children"
   | "nav.school"
   | "nav.notes"
@@ -113,7 +258,6 @@ export type MessageKey =
   | "notifications.clearAll"
   | "notifications.dismiss"
   | "notifications.empty"
-  | "nav.myStudents"
   | "parents.title"
   | "parents.subtitle"
   | "common.loading"
@@ -332,6 +476,11 @@ export type MessageKey =
   | "dashboard.successTrendSchool"
   | "dashboard.courseAveragesSchool"
   | "dashboard.examGraded"
+  | "dashboard.chartExamCount"
+  | "dashboard.chartLatest"
+  | "dashboard.chartAverage"
+  | "dashboard.chartRange"
+  | "dashboard.chartLatestExam"
   | "dashboard.focusHeatmap"
   | "dashboard.focusHeatmapDesc"
   | "dashboard.activityHeatmap"
@@ -686,18 +835,83 @@ export type MessageKey =
   | "admin.noUsers"
   | "guide.title"
   | "guide.subtitle"
-  | "guide.step1.title"
-  | "guide.step1.body"
-  | "guide.step2.title"
-  | "guide.step2.body"
-  | "guide.step3.title"
-  | "guide.step3.body"
-  | "guide.step4.title"
-  | "guide.step4.body"
-  | "guide.step5.title"
-  | "guide.step5.body"
-  | "guide.step6.title"
-  | "guide.step6.body"
+  | "guide.roles.title"
+  | "guide.roles.subtitle"
+  | "guide.roles.adminTab"
+  | "guide.roles.student.heading"
+  | "guide.roles.student.i1"
+  | "guide.roles.student.i2"
+  | "guide.roles.student.i3"
+  | "guide.roles.student.i4"
+  | "guide.roles.teacher.heading"
+  | "guide.roles.teacher.i1"
+  | "guide.roles.teacher.i2"
+  | "guide.roles.teacher.i3"
+  | "guide.roles.teacher.i4"
+  | "guide.roles.parent.heading"
+  | "guide.roles.parent.i1"
+  | "guide.roles.parent.i2"
+  | "guide.roles.parent.i3"
+  | "guide.roles.parent.i4"
+  | "guide.roles.admin.heading"
+  | "guide.roles.admin.i1"
+  | "guide.roles.admin.i2"
+  | "guide.roles.admin.i3"
+  | "guide.roles.admin.i4"
+  | "guide.modules.title"
+  | "guide.modules.subtitle"
+  | "guide.step.ai.badge"
+  | "guide.step.ai.title"
+  | "guide.step.ai.description"
+  | "guide.step.ai.cta"
+  | "guide.step.ai.f1"
+  | "guide.step.ai.f2"
+  | "guide.step.ai.f3"
+  | "guide.step.notes.badge"
+  | "guide.step.notes.title"
+  | "guide.step.notes.description"
+  | "guide.step.notes.cta"
+  | "guide.step.notes.f1"
+  | "guide.step.notes.f2"
+  | "guide.step.notes.f3"
+  | "guide.step.questions.badge"
+  | "guide.step.questions.title"
+  | "guide.step.questions.description"
+  | "guide.step.questions.cta"
+  | "guide.step.questions.f1"
+  | "guide.step.questions.f2"
+  | "guide.step.questions.f3"
+  | "guide.step.courses.badge"
+  | "guide.step.courses.title"
+  | "guide.step.courses.description"
+  | "guide.step.courses.cta"
+  | "guide.step.courses.f1"
+  | "guide.step.courses.f2"
+  | "guide.step.courses.f3"
+  | "guide.step.exams.badge"
+  | "guide.step.exams.title"
+  | "guide.step.exams.description"
+  | "guide.step.exams.cta"
+  | "guide.step.exams.f1"
+  | "guide.step.exams.f2"
+  | "guide.step.exams.f3"
+  | "guide.step.marks.badge"
+  | "guide.step.marks.title"
+  | "guide.step.marks.description"
+  | "guide.step.marks.cta"
+  | "guide.step.marks.f1"
+  | "guide.step.marks.f2"
+  | "guide.step.marks.f3"
+  | "guide.tips.title"
+  | "guide.tips.subtitle"
+  | "guide.tips.locale.title"
+  | "guide.tips.locale.body"
+  | "guide.tips.sync.title"
+  | "guide.tips.sync.body"
+  | "guide.tips.import.title"
+  | "guide.tips.import.body"
+  | "guide.tips.weights.title"
+  | "guide.tips.weights.body"
   | "guide.rolesTitle"
   | "courses.helpTitle"
   | "courses.helpBody"
@@ -1349,7 +1563,157 @@ const en: Dict = {
   "classGroups.noTeacher": "Not assigned",
   "classGroups.selectTeacher": "Select a teacher",
   "classGroups.yourClass": "Class",
-  "nav.children": "Children",
+  "classBlueprints.tab": "Grade blueprints",
+  "classBlueprints.classesTab": "Classes",
+  "classBlueprints.title": "Grade blueprints",
+  "classBlueprints.subtitle": "Every class at a grade takes this set of courses.",
+  "classBlueprints.new": "New blueprint",
+  "classBlueprints.edit": "Edit blueprint",
+  "classBlueprints.grade": "Grade",
+  "classBlueprints.gradeHint": "There is one blueprint per grade, so the grade cannot be changed later.",
+  "classBlueprints.courses": "Courses",
+  "classBlueprints.courseCount": "{count} courses",
+  "classBlueprints.courseCountColumn": "Course count",
+  "classBlueprints.selected": "{count} / {max} selected",
+  "classBlueprints.empty": "No blueprints yet.",
+  "classBlueprints.selectCourses": "Select the courses every class at this grade takes.",
+  "classBlueprints.wholeSetHint":
+    "This is the complete list — courses you uncheck are detached from every class at this grade. Hand-attached courses stay.",
+  "classBlueprints.filterCourses": "Filter courses",
+  "classBlueprints.noCourseMatch": "No course matches that filter.",
+  "classBlueprints.saved": "Blueprint saved and applied to every class at this grade.",
+  "classBlueprints.delete": "Delete blueprint",
+  "classBlueprints.deleteConfirm":
+    "Delete the blueprint for grade {grade}? The courses it attached are detached from every class at this grade. Hand-attached courses stay.",
+  "classBlueprints.deleted": "Blueprint deleted.",
+  "classBlueprints.apply": "Apply blueprint",
+  "classBlueprints.applyHint": "Attaches this grade's blueprint courses to this class.",
+  "classBlueprints.applyNoGrade": "Assign a grade to this class first.",
+  "classBlueprints.applied": "Blueprint applied.",
+  "classBlueprints.noBlueprintForGrade": "There is no blueprint for grade {grade} yet.",
+  "classBlueprints.conflictExists": "A blueprint already exists for this grade. Edit it from the list instead.",
+  "classBlueprints.staleReload":
+    "This blueprint changed while you were editing. The list has been refreshed — review it and save again.",
+  "classBlueprints.skippedSummary": "Saved. {count} class-course pairs could not be attached.",
+  "classBlueprints.skippedDetails": "See details",
+  "classBlueprints.skippedTitle": "Not attached",
+  "classBlueprints.skippedSubtitle": "Everything else went through. These pairs were left alone.",
+  "classBlueprints.skippedClass": "Class",
+  "classBlueprints.skippedCourse": "Course",
+  "classBlueprints.skippedReason": "Reason",
+  "classBlueprints.skipClassGone": "The class was deleted while the blueprint was being applied.",
+  "classBlueprints.skipCoursePruned": "This course no longer exists and has been dropped from the blueprint.",
+  "classBlueprints.skipCeiling": "The class already holds the maximum number of courses.",
+  "classBlueprints.skipOverloaded": "The class holds more students than one course attach may enroll at once.",
+  "classBlueprints.skipNoSeat": "{course} has no free seat for the whole class.",
+  "classBlueprints.skipCourseGone": "{course} no longer exists — detach it from this class first.",
+  "classBlueprints.skipOther": "This pair could not be attached.",
+  "profile.myProfile": "My profile",
+  "profile.viewProfile": "View profile",
+  "profile.displayName": "Display name",
+  "profile.displayNameHint": "Shown to other people instead of your username.",
+  "profile.bio": "About",
+  "profile.bioHint": "A short line about yourself.",
+  "profile.bioEmpty": "No bio yet.",
+  "profile.classes": "Classes",
+  "profile.noClasses": "Not in any class.",
+  "profile.courses": "Courses",
+  "profile.noCourses": "No courses to show.",
+  "profile.stats": "Stats",
+  "profile.statFocusHours": "Hours focused",
+  "profile.statSessions": "Focus sessions",
+  "profile.statHomework": "Homework submitted",
+  "profile.statOnTime": "Submitted on time",
+  "profile.statExams": "Exams sat",
+  "profile.statCourses": "Courses",
+  "profile.statClasses": "Classes",
+  "common.clearSearch": "Clear search",
+  "common.refresh": "Refresh",
+  "editor.bold": "Bold (Ctrl+B)",
+  "editor.italic": "Italic (Ctrl+I)",
+  "editor.underline": "Underline (Ctrl+U)",
+  "editor.strike": "Strikethrough",
+  "editor.bulletList": "Bulleted list",
+  "editor.numberedList": "Numbered list",
+  "editor.clearFormatting": "Clear formatting",
+  "messages.refreshList": "Refresh messages",
+  "messages.deleteDraft": "Delete draft",
+  "messages.restoreFromTrash": "Restore from trash",
+  "messages.labelsPlaceholder": "e.g. Study, Exam (optional)",
+  "messages.bodyPlaceholder": "Write your message here…",
+  "messages.replyPlaceholder": "Write your reply…",
+  "questions.deleteConfirm": "Delete this question?",
+  "profile.forbiddenParent": "You can only view your own profile and your children's.",
+  "profile.notFound": "There is no such person.",
+  "parentLink.manage": "Linked students",
+  "parentLink.title": "Linked students",
+  "parentLink.subtitle": "Students {name} is the guardian of.",
+  "parentLink.selectStudent": "Choose a student",
+  "parentLink.add": "Link",
+  "parentLink.empty": "No students are linked to this parent yet.",
+  "parentLink.linked": "Student linked.",
+  "parentLink.remove": "Remove link",
+  "parentLink.removeConfirm": "Unlink {student} from {parent}? The parent loses access to that student's records.",
+  "parentLink.removed": "Link removed.",
+  "avatar.title": "Photo",
+  "avatar.change": "Change photo",
+  "avatar.upload": "Upload photo",
+  "avatar.remove": "Remove photo",
+  "avatar.removeConfirm": "Remove your profile photo?",
+  "avatar.removed": "Photo removed.",
+  "avatar.uploaded": "Photo updated.",
+  "avatar.hint": "PNG, JPEG, WebP or GIF, up to {size}.",
+  "avatar.typeInvalid": "Use a PNG, JPEG, WebP or GIF image.",
+  "avatar.tooLarge": "This image is larger than {size}.",
+  "badges.title": "Badges",
+  "badges.subtitle": "Earned automatically as the work adds up.",
+  "badges.earnedOn": "Earned {date}",
+  "badges.locked": "Not earned yet",
+  "badges.remaining": "{count} to go",
+  "badges.remainingHours": "{count} hours to go",
+  "badges.none": "No badges yet.",
+  "badges.earnedCount": "{earned} / {total} earned",
+  "badge.homework_submitted_1.name": "First Steps",
+  "badge.homework_submitted_1.desc": "Submit your first homework.",
+  "badge.homework_submitted_10.name": "Steady Hand",
+  "badge.homework_submitted_10.desc": "Submit 10 homework assignments.",
+  "badge.homework_submitted_50.name": "Homework Master",
+  "badge.homework_submitted_50.desc": "Submit 50 homework assignments.",
+  "badge.homework_on_time_10.name": "On the Dot",
+  "badge.homework_on_time_10.desc": "Turn in 10 homework assignments on time.",
+  "badge.homework_on_time_25.name": "Clockwork",
+  "badge.homework_on_time_25.desc": "Turn in 25 homework assignments on time.",
+  "badge.exam_sat_1.name": "First Exam",
+  "badge.exam_sat_1.desc": "Sit your first exam.",
+  "badge.exam_sat_10.name": "Exam Regular",
+  "badge.exam_sat_10.desc": "Sit 10 exams.",
+  "badge.exam_sat_25.name": "Exam Veteran",
+  "badge.exam_sat_25.desc": "Sit 25 exams.",
+  "badge.pomodoro_finished_10.name": "Focus Starter",
+  "badge.pomodoro_finished_10.desc": "Finish 10 focus sessions.",
+  "badge.pomodoro_finished_50.name": "Focus Habit",
+  "badge.pomodoro_finished_50.desc": "Finish 50 focus sessions.",
+  "badge.pomodoro_finished_200.name": "Focus Champion",
+  "badge.pomodoro_finished_200.desc": "Finish 200 focus sessions.",
+  "badge.pomodoro_focus_ms_36000000.name": "Ten Hours Deep",
+  "badge.pomodoro_focus_ms_36000000.desc": "Spend 10 hours in focus sessions.",
+  "badge.pomodoro_focus_ms_180000000.name": "Fifty Hours Deep",
+  "badge.pomodoro_focus_ms_180000000.desc": "Spend 50 hours in focus sessions.",
+  "whiteboard.bulkInvite": "Invite a group",
+  "whiteboard.bulkInviteHint":
+    "Adds everyone in the group as a participant. Parents are skipped, and people already on the board keep their place.",
+  "whiteboard.inviteSourceClass": "Class",
+  "whiteboard.inviteSourceCourse": "Course or club",
+  "whiteboard.inviteSourceEvent": "Event",
+  "whiteboard.inviteSelect": "Choose a group",
+  "whiteboard.inviteAction": "Invite",
+  "whiteboard.inviteAdded": "{count} people added.",
+  "whiteboard.inviteNoneAdded": "Everyone in that group is already a participant.",
+  "whiteboard.inviteTooMany":
+    "That group would push the board past {max} participants, so nobody was added. Remove some participants or invite a smaller group.",
+  "whiteboard.inviteNotFound": "That group no longer exists. Refresh the list.",
+  "whiteboard.inviteEmptySource": "Nothing to pick here yet.",
+  "nav.children": "My children",
   "nav.school": "School",
   "nav.notes": "Notebook",
   "nav.events": "Events",
@@ -1361,9 +1725,9 @@ const en: Dict = {
   "nav.marks": "Report card",
   "nav.messages": "Messages",
   "rightPanel.messagesTitle": "Messages",
-  "rightPanel.calendarTitle": "Calendar & Events",
-  "rightPanel.openFullMessages": "Open Full Messages",
-  "rightPanel.openFullCalendar": "Open Full Calendar",
+  "rightPanel.calendarTitle": "Calendar & events",
+  "rightPanel.openFullMessages": "Open all messages",
+  "rightPanel.openFullCalendar": "Open full calendar",
   "rightPanel.noUnread": "No unread messages",
   "rightPanel.noUpcoming": "No upcoming events or exams",
   "rightPanel.unreadBadge": "Unread",
@@ -1401,7 +1765,6 @@ const en: Dict = {
   "nav.group.community": "Community",
   "nav.group.services": "School services",
   "nav.darkMode": "Dark mode",
-  "nav.myStudents": "My students",
   "parents.title": "My Students",
   "parents.subtitle": "Review academic records for the students linked to your account.",
   "common.loading": "Loading…",
@@ -1467,9 +1830,9 @@ const en: Dict = {
   "common.saved": "Saved successfully.",
   "common.createItem": "Create new {item}",
   "common.countItem": "{count} {item}",
-  "pool.title": "Question Pool",
+  "pool.title": "Question pool",
   "pool.subtitle": "Post questions and discuss solutions with teachers and classmates.",
-  "pool.ask": "Ask Question",
+  "pool.ask": "Ask a question",
   "pool.subject": "Subject",
   "pool.body": "Question details",
   "pool.image": "Attachment (Image)",
@@ -1618,6 +1981,11 @@ const en: Dict = {
   "dashboard.successTrendSchool": "Class averages of recent exams.",
   "dashboard.courseAveragesSchool": "Average of recent exams, by course.",
   "dashboard.examGraded": "{count} graded",
+  "dashboard.chartExamCount": "Exams",
+  "dashboard.chartLatest": "Latest score",
+  "dashboard.chartAverage": "Chart average",
+  "dashboard.chartRange": "Score range",
+  "dashboard.chartLatestExam": "Latest exam",
   "dashboard.focusHeatmap": "Focus activity",
   "dashboard.focusHeatmapDesc": "Your pomodoro sessions, day by day.",
   "dashboard.activityHeatmap": "School activity",
@@ -1846,11 +2214,11 @@ const en: Dict = {
   "exams.gradeAfterExam": "Available after the exam ends",
   "exams.results": "Results table",
   "exams.noResults": "No results yet.",
-  "exams.details": "Exam Details",
+  "exams.details": "Exam details",
   "exams.schedule": "Schedule",
-  "exams.examStatistics": "Exam Statistics",
-  "exams.examQuestions": "Exam Questions",
-  "exams.studentResults": "Student Grades",
+  "exams.examStatistics": "Exam statistics",
+  "exams.examQuestions": "Exam questions",
+  "exams.studentResults": "Student grades",
   "exams.window": "Window",
   "exams.unscheduled": "Unscheduled",
   "exams.mode": "Mode",
@@ -1878,19 +2246,19 @@ const en: Dict = {
   "exams.startTime": "Start time",
   "exams.endTime": "End time",
   "exams.scheduleRequired": "Sync/Async exams require a start and end time",
-  "exams.step1Details": "1. Exam Details",
+  "exams.step1Details": "1. Exam details",
   "exams.step2Questions": "2. Questions",
-  "exams.hasDuration": "Enable Time Limit",
+  "exams.hasDuration": "Enable time limit",
   "exams.hasDurationHelp": "Sets how many minutes students get in the exam room.",
-  "exams.accessAndAttempts": "Access & Attempts",
-  "exams.singleAttempt": "Single Attempt (1)",
-  "exams.multipleAttempts": "Multiple Attempts",
-  "exams.finishAndClose": "Finish & Close",
-  "exams.nextQuestions": "Save & Add Questions",
-  "exams.sectionBasic": "Basic Information",
-  "exams.sectionSchedule": "Schedule & Mode",
-  "exams.sectionDuration": "Time Limit",
-  "exams.sectionAccess": "Participation & Attempts",
+  "exams.accessAndAttempts": "Access & attempts",
+  "exams.singleAttempt": "Single attempt (1)",
+  "exams.multipleAttempts": "Multiple attempts",
+  "exams.finishAndClose": "Finish & close",
+  "exams.nextQuestions": "Save & add questions",
+  "exams.sectionBasic": "Basic information",
+  "exams.sectionSchedule": "Schedule & mode",
+  "exams.sectionDuration": "Time limit",
+  "exams.sectionAccess": "Participation & attempts",
   "exams.times": "times",
   "questions.title": "Questions",
   "questions.add": "Add question",
@@ -2034,9 +2402,9 @@ const en: Dict = {
   "attempt.submitted": "Submitted",
   "attempt.submittedCanRetakeInfo": "You have submitted this attempt. You can take the exam again using your remaining attempts.",
   "attempt.submittedFinalInfo": "You have submitted this exam. It cannot be reopened.",
-  "attempt.submittedAt": "Submitted At",
-  "exams.startsAt": "Start Date",
-  "exams.endsAt": "End Date",
+  "attempt.submittedAt": "Submitted at",
+  "exams.startsAt": "Start date",
+  "exams.endsAt": "End date",
   "attempt.expired": "Expired",
   "attempt.expiredInfo": "The time for this exam has expired. It cannot be reopened.",
   "attempt.noAttemptsLeft": "No rights left",
@@ -2058,24 +2426,83 @@ const en: Dict = {
   "admin.noUsers": "No users registered yet.",
   "guide.title": "Product guide",
   "guide.subtitle": "How the platform fits together, from classes and exams to report cards, notes, and events.",
-  "guide.step1.title": "1. Home overview",
-  "guide.step1.body":
-    "Live counts and shortcuts for notes, events, courses, exams, and your report card.",
-  "guide.step2.title": "2. Notes",
-  "guide.step2.body":
-    "Private scratchpad. Create, edit, delete — delete/update ask for confirmation with a short summary.",
-  "guide.step3.title": "3. Events & attendance",
-  "guide.step3.body":
-    "Teachers and managers open an event, select a student, then save present/absent/late/excused attendance.",
-  "guide.step4.title": "4. Education",
-  "guide.step4.body":
-    "Teachers create a course, study session, or club, enroll students, then add exams by kind inside it.",
-  "guide.step5.title": "5. Exams",
-  "guide.step5.body":
-    "List all exams here. New exams are created from an education detail page, not from this list.",
-  "guide.step6.title": "6. Report card",
-  "guide.step6.body":
-    "Your weighted course averages and overall average. Teachers can look up any student.",
+  "guide.roles.title": "Role permission map",
+  "guide.roles.subtitle": "What each role on the platform can reach and manage.",
+  "guide.roles.adminTab": "Manager & admin",
+  "guide.roles.student.heading": "Student study and participation tools",
+  "guide.roles.student.i1": "Keep notes in a private notebook, import PDFs and draw",
+  "guide.roles.student.i2": "Ask in the question pool and write solutions for others",
+  "guide.roles.student.i3": "Enter the exam room for enrolled courses and sit timed exams",
+  "guide.roles.student.i4": "Follow their own report-card average and attendance",
+  "guide.roles.teacher.heading": "Teacher management and teaching panel",
+  "guide.roles.teacher.i1": "Create courses, study sessions and clubs, and enrol students",
+  "guide.roles.teacher.i2": "Take roll call in lesson sessions (present, absent, late, excused)",
+  "guide.roles.teacher.i3": "Create exams, add questions and run live exam monitoring",
+  "guide.roles.teacher.i4": "Review answer sheets, award marks and confirm report cards",
+  "guide.roles.parent.heading": "Parent tracking and information portal",
+  "guide.roles.parent.i1": "Follow linked students' attendance records as they happen",
+  "guide.roles.parent.i2": "See a student's per-course report-card averages",
+  "guide.roles.parent.i3": "Follow the upcoming exam and event calendar",
+  "guide.roles.parent.i4": "Message teachers and the school office directly",
+  "guide.roles.admin.heading": "Manager and system policy panel",
+  "guide.roles.admin.i1": "Create accounts and assign their roles (student, teacher, parent)",
+  "guide.roles.admin.i2": "Define academic terms, exam kinds and their weights",
+  "guide.roles.admin.i3": "Manage every course and event record at audit level",
+  "guide.roles.admin.i4": "Review staff work logs and system records",
+  "guide.modules.title": "Core flows and features",
+  "guide.modules.subtitle": "The platform's main modules and how each one is used.",
+  "guide.step.ai.badge": "AI",
+  "guide.step.ai.title": "Çelebi AI assistant",
+  "guide.step.ai.description": "The assistant reachable from every page through “Ask Çelebi” in the top bar. It answers about your campus data, your course topics and the system itself.",
+  "guide.step.ai.cta": "Try Çelebi",
+  "guide.step.ai.f1": "One click from every page",
+  "guide.step.ai.f2": "Campus and course-aware answers",
+  "guide.step.ai.f3": "Contextual study guidance",
+  "guide.step.notes.badge": "Notes and drawing",
+  "guide.step.notes.title": "Smart notebook and drawing canvas",
+  "guide.step.notes.description": "Turn PDF, TXT and Markdown material into clean Markdown notes. Add freehand sketches and diagrams with the built-in .hzdraw canvas.",
+  "guide.step.notes.cta": "Go to notes",
+  "guide.step.notes.f1": "Automatic PDF and TXT converter",
+  "guide.step.notes.f2": "Built-in .hzdraw freehand canvas",
+  "guide.step.notes.f3": "Markdown formatting and an OCR warning",
+  "guide.step.questions.badge": "Question pool",
+  "guide.step.questions.title": "Question pool and solutions",
+  "guide.step.questions.description": "Share your questions in the community pool and add written or multiple-choice solutions. Teacher-approved solutions mark the answer to trust.",
+  "guide.step.questions.cta": "Question pool",
+  "guide.step.questions.f1": "Written and multiple-choice solutions",
+  "guide.step.questions.f2": "Teacher-approved solution badge",
+  "guide.step.questions.f3": "Filterable topic and status categories",
+  "guide.step.courses.badge": "Courses and study",
+  "guide.step.courses.title": "Courses, study sessions and clubs",
+  "guide.step.courses.description": "The course, study-session and club programme. Teachers enrol students, take lesson roll call (present, absent, late, excused) and follow the syllabus.",
+  "guide.step.courses.cta": "My courses",
+  "guide.step.courses.f1": "Student enrolment management",
+  "guide.step.courses.f2": "Roll call as the session runs",
+  "guide.step.courses.f3": "Exam and study calendar alignment",
+  "guide.step.exams.badge": "Exam room",
+  "guide.step.exams.title": "Exam room and live monitoring",
+  "guide.step.exams.description": "A live exam room with a countdown and autosave. Teachers follow answer sheets and instant marking suggestions from the live monitor.",
+  "guide.step.exams.cta": "Exam room",
+  "guide.step.exams.f1": "Countdown synced to the server clock",
+  "guide.step.exams.f2": "WebSocket and REST autosave",
+  "guide.step.exams.f3": "Live teacher monitoring and marking",
+  "guide.step.marks.badge": "Report card",
+  "guide.step.marks.title": "Report card and progress",
+  "guide.step.marks.description": "Term course averages and an overall score computed from exam-kind weights, alongside attendance statistics.",
+  "guide.step.marks.cta": "My report card",
+  "guide.step.marks.f1": "Weighted exam average",
+  "guide.step.marks.f2": "Attendance and excuse summaries",
+  "guide.step.marks.f3": "Detailed charts and course reports",
+  "guide.tips.title": "Practical tips and shortcuts",
+  "guide.tips.subtitle": "Small things that make the platform quicker to work with.",
+  "guide.tips.locale.title": "Language and theme",
+  "guide.tips.locale.body": "Open the account menu at the bottom of the sidebar to switch between Turkish and English, and between the light and dark themes.",
+  "guide.tips.sync.title": "Automatic saving",
+  "guide.tips.sync.body": "Your exam-room answers and canvas drafts are saved in the background against the server clock.",
+  "guide.tips.import.title": "Quick note import",
+  "guide.tips.import.body": "Use the import button on the notes page to turn PDF and TXT course documents into clean Markdown.",
+  "guide.tips.weights.title": "Weighted marking",
+  "guide.tips.weights.body": "Exam results feed your report-card average using the exam-kind weights the school office defines.",
   "guide.rolesTitle": "Who can do what?",
   "guide.rolesBody":
     "Student: notes, events attendance, view courses/exams, own results & report card. Teacher: create courses/events, enroll, add exams, grade. Manager: manage any course/event. Admin: user roles.",
@@ -2128,7 +2555,7 @@ const en: Dict = {
   "role.parent": "Parent",
   "role.teacher": "Teacher",
   "role.manager": "Manager",
-  "role.admin": "ADMIN",
+  "role.admin": "Admin",
   "courses.title": "Education",
   "courses.listTitle": "{item} records",
   "courses.subtitle": "Manage {item}, enrollment, and exams in one place.",
@@ -2224,11 +2651,11 @@ const en: Dict = {
   "exams.finished": "Finished",
   "exams.active": "Active",
   "exams.upcoming": "Upcoming",
-  "exams.liveMonitor": "Live Monitor",
+  "exams.liveMonitor": "Live monitor",
   "exams.liveMonitorDesc": "Real-time exam roster, progress, and marks.",
-  "exams.finalState": "Final State",
+  "exams.finalState": "Final state",
   "exams.finalStateDesc": "Final exam results, progress, and marks.",
-  "exams.liveRoster": "Live Roster",
+  "exams.liveRoster": "Live roster",
   "exams.notStarted": "Not started",
   "exams.lastActivity": "Last activity",
   "exams.answerSheet": "Answer Sheet",
@@ -2260,7 +2687,7 @@ const en: Dict = {
   "exams.emptyRoster": "No enrolled students yet.",
   "exams.selectStudent": "Select a student from the roster",
   "exams.viewSheet": "View answers",
-  "profile.title": "My Profile",
+  "profile.title": "Profile",
   "profile.subtitle": "Your personal information. All fields are optional.",
   "profile.name": "Name",
   "profile.surname": "Surname",
@@ -2566,7 +2993,7 @@ const en: Dict = {
   "messages.sent": "Sent",
   "messages.archive": "Archive",
   "messages.trash": "Trash",
-  "messages.newMessage": "New Message",
+  "messages.newMessage": "New message",
   "messages.recipient": "Recipient",
   "messages.recipientPlaceholder": "Search for name or username...",
   "messages.search": "Search messages",
@@ -2576,8 +3003,8 @@ const en: Dict = {
   "messages.send": "Send",
   "messages.moveToArchive": "Archive",
   "messages.moveOutOfArchive": "Move out of Archive",
-  "messages.moveToTrash": "Move to Trash",
-  "messages.deleteForever": "Delete Permanently",
+  "messages.moveToTrash": "Move to trash",
+  "messages.deleteForever": "Delete permanently",
   "messages.movedToast": "Message moved.",
   "messages.deletedToast": "Message deleted.",
   "messages.sentToast": "Message sent.",
@@ -2649,7 +3076,157 @@ const tr: Dict = {
   "classGroups.noTeacher": "Atanmadı",
   "classGroups.selectTeacher": "Bir öğretmen seç",
   "classGroups.yourClass": "Şube",
-  "nav.children": "Çocuklar",
+  "classBlueprints.tab": "Seviye şablonları",
+  "classBlueprints.classesTab": "Şubeler",
+  "classBlueprints.title": "Seviye şablonları",
+  "classBlueprints.subtitle": "Bir seviyedeki her şube bu ders kümesini alır.",
+  "classBlueprints.new": "Yeni şablon",
+  "classBlueprints.edit": "Şablonu düzenle",
+  "classBlueprints.grade": "Seviye",
+  "classBlueprints.gradeHint": "Her seviyenin tek bir şablonu olur, bu yüzden seviye sonradan değiştirilemez.",
+  "classBlueprints.courses": "Dersler",
+  "classBlueprints.courseCount": "{count} ders",
+  "classBlueprints.courseCountColumn": "Ders sayısı",
+  "classBlueprints.selected": "{count} / {max} seçildi",
+  "classBlueprints.empty": "Henüz şablon yok.",
+  "classBlueprints.selectCourses": "Bu seviyedeki her şubenin aldığı dersleri seç.",
+  "classBlueprints.wholeSetHint":
+    "Bu liste tamamıdır — işaretini kaldırdığın dersler bu seviyedeki her şubeden çıkarılır. Elle eklenen dersler kalır.",
+  "classBlueprints.filterCourses": "Derslerde ara",
+  "classBlueprints.noCourseMatch": "Bu aramayla eşleşen ders yok.",
+  "classBlueprints.saved": "Şablon kaydedildi ve bu seviyedeki her şubeye uygulandı.",
+  "classBlueprints.delete": "Şablonu sil",
+  "classBlueprints.deleteConfirm":
+    "{grade} seviyesinin şablonu silinsin mi? Şablonun eklediği dersler bu seviyedeki her şubeden çıkarılır. Elle eklenen dersler kalır.",
+  "classBlueprints.deleted": "Şablon silindi.",
+  "classBlueprints.apply": "Şablonu uygula",
+  "classBlueprints.applyHint": "Bu seviyenin şablon derslerini bu şubeye ekler.",
+  "classBlueprints.applyNoGrade": "Önce bu şubeye bir seviye ata.",
+  "classBlueprints.applied": "Şablon uygulandı.",
+  "classBlueprints.noBlueprintForGrade": "{grade} seviyesi için henüz bir şablon yok.",
+  "classBlueprints.conflictExists": "Bu seviye için zaten bir şablon var. Bunun yerine listeden düzenle.",
+  "classBlueprints.staleReload":
+    "Sen düzenlerken bu şablon değişti. Liste yenilendi — gözden geçirip tekrar kaydet.",
+  "classBlueprints.skippedSummary": "Kaydedildi. {count} şube-ders eşleşmesi eklenemedi.",
+  "classBlueprints.skippedDetails": "Detayları gör",
+  "classBlueprints.skippedTitle": "Eklenemeyenler",
+  "classBlueprints.skippedSubtitle": "Geri kalan her şey uygulandı. Aşağıdaki eşleşmelere dokunulmadı.",
+  "classBlueprints.skippedClass": "Şube",
+  "classBlueprints.skippedCourse": "Ders",
+  "classBlueprints.skippedReason": "Sebep",
+  "classBlueprints.skipClassGone": "Şablon uygulanırken bu şube silindi.",
+  "classBlueprints.skipCoursePruned": "Bu ders artık yok ve şablondan çıkarıldı.",
+  "classBlueprints.skipCeiling": "Şube en fazla ders sayısına ulaşmış.",
+  "classBlueprints.skipOverloaded": "Şubede, tek seferde eklenebilecek olandan daha çok öğrenci var.",
+  "classBlueprints.skipNoSeat": "{course} dersinde tüm şube için yeterli kontenjan yok.",
+  "classBlueprints.skipCourseGone": "{course} artık yok — önce bu şubeden çıkar.",
+  "classBlueprints.skipOther": "Bu eşleşme eklenemedi.",
+  "profile.myProfile": "Profilim",
+  "profile.viewProfile": "Profili gör",
+  "profile.displayName": "Görünen ad",
+  "profile.displayNameHint": "Diğer kişilere kullanıcı adın yerine bu gösterilir.",
+  "profile.bio": "Hakkında",
+  "profile.bioHint": "Kendinle ilgili kısa bir not.",
+  "profile.bioEmpty": "Henüz bir not yok.",
+  "profile.classes": "Şubeler",
+  "profile.noClasses": "Hiçbir şubede değil.",
+  "profile.courses": "Dersler",
+  "profile.noCourses": "Gösterilecek ders yok.",
+  "profile.stats": "İstatistikler",
+  "profile.statFocusHours": "Odak saati",
+  "profile.statSessions": "Odak oturumu",
+  "profile.statHomework": "Teslim edilen ödev",
+  "profile.statOnTime": "Zamanında teslim",
+  "profile.statExams": "Girilen sınav",
+  "profile.statCourses": "Ders",
+  "profile.statClasses": "Şube",
+  "common.clearSearch": "Aramayı temizle",
+  "common.refresh": "Yenile",
+  "editor.bold": "Kalın (Ctrl+B)",
+  "editor.italic": "İtalik (Ctrl+I)",
+  "editor.underline": "Altı çizili (Ctrl+U)",
+  "editor.strike": "Üstü çizili",
+  "editor.bulletList": "Madde işaretli liste",
+  "editor.numberedList": "Numaralı liste",
+  "editor.clearFormatting": "Biçimlendirmeyi temizle",
+  "messages.refreshList": "Mesajları yenile",
+  "messages.deleteDraft": "Taslağı sil",
+  "messages.restoreFromTrash": "Çöp kutusundan çıkar",
+  "messages.labelsPlaceholder": "ör. Etüt, Sınav (isteğe bağlı)",
+  "messages.bodyPlaceholder": "Mesajınızı buraya yazın…",
+  "messages.replyPlaceholder": "Yanıtınızı yazın…",
+  "questions.deleteConfirm": "Bu soru silinsin mi?",
+  "profile.forbiddenParent": "Yalnızca kendi profilini ve çocuklarının profilini görebilirsin.",
+  "profile.notFound": "Böyle bir kişi yok.",
+  "parentLink.manage": "Bağlı öğrenciler",
+  "parentLink.title": "Bağlı öğrenciler",
+  "parentLink.subtitle": "{name} adlı velinin sorumlu olduğu öğrenciler.",
+  "parentLink.selectStudent": "Öğrenci seç",
+  "parentLink.add": "Bağla",
+  "parentLink.empty": "Bu veliye bağlı öğrenci yok.",
+  "parentLink.linked": "Öğrenci bağlandı.",
+  "parentLink.remove": "Bağlantıyı kaldır",
+  "parentLink.removeConfirm": "{student} öğrencisinin {parent} ile bağlantısı kaldırılsın mı? Veli, o öğrencinin kayıtlarına erişimini kaybeder.",
+  "parentLink.removed": "Bağlantı kaldırıldı.",
+  "avatar.title": "Fotoğraf",
+  "avatar.change": "Fotoğrafı değiştir",
+  "avatar.upload": "Fotoğraf yükle",
+  "avatar.remove": "Fotoğrafı kaldır",
+  "avatar.removeConfirm": "Profil fotoğrafın kaldırılsın mı?",
+  "avatar.removed": "Fotoğraf kaldırıldı.",
+  "avatar.uploaded": "Fotoğraf güncellendi.",
+  "avatar.hint": "PNG, JPEG, WebP veya GIF, en fazla {size}.",
+  "avatar.typeInvalid": "PNG, JPEG, WebP veya GIF bir görsel kullan.",
+  "avatar.tooLarge": "Bu görsel {size} sınırından büyük.",
+  "badges.title": "Rozetler",
+  "badges.subtitle": "Çalışma biriktikçe otomatik kazanılır.",
+  "badges.earnedOn": "{date} tarihinde kazanıldı",
+  "badges.locked": "Henüz kazanılmadı",
+  "badges.remaining": "{count} tane kaldı",
+  "badges.remainingHours": "{count} saat kaldı",
+  "badges.none": "Henüz rozet yok.",
+  "badges.earnedCount": "{earned} / {total} kazanıldı",
+  "badge.homework_submitted_1.name": "İlk Adım",
+  "badge.homework_submitted_1.desc": "İlk ödevini teslim et.",
+  "badge.homework_submitted_10.name": "Düzenli Teslim",
+  "badge.homework_submitted_10.desc": "10 ödev teslim et.",
+  "badge.homework_submitted_50.name": "Ödev Ustası",
+  "badge.homework_submitted_50.desc": "50 ödev teslim et.",
+  "badge.homework_on_time_10.name": "Dakik",
+  "badge.homework_on_time_10.desc": "10 ödevi zamanında teslim et.",
+  "badge.homework_on_time_25.name": "Saat Gibi",
+  "badge.homework_on_time_25.desc": "25 ödevi zamanında teslim et.",
+  "badge.exam_sat_1.name": "İlk Sınav",
+  "badge.exam_sat_1.desc": "İlk sınavına gir.",
+  "badge.exam_sat_10.name": "Sınav Yolcusu",
+  "badge.exam_sat_10.desc": "10 sınava gir.",
+  "badge.exam_sat_25.name": "Sınav Kurdu",
+  "badge.exam_sat_25.desc": "25 sınava gir.",
+  "badge.pomodoro_finished_10.name": "Odağa Başlangıç",
+  "badge.pomodoro_finished_10.desc": "10 odak oturumu tamamla.",
+  "badge.pomodoro_finished_50.name": "Odak Alışkanlığı",
+  "badge.pomodoro_finished_50.desc": "50 odak oturumu tamamla.",
+  "badge.pomodoro_finished_200.name": "Odak Şampiyonu",
+  "badge.pomodoro_finished_200.desc": "200 odak oturumu tamamla.",
+  "badge.pomodoro_focus_ms_36000000.name": "10 Saat Odak",
+  "badge.pomodoro_focus_ms_36000000.desc": "Odak oturumlarında toplam 10 saat geçir.",
+  "badge.pomodoro_focus_ms_180000000.name": "50 Saat Odak",
+  "badge.pomodoro_focus_ms_180000000.desc": "Odak oturumlarında toplam 50 saat geçir.",
+  "whiteboard.bulkInvite": "Toplu davet",
+  "whiteboard.bulkInviteHint":
+    "Gruptaki herkesi katılımcı olarak ekler. Veliler eklenmez, zaten tahtada olanların yeri korunur.",
+  "whiteboard.inviteSourceClass": "Şube",
+  "whiteboard.inviteSourceCourse": "Ders veya kulüp",
+  "whiteboard.inviteSourceEvent": "Etkinlik",
+  "whiteboard.inviteSelect": "Bir grup seç",
+  "whiteboard.inviteAction": "Davet et",
+  "whiteboard.inviteAdded": "{count} kişi eklendi.",
+  "whiteboard.inviteNoneAdded": "O gruptaki herkes zaten katılımcı.",
+  "whiteboard.inviteTooMany":
+    "Bu grup tahtayı {max} katılımcı sınırının üstüne çıkarırdı, bu yüzden kimse eklenmedi. Bazı katılımcıları çıkar veya daha küçük bir grup davet et.",
+  "whiteboard.inviteNotFound": "O grup artık yok. Listeyi yenile.",
+  "whiteboard.inviteEmptySource": "Burada henüz seçilecek bir şey yok.",
+  "nav.children": "Çocuklarım",
   "nav.school": "Okul",
   "nav.notes": "Defter",
   "nav.events": "Etkinlikler",
@@ -2661,9 +3238,9 @@ const tr: Dict = {
   "nav.marks": "Karnem",
   "nav.messages": "Mesajlar",
   "rightPanel.messagesTitle": "Mesajlar",
-  "rightPanel.calendarTitle": "Takvim & Etkinlikler",
-  "rightPanel.openFullMessages": "Tüm Mesajları Aç",
-  "rightPanel.openFullCalendar": "Tüm Takvimi Aç",
+  "rightPanel.calendarTitle": "Takvim ve etkinlikler",
+  "rightPanel.openFullMessages": "Tüm mesajları aç",
+  "rightPanel.openFullCalendar": "Tüm takvimi aç",
   "rightPanel.noUnread": "Okunmamış mesaj yok",
   "rightPanel.noUpcoming": "Yaklaşan etkinlik veya sınav yok",
   "rightPanel.unreadBadge": "Okunmamış",
@@ -2701,7 +3278,6 @@ const tr: Dict = {
   "nav.group.community": "Topluluk",
   "nav.group.services": "Okul hizmetleri",
   "nav.darkMode": "Karanlık mod",
-  "nav.myStudents": "Öğrencilerim",
   "parents.title": "Öğrencilerim",
   "parents.subtitle": "Size bağlı öğrencilerin akademik kayıtlarını inceleyin.",
   "common.loading": "Yükleniyor…",
@@ -2767,9 +3343,9 @@ const tr: Dict = {
   "common.saved": "Başarıyla kaydedildi.",
   "common.createItem": "Yeni {item} oluştur",
   "common.countItem": "{count} {item}",
-  "pool.title": "Soru Havuzu",
+  "pool.title": "Soru havuzu",
   "pool.subtitle": "Öğretmenlerinize ve arkadaşlarınıza soru sorun, çözümleri birlikte tartışın.",
-  "pool.ask": "Soru Sor",
+  "pool.ask": "Soru sor",
   "pool.subject": "Konu",
   "pool.body": "Soru detayı",
   "pool.image": "Görsel (İsteğe bağlı)",
@@ -2778,7 +3354,7 @@ const tr: Dict = {
   "pool.approved": "Onaylandı",
   "pool.author": "Yazar",
   "pool.solutions": "Çözümler",
-  "pool.offerSolution": "Çözüm Gönder",
+  "pool.offerSolution": "Çözüm gönder",
   "pool.noQuestions": "Soru bulunamadı.",
   "theme.light": "Açık",
   "theme.dark": "Koyu",
@@ -2918,6 +3494,11 @@ const tr: Dict = {
   "dashboard.successTrendSchool": "Son sınavların sınıf ortalamaları.",
   "dashboard.courseAveragesSchool": "Son sınavlara göre ders bazında ortalama.",
   "dashboard.examGraded": "{count} notlandırıldı",
+  "dashboard.chartExamCount": "Sınav",
+  "dashboard.chartLatest": "Son değer",
+  "dashboard.chartAverage": "Grafik ortalaması",
+  "dashboard.chartRange": "Değer aralığı",
+  "dashboard.chartLatestExam": "Son sınav",
   "dashboard.focusHeatmap": "Odaklanma etkinliği",
   "dashboard.focusHeatmapDesc": "Gün gün pomodoro oturumların.",
   "dashboard.activityHeatmap": "Okul etkinliği",
@@ -3146,11 +3727,11 @@ const tr: Dict = {
   "exams.gradeAfterExam": "Sınav bitince kullanılabilir",
   "exams.results": "Sonuç tablosu",
   "exams.noResults": "Henüz sonuç yok.",
-  "exams.details": "Sınav Detayları",
+  "exams.details": "Sınav detayları",
   "exams.schedule": "Zamanlama",
-  "exams.examStatistics": "Sınav İstatistikleri",
-  "exams.examQuestions": "Sınav Soruları",
-  "exams.studentResults": "Öğrenci Notları",
+  "exams.examStatistics": "Sınav istatistikleri",
+  "exams.examQuestions": "Sınav soruları",
+  "exams.studentResults": "Öğrenci notları",
   "exams.window": "Aralık",
   "exams.unscheduled": "Zamansız",
   "exams.mode": "Mod",
@@ -3178,19 +3759,19 @@ const tr: Dict = {
   "exams.startTime": "Başlangıç saati",
   "exams.endTime": "Bitiş saati",
   "exams.scheduleRequired": "Zamanlı sınav için başlangıç ve bitiş gerekli",
-  "exams.step1Details": "1. Sınav Bilgileri",
+  "exams.step1Details": "1. Sınav bilgileri",
   "exams.step2Questions": "2. Sorular",
-  "exams.hasDuration": "Süre Sınırı Ekle",
+  "exams.hasDuration": "Süre sınırı ekle",
   "exams.hasDurationHelp": "Öğrencilerin sınav odasında kaç dakikası olacağını belirler.",
-  "exams.accessAndAttempts": "Erişim ve Haklar",
-  "exams.singleAttempt": "Tek Hak (1)",
-  "exams.multipleAttempts": "Çoklu Hak",
-  "exams.finishAndClose": "Tamamla ve Kapat",
-  "exams.nextQuestions": "Kaydet ve Sorulara Geç",
-  "exams.sectionBasic": "Temel Bilgiler",
-  "exams.sectionSchedule": "Mod ve Zamanlama",
-  "exams.sectionDuration": "Süre Sınırı",
-  "exams.sectionAccess": "Katılım ve Haklar",
+  "exams.accessAndAttempts": "Erişim ve haklar",
+  "exams.singleAttempt": "Tek hak (1)",
+  "exams.multipleAttempts": "Çoklu hak",
+  "exams.finishAndClose": "Tamamla ve kapat",
+  "exams.nextQuestions": "Kaydet ve sorulara geç",
+  "exams.sectionBasic": "Temel bilgiler",
+  "exams.sectionSchedule": "Mod ve zamanlama",
+  "exams.sectionDuration": "Süre sınırı",
+  "exams.sectionAccess": "Katılım ve haklar",
   "exams.times": "defa",
   "questions.title": "Sorular",
   "questions.add": "Soru ekle",
@@ -3334,9 +3915,9 @@ const tr: Dict = {
   "attempt.submitted": "Teslim edildi",
   "attempt.submittedCanRetakeInfo": "Bu denemenizi teslim ettiniz. Kalan haklarınızı kullanarak sınava tekrardan başlayabilirsiniz.",
   "attempt.submittedFinalInfo": "Bu sınavı zaten teslim ettin. Yeniden açılamaz.",
-  "attempt.submittedAt": "Teslim Tarihi",
-  "exams.startsAt": "Başlangıç Tarihi",
-  "exams.endsAt": "Bitiş Tarihi",
+  "attempt.submittedAt": "Teslim tarihi",
+  "exams.startsAt": "Başlangıç tarihi",
+  "exams.endsAt": "Bitiş tarihi",
   "attempt.expired": "Süresi doldu",
   "attempt.expiredInfo": "Bu sınavın süresi doldu. Yeniden açılamaz.",
   "attempt.noAttemptsLeft": "Hak bitti",
@@ -3358,24 +3939,83 @@ const tr: Dict = {
   "admin.noUsers": "Henüz kayıtlı kullanıcı yok.",
   "guide.title": "Ürün rehberi",
   "guide.subtitle": "Derslerden sınavlara, karnelerden notlara ve etkinliklere kadar platformun nasıl bir arada çalıştığı.",
-  "guide.step1.title": "1. Ana sayfa",
-  "guide.step1.body":
-    "Not, etkinlik, ders, sınav ve karne için canlı sayılar ve kısayollar.",
-  "guide.step2.title": "2. Notlar",
-  "guide.step2.body":
-    "Özel defter. Oluştur, düzenle, sil — silme/güncelleme özetli onay ister.",
-  "guide.step3.title": "3. Etkinlik ve yoklama",
-  "guide.step3.body":
-    "Öğretmenler ve yöneticiler etkinliği açar, öğrenciyi seçer ve var/yok/geç/mazeretli yoklama kaydeder.",
-  "guide.step4.title": "4. Eğitim",
-  "guide.step4.body":
-    "Öğretmen ders, etüt veya kulüp oluşturur, öğrenci kaydeder, içine türe göre sınav ekler.",
-  "guide.step5.title": "5. Sınavlar",
-  "guide.step5.body":
-    "Tüm sınavlar burada listelenir. Yeni sınav bu listeden değil, eğitim detayından eklenir.",
-  "guide.step6.title": "6. Karnem",
-  "guide.step6.body":
-    "Ders ortalamaları ve genel ortalama. Öğretmen herhangi bir öğrencinin karnesine bakabilir.",
+  "guide.roles.title": "Rol bazlı yetki haritası",
+  "guide.roles.subtitle": "Platformdaki her bir rolün erişebildiği ve yönetebildiği alanlar.",
+  "guide.roles.adminTab": "Yönetici ve admin",
+  "guide.roles.student.heading": "Öğrenci çalışma ve katılım araçları",
+  "guide.roles.student.i1": "Kendi özel defterinde not tutma, PDF aktarma ve çizim yapma",
+  "guide.roles.student.i2": "Soru havuzunda soru sorma, diğer sorulara çözüm yazma",
+  "guide.roles.student.i3": "Kaydolunan derslerin sınav odasına girme ve süreli sınav çözme",
+  "guide.roles.student.i4": "Kendi karne ortalamasını ve devamsızlık durumunu izleme",
+  "guide.roles.teacher.heading": "Öğretmen yönetim ve eğitici paneli",
+  "guide.roles.teacher.i1": "Ders, etüt ve kulüp oluşturma, öğrencileri derse kaydetme",
+  "guide.roles.teacher.i2": "Ders oturumlarında öğrenci yoklaması alma (Var, Yok, Geç, Mazeretli)",
+  "guide.roles.teacher.i3": "Sınav oluşturma, sorular ekleme ve canlı sınav takibi yürütme",
+  "guide.roles.teacher.i4": "Öğrenci sınav kağıtlarını inceleme, puan verme ve karne onaylama",
+  "guide.roles.parent.heading": "Veli takip ve bilgilendirme portalı",
+  "guide.roles.parent.i1": "Bağlı öğrencilerin ders devamsızlık kayıtlarını anlık izleme",
+  "guide.roles.parent.i2": "Öğrencinin ders bazlı karne başarı ortalamalarını görüntüleme",
+  "guide.roles.parent.i3": "Yaklaşan sınav ve etkinlik takvimini takip etme",
+  "guide.roles.parent.i4": "Öğretmenler ve okul yönetimi ile doğrudan mesajlaşma",
+  "guide.roles.admin.heading": "Yönetici ve sistem politikaları paneli",
+  "guide.roles.admin.i1": "Kullanıcı hesapları oluşturma, rollerini atama (öğrenci, öğretmen, veli)",
+  "guide.roles.admin.i2": "Okul akademik dönemleri, sınav türleri ve ağırlık oranlarını tanımlama",
+  "guide.roles.admin.i3": "Tüm ders ve etkinlik kayıtlarını genel denetim seviyesinde yönetme",
+  "guide.roles.admin.i4": "Personel çalışma günlüklerini ve sistem loglarını inceleme",
+  "guide.modules.title": "Temel akışlar ve özellikler",
+  "guide.modules.subtitle": "Hezarfen platformundaki ana modülleri ve kullanım adımlarını inceleyin.",
+  "guide.step.ai.badge": "Yapay zeka",
+  "guide.step.ai.title": "Çelebi AI asistanı",
+  "guide.step.ai.description": "Tüm sayfalardan üst barda bulunan “Çelebi’ye Sor” butonuyla erişilebilir akıllı yapay zeka asistanı. Kampüs verileriniz, ders konularınız ve sistem hakkında anlık yanıtlar verir.",
+  "guide.step.ai.cta": "Çelebi'yi dene",
+  "guide.step.ai.f1": "Tüm sayfalardan tek tıkla erişim",
+  "guide.step.ai.f2": "Kampüs ve ders odaklı yanıtlar",
+  "guide.step.ai.f3": "Bağlamsal çalışma rehberliği",
+  "guide.step.notes.badge": "Notlar ve çizim",
+  "guide.step.notes.title": "Akıllı defter ve çizim tuvali",
+  "guide.step.notes.description": "PDF, TXT ve Markdown materyallerinizi temiz Markdown notlarına dönüştürün. Dahili .hzdraw tuvali ile derslerinize serbest el çizimleri ve grafikler ekleyin.",
+  "guide.step.notes.cta": "Notlara git",
+  "guide.step.notes.f1": "PDF ve TXT otomatik dönüştürücü",
+  "guide.step.notes.f2": "Dahili .hzdraw serbest çizim tuvali",
+  "guide.step.notes.f3": "Markdown biçimlendirme ve OCR uyarısı",
+  "guide.step.questions.badge": "Soru havuzu",
+  "guide.step.questions.title": "Soru havuzu ve çözümler",
+  "guide.step.questions.description": "Topluluk soru havuzunda sorularınızı paylaşın, yazılı ve çoktan seçmeli çözümler ekleyin. Öğretmen onaylı çözümlerle ders konularında uzmanlaşın.",
+  "guide.step.questions.cta": "Soru havuzu",
+  "guide.step.questions.f1": "Yazılı ve test çözümleri",
+  "guide.step.questions.f2": "Öğretmen onaylı çözüm rozeti",
+  "guide.step.questions.f3": "Filtrelenebilir konu ve durum kategorileri",
+  "guide.step.courses.badge": "Dersler ve etütler",
+  "guide.step.courses.title": "Dersler, etütler ve kulüpler",
+  "guide.step.courses.description": "Ders, etüt ve kulüp programı. Öğretmenler öğrenci kaydeder, ders içi oturum yoklaması (Var, Yok, Geç, Mazeretli) alır ve müfredat takibi yapar.",
+  "guide.step.courses.cta": "Derslerim",
+  "guide.step.courses.f1": "Öğrenci ders kayıt yönetimi",
+  "guide.step.courses.f2": "Anlık oturum yoklaması alma",
+  "guide.step.courses.f3": "Sınav ve etüt takvimi hizalaması",
+  "guide.step.exams.badge": "Sınav odası",
+  "guide.step.exams.title": "Sınav odası ve canlı takip",
+  "guide.step.exams.description": "Geri sayım ve otomatik kaydetmeli canlı sınav odası. Öğretmenler canlı izleme panelinden yanıt kağıtlarını ve anlık puanlama önerilerini takip eder.",
+  "guide.step.exams.cta": "Sınav odası",
+  "guide.step.exams.f1": "Sunucu saati senkronize geri sayım",
+  "guide.step.exams.f2": "WebSocket ve REST otomatik kaydetme",
+  "guide.step.exams.f3": "Canlı öğretmen izleme ve puanlama",
+  "guide.step.marks.badge": "Karne ve devam",
+  "guide.step.marks.title": "Karne ve ilerleme raporu",
+  "guide.step.marks.description": "Dönem ders ortalamaları ve sınav türü ağırlıklarına göre hesaplanan genel başarı puanı. Devamsızlık istatistikleri ile anlık gelişim takibi.",
+  "guide.step.marks.cta": "Karnem",
+  "guide.step.marks.f1": "Ağırlıklı sınav puan ortalaması",
+  "guide.step.marks.f2": "Devamsızlık ve mazeret özetleri",
+  "guide.step.marks.f3": "Detaylı grafik ve ders raporları",
+  "guide.tips.title": "Pratik ipuçları ve kısayollar",
+  "guide.tips.subtitle": "Hezarfen deneyimini en verimli şekilde kullanmanızı sağlayan püf noktaları.",
+  "guide.tips.locale.title": "Dil ve tema seçimi",
+  "guide.tips.locale.body": "Kenar çubuğunun altındaki hesap menüsünden Türkçe / İngilizce dilleri ve açık / koyu temalar arasında anında geçiş yapabilirsiniz.",
+  "guide.tips.sync.title": "Otomatik senkronizasyon",
+  "guide.tips.sync.body": "Sınav odasındaki yanıtlarınız ve çizim tuvalindeki taslaklarınız sunucu saatiyle arka planda güvenle kaydedilir.",
+  "guide.tips.import.title": "Hızlı not içe aktarma",
+  "guide.tips.import.body": "Notlar sayfasındaki içe aktar butonuyla PDF ve TXT ders dokümanlarınızı temiz Markdown metinlerine dönüştürebilirsiniz.",
+  "guide.tips.weights.title": "Ağırlıklı not hesaplaması",
+  "guide.tips.weights.body": "Sınav sonuçlarınız, okul yönetiminin tanımladığı sınav türü ağırlıklarına göre doğrudan karne ortalamanıza yansıtılır.",
   "guide.rolesTitle": "Kim ne yapabilir?",
   "guide.rolesBody":
     "Öğrenci: notlar, yoklama, ders/sınav görüntüleme, kendi sonucu ve karne. Öğretmen: ders/etkinlik, kayıt, sınav, not. Yönetici: her ders/etkinlik. Admin: roller.",
@@ -3428,7 +4068,7 @@ const tr: Dict = {
   "role.parent": "Veli",
   "role.teacher": "Öğretmen",
   "role.manager": "Yönetici",
-  "role.admin": "ADMIN",
+  "role.admin": "Sistem yöneticisi",
   "courses.title": "Eğitim",
   "courses.listTitle": "{item} kayıtları",
   "courses.subtitle": "{item}, kayıtları ve sınavları tek bir yerden yönetin.",
@@ -3461,7 +4101,7 @@ const tr: Dict = {
   "courses.teacherAssigned": "Öğretmen başarıyla atandı.",
   "courses.teacherUnassigned": "Öğretmen başarıyla çıkarıldı.",
   "courses.noTeachers": "Atanmış öğretmen yok.",
-  "courses.overview": "Genel Bakış",
+  "courses.overview": "Genel bakış",
   "courses.work": "Çalışmalar",
   "courses.people": "Kişiler",
   "courses.upcoming": "Yaklaşan çalışmalar",
@@ -3524,11 +4164,11 @@ const tr: Dict = {
   "exams.finished": "Bitti",
   "exams.active": "Aktif",
   "exams.upcoming": "Yakında",
-  "exams.liveMonitor": "Canlı İzleme",
+  "exams.liveMonitor": "Canlı izleme",
   "exams.liveMonitorDesc": "Sınav durumu, ilerleme ve notlar gerçek zamanlı.",
-  "exams.finalState": "Son Durum",
+  "exams.finalState": "Son durum",
   "exams.finalStateDesc": "Sınav sonuçları, ilerleme ve notlar.",
-  "exams.liveRoster": "Canlı Liste",
+  "exams.liveRoster": "Canlı liste",
   "exams.notStarted": "Başlamadı",
   "exams.lastActivity": "Son hareket",
   "exams.answerSheet": "Cevap Kâğıdı",
@@ -3560,7 +4200,7 @@ const tr: Dict = {
   "exams.emptyRoster": "Henüz kayıtlı öğrenci yok.",
   "exams.selectStudent": "Listeden bir öğrenci seç",
   "exams.viewSheet": "Cevapları gör",
-  "profile.title": "Profilim",
+  "profile.title": "Profil",
   "profile.subtitle": "Kişisel bilgileriniz. Tüm alanların doldurulması isteğe bağlıdır.",
   "profile.name": "Ad",
   "profile.surname": "Soyad",
@@ -3691,7 +4331,7 @@ const tr: Dict = {
   "nav.payments": "Ücretler",
   "nav.paymentStatement": "Ücretlerim",
   "nav.whiteboards": "Beyaz tahtalar",
-  "whiteboard.title": "Beyaz Tahtalar",
+  "whiteboard.title": "Beyaz tahtalar",
   "whiteboard.subtitle": "Canlı ortak çizim tahtaları.",
   "whiteboard.empty": "Henüz beyaz tahta yok.",
   "whiteboard.create": "Yeni tahta",
@@ -3774,7 +4414,7 @@ const tr: Dict = {
   "payments.appendOnly": "Hesap yalnızca eklenir. Düzeltme, düzenleme değil dengeleyici kayıt gerektirir.",
   "payments.tabCollect": "Tahsilat",
   "payments.tabPlans": "Ücret planları",
-  "payments.collect": "Tahsilat Al",
+  "payments.collect": "Tahsilat al",
   "payments.collectFrom": "Tahsilat al",
   "payments.totalDebt": "Toplam borç",
   "payments.collected": "Tahsil edilen",
@@ -3865,8 +4505,8 @@ const tr: Dict = {
   "messages.inbox": "Gelenler",
   "messages.sent": "Gönderilenler",
   "messages.archive": "Arşiv",
-  "messages.trash": "Çöp Kutusu",
-  "messages.newMessage": "Yeni Mesaj",
+  "messages.trash": "Çöp kutusu",
+  "messages.newMessage": "Yeni mesaj",
   "messages.recipient": "Alıcı",
   "messages.recipientPlaceholder": "İsim veya kullanıcı adı ara...",
   "messages.search": "Mesajlarda ara...",
@@ -3876,8 +4516,8 @@ const tr: Dict = {
   "messages.send": "Gönder",
   "messages.moveToArchive": "Arşivle",
   "messages.moveOutOfArchive": "Arşivden çıkar",
-  "messages.moveToTrash": "Çöp Kutusuna Taşı",
-  "messages.deleteForever": "Kalıcı Olarak Sil",
+  "messages.moveToTrash": "Çöp kutusuna taşı",
+  "messages.deleteForever": "Kalıcı olarak sil",
   "messages.movedToast": "Mesaj taşındı.",
   "messages.deletedToast": "Mesaj silindi.",
   "messages.sentToast": "Mesaj gönderildi.",

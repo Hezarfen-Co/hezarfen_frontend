@@ -13,6 +13,12 @@ import {
   postClassCourse,
   getClassCourses,
   deleteClassCourse,
+  postClassBlueprint,
+  getClassBlueprints,
+  getClassBlueprintByGrade,
+  patchClassBlueprintByGrade,
+  deleteClassBlueprintByGrade,
+  postClassBlueprintApply,
 } from "../../classes";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
@@ -127,5 +133,56 @@ describe("classes API", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/classes/c1/courses/co1");
     expect(init?.method).toBe("DELETE");
+  });
+
+  it("postClassBlueprint POSTs /classes/blueprints with the body", async () => {
+    mockFetchSuccess({ blueprint: { grade: "9", courses: [], creator: {} }, skipped: [] });
+    const body = { grade: "9", course_ids: ["co1", "co2"] };
+    await postClassBlueprint(body);
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/classes/blueprints");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify(body));
+  });
+
+  it("getClassBlueprints GETs /classes/blueprints with pagination", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getClassBlueprints({ limit: 20, offset: 40 });
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/classes/blueprints?limit=20&offset=40");
+  });
+
+  it("getClassBlueprintByGrade encodes the grade, which is the record key", async () => {
+    mockFetchSuccess({ grade: "9/A", courses: [], creator: {} });
+    await getClassBlueprintByGrade("9/A");
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/classes/blueprints/9%2FA");
+  });
+
+  it("patchClassBlueprintByGrade PATCHes the whole course set", async () => {
+    mockFetchSuccess({ blueprint: { grade: "9", courses: [], creator: {} }, skipped: [] });
+    const body = { course_ids: ["co1"] };
+    await patchClassBlueprintByGrade("9", body);
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/classes/blueprints/9");
+    expect(init?.method).toBe("PATCH");
+    expect(init?.body).toBe(JSON.stringify(body));
+  });
+
+  it("deleteClassBlueprintByGrade DELETEs /classes/blueprints/:grade", async () => {
+    mockFetch204();
+    await deleteClassBlueprintByGrade("9/A");
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/classes/blueprints/9%2FA");
+    expect(init?.method).toBe("DELETE");
+  });
+
+  it("postClassBlueprintApply POSTs /classes/:id/blueprint with no body", async () => {
+    mockFetchSuccess({ skipped: [] });
+    await postClassBlueprintApply("c1");
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/classes/c1/blueprint");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBeUndefined();
   });
 });

@@ -8,7 +8,13 @@ import { patchUserProfile } from "../../users";
 import { patchUserRole } from "../../users";
 import { patchMyPreferences } from "../../users";
 import { patchUserPreferences } from "../../users";
-import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
+import { getMyProfile } from "../../users";
+import { getUserProfile } from "../../users";
+import { postMyAvatar } from "../../users";
+import { deleteMyAvatar } from "../../users";
+import { deleteUserAvatar } from "../../users";
+import { getUserAvatarUrl } from "../../users";
+import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("users API", () => {
   afterEach(() => {
@@ -154,5 +160,58 @@ describe("users API", () => {
     expect(url).toBe("/api/users/u1/preferences");
     expect(init?.method).toBe("PATCH");
     expect(init?.body).toBe(JSON.stringify(updates));
+  });
+
+  it("getMyProfile calls /users/me/profile", async () => {
+    const profile = { id: "u1", username: "test", badges: [] };
+    mockFetchSuccess(profile);
+
+    const result = await getMyProfile();
+    expect(result).toEqual(profile);
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/users/me/profile");
+  });
+
+  it("getUserProfile calls /users/:id/profile", async () => {
+    mockFetchSuccess({ id: "u2", username: "other", badges: [] });
+    await getUserProfile("u2");
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/users/u2/profile");
+  });
+
+  it("postMyAvatar POSTs the file as multipart under the `file` field", async () => {
+    mockFetchSuccess({ content_type: "image/png", size: 1024 }, 201);
+
+    const file = new File(["x"], "me.png", { type: "image/png" });
+    const result = await postMyAvatar(file);
+    expect(result).toEqual({ content_type: "image/png", size: 1024 });
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/users/me/avatar");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get("file")).toBe(file);
+  });
+
+  it("deleteMyAvatar calls DELETE /users/me/avatar", async () => {
+    mockFetch204();
+    await deleteMyAvatar();
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/users/me/avatar");
+    expect(init?.method).toBe("DELETE");
+  });
+
+  it("deleteUserAvatar calls DELETE /users/:id/avatar", async () => {
+    mockFetch204();
+    await deleteUserAvatar("u2");
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/users/u2/avatar");
+    expect(init?.method).toBe("DELETE");
+  });
+
+  it("getUserAvatarUrl builds a same-origin URL, with the cache-buster only when versioned", () => {
+    expect(getUserAvatarUrl("u1")).toBe("/api/users/u1/avatar");
+    expect(getUserAvatarUrl("u1", 3)).toBe("/api/users/u1/avatar?v=3");
+    expect(getUserAvatarUrl("u/1")).toBe("/api/users/u%2F1/avatar");
   });
 });

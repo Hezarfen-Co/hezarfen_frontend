@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { IconChevronRight, IconGlobe, IconGuide, IconLogout, IconSettings } from "@/components/ui/icons";
 import { ThemeModeControl } from "@/components/layout/theme-mode-control";
+import { UserAvatar } from "@/components/users/user-avatar";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
-import { personInitials } from "@/lib/person";
 
 function displayName(user: User) {
   return [user.name, user.surname].filter(Boolean).join(" ").trim() || user.username;
@@ -46,14 +46,12 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                 )}
                 aria-label={t("nav.account")}
               >
-                <span
-                  class={cn(
-                    "flex shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-bold text-primary shadow-xs ring-1 ring-border/70 dark:bg-emerald-100 dark:text-emerald-950 dark:ring-white/20",
-                    props.collapsed ? "h-9 w-9" : "h-8 w-8",
-                  )}
-                >
-                  {personInitials(name())}
-                </span>
+                <UserAvatar
+                  userId={u().id}
+                  name={name()}
+                  size="sm"
+                  class={props.collapsed ? "h-9 w-9" : undefined}
+                />
                 <Show when={!props.collapsed}>
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-[13px] font-semibold leading-4 2xl:text-sm">{name()}</span>
@@ -66,14 +64,16 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
               </DropdownMenuTrigger>
 
               <DropdownMenuContent class="w-72 rounded-xl border-border bg-popover p-0 text-popover-foreground shadow-xl shadow-black/10">
-                <DropdownMenuItem class="m-1.5 gap-2.5 rounded-xl bg-muted/70 p-2.5 focus:bg-muted data-highlighted:bg-muted dark:bg-white/8 dark:focus:bg-white/10 dark:data-highlighted:bg-white/10" onSelect={() => setProfileOpen(true)}>
-                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary dark:bg-emerald-100 dark:text-emerald-950">
-                    {personInitials(name())}
-                  </span>
+                <DropdownMenuItem
+                  class="m-1.5 gap-2.5 rounded-xl bg-muted/70 p-2.5 focus:bg-muted data-highlighted:bg-muted dark:bg-white/8 dark:focus:bg-white/10 dark:data-highlighted:bg-white/10"
+                  onSelect={() => void navigate({ to: "/profile/me" })}
+                >
+                  <UserAvatar userId={u().id} name={name()} size="md" class="ring-0" />
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-sm font-semibold">{name()}</span>
-                    <span class="block truncate text-xs text-muted-foreground dark:text-white/60">{u().email || u().username}</span>
+                    <span class="block truncate text-xs text-muted-foreground dark:text-white/60">{t("profile.myProfile")}</span>
                   </span>
+                  <IconChevronRight class="h-3.5 w-3.5 shrink-0 text-muted-foreground dark:text-white/50" />
                 </DropdownMenuItem>
                 <div class="px-1.5 pb-1.5">
                 <DropdownMenuItem class="rounded-lg gap-3" onSelect={() => setProfileOpen(true)}>

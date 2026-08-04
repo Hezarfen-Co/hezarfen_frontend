@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Select } from "@/components/ui/select";
+import { courseKindLabel } from "@/lib/course-kind";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,7 +27,7 @@ import { createFlash } from "@/lib/flash";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 const PAGE_SIZE = 10;
 
@@ -39,10 +40,13 @@ function CoursesContent() {
   const navigate = useNavigate();
   const routeSearch = useSearch({ from: "/courses" });
   const t = useT();
+  const prefs = usePreferences();
   const [pageKind, setPageKind] = createSignal<CourseKind | undefined>(routeSearch().kind);
   const createKind = (): CourseKind => pageKind() ?? "course";
   const pageLabel = () => t("nav.classes");
   const kindLabel = () => createKind() === "study" ? t("courses.kind.study") : createKind() === "club" ? t("courses.kind.club") : t("courses.kind.course");
+  const kindInSentence = () =>
+    kindLabelSingular().toLocaleLowerCase(prefs.locale() === "tr" ? "tr-TR" : "en-US");
   const kindLabelSingular = () => createKind() === "study" ? t("courses.kind.studySingular") : createKind() === "club" ? t("courses.kind.clubSingular") : t("courses.kind.courseSingular");
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
   const [showForm, setShowForm] = createSignal(routeSearch().action === "new");
@@ -120,7 +124,7 @@ function CoursesContent() {
 
   return (
     <div class="space-y-5">
-      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: kindLabelSingular() })} description={t("courses.subtitle", { item: kindLabel() })}>
+      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: kindInSentence() })} description={t("courses.subtitle", { item: kindLabel() })}>
         <form class="space-y-4" onSubmit={createCourse}>
           <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
           <div class="flex items-center justify-between rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
@@ -147,7 +151,7 @@ function CoursesContent() {
         <Show when={canCreate()}>
           <Button size="sm" class="min-w-30 rounded-lg" onClick={() => setShowForm(true)}>
             <IconPlus class="h-4 w-4" />
-            {t("common.createItem", { item: kindLabelSingular() })}
+            {t("common.createItem", { item: kindInSentence() })}
           </Button>
         </Show>
       </header>
@@ -210,7 +214,7 @@ function CoursesContent() {
                           capacity: t("courses.capacity"),
                           unlimited: t("courses.unlimited"),
                           enrolled: t("courses.enrolled"),
-                          kind: course.kind === "study" ? t("courses.kind.study") : course.kind === "club" ? t("courses.kind.club") : t("courses.kind.course"),
+                          kind: courseKindLabel(course.kind, t),
                         }}
                       />
                     )}

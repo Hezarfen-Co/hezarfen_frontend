@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { personLabel } from "@/lib/person";
@@ -35,8 +36,14 @@ function WhiteboardsContent() {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  const [boards, { refetch }] = createResource(async () => (await getBoards({ limit: 200 })).items);
+  const PAGE_SIZE = 12;
+  const [page, setPage] = createSignal(0);
+  const [boards, { refetch }] = createResource(
+    page,
+    (pageIndex) => getBoards({ limit: PAGE_SIZE, offset: pageIndex * PAGE_SIZE }),
+  );
   const [createOpen, setCreateOpen] = createSignal(false);
+  const pageCount = createMemo(() => Math.max(1, Math.ceil((boards.latest?.total ?? 0) / PAGE_SIZE)));
 
   const meId = () => auth.user()?.id ?? "";
 
@@ -58,20 +65,31 @@ function WhiteboardsContent() {
           <ErrorAlert message={formatApiError(boards.error, locale())} />
         </Show>
         <Show
-          when={(boards() ?? []).length > 0}
+          when={(boards()?.items ?? []).length > 0}
           fallback={<EmptyState title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
         >
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <For each={boards()}>
-              {(board) => (
-                <BoardCard
-                  board={board}
-                  isCreator={board.creator === meId()}
-                  onOpen={() => navigate({ to: "/whiteboards/$id", params: { id: board.id } })}
-                  createdLabel={formatDate(board.created_at, locale())}
-                />
-              )}
-            </For>
+          <div class="space-y-4">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <For each={boards()?.items ?? []}>
+                {(board) => (
+                  <BoardCard
+                    board={board}
+                    isCreator={board.creator === meId()}
+                    onOpen={() => navigate({ to: "/whiteboards/$id", params: { id: board.id } })}
+                    createdLabel={formatDate(board.created_at, locale())}
+                  />
+                )}
+              </For>
+            </div>
+            <Show when={(boards()?.total ?? 0) > PAGE_SIZE}>
+              <TablePagination
+                pageIndex={page()}
+                pageCount={pageCount()}
+                pageSize={PAGE_SIZE}
+                total={boards()?.total ?? 0}
+                onPageChange={setPage}
+              />
+            </Show>
           </div>
         </Show>
       </Suspense>
@@ -92,7 +110,11 @@ function WhiteboardsContent() {
 function BoardCard(props: { board: Board; isCreator: boolean; onOpen: () => void; createdLabel: string }) {
   const t = useT();
   return (
-    <div class="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-xs">
+    <button
+      type="button"
+      class="flex w-full cursor-pointer flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 text-left shadow-xs outline-hidden transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:bg-muted/25 hover:shadow-sm focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-ring active:translate-y-0"
+      onClick={props.onOpen}
+    >
       <div class="flex items-start justify-between gap-2">
         <h3 class="min-w-0 truncate font-semibold">{props.board.title}</h3>
         <div class="flex shrink-0 gap-1">
@@ -110,10 +132,7 @@ function BoardCard(props: { board: Board; isCreator: boolean; onOpen: () => void
       <p class="text-xs text-muted-foreground">
         {t("whiteboard.createdAt")}: {props.createdLabel} · {props.board.participants.length + 1} {t("whiteboard.participants").toLowerCase()}
       </p>
-      <Button type="button" variant="outline" size="sm" class="mt-auto w-full" onClick={props.onOpen}>
-        {t("whiteboard.open")}
-      </Button>
-    </div>
+    </button>
   );
 }
 

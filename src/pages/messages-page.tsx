@@ -292,7 +292,7 @@ export default function MessagesPage() {
                       class="h-9 px-3 rounded-full text-xs font-semibold shrink-0"
                       onClick={handleRefresh}
                       disabled={isRefreshing()}
-                      title="Mesajları Yenile"
+                      title={t("messages.refreshList")}
                     >
                       <IconRefresh
                         class={cn(
@@ -300,7 +300,7 @@ export default function MessagesPage() {
                           isRefreshing() && "animate-spin text-primary"
                         )}
                       />
-                      Yenile
+                      {t("common.refresh")}
                     </Button>
 
                     <div class="relative w-full">

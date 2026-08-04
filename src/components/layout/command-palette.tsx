@@ -382,7 +382,7 @@ export function CommandPalette(props: CommandPaletteProps) {
                 setQuery("");
                 inputRef?.focus();
               }}
-              title="Aramayı Temizle"
+              title={t("common.clearSearch")}
             >
               <IconX class="h-3.5 w-3.5" />
             </button>

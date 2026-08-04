@@ -10,6 +10,7 @@ import {
   postBoard,
   postBoardClear,
   postBoardClose,
+  postBoardInvite,
 } from "../../boards";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
@@ -120,5 +121,30 @@ describe("boards API", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/boards/b1");
     expect(init?.method).toBe("DELETE");
+  });
+
+  it("postBoardInvite POSTs a class invite to /boards/:id/invite", async () => {
+    mockFetchSuccess({ id: "b1", participants: ["u1", "u2"] });
+    const body = { kind: "class", class: "cl1" } as const;
+    await postBoardInvite("b1", body);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/boards/b1/invite");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify(body));
+  });
+
+  it("postBoardInvite POSTs a course invite", async () => {
+    mockFetchSuccess({ id: "b1", participants: [] });
+    const body = { kind: "course", course: "co1" } as const;
+    await postBoardInvite("b1", body);
+    expect(lastFetchCall()[1]?.body).toBe(JSON.stringify(body));
+  });
+
+  it("postBoardInvite POSTs an event invite", async () => {
+    mockFetchSuccess({ id: "b1", participants: [] });
+    const body = { kind: "event", event: "e1" } as const;
+    await postBoardInvite("b1", body);
+    expect(lastFetchCall()[1]?.body).toBe(JSON.stringify(body));
   });
 });

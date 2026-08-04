@@ -86,14 +86,14 @@ function NotesContent() {
               </Button>
               <Button type="button" variant="outline" size="sm" class="min-w-30 rounded-lg" onClick={() => setImportOpen(true)}>
                 <IconUploadCloud class="h-4 w-4" />
-                İçe Aktar
+                {t("notes.import")}
               </Button>
             </div>
           }
         />
       </div>
 
-      <SidePanel open={importOpen()} onOpenChange={setImportOpen} title="İçe Aktar">
+      <SidePanel open={importOpen()} onOpenChange={setImportOpen} title={t("notes.import")}>
         <NoteImportPanel
           onCancel={() => setImportOpen(false)}
           onImport={async (importedTitle, importedMarkdown) => {

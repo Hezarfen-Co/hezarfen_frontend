@@ -11,7 +11,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DetailField } from "@/components/ui/detail-field";
-import { IconChevronLeft, IconEdit, IconUsers } from "@/components/ui/icons";
+import { IconChevronLeft, IconEdit, IconExternalLink, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -75,6 +75,12 @@ function AdminUserDetailContent() {
                       {t("common.back")}
                     </Button>
                   </Link>
+                  <Link to="/profile/$userId" params={{ userId: current().id }}>
+                    <Button variant="outline" size="sm">
+                      <IconExternalLink class="h-4 w-4" />
+                      {t("profile.viewProfile")}
+                    </Button>
+                  </Link>
                   <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                     <IconEdit class="h-4 w-4" />
                     {t("common.edit")}
@@ -82,7 +88,7 @@ function AdminUserDetailContent() {
                   <Show when={current().role === "parent"}>
                     <Button variant="outline" size="sm" onClick={() => setStudentsOpen(true)}>
                       <IconUsers class="h-4 w-4" />
-                      {t("nav.myStudents")}
+                      {t("parentLink.manage")}
                     </Button>
                   </Show>
                 </>
@@ -134,7 +140,12 @@ function AdminUserDetailContent() {
             </SidePanel>
 
             <ParentStudentsPanel
-              parent={{ id: current().id, username: current().username, display_name: current().name || current().username }}
+              parent={{
+                id: current().id,
+                username: current().username,
+                // Both halves of the name, or the panel calls "Yusuf Baş" just "Yusuf".
+                display_name: [current().name, current().surname].filter(Boolean).join(" ") || current().username,
+              }}
               open={studentsOpen()}
               onOpenChange={setStudentsOpen}
             />

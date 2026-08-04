@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { For, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -21,23 +21,55 @@ import {
   IconFileText,
   IconChart,
 } from "@/components/ui/icons";
+import type { MessageKey } from "@/i18n/messages";
 import { useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 
+// Everything on this page is copy, so the arrays below carry message keys and
+// presentation only — no literal text, in either locale.
 type GuideStep = {
   id: string;
   stepNumber: string;
-  badge: string;
-  badgeTone: string;
   borderTone: string;
-  icon: any;
+  icon: Component<{ class?: string }>;
   iconColor: string;
-  title: string;
-  description: string;
   to: string;
-  cta: string;
-  features: string[];
 };
+
+const CARD_TONE = "border-sky-500/40 dark:border-sky-500/30 hover:border-sky-500/70 ring-1 ring-sky-500/20";
+const BADGE_TONE = "border-sky-500/40 text-foreground bg-card";
+
+const STEPS: GuideStep[] = [
+  { id: "ai", stepNumber: "01", borderTone: CARD_TONE, icon: IconSparkles, iconColor: "text-sky-400", to: "/" },
+  { id: "notes", stepNumber: "02", borderTone: CARD_TONE, icon: IconNote, iconColor: "text-sky-400", to: "/notes" },
+  { id: "questions", stepNumber: "03", borderTone: CARD_TONE, icon: IconBook, iconColor: "text-sky-400", to: "/questions" },
+  { id: "courses", stepNumber: "04", borderTone: CARD_TONE, icon: IconCalendarDays, iconColor: "text-sky-400", to: "/courses" },
+  { id: "exams", stepNumber: "05", borderTone: CARD_TONE, icon: IconExam, iconColor: "text-sky-400", to: "/exams" },
+  { id: "marks", stepNumber: "06", borderTone: CARD_TONE, icon: IconReportAnalytics, iconColor: "text-sky-400", to: "/marks" },
+];
+
+type RoleTab = {
+  id: string;
+  tabKey: MessageKey;
+  icon: Component<{ class?: string }>;
+  checkColor: string;
+};
+
+const ROLE_TABS: RoleTab[] = [
+  { id: "student", tabKey: "role.student", icon: IconSchool, checkColor: "text-emerald-400" },
+  { id: "teacher", tabKey: "role.teacher", icon: IconClipboardCheck, checkColor: "text-sky-400" },
+  { id: "parent", tabKey: "role.parent", icon: IconUsers, checkColor: "text-violet-400" },
+  { id: "admin", tabKey: "guide.roles.adminTab", icon: IconUserCog, checkColor: "text-amber-400" },
+];
+
+const TIPS = [
+  { id: "locale", icon: IconGlobe, tone: "text-violet-400" },
+  { id: "sync", icon: IconClock, tone: "text-sky-400" },
+  { id: "import", icon: IconFileText, tone: "text-amber-400" },
+  { id: "weights", icon: IconChart, tone: "text-emerald-400" },
+] satisfies { id: string; icon: Component<{ class?: string }>; tone: string }[];
+
+const ITEM_INDEXES = [1, 2, 3, 4] as const;
 
 export default function GuidePage() {
   return (
@@ -49,266 +81,102 @@ export default function GuidePage() {
 
 function GuideContent() {
   const t = useT();
-
-  const steps: GuideStep[] = [
-    {
-      id: "ai",
-      stepNumber: "01",
-      badge: "Yapay Zeka",
-      badgeTone: "border-sky-500/40 text-foreground bg-card",
-      borderTone: "border-sky-500/40 dark:border-sky-500/30 hover:border-sky-500/70 ring-1 ring-sky-500/20",
-      icon: IconSparkles,
-      iconColor: "text-sky-400",
-      title: "Çelebi AI Asistanı",
-      description: "Tüm sayfalardan üst barda bulunan 'Çelebi'ye Sor' butonuyla erişilebilir akıllı yapay zeka asistanı. Kampüs verileriniz, ders konularınız ve sistem hakkında anlık yanıtlar verir.",
-      to: "/",
-      cta: "Çelebi'yi Dene",
-      features: ["Tüm sayfalardan tek tıkla erişim", "Kampüs ve ders odaklı yanıtlar", "Bağlamsal çalışma rehberliği"],
-    },
-    {
-      id: "notes",
-      stepNumber: "02",
-      badge: "Notlar & Çizim",
-      badgeTone: "border-sky-500/40 text-foreground bg-card",
-      borderTone: "border-sky-500/40 dark:border-sky-500/30 hover:border-sky-500/70 ring-1 ring-sky-500/20",
-      icon: IconNote,
-      iconColor: "text-sky-400",
-      title: "Akıllı Defter & Çizim Tuvali",
-      description: "PDF, TXT ve Markdown materyallerinizi temiz Markdown notlarına dönüştürün. Dahili .hzdraw tuvali ile derslerinize serbest el çizimleri ve grafikler ekleyin.",
-      to: "/notes",
-      cta: "Notlara Git",
-      features: ["PDF & TXT otomatik dönüştürücü", "Dahili .hzdraw serbest çizim tuvali", "Markdown biçimlendirme ve OCR uyarısı"],
-    },
-    {
-      id: "questions",
-      stepNumber: "03",
-      badge: "Soru Havuzu",
-      badgeTone: "border-sky-500/40 text-foreground bg-card",
-      borderTone: "border-sky-500/40 dark:border-sky-500/30 hover:border-sky-500/70 ring-1 ring-sky-500/20",
-      icon: IconBook,
-      iconColor: "text-sky-400",
-      title: "Soru Havuzu & Çözümler",
-      description: "Topluluk soru havuzunda sorularınızı paylaşın, yazılı ve çoktan seçmeli çözümler ekleyin. Öğretmen onaylı çözümlerle ders konularında uzmanlaşın.",
-      to: "/questions",
-      cta: "Soru Havuzu",
-      features: ["Yazılı ve test çözümleri", "Öğretmen onaylı çözüm rozeti", "Filtrelenebilir konu ve durum kategorileri"],
-    },
-    {
-      id: "courses",
-      stepNumber: "04",
-      badge: "Dersler & Etütler",
-      badgeTone: "border-sky-500/40 text-foreground bg-card",
-      borderTone: "border-sky-500/40 dark:border-sky-500/30 hover:border-sky-500/70 ring-1 ring-sky-500/20",
-      icon: IconCalendarDays,
-      iconColor: "text-sky-400",
-      title: "Dersler, Etütler & Kulüpler",
-      description: "Ders, etüt ve kulüp programı. Öğretmenler öğrenci kaydeder, ders içi oturum yoklaması (Var, Yok, Geç, Mazeretli) alır ve müfredat takibi yapar.",
-      to: "/courses",
-      cta: "Derslerim",
-      features: ["Öğrenci ders kayıt yönetimi", "Anlık oturum yoklaması alma", "Sınav ve etüt takvimi hizalaması"],
-    },
-    {
-      id: "exams",
-      stepNumber: "05",
-      badge: "Sınav Odası",
-      badgeTone: "border-sky-500/40 text-foreground bg-card",
-      borderTone: "border-sky-500/40 dark:border-sky-500/30 hover:border-sky-500/70 ring-1 ring-sky-500/20",
-      icon: IconExam,
-      iconColor: "text-sky-400",
-      title: "Sınav Odası & Canlı Takip",
-      description: "Geri sayım ve otomatik kaydetmeli canlı sınav odası. Öğretmenler canlı izleme panelinden yanıt kağıtlarını ve anlık puanlama önerilerini takip eder.",
-      to: "/exams",
-      cta: "Sınav Odası",
-      features: ["Sunucu saati senkronize geri sayım", "WebSocket & REST otomatik kaydetme", "Canlı öğretmen izleme ve puanlama"],
-    },
-    {
-      id: "marks",
-      stepNumber: "06",
-      badge: "Karne & Devam",
-      badgeTone: "border-sky-500/40 text-foreground bg-card",
-      borderTone: "border-sky-500/40 dark:border-sky-500/30 hover:border-sky-500/70 ring-1 ring-sky-500/20",
-      icon: IconReportAnalytics,
-      iconColor: "text-sky-400",
-      title: "Karne & İlerleme Raporu",
-      description: "Dönem ders ortalamaları ve sınav türü ağırlıklarına göre hesaplanan genel başarı puanı. Devamsızlık istatistikleri ile anlık gelişim takibi.",
-      to: "/marks",
-      cta: "Karnem",
-      features: ["Ağırlıklı sınav puan ortalaması", "Devamsızlık ve mazeret özetleri", "Detaylı grafik ve ders raporları"],
-    },
-  ];
+  const stepText = (id: string, field: string) => t(`guide.step.${id}.${field}` as MessageKey);
 
   return (
     <div class="space-y-6">
-      <PageHeader
-        eyebrow={t("nav.guide")}
-        title={t("guide.title")}
-        description="Kampüs akışı: Rol yetkileri, modül kullanım adımları ve pratik çalışma ipuçları."
-      />
+      <PageHeader eyebrow={t("nav.guide")} title={t("guide.title")} description={t("guide.subtitle")} />
 
-      {/* 1. ROL BAZLI YETKİ HARİTASI (TABS AT THE TOP) */}
       <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-6">
         <div>
-          <h2 class="text-lg font-semibold tracking-tight">Rol Bazlı Yetki Haritası</h2>
-          <p class="mt-1 text-xs text-muted-foreground">Platformdaki her bir rolün erişebildiği ve yönetebildiği alanlar.</p>
+          <h2 class="text-lg font-semibold tracking-tight">{t("guide.roles.title")}</h2>
+          <p class="mt-1 text-xs text-muted-foreground">{t("guide.roles.subtitle")}</p>
         </div>
 
         <Tabs defaultValue="student" class="w-full">
           <TabsList class="w-full justify-start">
-            <TabsTrigger value="student" class="flex-row items-center gap-2">
-              <IconSchool class="h-4 w-4 shrink-0" />
-              <span class="whitespace-nowrap">Öğrenci</span>
-            </TabsTrigger>
-            <TabsTrigger value="teacher" class="flex-row items-center gap-2">
-              <IconClipboardCheck class="h-4 w-4 shrink-0" />
-              <span class="whitespace-nowrap">Öğretmen</span>
-            </TabsTrigger>
-            <TabsTrigger value="parent" class="flex-row items-center gap-2">
-              <IconUsers class="h-4 w-4 shrink-0" />
-              <span class="whitespace-nowrap">Veli</span>
-            </TabsTrigger>
-            <TabsTrigger value="admin" class="flex-row items-center gap-2">
-              <IconUserCog class="h-4 w-4 shrink-0" />
-              <span class="whitespace-nowrap">Yönetici & Admin</span>
-            </TabsTrigger>
+            <For each={ROLE_TABS}>
+              {(role) => (
+                <TabsTrigger value={role.id} class="flex-row items-center gap-2">
+                  <role.icon class="h-4 w-4 shrink-0" />
+                  <span class="whitespace-nowrap">{t(role.tabKey)}</span>
+                </TabsTrigger>
+              )}
+            </For>
           </TabsList>
 
-          <TabsContent value="student" class="space-y-3">
-            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
-              <h3 class="text-sm font-semibold text-foreground">Öğrenci Çalışma & Katılım Araçları</h3>
-              <ul class="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Kendi özel defterinde not tutma, PDF aktarma ve çizim yapma</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Soru havuzunda soru sorma, diğer sorulara çözüm yazma</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Kaydolunan derslerin sınav odasına girme ve süreli sınav çözme</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Kendi karne ortalamasını ve devamsızlık durumunu izleme</span>
-                </li>
-              </ul>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="teacher" class="space-y-3">
-            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
-              <h3 class="text-sm font-semibold text-foreground">Öğretmen Yönetim & Eğitici Paneli</h3>
-              <ul class="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-sky-400 shrink-0" />
-                  <span>Ders, etüt ve kulüp oluşturma, öğrencileri derse kaydetme</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-sky-400 shrink-0" />
-                  <span>Ders oturumlarında öğrenci yoklaması alma (Var, Yok, Geç, Mazeretli)</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-sky-400 shrink-0" />
-                  <span>Sınav oluşturma, sorular ekleme ve canlı sınav takibi yürütme</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-sky-400 shrink-0" />
-                  <span>Öğrenci sınav kağıtlarını inceleme, puan verme ve karne onaylama</span>
-                </li>
-              </ul>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="parent" class="space-y-3">
-            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
-              <h3 class="text-sm font-semibold text-foreground">Veli Takip & Bilgilendirme Portalı</h3>
-              <ul class="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-violet-400 shrink-0" />
-                  <span>Bağlı öğrencilerin ders devamsızlık kayıtlarını anlık izleme</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-violet-400 shrink-0" />
-                  <span>Öğrencinin ders bazlı karne başarı ortalamalarını görüntüleme</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-violet-400 shrink-0" />
-                  <span>Yaklaşan sınav ve etkinlik takvimini takip etme</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-violet-400 shrink-0" />
-                  <span>Öğretmenler ve okul yönetimi ile doğrudan mesajlaşma</span>
-                </li>
-              </ul>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="admin" class="space-y-3">
-            <div class="rounded-xl border border-border/80 bg-card p-4 shadow-xs">
-              <h3 class="text-sm font-semibold text-foreground">Yönetici & Sistem Politikaları Paneli</h3>
-              <ul class="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-amber-400 shrink-0" />
-                  <span>Kullanıcı hesapları oluşturma, rollerini atama (Öğrenci, Öğretmen, Veli)</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-amber-400 shrink-0" />
-                  <span>Okul akademik dönemleri, sınav türleri ve ağırlık oranlarını tanımlama</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-amber-400 shrink-0" />
-                  <span>Tüm ders ve etkinlik kayıtlarını genel denetim seviyesinde yönetme</span>
-                </li>
-                <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
-                  <IconCheck class="h-4 w-4 text-amber-400 shrink-0" />
-                  <span>Personel çalışma günlüklerini ve sistem loglarını inceleme</span>
-                </li>
-              </ul>
-            </div>
-          </TabsContent>
+          <For each={ROLE_TABS}>
+            {(role) => (
+              <TabsContent value={role.id} class="space-y-3">
+                <div class="rounded-lg border border-border/80 bg-card p-4 shadow-xs">
+                  <h3 class="text-sm font-semibold text-foreground">
+                    {t(`guide.roles.${role.id}.heading` as MessageKey)}
+                  </h3>
+                  <ul class="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                    <For each={ITEM_INDEXES}>
+                      {(n) => (
+                        <li class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 p-2.5">
+                          <IconCheck class={cn("h-4 w-4 shrink-0", role.checkColor)} />
+                          <span>{t(`guide.roles.${role.id}.i${n}` as MessageKey)}</span>
+                        </li>
+                      )}
+                    </For>
+                  </ul>
+                </div>
+              </TabsContent>
+            )}
+          </For>
         </Tabs>
       </section>
 
-      {/* 2. TEMEL AKIŞLAR & ÖZELLİKLER (MODÜL KARTLARI) */}
       <section class="data-shell space-y-6 border-sky-500/15 bg-sky-500/2.5 p-6">
         <div>
-          <h2 class="text-lg font-semibold tracking-tight">Temel Akışlar & Özellikler</h2>
-          <p class="mt-1 text-xs text-muted-foreground">Hezarfen platformundaki ana modülleri ve kullanım adımlarını inceleyin.</p>
+          <h2 class="text-lg font-semibold tracking-tight">{t("guide.modules.title")}</h2>
+          <p class="mt-1 text-xs text-muted-foreground">{t("guide.modules.subtitle")}</p>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <For each={steps}>
+          <For each={STEPS}>
             {(step) => (
-              <article class={cn("group relative flex flex-col justify-between overflow-hidden rounded-lg border bg-card p-5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md", step.borderTone)}>
+              <article
+                class={cn(
+                  "group relative flex flex-col justify-between overflow-hidden rounded-lg border bg-card p-5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md",
+                  step.borderTone,
+                )}
+              >
                 <div class="space-y-3">
                   <div class="flex items-center justify-between gap-2">
-                    <span class={cn("inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider", step.badgeTone)}>
+                    <span
+                      class={cn(
+                        "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider",
+                        BADGE_TONE,
+                      )}
+                    >
                       <step.icon class="h-3.5 w-3.5" />
-                      {step.badge}
+                      {stepText(step.id, "badge")}
                     </span>
                     <span class="mono text-xs font-bold opacity-40">{step.stepNumber}</span>
                   </div>
 
-                  <h3 class="text-base font-semibold tracking-tight text-foreground">{step.title}</h3>
-                  <p class="text-xs leading-relaxed text-muted-foreground">{step.description}</p>
+                  <h3 class="text-base font-semibold tracking-tight text-foreground">{stepText(step.id, "title")}</h3>
+                  <p class="text-xs leading-relaxed text-muted-foreground">{stepText(step.id, "description")}</p>
 
                   <ul class="space-y-1.5 pt-2">
-                    <For each={step.features}>
-                      {(feat) => (
+                    <For each={[1, 2, 3] as const}>
+                      {(n) => (
                         <li class="flex items-center gap-2 text-[11px] text-muted-foreground">
                           <IconCheck class={cn("h-3.5 w-3.5 shrink-0", step.iconColor)} />
-                          <span>{feat}</span>
+                          <span>{stepText(step.id, `f${n}`)}</span>
                         </li>
                       )}
                     </For>
                   </ul>
                 </div>
 
-                <div class="mt-5 pt-3 border-t border-border/60">
+                <div class="mt-5 border-t border-border/60 pt-3">
                   <Link to={step.to}>
-                    <Button variant="default" size="sm" class="w-full justify-between rounded-xl text-xs">
-                      <span>{step.cta}</span>
+                    <Button variant="default" size="sm" class="w-full justify-between rounded-lg text-xs">
+                      <span>{stepText(step.id, "cta")}</span>
                       <span class="font-bold">→</span>
                     </Button>
                   </Link>
@@ -319,50 +187,31 @@ function GuideContent() {
         </div>
       </section>
 
-      {/* 3. PRATİK İPUÇLARI & KISAYOLLAR */}
       <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-6">
         <div>
-          <h2 class="text-lg font-semibold tracking-tight">Pratik İpuçları & Kısayollar</h2>
-          <p class="mt-1 text-xs text-muted-foreground">Hezarfen deneyimini en verimli şekilde kullanmanızı sağlayan püf noktaları.</p>
+          <h2 class="text-lg font-semibold tracking-tight">{t("guide.tips.title")}</h2>
+          <p class="mt-1 text-xs text-muted-foreground">{t("guide.tips.subtitle")}</p>
         </div>
 
         <ul class="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2">
-          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-xs">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-card text-violet-400">
-              <IconGlobe class="h-4 w-4" />
-            </span>
-            <div>
-              <p class="font-semibold text-foreground">Dil & Tema Seçimi</p>
-              <p class="mt-1 leading-relaxed">Sağ üstteki profil avatarınıza tıklayarak Türkçe / İngilizce dillerini ve Dark / Light temalarını anında değiştirebilirsiniz.</p>
-            </div>
-          </li>
-          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-xs">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-card text-sky-400">
-              <IconClock class="h-4 w-4" />
-            </span>
-            <div>
-              <p class="font-semibold text-foreground">Otomatik Senkronizasyon</p>
-              <p class="mt-1 leading-relaxed">Sınav odasındaki yanıtlarınız ve çizim tuvalindeki taslaklarınız sunucu saati (`/time`) ile arka planda güvenle kaydedilir.</p>
-            </div>
-          </li>
-          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-xs">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-card text-amber-400">
-              <IconFileText class="h-4 w-4" />
-            </span>
-            <div>
-              <p class="font-semibold text-foreground">Hızlı Not İçe Aktarma</p>
-              <p class="mt-1 leading-relaxed">Notlar sayfasında "İçe Aktar" butonunu kullanarak PDF ve TXT ders dokümanlarınızı temiz Markdown metinlerine dönüştürebilirsiniz.</p>
-            </div>
-          </li>
-          <li class="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-xs">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-card text-emerald-400">
-              <IconChart class="h-4 w-4" />
-            </span>
-            <div>
-              <p class="font-semibold text-foreground">Ağırlıklı Not Hesaplaması</p>
-              <p class="mt-1 leading-relaxed">Sınav sonuçlarınız, okul yönetiminin tanımladığı sınav türü ağırlıklarına göre doğrudan karne ortalamanıza yansıtılır.</p>
-            </div>
-          </li>
+          <For each={TIPS}>
+            {(tip) => (
+              <li class="flex items-start gap-3 rounded-lg border border-border/60 bg-card p-4 shadow-xs">
+                <span
+                  class={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-card",
+                    tip.tone,
+                  )}
+                >
+                  <tip.icon class="h-4 w-4" />
+                </span>
+                <div>
+                  <p class="font-semibold text-foreground">{t(`guide.tips.${tip.id}.title` as MessageKey)}</p>
+                  <p class="mt-1 leading-relaxed">{t(`guide.tips.${tip.id}.body` as MessageKey)}</p>
+                </div>
+              </li>
+            )}
+          </For>
         </ul>
       </section>
     </div>
