@@ -178,7 +178,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               size="sm"
               class="h-8 rounded-lg text-xs"
               onClick={() => props.onAction({ folder: restoreFolder() })}
-              title="Çöp Kutusundan Çıkar"
+              title={t("messages.restoreFromTrash")}
             >
               <IconMessage class="mr-1.5 h-3.5 w-3.5" />
               Çöp Kutusundan Çıkar
@@ -313,14 +313,14 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                     class="text-xs text-muted-foreground hover:text-foreground"
                     onClick={() => setIsReplying(false)}
                   >
-                    Vazgeç
+                    {t("common.cancel")}
                   </button>
                 </div>
 
                 <RichTextEditor
                   value={replyBody()}
                   onChange={setReplyBody}
-                  placeholder="Yanıtınızı yazın..."
+                  placeholder={t("messages.replyPlaceholder")}
                   minHeight="min-h-[120px]"
                 />
 
@@ -336,14 +336,14 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                     disabled={sending() || !replyBody().trim()}
                   >
                     <IconSend class="mr-2 h-4 w-4" />
-                    Gönder
+                    {t("messages.send")}
                   </Button>
 
                   <button
                     type="button"
                     class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => setIsReplying(false)}
-                    title="Vazgeç"
+                    title={t("common.cancel")}
                   >
                     <IconTrash class="h-4 w-4" />
                   </button>

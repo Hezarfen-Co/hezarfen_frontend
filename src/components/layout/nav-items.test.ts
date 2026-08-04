@@ -1,4 +1,4 @@
-import { pathActive, primaryNavItems, primaryPathActive, routeNavItem, sidebarNavGroups, visibleNavItems } from "@/components/layout/nav-items";
+import { pathActive, primaryNavItems, primaryPathActive, routeLabelKey, routeNavItem, sidebarNavGroups, visibleNavItems } from "@/components/layout/nav-items";
 
 test.each([
   ["student", ["/", "/courses", "/calendar", "/marks"]],
@@ -68,4 +68,32 @@ test.each([
   const current = routeNavItem(pathname, role);
 
   expect(items.filter((item) => item.id === current?.id).map((item) => item.id)).toEqual([expected]);
+});
+
+// The shell header used to print the raw pathname for any route without a
+// sidebar entry, so /profile/me read as "/profile/me".
+test.each([
+  ["/profile/me", "profile.myProfile"],
+  ["/profile/u-1", "profile.title"],
+  ["/guide", "nav.guide"],
+  ["/attendance", "nav.attendance"],
+  ["/studies", "courses.kind.study"],
+  ["/clubs", "courses.kind.club"],
+] as const)("%s has a header label", (pathname, expected) => {
+  expect(routeLabelKey(pathname, "student")).toBe(expected);
+});
+
+test("routes with a sidebar entry still take their nav label", () => {
+  expect(routeLabelKey("/courses/course-1", "teacher")).toBe(routeNavItem("/courses/course-1", "teacher")?.labelKey);
+});
+
+test("a route rendered outside the shell has no label rather than a raw path", () => {
+  expect(routeLabelKey("/login", undefined)).toBeUndefined();
+});
+
+test("a page keeps its name for a viewer who may not open it", () => {
+  // /students is parent-only; an admin lands on the no-access screen, and the
+  // shell header must still say what page that is.
+  expect(routeLabelKey("/students", "admin")).toBe("nav.children");
+  expect(routeLabelKey("/students", "parent")).toBe("nav.children");
 });

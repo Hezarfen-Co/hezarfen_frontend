@@ -229,3 +229,39 @@ export function routeNavItem(pathname: string, role: Role | undefined): NavItem 
     .filter((item) => pathActive(pathname, item.to, item.exact))
     .sort((a, b) => b.to.length - a.to.length)[0];
 }
+
+// Routes that are reachable but carry no sidebar entry — the account menu, a
+// course-kind view, a deep link. Without these the shell's title falls back to
+// the raw pathname and the header reads "/profile/me".
+const UNLISTED_ROUTE_LABELS: { prefix: string; labelKey: MessageKey }[] = [
+  // Longest prefix first — /profile/me is the viewer's own, every other
+  // /profile/{id} belongs to somebody else and must not read "My profile".
+  { prefix: "/profile/me", labelKey: "profile.myProfile" },
+  { prefix: "/profile", labelKey: "profile.title" },
+  { prefix: "/guide", labelKey: "nav.guide" },
+  { prefix: "/attendance", labelKey: "nav.attendance" },
+  { prefix: "/studies", labelKey: "courses.kind.study" },
+  { prefix: "/clubs", labelKey: "courses.kind.club" },
+];
+
+/**
+ * The label the shell header shows for a route: its nav entry when it has one,
+ * otherwise an explicit fallback. Returns undefined only for routes rendered
+ * without the shell (login, register, the exam room).
+ */
+export function routeLabelKey(pathname: string, role: Role | undefined): MessageKey | undefined {
+  const item = routeNavItem(pathname, role);
+  if (item) return item.labelKey;
+
+  const unlisted = UNLISTED_ROUTE_LABELS.find(
+    (entry) => pathname === entry.prefix || pathname.startsWith(`${entry.prefix}/`),
+  );
+  if (unlisted) return unlisted.labelKey;
+
+  // A page still has a name when the viewer may not open it — the shell title
+  // must not go blank on the "no access" screen — so fall back to the nav entry
+  // for any role, not just this one.
+  return [HOME_ITEM, ...NAV_GROUPS.flatMap((group) => group.items)]
+    .filter((entry) => pathActive(pathname, entry.to, entry.exact))
+    .sort((a, b) => b.to.length - a.to.length)[0]?.labelKey;
+}

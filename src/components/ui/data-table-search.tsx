@@ -2,6 +2,7 @@ import { Show } from "solid-js";
 import { IconSearch, IconX } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
+import { useT } from "@/stores/preferences-context";
 
 export type DataTableSearchProps = {
   value: string;
@@ -12,6 +13,7 @@ export type DataTableSearchProps = {
 
 /** Rounded search field: leading icon + conditional clear (X) button. */
 export function DataTableSearch(props: DataTableSearchProps) {
+  const t = useT();
   return (
     <div class={cn("relative w-full sm:max-w-xs", props.class)}>
       <IconSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -24,7 +26,7 @@ export function DataTableSearch(props: DataTableSearchProps) {
       <Show when={props.value}>
         <button
           type="button"
-          aria-label="Aramayı temizle"
+          aria-label={t("common.clearSearch")}
           onClick={() => props.onChange("")}
           class="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
         >

@@ -1,5 +1,6 @@
 import { createSignal, createEffect } from "solid-js";
 import { cn } from "@/lib/cn";
+import { useT } from "@/stores/preferences-context";
 
 interface RichTextEditorProps {
   value: string;
@@ -10,6 +11,7 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor(props: RichTextEditorProps) {
+  const t = useT();
   let editorRef: HTMLDivElement | undefined;
   const [isFocused, setIsFocused] = createSignal(false);
 
@@ -58,7 +60,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           type="button"
           class="flex h-7 w-7 items-center justify-center rounded font-bold text-xs hover:bg-muted text-foreground"
           onClick={() => execCommand("bold")}
-          title="Kalın (Ctrl+B)"
+          title={t("editor.bold")}
         >
           B
         </button>
@@ -66,7 +68,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           type="button"
           class="flex h-7 w-7 items-center justify-center rounded italic text-xs hover:bg-muted text-foreground"
           onClick={() => execCommand("italic")}
-          title="İtalik (Ctrl+I)"
+          title={t("editor.italic")}
         >
           I
         </button>
@@ -74,7 +76,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           type="button"
           class="flex h-7 w-7 items-center justify-center rounded underline text-xs hover:bg-muted text-foreground"
           onClick={() => execCommand("underline")}
-          title="Altı Çizili (Ctrl+U)"
+          title={t("editor.underline")}
         >
           U
         </button>
@@ -82,7 +84,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           type="button"
           class="flex h-7 w-7 items-center justify-center rounded line-through text-xs hover:bg-muted text-foreground"
           onClick={() => execCommand("strikeThrough")}
-          title="Üstü Çizili"
+          title={t("editor.strike")}
         >
           S
         </button>
@@ -93,7 +95,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           type="button"
           class="flex h-7 px-2 items-center justify-center rounded text-xs font-mono hover:bg-muted text-foreground"
           onClick={() => execCommand("insertUnorderedList")}
-          title="Madde İşaretli Liste"
+          title={t("editor.bulletList")}
         >
           • Liste
         </button>
@@ -101,7 +103,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           type="button"
           class="flex h-7 px-2 items-center justify-center rounded text-xs font-mono hover:bg-muted text-foreground"
           onClick={() => execCommand("insertOrderedList")}
-          title="Numaralı Liste"
+          title={t("editor.numberedList")}
         >
           1. Liste
         </button>
@@ -112,7 +114,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           type="button"
           class="flex h-7 px-2 items-center justify-center rounded text-xs hover:bg-muted text-muted-foreground"
           onClick={() => execCommand("removeFormat")}
-          title="Biçimlendirmeyi Temizle"
+          title={t("editor.clearFormatting")}
         >
           Biçimi Temizle
         </button>

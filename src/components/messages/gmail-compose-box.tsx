@@ -153,7 +153,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
               </span>
               <Input
                 maxlength={50}
-                placeholder="ör. Etüt, Sınav (Opsiyonel)"
+                placeholder={t("messages.labelsPlaceholder")}
                 class="h-8 border-none bg-transparent shadow-none focus-visible:ring-0 text-xs flex-1"
                 value={label()}
                 onInput={(e) => setLabel(e.currentTarget.value)}
@@ -165,7 +165,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
               <RichTextEditor
                 value={body()}
                 onChange={setBody}
-                placeholder="Mesajınızı buraya yazın..."
+                placeholder={t("messages.bodyPlaceholder")}
                 class="flex-1 min-h-0"
               />
             </div>
@@ -190,7 +190,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
                 type="button"
                 class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                 onClick={handleClose}
-                title="Taslağı Sil"
+                title={t("messages.deleteDraft")}
               >
                 <IconTrash class="h-4 w-4" />
               </button>
