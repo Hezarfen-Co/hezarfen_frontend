@@ -154,7 +154,7 @@ test("logged-out visitor redirects before dashboard reads user role", () => {
 });
 
 test("student sees own trend plus focus heatmap, and a standalone deadlines table", async () => {
-  const view = renderDashboard("student");
+  renderDashboard("student");
 
   expect(await screen.findByText("Course averages")).toBeTruthy();
   expect(screen.getByText("Success trend")).toBeTruthy();
@@ -172,7 +172,8 @@ test("student sees own trend plus focus heatmap, and a standalone deadlines tabl
   expect(screen.getByLabelText(/25 min focus/)).toBeTruthy();
   expect(screen.getByLabelText(/50 min focus/)).toBeTruthy();
   expect(screen.getByText("75 min in the last 26 weeks")).toBeTruthy();
-  expect(view.container.querySelector("polyline")).toBeNull();
+  expect(screen.getByRole("img", { name: /Algebra: Midterm.*78/ })).toBeTruthy();
+  expect(document.querySelectorAll("[data-chart-tooltip]").length).toBeGreaterThan(0);
   expect(screen.queryByText("Priority")).toBeNull();
   expect(screen.queryByText("Refresh data")).toBeNull();
   expect(screen.queryByText("Ask a question")).toBeNull();
@@ -196,7 +197,8 @@ test("teacher sees real exam averages instead of capacities and resource links",
   expect(await screen.findByText("Class averages of recent exams.")).toBeTruthy();
   expect(screen.getByText("Success trend")).toBeTruthy();
   expect(screen.getByText("Average of recent exams, by course.")).toBeTruthy();
-  // Both the trend bar and the per-course bar carry the backend's average.
+  // The trend point and the per-course bar carry the backend's average.
+  expect(await screen.findByRole("img", { name: /Algebra: Midterm.*74\.5/ })).toBeTruthy();
   expect((await screen.findAllByText("74.5")).length).toBeGreaterThanOrEqual(2);
   expect(screen.queryByText("Course capacities")).toBeNull();
   expect(screen.queryByText("Workload split")).toBeNull();

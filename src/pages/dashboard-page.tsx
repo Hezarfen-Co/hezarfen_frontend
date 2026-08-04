@@ -18,6 +18,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
 import { ChartBar } from "@/components/ui/chart-bar";
 import { ChartHeatmap, type HeatmapEntry } from "@/components/ui/chart-heatmap";
+import { ChartLine } from "@/components/ui/chart-line";
 import { ChartProgressRing } from "@/components/ui/chart-progress-ring";
 import { DataTable } from "@/components/ui/data-table";
 import {
@@ -45,11 +46,11 @@ const HEATMAP_WEEKS = 26;
 /**
  * Exams pulled into the teacher+ success trend. Each one costs a separate
  * `/exams/{id}/statistics` call — there is no bulk statistics endpoint — so the
- * homepage reads only the most recent handful.
+ * homepage keeps a bounded recent history.
  */
-const TREND_EXAM_CAP = 8;
+const TREND_EXAM_CAP = 20;
 /** Marks plotted in a student's own trend. */
-const TREND_MARK_CAP = 10;
+const TREND_MARK_CAP = 20;
 
 type Status = "active" | "today" | "soon";
 type DeadlineKind = "exam" | "event" | "appointment" | "homework";
@@ -116,7 +117,7 @@ function DashboardContent() {
   );
   const [exams] = createResource(
     () => role() === "parent" ? null : role(),
-    () => getExams({ limit: 50 }),
+    () => getExams({ limit: 100 }),
   );
   // Unfiltered: `/homework` has no due-date window, so this one read serves both
   // the deadlines table (filtered by `scheduleStatus`) and the backwards-looking
@@ -187,6 +188,11 @@ function DashboardContent() {
 
   const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
   const now = () => clock()?.now ?? Date.now();
+  const trendDateFormatter = createMemo(() => new Intl.DateTimeFormat(
+    locale() === "tr" ? "tr-TR" : "en-GB",
+    { day: "2-digit", month: "short" },
+  ));
+  const formatTrendDate = (timestamp: number) => trendDateFormatter().format(timestamp);
 
   const attendanceRate = createMemo(() => {
     const report = attendance();
@@ -240,7 +246,7 @@ function DashboardContent() {
       .flatMap((course) =>
         course.results.map((result) => ({
           id: `${course.course.id}:${result.exam}`,
-          label: result.title,
+          label: `${course.course.title}: ${result.title}`,
           value: result.mark,
           at: examDates.get(result.exam) ?? null,
         })),
@@ -248,20 +254,28 @@ function DashboardContent() {
       .filter((row): row is typeof row & { at: number } => row.at != null)
       .sort((a, b) => a.at - b.at)
       .slice(-TREND_MARK_CAP)
-      .map((row) => ({ id: row.id, label: row.label, value: row.value, formattedValue: row.value.toFixed(1) }));
+      .map((row) => ({
+        id: row.id,
+        label: row.label,
+        value: row.value,
+        formattedValue: row.value.toFixed(1),
+        caption: formatTrendDate(row.at),
+      }));
   });
 
   // Teacher+ trend — the backend's own per-exam average, oldest exam first.
-  const examAverageTrend = createMemo(() =>
-    (examStats() ?? []).map((row) => ({
+  const examAverageTrend = createMemo(() => {
+    const titles = new Map((courses()?.items ?? []).map((course) => [course.id, course.title]));
+    return (examStats() ?? []).map((row) => ({
       id: row.exam.id,
-      label: row.exam.title,
+      label: `${titles.get(row.exam.course) ?? row.exam.course}: ${row.exam.title}`,
       value: row.stats!.average!,
       formattedValue: row.stats!.average!.toFixed(1),
-    })),
-  );
+      caption: formatTrendDate(row.exam.starts_at!),
+    }));
+  });
 
-  // Teacher+ side panel — the same exam averages grouped by course, so a weak
+  // Teacher+ comparison — the same exam averages grouped by course, so a weak
   // subject stands out rather than being averaged into one school-wide number.
   const courseAverageBars = createMemo(() => {
     const titles = new Map((courses()?.items ?? []).map((course) => [course.id, course.title]));
@@ -476,12 +490,11 @@ function DashboardContent() {
                   maxScale={100}
                   itemsPerPage={5}
                 />
-                <ChartBar
+                <ChartLine
                   title={t("dashboard.successTrend")}
                   subtitle={t("dashboard.successTrendMine")}
                   items={myMarkTrend()}
                   maxScale={100}
-                  itemsPerPage={5}
                 />
                 <ChartProgressRing
                   title={t("dashboard.activitySplit")}
@@ -491,13 +504,12 @@ function DashboardContent() {
                 />
               </Show>
               <Show when={role() !== "student"}>
-                <ChartBar
+                <ChartLine
                   class="lg:col-span-2"
                   title={t("dashboard.successTrend")}
                   subtitle={t("dashboard.successTrendSchool")}
                   items={examAverageTrend()}
                   maxScale={100}
-                  itemsPerPage={5}
                 />
                 <ChartBar
                   title={t("dashboard.courseAverages")}
