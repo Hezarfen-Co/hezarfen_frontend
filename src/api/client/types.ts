@@ -26,18 +26,77 @@ export type User = {
   palette_color: string | null;
 };
 
+// PATCH /users/me and PATCH /users/{id}/profile take the same body: an omitted
+// (or null) field is left alone, an empty string clears it.
 export type ProfileUpdate = {
   name?: string | null;
   surname?: string | null;
   email?: string | null;
   phone?: string | null;
   birth_date?: string | null;
+  display_name?: string | null;
+  bio?: string | null;
 };
 
 export type PersonRef = {
   id: string;
   username: string;
   display_name: string | null;
+};
+
+// The lifetime counter a badge reads. Badges sharing a stat form a ladder.
+export type BadgeStat =
+  | "homework_submitted"
+  | "homework_on_time"
+  | "exam_sat"
+  | "pomodoro_finished"
+  | "pomodoro_focus_ms";
+
+// One entry of the badge catalogue, served by GET /limits. The label and icon
+// behind an id live in the client, exactly as they do for a role.
+export type BadgeCatalogEntry = { id: string; stat: BadgeStat | string; threshold: number };
+
+// A badge a person has earned. Awards are permanent and `earned_at` is the
+// moment of first crossing, unix ms.
+export type EarnedBadge = { id: string; earned_at: number };
+
+export type AvatarMeta = { content_type: string; size: number };
+
+export type ProfileClassRef = { id: string; name: string; grade: string | null };
+
+export type ProfileCourseRef = { id: string; title: string; kind: CourseKind };
+
+// Lifetime counters behind the badge ladders, plus the two live totals the
+// capped `classes`/`courses` lists would otherwise hide.
+export type ProfileStats = {
+  pomodoro_sessions: number;
+  pomodoro_focus_ms: number;
+  courses: number;
+  classes: number;
+  homework_submitted_total: number;
+  homework_on_time_total: number;
+  exam_sat_total: number;
+  pomodoro_finished_total: number;
+  pomodoro_focus_ms_total: number;
+};
+
+// A person's public profile. Readable by any authenticated account except a
+// parent, who only reaches their own and their linked students'. Never carries
+// email, phone or birth date at any role — those stay on GET /users/{id}.
+export type Profile = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  role: Role;
+  bio: string | null;
+  avatar: AvatarMeta | null;
+  // Capped at limits.user.max_profile_classes; stats.classes holds the true total.
+  classes: ProfileClassRef[];
+  // Capped at limits.user.max_profile_courses, and filtered to what the reader
+  // may see; stats.courses holds the owner's true, unfiltered total.
+  courses: ProfileCourseRef[];
+  badges: EarnedBadge[];
+  stats: ProfileStats;
 };
 
 export type Note = {
@@ -194,6 +253,29 @@ export type ClassCourse = {
   course: string;
   attached_by: PersonRef;
 };
+
+// A grade blueprint: the set of courses every class at one grade takes. The
+// grade label is the record's key, so there is at most one per grade. Creating
+// or editing one applies it to every existing class at that grade right away.
+export type ClassBlueprint = {
+  grade: string;
+  courses: string[];
+  creator: PersonRef;
+};
+
+// One (class, course) pair a blueprint could not attach. Applying is
+// best-effort: a pair that cannot land is reported here and the rest still go
+// through. `reason` is backend English — localize it, never render it raw.
+export type BlueprintSkip = {
+  class: string;
+  class_name: string;
+  course: string;
+  reason: string;
+};
+
+export type BlueprintResult = { blueprint: ClassBlueprint; skipped: BlueprintSkip[] };
+
+export type BlueprintApplyResult = { skipped: BlueprintSkip[] };
 
 export type CourseSession = {
   id: string;
@@ -499,6 +581,12 @@ export type Limits = {
     min_password_len: number;
     max_password_len: number;
     max_name_len: number;
+    max_display_name_len: number;
+    max_bio_len: number;
+    // Caps on what a profile read embeds, not on membership: the full lists
+    // stay at /courses/me and /classes/me.
+    max_profile_courses: number;
+    max_profile_classes: number;
     max_email_len: number;
     min_phone_digits: number;
     max_phone_digits: number;
@@ -507,6 +595,7 @@ export type Limits = {
     languages: UserLanguage[];
     session_duration_days: number;
   };
+  badges: { catalog: BadgeCatalogEntry[] };
   note: { max_title_len: number; max_content_len: number; max_files: number };
   file: {
     max_name_len: number;
@@ -600,6 +689,19 @@ export type Limits = {
     min_max_threads: number;
     max_max_threads: number;
     default_max_threads: number;
+  };
+  board: {
+    max_title_len: number;
+    // People the creator may name onto one board. Every participant draws, so
+    // this also bounds a room's writer count.
+    max_participants: number;
+    max_stroke_payload_len: number;
+    max_epoch_strokes: number;
+    max_board_strokes: number;
+    max_boards_per_creator: number;
+    stroke_kinds: string[];
+    ws_tick_secs: number;
+    ws_max_board_id_len: number;
   };
   settings: {
     max_list_len: number;

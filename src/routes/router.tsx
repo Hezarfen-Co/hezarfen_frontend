@@ -61,6 +61,7 @@ const AppointmentsPage = lazyRoute(() => import("@/pages/appointments-page"));
 const MealsPage = lazyRoute(() => import("@/pages/meals-page"));
 const MealDetailPage = lazyRoute(() => import("@/pages/meal-detail-page"));
 const PaymentsPage = lazyRoute(() => import("@/pages/payments-page"));
+const ProfilePage = lazyRoute(() => import("@/pages/profile-page"));
 const PaymentStatementPage = lazyRoute(() => import("@/pages/payment-statement-page"));
 const WhiteboardsPage = lazyRoute(() => import("@/pages/whiteboards-page"));
 const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
@@ -306,6 +307,20 @@ const guideRoute = createRoute({
   component: GuidePage,
 });
 
+// Declared (and registered) before the param route so the literal segment is
+// never a candidate for $userId.
+const myProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/profile/me",
+  component: ProfilePage,
+});
+
+const userProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/profile/$userId",
+  component: ProfilePage,
+});
+
 const myStudentsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/students",
@@ -425,6 +440,8 @@ const routeTree = rootRoute.addChildren([
   paymentStatementRoute,
   whiteboardsRoute,
   whiteboardRoute,
+  myProfileRoute,
+  userProfileRoute,
 ]);
 
 function RouterPending() {

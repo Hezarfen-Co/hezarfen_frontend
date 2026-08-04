@@ -11,18 +11,20 @@ import {
   getClassCourses,
   postClassCourse,
   deleteClassCourse,
+  postClassBlueprintApply,
 } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { getTerms } from "@/api/terms";
 import { getLimits } from "@/api/limits";
-import { formatApiError, type ClassCourse, type ClassMember } from "@/api/client";
+import { ApiError, formatApiError, type BlueprintSkip, type ClassCourse, type ClassMember } from "@/api/client";
+import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-report";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconChevronLeft, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconChevronLeft, IconExternalLink, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -67,6 +69,8 @@ function ClassDetailContent() {
   const [showAttachCourse, setShowAttachCourse] = createSignal(false);
   const [attachCourseId, setAttachCourseId] = createSignal("");
   const [detachCourse, setDetachCourse] = createSignal<ClassCourse | null>(null);
+  const [skipped, setSkipped] = createSignal<BlueprintSkip[]>([]);
+  const [reportOpen, setReportOpen] = createSignal(false);
 
   const [cls, { refetch: refetchClass }] = createResource(id, (classId) => getClassById(classId));
   const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
@@ -93,6 +97,29 @@ function ClassDetailContent() {
     }
   };
 
+  // Applying is best-effort: the request succeeds and reports the pairs it
+  // could not attach, so a shortfall is a warning with a report, not an error.
+  const applyBlueprint = async (classGrade: string) => {
+    setError("");
+    setSkipped([]);
+    setPending(true);
+    try {
+      const result = await postClassBlueprintApply(id());
+      await refetchCourses();
+      setSkipped(result.skipped);
+      if (result.skipped.length === 0) setFlash(t("classBlueprints.applied"));
+    } catch (err) {
+      // A 404 here means no blueprint covers this grade, not a missing class.
+      if (err instanceof ApiError && err.status === 404) {
+        setError(t("classBlueprints.noBlueprintForGrade", { grade: classGrade }));
+      } else {
+        setError(formatApiError(err));
+      }
+    } finally {
+      setPending(false);
+    }
+  };
+
   const memberColumns = createMemo<ColumnDef<ClassMember>[]>(() => [
     {
       id: "student",
@@ -114,7 +141,14 @@ function ClassDetailContent() {
         <Show when={canManage()}>
           <TableRowActions
             label={t("common.actions")}
-            actions={[{ label: t("classGroups.removeStudent"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setRemoveMember(cell.row.original) }]}
+            actions={[
+              {
+                label: t("profile.viewProfile"),
+                icon: <IconExternalLink class="h-4 w-4" />,
+                onSelect: () => void navigate({ to: "/profile/$userId", params: { userId: cell.row.original.user.id } }),
+              },
+              { label: t("classGroups.removeStudent"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setRemoveMember(cell.row.original) },
+            ]}
           />
         </Show>
       ),
@@ -171,6 +205,16 @@ function ClassDetailContent() {
                 </div>
                 <Show when={canManage()}>
                   <div class="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      class="rounded-lg"
+                      disabled={pending() || !c().grade}
+                      title={c().grade ? t("classBlueprints.applyHint") : t("classBlueprints.applyNoGrade")}
+                      onClick={() => void applyBlueprint(c().grade ?? "")}
+                    >
+                      {t("classBlueprints.apply")}
+                    </Button>
                     <Button size="sm" variant="outline" class="rounded-lg" onClick={() => { setName(c().name); setGrade(c().grade ?? ""); setTermId(c().term ?? ""); setTeacherId(c().teacher?.id ?? ""); setEditing(true); }}>{t("common.edit")}</Button>
                     <Button size="sm" variant="outline" class="rounded-lg text-destructive" onClick={() => setDeleteOpen(true)}>{t("classGroups.deleteClass")}</Button>
                   </div>
@@ -179,6 +223,20 @@ function ClassDetailContent() {
 
               <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
               <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
+              <Show when={skipped().length > 0}>
+                <Alert class="flex flex-wrap items-center justify-between gap-3 border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+                  <span class="min-w-0 flex-1">{t("classBlueprints.skippedSummary", { count: skipped().length })}</span>
+                  <Button type="button" size="sm" variant="outline" class="shrink-0 rounded-lg" onClick={() => setReportOpen(true)}>
+                    {t("classBlueprints.skippedDetails")}
+                  </Button>
+                </Alert>
+              </Show>
+              <BlueprintSkippedReport
+                open={reportOpen()}
+                onOpenChange={setReportOpen}
+                skipped={skipped()}
+                courseTitle={courseTitle}
+              />
 
               <Tabs value={tab()} onChange={setTab} class="space-y-3">
                 <TabsList>

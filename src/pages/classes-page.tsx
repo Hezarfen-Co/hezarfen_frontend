@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BlueprintsTab } from "@/components/classes/blueprints-tab";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
 import { personLabel } from "@/lib/person";
@@ -32,6 +34,7 @@ function ClassesContent() {
   const t = useT();
   const canManage = () => hasMinRole(auth.user()?.role, "manager");
 
+  const [tab, setTab] = createSignal("classes");
   const [showForm, setShowForm] = createSignal(false);
   const [name, setName] = createSignal("");
   const [grade, setGrade] = createSignal("");
@@ -127,27 +130,44 @@ function ClassesContent() {
 
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
 
-      <Suspense fallback={<DataTableSkeleton />}>
-        <DataTable
-          columns={columns()}
-          data={listData() ?? []}
-          filterColumn="name"
-          enablePagination
-          pageSize={10}
-          title={t("classGroups.title")}
-          description={t("classGroups.subtitle")}
-          empty={t("classGroups.empty")}
-          onRowClick={(row) => void navigate({ to: "/management/classes/$id", params: { id: row.id } })}
-          actions={
-            <Show when={canManage()}>
-              <Button size="sm" class="min-w-30 rounded-lg" onClick={() => setShowForm(true)}>
-                <IconPlus class="h-4 w-4" />
-                {t("classGroups.newClass")}
-              </Button>
-            </Show>
-          }
-        />
-      </Suspense>
+      <Tabs value={tab()} onChange={setTab}>
+        {/* Every blueprint endpoint is manager+, so a teacher must not be shown
+            a tab that would 403 the moment it opens. */}
+        <Show when={canManage()}>
+          <TabsList class="mb-4">
+            <TabsTrigger value="classes">{t("classBlueprints.classesTab")}</TabsTrigger>
+            <TabsTrigger value="blueprints">{t("classBlueprints.tab")}</TabsTrigger>
+          </TabsList>
+        </Show>
+
+        <TabsContent value="classes">
+          <Suspense fallback={<DataTableSkeleton />}>
+            <DataTable
+              columns={columns()}
+              data={listData() ?? []}
+              filterColumn="name"
+              enablePagination
+              pageSize={10}
+              title={t("classGroups.title")}
+              description={t("classGroups.subtitle")}
+              empty={t("classGroups.empty")}
+              onRowClick={(row) => void navigate({ to: "/management/classes/$id", params: { id: row.id } })}
+              actions={
+                <Show when={canManage()}>
+                  <Button size="sm" class="min-w-30 rounded-lg" onClick={() => setShowForm(true)}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("classGroups.newClass")}
+                  </Button>
+                </Show>
+              }
+            />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="blueprints">
+          <BlueprintsTab canManage={canManage} active={() => tab() === "blueprints"} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

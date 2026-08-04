@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { createFlash } from "@/lib/flash";
 import { useT } from "@/stores/preferences-context";
 
@@ -38,13 +39,28 @@ function isoFromDateInput(value: string): string {
   return `${year}-${month}-${day}`;
 }
 
-export function ProfileForm(props: { user: User; onSaved: () => void; onSave?: (body: ProfileUpdate) => Promise<User> }) {
+export function ProfileForm(props: {
+  user: User;
+  /**
+   * `display_name` and `bio` ride the same PATCH but do not live on `User` —
+   * GET /auth/me never returns them, only GET /users/{id}/profile does. Pass
+   * them where a profile is in hand; omit them and the fields stay hidden
+   * rather than silently offering to clear values they cannot see.
+   */
+  profile?: { display_name: string | null; bio: string | null };
+  maxDisplayNameLen?: number;
+  maxBioLen?: number;
+  onSaved: () => void;
+  onSave?: (body: ProfileUpdate) => Promise<User>;
+}) {
   const t = useT();
   const [name, setName] = createSignal(props.user.name ?? "");
   const [surname, setSurname] = createSignal(props.user.surname ?? "");
   const [email, setEmail] = createSignal(props.user.email ?? "");
   const [phone, setPhone] = createSignal(props.user.phone ?? "");
   const [birthDate, setBirthDate] = createSignal(dateInputFromIso(props.user.birth_date));
+  const [displayName, setDisplayName] = createSignal(props.profile?.display_name ?? "");
+  const [bio, setBio] = createSignal(props.profile?.bio ?? "");
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
@@ -71,6 +87,13 @@ export function ProfileForm(props: { user: User; onSaved: () => void; onSave?: (
     if (e !== (props.user.email ?? "")) b.email = e;
     if (p !== (props.user.phone ?? "")) b.phone = p;
     if (d !== (props.user.birth_date ?? "")) b.birth_date = d;
+    if (props.profile) {
+      // An empty string clears the field server-side; an omitted key keeps it.
+      const dn = displayName().trim();
+      const bi = bio().trim();
+      if (dn !== (props.profile.display_name ?? "")) b.display_name = dn;
+      if (bi !== (props.profile.bio ?? "")) b.bio = bi;
+    }
     return b;
   };
 
@@ -108,6 +131,35 @@ export function ProfileForm(props: { user: User; onSaved: () => void; onSave?: (
           <Input id="pf-surname" class="h-10" value={surname()} onInput={(e) => setSurname(e.currentTarget.value)} />
         </div>
       </div>
+      <Show when={props.profile}>
+        <div class="space-y-1.5">
+          <Label for="pf-display-name">{t("profile.displayName")}</Label>
+          <Input
+            id="pf-display-name"
+            class="h-10"
+            maxlength={props.maxDisplayNameLen}
+            value={displayName()}
+            onInput={(e) => setDisplayName(e.currentTarget.value)}
+          />
+          <p class="text-xs text-muted-foreground">{t("profile.displayNameHint")}</p>
+        </div>
+        <div class="space-y-1.5">
+          <Label for="pf-bio">{t("profile.bio")}</Label>
+          <Textarea
+            id="pf-bio"
+            rows={3}
+            maxlength={props.maxBioLen}
+            value={bio()}
+            onInput={(e) => setBio(e.currentTarget.value)}
+          />
+          <p class="text-xs text-muted-foreground">
+            {t("profile.bioHint")}
+            <Show when={props.maxBioLen}>
+              {(max) => <span class="ml-1 tabular-nums">{bio().length} / {max()}</span>}
+            </Show>
+          </p>
+        </div>
+      </Show>
       <div class="space-y-1.5">
         <Label for="pf-email">{t("profile.email")}</Label>
         <Input id="pf-email" class="h-10" type="email" value={email()} onInput={(e) => setEmail(e.currentTarget.value)} />

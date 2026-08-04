@@ -45,5 +45,12 @@ export type UpdateBoardBody = {
   locked?: boolean;
 };
 
+// POST /boards/{id}/invite, tagged by `kind` — send exactly one id key.
+// A club is just a course whose kind is "club", so it rides the "course" arm.
+export type BoardInviteBody =
+  | { kind: "class"; class: string }
+  | { kind: "course"; course: string }
+  | { kind: "event"; event: string };
+
 // GET /boards/{id}/history: `epoch` narrows to one epoch; omit for whole life.
 export type BoardHistoryParams = PageParams & { epoch?: number };

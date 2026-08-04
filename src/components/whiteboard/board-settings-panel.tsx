@@ -1,11 +1,14 @@
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
+import type { Board } from "@/api/boards";
+import { BoardBulkInvite } from "@/components/whiteboard/board-bulk-invite";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useT } from "@/stores/preferences-context";
 
@@ -19,6 +22,7 @@ type ParticipantRow = {
 export function BoardSettingsPanel(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  boardId: () => string;
   title: () => string;
   participants: () => string[];
   creatorId: () => string;
@@ -28,6 +32,7 @@ export function BoardSettingsPanel(props: {
   roleOf: (id: string) => string;
   onTitleSave: (title: string) => Promise<void>;
   onParticipantsSave: (participants: string[]) => Promise<void>;
+  onInvited: (board: Board) => void;
 }) {
   const t = useT();
   const [title, setTitle] = createSignal("");
@@ -93,22 +98,23 @@ export function BoardSettingsPanel(props: {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { align: "center" },
+      meta: { align: "center", label: t("common.actions") },
       cell: (cell) => (
         <Show
           when={props.canManageParticipants() && !cell.row.original.creator}
           fallback={<span class="text-xs text-muted-foreground">{cell.row.original.creator ? t("whiteboard.creator") : "—"}</span>}
         >
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            class="h-8 rounded-lg px-2 text-xs"
-            disabled={pending()}
-            onClick={() => void saveParticipants(props.participants().filter((id) => id !== cell.row.original.id))}
-          >
-            {t("whiteboard.removeParticipant")}
-          </Button>
+          <TableRowActions
+            compact
+            label={t("common.actions")}
+            actions={[{
+              label: t("whiteboard.removeParticipant"),
+              icon: <span class="text-base leading-none">×</span>,
+              destructive: true,
+              disabled: pending(),
+              onSelect: () => void saveParticipants(props.participants().filter((id) => id !== cell.row.original.id)),
+            }]}
+          />
         </Show>
       ),
     },
@@ -118,21 +124,23 @@ export function BoardSettingsPanel(props: {
     <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("whiteboard.edit")} size="wide">
       <div class="space-y-6">
         <Show when={error()}><ErrorAlert message={error()} /></Show>
-        <section class="space-y-3 rounded-xl border border-border/70 bg-card p-4 shadow-xs">
-          <Label for="whiteboard-title">{t("whiteboard.titleLabel")}</Label>
-          <div class="flex flex-wrap gap-2">
-            <Input id="whiteboard-title" class="min-w-0 flex-1" maxlength={200} value={title()} onInput={(event) => setTitle(event.currentTarget.value)} />
+        <section class="space-y-3 rounded-lg border border-border/70 bg-card p-4 shadow-sm">
+          <div>
+            <h3 class="text-sm font-semibold">{t("whiteboard.titleLabel")}</h3>
+            <p class="mt-1 text-xs text-muted-foreground">{t("whiteboard.edit")}</p>
+          </div>
+          <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <div class="space-y-1.5">
+              <Label for="whiteboard-title" class="sr-only">{t("whiteboard.titleLabel")}</Label>
+              <Input id="whiteboard-title" maxlength={200} value={title()} onInput={(event) => setTitle(event.currentTarget.value)} />
+            </div>
             <Button type="button" size="sm" class="rounded-lg" disabled={pending() || !title().trim() || title().trim() === props.title()} onClick={() => void saveTitle()}>
               {t("common.save")}
             </Button>
           </div>
         </section>
 
-        <section class="space-y-3 rounded-xl border border-border/70 bg-card p-4 shadow-xs">
-          <div>
-            <h3 class="text-sm font-semibold">{t("whiteboard.participants")}</h3>
-            <p class="mt-1 text-xs text-muted-foreground">{t("whiteboard.participantsHint")}</p>
-          </div>
+        <section class="space-y-3">
           <Show when={props.canManageParticipants()} fallback={<p class="text-xs text-muted-foreground">{t("whiteboard.creator")}</p>}>
             <Show
               when={props.canSearchPeople()}
@@ -154,14 +162,27 @@ export function BoardSettingsPanel(props: {
             columns={columns()}
             data={rows()}
             empty={t("whiteboard.empty")}
-            class="overflow-hidden rounded-xl border border-border/70 bg-background/40"
-            tableClass="min-w-[32rem]"
+            title={t("whiteboard.participants")}
+            description={t("whiteboard.participantsHint")}
+            class="rounded-lg border border-border/70 bg-card p-4 shadow-sm"
+            tableClass="min-w-[26rem]"
             enableColumnVisibility={false}
             enableSorting={false}
             enablePagination
             pageSize={8}
           />
         </section>
+
+        {/* Inviting a whole group is the creator's alone, exactly like the
+            roster edits above. */}
+        <Show when={props.canManageParticipants()}>
+          <BoardBulkInvite
+            boardId={props.boardId}
+            visible={props.canManageParticipants}
+            participantCount={() => props.participants().length}
+            onInvited={props.onInvited}
+          />
+        </Show>
       </div>
     </SidePanel>
   );

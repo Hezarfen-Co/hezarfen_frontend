@@ -1,4 +1,5 @@
 import { createMemo, createSignal, Show } from "solid-js";
+import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import type { Role, User } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { IconCheck, IconEye, IconUsers } from "@/components/ui/icons";
+import { IconCheck, IconExternalLink, IconEye, IconUsers } from "@/components/ui/icons";
 import { ROLES } from "@/lib/roles";
 import { useT } from "@/stores/preferences-context";
 
@@ -71,6 +72,7 @@ export function UserTable(props: {
   onParentClick?: (user: User) => void;
 }) {
   const t = useT();
+  const navigate = useNavigate();
   const searchUser = (user: User, query: string) =>
     [user.username, displayName(user), user.email, user.id, t(`role.${user.role}` as MessageKey)]
       .join(" ")
@@ -127,10 +129,15 @@ export function UserTable(props: {
               icon: <IconEye class="h-4 w-4" />,
               onSelect: () => props.onUserClick?.(cell.row.original),
             },
+            {
+              label: t("profile.viewProfile"),
+              icon: <IconExternalLink class="h-4 w-4" />,
+              onSelect: () => void navigate({ to: "/profile/$userId", params: { userId: cell.row.original.id } }),
+            },
             ...(cell.row.original.role === "parent"
               ? [
                   {
-                    label: t("nav.myStudents"),
+                    label: t("parentLink.manage"),
                     icon: <IconUsers class="h-4 w-4" />,
                     onSelect: () => props.onParentClick?.(cell.row.original),
                   },

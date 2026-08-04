@@ -79,7 +79,7 @@ function AdminUsersContent() {
       <Show when={selectedParent()} keyed>
         {(u) => (
           <ParentStudentsPanel 
-            parent={{ id: u.id, username: u.username, display_name: u.name || u.username }} 
+            parent={{ id: u.id, username: u.username, display_name: [u.name, u.surname].filter(Boolean).join(" ") || u.username }} 
             open 
             onOpenChange={() => setSelectedParent(null)} 
           />

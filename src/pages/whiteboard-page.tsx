@@ -21,7 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DrawingPlayback } from "@/components/ui/drawing-playback";
-import { IconChevronLeft, IconLock, IconTrash, IconX } from "@/components/ui/icons";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { IconChevronLeft, IconDotsVertical, IconEraser, IconLock, IconTrash, IconX } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { reassembleStrokes } from "@/lib/board-stroke-codec";
@@ -198,7 +199,7 @@ function WhiteboardContent() {
               compact
               title={boardTitle()}
               actions={
-                <div class="flex flex-wrap items-center gap-1.5">
+                <div class="flex flex-wrap items-center gap-2">
                   <Button type="button" variant="ghost" size="sm" onClick={() => navigate({ to: "/whiteboards" })}>
                     <IconChevronLeft class="h-4 w-4" />
                     {t("common.back")}
@@ -206,26 +207,41 @@ function WhiteboardContent() {
                   <Button type="button" variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
                     {t("whiteboard.history")}
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+                  <Button type="button" size="sm" class="rounded-lg" onClick={() => setSettingsOpen(true)}>
                     {t("whiteboard.edit")}
                   </Button>
-                  <Show when={isCreator() && !closed()}>
-                    <Button type="button" variant="outline" size="sm" disabled={busy()} onClick={() => void toggleLock()}>
-                      {locked() ? t("whiteboard.unlock") : t("whiteboard.lock")}
-                    </Button>
-                    <Button type="button" variant="outline" size="sm" disabled={busy()} onClick={() => setClearOpen(true)}>
-                      {t("whiteboard.clear")}
-                    </Button>
-                    <Button type="button" variant="outline" size="sm" class="border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 hover:text-amber-800 dark:text-amber-400" disabled={busy()} onClick={() => setCloseOpen(true)}>
-                      <IconLock class="h-4 w-4" />
-                      {t("whiteboard.close")}
-                    </Button>
-                  </Show>
                   <Show when={isCreator()}>
-                    <Button type="button" variant="outline" size="sm" class="text-destructive" disabled={busy()} onClick={() => setDeleteOpen(true)}>
-                      <IconTrash class="h-4 w-4" />
-                      {t("whiteboard.delete")}
-                    </Button>
+                    <DropdownMenu placement="bottom-end" gutter={8}>
+                      <DropdownMenuTrigger
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/80 bg-muted/45 text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary"
+                        aria-label={t("common.actions")}
+                        title={t("common.actions")}
+                      >
+                        <IconDotsVertical class="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent class="w-52">
+                        <Show when={!closed()}>
+                          <DropdownMenuItem disabled={busy()} onSelect={() => void toggleLock()}>
+                            <IconLock class="h-4 w-4" />
+                            {locked() ? t("whiteboard.unlock") : t("whiteboard.lock")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled={busy()} onSelect={() => setTimeout(() => setClearOpen(true), 0)}>
+                            <IconEraser class="h-4 w-4" />
+                            {t("whiteboard.clear")}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem class="text-amber-700 focus:bg-amber-500/10 focus:text-amber-800 data-highlighted:bg-amber-500/10 data-highlighted:text-amber-800 dark:text-amber-400" disabled={busy()} onSelect={() => setTimeout(() => setCloseOpen(true), 0)}>
+                            <IconLock class="h-4 w-4" />
+                            {t("whiteboard.close")}
+                          </DropdownMenuItem>
+                        </Show>
+                        <Show when={!closed()}><DropdownMenuSeparator /></Show>
+                        <DropdownMenuItem destructive disabled={busy()} onSelect={() => setTimeout(() => setDeleteOpen(true), 0)}>
+                          <IconTrash class="h-4 w-4" />
+                          {t("whiteboard.delete")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </Show>
                 </div>
               }
@@ -299,6 +315,7 @@ function WhiteboardContent() {
             <BoardSettingsPanel
               open={settingsOpen()}
               onOpenChange={setSettingsOpen}
+              boardId={id}
               title={boardTitle}
               participants={roster}
               creatorId={() => live().creator ?? ""}
@@ -308,6 +325,10 @@ function WhiteboardContent() {
               roleOf={roleOf}
               onTitleSave={(title) => updateBoard({ title })}
               onParticipantsSave={(participants) => updateBoard({ participants: participants.filter((participant) => participant !== live().creator) })}
+              // Merge in place rather than refetching the board resource, which
+              // would re-suspend the page; the socket's `participants` frame
+              // re-syncs anyway, this just avoids waiting on it.
+              onInvited={(board) => mergeLive({ creator: board.creator, participants: board.participants })}
             />
 
             <HistoryPanel open={historyOpen()} onOpenChange={setHistoryOpen} boardId={id()} />
