@@ -101,3 +101,21 @@ test("shows the pagination footer on a single page", () => {
   expect((screen.getByRole("button", { name: "Previous" }) as HTMLButtonElement).disabled).toBe(true);
   expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(true);
 });
+
+test("a display column renders its own cell instead of the empty dash", () => {
+  // A column with no accessorFn has no value to be empty, so the empty-cell
+  // fallback must not swallow its render function.
+  render(() => (
+    <PreferencesProvider>
+      <DataTable
+        columns={[
+          { accessorKey: "name", header: "Name" },
+          { id: "label", header: "Label", cell: (c) => `#${c.row.original.name}` },
+        ] as ColumnDef<Row>[]}
+        data={[{ name: "ada" }]}
+      />
+    </PreferencesProvider>
+  ));
+
+  expect(screen.getByText("#ada")).toBeTruthy();
+});

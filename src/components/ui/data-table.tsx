@@ -355,7 +355,13 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                         const val = cell.getValue();
                         const isText = typeof val === "string" || typeof val === "number";
                         const isSystemColumn = ["actions", "update", "select"].includes(cell.column.id);
-                        const isEmpty = !isSystemColumn && (val == null || val === "");
+                        // A display column (no accessorFn/accessorKey) has no
+                        // value to be empty — getValue() is always undefined —
+                        // so it must render its own `cell`, or a column that
+                        // draws itself from row.original silently shows "-".
+                        const isDisplayColumn = cell.column.accessorFn == null;
+                        const isEmpty =
+                          !isSystemColumn && !isDisplayColumn && (val == null || val === "");
 
                         return (
                           <TableCell
