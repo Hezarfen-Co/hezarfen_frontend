@@ -125,10 +125,10 @@
   @apply border border-border/70 bg-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground;
 }
 
-/* AI action button: follows the active product palette instead of introducing
-   a separate violet brand color in the top bar. */
+/* AI action button: matches the app logo's orange instead of the theme's
+   primary color, so it reads as a distinct brand accent in the top bar. */
 @utility topbar-ai-control {
-  @apply border border-primary/20 bg-primary/10 text-primary transition-colors hover:bg-primary/16 hover:text-primary;
+  @apply border border-orange-500/20 bg-orange-500/10 text-orange-500 transition-colors hover:bg-orange-500/16 hover:text-orange-500;
 }
 
 @utility data-shell {
