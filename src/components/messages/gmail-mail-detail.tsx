@@ -181,7 +181,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               title={t("messages.restoreFromTrash")}
             >
               <IconMessage class="mr-1.5 h-3.5 w-3.5" />
-              Çöp Kutusundan Çıkar
+              {t("messages.restoreFromTrash")}
             </Button>
           </Show>
 
@@ -267,7 +267,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               onClick={handleStartReply}
             >
               <IconMessage class="mr-1.5 h-3.5 w-3.5" />
-              Yanıtla
+              {t("messages.reply")}
             </Button>
           </Show>
         </div>
@@ -291,7 +291,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                     onClick={handleStartReply}
                   >
                     <IconMessage class="mr-2 h-4 w-4" />
-                    Yanıtla
+                    {t("messages.reply")}
                   </Button>
                 </div>
               }
@@ -303,7 +303,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               >
                 <div class="flex items-center justify-between text-xs border-b pb-2">
                   <div class="flex items-center gap-2">
-                    <span class="font-bold text-foreground">Yanıtla:</span>
+                    <span class="font-bold text-foreground">{t("messages.replyTo")}</span>
                     <Badge variant="secondary" class="text-xs font-medium">
                       {peerName()}
                     </Badge>

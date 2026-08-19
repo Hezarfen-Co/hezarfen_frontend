@@ -1,11 +1,16 @@
 import { For, Show, createSignal } from "solid-js";
 import type { Note } from "@/api/client";
+import type { NoteFileSource } from "@/lib/note-source";
 import { NoteCard } from "@/components/notes/note-card";
 import { NoteReaderPanel } from "@/components/notes/note-reader-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export function NoteList(props: {
   notes: Note[];
+  /** Which note family these belong to — decides the file routes behind them. */
+  source: NoteFileSource;
+  /** Hides edit/delete and the file controls when false. Defaults to true. */
+  canManage?: boolean;
   emptyTitle: string;
   emptyDescription?: string;
   onUpdate: (id: string, values: { title: string; content: string }) => Promise<void>;
@@ -30,6 +35,7 @@ export function NoteList(props: {
               <li class="animate-fade-up">
                 <NoteCard
                   note={note}
+                  canManage={props.canManage}
                   onOpen={setReadingNote}
                   onUpdate={props.onUpdate}
                   onDelete={props.onDelete}
@@ -42,6 +48,8 @@ export function NoteList(props: {
 
       <NoteReaderPanel
         note={readingNote()}
+        source={props.source}
+        canManage={props.canManage}
         open={readingNote() != null}
         onOpenChange={(open) => {
           if (!open) setReadingNote(null);

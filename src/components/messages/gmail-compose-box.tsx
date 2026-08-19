@@ -97,7 +97,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
               type="button"
               class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => setIsMinimized(!isMinimized())}
-              title={isMinimized() ? "Genişlet" : "Simge durumuna küçült"}
+              title={isMinimized() ? t("messages.expand") : t("messages.minimize")}
             >
               <span class="text-xs font-bold">{isMinimized() ? "□" : "—"}</span>
             </button>

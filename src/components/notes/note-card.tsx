@@ -10,6 +10,8 @@ import { useT } from "@/stores/preferences-context";
 
 export function NoteCard(props: {
   note: Note;
+  /** Hides the edit/delete menu when false. Defaults to true. */
+  canManage?: boolean;
   onOpen: (note: Note) => void;
   onUpdate: (id: string, values: { title: string; content: string }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -18,6 +20,7 @@ export function NoteCard(props: {
   const [editing, setEditing] = createSignal(false);
   const [error, setError] = createSignal("");
   const [deleteOpen, setDeleteOpen] = createSignal(false);
+  const canManage = () => props.canManage !== false;
 
   return (
     <>
@@ -35,24 +38,26 @@ export function NoteCard(props: {
       >
         <div class="flex items-start justify-between gap-3 border-b border-amber-500/30 bg-muted/40 px-4 py-3 dark:border-amber-500/30 dark:bg-muted/30">
           <h3 class="line-clamp-2 min-w-0 text-base font-semibold leading-snug">{props.note.title}</h3>
-          <div class="shrink-0" onClick={(event) => event.stopPropagation()}>
-            <TableRowActions
-              label={t("common.actions")}
-              actions={[
-                {
-                  label: t("common.edit"),
-                  icon: <IconEdit class="h-4 w-4" />,
-                  onSelect: () => setEditing(true),
-                },
-                {
-                  label: t("common.delete"),
-                  icon: <IconTrash class="h-4 w-4" />,
-                  destructive: true,
-                  onSelect: () => setDeleteOpen(true),
-                },
-              ]}
-            />
-          </div>
+          <Show when={canManage()}>
+            <div class="shrink-0" onClick={(event) => event.stopPropagation()}>
+              <TableRowActions
+                label={t("common.actions")}
+                actions={[
+                  {
+                    label: t("common.edit"),
+                    icon: <IconEdit class="h-4 w-4" />,
+                    onSelect: () => setEditing(true),
+                  },
+                  {
+                    label: t("common.delete"),
+                    icon: <IconTrash class="h-4 w-4" />,
+                    destructive: true,
+                    onSelect: () => setDeleteOpen(true),
+                  },
+                ]}
+              />
+            </div>
+          </Show>
         </div>
         <div class="flex flex-1 flex-col gap-4 bg-[linear-gradient(90deg,rgba(245,158,11,0.12)_0,rgba(245,158,11,0.12)_2.25rem,transparent_2.25rem),repeating-linear-gradient(0deg,transparent_0,transparent_2.05rem,rgba(120,113,108,0.14)_2.1rem)] px-4 py-4 pl-12 dark:bg-[linear-gradient(90deg,rgba(245,158,11,0.1)_0,rgba(245,158,11,0.1)_2.25rem,transparent_2.25rem),repeating-linear-gradient(0deg,transparent_0,transparent_2.05rem,rgba(214,211,209,0.1)_2.1rem)]">
           <Show

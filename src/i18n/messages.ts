@@ -131,6 +131,10 @@ export type MessageKey =
   | "editor.bulletList"
   | "editor.numberedList"
   | "editor.clearFormatting"
+  | "editor.bulletListLabel"
+  | "editor.numberedListLabel"
+  | "editor.clearFormattingLabel"
+  | "editor.bodyPlaceholder"
   | "messages.refreshList"
   | "messages.deleteDraft"
   | "messages.restoreFromTrash"
@@ -412,7 +416,14 @@ export type MessageKey =
   | "command.action.langEn"
   | "command.action.logout"
   | "command.action.logoutDesc"
+  | "command.action.themeDarkDesc"
+  | "command.action.themeLightDesc"
+  | "command.action.langTrDesc"
+  | "command.action.langEnDesc"
   | "command.shortcutHint"
+  | "command.key.navigate"
+  | "command.key.select"
+  | "command.key.close"
   | "dashboard.observationOnly"
   | "dashboard.today"
   | "dashboard.reportCard"
@@ -520,6 +531,12 @@ export type MessageKey =
   | "dashboard.quickReview.placeholder"
   | "dashboard.quickReview.practice"
   | "dashboard.quickReview.startQuiz"
+  | "courseNotes.title"
+  | "courseNotes.item"
+  | "courseNotes.new"
+  | "courseNotes.add"
+  | "courseNotes.empty"
+  | "courseNotes.emptyManageHint"
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
@@ -1419,6 +1436,13 @@ export type MessageKey =
   | "messages.markAsRead"
   | "messages.markAsUnread"
   | "messages.selectRecipient"
+  | "messages.expand"
+  | "messages.minimize"
+  | "messages.replyTo"
+  | "messages.refreshedToast"
+  | "messages.deleteForeverOnlyTrash"
+  | "messages.readOnlyReceived"
+  | "messages.trashEmptiedToast"
   | "calendar.title"
   | "calendar.today"
   | "calendar.noEvents"
@@ -1636,6 +1660,10 @@ const en: Dict = {
   "editor.bulletList": "Bulleted list",
   "editor.numberedList": "Numbered list",
   "editor.clearFormatting": "Clear formatting",
+  "editor.bulletListLabel": "List",
+  "editor.numberedListLabel": "1. List",
+  "editor.clearFormattingLabel": "Clear format",
+  "editor.bodyPlaceholder": "Write your message here…",
   "messages.refreshList": "Refresh messages",
   "messages.deleteDraft": "Delete draft",
   "messages.restoreFromTrash": "Restore from trash",
@@ -1920,6 +1948,13 @@ const en: Dict = {
   "command.action.logout": "Log out",
   "command.action.logoutDesc": "Sign out of your account",
   "command.shortcutHint": "Use arrow keys to navigate, press Enter to select",
+  "command.key.navigate": "navigate",
+  "command.key.select": "select",
+  "command.key.close": "close",
+  "command.action.themeDarkDesc": "Switch to dark mode",
+  "command.action.themeLightDesc": "Switch to light mode",
+  "command.action.langTrDesc": "Switch to Turkish",
+  "command.action.langEnDesc": "Switch to English",
   "dashboard.observationOnly": "Read-only overview of what needs attention.",
   "dashboard.today": "Today",
   "dashboard.reportCard": "Report card",
@@ -2027,6 +2062,12 @@ const en: Dict = {
   "dashboard.quickReview.placeholder": "Choose a topic to review…",
   "dashboard.quickReview.practice": "Practice",
   "dashboard.quickReview.startQuiz": "Start quiz",
+  "courseNotes.title": "Lesson notes",
+  "courseNotes.item": "lesson note",
+  "courseNotes.new": "New lesson note",
+  "courseNotes.add": "Add note",
+  "courseNotes.empty": "No notes on this course yet.",
+  "courseNotes.emptyManageHint": "Write a note the whole class can read, and attach files to it.",
   "notes.title": "Notebook",
   "notes.subtitle": "Your private notebook for class ideas and reminders.",
   "notes.new": "New note",
@@ -3013,6 +3054,13 @@ const en: Dict = {
   "messages.markAsRead": "Mark as read",
   "messages.markAsUnread": "Mark as unread",
   "messages.selectRecipient": "Please select a recipient.",
+  "messages.expand": "Expand",
+  "messages.minimize": "Minimise",
+  "messages.replyTo": "Reply to:",
+  "messages.refreshedToast": "Messages refreshed.",
+  "messages.deleteForeverOnlyTrash": "Permanent delete only applies to messages in the trash.",
+  "messages.readOnlyReceived": "Only received messages can be marked read or unread.",
+  "messages.trashEmptiedToast": "Trash emptied.",
 };
 
 const tr: Dict = {
@@ -3149,6 +3197,10 @@ const tr: Dict = {
   "editor.bulletList": "Madde işaretli liste",
   "editor.numberedList": "Numaralı liste",
   "editor.clearFormatting": "Biçimlendirmeyi temizle",
+  "editor.bulletListLabel": "Liste",
+  "editor.numberedListLabel": "1. Liste",
+  "editor.clearFormattingLabel": "Biçimi temizle",
+  "editor.bodyPlaceholder": "Mesajınızı buraya yazın…",
   "messages.refreshList": "Mesajları yenile",
   "messages.deleteDraft": "Taslağı sil",
   "messages.restoreFromTrash": "Çöp kutusundan çıkar",
@@ -3433,6 +3485,13 @@ const tr: Dict = {
   "command.action.logout": "Oturumu kapat",
   "command.action.logoutDesc": "Mevcut oturumu sonlandır",
   "command.shortcutHint": "Yön tuşlarıyla gezinebilir, Enter ile seçebilirsiniz",
+  "command.key.navigate": "gezin",
+  "command.key.select": "seç",
+  "command.key.close": "kapat",
+  "command.action.themeDarkDesc": "Koyu moda geç",
+  "command.action.themeLightDesc": "Açık moda geç",
+  "command.action.langTrDesc": "Türkçe diline geç",
+  "command.action.langEnDesc": "İngilizce diline geç",
   "dashboard.observationOnly": "Dikkat isteyenlerin salt okunur özeti.",
   "dashboard.today": "Bugün",
   "dashboard.reportCard": "Karne",
@@ -3540,6 +3599,12 @@ const tr: Dict = {
   "dashboard.quickReview.placeholder": "Tekrar için konu seç…",
   "dashboard.quickReview.practice": "Alıştır",
   "dashboard.quickReview.startQuiz": "Teste başla",
+  "courseNotes.title": "Ders notları",
+  "courseNotes.item": "ders notu",
+  "courseNotes.new": "Yeni ders notu",
+  "courseNotes.add": "Not ekle",
+  "courseNotes.empty": "Bu derse ait henüz not yok.",
+  "courseNotes.emptyManageHint": "Tüm sınıfın okuyabileceği bir not yazın, dosya da ekleyebilirsiniz.",
   "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleriniz ve hatırlatmalarınız için özel defteriniz.",
   "notes.new": "Yeni not",
@@ -4526,6 +4591,13 @@ const tr: Dict = {
   "messages.markAsRead": "Okundu olarak işaretle",
   "messages.markAsUnread": "Okunmadı olarak işaretle",
   "messages.selectRecipient": "Lütfen bir alıcı seçin.",
+  "messages.expand": "Genişlet",
+  "messages.minimize": "Simge durumuna küçült",
+  "messages.replyTo": "Yanıtla:",
+  "messages.refreshedToast": "Mesajlar güncellendi.",
+  "messages.deleteForeverOnlyTrash": "Kalıcı silme yalnızca çöp kutusundaki mesajlar için geçerli.",
+  "messages.readOnlyReceived": "Yalnızca gelen mesajların okundu durumu değiştirilebilir.",
+  "messages.trashEmptiedToast": "Çöp kutusu boşaltıldı.",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

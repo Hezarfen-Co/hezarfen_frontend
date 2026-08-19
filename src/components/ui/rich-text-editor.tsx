@@ -97,7 +97,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           onClick={() => execCommand("insertUnorderedList")}
           title={t("editor.bulletList")}
         >
-          • Liste
+          • {t("editor.bulletListLabel")}
         </button>
         <button
           type="button"
@@ -105,7 +105,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           onClick={() => execCommand("insertOrderedList")}
           title={t("editor.numberedList")}
         >
-          1. Liste
+          {t("editor.numberedListLabel")}
         </button>
 
         <div class="mx-1 h-4 w-px bg-border" />
@@ -116,7 +116,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           onClick={() => execCommand("removeFormat")}
           title={t("editor.clearFormatting")}
         >
-          Biçimi Temizle
+          {t("editor.clearFormattingLabel")}
         </button>
       </div>
 
@@ -136,7 +136,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
         {/* Placeholder overlay */}
         {!props.value && !isFocused() && (
           <div class="pointer-events-none absolute left-3 top-3 text-xs text-muted-foreground/60 select-none">
-            {props.placeholder || "Mesajınızı buraya yazın..."}
+            {props.placeholder || t("editor.bodyPlaceholder")}
           </div>
         )}
       </div>

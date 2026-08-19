@@ -20,7 +20,7 @@ export function DataTableSearch(props: DataTableSearchProps) {
       <Input
         value={props.value}
         onInput={(event) => props.onChange(event.currentTarget.value)}
-        placeholder={props.placeholder ?? "Ara"}
+        placeholder={props.placeholder ?? t("common.search")}
         class={cn("h-8 rounded-lg bg-muted/40 text-[13px] md:text-[13px]", props.value ? "pl-9 pr-8" : "pl-9")}
       />
       <Show when={props.value}>

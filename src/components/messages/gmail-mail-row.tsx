@@ -116,7 +116,7 @@ export function GmailMailRow(props: GmailMailRowProps) {
             <button
               type="button"
               class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-              title={props.folder === "trash" ? "Çöp Kutusundan Çıkar" : t("messages.moveToTrash")}
+              title={props.folder === "trash" ? t("messages.restoreFromTrash") : t("messages.moveToTrash")}
               onClick={(e) => {
                 e.stopPropagation();
                 props.onTrash?.();
@@ -144,7 +144,7 @@ export function GmailMailRow(props: GmailMailRowProps) {
             <button
               type="button"
               class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-              title={unread() ? "Okundu olarak işaretle" : "Okunmadı olarak işaretle"}
+              title={unread() ? t("messages.markAsRead") : t("messages.markAsUnread")}
               onClick={(e) => {
                 e.stopPropagation();
                 props.onToggleRead?.();

@@ -1,13 +1,9 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, lazy } from "solid-js";
-import { deleteNoteFileById } from "@/api/notes";
-import { getNoteFileBlob } from "@/api/notes";
-import { getNoteFileUrl } from "@/api/notes";
-import { getNoteFiles } from "@/api/notes";
 import { getSettings } from "@/api/settings";
-import { postNoteFile } from "@/api/notes";
 import { formatApiError } from "@/api/client";
 import type { NoteFile } from "@/api/client";
 import type { DrawScene } from "@/lib/draw-stroke";
+import type { NoteFileSource } from "@/lib/note-source";
 import { NoteFilePreview } from "@/components/notes/note-file-preview";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -26,14 +22,20 @@ import { useT } from "@/stores/preferences-context";
 // Lazy so the drawing pad rides its own chunk, off the notes page's initial load.
 const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
-const MAX_NOTE_FILES = 10;
 const FILE_PAGE_SIZE = 4;
 
 /** Drawings are saved with this suffix so the grid can offer "Edit" without fetching every blob. */
 const DRAWING_SUFFIX = ".hzdraw.png";
 const isDrawing = (file: NoteFile) => file.name.toLowerCase().endsWith(DRAWING_SUFFIX);
 
-export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
+export function NoteFilesPanel(props: {
+  noteId: string;
+  active: boolean;
+  /** Which note family the files hang off — personal notes or a course's. */
+  source: NoteFileSource;
+  /** Read-only when false: no upload, drawing, or delete. Defaults to true. */
+  canManage?: boolean;
+}) {
   let input: HTMLInputElement | undefined;
   const t = useT();
   const [error, setError] = createSignal("");
@@ -45,11 +47,12 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   const [editTarget, setEditTarget] = createSignal<NoteFile | null>(null);
   const [previewFile, setPreviewFile] = createSignal<NoteFile | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<NoteFile | null>(null);
+  const canManage = () => props.canManage !== false;
   const [files, { refetch }] = createResource(
     () => (props.active ? props.noteId : null),
     async (noteId) => {
       if (!noteId) return [] as NoteFile[];
-      return (await getNoteFiles(noteId, { limit: MAX_NOTE_FILES })).items;
+      return (await props.source.listFiles(noteId, { limit: props.source.maxFiles })).items;
     },
   );
   const [settings] = createResource(async () => {
@@ -60,7 +63,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
     }
   });
   const maxFileBytes = () => maxUploadBytes(settings());
-  const atLimit = () => (files() ?? []).length >= MAX_NOTE_FILES;
+  const atLimit = () => (files() ?? []).length >= props.source.maxFiles;
   const totalPages = createMemo(() => Math.max(1, Math.ceil((files() ?? []).length / FILE_PAGE_SIZE)));
   const pageFiles = createMemo(() => {
     const start = filePage() * FILE_PAGE_SIZE;
@@ -80,7 +83,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
     }
     setPending(true);
     try {
-      await postNoteFile(props.noteId, file);
+      await props.source.uploadFile(props.noteId, file);
       await refetch();
       if (input) input.value = "";
       setFlash(t("common.created"));
@@ -95,7 +98,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
 
   const download = (file: NoteFile) => {
     const link = document.createElement("a");
-    link.href = getNoteFileUrl(props.noteId, file.id);
+    link.href = props.source.fileUrl(props.noteId, file.id);
     link.download = file.name;
     link.click();
   };
@@ -109,7 +112,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
   const openEditDrawing = async (file: NoteFile) => {
     setError("");
     try {
-      const blob = await getNoteFileBlob(props.noteId, file.id);
+      const blob = await props.source.fileBlob(props.noteId, file.id);
       const { pngBytesToScene } = await import("@/lib/drawing-file");
       setEditScene(pngBytesToScene(new Uint8Array(await blob.arrayBuffer())));
       setEditTarget(file);
@@ -126,7 +129,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
     if (!(await upload(file))) return;
     if (target) {
       try {
-        await deleteNoteFileById(props.noteId, target.id);
+        await props.source.deleteFile(props.noteId, target.id);
         await refetch();
       } catch {
         // New drawing is saved; deleting the old copy failed — a stale duplicate
@@ -146,7 +149,9 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 class="text-sm font-semibold">{t("notes.files")}</h3>
-          <p class="mt-1 text-xs text-muted-foreground">{t("notes.filesHelp", { size: formatBytes(maxFileBytes()) })}</p>
+          <Show when={canManage()}>
+            <p class="mt-1 text-xs text-muted-foreground">{t("notes.filesHelp", { size: formatBytes(maxFileBytes()) })}</p>
+          </Show>
         </div>
         <input
           ref={(el) => {
@@ -157,20 +162,22 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           disabled={pending() || atLimit()}
           onChange={(event) => void upload(event.currentTarget.files?.[0])}
         />
-        <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-          <Button type="button" variant="outline" size="sm" class="w-full sm:w-32 rounded-lg" disabled={pending() || atLimit()} onClick={openNewDrawing}>
-            <IconEdit class="h-4 w-4 shrink-0" />
-            <span class="truncate">{t("notes.draw")}</span>
-          </Button>
-          <Button type="button" size="sm" class="w-full sm:w-32 rounded-lg" disabled={pending() || atLimit()} onClick={() => input?.click()}>
-            <IconPlus class="h-4 w-4 shrink-0" />
-            <span class="truncate">{t("notes.addFile")}</span>
-          </Button>
-        </div>
+        <Show when={canManage()}>
+          <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+            <Button type="button" variant="outline" size="sm" class="w-full sm:w-32 rounded-lg" disabled={pending() || atLimit()} onClick={openNewDrawing}>
+              <IconEdit class="h-4 w-4 shrink-0" />
+              <span class="truncate">{t("notes.draw")}</span>
+            </Button>
+            <Button type="button" size="sm" class="w-full sm:w-32 rounded-lg" disabled={pending() || atLimit()} onClick={() => input?.click()}>
+              <IconPlus class="h-4 w-4 shrink-0" />
+              <span class="truncate">{t("notes.addFile")}</span>
+            </Button>
+          </div>
+        </Show>
       </div>
 
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
-      <Show when={atLimit()}>
+      <Show when={canManage() && atLimit()}>
         <p class="text-xs text-muted-foreground">{t("notes.fileLimit")}</p>
       </Show>
 
@@ -202,7 +209,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
                         <TableRowActions
                           label={t("common.actions")}
                           actions={[
-                            ...(isDrawing(file)
+                            ...(canManage() && isDrawing(file)
                               ? [
                                   {
                                     label: t("common.edit"),
@@ -221,12 +228,16 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
                               icon: <IconDownload class="h-4 w-4" />,
                               onSelect: () => download(file),
                             },
-                            {
-                              label: t("common.delete"),
-                              icon: <IconTrash class="h-4 w-4" />,
-                              destructive: true,
-                              onSelect: () => setDeleteTarget(file),
-                            },
+                            ...(canManage()
+                              ? [
+                                  {
+                                    label: t("common.delete"),
+                                    icon: <IconTrash class="h-4 w-4" />,
+                                    destructive: true,
+                                    onSelect: () => setDeleteTarget(file),
+                                  },
+                                ]
+                              : []),
                           ]}
                         />
                       </div>
@@ -243,7 +254,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
           <Show when={(files() ?? []).length > FILE_PAGE_SIZE}>
             <PaginationControls page={filePage()} totalPages={totalPages()} onPageChange={setFilePage} />
           </Show>
-          <NoteFilePreview noteId={props.noteId} file={previewFile()} onClose={() => setPreviewFile(null)} />
+          <NoteFilePreview noteId={props.noteId} source={props.source} file={previewFile()} onClose={() => setPreviewFile(null)} />
         </Show>
       </Suspense>
 
@@ -281,7 +292,7 @@ export function NoteFilesPanel(props: { noteId: string; active: boolean }) {
         onConfirm={async () => {
           const target = deleteTarget();
           if (!target) return;
-          await deleteNoteFileById(props.noteId, target.id);
+          await props.source.deleteFile(props.noteId, target.id);
           if (previewFile()?.id === target.id) setPreviewFile(null);
           setDeleteTarget(null);
           await refetch();

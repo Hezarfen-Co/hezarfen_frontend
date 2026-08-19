@@ -1,11 +1,15 @@
 import { Show } from "solid-js";
 import type { Note } from "@/api/client";
+import type { NoteFileSource } from "@/lib/note-source";
 import { NoteFilesPanel } from "@/components/notes/note-files-panel";
 import { SidePanel } from "@/components/ui/side-panel";
 import { useT } from "@/stores/preferences-context";
 
 export function NoteReaderPanel(props: {
   note: Note | null;
+  source: NoteFileSource;
+  /** Read-only file section when false. Defaults to true. */
+  canManage?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -32,7 +36,7 @@ export function NoteReaderPanel(props: {
                 </Show>
               </div>
             </article>
-            <NoteFilesPanel noteId={n().id} active={props.open} />
+            <NoteFilesPanel noteId={n().id} source={props.source} canManage={props.canManage} active={props.open} />
           </div>
         )}
       </Show>
