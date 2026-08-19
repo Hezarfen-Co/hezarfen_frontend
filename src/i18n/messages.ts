@@ -531,6 +531,12 @@ export type MessageKey =
   | "dashboard.quickReview.placeholder"
   | "dashboard.quickReview.practice"
   | "dashboard.quickReview.startQuiz"
+  | "courseNotes.title"
+  | "courseNotes.item"
+  | "courseNotes.new"
+  | "courseNotes.add"
+  | "courseNotes.empty"
+  | "courseNotes.emptyManageHint"
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
@@ -2056,6 +2062,12 @@ const en: Dict = {
   "dashboard.quickReview.placeholder": "Choose a topic to review…",
   "dashboard.quickReview.practice": "Practice",
   "dashboard.quickReview.startQuiz": "Start quiz",
+  "courseNotes.title": "Lesson notes",
+  "courseNotes.item": "lesson note",
+  "courseNotes.new": "New lesson note",
+  "courseNotes.add": "Add note",
+  "courseNotes.empty": "No notes on this course yet.",
+  "courseNotes.emptyManageHint": "Write a note the whole class can read, and attach files to it.",
   "notes.title": "Notebook",
   "notes.subtitle": "Your private notebook for class ideas and reminders.",
   "notes.new": "New note",
@@ -3587,6 +3599,12 @@ const tr: Dict = {
   "dashboard.quickReview.placeholder": "Tekrar için konu seç…",
   "dashboard.quickReview.practice": "Alıştır",
   "dashboard.quickReview.startQuiz": "Teste başla",
+  "courseNotes.title": "Ders notları",
+  "courseNotes.item": "ders notu",
+  "courseNotes.new": "Yeni ders notu",
+  "courseNotes.add": "Not ekle",
+  "courseNotes.empty": "Bu derse ait henüz not yok.",
+  "courseNotes.emptyManageHint": "Tüm sınıfın okuyabileceği bir not yazın, dosya da ekleyebilirsiniz.",
   "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleriniz ve hatırlatmalarınız için özel defteriniz.",
   "notes.new": "Yeni not",

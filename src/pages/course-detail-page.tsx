@@ -19,6 +19,7 @@ import { patchExamById } from "@/api/exams";
 import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
+import { CourseNotesPanel } from "@/components/courses/course-notes-panel";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
 import { CourseTeachersPanel } from "@/components/courses/course-teachers-panel";
 import { CourseHomeworkPanel } from "@/components/homework/course-homework-panel";
@@ -31,7 +32,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconBook, IconCalendarDays, IconEdit, IconExam, IconHomework, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
+import { IconBook, IconCalendarDays, IconEdit, IconExam, IconHomework, IconNote, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
 import { createFlash } from "@/lib/flash";
 import { cn } from "@/lib/cn";
 import { Input } from "@/components/ui/input";
@@ -118,10 +119,12 @@ function CourseDetailContent() {
   const [showSessionForm, setShowSessionForm] = createSignal(false);
   const [showHomeworkForm, setShowHomeworkForm] = createSignal(false);
   const [showTeacherForm, setShowTeacherForm] = createSignal(false);
+  const [showNoteForm, setShowNoteForm] = createSignal(false);
   const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
   const [subjectCount, setSubjectCount] = createSignal(0);
   const [sessionCount, setSessionCount] = createSignal(0);
   const [homeworkCount, setHomeworkCount] = createSignal(0);
+  const [noteCount, setNoteCount] = createSignal(0);
   const [enrollUserId, setEnrollUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -599,11 +602,12 @@ function CourseDetailContent() {
             )}
 
             <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-4">
-              <TabsList class="grid w-full grid-cols-2 sm:grid-cols-3 xl:grid-cols-6" aria-label={c().title}>
+              <TabsList class="grid w-full grid-cols-2 sm:grid-cols-3 xl:grid-cols-7" aria-label={c().title}>
                 <TabsTrigger value="subjects" class="min-w-0"><IconBook class="h-4 w-4" />{t("subjects.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{subjectCount()}</Badge></TabsTrigger>
                 <TabsTrigger value="exams" class="min-w-0"><IconExam class="h-4 w-4" />{t("courses.exams")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{examCount()}</Badge></TabsTrigger>
                 <TabsTrigger value="homework" class="min-w-0"><IconHomework class="h-4 w-4" />{t("homework.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{homeworkCount()}</Badge></TabsTrigger>
                 <TabsTrigger value="sessions" class="min-w-0"><IconCalendarDays class="h-4 w-4" />{t("sessions.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{sessionCount()}</Badge></TabsTrigger>
+                <TabsTrigger value="notes" class="min-w-0"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{noteCount()}</Badge></TabsTrigger>
                 <TabsTrigger value="teachers" class="min-w-0"><IconSchool class="h-4 w-4" />{t("courses.teachers")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{assignedTeacherCount()}</Badge></TabsTrigger>
                 <Show when={hasCourseManagementRights()}>
                   <TabsTrigger value="students" class="min-w-0"><IconUsers class="h-4 w-4" />{t("courses.roster")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{rosterCount()}</Badge></TabsTrigger>
@@ -645,6 +649,14 @@ function CourseDetailContent() {
                   </Show>
                 </div>
                 <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} active={courseTab() === "sessions"} createOpen={showSessionForm()} onCreateOpenChange={setShowSessionForm} onCountChange={setSessionCount} />
+              </TabsContent>
+
+              <TabsContent value="notes" class="space-y-3">
+                <div class="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary" class="rounded-full">{countDescription(noteCount(), t("courseNotes.item"))}</Badge>
+                  <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowNoteForm(true)}><IconPlus class="h-4 w-4" />{t("courseNotes.add")}</Button></Show>
+                </div>
+                <CourseNotesPanel courseId={id()} canManage={canManage()} active={courseTab() === "notes"} createOpen={showNoteForm()} onCreateOpenChange={setShowNoteForm} onCountChange={setNoteCount} />
               </TabsContent>
 
               <TabsContent value="teachers" class="space-y-3">

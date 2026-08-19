@@ -1,8 +1,7 @@
 import { Match, Show, Switch, createEffect, createSignal, onCleanup } from "solid-js";
 import { formatApiError } from "@/api/client";
-import { getNoteFileBlob } from "@/api/notes";
 import type { NoteFile } from "@/api/client";
-import { getNoteFileUrl } from "@/api/notes";
+import type { NoteFileSource } from "@/lib/note-source";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useT } from "@/stores/preferences-context";
 
@@ -15,12 +14,12 @@ function canPreview(file: NoteFile): boolean {
   return type.startsWith("image/") || type.startsWith("video/") || type.startsWith("audio/") || canFrame(type);
 }
 
-export function NoteFilePreview(props: { noteId: string; file: NoteFile | null; onClose: () => void }) {
+export function NoteFilePreview(props: { noteId: string; source: NoteFileSource; file: NoteFile | null; onClose: () => void }) {
   const t = useT();
   let currentUrl = "";
   const [previewUrl, setPreviewUrl] = createSignal("");
   const [previewError, setPreviewError] = createSignal("");
-  const downloadUrl = () => (props.file ? getNoteFileUrl(props.noteId, props.file.id) : "");
+  const downloadUrl = () => (props.file ? props.source.fileUrl(props.noteId, props.file.id) : "");
   const type = () => props.file?.content_type ?? "";
 
   createEffect(() => {
@@ -33,7 +32,7 @@ export function NoteFilePreview(props: { noteId: string; file: NoteFile | null; 
     if (!file || !canPreview(file)) return;
 
     const controller = new AbortController();
-    void getNoteFileBlob(props.noteId, file.id, controller.signal)
+    void props.source.fileBlob(props.noteId, file.id, controller.signal)
       .then((blob) => {
         if (controller.signal.aborted) return;
         currentUrl = URL.createObjectURL(blob);

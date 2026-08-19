@@ -19,6 +19,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
 import { createFlash } from "@/lib/flash";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
+import { personalNoteFiles } from "@/lib/note-source";
 import { useT } from "@/stores/preferences-context";
 
 const NOTE_PAGE_SIZE = 10;
@@ -154,6 +155,7 @@ function NotesContent() {
             <Show when={list()}>
               <NoteList
                 notes={pageItems()}
+                source={personalNoteFiles}
                 emptyTitle={t("dashboard.emptyNotesTitle")}
                 emptyDescription={t("notes.empty")}
                 onUpdate={(id, values) =>

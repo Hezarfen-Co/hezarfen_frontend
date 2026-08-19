@@ -105,6 +105,14 @@ export type Note = {
   content: string;
 };
 
+/** A note attached to a course; files reuse the personal note's `NoteFile` shape. */
+export type CourseNote = {
+  id: string;
+  course: string;
+  title: string;
+  content: string;
+};
+
 export type NoteFile = {
   id: string;
   name: string;
