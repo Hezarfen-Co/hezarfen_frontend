@@ -102,7 +102,7 @@ export default function MessagesPage() {
     setIsRefreshing(true);
     try {
       await Promise.all([refetch(), refetchUnread()]);
-      setFlash("Mesajlar güncellendi");
+      setFlash(t("messages.refreshedToast"));
     } catch (err: any) {
       console.error("Refresh error:", err);
       setFlash(formatApiError(err));
@@ -118,7 +118,7 @@ export default function MessagesPage() {
     try {
       if (action.delete) {
         if (msg.folder !== "trash") {
-          setFlash("Kalıcı silme işlemi sadece Çöp Kutusu'ndaki mesajlar için geçerlidir");
+          setFlash(t("messages.deleteForeverOnlyTrash"));
           return;
         }
         await deleteMessageById(msg.id);
@@ -128,7 +128,7 @@ export default function MessagesPage() {
         setFlash(t("messages.movedToast"));
       } else if (action.read !== undefined) {
         if (isOwnSentMessage(msg)) {
-          setFlash("Sadece alınan mesajların okundu durumu değiştirilebilir");
+          setFlash(t("messages.readOnlyReceived"));
           return;
         }
         await patchMessageById(msg.id, { read: action.read });
@@ -152,7 +152,7 @@ export default function MessagesPage() {
     if (trashItems.length === 0) return;
     try {
       await Promise.all(trashItems.map((m) => deleteMessageById(m.id)));
-      setFlash("Çöp kutusu boşaltıldı");
+      setFlash(t("messages.trashEmptiedToast"));
       setSelectedId("");
       refetch();
     } catch (err: any) {

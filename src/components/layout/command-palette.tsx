@@ -225,7 +225,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       category: "system",
       categoryLabel: systemCategoryLabel,
       title: isDark ? t("command.action.themeLight") : t("command.action.themeDark"),
-      description: isDark ? "Açık moda geç" : "Koyu moda geç",
+      description: isDark ? t("command.action.themeLightDesc") : t("command.action.themeDarkDesc"),
       keywords: "theme tema koyu acik dark light mode",
       icon: isDark ? IconSun : IconMoon,
       onSelect: () => prefs.setTheme(isDark ? "light" : "dark"),
@@ -237,7 +237,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       category: "system",
       categoryLabel: systemCategoryLabel,
       title: isTr ? t("command.action.langEn") : t("command.action.langTr"),
-      description: isTr ? "Switch to English" : "Türkçe diline geç",
+      description: isTr ? t("command.action.langEnDesc") : t("command.action.langTrDesc"),
       keywords: "language dil turkce english tr en",
       icon: IconGlobe,
       onSelect: () => prefs.setLocale(isTr ? "en" : "tr"),
@@ -466,11 +466,11 @@ export function CommandPalette(props: CommandPaletteProps) {
           <span class="truncate">{t("command.shortcutHint")}</span>
           <div class="flex items-center gap-2 font-mono shrink-0">
             <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold">↑↓</kbd>
-            <span>navigasyon</span>
+            <span>{t("command.key.navigate")}</span>
             <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold">↵</kbd>
-            <span>seç</span>
+            <span>{t("command.key.select")}</span>
             <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold">Esc</kbd>
-            <span>kapat</span>
+            <span>{t("command.key.close")}</span>
           </div>
         </div>
       </DialogContent>
