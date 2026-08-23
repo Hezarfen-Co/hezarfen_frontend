@@ -9,6 +9,9 @@ export type ChatbotThread = {
 
 export type ChatbotThreadBody = { title?: string | null };
 
+/** Where an answer offers to take the user, rendered as a button under it. */
+export type ChatbotNavigation = { route: string; label: string };
+
 export type ChatbotMessage = {
   id: string;
   thread_id: string;
@@ -19,6 +22,14 @@ export type ChatbotMessage = {
   error_code: string | null;
   created_at: number;
   completed_at: number | null;
+  /**
+   * Optional halves of `chat.reply`: a place the answer can take the user, and
+   * the follow-up questions it offers when it is not sure what was meant. Both
+   * are absent until the backend sends them, and the panel renders nothing for
+   * an answer that carries neither.
+   */
+  navigation?: ChatbotNavigation | null;
+  suggestions?: string[] | null;
 };
 
 export type AcceptedChatbotMessage = {
