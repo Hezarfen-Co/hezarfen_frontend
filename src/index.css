@@ -333,6 +333,13 @@
        instead of the viewport, which on mobile is taller than the page. */
     --app-viewport: calc(100dvh - env(safe-area-inset-top));
 
+    /* The UA paints the caret, the text-selection handles, the keyboard and
+       the overscroll canvas from this — and `light dark` in the meta tag makes
+       it follow the OS, not the app. A dark app on a light phone then drew a
+       black caret on a black field, and the strip revealed by overscrolling
+       came back white. Pinning it per theme keeps that chrome in the theme. */
+    color-scheme: light;
+
     /* --accent-light / --accent-light-fg are set inline by preferences-context
        when the user picks an accent color; the fallback here is the neutral
        default for everyone else. */
@@ -369,6 +376,7 @@
     /* --accent-dark / --accent-dark-fg are set inline by preferences-context —
        a separate, lighter-lightness variant of the same picked hue so it stays
        legible against this theme's near-black background. */
+    color-scheme: dark;
     --ui-accent: var(--accent-dark, 0 0% 92%);
     --background: 0 0% 4%;
     --foreground: 0 0% 98%;
@@ -402,7 +410,11 @@
   }
 
   html {
-    @apply scroll-smooth;
+    @apply scroll-smooth bg-background;
+    /* The canvas behind the page — what an overscroll bounce or a keyboard
+       teardown reveals below the last element — is painted from `html`, not
+       from `body`. Without this it falls back to the UA's white. */
+    overscroll-behavior-y: none;
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -438,6 +450,32 @@
     background: hsl(var(--background));
     z-index: 90;
     pointer-events: none;
+  }
+
+  /* Form controls inherit `color` from Tailwind's preflight, but the caret and
+     the selection highlight do not follow it, and a field that overrides its
+     own background (the Çelebi composer is transparent on a card) could end up
+     with a caret the same color as what is behind it. Naming all three keeps a
+     focused field readable in either theme. */
+  input,
+  textarea,
+  select {
+    color: hsl(var(--foreground));
+    caret-color: hsl(var(--primary));
+    -webkit-text-fill-color: currentColor;
+  }
+
+  /* `-webkit-text-fill-color` inherits as a resolved color, so without this the
+     field's own fill would repaint the placeholder in the text color. */
+  input::placeholder,
+  textarea::placeholder {
+    -webkit-text-fill-color: currentColor;
+  }
+
+  input::selection,
+  textarea::selection {
+    background: hsl(var(--primary) / 0.3);
+    color: hsl(var(--foreground));
   }
 
   /* Keep scrolling available while removing native scrollbar chrome globally. */

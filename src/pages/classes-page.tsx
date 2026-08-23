@@ -103,7 +103,14 @@ function ClassesContent() {
         teacher_id: teacherId() || undefined,
       });
       setName(""); setGrade(""); setTermId(""); setTeacherId(""); setShowForm(false);
-      await refetch();
+      // Reloading the list is housekeeping for a page we are leaving anyway: a
+      // failure here used to be reported as if the class had not been created,
+      // and it swallowed the navigation to the class that plainly existed.
+      try {
+        await refetch();
+      } catch {
+        // The list reloads on the next visit; the class was created.
+      }
       setFlash(t("common.created"));
       void navigate({ to: "/management/classes/$id", params: { id: created.id } });
     } catch (err) {

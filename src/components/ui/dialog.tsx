@@ -54,7 +54,7 @@ export function DialogHeader(props: ParentProps<{ class?: string }>) {
 }
 
 export function DialogBody(props: ParentProps<{ class?: string }>) {
-  return <div class={cn("overflow-y-auto px-5 py-4 sm:px-6", props.class)}>{props.children}</div>;
+  return <div class={cn("overflow-y-auto overscroll-contain px-5 py-4 sm:px-6", props.class)}>{props.children}</div>;
 }
 
 export function DialogTitle<T extends ValidComponent = "h2">(

@@ -187,6 +187,19 @@ export function PreferencesProvider(props: ParentProps) {
     writeStorage(THEME_KEY, th);
     document.documentElement.setAttribute("data-kb-theme", th);
     document.documentElement.classList.toggle("dark", th === "dark");
+    // The boot script paints an inline background on <html> because it runs
+    // before the stylesheet; from here on the stylesheet owns that color, and
+    // a stale literal would survive a theme switch.
+    document.documentElement.style.removeProperty("background-color");
+    // The system bars (status bar, gesture bar) are painted by the shell from
+    // this meta tag, not from the page, so without the update they keep the
+    // boot value and a switched theme left a white strip framing a dark app.
+    // The value is read back from --background so the two cannot drift apart.
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (meta) {
+      const background = getComputedStyle(document.documentElement).getPropertyValue("--background").trim();
+      if (background) meta.content = `hsl(${background})`;
+    }
   });
 
   createEffect(() => {

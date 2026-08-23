@@ -5,8 +5,9 @@ import { CelebiComposer } from "@/components/layout/celebi-composer";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { CelebiSuggestions } from "@/components/layout/celebi-suggestions";
 import { CelebiThinkingLabel } from "@/components/layout/celebi-thinking-label";
-import { IconAlert, IconBotSquare, IconCopy, IconSparkles } from "@/components/ui/icons";
+import { IconAlert, IconBotSquare, IconCopy, IconEdit, IconPlus, IconSparkles, IconTrash } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
+import { cn } from "@/lib/cn";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 type PanelMessage = Pick<ChatbotMessage, "id" | "role" | "status" | "content" | "truncated" | "error_code">;
@@ -28,6 +29,25 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     setCopiedId(message.id);
     window.setTimeout(() => setCopiedId((current) => (current === message.id ? undefined : current)), 1_500);
   };
+
+  // The transcript follows the newest message, but only while the reader is
+  // already at the bottom: scrolling up to re-read an earlier answer must not
+  // be yanked back down by the next streamed chunk.
+  let transcript: HTMLDivElement | undefined;
+  const NEAR_BOTTOM_PX = 64;
+  const scrollToLatest = () => {
+    if (!transcript) return;
+    transcript.scrollTop = transcript.scrollHeight;
+  };
+  createEffect(() => {
+    const items = messages();
+    if (!transcript || items.length === 0) return;
+    const distance = transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight;
+    const atBottom = distance <= NEAR_BOTTOM_PX;
+    // The DOM node for the message that just arrived is written after this
+    // effect reads the store, so the scroll waits for the next frame.
+    if (atBottom) requestAnimationFrame(scrollToLatest);
+  });
 
   let pollTimer: number | undefined;
   let stream: EventSource | undefined;
@@ -130,10 +150,27 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("ai.title")} description={t("ai.description")}>
       <div class="flex h-full min-h-0 flex-col">
         <div class="mb-3 flex shrink-0 gap-2 overflow-x-auto border-b border-border pb-3">
-          <button type="button" class="rounded-lg border px-2.5 py-1.5 text-xs font-medium" onClick={createThread}>{locale() === "tr" ? "Yeni sohbet" : "New chat"}</button>
-          <For each={threads()}>{(thread) => <div class="flex shrink-0 overflow-hidden rounded-lg border"><button type="button" class={thread.id === threadId() ? "bg-muted px-2.5 py-1.5 text-xs font-medium" : "px-2.5 py-1.5 text-xs"} onClick={() => void openThread(thread.id)}>{thread.title || (locale() === "tr" ? "Adsız sohbet" : "Untitled chat")}</button><button type="button" class="border-l px-2 text-xs" aria-label={locale() === "tr" ? "Sohbeti yeniden adlandır" : "Rename chat"} onClick={() => void renameThread(thread)}>✎</button><button type="button" class="border-l px-2 text-xs text-destructive" aria-label={locale() === "tr" ? "Sohbeti sil" : "Delete chat"} onClick={() => void removeThread(thread)}>×</button></div>}</For>
+          <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={createThread}>
+            <IconPlus class="h-3.5 w-3.5" />
+            {locale() === "tr" ? "Yeni sohbet" : "New chat"}
+          </button>
+          <For each={threads()}>
+            {(thread) => (
+              <div class={cn("flex h-8 shrink-0 items-center overflow-hidden rounded-lg border border-border", thread.id === threadId() ? "bg-accent" : "bg-card")}>
+                <button type="button" class="max-w-[10rem] truncate px-2.5 text-xs text-foreground" onClick={() => void openThread(thread.id)}>
+                  {thread.title || (locale() === "tr" ? "Adsız sohbet" : "Untitled chat")}
+                </button>
+                <button type="button" class="flex h-full w-7 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={locale() === "tr" ? "Sohbeti yeniden adlandır" : "Rename chat"} onClick={() => void renameThread(thread)}>
+                  <IconEdit class="h-3.5 w-3.5" />
+                </button>
+                <button type="button" class="flex h-full w-7 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" aria-label={locale() === "tr" ? "Sohbeti sil" : "Delete chat"} onClick={() => void removeThread(thread)}>
+                  <IconTrash class="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+          </For>
         </div>
-        <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div ref={transcript} class="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
           <Show
           when={messages().length > 0}
           fallback={

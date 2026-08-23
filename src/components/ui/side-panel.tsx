@@ -69,7 +69,7 @@ export function SidePanel(
               <IconX class="h-4 w-4" />
             </DialogPrimitive.CloseButton>
           </div>
-          <div class="side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-5">
+          <div class="side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5">
             {props.children}
           </div>
         </DialogPrimitive.Content>

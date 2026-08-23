@@ -308,7 +308,6 @@ export function CommandPalette(props: CommandPaletteProps) {
     if (!props.open) return;
     setQuery("");
     setSelectedIndex(0);
-    queueMicrotask(() => inputRef?.focus());
   });
 
   // Reset selected index when query changes
@@ -358,7 +357,17 @@ export function CommandPalette(props: CommandPaletteProps) {
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95">
+      <DialogContent
+        class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95"
+        // The dialog's focus trap parks focus on the panel itself when it
+        // opens, which used to swallow a focus() queued from an effect — the
+        // palette opened with nothing focused and the first keystroke went
+        // nowhere. Taking the initial focus over hands it to the query field.
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          inputRef?.focus();
+        }}
+      >
         <DialogTitle class="sr-only">{t("dashboard.commandCenter")}</DialogTitle>
         <DialogDescription class="sr-only">{t("common.searchPlaceholder")}</DialogDescription>
 
