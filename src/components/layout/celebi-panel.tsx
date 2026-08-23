@@ -1,8 +1,10 @@
-import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
+import { For, Match, Show, Switch, createEffect, createSignal, onCleanup } from "solid-js";
+import { useNavigate } from "@tanstack/solid-router";
 import { deleteChatbotThreadById, getChatbotMessageById, getChatbotThreadMessages, getChatbotThreads, patchChatbotThreadById, postChatbotMessage, postChatbotThread, type ChatbotMessage, type ChatbotThread } from "@/api/chatbot";
 import { formatApiError } from "@/api/client";
 import { CelebiComposer } from "@/components/layout/celebi-composer";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
+import { CelebiReplyActions } from "@/components/layout/celebi-reply-actions";
 import { CelebiSuggestions } from "@/components/layout/celebi-suggestions";
 import { CelebiThinkingLabel } from "@/components/layout/celebi-thinking-label";
 import { IconAlert, IconBotSquare, IconCopy, IconEdit, IconPlus, IconSparkles, IconTrash } from "@/components/ui/icons";
@@ -10,12 +12,20 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-type PanelMessage = Pick<ChatbotMessage, "id" | "role" | "status" | "content" | "truncated" | "error_code">;
+type PanelMessage = Pick<ChatbotMessage, "id" | "role" | "status" | "content" | "truncated" | "error_code" | "navigation" | "suggestions">;
 
 const POLL_INTERVAL_MS = 1_000;
 
+// A comfortable reading pace for the reveal, and the backlog past which it
+// stops pacing and catches up: a rule-based answer often lands whole in the
+// `done` event, and nobody should wait out an animation to read it.
+const REVEAL_CHARS_PER_SECOND = 90;
+const REVEAL_CATCH_UP_CHARS = 320;
+const REVEAL_CATCH_UP_FACTOR = 5;
+
 export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT();
+  const navigate = useNavigate();
   const { locale } = usePreferences();
   const [draft, setDraft] = createSignal("");
   const [messages, setMessages] = createSignal<PanelMessage[]>([]);
@@ -30,6 +40,52 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     window.setTimeout(() => setCopiedId((current) => (current === message.id ? undefined : current)), 1_500);
   };
 
+  // Answers arrive either as stream deltas or whole in the `done` event, and
+  // both used to appear in one jump. The reveal walks a character count over
+  // whatever content the answer has so far, so a streamed answer types itself
+  // and a whole one is still read at a human pace. Reduced motion skips it.
+  const [typingId, setTypingId] = createSignal<string>();
+  const [typedCount, setTypedCount] = createSignal(0);
+  let revealFrame: number | undefined;
+
+  const prefersReducedMotion = () =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const stopReveal = () => {
+    if (revealFrame !== undefined) cancelAnimationFrame(revealFrame);
+    revealFrame = undefined;
+    setTypingId(undefined);
+  };
+
+  const startReveal = (messageId: string) => {
+    stopReveal();
+    if (prefersReducedMotion()) return;
+    setTypingId(messageId);
+    setTypedCount(0);
+    let previous = performance.now();
+    const step = (now: number) => {
+      const target = messages().find((item) => item.id === messageId);
+      if (!target || typingId() !== messageId) return stopReveal();
+      const full = target.content.length;
+      const behind = full - typedCount();
+      const speed = REVEAL_CHARS_PER_SECOND * (behind > REVEAL_CATCH_UP_CHARS ? REVEAL_CATCH_UP_FACTOR : 1);
+      setTypedCount((count) => Math.min(full, count + ((now - previous) / 1_000) * speed));
+      previous = now;
+      // Keep the frame running while the answer is still being written, even
+      // once the text in hand is exhausted: the next delta extends it.
+      if (typedCount() >= full && target.status !== "pending") return stopReveal();
+      revealFrame = requestAnimationFrame(step);
+    };
+    revealFrame = requestAnimationFrame(step);
+  };
+
+  /** How much of a message is on screen — the whole of it unless it is the one revealing. */
+  const visibleContent = (message: PanelMessage) =>
+    message.id === typingId() ? message.content.slice(0, Math.floor(typedCount())) : message.content;
+
+  const isRevealing = (message: PanelMessage) =>
+    message.id === typingId() && (message.status === "pending" || Math.floor(typedCount()) < message.content.length);
+
   // The transcript follows the newest message, but only while the reader is
   // already at the bottom: scrolling up to re-read an earlier answer must not
   // be yanked back down by the next streamed chunk.
@@ -41,6 +97,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   };
   createEffect(() => {
     const items = messages();
+    typedCount();
     if (!transcript || items.length === 0) return;
     const distance = transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight;
     const atBottom = distance <= NEAR_BOTTOM_PX;
@@ -58,8 +115,8 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   };
   const stopStream = () => { stream?.close(); stream = undefined; };
   const loadThreads = async () => { try { setThreads((await getChatbotThreads({ limit: 100 })).items); } catch { /* history is non-blocking */ } };
-  const openThread = async (id: string) => { stopPolling(); stopStream(); setThreadId(id); setMessages((await getChatbotThreadMessages(id, { limit: 500 })).items); };
-  const createThread = () => { stopPolling(); stopStream(); setThreadId(undefined); setMessages([]); };
+  const openThread = async (id: string) => { stopPolling(); stopStream(); stopReveal(); setThreadId(id); setMessages((await getChatbotThreadMessages(id, { limit: 500 })).items); };
+  const createThread = () => { stopPolling(); stopStream(); stopReveal(); setThreadId(undefined); setMessages([]); };
   const renameThread = async (thread: ChatbotThread) => { const title = window.prompt(locale() === "tr" ? "Sohbet başlığı" : "Conversation title", thread.title ?? ""); if (title !== null) { await patchChatbotThreadById(thread.id, { title: title.trim() || null }); await loadThreads(); } };
   const removeThread = async (thread: ChatbotThread) => { if (!window.confirm(locale() === "tr" ? "Bu sohbet silinsin mi?" : "Delete this conversation?")) return; await deleteChatbotThreadById(thread.id); if (threadId() === thread.id) createThread(); await loadThreads(); };
   createEffect(() => { if (props.open) void loadThreads(); });
@@ -97,7 +154,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     source.onerror = () => { stopStream(); poll(activeThreadId, messageId); };
   };
 
-  onCleanup(() => { stopPolling(); stopStream(); });
+  onCleanup(() => { stopPolling(); stopStream(); stopReveal(); });
 
   const send = async (override?: string) => {
     // A suggestion chip sends its own text without ever touching the draft.
@@ -127,6 +184,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           completed_at: null,
         },
       ]);
+      startReveal(accepted.message_id);
       streamAnswer(activeThreadId, accepted.message_id);
       void loadThreads();
     } catch (error) {
@@ -190,22 +248,51 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             <For each={messages()}>
               {(message) => (
                 <div class={message.role === "user" ? "ml-8 rounded-lg rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground" : "mr-6 rounded-lg rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
-                  <Show when={message.role === "assistant" && message.status === "pending"} fallback={
-                    <Show when={message.role === "assistant" && message.status === "failed" && !message.content} fallback={
-                      <Show when={message.role === "assistant"} fallback={<p class="whitespace-pre-wrap leading-6">{message.content}</p>}>
-                        <CelebiMarkdown text={message.content} />
-                      </Show>
-                    }>
+                  <Switch>
+                    <Match when={message.role === "user"}>
+                      <p class="whitespace-pre-wrap leading-6">{message.content}</p>
+                    </Match>
+                    <Match when={message.status === "failed" && !message.content}>
                       <p class="whitespace-pre-wrap leading-6">{failureMessage(message.error_code)}</p>
-                    </Show>
-                  }>
-                    <span class="flex items-center gap-2 text-muted-foreground"><IconBotSquare class="h-4 w-4 text-primary" /><span class="animate-pulse"><CelebiThinkingLabel /></span></span>
-                  </Show>
+                    </Match>
+                    {/* The label stands in only until the first characters land;
+                        an answer that is still being written keeps typing. */}
+                    <Match when={message.status === "pending" && !visibleContent(message)}>
+                      <span class="flex items-center gap-2 text-muted-foreground"><IconBotSquare class="h-4 w-4 text-primary" /><span class="animate-pulse"><CelebiThinkingLabel /></span></span>
+                    </Match>
+                    <Match when={true}>
+                      <CelebiMarkdown text={visibleContent(message)} />
+                      <Show when={isRevealing(message)}>
+                        <span class="ml-1 inline-block h-3.5 w-0.5 animate-pulse rounded-full bg-primary align-middle" aria-hidden="true" />
+                        <button
+                          type="button"
+                          class="mt-2 block text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                          onClick={stopReveal}
+                        >
+                          {t("ai.skipTyping")}
+                        </button>
+                      </Show>
+                    </Match>
+                  </Switch>
                   <Show when={message.role === "assistant" && message.status === "failed"}>
                     <span class="mt-2 flex items-center gap-1.5 text-xs text-destructive"><IconAlert class="h-3.5 w-3.5" />{failureMessage(message.error_code)}</span>
                   </Show>
                   <Show when={message.role === "assistant" && message.truncated}>
                     <p class="mt-2 text-xs text-muted-foreground">{locale() === "tr" ? "Yanıt uzunluk sınırında kısaltıldı." : "Response was shortened at the configured limit."}</p>
+                  </Show>
+                  <Show when={message.role === "assistant" && message.status === "complete" && !isRevealing(message)}>
+                    <CelebiReplyActions
+                      navigation={message.navigation}
+                      suggestions={message.suggestions}
+                      onNavigate={(route) => {
+                        props.onOpenChange(false);
+                        // The route is checked in celebi-route.ts, but it is a
+                        // runtime string either way — the router's typed table
+                        // cannot describe it.
+                        void navigate({ to: route as never });
+                      }}
+                      onPick={(text) => void send(text)}
+                    />
                   </Show>
                   <Show when={message.role === "assistant" && message.status === "complete"}>
                     <button

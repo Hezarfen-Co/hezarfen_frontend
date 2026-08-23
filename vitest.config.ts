@@ -26,7 +26,11 @@ export default defineConfig({
         },
       },
       {
-        plugins: [solid()],
+        // `hot: false`: the plugin otherwise injects solid-refresh's virtual
+        // module, and vitest hands node the unresolvable `file:///@solid-refresh`
+        // specifier — every *.test.tsx file failed to load on that alone. There
+        // is no HMR in a test run for it to serve.
+        plugins: [solid({ hot: false })],
         // "development"/"browser" so solid-js resolves to its client build once —
         // a dual-loaded solid-js gives components a different reactive graph.
         resolve: { alias, conditions: ["development", "browser"] },

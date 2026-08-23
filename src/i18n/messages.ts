@@ -28,6 +28,9 @@ export type MessageKey =
   | "ai.suggestParent2"
   | "ai.suggestParent3"
   | "ai.suggestParent4"
+  | "ai.goTo"
+  | "ai.didYouMean"
+  | "ai.skipTyping"
   | "nav.today"
   | "nav.classes"
   | "nav.classGroups"
@@ -1557,6 +1560,9 @@ const en: Dict = {
   "ai.suggestParent2": "Which exams does my child have soon?",
   "ai.suggestParent3": "How is my child's attendance this term?",
   "ai.suggestParent4": "What is on this week's meal menu?",
+  "ai.goTo": "Go to the page",
+  "ai.didYouMean": "Did you mean one of these?",
+  "ai.skipTyping": "Show the whole answer",
   "nav.today": "Today",
   "nav.classes": "Education",
   "nav.classGroups": "Classes",
@@ -3097,6 +3103,9 @@ const tr: Dict = {
   "ai.suggestParent2": "Çocuğumun yaklaşan sınavları neler?",
   "ai.suggestParent3": "Çocuğumun bu dönem devamsızlığı nasıl?",
   "ai.suggestParent4": "Bu haftanın yemek menüsünde ne var?",
+  "ai.goTo": "Sayfaya git",
+  "ai.didYouMean": "Bunu mu demek istedin?",
+  "ai.skipTyping": "Cevabın tamamını göster",
   "nav.today": "Bugün",
   "nav.classes": "Eğitim",
   "nav.classGroups": "Şubeler",
