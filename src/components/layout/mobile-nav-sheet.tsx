@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import { Link, useRouterState } from "@tanstack/solid-router";
 import { routeNavItem, sidebarNavGroups, type NavItem } from "@/components/layout/nav-items";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
@@ -15,7 +15,13 @@ import { useT } from "@/stores/preferences-context";
  * It stays mounted and is moved off-screen when closed, so opening and closing
  * both animate; a `<Show>` around it would make it appear and disappear in one
  * frame.
+ *
+ * It closes by tapping the X, tapping outside, or dragging it down past
+ * DISMISS_PX — the gesture people expect from a sheet.
  */
+
+/** How far the sheet has to be pulled down before letting go dismisses it. */
+const DISMISS_PX = 96;
 export function MobileNavSheet(props: {
   open: boolean;
   onClose: () => void;
@@ -31,6 +37,34 @@ export function MobileNavSheet(props: {
   const groups = () => sidebarNavGroups(auth.user()?.role);
   const current = () => routeNavItem(pathname(), auth.user()?.role);
   const badgeFor = (item: NavItem) => (item.id === "messages" ? feed.unreadMessages().total : 0);
+
+  // Drag-to-dismiss. Only the grab area drives it, so a flick inside the list
+  // still scrolls the list. While dragging, the sheet follows the finger with
+  // its transition off; on release it either closes or springs back.
+  const [dragY, setDragY] = createSignal(0);
+  const [dragging, setDragging] = createSignal(false);
+  let startY = 0;
+
+  const startDrag = (event: PointerEvent) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    startY = event.clientY;
+    setDragging(true);
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  };
+
+  const moveDrag = (event: PointerEvent) => {
+    if (!dragging()) return;
+    // Downward only: dragging up must not lift the sheet past its own top.
+    setDragY(Math.max(0, event.clientY - startY));
+  };
+
+  const endDrag = () => {
+    if (!dragging()) return;
+    const travelled = dragY();
+    setDragging(false);
+    setDragY(0);
+    if (travelled > DISMISS_PX) props.onClose();
+  };
 
   return (
     <div
@@ -57,9 +91,17 @@ export function MobileNavSheet(props: {
           "transition-transform duration-300 ease-out",
           props.open ? "translate-y-0" : "translate-y-full",
         )}
+        style={dragging() ? { transform: `translateY(${dragY()}px)`, transition: "none" } : undefined}
       >
-        {/* Grab handle: the affordance that says this panel is draggable-looking
-            and dismissible, even though dismissal is by tap. */}
+        {/* The grab area: handle plus title row. touch-none keeps the browser
+            from claiming the vertical gesture for scrolling. */}
+        <div
+          class="shrink-0 touch-none"
+          onPointerDown={startDrag}
+          onPointerMove={moveDrag}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+        >
         <div class="flex justify-center pt-3">
           <span class="h-1 w-10 rounded-full bg-border" />
         </div>
@@ -74,6 +116,7 @@ export function MobileNavSheet(props: {
           >
             <IconX class="h-4 w-4" />
           </button>
+        </div>
         </div>
 
         <div class="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4">

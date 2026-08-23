@@ -461,8 +461,9 @@ export function CommandPalette(props: CommandPaletteProps) {
           </Show>
         </div>
 
-        {/* Command Palette Footer */}
-        <div class="flex items-center justify-between border-t border-border/60 bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
+        {/* Command Palette Footer — keyboard-only guidance, so it is hidden on
+            phones where there are no arrow, enter or escape keys to press. */}
+        <div class="hidden items-center justify-between border-t border-border/60 bg-muted/30 px-4 py-2 text-xs text-muted-foreground sm:flex">
           <span class="truncate">{t("command.shortcutHint")}</span>
           <div class="flex items-center gap-2 font-mono shrink-0">
             <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold">↑↓</kbd>

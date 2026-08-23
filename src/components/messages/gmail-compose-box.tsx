@@ -81,7 +81,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
   return (
     <Show when={props.open}>
       <div
-        class="fixed bottom-0 right-2 z-50 w-[calc(100vw-1rem)] rounded-t-lg border border-border/80 bg-card shadow-2xl transition-all duration-200 sm:right-6 sm:w-[560px]"
+        class="fixed inset-x-0 bottom-0 z-50 w-full rounded-t-2xl border border-border/80 bg-card pb-[max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))] shadow-2xl transition-all duration-200 sm:inset-x-auto sm:right-6 sm:w-[560px] sm:rounded-t-lg sm:pb-0"
         style={{ "max-height": isMinimized() ? "44px" : "640px" }}
       >
         {/* Gmail Header */}
@@ -114,7 +114,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
 
         {/* Gmail Form Content */}
         <Show when={!isMinimized()}>
-          <form class="flex flex-col h-[520px]" onSubmit={handleSend}>
+          <form class="flex h-[min(520px,60vh)] flex-col sm:h-[520px]" onSubmit={handleSend}>
             {/* Recipient Line */}
             <div class="flex items-center border-b px-3 py-1.5 gap-2 text-xs">
               <span class="w-12 font-medium text-muted-foreground shrink-0">

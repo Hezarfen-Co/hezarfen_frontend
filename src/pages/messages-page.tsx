@@ -163,9 +163,9 @@ export default function MessagesPage() {
 
   return (
     <RouteGuard>
-      <div class="min-h-[calc(100vh-7rem)] bg-background">
+      <div class="min-h-[50vh] bg-background sm:min-h-[calc(100vh-7rem)]">
         <section class="data-shell overflow-hidden p-0 border-none">
-          <div class="flex min-h-[calc(100vh-7rem)] flex-col">
+          <div class="flex min-h-[50vh] flex-col sm:min-h-[calc(100vh-7rem)]">
             {/* Folder toolbar — the app shell already owns the global sidebar. */}
             <aside class="flex flex-wrap items-center gap-2 border-b bg-card/60 px-3 py-2.5">
               {/* Compose Button */}
@@ -283,8 +283,8 @@ export default function MessagesPage() {
             <main class="flex-1 flex flex-col min-w-0 bg-background">
               {/* Top Header Toolbar */}
               <Show when={!selected()}>
-                <div class="flex items-center justify-between border-b px-4 py-3 bg-card/40">
-                  <div class="flex items-center gap-2 w-full max-w-xl">
+                <div class="flex flex-col gap-2 border-b bg-card/40 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
+                  <div class="flex w-full items-center gap-2 sm:max-w-xl">
                     {/* Gmail Refresh Button */}
                     <Button
                       variant="outline"
@@ -314,7 +314,7 @@ export default function MessagesPage() {
                     </div>
                   </div>
 
-                  <div class="flex items-center gap-3">
+                  <div class="flex items-center justify-end gap-3">
                     <Show when={folder() === "trash" && messages().length > 0}>
                       <Button
                         variant="outline"
