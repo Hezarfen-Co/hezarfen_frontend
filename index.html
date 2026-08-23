@@ -22,6 +22,14 @@
           if (dark) document.documentElement.classList.add("dark");
           const locale = localStorage.getItem("hezarfen.locale");
           if (locale === "en" || locale === "tr") document.documentElement.lang = locale;
+          // Android reports only the display cutout through CSS env(), so the
+          // gesture bar is invisible to the page. The Tauri shell exposes its
+          // height here; read before first paint so nothing renders under it.
+          // Absent in a browser, where env(safe-area-inset-bottom) is enough.
+          const shell = window.HezarfenShell;
+          if (shell && typeof shell.bottomInsetPx === "function") {
+            document.documentElement.style.setProperty("--android-nav-inset", shell.bottomInsetPx() + "px");
+          }
         } catch {}
       })();
     </script>

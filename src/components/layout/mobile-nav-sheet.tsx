@@ -82,8 +82,11 @@ export function MobileNavSheet(props: {
       />
 
       <div
-        role="dialog"
-        aria-modal="true"
+        // Only a dialog while it is actually up: left on permanently, this
+        // off-screen panel would answer every [role=dialog] query and sit in
+        // the accessibility tree next to whatever modal is really open.
+        role={props.open ? "dialog" : undefined}
+        aria-modal={props.open ? "true" : undefined}
         aria-label={t("nav.menu")}
         class={cn(
           "absolute inset-x-0 bottom-0 flex max-h-[75vh] flex-col rounded-t-3xl border-t border-border bg-background",

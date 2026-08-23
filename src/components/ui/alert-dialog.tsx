@@ -17,7 +17,8 @@ export function AlertDialogContent<T extends ValidComponent = "div">(
   return (
     <AlertDialogPrimitive.Portal>
       <AlertDialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm transition-opacity" />
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Inset by the system bars — see dialog.tsx. */}
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 pb-[calc(1rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] pt-[calc(1rem+env(safe-area-inset-top))]">
         <AlertDialogPrimitive.Content
           class={cn(
             "w-full max-w-md overflow-hidden border border-border/80 bg-background text-foreground shadow-2xl shadow-black/20 outline-hidden animate-fade-up sm:rounded-lg",
