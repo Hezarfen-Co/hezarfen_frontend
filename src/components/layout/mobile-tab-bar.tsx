@@ -46,14 +46,14 @@ export function MobileTabBar(props: { onMenu: () => void }) {
         <li class="min-w-0">
           <button
             type="button"
-            aria-label={t("nav.account")}
+            aria-label={t("nav.menu")}
             class="flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[10px] font-medium text-muted-foreground"
             onClick={() => props.onMenu()}
           >
             <span class="flex h-8 w-10 items-center justify-center rounded-md">
               <IconMenu class="h-4.5 w-4.5" />
             </span>
-            <span class="truncate">{t("nav.account")}</span>
+            <span class="truncate">{t("nav.menu")}</span>
           </button>
         </li>
       </ul>

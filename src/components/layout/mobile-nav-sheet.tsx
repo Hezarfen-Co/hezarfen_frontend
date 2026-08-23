@@ -102,31 +102,31 @@ export function MobileNavSheet(props: {
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
         >
-        <div class="flex justify-center pt-3">
-          <span class="h-1 w-10 rounded-full bg-border" />
+        <div class="flex justify-center pt-2.5">
+          <span class="h-1 w-9 rounded-full bg-border" />
         </div>
 
-        <div class="flex items-center justify-between px-6 pb-3 pt-3">
-          <h2 class="text-lg font-semibold">{t("nav.menu")}</h2>
+        <div class="flex items-center justify-between px-4 pb-2 pt-2">
+          <h2 class="text-base font-semibold">{t("nav.menu")}</h2>
           <button
             type="button"
             onClick={props.onClose}
             aria-label={t("nav.close")}
-            class="topbar-control flex h-9 w-9 items-center justify-center rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            class="topbar-control flex h-8 w-8 items-center justify-center rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <IconX class="h-4 w-4" />
           </button>
         </div>
         </div>
 
-        <div class="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4">
+        <div class="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-1">
           <For each={groups()}>
             {(group) => (
-              <div class="mt-3 first:mt-0">
-                <p class="px-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <div class="mt-1.5 border-t border-border/60 pt-1.5 first:mt-0 first:border-t-0 first:pt-0">
+                <p class="px-3 pb-0.5 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t(group.labelKey)}
                 </p>
-                <div class="mt-1.5 flex flex-col">
+                <div class="flex flex-col">
                   <For each={group.items}>
                     {(item) => {
                       const active = () => current()?.id === item.id;
@@ -136,19 +136,19 @@ export function MobileNavSheet(props: {
                           onClick={props.onClose}
                           aria-current={active() ? "page" : undefined}
                           class={cn(
-                            "flex items-center gap-3 rounded-md px-2 py-3 transition-colors active:bg-muted",
+                            "flex items-center gap-2.5 rounded-md px-3 py-1.5 transition-colors active:bg-muted",
                             active() ? "text-primary" : "text-foreground",
                           )}
                         >
                           <span
                             class={cn(
-                              "inline-flex size-9 shrink-0 items-center justify-center rounded-md",
-                              active() ? "bg-primary/10 text-primary" : "bg-muted text-foreground",
+                              "inline-flex size-7 shrink-0 items-center justify-center rounded-md",
+                              active() ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
                             )}
                           >
-                            <item.Icon class="h-4.5 w-4.5" />
+                            <item.Icon class="h-4 w-4" />
                           </span>
-                          <span class="min-w-0 flex-1 truncate text-sm font-medium">
+                          <span class="min-w-0 flex-1 truncate text-[13px] font-medium">
                             {t(item.labelKey)}
                           </span>
                           <Show when={badgeFor(item) > 0}>

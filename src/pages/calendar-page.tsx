@@ -114,6 +114,16 @@ const KIND_STYLES: Record<CalendarKind, KindStyle> = {
 
 const KIND_ORDER = Object.keys(KIND_STYLES) as CalendarKind[];
 
+/** Day / week / month, the three zoom levels a phone calendar is expected to
+ *  offer. The month grid alone is unreadable at 45px per cell. */
+type CalendarView = "day" | "week" | "month";
+
+const VIEWS: { id: CalendarView; labelKey: MessageKey }[] = [
+  { id: "day", labelKey: "calendar.viewDay" },
+  { id: "week", labelKey: "calendar.viewWeek" },
+  { id: "month", labelKey: "calendar.viewMonth" },
+];
+
 function dateKey(d: Date) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
@@ -135,6 +145,7 @@ function CalendarContent() {
   const [viewYear, setViewYear] = createSignal(nowDate().getFullYear());
   const [viewMonth, setViewMonth] = createSignal(nowDate().getMonth());
   const [selected, setSelected] = createSignal(dateKey(nowDate()));
+  const [view, setView] = createSignal<CalendarView>("month");
 
   const [events] = createResource(async () => (await getEvents({ limit: 100 })).items, { initialValue: [] });
   const [exams] = createResource(async () => (await getExams({ limit: 100 })).items, { initialValue: [] });
@@ -255,6 +266,41 @@ function CalendarContent() {
     ms == null ? "" : new Date(ms).toLocaleTimeString(locale() === "tr" ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" });
   const timeRange = (item: CalendarItem) => (item.endsAt ? `${clock(item.at)} — ${clock(item.endsAt)}` : clock(item.at));
 
+  const intl = () => (locale() === "tr" ? "tr-TR" : "en-US");
+
+  /** Moves the selected day, keeping the month grid on the same page as it. */
+  const shiftSelected = (days: number) => {
+    const d = selectedDay();
+    d.setDate(d.getDate() + days);
+    setSelected(dateKey(d));
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+  };
+
+  // Monday-first, like the month grid.
+  const weekDays = createMemo(() => {
+    const start = selectedDay();
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d;
+    });
+  });
+
+  const rangeLabel = () => {
+    if (view() === "month") return monthLabel();
+    if (view() === "day") {
+      return selectedDay().toLocaleDateString(intl(), { day: "numeric", month: "long", year: "numeric" });
+    }
+    const days = weekDays();
+    return `${days[0].toLocaleDateString(intl(), { day: "numeric", month: "short" })} – ${days[6].toLocaleDateString(intl(), { day: "numeric", month: "short", year: "numeric" })}`;
+  };
+
+  // One pair of arrows for all three views: they step by whatever is on screen.
+  const goPrev = () => (view() === "month" ? prevMonth() : shiftSelected(view() === "week" ? -7 : -1));
+  const goNext = () => (view() === "month" ? nextMonth() : shiftSelected(view() === "week" ? 7 : 1));
+
   const goToday = () => {
     const n = nowDate();
     setViewYear(n.getFullYear());
@@ -277,21 +323,41 @@ function CalendarContent() {
       <section class="data-shell flex flex-col space-y-3 border-sky-500/15 bg-sky-500/2.5 p-3 lg:h-[calc(100dvh-7.5rem)]">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
-            <h1 class="truncate text-xl font-semibold tracking-tight text-foreground">{t("calendar.title")}</h1>
-            <div class="mt-1.5 flex items-center gap-2">
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={prevMonth}>
+            <h1 class="truncate text-lg font-semibold tracking-tight text-foreground sm:text-xl">{t("calendar.title")}</h1>
+            <div class="mt-1.5 flex items-center gap-1 sm:gap-2">
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={goPrev}>
                 <IconChevronLeft class="h-4 w-4" />
               </Button>
-              <span class="text-base font-semibold tracking-tight">{monthLabel()}</span>
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={nextMonth}>
+              <span class="truncate text-sm font-semibold tracking-tight sm:text-base">{rangeLabel()}</span>
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={goNext}>
                 <IconChevronRight class="h-4 w-4" />
               </Button>
             </div>
           </div>
-          <Button type="button" variant="outline" size="sm" class="h-9 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
-            <IconCalendarDays class="h-3.5 w-3.5" />
-            {t("calendar.today")}
-          </Button>
+          <div class="flex items-center gap-2">
+            {/* Day / week / month, the way a phone calendar switches zoom. */}
+            <div class="inline-flex shrink-0 rounded-lg border border-border bg-muted/40 p-0.5">
+              <For each={VIEWS}>
+                {(entry) => (
+                  <button
+                    type="button"
+                    aria-pressed={view() === entry.id}
+                    onClick={() => setView(entry.id)}
+                    class={cn(
+                      "rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+                      view() === entry.id ? "bg-background text-foreground shadow-xs" : "text-muted-foreground",
+                    )}
+                  >
+                    {t(entry.labelKey)}
+                  </button>
+                )}
+              </For>
+            </div>
+            <Button type="button" variant="outline" size="sm" class="h-9 shrink-0 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
+              <IconCalendarDays class="h-3.5 w-3.5" />
+              <span class="hidden sm:inline">{t("calendar.today")}</span>
+            </Button>
+          </div>
         </div>
 
         {/* Legend — six categories share one grid, so the colours need naming. */}
@@ -307,7 +373,49 @@ function CalendarContent() {
         </div>
 
         <Suspense fallback={<PageSpinner />}>
-          <div class="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <div class={cn("grid min-h-0 flex-1 gap-4", view() === "month" && "xl:grid-cols-[minmax(0,1fr)_20rem]")}>
+            <Show when={view() === "week"}>
+              {/* Week strip: seven tappable days with their category dots, the
+                  middle zoom level between a month of cells and one day's list. */}
+              <div class="grid shrink-0 grid-cols-7 gap-1 rounded-lg border bg-card p-1 shadow-xs">
+                <For each={weekDays()}>
+                  {(day) => {
+                    const key = dateKey(day);
+                    const dayItems = () => itemsByDay().get(key) ?? [];
+                    const today = () => dateKey(nowDate()) === key;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => setSelected(key)}
+                        class={cn(
+                          "flex min-w-0 flex-col items-center gap-1 rounded-md px-0.5 py-1.5 transition-colors",
+                          key === selected() ? "bg-sky-50 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "hover:bg-muted/40",
+                        )}
+                      >
+                        <span class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {dayNames()[(day.getDay() + 6) % 7]}
+                        </span>
+                        <span
+                          class={cn(
+                            "inline-flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold",
+                            today() ? "bg-sky-500 text-white" : "text-foreground",
+                          )}
+                        >
+                          {day.getDate()}
+                        </span>
+                        <span class="flex h-1.5 items-center gap-0.5">
+                          <For each={dayItems().slice(0, 3)}>
+                            {(item) => <span class={cn("h-1.5 w-1.5 rounded-full", KIND_STYLES[item.kind].dot)} />}
+                          </For>
+                        </span>
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
+            </Show>
+
+            <Show when={view() === "month"}>
             <div class="flex min-h-0 flex-col rounded-lg border bg-card shadow-xs">
               <div class="grid shrink-0 grid-cols-7 border-b">
                 <For each={dayNames()}>
@@ -329,7 +437,7 @@ function CalendarContent() {
                       <button
                         type="button"
                         class={cn(
-                          "relative flex min-h-17 min-w-0 flex-col overflow-hidden border-b border-r border-border/40 p-1.5 text-left transition-colors last:border-r-0 hover:bg-muted/40 lg:min-h-0",
+                          "relative flex min-h-12 min-w-0 flex-col overflow-hidden border-b border-r border-border/40 p-1 text-left transition-colors last:border-r-0 hover:bg-muted/40 sm:min-h-17 sm:p-1.5 lg:min-h-0",
                           cell.other && "pointer-events-none bg-muted/20",
                           cellSelected() ? "bg-sky-50/60 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "",
                           cellToday ? "font-bold text-sky-600 dark:text-sky-400" : ""
@@ -347,7 +455,14 @@ function CalendarContent() {
                           {cell.day || ""}
                         </span>
                         <Show when={dayItems().length > 0}>
-                          <div class="mt-1 flex min-h-0 flex-1 flex-col justify-end gap-0.5 overflow-hidden">
+                          {/* A phone cell is too narrow for titles, so it marks
+                              the day with one dot per category instead. */}
+                          <div class="mt-0.5 flex flex-wrap gap-0.5 sm:hidden">
+                            <For each={dayItems().slice(0, 4)}>
+                              {(item) => <span class={cn("h-1.5 w-1.5 rounded-full", KIND_STYLES[item.kind].dot)} />}
+                            </For>
+                          </div>
+                          <div class="mt-1 hidden min-h-0 flex-1 flex-col justify-end gap-0.5 overflow-hidden sm:flex">
                             <For each={dayItems().slice(0, CHIPS_PER_CELL)}>
                               {(item) => (
                                 <span class={cn("inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-[9px] font-medium leading-none", KIND_STYLES[item.kind].chip)}>
@@ -369,6 +484,7 @@ function CalendarContent() {
                 </For>
               </div>
             </div>
+            </Show>
 
             <div class="min-h-0 space-y-3 overflow-y-auto">
               <div class="rounded-xl border border-border/80 bg-card p-3 shadow-xs">
