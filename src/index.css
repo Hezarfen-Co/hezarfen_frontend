@@ -328,6 +328,11 @@
 @layer base {
   /* Hue-neutral gray scale + Carbon-style semantic colors. */
   :root {
+    /* Height of the area the user can actually see: the display minus the
+       status bar / camera cutout at the top. Full-height layouts measure this
+       instead of the viewport, which on mobile is taller than the page. */
+    --app-viewport: calc(100dvh - env(safe-area-inset-top));
+
     /* --accent-light / --accent-light-fg are set inline by preferences-context
        when the user picks an accent color; the fallback here is the neutral
        default for everyone else. */
@@ -405,6 +410,34 @@
 
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    /* The mobile shells (Tauri on Android/iOS) draw the page edge to edge, so
+       the status bar and the camera cutout sit on top of it. This padding is
+       what starts the page below them; border-box keeps the min-height from
+       counting it, so the page does not grow a scrollbar's worth of overflow.
+       Every inset is 0 in a desktop browser, so the web build is unchanged. */
+    box-sizing: border-box;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* The padding above scrolls away with the page, which would let content slide
+     up under the status bar and the camera. This band does not move: it paints
+     the theme background over that strip at every scroll position, so the
+     cutout area always matches the page instead of showing what is behind it.
+     It sits above every overlay (the highest in the app is z-80) because the
+     strip must stay clean even while a drawer or dialog is open. */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top);
+    background: hsl(var(--background));
+    z-index: 90;
+    pointer-events: none;
   }
 
   /* Keep scrolling available while removing native scrollbar chrome globally. */

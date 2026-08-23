@@ -44,7 +44,7 @@ export function AppShell(props: ParentProps) {
   };
 
   return (
-    <div class="min-h-screen bg-background text-foreground">
+    <div class="min-h-[var(--app-viewport)] bg-background text-foreground">
       <Show when={!auth.user()}>
         <NavBar />
       </Show>
@@ -53,7 +53,7 @@ export function AppShell(props: ParentProps) {
         <Show when={auth.user() && !fullScreen()}>
           <aside
             class={cn(
-              "sticky top-0 z-30 hidden h-screen shrink-0 border-r border-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex lg:flex-col",
+              "sticky top-[env(safe-area-inset-top)] z-30 hidden h-[var(--app-viewport)] shrink-0 border-r border-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex lg:flex-col",
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
             )}
           >
@@ -104,7 +104,7 @@ export function AppShell(props: ParentProps) {
               aria-label={t("nav.close")}
               onClick={() => setMobileOpen(false)}
             />
-            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-border bg-sidebar text-sidebar-foreground shadow-2xl shadow-black/20">
+            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-border bg-sidebar pb-[max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))] pt-[env(safe-area-inset-top)] text-sidebar-foreground shadow-2xl shadow-black/20">
               <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
                 <Link to="/" class="flex min-w-0 items-center gap-2.5" onClick={() => setMobileOpen(false)}>
                   <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">H</span>
@@ -131,7 +131,7 @@ export function AppShell(props: ParentProps) {
 
         <main class="min-w-0 flex-1">
           <Show when={auth.user() && !fullScreen()}>
-            <header class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/70 bg-background px-4 sm:px-6 lg:px-8">
+            <header class="sticky top-[env(safe-area-inset-top)] z-30 flex h-16 items-center gap-3 border-b border-border/70 bg-background px-4 sm:px-6 lg:px-8">
               <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-52 lg:w-60">
                 <Show when={location().pathname !== "/"}>
                   <button

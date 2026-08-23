@@ -14,7 +14,7 @@ export function MobileTabBar(props: { onMenu: () => void }) {
 
   return (
     <nav
-      class="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
+      class="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background pb-[max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))] lg:hidden"
       aria-label={t("nav.menu")}
     >
       <ul
