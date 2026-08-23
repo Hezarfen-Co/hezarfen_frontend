@@ -8,10 +8,11 @@ import { NavBar } from "@/components/layout/nav-bar";
 import { NotificationCenter } from "@/components/layout/notification-center";
 import { routeLabelKey } from "@/components/layout/nav-items";
 import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
+import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { Button } from "@/components/ui/button";
-import { IconChevronLeft, IconPanelLeft, IconSearch, IconSparkles, IconX } from "@/components/ui/icons";
+import { IconChevronLeft, IconPanelLeft, IconSearch, IconSparkles } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
@@ -96,37 +97,12 @@ export function AppShell(props: ParentProps) {
           </aside>
         </Show>
 
-        <Show when={mobileOpen() && auth.user()}>
-          <div class="fixed inset-0 z-50 lg:hidden">
-            <button
-              type="button"
-              class="absolute inset-0 bg-black/40 transition-opacity"
-              aria-label={t("nav.close")}
-              onClick={() => setMobileOpen(false)}
-            />
-            <aside class="absolute inset-y-0 left-0 flex w-60 max-w-[85vw] flex-col border-r border-border bg-sidebar pb-[max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))] pt-[env(safe-area-inset-top)] text-sidebar-foreground shadow-2xl shadow-black/20">
-              <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
-                <Link to="/" class="flex min-w-0 items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">H</span>
-                  <span class="truncate text-base font-semibold text-foreground dark:text-white">{t("app.name")}</span>
-                </Link>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  class="h-8 w-8 shrink-0 rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/8 dark:hover:text-white"
-                  aria-label={t("nav.close")}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <IconX class="h-4 w-4" />
-                </Button>
-              </div>
-              <div class="min-h-0 flex-1 overflow-y-auto px-1.5 py-2.5">
-                <SideNav onNavigate={() => setMobileOpen(false)} />
-              </div>
-              <SidebarAccount onLogout={logout} />
-            </aside>
-          </div>
+        <Show when={auth.user()}>
+          <MobileNavSheet
+            open={mobileOpen()}
+            onClose={() => setMobileOpen(false)}
+            onLogout={logout}
+          />
         </Show>
 
         <main class="min-w-0 flex-1">
@@ -183,7 +159,7 @@ export function AppShell(props: ParentProps) {
           <div
             class={cn(
               "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-6",
-              auth.user() && !wide() && "pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-6",
+              auth.user() && !fullScreen() && "pb-[calc(5rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] lg:pb-6",
               wide() ? "max-w-none" : "max-w-[1280px] xl:max-w-[1600px] 2xl:max-w-none",
             )}
           >
@@ -193,7 +169,7 @@ export function AppShell(props: ParentProps) {
       </div>
       {/* MobileTabBar stays inside the provider — it is a shell surface, so a
           useShellFeed() badge there must not throw. */}
-      <Show when={auth.user() && !wide()}>
+      <Show when={auth.user() && !fullScreen()}>
         <MobileTabBar onMenu={() => setMobileOpen(true)} />
       </Show>
       </ShellFeedProvider>
