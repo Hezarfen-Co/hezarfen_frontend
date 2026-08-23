@@ -15,7 +15,7 @@ function RootErrorFallback(props: { error: unknown; reset: () => void }) {
   // is lost and impossible to trace after the fact.
   console.error("Uncaught render error:", props.error);
   return (
-    <div class="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
+    <div class="flex min-h-[var(--app-viewport)] items-center justify-center bg-background px-4 text-foreground">
       <div class="w-full max-w-md space-y-4 rounded-md border border-destructive/30 bg-destructive/10 p-6 text-center text-destructive">
         <p class="text-sm">{formatApiError(props.error)}</p>
         <button

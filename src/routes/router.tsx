@@ -445,7 +445,7 @@ const routeTree = rootRoute.addChildren([
 ]);
 
 function RouterPending() {
-  return <div class="min-h-screen bg-background" />;
+  return <div class="min-h-[var(--app-viewport)] bg-background" />;
 }
 
 export const router = createRouter({

@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
@@ -16,7 +16,7 @@ import {
 import { getCourses } from "@/api/courses";
 import { getTerms } from "@/api/terms";
 import { getLimits } from "@/api/limits";
-import { ApiError, formatApiError, type BlueprintSkip, type ClassCourse, type ClassMember } from "@/api/client";
+import { ApiError, formatApiError, type BlueprintSkip, type ClassCourse, type ClassGroup, type ClassMember } from "@/api/client";
 import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-report";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
@@ -79,10 +79,31 @@ function ClassDetailContent() {
   const [members, { refetch: refetchMembers }] = createResource(id, async (classId) => (await getClassMembers(classId, { limit: 200 })).items);
   const [classCourses, { refetch: refetchCourses }] = createResource(id, async (classId) => (await getClassCourses(classId, { limit: 50 })).items);
 
+  // The last class the page actually loaded. A refetch that fails leaves the
+  // resource in an error state, and reading it there throws; holding the last
+  // good value lets the page stay up and keeps the error screen for the case
+  // it is meant for — a first load that never produced a class.
+  const [loadedClass, setLoadedClass] = createSignal<ClassGroup>();
+  createEffect(() => {
+    if (cls.state === "ready") setLoadedClass(cls());
+  });
+
   const termName = (tid: string | null) => terms.latest?.find((term) => term.id === tid)?.name ?? (tid || t("terms.unassigned"));
   const courseTitle = (courseId: string) => courses.latest?.find((course) => course.id === courseId)?.title ?? courseId;
   const memberUserIds = () => (members.latest ?? []).map((row) => row.user.id);
   const attachedCourseIds = () => (classCourses.latest ?? []).map((row) => row.course);
+
+  // Refreshing the tables after a successful write is not part of the write:
+  // a failed refetch used to be reported as if the save itself had failed, so
+  // the row appeared and an error banner appeared with it. The resource keeps
+  // its previous value and the next load picks the change up.
+  const refresh = async (run: () => unknown) => {
+    try {
+      await run();
+    } catch {
+      // Stale rows are better than telling the user a save failed.
+    }
+  };
 
   const wrap = async (fn: () => Promise<void>, successKey?: string) => {
     setError("");
@@ -105,7 +126,7 @@ function ClassDetailContent() {
     setPending(true);
     try {
       const result = await postClassBlueprintApply(id());
-      await refetchCourses();
+      await refresh(refetchCourses);
       setSkipped(result.skipped);
       if (result.skipped.length === 0) setFlash(t("classBlueprints.applied"));
     } catch (err) {
@@ -184,10 +205,18 @@ function ClassDetailContent() {
   ]);
 
   return (
-    <Suspense fallback={<PageSpinner />}>
-      <Show when={cls.error} fallback={
-        <Show when={cls()}>
-          {(c) => (
+    // Only a load that never produced a class becomes the error screen. A
+    // refetch that fails after a save still has the class in hand, and
+    // replacing the whole page there read as if the save had failed.
+    <Show
+      when={loadedClass()}
+      fallback={
+        <Show when={cls.error} fallback={<PageSpinner />}>
+          <Alert variant="destructive">{formatApiError(cls.error)}</Alert>
+        </Show>
+      }
+    >
+      {(c) => (
             <div class="space-y-5">
               <Link to="/management/classes" class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
                 <IconChevronLeft class="h-4 w-4" />{t("classGroups.title")}
@@ -269,7 +298,7 @@ function ClassDetailContent() {
 
               {/* Edit class */}
               <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().name}>
-                <form class="space-y-4" onSubmit={(e) => { e.preventDefault(); void wrap(async () => { await patchClassById(id(), { name: name().trim(), grade: grade().trim() || null, term_id: termId() || null, teacher_id: teacherId() || null }); setEditing(false); await refetchClass(); }, "common.saved"); }}>
+                <form class="space-y-4" onSubmit={(e) => { e.preventDefault(); void wrap(async () => { await patchClassById(id(), { name: name().trim(), grade: grade().trim() || null, term_id: termId() || null, teacher_id: teacherId() || null }); setEditing(false); await refresh(refetchClass); }, "common.saved"); }}>
                   <div class="space-y-3">
                     <div class="space-y-1.5"><Label for="edit-class-name">{t("classGroups.className")}</Label><Input id="edit-class-name" maxlength={limits.latest?.course.max_class_name_len} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
                     <div class="space-y-1.5"><Label for="edit-class-grade">{t("classGroups.grade")}</Label><Input id="edit-class-grade" maxlength={limits.latest?.course.max_class_grade_len} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
@@ -282,7 +311,7 @@ function ClassDetailContent() {
 
               {/* Add student */}
               <SidePanel open={showAddMember()} onOpenChange={setShowAddMember} title={t("classGroups.addStudent")} description={t("classGroups.addStudentHelp")}>
-                <form class="space-y-3" onSubmit={(e) => { e.preventDefault(); void wrap(async () => { const uid = addUserId().trim(); if (!uid) return; await postClassMember(id(), { user_id: uid }); setAddUserId(""); setShowAddMember(false); await refetchMembers(); }, "common.saved"); }}>
+                <form class="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!addUserId().trim()) return; void wrap(async () => { await postClassMember(id(), { user_id: addUserId().trim() }); setAddUserId(""); setShowAddMember(false); await refresh(refetchMembers); }, "common.saved"); }}>
                   <UserSearchSelect id="class-add-student" role="student" value={addUserId()} excludeIds={memberUserIds()} placeholder={t("form.selectStudent")} onChange={setAddUserId} />
                   <div class="flex gap-2"><Button type="submit" disabled={pending()}>{t("classGroups.addStudent")}</Button><Button type="button" variant="outline" onClick={() => setShowAddMember(false)}>{t("common.cancel")}</Button></div>
                 </form>
@@ -290,7 +319,7 @@ function ClassDetailContent() {
 
               {/* Attach course */}
               <SidePanel open={showAttachCourse()} onOpenChange={setShowAttachCourse} title={t("classGroups.attachCourse")} description={t("classGroups.attachCourseHelp")}>
-                <form class="space-y-3" onSubmit={(e) => { e.preventDefault(); void wrap(async () => { const cid = attachCourseId(); if (!cid) return; await postClassCourse(id(), { course_id: cid }); setAttachCourseId(""); setShowAttachCourse(false); await refetchCourses(); }, "common.saved"); }}>
+                <form class="space-y-3" onSubmit={(e) => { e.preventDefault(); const cid = attachCourseId(); if (!cid) return; void wrap(async () => { await postClassCourse(id(), { course_id: cid }); setAttachCourseId(""); setShowAttachCourse(false); await refresh(refetchCourses); }, "common.saved"); }}>
                   <div class="space-y-1.5">
                     <Label for="class-attach-course">{t("classGroups.selectCourse")}</Label>
                     <Select id="class-attach-course" value={attachCourseId()} onChange={(e) => setAttachCourseId(e.currentTarget.value)}>
@@ -319,7 +348,7 @@ function ClassDetailContent() {
                 title={t("classGroups.removeStudent")}
                 variant="destructive"
                 summary={t("classGroups.removeStudentConfirm", { name: removeMember() ? personLabel(removeMember()!.user) : "" })}
-                onConfirm={async () => { const target = removeMember(); if (!target) return; await wrap(async () => { await deleteClassMember(id(), target.user.id); await refetchMembers(); setRemoveMember(null); }, "common.deleted"); }}
+                onConfirm={async () => { const target = removeMember(); if (!target) return; await wrap(async () => { await deleteClassMember(id(), target.user.id); await refresh(refetchMembers); setRemoveMember(null); }, "common.deleted"); }}
               />
 
               {/* Detach course */}
@@ -329,14 +358,10 @@ function ClassDetailContent() {
                 title={t("classGroups.detachCourse")}
                 variant="destructive"
                 summary={t("classGroups.detachCourseConfirm", { course: detachCourse() ? courseTitle(detachCourse()!.course) : "" })}
-                onConfirm={async () => { const target = detachCourse(); if (!target) return; await wrap(async () => { await deleteClassCourse(id(), target.course); await refetchCourses(); setDetachCourse(null); }, "common.deleted"); }}
+                onConfirm={async () => { const target = detachCourse(); if (!target) return; await wrap(async () => { await deleteClassCourse(id(), target.course); await refresh(refetchCourses); setDetachCourse(null); }, "common.deleted"); }}
               />
             </div>
-          )}
-        </Show>
-      }>
-        <Alert variant="destructive">{formatApiError(cls.error)}</Alert>
-      </Show>
-    </Suspense>
+      )}
+    </Show>
   );
 }

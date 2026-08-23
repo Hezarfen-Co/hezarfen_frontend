@@ -20,10 +20,12 @@ export function DialogContent<T extends ValidComponent = "div">(
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm transition-opacity duration-200" />
       {/* flex center — animate-fade-up must not own transform positioning */}
-      <div class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+      {/* The centring box is inset by the system bars, so a tall dialog is
+          never clipped by the status bar or the gesture bar. */}
+      <div class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-3 pb-[calc(0.75rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] pt-[calc(0.75rem+env(safe-area-inset-top))] sm:p-4">
         <DialogPrimitive.Content
           class={cn(
-            "pointer-events-auto relative flex max-h-[min(90vh,48rem)] w-full max-w-lg flex-col overflow-hidden border border-border/80 bg-background text-foreground shadow-2xl shadow-black/20 outline-hidden animate-fade-up sm:rounded-lg",
+            "pointer-events-auto relative flex max-h-[min(100%,48rem)] w-full max-w-lg flex-col overflow-hidden border border-border/80 bg-background text-foreground shadow-2xl shadow-black/20 outline-hidden animate-fade-up sm:rounded-lg",
             local.class,
           )}
           // Standard dialogs dismiss outside/ESC; pass false only when losing
@@ -52,7 +54,7 @@ export function DialogHeader(props: ParentProps<{ class?: string }>) {
 }
 
 export function DialogBody(props: ParentProps<{ class?: string }>) {
-  return <div class={cn("overflow-y-auto px-5 py-4 sm:px-6", props.class)}>{props.children}</div>;
+  return <div class={cn("overflow-y-auto overscroll-contain px-5 py-4 sm:px-6", props.class)}>{props.children}</div>;
 }
 
 export function DialogTitle<T extends ValidComponent = "h2">(

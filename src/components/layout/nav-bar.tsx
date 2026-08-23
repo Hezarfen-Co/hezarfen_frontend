@@ -16,7 +16,7 @@ export function NavBar() {
 
   return (
     <>
-      <header class="sticky top-0 z-40 h-14 border-b border-border/70 bg-background">
+      <header class="sticky top-[env(safe-area-inset-top)] z-40 h-14 border-b border-border/70 bg-background">
         <div class="flex h-full items-center gap-3 px-4 lg:px-6">
           <Show when={auth.user()}>
             <Button
@@ -60,7 +60,7 @@ export function NavBar() {
             aria-label={t("nav.close")}
             onClick={() => setMobileOpen(false)}
           />
-          <aside class="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-sidebar shadow-sm">
+          <aside class="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-sidebar pb-[max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))] pt-[env(safe-area-inset-top)] shadow-sm">
             <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
               <span class="flex min-w-0 items-center gap-2">
                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">H</span>

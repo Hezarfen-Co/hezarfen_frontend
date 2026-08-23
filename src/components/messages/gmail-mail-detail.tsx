@@ -110,8 +110,10 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
   return (
     <div class="flex flex-col h-full bg-background overflow-auto">
       {/* Top Gmail Navigation & Action Bar */}
-      <div class="sticky top-0 z-10 flex items-center justify-between border-b bg-card/90 px-4 py-2.5 backdrop-blur-xs">
-        <div class="flex items-center gap-2">
+      <div class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card/90 px-3 py-2.5 backdrop-blur-xs sm:px-4">
+        {/* The action set is wider than a phone, so it scrolls sideways instead
+            of squeezing every button or wrapping into a second bar. */}
+        <div class="no-scrollbar flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
           <Button
             variant="ghost"
             size="sm"
@@ -214,7 +216,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
           </Show>
         </div>
 
-        <div class="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+        <div class="hidden shrink-0 items-center gap-2 font-mono text-xs text-muted-foreground sm:flex">
           <span>{formattedDate(props.message.sent_at)}</span>
         </div>
       </div>

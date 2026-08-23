@@ -1452,6 +1452,9 @@ export type MessageKey =
   | "calendar.lessons"
   | "calendar.studies"
   | "calendar.homework"
+  | "calendar.viewDay"
+  | "calendar.viewWeek"
+  | "calendar.viewMonth"
   | "nav.appointments"
   | "appointments.title"
   | "appointments.subtitle"
@@ -2161,6 +2164,9 @@ const en: Dict = {
   "calendar.lessons": "Lessons",
   "calendar.studies": "Studies & clubs",
   "calendar.homework": "Homework due",
+  "calendar.viewDay": "Day",
+  "calendar.viewWeek": "Week",
+  "calendar.viewMonth": "Month",
   "nav.appointments": "Appointments",
   "appointments.title": "Appointments",
   "appointments.subtitle": "Pick one of the times a teacher opened for meetings, then follow your request here.",
@@ -3698,6 +3704,9 @@ const tr: Dict = {
   "calendar.lessons": "Dersler",
   "calendar.studies": "Etütler ve kulüpler",
   "calendar.homework": "Ödev teslimi",
+  "calendar.viewDay": "Gün",
+  "calendar.viewWeek": "Hafta",
+  "calendar.viewMonth": "Ay",
   "nav.appointments": "Randevular",
   "appointments.title": "Randevular",
   "appointments.subtitle": "Bir öğretmenin görüşmeye açtığı saatlerden birini seç, talebini buradan takip et.",

@@ -35,9 +35,16 @@ export function CelebiComposer(props: {
     props.onSubmit();
   };
 
+  // The strip has to be opaque rather than a gradient fading into the panel:
+  // on a phone the messages scroll right up to it, and a half-transparent band
+  // let the last line show through the field's own row.
+  //
+  // The field itself is transparent over the card, so it names its text and
+  // caret colors: a control that drops its background inherits neither, and
+  // the draft came out unreadable once focused.
   return (
     <form
-      class="sticky bottom-0 -mx-5 bg-gradient-to-t from-background via-background to-transparent px-5 pb-1 pt-3 sm:-mx-6 sm:px-6"
+      class="sticky bottom-0 -mx-5 border-t border-border/60 bg-background px-5 pb-1 pt-3 sm:-mx-6 sm:px-6"
       onSubmit={(event) => {
         event.preventDefault();
         submit();
@@ -47,7 +54,7 @@ export function CelebiComposer(props: {
         <Textarea
           ref={field}
           rows={1}
-          class="max-h-40 min-h-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-0 py-1.5 shadow-none hover:border-0 hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+          class="max-h-40 min-h-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-0 py-1.5 text-card-foreground caret-primary shadow-none hover:border-0 hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
           value={props.value}
           placeholder={t("ai.placeholder")}
           onInput={(event) => props.onInput(event.currentTarget.value)}

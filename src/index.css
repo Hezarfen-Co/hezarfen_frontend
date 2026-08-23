@@ -328,6 +328,18 @@
 @layer base {
   /* Hue-neutral gray scale + Carbon-style semantic colors. */
   :root {
+    /* Height of the area the user can actually see: the display minus the
+       status bar / camera cutout at the top. Full-height layouts measure this
+       instead of the viewport, which on mobile is taller than the page. */
+    --app-viewport: calc(100dvh - env(safe-area-inset-top));
+
+    /* The UA paints the caret, the text-selection handles, the keyboard and
+       the overscroll canvas from this — and `light dark` in the meta tag makes
+       it follow the OS, not the app. A dark app on a light phone then drew a
+       black caret on a black field, and the strip revealed by overscrolling
+       came back white. Pinning it per theme keeps that chrome in the theme. */
+    color-scheme: light;
+
     /* --accent-light / --accent-light-fg are set inline by preferences-context
        when the user picks an accent color; the fallback here is the neutral
        default for everyone else. */
@@ -364,6 +376,7 @@
     /* --accent-dark / --accent-dark-fg are set inline by preferences-context —
        a separate, lighter-lightness variant of the same picked hue so it stays
        legible against this theme's near-black background. */
+    color-scheme: dark;
     --ui-accent: var(--accent-dark, 0 0% 92%);
     --background: 0 0% 4%;
     --foreground: 0 0% 98%;
@@ -397,7 +410,11 @@
   }
 
   html {
-    @apply scroll-smooth;
+    @apply scroll-smooth bg-background;
+    /* The canvas behind the page — what an overscroll bounce or a keyboard
+       teardown reveals below the last element — is painted from `html`, not
+       from `body`. Without this it falls back to the UA's white. */
+    overscroll-behavior-y: none;
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -405,6 +422,60 @@
 
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    /* The mobile shells (Tauri on Android/iOS) draw the page edge to edge, so
+       the status bar and the camera cutout sit on top of it. This padding is
+       what starts the page below them; border-box keeps the min-height from
+       counting it, so the page does not grow a scrollbar's worth of overflow.
+       Every inset is 0 in a desktop browser, so the web build is unchanged. */
+    box-sizing: border-box;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* The padding above scrolls away with the page, which would let content slide
+     up under the status bar and the camera. This band does not move: it paints
+     the theme background over that strip at every scroll position, so the
+     cutout area always matches the page instead of showing what is behind it.
+     It sits above every overlay (the highest in the app is z-80) because the
+     strip must stay clean even while a drawer or dialog is open. */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top);
+    background: hsl(var(--background));
+    z-index: 90;
+    pointer-events: none;
+  }
+
+  /* Form controls inherit `color` from Tailwind's preflight, but the caret and
+     the selection highlight do not follow it, and a field that overrides its
+     own background (the Çelebi composer is transparent on a card) could end up
+     with a caret the same color as what is behind it. Naming all three keeps a
+     focused field readable in either theme. */
+  input,
+  textarea,
+  select {
+    color: hsl(var(--foreground));
+    caret-color: hsl(var(--primary));
+    -webkit-text-fill-color: currentColor;
+  }
+
+  /* `-webkit-text-fill-color` inherits as a resolved color, so without this the
+     field's own fill would repaint the placeholder in the text color. */
+  input::placeholder,
+  textarea::placeholder {
+    -webkit-text-fill-color: currentColor;
+  }
+
+  input::selection,
+  textarea::selection {
+    background: hsl(var(--primary) / 0.3);
+    color: hsl(var(--foreground));
   }
 
   /* Keep scrolling available while removing native scrollbar chrome globally. */

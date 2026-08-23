@@ -2,8 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- interactive-widget=resizes-content: with the default the soft keyboard
+         only shrinks the visual viewport, so a fixed panel keeps its full
+         height and its composer stays behind the keys. Resizing the layout
+         viewport instead makes 100dvh and fixed insets follow the keyboard,
+         which keeps the field the user is typing in on screen. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <meta name="color-scheme" content="light dark" />
+    <!-- Repainted from --background by preferences-context on every theme
+         change; this literal is only the value the first paint uses. -->
+    <meta name="theme-color" content="#fafafa" />
     <meta
       name="description"
       content="Hezarfen; eğitim, ders, sınav, ödev, takvim ve kampüs işlemlerini tek yerde yöneten güvenli öğrenme platformudur."
@@ -20,8 +31,21 @@
             (theme !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.setAttribute("data-kb-theme", dark ? "dark" : "light");
           if (dark) document.documentElement.classList.add("dark");
+          // The stylesheet has not loaded yet, so these repeat --background /
+          // --background(dark) as literals. Keep them in step with index.css.
+          document.documentElement.style.backgroundColor = dark ? "#0a0a0a" : "#fafafa";
+          const themeColor = document.querySelector('meta[name="theme-color"]');
+          if (themeColor) themeColor.setAttribute("content", dark ? "#0a0a0a" : "#fafafa");
           const locale = localStorage.getItem("hezarfen.locale");
           if (locale === "en" || locale === "tr") document.documentElement.lang = locale;
+          // Android reports only the display cutout through CSS env(), so the
+          // gesture bar is invisible to the page. The Tauri shell exposes its
+          // height here; read before first paint so nothing renders under it.
+          // Absent in a browser, where env(safe-area-inset-bottom) is enough.
+          const shell = window.HezarfenShell;
+          if (shell && typeof shell.bottomInsetPx === "function") {
+            document.documentElement.style.setProperty("--android-nav-inset", shell.bottomInsetPx() + "px");
+          }
         } catch {}
       })();
     </script>
