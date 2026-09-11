@@ -2,6 +2,7 @@ import { Show } from "solid-js";
 import type { Note } from "@/api/client";
 import type { NoteFileSource } from "@/lib/note-source";
 import { NoteFilesPanel } from "@/components/notes/note-files-panel";
+import { RagOutputsPanel } from "@/components/notes/rag-outputs-panel";
 import { SidePanel } from "@/components/ui/side-panel";
 import { useT } from "@/stores/preferences-context";
 
@@ -37,6 +38,9 @@ export function NoteReaderPanel(props: {
               </div>
             </article>
             <NoteFilesPanel noteId={n().id} source={props.source} canManage={props.canManage} active={props.open} />
+            <Show when={props.source.listRagOutputs}>
+              <RagOutputsPanel noteId={n().id} source={props.source} canManage={props.canManage} active={props.open} />
+            </Show>
           </div>
         )}
       </Show>

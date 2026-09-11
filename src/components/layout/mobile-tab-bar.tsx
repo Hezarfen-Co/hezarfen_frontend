@@ -4,13 +4,15 @@ import { IconMenu } from "@/components/ui/icons";
 import { primaryNavItems, primaryPathActive } from "@/components/layout/nav-items";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
+import { useModules } from "@/stores/modules-context";
 import { useT } from "@/stores/preferences-context";
 
 export function MobileTabBar(props: { onMenu: () => void }) {
   const auth = useAuth();
   const t = useT();
+  const modules = useModules();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const items = () => primaryNavItems(auth.user()?.role);
+  const items = () => primaryNavItems(auth.user()?.role, modules.enabled());
 
   return (
     <nav

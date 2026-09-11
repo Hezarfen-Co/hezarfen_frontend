@@ -9,6 +9,7 @@ import { Suspense, createRenderEffect, createRoot, lazy, type Component } from "
 import { AppShell } from "@/components/layout/app-shell";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { AuthProvider } from "@/stores/auth-context";
+import { ModulesProvider } from "@/stores/modules-context";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
 function lazyRoute(loader: () => Promise<{ default: Component }>): Component {
@@ -70,9 +71,11 @@ function RootComponent() {
   return (
     <PreferencesProvider>
       <AuthProvider>
-        <AppShell>
-          <Outlet />
-        </AppShell>
+        <ModulesProvider>
+          <AppShell>
+            <Outlet />
+          </AppShell>
+        </ModulesProvider>
       </AuthProvider>
     </PreferencesProvider>
   );

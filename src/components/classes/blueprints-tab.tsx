@@ -1,16 +1,17 @@
 import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { deleteClassBlueprintByGrade, getClassBlueprints } from "@/api/classes";
+import { deleteClassBlueprintByGrade, getClassBlueprints, getClassBlueprintStatus } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { getLimits } from "@/api/limits";
-import { formatApiError, type BlueprintSkip, type ClassBlueprint } from "@/api/client";
+import { formatApiError, type BlueprintSectionStatus, type BlueprintSkip, type BlueprintStatus, type ClassBlueprint } from "@/api/client";
 import { BlueprintPanel } from "@/components/classes/blueprint-panel";
 import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-report";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconClipboardCheck, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
 import { personLabel } from "@/lib/person";
@@ -30,6 +31,7 @@ export function BlueprintsTab(props: {
   const [deleting, setDeleting] = createSignal<ClassBlueprint | null>(null);
   const [skipped, setSkipped] = createSignal<BlueprintSkip[]>([]);
   const [reportOpen, setReportOpen] = createSignal(false);
+  const [status, setStatus] = createSignal<BlueprintStatus | null>(null);
 
   const enabled = () => (props.active() && props.canManage() ? true : null);
   const [list, { refetch }] = createResource(enabled, async () =>
@@ -90,6 +92,11 @@ export function BlueprintsTab(props: {
               destructive: true,
               onSelect: () => setDeleting(cell.row.original),
             },
+            {
+              label: t("classBlueprints.status"),
+              icon: <IconClipboardCheck class="h-4 w-4" />,
+              onSelect: () => void checkStatus(cell.row.original.grade),
+            },
           ]}
         />
       ),
@@ -120,6 +127,29 @@ export function BlueprintsTab(props: {
       setError(formatApiError(err));
     }
   };
+  const checkStatus = async (grade: string) => {
+    setError("");
+    try {
+      setStatus(await getClassBlueprintStatus(grade));
+    } catch (err) {
+      setError(formatApiError(err));
+    }
+  };
+
+  const statusColumns = createMemo<ColumnDef<BlueprintSectionStatus>[]>(() => [
+    {
+      id: "section",
+      accessorFn: (row) => row.class_name || row.class,
+      header: t("classBlueprints.statusSection"),
+      meta: { cellClass: "font-medium" },
+    },
+    {
+      id: "missing",
+      accessorFn: (row) => row.missing.map(courseTitle).join(", ") || "—",
+      header: t("classBlueprints.statusMissing"),
+      meta: { cellClass: "text-muted-foreground" },
+    },
+  ]);
 
   return (
     <div class="space-y-4">
@@ -186,6 +216,26 @@ export function BlueprintsTab(props: {
         courseTitle={courseTitle}
       />
 
+      <SidePanel
+        open={status() != null}
+        onOpenChange={(open) => !open && setStatus(null)}
+        title={t("classBlueprints.statusTitle", { grade: status()?.grade ?? "" })}
+        size="wide"
+      >
+        <Show when={status()}>
+          {(current) => (
+            <Show
+              when={current().sections.some((section) => section.missing.length > 0)}
+              fallback={<p class="text-sm text-muted-foreground">{t("classBlueprints.statusEmpty")}</p>}
+            >
+              <DataTable
+                columns={statusColumns()}
+                data={current().sections.filter((section) => section.missing.length > 0)}
+              />
+            </Show>
+          )}
+        </Show>
+      </SidePanel>
       <ConfirmDialog
         open={deleting() !== null}
         onOpenChange={(open) => !open && setDeleting(null)}

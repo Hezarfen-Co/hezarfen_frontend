@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { IconChevronLeft, IconPanelLeft, IconSearch, IconSparkles } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
+import { useModules } from "@/stores/modules-context";
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -26,6 +27,7 @@ export function AppShell(props: ParentProps) {
   const auth = useAuth();
   const prefs = usePreferences();
   const t = useT();
+  const modules = useModules();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = createSignal(false);
   const [celebiOpen, setCelebiOpen] = createSignal(false);
@@ -143,16 +145,18 @@ export function AppShell(props: ParentProps) {
               <div class="flex shrink-0 items-center justify-end gap-2">
                 <ShellMessagesButton />
                 <NotificationCenter />
-                <button
-                  type="button"
-                  class="topbar-ai-control hidden h-9 shrink-0 items-center justify-center gap-2 rounded-md px-3 text-xs font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] sm:flex"
-                  aria-label={t("ai.askCelebi")}
-                  title={t("ai.askCelebi")}
-                  onClick={() => setCelebiOpen(true)}
-                >
-                  <IconSparkles class="h-4 w-4" />
-                  <span>{t("ai.askCelebi")}</span>
-                </button>
+                <Show when={modules.isEnabled("chatbot")}>
+                  <button
+                    type="button"
+                    class="topbar-ai-control hidden h-9 shrink-0 items-center justify-center gap-2 rounded-md px-3 text-xs font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] sm:flex"
+                    aria-label={t("ai.askCelebi")}
+                    title={t("ai.askCelebi")}
+                    onClick={() => setCelebiOpen(true)}
+                  >
+                    <IconSparkles class="h-4 w-4" />
+                    <span>{t("ai.askCelebi")}</span>
+                  </button>
+                </Show>
               </div>
             </header>
           </Show>

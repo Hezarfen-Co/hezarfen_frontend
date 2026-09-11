@@ -4,8 +4,9 @@ import { getTermById } from "../../terms";
 import { postTerm } from "../../terms";
 import { patchTermById } from "../../terms";
 import { deleteTermById } from "../../terms";
+import { postTermArchive } from "../../terms";
+import { postTermUnarchive } from "../../terms";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
-
 describe("terms API", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -71,5 +72,29 @@ describe("terms API", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/terms/t1");
     expect(init?.method).toBe("DELETE");
+  });
+
+  it("postTermArchive calls /terms/:id/archive", async () => {
+    const mockTerm = { id: "t1", archived_at: 1756896000000 };
+    mockFetchSuccess(mockTerm);
+
+    const result = await postTermArchive("t1");
+    expect(result).toEqual(mockTerm);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/terms/t1/archive");
+    expect(init?.method).toBe("POST");
+  });
+
+  it("postTermUnarchive calls /terms/:id/unarchive", async () => {
+    const mockTerm = { id: "t1", archived_at: null };
+    mockFetchSuccess(mockTerm);
+
+    const result = await postTermUnarchive("t1");
+    expect(result).toEqual(mockTerm);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/terms/t1/unarchive");
+    expect(init?.method).toBe("POST");
   });
 });
