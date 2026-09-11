@@ -19,6 +19,7 @@ import {
   patchClassBlueprintByGrade,
   deleteClassBlueprintByGrade,
   postClassBlueprintApply,
+  getClassBlueprintStatus,
 } from "../../classes";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
@@ -184,5 +185,15 @@ describe("classes API", () => {
     expect(url).toBe("/api/classes/c1/blueprint");
     expect(init?.method).toBe("POST");
     expect(init?.body).toBeUndefined();
+  });
+
+  it("getClassBlueprintStatus GETs /classes/blueprints/:grade/status", async () => {
+    const mockStatus = { grade: "9/A", courses: ["co1"], matched: 3, sections: [] };
+    mockFetchSuccess(mockStatus);
+    const result = await getClassBlueprintStatus("9/A");
+    expect(result).toEqual(mockStatus);
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/classes/blueprints/9%2FA/status");
+    expect(init?.method).toBe("GET");
   });
 });

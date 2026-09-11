@@ -113,11 +113,47 @@ export type CourseNote = {
   content: string;
 };
 
+/** One AI service output stored against a course note. `payload` is the
+ * service's own shape — stored and served unread, rendered as JSON. */
+export type RagOutput = {
+  id: string;
+  course_note: string;
+  course: string;
+  /** The note's file attachments the output was built from. */
+  sources: string[];
+  payload: unknown;
+  /** When the backend stored it, epoch milliseconds. */
+  generated_at: number;
+};
+
 export type NoteFile = {
   id: string;
   name: string;
   content_type: string;
   size: number;
+};
+
+/** The caller's school entitlements: every switched-on module, sorted by name. */
+export type EnabledModules = {
+  enabled: string[];
+};
+
+export type ModuleCatalogEntry = {
+  module: string;
+  package: string;
+  /** Modules that must be enabled alongside this one. */
+  requires: string[];
+};
+
+export type ModuleCatalogPackage = {
+  package: string;
+  modules: string[];
+};
+
+/** The deployment's whole module catalog — identical for every school. */
+export type ModuleCatalog = {
+  modules: ModuleCatalogEntry[];
+  packages: ModuleCatalogPackage[];
 };
 
 export type EventAudience =
@@ -219,6 +255,8 @@ export type Term = {
   name: string;
   starts_at: number;
   ends_at: number;
+  /** Archived at, UTC unix-millis; null while the term is open. */
+  archived_at: number | null;
 };
 
 export type Enrollment = {
@@ -284,6 +322,23 @@ export type BlueprintSkip = {
 export type BlueprintResult = { blueprint: ClassBlueprint; skipped: BlueprintSkip[] };
 
 export type BlueprintApplyResult = { skipped: BlueprintSkip[] };
+
+/** One section measured against its grade's blueprint. */
+export type BlueprintSectionStatus = {
+  class: string;
+  class_name: string;
+  /** Template courses the section does not carry; empty when in sync. */
+  missing: string[];
+};
+
+/** Every section at a grade with the template courses it is missing. */
+export type BlueprintStatus = {
+  grade: string;
+  /** The template every section below is measured against. */
+  courses: string[];
+  matched: number;
+  sections: BlueprintSectionStatus[];
+};
 
 export type CourseSession = {
   id: string;

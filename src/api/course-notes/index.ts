@@ -8,3 +8,5 @@ export * from "./postCourseNoteFile";
 export * from "./deleteCourseNoteFileById";
 export * from "./getCourseNoteFileUrl";
 export * from "./getCourseNoteFileBlob";
+export * from "./getCourseNoteRag";
+export * from "./deleteCourseNoteRagOutput";

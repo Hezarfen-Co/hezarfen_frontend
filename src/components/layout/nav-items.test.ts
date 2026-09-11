@@ -1,4 +1,4 @@
-import { pathActive, primaryNavItems, primaryPathActive, routeLabelKey, routeNavItem, sidebarNavGroups, visibleNavItems } from "@/components/layout/nav-items";
+import { moduleVisible, pathActive, primaryNavItems, primaryPathActive, routeLabelKey, routeNavItem, sidebarNavGroups, visibleNavItems } from "@/components/layout/nav-items";
 
 test.each([
   ["student", ["/", "/courses", "/calendar", "/marks"]],
@@ -96,4 +96,23 @@ test("a page keeps its name for a viewer who may not open it", () => {
   // shell header must still say what page that is.
   expect(routeLabelKey("/students", "admin")).toBe("nav.children");
   expect(routeLabelKey("/students", "parent")).toBe("nav.children");
+});
+
+test("module gate fails open while the entitlement lookup is unknown", () => {
+  expect(primaryNavItems("student", null).map((item) => item.to)).toEqual(primaryNavItems("student").map((item) => item.to));
+  expect(primaryNavItems("student", undefined).map((item) => item.to)).toEqual(primaryNavItems("student").map((item) => item.to));
+});
+
+test("module gate hides nests the school did not buy", () => {
+  const enabled = ["courses", "notes"];
+  const primary = primaryNavItems("student", enabled).map((item) => item.to);
+  expect(primary).toContain("/courses");
+  expect(primary).not.toContain("/marks");
+  const sidebar = sidebarNavGroups("teacher", enabled).flatMap((group) => group.items.map((item) => item.to));
+  expect(sidebar).not.toContain("/meals");
+  expect(sidebar).not.toContain("/messages");
+});
+
+test("ungated entries never drop on module filtering", () => {
+  expect(moduleVisible({ id: "x", to: "/calendar", labelKey: "nav.calendar", Icon: (() => null) as never }, [])).toBe(true);
 });

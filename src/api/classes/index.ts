@@ -17,3 +17,4 @@ export * from "./getClassBlueprintByGrade";
 export * from "./patchClassBlueprintByGrade";
 export * from "./deleteClassBlueprintByGrade";
 export * from "./postClassBlueprintApply";
+export * from "./getClassBlueprintStatus";

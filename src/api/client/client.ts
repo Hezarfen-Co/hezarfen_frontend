@@ -166,6 +166,18 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     en: "Question bank templates still use this subject. Re-tag or delete them first.",
     tr: "Soru bankasındaki şablonlar hâlâ bu konuyu kullanıyor. Önce onları başka konuya taşı veya sil.",
   },
+  "the term is archived — past years are read-only": {
+    en: "This term is archived. Past years are read-only.",
+    tr: "Bu dönem arşivli. Geçmiş dönemler salt okunur.",
+  },
+  "this course's term is archived — past years are read-only": {
+    en: "This course's term is archived. Past years are read-only.",
+    tr: "Bu dersin dönemi arşivli. Geçmiş dönemler salt okunur.",
+  },
+  "module disabled": {
+    en: "This feature is not enabled for your school.",
+    tr: "Bu özellik okulunuz için etkin değil.",
+  },
   "course not found": {
     en: "Course not found.",
     tr: "Ders bulunamadı.",

@@ -5,6 +5,7 @@ import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
+import { useModules } from "@/stores/modules-context";
 import { useShellFeed } from "@/stores/shell-feed-context";
 import { useT } from "@/stores/preferences-context";
 
@@ -30,11 +31,12 @@ export function MobileNavSheet(props: {
   const auth = useAuth();
   const t = useT();
   const feed = useShellFeed();
+  const modules = useModules();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   // The primary destinations are already one tap away in the tab bar, so the
   // sheet lists everything else.
-  const groups = () => sidebarNavGroups(auth.user()?.role);
+  const groups = () => sidebarNavGroups(auth.user()?.role, modules.enabled());
   const current = () => routeNavItem(pathname(), auth.user()?.role);
   const badgeFor = (item: NavItem) => (item.id === "messages" ? feed.unreadMessages().total : 0);
 

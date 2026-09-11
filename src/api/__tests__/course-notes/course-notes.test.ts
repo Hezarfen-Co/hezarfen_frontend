@@ -9,8 +9,9 @@ import { postCourseNoteFile } from "../../course-notes";
 import { deleteCourseNoteFileById } from "../../course-notes";
 import { getCourseNoteFileUrl } from "../../course-notes";
 import { getCourseNoteFileBlob } from "../../course-notes";
+import { getCourseNoteRag } from "../../course-notes";
+import { deleteCourseNoteRagOutput } from "../../course-notes";
 import { lastFetchCall, mockFetch204, mockFetchBlob, mockFetchSuccess } from "../helpers/mock-fetch";
-
 describe("course notes API", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -140,5 +141,27 @@ describe("course notes API", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/course-notes/cn1/files/f1");
     expect(init?.credentials).toBe("same-origin");
+  });
+
+  it("getCourseNoteRag calls /course-notes/:id/rag with pagination", async () => {
+    const mockPage = { items: [{ id: "r1", course_note: "cn1" }], total: 1 };
+    mockFetchSuccess(mockPage);
+
+    const result = await getCourseNoteRag("cn1", { limit: 10 });
+    expect(result).toEqual({ ...mockPage, limit: null, offset: 0 });
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/course-notes/cn1/rag?limit=10");
+    expect(init?.method).toBe("GET");
+  });
+
+  it("deleteCourseNoteRagOutput calls /course-notes/:id/rag/:outputId", async () => {
+    mockFetch204();
+
+    await deleteCourseNoteRagOutput("cn1", "r1");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/course-notes/cn1/rag/r1");
+    expect(init?.method).toBe("DELETE");
   });
 });

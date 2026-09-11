@@ -20,6 +20,7 @@ import {
 import { HOME_ITEM, visibleNavGroups } from "@/components/layout/nav-items";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
+import { useModules } from "@/stores/modules-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 
@@ -50,6 +51,7 @@ export function CommandPalette(props: CommandPaletteProps) {
   const prefs = usePreferences();
   const t = useT();
   const navigate = useNavigate();
+  const modules = useModules();
 
   const [query, setQuery] = createSignal("");
   const [selectedIndex, setSelectedIndex] = createSignal(0);
@@ -200,7 +202,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       onSelect: () => void navigate({ to: HOME_ITEM.to }),
     });
 
-    for (const group of visibleNavGroups(userRole)) {
+    for (const group of visibleNavGroups(userRole, modules.enabled())) {
       const groupName = t(group.labelKey);
       for (const item of group.items) {
         list.push({

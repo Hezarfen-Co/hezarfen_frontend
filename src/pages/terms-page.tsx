@@ -4,18 +4,21 @@ import { deleteTermById } from "@/api/terms";
 import { getTerms } from "@/api/terms";
 import { patchTermById } from "@/api/terms";
 import { postTerm } from "@/api/terms";
+import { postTermArchive } from "@/api/terms";
+import { postTermUnarchive } from "@/api/terms";
 import { formatApiError } from "@/api/client";
 import type { Term } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconArchive, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -83,6 +86,15 @@ function TermsContent() {
       cell: (cell) => <span class="mono text-sm">{formatDateTime(cell.row.original.ends_at, locale())}</span>,
     },
     {
+      accessorKey: "archived_at",
+      header: t("terms.archived"),
+      cell: (cell) => (
+        <Show when={cell.row.original.archived_at != null} fallback={<span class="text-muted-foreground">—</span>}>
+          <Badge variant="secondary" class="rounded-full">{t("terms.archived")}</Badge>
+        </Show>
+      ),
+    },
+    {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
@@ -95,6 +107,17 @@ function TermsContent() {
               icon: <IconEdit class="h-4 w-4" />,
               onSelect: () => startEdit(cell.row.original),
             },
+            cell.row.original.archived_at == null
+              ? {
+                  label: t("terms.archive"),
+                  icon: <IconArchive class="h-4 w-4" />,
+                  onSelect: () => void toggleArchive(cell.row.original, true),
+                }
+              : {
+                  label: t("terms.unarchive"),
+                  icon: <IconArchive class="h-4 w-4" />,
+                  onSelect: () => void toggleArchive(cell.row.original, false),
+                },
             {
               label: t("common.delete"),
               icon: <IconTrash class="h-4 w-4" />,
@@ -127,6 +150,20 @@ function TermsContent() {
     setEditing(term);
     setError("");
     setPanelOpen(true);
+  };
+  const toggleArchive = async (term: Term, archive: boolean) => {
+    setError("");
+    try {
+      if (archive) {
+        await postTermArchive(term.id);
+      } else {
+        await postTermUnarchive(term.id);
+      }
+      await refetch();
+      setFlash(t("common.saved"));
+    } catch (err) {
+      setError(formatApiError(err));
+    }
   };
 
   const save = async (e: SubmitEvent) => {

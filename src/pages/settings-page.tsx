@@ -1,7 +1,8 @@
-import { Index, Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
+import { For, Index, Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
 import { getSettings } from "@/api/settings";
 import { patchSettings } from "@/api/settings";
 import { getLimits } from "@/api/limits";
+import { getModules, getModulesCatalog } from "@/api/modules";
 import type { ExamKindSetting, GradeBand, MealSlot, SchoolSettings } from "@/api/client";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -49,6 +50,10 @@ export default function SettingsPage() {
 function SettingsContent() {
   const t = useT();
   const [settings, { refetch, mutate }] = createResource(() => getSettings());
+  const [modulesInfo, { refetch: refetchModules }] = createResource(async () => {
+    const [mine, catalog] = await Promise.all([getModules(), getModulesCatalog()]);
+    return { mine, catalog };
+  });
   const [examKinds, setExamKinds] = createSignal<ExamKindSetting[]>([]);
   const [attendanceStatuses, setAttendanceStatuses] = createSignal<string[]>([]);
   const [gradeBands, setGradeBands] = createSignal<GradeBand[]>([]);
@@ -587,6 +592,39 @@ function SettingsContent() {
                     <Input id="chat-message" type="number" min={limits()?.chatbot.min_max_message_len} max={limits()?.chatbot.max_max_message_len} value={maxChatbotMessageLen()} onInput={(e) => setMaxChatbotMessageLen(e.currentTarget.value)} />
                   </div>
                 </div>
+              </section>
+              <section class="data-shell space-y-4 p-4">
+                <div>
+                  <h2 class="text-base font-semibold">{t("settings.modules")}</h2>
+                  <p class="mt-1 text-sm text-muted-foreground">{t("settings.modulesHelp")}</p>
+                </div>
+                <Suspense fallback={<PageSpinner />}>
+                  <Show when={modulesInfo.error}>
+                    <ErrorAlert message={formatApiError(modulesInfo.error)} onRetry={() => void refetchModules()} />
+                  </Show>
+                  <Show when={modulesInfo()}>
+                    {(info) => (
+                      <div class="space-y-3">
+                        <For each={info().catalog.packages}>
+                          {(pkg) => (
+                            <div class="space-y-1.5">
+                              <h3 class="text-sm font-medium capitalize">{pkg.package}</h3>
+                              <div class="flex flex-wrap gap-1.5">
+                                <For each={pkg.modules}>
+                                  {(name) => (
+                                    <Badge variant={info().mine.enabled.includes(name) ? "secondary" : "outline"} class="rounded-full">
+                                      {name}
+                                    </Badge>
+                                  )}
+                                </For>
+                              </div>
+                            </div>
+                          )}
+                        </For>
+                      </div>
+                    )}
+                  </Show>
+                </Suspense>
               </section>
             </Show>
           </TabsContent>

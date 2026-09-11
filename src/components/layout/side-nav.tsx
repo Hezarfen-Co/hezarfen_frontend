@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
+import { useModules } from "@/stores/modules-context";
 import { useShellFeed } from "@/stores/shell-feed-context";
 import { useT } from "@/stores/preferences-context";
 
@@ -12,11 +13,12 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
   const auth = useAuth();
   const t = useT();
   const feed = useShellFeed();
+  const modules = useModules();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-  const primary = () => primaryNavItems(auth.user()?.role);
-  const groups = () => sidebarNavGroups(auth.user()?.role);
+  const primary = () => primaryNavItems(auth.user()?.role, modules.enabled());
+  const groups = () => sidebarNavGroups(auth.user()?.role, modules.enabled());
   const current = () => routeNavItem(pathname(), auth.user()?.role);
   const unread = () => feed.unreadMessages().total;
   const badgeFor = (item: NavItem) => (item.id === "messages" ? unread() : 0);

@@ -84,6 +84,11 @@ export type MessageKey =
   | "classBlueprints.saved"
   | "classBlueprints.delete"
   | "classBlueprints.deleteConfirm"
+  | "classBlueprints.status"
+  | "classBlueprints.statusTitle"
+  | "classBlueprints.statusEmpty"
+  | "classBlueprints.statusSection"
+  | "classBlueprints.statusMissing"
   | "classBlueprints.deleted"
   | "classBlueprints.apply"
   | "classBlueprints.applyHint"
@@ -540,6 +545,8 @@ export type MessageKey =
   | "courseNotes.add"
   | "courseNotes.empty"
   | "courseNotes.emptyManageHint"
+  | "courseNotes.ragTitle"
+  | "courseNotes.ragEmpty"
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
@@ -1159,6 +1166,8 @@ export type MessageKey =
   | "settings.mealSlotNameInvalid"
   | "settings.aiPolicy"
   | "settings.aiPolicyHelp"
+  | "settings.modules"
+  | "settings.modulesHelp"
   | "settings.chatHistory"
   | "settings.chatThreads"
   | "settings.chatMessage"
@@ -1365,6 +1374,9 @@ export type MessageKey =
   | "terms.term"
   | "terms.unassigned"
   | "terms.dateRequired"
+  | "terms.archive"
+  | "terms.unarchive"
+  | "terms.archived"
   | "sessions.title"
   | "sessions.item"
   | "sessions.subtitle"
@@ -1619,6 +1631,11 @@ const en: Dict = {
   "classBlueprints.deleteConfirm":
     "Delete the blueprint for grade {grade}? The courses it attached are detached from every class at this grade. Hand-attached courses stay.",
   "classBlueprints.deleted": "Blueprint deleted.",
+  "classBlueprints.status": "Check sync",
+  "classBlueprints.statusTitle": "Sync status for grade {grade}",
+  "classBlueprints.statusEmpty": "Every section at this grade carries the full template.",
+  "classBlueprints.statusSection": "Section",
+  "classBlueprints.statusMissing": "Missing courses",
   "classBlueprints.apply": "Apply blueprint",
   "classBlueprints.applyHint": "Attaches this grade's blueprint courses to this class.",
   "classBlueprints.applyNoGrade": "Assign a grade to this class first.",
@@ -2077,6 +2094,8 @@ const en: Dict = {
   "courseNotes.add": "Add note",
   "courseNotes.empty": "No notes on this course yet.",
   "courseNotes.emptyManageHint": "Write a note the whole class can read, and attach files to it.",
+  "courseNotes.ragTitle": "AI outputs",
+  "courseNotes.ragEmpty": "No AI outputs on this note yet.",
   "notes.title": "Notebook",
   "notes.subtitle": "Your private notebook for class ideas and reminders.",
   "notes.new": "New note",
@@ -2786,6 +2805,8 @@ const en: Dict = {
   "settings.mealSlotNameInvalid": "A meal slot name can't contain / \\ ? # or %.",
   "settings.aiPolicy": "AI policy",
   "settings.aiPolicyHelp": "Limits for conversation context, threads, and message length.",
+  "settings.modules": "Modules",
+  "settings.modulesHelp": "Features your school has switched on, grouped by package. Switched-off features stay hidden in navigation.",
   "settings.chatHistory": "History turns",
   "settings.chatThreads": "Maximum threads",
   "settings.chatMessage": "Message length",
@@ -2992,6 +3013,9 @@ const en: Dict = {
   "terms.term": "Term",
   "terms.unassigned": "Unassigned",
   "terms.dateRequired": "Start and end dates are required.",
+  "terms.archive": "Archive term",
+  "terms.unarchive": "Reopen term",
+  "terms.archived": "Archived",
   "sessions.title": "Lesson sessions",
   "sessions.item": "Session",
   "sessions.subtitle": "Schedule lesson sessions and record roll call for each class.",
@@ -3162,6 +3186,11 @@ const tr: Dict = {
   "classBlueprints.deleteConfirm":
     "{grade} seviyesinin şablonu silinsin mi? Şablonun eklediği dersler bu seviyedeki her şubeden çıkarılır. Elle eklenen dersler kalır.",
   "classBlueprints.deleted": "Şablon silindi.",
+  "classBlueprints.status": "Eşitleme kontrolü",
+  "classBlueprints.statusTitle": "{grade} seviyesi eşitleme durumu",
+  "classBlueprints.statusEmpty": "Bu seviyedeki her şube şablonun tamamını taşıyor.",
+  "classBlueprints.statusSection": "Şube",
+  "classBlueprints.statusMissing": "Eksik dersler",
   "classBlueprints.apply": "Şablonu uygula",
   "classBlueprints.applyHint": "Bu seviyenin şablon derslerini bu şubeye ekler.",
   "classBlueprints.applyNoGrade": "Önce bu şubeye bir seviye ata.",
@@ -3620,6 +3649,8 @@ const tr: Dict = {
   "courseNotes.add": "Not ekle",
   "courseNotes.empty": "Bu derse ait henüz not yok.",
   "courseNotes.emptyManageHint": "Tüm sınıfın okuyabileceği bir not yazın, dosya da ekleyebilirsiniz.",
+  "courseNotes.ragTitle": "YZ çıktıları",
+  "courseNotes.ragEmpty": "Bu notta henüz YZ çıktısı yok.",
   "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleriniz ve hatırlatmalarınız için özel defteriniz.",
   "notes.new": "Yeni not",
@@ -4329,6 +4360,8 @@ const tr: Dict = {
   "settings.mealSlotNameInvalid": "Öğün adı / \\ ? # veya % içeremez.",
   "settings.aiPolicy": "Yapay zekâ politikası",
   "settings.aiPolicyHelp": "Konuşma bağlamı, konu sayısı ve mesaj uzunluğu sınırları.",
+  "settings.modules": "Modüller",
+  "settings.modulesHelp": "Okulunuzda açık olan özellikler, pakete göre gruplu. Kapalı özellikler gezgin menüde gizlenir.",
   "settings.chatHistory": "Geçmiş turu",
   "settings.chatThreads": "En fazla konu",
   "settings.chatMessage": "Mesaj uzunluğu",
@@ -4535,6 +4568,9 @@ const tr: Dict = {
   "terms.term": "Dönem",
   "terms.unassigned": "Atanmamış",
   "terms.dateRequired": "Başlangıç ve bitiş tarihi gerekli.",
+  "terms.archive": "Dönemi arşivle",
+  "terms.unarchive": "Dönemi yeniden aç",
+  "terms.archived": "Arşivli",
   "sessions.title": "Ders oturumları",
   "sessions.item": "Oturum",
   "sessions.subtitle": "Ders oturumlarını planlayın ve her ders için yoklama alın.",
