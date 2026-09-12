@@ -1,4 +1,4 @@
-import { Show, Suspense, createMemo, createResource } from "solid-js";
+import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getHomeworkReport } from "@/api/homework";
@@ -8,14 +8,25 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconEye } from "@/components/ui/icons";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
+
+type ReportTab = "all" | "todo" | "submitted" | "graded";
 
 export function HomeworkReportView(props: { userId: string }) {
   const t = useT();
   const navigate = useNavigate();
   const { locale } = usePreferences();
+  const [tab, setTab] = createSignal<ReportTab>("all");
   const [report] = createResource(() => props.userId, async (userId) => getHomeworkReport(userId, { limit: 100 }));
+  const rows = createMemo(() => {
+    const items = report()?.items ?? [];
+    if (tab() === "todo") return items.filter((row) => !row.submitted);
+    if (tab() === "submitted") return items.filter((row) => row.submitted);
+    if (tab() === "graded") return items.filter((row) => row.result !== null);
+    return items;
+  });
   const statusLabel = (row: HomeworkReportEntry) => {
     if (row.missing) return t("homework.status.missing");
     if (!row.submitted) return t("homework.notSubmitted");
@@ -79,16 +90,26 @@ export function HomeworkReportView(props: { userId: string }) {
   return (
     <Suspense fallback={<DataTableSkeleton />}>
       <Show when={(report()?.items ?? []).length > 0} fallback={<EmptyState title={t("homework.empty")} />}>
-        <DataTable
-          columns={columns()}
-          data={report()?.items ?? []}
-          filterColumn="title"
-          storageKey={`homework-report-${props.userId}`}
-          enablePagination
-          pageSize={10}
-          empty={t("homework.empty")}
-          onRowClick={(row) => navigate({ to: "/homework/$id", params: { id: row.homework } })}
-        />
+        <Tabs value={tab()} onChange={(value) => setTab(value as ReportTab)}>
+          <TabsList aria-label={t("homework.title")}>
+            <TabsTrigger value="all">{t("common.all")}</TabsTrigger>
+            <TabsTrigger value="todo">{t("homework.tab.todo")}</TabsTrigger>
+            <TabsTrigger value="submitted">{t("homework.tab.submitted")}</TabsTrigger>
+            <TabsTrigger value="graded">{t("homework.tab.graded")}</TabsTrigger>
+          </TabsList>
+          <TabsContent value={tab()} class="mt-3 border-0 bg-transparent p-0 shadow-none">
+            <DataTable
+              columns={columns()}
+              data={rows()}
+              filterColumn="title"
+              storageKey={`homework-report-${props.userId}`}
+              enablePagination
+              pageSize={10}
+              empty={t("homework.empty")}
+              onRowClick={(row) => navigate({ to: "/homework/$id", params: { id: row.homework } })}
+            />
+          </TabsContent>
+        </Tabs>
       </Show>
     </Suspense>
   );

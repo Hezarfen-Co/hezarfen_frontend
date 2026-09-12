@@ -7,6 +7,7 @@ import {
 } from "@tanstack/solid-router";
 import { Suspense, createRenderEffect, createRoot, lazy, type Component } from "solid-js";
 import { AppShell } from "@/components/layout/app-shell";
+import { NotFoundPage } from "@/components/system/not-found-page";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { AuthProvider } from "@/stores/auth-context";
 import { ModulesProvider } from "@/stores/modules-context";
@@ -84,14 +85,7 @@ function RootComponent() {
 
 const rootRoute = createRootRoute({
   component: RootComponent,
-  notFoundComponent: () => (
-    <div class="space-y-2 py-16 text-center">
-      <p class="text-lg font-medium">404</p>
-      <a href="/" class="text-sm text-muted-foreground underline-offset-4 hover:underline">
-        Home
-      </a>
-    </div>
-  ),
+  notFoundComponent: () => <NotFoundPage />,
 });
 
 const indexRoute = createRoute({

@@ -6,6 +6,7 @@ import { CelebiPanel } from "@/components/layout/celebi-panel";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
+import { NetworkStatusBanner } from "@/components/layout/network-status-banner";
 import { NotificationCenter } from "@/components/layout/notification-center";
 import { routeLabelKey } from "@/components/layout/nav-items";
 import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
@@ -166,6 +167,9 @@ export function AppShell(props: ParentProps) {
                 </Show>
               </div>
             </header>
+          </Show>
+          <Show when={auth.user() && !fullScreen()}>
+            <NetworkStatusBanner />
           </Show>
           <div
             class={cn(

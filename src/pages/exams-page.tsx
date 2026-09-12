@@ -21,7 +21,9 @@ import { DropdownSelect } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createNow } from "@/lib/create-now";
+import { EXAM_KINDS } from "@/api/client";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDisplayStatus, examStatusMessageKey, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
 import { createFlash } from "@/lib/flash";
@@ -51,8 +53,15 @@ function ExamsContent() {
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
-  const [statusFilter, setStatusFilter] = createSignal<ExamDisplayStatus | "all">("all");
+  type ExamTab = "all" | "upcoming" | "completed" | "draft";
+  const examTabGroup = (status: ExamDisplayStatus): ExamTab => {
+    if (status === "draft") return "draft";
+    if (status === "upcoming" || status === "active" || status === "unscheduled") return "upcoming";
+    return "completed";
+  };
+  const [tab, setTab] = createSignal<ExamTab>("all");
   const [courseFilter, setCourseFilter] = createSignal("all");
+  const [kindFilter, setKindFilter] = createSignal("all");
   const [createOpen, setCreateOpen] = createSignal(location().searchStr.includes("action=new"));
   createEffect(() => {
     if (location().searchStr.includes("action=new")) {
@@ -99,8 +108,9 @@ function ExamsContent() {
     const allowed = isStudent() ? new Set(visibleCourses().map((course) => course.id)) : null;
     return items.filter((exam) => {
       if (allowed && !allowed.has(exam.course)) return false;
-      if (statusFilter() !== "all" && examStatus(exam) !== statusFilter()) return false;
+      if (tab() !== "all" && examTabGroup(examStatus(exam)) !== tab()) return false;
       if (courseFilter() !== "all" && exam.course !== courseFilter()) return false;
+      if (kindFilter() !== "all" && String(exam.kind) !== kindFilter()) return false;
       return true;
     });
   };
@@ -268,80 +278,85 @@ function ExamsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-          <Show when={list.error}>
-            <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-          </Show>
-          <DataTable
-            title={t("exams.title")}
-            description={t("exams.subtitle")}
-            actions={
-              canCreate() ? (
-                <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreateModal}>
-                  <IconPlus class="h-4 w-4" />
-                  {t("exams.create")}
-                </Button>
-              ) : undefined
-            }
-            columns={columns()}
-            data={rows()}
-            tableClass="table-fixed min-w-5xl"
-            filterPlaceholder={t("exams.searchPlaceholder")}
-            searchPredicate={searchExam}
-            enablePagination
-            pageSize={EXAM_PAGE_SIZE}
-            empty={t("exams.empty")}
-            storageKey="exams"
-            onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
-            filters={
-              <div class="flex flex-wrap items-center gap-2.5">
-                <DropdownSelect
-                  labelPrefix={t("attempt.status")}
-                  value={statusFilter()}
-                  onChange={(val) => setStatusFilter(val as ExamDisplayStatus | "all")}
-                  options={[
-                    { value: "all", label: t("common.all") },
-                    { value: "active", label: t("exams.active") },
-                    { value: "upcoming", label: t("exams.upcoming") },
-                    { value: "submitted", label: t("attempt.submitted") },
-                    { value: "expired", label: t("attempt.expired") },
-                    { value: "draft", label: t("exams.draft") },
-                    { value: "finished", label: t("exams.finished") },
-                    { value: "unscheduled", label: t("exams.unscheduled") },
-                  ]}
-                />
+      <Tabs value={tab()} onChange={(value) => setTab(value as ExamTab)}>
+        <TabsList aria-label={t("exams.title")}>
+          <TabsTrigger value="all">{t("common.all")}</TabsTrigger>
+          <TabsTrigger value="upcoming">{t("exams.upcoming")}</TabsTrigger>
+          <TabsTrigger value="completed">{t("exams.finished")}</TabsTrigger>
+          <TabsTrigger value="draft">{t("exams.draft")}</TabsTrigger>
+        </TabsList>
 
-                <DropdownSelect
-                  labelPrefix={t("nav.courses")}
-                  value={courseFilter()}
-                  onChange={(val) => setCourseFilter(val)}
-                  options={[
-                    { value: "all", label: t("common.all") },
-                    ...visibleCourses().map((course) => ({ value: course.id, label: course.title })),
-                  ]}
-                />
+        <TabsContent value={tab()} class="mt-4 border-0 bg-transparent p-0 shadow-none">
+          <section class="data-shell space-y-4 p-4">
+            <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
+              <Show when={list.error}>
+                <Alert variant="destructive">{formatApiError(list.error)}</Alert>
+              </Show>
+              <DataTable
+                title={t("exams.title")}
+                description={t("exams.subtitle")}
+                actions={
+                  canCreate() ? (
+                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreateModal}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("exams.create")}
+                    </Button>
+                  ) : undefined
+                }
+                columns={columns()}
+                data={rows()}
+                tableClass="table-fixed min-w-5xl"
+                filterPlaceholder={t("exams.searchPlaceholder")}
+                searchPredicate={searchExam}
+                enablePagination
+                pageSize={EXAM_PAGE_SIZE}
+                empty={t("exams.empty")}
+                storageKey="exams"
+                onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
+                filters={
+                  <div class="flex flex-wrap items-center gap-2.5">
+                    <DropdownSelect
+                      labelPrefix={t("nav.courses")}
+                      value={courseFilter()}
+                      onChange={(val) => setCourseFilter(val)}
+                      options={[
+                        { value: "all", label: t("common.all") },
+                        ...visibleCourses().map((course) => ({ value: course.id, label: course.title })),
+                      ]}
+                    />
 
-                <Show when={statusFilter() !== "all" || courseFilter() !== "all"}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    class="h-8 rounded-lg px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setStatusFilter("all");
-                      setCourseFilter("all");
-                    }}
-                  >
-                    <IconRotateCcw class="h-3.5 w-3.5 mr-1" />
-                    {t("common.resetFilters")}
-                  </Button>
-                </Show>
-              </div>
-            }
-          />
-        </Suspense>
-      </section>
+                    <DropdownSelect
+                      labelPrefix={t("exams.kind")}
+                      value={kindFilter()}
+                      onChange={(val) => setKindFilter(val)}
+                      options={[
+                        { value: "all", label: t("common.all") },
+                        ...EXAM_KINDS.map((kind) => ({ value: kind, label: examKindLabel(kind, t) })),
+                      ]}
+                    />
+
+                    <Show when={courseFilter() !== "all" || kindFilter() !== "all"}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        class="h-8 rounded-lg px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          setCourseFilter("all");
+                          setKindFilter("all");
+                        }}
+                      >
+                        <IconRotateCcw class="h-3.5 w-3.5 mr-1" />
+                        {t("common.resetFilters")}
+                      </Button>
+                    </Show>
+                  </div>
+                }
+              />
+            </Suspense>
+          </section>
+        </TabsContent>
+      </Tabs>
 
       <SidePanel
         open={createOpen()}

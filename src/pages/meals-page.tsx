@@ -1,6 +1,6 @@
 import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { getLimits } from "@/api/limits";
-import { getMealMenus, postMealMenu } from "@/api/meals";
+import { getMealMenuBookings, getMealMenus, postMealMenu } from "@/api/meals";
 import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
 import { MealMenuCard } from "@/components/meals/meal-menu-card";
@@ -53,6 +53,26 @@ function MealsContent() {
   const visible = createMemo(() => slot() === "all" ? menus()?.items ?? [] : (menus()?.items ?? []).filter((menu) => menu.slot === slot()));
   const totalPages = createMemo(() => Math.max(1, Math.ceil((menus()?.total ?? 0) / PAGE_SIZE)));
 
+  // Real occupancy = confirmed bookings / capacity, both true fields — not the
+  // fabricated İyi/Takipte/Risk badge Figma shows. `getMealMenuBookings` is
+  // the same manager-only booking-audit read already used on the detail page,
+  // so this only runs for managers and only for the menus on screen.
+  const [reservationCounts] = createResource(
+    () => canManage() ? visible().map((menu) => menu.id) : null,
+    async (ids) => {
+      const entries = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            return [id, (await getMealMenuBookings(id, { limit: 1 })).total] as const;
+          } catch {
+            return [id, null] as const;
+          }
+        }),
+      );
+      return new Map(entries);
+    },
+  );
+
   const publish = async (event: SubmitEvent) => {
     event.preventDefault();
     setPending(true); setError("");
@@ -88,7 +108,7 @@ function MealsContent() {
         <Suspense fallback={<PageSpinner />}>
           <Show when={menus.error}><ErrorAlert message={formatApiError(menus.error)} onRetry={() => void refetch()} /></Show>
           <Show when={visible().length > 0} fallback={<EmptyState kind="meals" title={t("meals.empty")} />}>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"><For each={visible()}>{(menu) => <MealMenuCard menu={menu} locale={locale() === "tr" ? "tr-TR" : "en-US"} labels={{ dishes: t("meals.dishes"), capacity: t("meals.capacity"), conflict: t("meals.conflict") }} />}</For></div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"><For each={visible()}>{(menu) => <MealMenuCard menu={menu} locale={locale() === "tr" ? "tr-TR" : "en-US"} labels={{ dishes: t("meals.dishes"), capacity: t("meals.capacity"), conflict: t("meals.conflict"), reservations: t("meals.reservations"), topPick: t("meals.topPick") }} reservationCount={reservationCounts()?.get(menu.id) ?? undefined} />}</For></div>
             <PaginationControls page={page()} totalPages={totalPages()} onPageChange={setPage} />
           </Show>
         </Suspense>

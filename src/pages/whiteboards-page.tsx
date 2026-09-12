@@ -44,6 +44,15 @@ function WhiteboardsContent() {
   );
   const [createOpen, setCreateOpen] = createSignal(false);
   const pageCount = createMemo(() => Math.max(1, Math.ceil((boards.latest?.total ?? 0) / PAGE_SIZE)));
+  const [query, setQuery] = createSignal("");
+  // The board list endpoint has no server-side text filter, so this narrows
+  // only the current page's real titles — a client-side search over real
+  // data, not a promise of searching every board the caller has ever opened.
+  const visibleBoards = createMemo(() => {
+    const q = query().trim().toLocaleLowerCase();
+    const items = boards()?.items ?? [];
+    return q ? items.filter((b) => b.title.toLocaleLowerCase().includes(q)) : items;
+  });
 
   const meId = () => auth.user()?.id ?? "";
 
@@ -69,18 +78,26 @@ function WhiteboardsContent() {
           fallback={<EmptyState title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
         >
           <div class="space-y-4">
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <For each={boards()?.items ?? []}>
-                {(board) => (
-                  <BoardCard
-                    board={board}
-                    isCreator={board.creator === meId()}
-                    onOpen={() => navigate({ to: "/whiteboards/$id", params: { id: board.id } })}
-                    createdLabel={formatDate(board.created_at, locale())}
-                  />
-                )}
-              </For>
-            </div>
+            <Input
+              value={query()}
+              onInput={(e) => setQuery(e.currentTarget.value)}
+              placeholder={t("whiteboard.searchPlaceholder")}
+              class="h-9 max-w-sm rounded-lg"
+            />
+            <Show when={visibleBoards().length > 0} fallback={<EmptyState title={t("common.noResults")} />}>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <For each={visibleBoards()}>
+                  {(board) => (
+                    <BoardCard
+                      board={board}
+                      isCreator={board.creator === meId()}
+                      onOpen={() => navigate({ to: "/whiteboards/$id", params: { id: board.id } })}
+                      createdLabel={formatDate(board.created_at, locale())}
+                    />
+                  )}
+                </For>
+              </div>
+            </Show>
             <Show when={(boards()?.total ?? 0) > PAGE_SIZE}>
               <TablePagination
                 pageIndex={page()}

@@ -317,6 +317,11 @@ function AppointmentsContent() {
 
   // --- booker: my bookings ---
   const myBookings = () => (appts.latest ?? []).filter((a) => a.requester.id === me()?.id);
+  const nextBooking = createMemo(() =>
+    myBookings()
+      .filter((a) => isLive(a.status) && a.starts_at != null && a.starts_at > now())
+      .sort((a, b) => a.starts_at! - b.starts_at!)[0] ?? null,
+  );
 
   const bookingColumns = createMemo<ColumnDef<Appointment>[]>(() => [
     {
@@ -479,6 +484,20 @@ function AppointmentsContent() {
             <section class="data-shell p-4">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
+                <Show when={nextBooking()}>
+                  {(booking) => (
+                    <div class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-border-line bg-surface-tint p-4">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-base text-primary">
+                        <IconCalendarDays class="h-4 w-4" />
+                      </span>
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-medium text-text-strong">{personLabel(booking().teacher)}</p>
+                        <p class="mono truncate text-xs text-text-subtle">{timeWindow(booking().starts_at, booking().ends_at)}</p>
+                      </div>
+                      {statusBadge(booking().status)}
+                    </div>
+                  )}
+                </Show>
                 <p class="mb-3 text-sm text-muted-foreground">{t("appointments.myBookingsHint")}</p>
                 <DataTable
                   title={t("appointments.myBookings")}

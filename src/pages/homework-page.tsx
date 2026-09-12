@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -91,6 +92,15 @@ function HomeworkContent() {
   const courseName = (id: string) => courseNames()[id] ?? id;
   const canCreate = () => manageableCourses().length > 0;
   const pageTitle = () => auth.user()?.role === "student" ? t("homework.mineTitle") : t("homework.title");
+  type DueTab = "all" | "open" | "past";
+  const [dueTab, setDueTab] = createSignal<DueTab>("all");
+  const dueFilteredList = createMemo(() => {
+    const now = serverTime()?.now ?? Date.now();
+    const items = list() ?? [];
+    if (dueTab() === "open") return items.filter((item) => item.due_at >= now);
+    if (dueTab() === "past") return items.filter((item) => item.due_at < now);
+    return items;
+  });
 
   createEffect(() => {
     if (!createOpen()) return;
@@ -152,8 +162,8 @@ function HomeworkContent() {
       id: "course",
       accessorFn: (row) => courseName(row.course),
       header: t("nav.courses"),
-      meta: { cellClass: "text-text-subtle" },
-      cell: (cell) => courseName(cell.row.original.course),
+      meta: { cellClass: "max-w-0 truncate text-text-subtle" },
+      cell: (cell) => <span class="block truncate">{courseName(cell.row.original.course)}</span>,
     },
     {
       id: "due_at",
@@ -222,34 +232,44 @@ function HomeworkContent() {
           </div>
         </form>
       </SidePanel>
-      <section class="data-shell space-y-4 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-          <Show when={list.error}>
-            <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-          </Show>
-          <DataTable
-            title={pageTitle()}
-            description={t("homework.listHelp")}
-            actions={
-              <Show when={canCreate()}>
-                <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
-                  <IconPlus class="h-4 w-4" />
-                  {t("homework.add")}
-                </Button>
+      <Tabs value={dueTab()} onChange={(value) => setDueTab(value as DueTab)}>
+        <TabsList aria-label={pageTitle()}>
+          <TabsTrigger value="all">{t("common.all")}</TabsTrigger>
+          <TabsTrigger value="open">{t("homework.tab.open")}</TabsTrigger>
+          <TabsTrigger value="past">{t("homework.tab.past")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={dueTab()} class="mt-4 border-0 bg-transparent p-0 shadow-none">
+          <section class="data-shell space-y-4 p-4">
+            <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
+              <Show when={list.error}>
+                <Alert variant="destructive">{formatApiError(list.error)}</Alert>
               </Show>
-            }
-            columns={columns()}
-            data={list() ?? []}
-            tableClass="table-fixed min-w-5xl"
-            filterColumn="title"
-            enablePagination
-            pageSize={10}
-            empty={t("homework.empty")}
-            storageKey="homework"
-            onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
-          />
-        </Suspense>
-      </section>
+              <DataTable
+                title={pageTitle()}
+                description={t("homework.listHelp")}
+                actions={
+                  <Show when={canCreate()}>
+                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("homework.add")}
+                    </Button>
+                  </Show>
+                }
+                columns={columns()}
+                data={dueFilteredList()}
+                tableClass="table-fixed min-w-5xl"
+                filterColumn="title"
+                enablePagination
+                pageSize={10}
+                empty={t("homework.empty")}
+                storageKey="homework"
+                onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
+              />
+            </Suspense>
+          </section>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -203,18 +203,25 @@ function CoursesContent() {
                 when={filteredCourses().length > 0}
                 fallback={<EmptyState kind="courses" title={t("courses.empty", { item: kindLabel() })} />}
               >
-                <div class={list.loading ? "space-y-2 opacity-60 transition-opacity" : "space-y-2 transition-opacity"}>
+                <div class={list.loading ? "grid grid-cols-1 gap-3 opacity-60 transition-opacity sm:grid-cols-2 xl:grid-cols-3" : "grid grid-cols-1 gap-3 transition-opacity sm:grid-cols-2 xl:grid-cols-3"}>
                   <For each={visibleCourses()}>
                     {(course) => (
                       <CourseCard
                         course={course}
                         term={termName(course.term)}
                         enrolled={auth.user()?.role === "student"}
+                        showTeacherActions={hasMinRole(auth.user()?.role, "teacher")}
                         labels={{
                           capacity: t("courses.capacity"),
                           unlimited: t("courses.unlimited"),
                           enrolled: t("courses.enrolled"),
                           kind: courseKindLabel(course.kind, t),
+                          weeklyHours: t("courses.weeklyHours"),
+                          competency: t("courses.competency"),
+                          attendance: t("courses.attendanceRate"),
+                          progress: t("courses.progress"),
+                          takeAttendance: t("courses.takeAttendance"),
+                          analysis: t("courses.analysis"),
                         }}
                       />
                     )}

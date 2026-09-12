@@ -35,6 +35,7 @@ import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { personLabel } from "@/lib/person";
 import { createFlash } from "@/lib/flash";
+import { Badge } from "@/components/ui/badge";
 
 export default function MessagesPage() {
   const t = useT();
@@ -161,28 +162,50 @@ export default function MessagesPage() {
     }
   };
 
+  const folderLabel = () => {
+    const f = folder();
+    if (f === "sent") return t("messages.sent");
+    if (f === "archive") return t("messages.archive");
+    if (f === "trash") return t("messages.trash");
+    return t("messages.inbox");
+  };
+
   return (
     <RouteGuard>
-      <div class="min-h-[50vh] bg-background sm:min-h-[calc(100vh-7rem)]">
+      <div class="space-y-4">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("nav.messages")}</h1>
+          </div>
+          <Button
+            size="sm"
+            class="shrink-0 rounded-lg"
+            onClick={() => {
+              setReplyData(null);
+              setComposeOpen(true);
+            }}
+          >
+            <IconPlus class="h-4 w-4" />
+            <span>{t("messages.newMessage")}</span>
+          </Button>
+        </div>
+
+        <div class="min-h-[50vh] sm:min-h-[calc(100vh-11rem)]">
         <section class="data-shell overflow-hidden p-0">
-          <div class="flex min-h-[50vh] flex-col sm:min-h-[calc(100vh-7rem)]">
+          <div class="flex min-h-[50vh] flex-col sm:min-h-[calc(100vh-11rem)]">
+            {/* Card header — folder name + unread chip, matching Figma's "Gelen kutusu" card. */}
+            <div class="flex items-center gap-2 border-b border-border-hairline bg-surface-base px-4 py-3">
+              <p class="text-sm font-semibold text-text-strong">{folderLabel()}</p>
+              <Show when={folder() === "inbox" && unreadCount() && unreadCount()! > 0}>
+                <Badge variant="secondary" class="rounded-full text-[11px]">
+                  {unreadCount()} {t("messages.unread")}
+                </Badge>
+              </Show>
+            </div>
             {/* Folder toolbar — the app shell already owns the global sidebar. */}
             <aside class="flex flex-wrap items-center gap-2 border-b border-border-hairline bg-surface-overlay px-3 py-2.5">
-              {/* Compose Button */}
-              <Button
-                size="sm"
-                class="order-2 ml-auto shrink-0 rounded-lg text-xs"
-                onClick={() => {
-                  setReplyData(null);
-                  setComposeOpen(true);
-                }}
-              >
-                <IconPlus class="h-5 w-5" />
-                <span>{t("messages.newMessage")}</span>
-              </Button>
-
               {/* Folder navigation stays compact, leaving the only sidebar to the app shell. */}
-              <nav class="order-1 flex min-w-0 max-w-full flex-1 items-center gap-1 overflow-x-auto">
+              <nav class="flex min-w-0 max-w-full flex-1 items-center gap-1 overflow-x-auto">
                 <button
                   type="button"
                   class={cn(
@@ -430,6 +453,7 @@ export default function MessagesPage() {
             </main>
           </div>
         </section>
+        </div>
 
         {/* Gmail Floating Compose Box at Bottom Right */}
         <GmailComposeBox

@@ -135,10 +135,30 @@ Figma Icons page. Temporary Figma URLs are never committed.
 
 ## Remaining implementation plan
 
-### In progress — existing backend support
+### How a missing value is shown
 
-1. System polish: notification panel, branded 404, network/error states,
-   keyboard/focus audit, dark-mode screenshots, and role/module regression.
+Earlier passes dropped every element the backend could not fill, which kept the
+app honest but left the screens shorter and sparser than the design, with no
+way for a reader to tell an absent number from an unbuilt one. The rule now is
+to show the gap rather than hide it: render the card, tile, column or section
+the design allots and mark it **"yakında"** via `src/components/ui/coming-soon.tsx`
+(`ComingSoonBadge`, `ComingSoonValue`, `ComingSoonPanel`). A control that would
+do nothing is rendered disabled beside the badge, never enabled and inert.
+
+A fabricated value is still never acceptable — no invented percentages, counts,
+names, deltas or statuses. And the badge is not applied mechanically: a section
+with nothing behind it earns a panel, a single missing metric earns a value
+slot, and a decorative flourish with no information to carry — a delta arrow
+with no baseline, a progress bar with no ratio — is simply left out. Where
+badging a screen would read worse than the honest smaller version, it is left
+alone; `/management/settings` is the standing example, since its four designed
+tabs map to fields absent from `SchoolSettings` entirely.
+
+### Remaining
+
+Keyboard/focus audit, dark-mode screenshot pass, and the role/module
+authorization regression. Notification panel, branded 404 and network/error
+states are done.
 
 Desktop, student mobile and parent mobile composition are complete, and the
 student and parent routes were walked at 393px, 375px and 320px against a

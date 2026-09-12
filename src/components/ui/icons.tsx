@@ -45,6 +45,8 @@ import uploadSimpleUrl from "@phosphor-icons/core/regular/upload-simple.svg?url"
 import usersUrl from "@phosphor-icons/core/regular/users.svg?url";
 import warningUrl from "@phosphor-icons/core/regular/warning.svg?url";
 import waveformUrl from "@phosphor-icons/core/regular/waveform.svg?url";
+import wifiHighUrl from "@phosphor-icons/core/regular/wifi-high.svg?url";
+import wifiSlashUrl from "@phosphor-icons/core/regular/wifi-slash.svg?url";
 import xUrl from "@phosphor-icons/core/regular/x.svg?url";
 
 type IconProps = {
@@ -630,4 +632,12 @@ export function IconTarget(props: IconProps) {
 
 export function IconWaveform(props: IconProps) {
   return <PhosphorIcon {...props} src={waveformUrl} />;
+}
+
+export function IconWifi(props: IconProps) {
+  return <PhosphorIcon {...props} src={wifiHighUrl} />;
+}
+
+export function IconWifiOff(props: IconProps) {
+  return <PhosphorIcon {...props} src={wifiSlashUrl} />;
 }

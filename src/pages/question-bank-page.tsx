@@ -10,12 +10,14 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconEdit, IconEye, IconEyeOff, IconPlus, IconTrash, IconUsers } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createDebouncedSignal } from "@/lib/create-debounced-signal";
 import { createFlash } from "@/lib/flash";
 import { hasMinRole } from "@/lib/roles";
@@ -39,9 +41,10 @@ function QuestionBankContent() {
   createEffect(() => {
     document.title = `${t("nav.questionBank")} · Hezarfen`;
   });
-  const [ownerFilter, setOwnerFilter] = createSignal<"all" | "me">("all");
+  const [bankTab, setBankTab] = createSignal<"all" | "mine" | "school">("all");
+  const ownerFilter = () => (bankTab() === "mine" ? "me" : "all") as "all" | "me";
+  const visibilityFilter = () => (bankTab() === "school" ? "school" : "all") as "all" | "private" | "school";
   const [subjectFilter, setSubjectFilter] = createSignal("all");
-  const [visibilityFilter, setVisibilityFilter] = createSignal<"all" | "private" | "school">("all");
   const [page, setPage] = createSignal(0);
   const [query, setQuery, debouncedQuery] = createDebouncedSignal();
   const [createOpen, setCreateOpen] = createSignal(false);
@@ -131,6 +134,11 @@ function QuestionBankContent() {
       meta: { headerClass: "text-center", cellClass: "mono text-center" },
     },
     {
+      accessorKey: "used_count",
+      header: t("bank.usedCount"),
+      meta: { headerClass: "text-center", cellClass: "mono text-center" },
+    },
+    {
       id: "visibility",
       accessorFn: (question) => question.visibility,
       header: t("bank.whoCanSee"),
@@ -201,77 +209,81 @@ function QuestionBankContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-          <Show when={list.error}>
-            <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-          </Show>
-          <DataTable
-            title={t("bank.title")}
-            description={`${t("bank.subtitle")} ${t("bank.countTotal", { total: total() })}`}
-            actions={
-              <Show when={manageableCourses().length > 0}>
-                <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
-                  <IconPlus class="h-4 w-4" />
-                  {t("bank.create")}
-                </Button>
+      <Tabs
+        value={bankTab()}
+        onChange={(value) => {
+          setBankTab(value as "all" | "mine" | "school");
+          setPage(0);
+        }}
+      >
+        <TabsList aria-label={t("bank.title")}>
+          <TabsTrigger value="all">{t("common.all")}</TabsTrigger>
+          <TabsTrigger value="mine">{t("bank.mine")}</TabsTrigger>
+          <TabsTrigger value="school">{t("bank.sharedWithSchool")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={bankTab()} class="mt-4 border-0 bg-transparent p-0 shadow-none">
+          <section class="data-shell space-y-4 p-4">
+            <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
+              <Show when={list.error}>
+                <Alert variant="destructive">{formatApiError(list.error)}</Alert>
               </Show>
-            }
-            columns={columns()}
-            data={list()?.items ?? []}
-            tableClass="min-w-[48rem]"
-            filterPlaceholder={t("bank.search")}
-            searchValue={query()}
-            onSearchInput={(value) => {
-              setQuery(value);
-              setPage(0);
-            }}
-            enablePagination
-            manualPagination={{ pageIndex: page(), pageSize: BANK_PAGE_SIZE, total: total(), onPageChange: setPage }}
-            empty={t("bank.empty")}
-            storageKey="question-bank"
-            onRowClick={(question) => navigate({ to: "/question-bank/$id", params: { id: question.id } })}
-            filters={
-              <div class="flex flex-wrap items-center gap-2.5">
-                <DropdownSelect
-                  labelPrefix={t("bank.owner")}
-                  value={ownerFilter()}
-                  onChange={(value) => {
-                    setOwnerFilter(value as "all" | "me");
-                    setPage(0);
-                  }}
-                  options={[
-                    { value: "all", label: t("common.all") },
-                    { value: "me", label: t("bank.mine") },
-                  ]}
-                />
-                <DropdownSelect
-                  labelPrefix={t("bank.whoCanSee")}
-                  value={visibilityFilter()}
-                  onChange={(value) => {
-                    setVisibilityFilter(value as "all" | "private" | "school");
-                    setPage(0);
-                  }}
-                  options={[
-                    { value: "all", label: t("common.all") },
-                    { value: "private", label: t("bank.onlyMe") },
-                    { value: "school", label: t("bank.sharedWithSchool") },
-                  ]}
-                />
-                <DropdownSelect
-                  labelPrefix={t("subjects.subject")}
-                  value={subjectFilter()}
-                  onChange={(value) => {
-                    setSubjectFilter(value);
-                    setPage(0);
-                  }}
-                  options={subjectOptions()}
-                />
-              </div>
-            }
-          />
-        </Suspense>
-      </section>
+              <DataTable
+                title={t("bank.title")}
+                description={`${t("bank.subtitle")} ${t("bank.countTotal", { total: total() })}`}
+                actions={
+                  <Show when={manageableCourses().length > 0}>
+                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("bank.create")}
+                    </Button>
+                  </Show>
+                }
+                columns={columns()}
+                data={list()?.items ?? []}
+                tableClass="min-w-[48rem]"
+                filterPlaceholder={t("bank.search")}
+                searchValue={query()}
+                onSearchInput={(value) => {
+                  setQuery(value);
+                  setPage(0);
+                }}
+                enablePagination
+                manualPagination={{ pageIndex: page(), pageSize: BANK_PAGE_SIZE, total: total(), onPageChange: setPage }}
+                empty={t("bank.empty")}
+                storageKey="question-bank"
+                onRowClick={(question) => navigate({ to: "/question-bank/$id", params: { id: question.id } })}
+                filters={
+                  <div class="flex flex-wrap items-center gap-2.5">
+                    <DropdownSelect
+                      labelPrefix={t("subjects.subject")}
+                      value={subjectFilter()}
+                      onChange={(value) => {
+                        setSubjectFilter(value);
+                        setPage(0);
+                      }}
+                      options={subjectOptions()}
+                    />
+                    <DropdownSelect
+                      labelPrefix={t("bank.source")}
+                      value="all"
+                      disabled
+                      onChange={() => {}}
+                      options={[
+                        { value: "all", label: t("common.all") },
+                        { value: "institution", label: t("bank.source.institution") },
+                        { value: "publisher", label: t("bank.source.publisher") },
+                        { value: "ai", label: t("bank.source.ai") },
+                      ]}
+                    />
+                    <ComingSoonBadge />
+                  </div>
+                }
+              />
+            </Suspense>
+          </section>
+        </TabsContent>
+      </Tabs>
 
       <SidePanel
         open={createOpen() || editing() != null}

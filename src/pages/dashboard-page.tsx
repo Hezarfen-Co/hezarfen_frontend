@@ -1,33 +1,40 @@
-import { For, Show, Suspense, createMemo, createResource, type Component } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup, type Component } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import type { Role } from "@/api/client";
 import { formatApiError } from "@/api/client";
 import { getAppointments } from "@/api/appointments";
-import { getMyClasses } from "@/api/classes";
-import { getCourses } from "@/api/courses";
+import { getClasses, getClassesByUserId, getMyClasses } from "@/api/classes";
+import { getCourseEnrollments, getCourses } from "@/api/courses";
 import { getEvents } from "@/api/events";
 import { getExams, getExamStatistics } from "@/api/exams";
 import { getHomework } from "@/api/homework";
 import { getMealMenus } from "@/api/meals";
 import { getMyStudents } from "@/api/parents";
+import { getPaymentStatementByUserId } from "@/api/payments";
 import { getPomodoroMe } from "@/api/pomodoro";
-import { getMyAttendance, getMyCourses, getMyMarks } from "@/api/reports";
+import { getMyAttendance, getMyCourses, getMyMarks, getUserAttendance } from "@/api/reports";
 import { getTime } from "@/api/time/getTime";
+import { getUsers, getUserSearch } from "@/api/users";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
+import { ComingSoonBadge, ComingSoonPanel } from "@/components/ui/coming-soon";
 import { ChartBar } from "@/components/ui/chart-bar";
 import { ChartHeatmap, type HeatmapEntry } from "@/components/ui/chart-heatmap";
 import { ChartLine } from "@/components/ui/chart-line";
 import { ChartProgressRing } from "@/components/ui/chart-progress-ring";
 import { DataTable } from "@/components/ui/data-table";
+import { QuickLinkColumn, type QuickLinkRow } from "@/components/dashboard/quick-link-column";
+import { StatTile } from "@/components/dashboard/stat-tile";
 import {
   IconBook,
   IconCalendarDays,
   IconChart,
   IconClipboardCheck,
+  IconClock,
   IconExam,
   IconHomework,
+  IconSearch,
   IconUsers,
   IconUtensils,
 } from "@/components/ui/icons";
@@ -35,6 +42,8 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
+import { formatTry } from "@/lib/meals";
+import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -53,7 +62,7 @@ const TREND_EXAM_CAP = 20;
 const TREND_MARK_CAP = 20;
 
 type Status = "active" | "today" | "soon";
-type DeadlineKind = "exam" | "event" | "appointment" | "homework";
+type DeadlineKind = "exam" | "event" | "appointment" | "homework" | "payment";
 
 type DeadlineRow = {
   id: string;
@@ -82,6 +91,7 @@ const kindKeys: Record<DeadlineKind, MessageKey> = {
   event: "dashboard.type.event",
   appointment: "dashboard.type.appointment",
   homework: "dashboard.type.homework",
+  payment: "dashboard.type.payment",
 };
 
 function scheduleStatus(startsAt: number | null, endsAt: number | null, now: number): Status | null {
@@ -111,8 +121,11 @@ function DashboardContent() {
     (currentRole) => currentRole === "student" ? getMyCourses() : getCourses(),
   );
   const courseCount = () => (courses()?.items ?? []).filter((course) => course.kind === "course").length;
+  // `/events` has no role gate — a parent-teacher conference is a real PAR-01
+  // "Yaklaşan" item, so parent reads this too (unlike `exams`/`homework`
+  // below, which really are course-scoped and out of a parent's reach).
   const [events] = createResource(
-    () => role() === "parent" ? null : clock()?.now,
+    () => clock()?.now,
     (now) => getEvents({ ends_after: now, limit: 50 }),
   );
   const [exams] = createResource(
@@ -186,8 +199,158 @@ function DashboardContent() {
   );
   const myClass = () => myClasses.latest?.items[0] ?? null;
 
+  // TCH-01 "Öğrencim" stat — Course carries no enrolled-count field, so this
+  // reads each of the teacher's own courses' enrollment page and unions the
+  // user ids. Bounded to a handful of courses, the same cost shape as the
+  // admin quick-link class-member lookups.
+  const [teacherStudentCount] = createResource(
+    () => (role() === "teacher" ? courses.latest?.items ?? null : null),
+    async (items) => {
+      const settled = await Promise.all(
+        items.slice(0, 20).map((course) => getCourseEnrollments(course.id, { limit: 200 }).catch(() => null)),
+      );
+      const ids = new Set<string>();
+      for (const page of settled) for (const enrollment of page?.items ?? []) ids.add(enrollment.user.id);
+      return ids.size;
+    },
+  );
+
+  // TCH-01 "Bekleyen onaylar" rail — the AI suggestion queue itself has no
+  // backend endpoint, but a real pending appointment request addressed to
+  // this teacher is exactly the kind of thing that rail is for.
+  const pendingAppointments = createMemo(() =>
+    (appointments()?.items ?? [])
+      .filter((appointment) => appointment.status === "pending" && appointment.teacher?.id === user().id)
+      .sort((a, b) => (a.starts_at ?? a.created_at) - (b.starts_at ?? b.created_at))
+      .slice(0, 5),
+  );
+
+  // PAR-01 child-scoped panels. A parent may link several children; default
+  // to the first and let them switch when there is more than one.
+  const [selectedChildId, setSelectedChildId] = createSignal("");
+  createEffect(() => {
+    const first = children()?.items[0]?.id;
+    if (first && !selectedChildId()) setSelectedChildId(first);
+  });
+  const [childClasses] = createResource(
+    () => (role() === "parent" && selectedChildId() ? selectedChildId() : null),
+    (id) => getClassesByUserId(id, { limit: 1 }).catch(() => null),
+  );
+  const homeroomTeacher = () => childClasses()?.items[0]?.teacher ?? null;
+  const [childAttendance] = createResource(
+    () => (role() === "parent" && selectedChildId() ? selectedChildId() : null),
+    (id) => getUserAttendance(id).catch(() => null),
+  );
+  const childAttendanceBreakdown = createMemo(() => {
+    const report = childAttendance();
+    if (!report) return null;
+    const sum = (k: "present" | "absent" | "late" | "excused") => report.events[k] + report.sessions[k];
+    const total = report.events.total + report.sessions.total;
+    return {
+      present: sum("present"),
+      absent: sum("absent"),
+      late: sum("late"),
+      excused: sum("excused"),
+      rate: total ? Math.round((sum("present") / total) * 100) : null,
+    };
+  });
+  const [childStatement] = createResource(
+    () => (role() === "parent" && selectedChildId() ? selectedChildId() : null),
+    (id) => getPaymentStatementByUserId(id, { limit: 100 }).catch(() => null),
+  );
+  const paymentSummary = createMemo(() => {
+    const statement = childStatement();
+    if (!statement) return null;
+    const entries = statement.entries.items;
+    const settled = (entry: (typeof entries)[number]) => !entry.reversed && entry.outstanding_minor <= 0;
+    const next = entries
+      .filter((entry) => !entry.reversed && entry.outstanding_minor > 0 && entry.due_at != null)
+      .sort((a, b) => a.due_at! - b.due_at!)[0] ?? null;
+    return {
+      paidCount: entries.filter(settled).length,
+      total: entries.length,
+      next,
+      balanceMinor: statement.balance_minor,
+    };
+  });
+
+  // The ADM-01 hero (search + quick links to `/admin/users`) targets a route
+  // guarded to `admin` only — a manager would 403 on it, so the hero stays
+  // admin-exclusive and manager keeps the classic left-aligned header.
+  const isAdminHome = () => role() === "admin";
+
+  // ADM-01 quick-link columns. `/users/search` needs a query, so a plain
+  // "recent students" list reads the first page of `/users` and filters to
+  // the student role client-side rather than guessing a role query param.
+  const [recentStudents] = createResource(
+    () => (isAdminHome() ? true : null),
+    () => getUsers({ limit: 30 }),
+  );
+  const [recentClasses] = createResource(
+    () => (isAdminHome() ? true : null),
+    () => getClasses({ limit: 2 }),
+  );
+  const studentQuickLinks = createMemo<QuickLinkRow[]>(() =>
+    (recentStudents()?.items ?? [])
+      .filter((candidate) => candidate.role === "student")
+      .slice(0, 2)
+      .map((candidate) => ({
+        id: candidate.id,
+        primary: [candidate.name, candidate.surname].filter(Boolean).join(" ") || candidate.username,
+        secondary: candidate.username,
+        Icon: IconUsers,
+      })),
+  );
+  const classQuickLinks = createMemo<QuickLinkRow[]>(() =>
+    (recentClasses()?.items ?? []).slice(0, 2).map((cls) => ({
+      id: cls.id,
+      primary: cls.name,
+      secondary: cls.grade ?? undefined,
+      Icon: IconBook,
+    })),
+  );
+
+  // Hero search. `/users/search` is the only search endpoint the app has, so
+  // this box only ever finds students — it never claims to search classes,
+  // exams, or modules the way the Figma copy does.
+  const [searchInput, setSearchInput] = createSignal("");
+  const [searchQuery, setSearchQuery] = createSignal("");
+  let searchDebounce: ReturnType<typeof setTimeout> | undefined;
+  const onSearchInput = (value: string) => {
+    setSearchInput(value);
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => setSearchQuery(value.trim()), 250);
+  };
+  onCleanup(() => clearTimeout(searchDebounce));
+  const [searchResults] = createResource(
+    () => (isAdminHome() && searchQuery() ? searchQuery() : null),
+    (q) => getUserSearch(q, undefined, "student", { limit: 6 }),
+  );
+
   const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
   const now = () => clock()?.now ?? Date.now();
+
+  // STU-01 "Bu Hafta" rail — this week's pomodoro focus minutes, Monday
+  // through Sunday. Distinct granularity from the 26-week heatmap below;
+  // both read the same already-fetched `pomodoro` resource.
+  const weekdayFormatter = createMemo(() => new Intl.DateTimeFormat(locale() === "tr" ? "tr-TR" : "en-GB", { weekday: "short" }));
+  const weeklyFocus = createMemo(() => {
+    const sessions = pomodoro()?.items ?? [];
+    const today = new Date(now());
+    const mondayOffset = (today.getDay() + 6) % 7;
+    const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - mondayOffset);
+    return Array.from({ length: 7 }, (_, i) => {
+      const dayStart = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i).getTime();
+      const dayEnd = dayStart + DAY_MS;
+      const minutes = sessions
+        .filter((session) => session.duration_ms != null && session.started_at >= dayStart && session.started_at < dayEnd)
+        .reduce((sum, session) => sum + Math.round(session.duration_ms! / 60000), 0);
+      return { id: String(i), label: weekdayFormatter().format(dayStart), minutes };
+    });
+  });
+  const weeklyFocusTotal = createMemo(() => weeklyFocus().reduce((sum, day) => sum + day.minutes, 0));
+  const weeklyFocusMax = createMemo(() => Math.max(1, ...weeklyFocus().map((day) => day.minutes)));
+
   const trendDateFormatter = createMemo(() => new Intl.DateTimeFormat(
     locale() === "tr" ? "tr-TR" : "en-GB",
     { day: "2-digit", month: "short" },
@@ -215,8 +378,8 @@ function DashboardContent() {
     if (r === "teacher") {
       return [
         { labelKey: "dashboard.stats.courses", value: String(courseCount()), Icon: IconBook },
+        { labelKey: "dashboard.stats.students", value: teacherStudentCount() == null ? "—" : String(teacherStudentCount()), Icon: IconUsers },
         { labelKey: "dashboard.stats.exams", value: String(exams()?.total ?? 0), Icon: IconExam },
-        { labelKey: "dashboard.stats.events", value: String(events()?.total ?? 0), Icon: IconCalendarDays },
         { labelKey: "dashboard.stats.homework", value: String(homework()?.total ?? 0), Icon: IconHomework },
       ];
     }
@@ -225,6 +388,7 @@ function DashboardContent() {
         { labelKey: "dashboard.stats.children", value: String(children()?.total ?? 0), Icon: IconUsers },
         { labelKey: "dashboard.stats.appointments", value: String(appointments()?.total ?? 0), Icon: IconCalendarDays },
         { labelKey: "dashboard.stats.meals", value: String(menus()?.total ?? 0), Icon: IconUtensils },
+        { labelKey: "dashboard.stats.childAttendance", value: childAttendanceBreakdown()?.rate == null ? "—" : `${childAttendanceBreakdown()!.rate}%`, Icon: IconClipboardCheck },
       ];
     }
     return [
@@ -374,6 +538,15 @@ function DashboardContent() {
         items.push({ id: appointment.id, kind: "appointment", title: person, at: appointment.starts_at, status });
       }
     }
+    // PAR-01's "Yaklaşan" also carries the next fee installment — real, from
+    // the same statement the "Ödeme" rail card reads.
+    if (role() === "parent") {
+      for (const entry of childStatement()?.entries.items ?? []) {
+        if (entry.reversed || entry.outstanding_minor <= 0) continue;
+        const status = scheduleStatus(entry.due_at, entry.due_at, now());
+        if (status) items.push({ id: entry.charge_id, kind: "payment", title: entry.plan_name ?? t("dashboard.type.payment"), at: entry.due_at!, status });
+      }
+    }
     return items.sort((a, b) => a.at - b.at);
   });
 
@@ -428,31 +601,94 @@ function DashboardContent() {
         return navigate({ to: "/homework/$id", params: { id: row.id } });
       case "appointment":
         return navigate({ to: "/appointments" });
+      case "payment":
+        return navigate({ to: "/payments" });
     }
   };
 
   const error = createMemo(() => {
-    const problem = courses.error || events.error || exams.error || homework.error || children.error || appointments.error || menus.error || marks.error || attendance.error || myClasses.error || pomodoro.error;
+    const problem = courses.error || events.error || exams.error || homework.error || children.error || appointments.error || menus.error || marks.error || attendance.error || myClasses.error || pomodoro.error || childAttendance.error || childStatement.error;
     return problem ? formatApiError(problem, locale()) : "";
   });
 
   return (
     <div class="space-y-6">
-        <header class="flex min-h-[66px] flex-wrap items-center justify-between gap-3 border-b border-border-hairline pb-4">
-          <div class="space-y-1">
-            <h1 class="text-[28px] font-semibold leading-9 tracking-[-0.02em] text-text-strong">{t("dashboard.welcomeBack", { name: fullName() })}</h1>
-            <p class="text-sm text-text-subtle">{t("dashboard.welcomeHint")}</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <Badge variant="outline" class="bg-surface-overlay">{t(roleKeys[role()])}</Badge>
-            <Show when={myClass()}>
-              {(cls) => <Badge variant="outline" class="bg-surface-overlay">{cls().name}</Badge>}
-            </Show>
-            <time class="text-sm tabular-nums text-text-subtle">
-              {new Intl.DateTimeFormat(locale() === "tr" ? "tr-TR" : "en-GB", { dateStyle: "medium" }).format(now())}
-            </time>
-          </div>
-        </header>
+        <Show
+          when={isAdminHome()}
+          fallback={
+            <header class="flex min-h-[66px] flex-wrap items-center justify-between gap-3 border-b border-border-hairline pb-4">
+              <div class="space-y-1">
+                <h1 class="text-[28px] font-semibold leading-9 tracking-[-0.02em] text-text-strong">{t("dashboard.welcomeBack", { name: fullName() })}</h1>
+                <p class="text-sm text-text-subtle">{t("dashboard.welcomeHint")}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <Badge variant="outline" class="bg-surface-overlay">{t(roleKeys[role()])}</Badge>
+                <Show when={myClass()}>
+                  {(cls) => <Badge variant="outline" class="bg-surface-overlay">{cls().name}</Badge>}
+                </Show>
+                <time class="text-sm tabular-nums text-text-subtle">
+                  {new Intl.DateTimeFormat(locale() === "tr" ? "tr-TR" : "en-GB", { dateStyle: "medium" }).format(now())}
+                </time>
+              </div>
+            </header>
+          }
+        >
+          <header class="flex flex-col items-center gap-4 pb-2 pt-2 text-center">
+            <div class="flex items-center gap-2">
+              <Badge variant="outline" class="bg-surface-overlay">{t(roleKeys[role()])}</Badge>
+              <time class="text-sm tabular-nums text-text-subtle">
+                {new Intl.DateTimeFormat(locale() === "tr" ? "tr-TR" : "en-GB", { dateStyle: "medium" }).format(now())}
+              </time>
+            </div>
+            <h1 class="text-[28px] font-semibold leading-9 tracking-[-0.02em] text-text-strong">{t("dashboard.hero.heading")}</h1>
+            <div class="relative w-full max-w-xl">
+              <IconSearch class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+              <input
+                type="search"
+                value={searchInput()}
+                onInput={(event) => onSearchInput(event.currentTarget.value)}
+                placeholder={t("dashboard.hero.searchPlaceholder")}
+                class="h-[46px] w-full rounded-lg border border-border-line bg-surface-base pl-11 pr-4 text-sm text-text-default shadow-sm placeholder:text-text-placeholder focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70"
+              />
+              <Show when={searchQuery() && searchResults()}>
+                <div class="absolute left-0 right-0 top-[calc(100%+6px)] z-10 rounded-lg border border-border-line bg-surface-base py-1 text-left shadow-md">
+                  <Show
+                    when={(searchResults()?.items.length ?? 0) > 0}
+                    fallback={<p class="px-4 py-2 text-sm text-text-subtle">{t("dashboard.hero.searchEmpty")}</p>}
+                  >
+                    <For each={searchResults()?.items}>
+                      {(person) => (
+                        <button
+                          type="button"
+                          class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-default hover:bg-surface-tint"
+                          onClick={() => navigate({ to: "/admin/users/$id", params: { id: person.id } })}
+                        >
+                          <IconUsers class="h-4 w-4 shrink-0 text-text-subtle" />
+                          <span class="min-w-0 flex-1 truncate">{person.display_name || person.username}</span>
+                        </button>
+                      )}
+                    </For>
+                  </Show>
+                </div>
+              </Show>
+            </div>
+            <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+              <QuickLinkColumn
+                title={t("dashboard.quicklinks.students")}
+                rows={studentQuickLinks()}
+                empty={t("dashboard.quicklinks.empty")}
+                onOpen={(row) => navigate({ to: "/admin/users/$id", params: { id: row.id } })}
+              />
+              <QuickLinkColumn
+                title={t("dashboard.quicklinks.classes")}
+                rows={classQuickLinks()}
+                empty={t("dashboard.quicklinks.empty")}
+                onOpen={(row) => navigate({ to: "/management/classes/$id", params: { id: row.id } })}
+              />
+              <ComingSoonPanel class="text-left" title={t("dashboard.quicklinks.modules")} />
+            </div>
+          </header>
+        </Show>
 
         <Suspense fallback={<PageSpinner />}>
           <Show when={error()}>
@@ -460,29 +696,33 @@ function DashboardContent() {
           </Show>
 
           <section class="space-y-3" aria-labelledby="highlights-heading">
-            <h2 id="highlights-heading" class="text-sm font-semibold text-text-strong">{t("dashboard.highlights")}</h2>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h2 id="highlights-heading" class="text-base font-semibold tracking-tight text-text-strong">{t("dashboard.analytics")}</h2>
+              <Show when={isAdminHome()}>
+                <div class="flex items-center gap-2">
+                  <select disabled class="h-8 rounded-lg border border-border-line bg-surface-tint px-2 text-[13px] text-text-subtle disabled:opacity-60">
+                    <option>{t("dashboard.admin.rangeThisMonth")}</option>
+                  </select>
+                  <ComingSoonBadge />
+                </div>
+              </Show>
+            </div>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <For each={stats()}>
-                {(stat) => (
-                  <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
-                    <div class="flex items-center gap-2">
-                      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-tint text-text-subtle">
-                        <stat.Icon class="h-4 w-4" />
-                      </span>
-                      <p class="min-w-0 flex-1 truncate text-xs font-medium text-text-subtle">{t(stat.labelKey)}</p>
-                    </div>
-                    <div class="mt-3">
-                      <p class="mono tabular-nums text-2xl font-semibold tracking-[-0.02em] text-text-strong">{stat.value}</p>
-                    </div>
-                  </div>
-                )}
+                {(stat) => <StatTile label={t(stat.labelKey)} value={stat.value} Icon={stat.Icon} />}
               </For>
             </div>
           </section>
 
-          <Show when={role() !== "parent"}>
-            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
-              <Show when={role() === "student"}>
+          <Show when={role() === "student"}>
+            {/* STU-01's own "Bugünün Planı" and "Konu Yetkinliğim" main-column
+                cards need a study-plan/mastery API this app doesn't have, and
+                "Ses Atölyesi" has no backend concept at all — all three keep
+                their design slot as a ComingSoonPanel. "Bu Hafta" is real
+                (this week's pomodoro minutes), so it gets the rail slot the
+                design reserves for that kind of card. */}
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-4">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-3 lg:grid-cols-3">
                 <ChartBar
                   title={t("dashboard.progressOverview")}
                   subtitle={t("dashboard.courseAverages")}
@@ -502,10 +742,49 @@ function DashboardContent() {
                   segments={attendanceSegments()}
                   itemsPerPage={3}
                 />
-              </Show>
-              <Show when={role() !== "student"}>
+              </div>
+              <div class="flex flex-col gap-2 rounded-xl border border-border-line bg-surface-base p-4 lg:col-span-1">
+                <div class="flex items-center gap-2">
+                  <IconClock class="h-4 w-4 shrink-0 text-text-subtle" />
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-text-strong">{t("dashboard.student.thisWeek")}</p>
+                    <p class="truncate text-xs text-text-subtle">{t("dashboard.student.thisWeekDesc")}</p>
+                  </div>
+                </div>
+                <div class="flex h-16 items-end gap-1.5 pt-2">
+                  <For each={weeklyFocus()}>
+                    {(day) => (
+                      <div class="flex flex-1 flex-col items-center gap-1">
+                        <div
+                          class="w-full rounded-sm bg-primary/70"
+                          style={{ height: `${Math.max(4, Math.round((day.minutes / weeklyFocusMax()) * 100))}%` }}
+                        />
+                        <span class="text-[10px] text-text-subtle">{day.label}</span>
+                      </div>
+                    )}
+                  </For>
+                </div>
+                <p class="mono text-xs tabular-nums text-text-subtle">{t("dashboard.student.thisWeekTotal", { minutes: String(weeklyFocusTotal()) })}</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <ComingSoonPanel title={t("dashboard.student.todayPlan")} />
+              <ComingSoonPanel title={t("dashboard.student.mastery")} />
+              <ComingSoonPanel title={t("dashboard.student.audioWorkshop")} />
+            </div>
+          </Show>
+
+          <Show when={role() === "teacher"}>
+            {/* TCH-01's "Bugünün Programı" needs a bulk sessions/timetable
+                endpoint this app doesn't have, and "Sınıf Performansı" needs
+                per-class topic mastery, which is out too — both keep their
+                design slot as a ComingSoonPanel rather than disappearing. The
+                AI suggestion queue has no backend at all. The one real rail
+                item behind that queue — a pending appointment request —
+                gets the rail. */}
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2">
                 <ChartLine
-                  class="lg:col-span-2"
                   title={t("dashboard.successTrend")}
                   subtitle={t("dashboard.successTrendSchool")}
                   items={examAverageTrend()}
@@ -518,7 +797,145 @@ function DashboardContent() {
                   maxScale={100}
                   itemsPerPage={5}
                 />
-              </Show>
+              </div>
+              <div class="flex flex-col rounded-xl border border-border-line bg-surface-base p-4">
+                <div class="flex items-center gap-2 pb-3">
+                  <IconCalendarDays class="h-4 w-4 shrink-0 text-text-subtle" />
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-text-strong">{t("dashboard.teacher.pendingAppointments")}</p>
+                    <p class="truncate text-xs text-text-subtle">{t("dashboard.teacher.pendingAppointmentsDesc")}</p>
+                  </div>
+                </div>
+                <Show
+                  when={pendingAppointments().length > 0}
+                  fallback={<p class="py-3 text-sm text-text-subtle">{t("dashboard.teacher.pendingAppointmentsEmpty")}</p>}
+                >
+                  <For each={pendingAppointments()}>
+                    {(appointment) => (
+                      <button
+                        type="button"
+                        onClick={() => navigate({ to: "/appointments" })}
+                        class="flex w-full flex-col gap-0.5 border-t border-border-hairline py-2.5 text-left first:border-t-0"
+                      >
+                        <span class="truncate text-sm font-medium text-text-default">{personLabel(appointment.requester)}</span>
+                        <span class="truncate text-xs text-text-subtle">{appointment.reason || "—"}</span>
+                        <span class="text-xs tabular-nums text-text-subtle">{appointment.starts_at ? formatDateTime(appointment.starts_at, locale()) : ""}</span>
+                      </button>
+                    )}
+                  </For>
+                </Show>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              <ComingSoonPanel title={t("dashboard.teacher.schedule")} />
+              <ComingSoonPanel title={t("dashboard.teacher.classPerformance")} />
+            </div>
+          </Show>
+
+          <Show when={role() === "manager" || role() === "admin"}>
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <ChartLine
+                class="lg:col-span-2"
+                title={t("dashboard.successTrend")}
+                subtitle={t("dashboard.successTrendSchool")}
+                items={examAverageTrend()}
+                maxScale={100}
+              />
+              <ChartBar
+                title={t("dashboard.courseAverages")}
+                subtitle={t("dashboard.courseAveragesSchool")}
+                items={courseAverageBars()}
+                maxScale={100}
+                itemsPerPage={5}
+              />
+            </div>
+          </Show>
+
+          <Show when={role() === "parent"}>
+            {/* PAR-01's "Gelişim" (topic-mastery trend) needs mastery data this
+                app doesn't have, and "Öğretmen Notları" has no backend concept
+                distinct from `/messages` — both keep their design slot as a
+                ComingSoonPanel. "Devamsızlık" and "Ödeme" are both real,
+                per-child reads already used elsewhere in the app (`/students`
+                child detail, `/payments`). */}
+            <Show when={(children()?.items.length ?? 0) > 1}>
+              <div class="flex items-center gap-2">
+                <label for="dashboard-child" class="text-sm text-text-subtle">{t("dashboard.parent.child")}</label>
+                <select
+                  id="dashboard-child"
+                  value={selectedChildId()}
+                  onInput={(event) => setSelectedChildId(event.currentTarget.value)}
+                  class="h-8 rounded-lg border border-border-line bg-surface-base px-2 text-[13px] text-text-default"
+                >
+                  <For each={children()?.items}>
+                    {(child) => <option value={child.id}>{personLabel(child)}</option>}
+                  </For>
+                </select>
+              </div>
+            </Show>
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <div class="flex flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-4 lg:col-span-2">
+                <div>
+                  <p class="text-sm font-semibold text-text-strong">{t("dashboard.parent.attendanceDetail")}</p>
+                  <p class="text-xs text-text-subtle">{t("dashboard.parent.attendanceDetailDesc")}</p>
+                  <Show when={homeroomTeacher()}>
+                    {(teacher) => <p class="mt-1 text-xs text-text-subtle">{t("dashboard.parent.homeroom", { name: personLabel(teacher()) })}</p>}
+                  </Show>
+                </div>
+                <Show when={childAttendanceBreakdown()} fallback={<p class="text-sm text-text-subtle">{t("dashboard.chartEmpty")}</p>}>
+                  {(breakdown) => (
+                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <div class="rounded-lg bg-surface-tint px-3 py-2">
+                        <p class="text-xs text-text-subtle">{t("dashboard.attend.present")}</p>
+                        <p class="mono text-lg font-semibold tabular-nums text-text-strong">{breakdown().present}</p>
+                      </div>
+                      <div class="rounded-lg bg-surface-tint px-3 py-2">
+                        <p class="text-xs text-text-subtle">{t("dashboard.attend.absent")}</p>
+                        <p class="mono text-lg font-semibold tabular-nums text-text-strong">{breakdown().absent}</p>
+                      </div>
+                      <div class="rounded-lg bg-surface-tint px-3 py-2">
+                        <p class="text-xs text-text-subtle">{t("dashboard.attend.excused")}</p>
+                        <p class="mono text-lg font-semibold tabular-nums text-text-strong">{breakdown().excused}</p>
+                      </div>
+                      <div class="rounded-lg bg-surface-tint px-3 py-2">
+                        <p class="text-xs text-text-subtle">{t("dashboard.parent.attendanceRate")}</p>
+                        <p class="mono text-lg font-semibold tabular-nums text-text-strong">{breakdown().rate == null ? "—" : `${breakdown().rate}%`}</p>
+                      </div>
+                    </div>
+                  )}
+                </Show>
+              </div>
+              <div class="flex flex-col gap-2 rounded-xl border border-border-line bg-surface-base p-4">
+                <p class="text-sm font-semibold text-text-strong">{t("dashboard.parent.payment")}</p>
+                <p class="text-xs text-text-subtle">{t("dashboard.parent.paymentDesc")}</p>
+                <Show
+                  when={(() => {
+                    const summary = paymentSummary();
+                    return summary && summary.total > 0 ? summary : null;
+                  })()}
+                  fallback={<p class="pt-2 text-sm text-text-subtle">{t("dashboard.parent.paymentEmpty")}</p>}
+                >
+                  {(summary) => (
+                    <div class="flex flex-col gap-2 pt-1">
+                      <p class="mono text-sm tabular-nums text-text-strong">
+                        {t("dashboard.parent.installmentsPaid", { paid: String(summary().paidCount), total: String(summary().total) })}
+                      </p>
+                      <p class="text-xs text-text-subtle">{t("dashboard.parent.balance")}: <span class="mono tabular-nums text-text-default">{formatTry(summary().balanceMinor, locale() === "tr" ? "tr-TR" : "en-US")}</span></p>
+                      <Show when={summary().next}>
+                        {(next) => (
+                          <p class="text-xs text-text-subtle">
+                            {t("dashboard.parent.nextInstallment")}: {formatDateTime(next().due_at!, locale())} · <span class="mono tabular-nums text-text-default">{formatTry(next().amount_minor, locale() === "tr" ? "tr-TR" : "en-US")}</span>
+                          </p>
+                        )}
+                      </Show>
+                    </div>
+                  )}
+                </Show>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <ComingSoonPanel class="lg:col-span-2" title={t("dashboard.parent.progress")} />
+              <ComingSoonPanel title={t("dashboard.parent.teacherNotes")} />
             </div>
           </Show>
 

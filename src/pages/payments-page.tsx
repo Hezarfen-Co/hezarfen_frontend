@@ -26,6 +26,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -190,7 +191,8 @@ function PaymentsContent() {
     {
       id: "name",
       header: t("payments.student"),
-      cell: (cell) => <span class="font-medium">{personLabel(cell.row.original)}</span>,
+      meta: { cellClass: "truncate" },
+      cell: (cell) => <span class="block truncate font-medium">{personLabel(cell.row.original)}</span>,
     },
     {
       accessorKey: "username",
@@ -252,6 +254,33 @@ function PaymentsContent() {
   );
   const entries = () => statement()?.entries.items ?? [];
   const sortedEntries = () => sortStatementEntries(entries());
+  // Figma's Tümü/Gecikmiş/Bu ay/Kapanmış tabs, rebuilt over the statement rows
+  // already fetched for the selected student — `overdue` is the backend's own
+  // rollup field, "closed" reuses the same paid/reversed check as the status
+  // badge below, and "this month" groups by the due date's calendar month.
+  // This is per-student, not the school-wide period totals Figma shows next
+  // to it — those would need a bulk statement read across every student with
+  // an assumed billing period, which no endpoint provides (see report).
+  const [entryTab, setEntryTab] = createSignal("all");
+  const now = new Date();
+  const isThisMonth = (ms: number | null) => {
+    if (ms == null) return false;
+    const d = new Date(ms);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  };
+  const tabFilteredEntries = createMemo(() => {
+    const rows = sortedEntries();
+    switch (entryTab()) {
+      case "overdue":
+        return rows.filter((row) => row.overdue);
+      case "month":
+        return rows.filter((row) => isThisMonth(row.due_at));
+      case "closed":
+        return rows.filter((row) => !row.reversed && row.outstanding_minor <= 0);
+      default:
+        return rows;
+    }
+  });
   const summary = createMemo(() => {
     const rows = entries();
     return {
@@ -315,12 +344,15 @@ function PaymentsContent() {
     {
       id: "plan",
       header: t("payments.plan"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.plan_name ?? "—"}</span>,
+      size: 260,
+      meta: { cellClass: "truncate" },
+      cell: (cell) => <span class="block truncate font-medium">{cell.row.original.plan_name ?? "—"}</span>,
     },
     {
       accessorKey: "due_at",
       header: t("payments.due"),
-      cell: (cell) => <span class="mono text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
+      size: 120,
+      cell: (cell) => <span class="mono whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
     },
     {
       accessorKey: "outstanding_minor",
@@ -544,7 +576,17 @@ function PaymentsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader eyebrow={t("nav.school")} title={t("payments.title")} description={t("payments.subtitle")} />
+      <PageHeader
+        eyebrow={t("nav.school")}
+        title={t("payments.title")}
+        description={t("payments.subtitle")}
+        actions={
+          <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+            {t("payments.exportStatement")}
+            <ComingSoonBadge class="ml-1.5" />
+          </Button>
+        }
+      />
 
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
@@ -564,6 +606,13 @@ function PaymentsContent() {
           <Show
             when={selectedStudent()}
             fallback={
+              <>
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodBilled")}</p><ComingSoonValue class="mt-1" /></div>
+                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodCollected")}</p><ComingSoonValue class="mt-1" /></div>
+                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodOverdue")}</p><ComingSoonValue class="mt-1" /></div>
+                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodExpected")}</p><ComingSoonValue class="mt-1" /></div>
+              </div>
               <section class="data-shell space-y-4 p-4">
               <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
                 <Show when={studentsPage.error}>
@@ -605,6 +654,7 @@ function PaymentsContent() {
                 </Show>
               </Suspense>
               </section>
+              </>
             }
           >
             {(current) => (<>
@@ -640,15 +690,25 @@ function PaymentsContent() {
                     </div>
                   }
                 >
-                  <DataTable
-                    columns={statementColumns()}
-                    data={sortedEntries()}
-                    tableClass="min-w-160"
-                    storageKey="payment-statement"
-                    enablePagination
-                    pageSize={STATEMENT_PAGE_SIZE}
-                    onRowClick={setViewEntry}
-                  />
+                  <div class="space-y-3">
+                    <Tabs value={entryTab()} onChange={setEntryTab}>
+                      <TabsList>
+                        <TabsTrigger value="all">{t("payments.entryTabAll")}</TabsTrigger>
+                        <TabsTrigger value="overdue">{t("payments.entryTabOverdue")}</TabsTrigger>
+                        <TabsTrigger value="month">{t("payments.entryTabMonth")}</TabsTrigger>
+                        <TabsTrigger value="closed">{t("payments.entryTabClosed")}</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                    <DataTable
+                      columns={statementColumns()}
+                      data={tabFilteredEntries()}
+                      tableClass="min-w-160"
+                      storageKey="payment-statement"
+                      enablePagination
+                      pageSize={STATEMENT_PAGE_SIZE}
+                      onRowClick={setViewEntry}
+                    />
+                  </div>
                 </Show>
               </Suspense>
             </section>

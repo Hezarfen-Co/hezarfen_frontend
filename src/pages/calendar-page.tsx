@@ -375,40 +375,50 @@ function CalendarContent() {
         <Suspense fallback={<PageSpinner />}>
           <div class={cn("grid min-h-0 flex-1 gap-4", view() === "month" && "xl:grid-cols-[minmax(0,1fr)_20rem]")}>
             <Show when={view() === "week"}>
-              {/* Week strip: seven tappable days with their category dots, the
-                  middle zoom level between a month of cells and one day's list. */}
-              <div class="grid shrink-0 grid-cols-7 gap-1 rounded-lg border bg-card p-1 shadow-xs">
+              {/* Weekly timetable: one column per day, each item a labelled
+                  block — the closest real-data equivalent of a school's
+                  printed weekly schedule, built from the same session/exam/
+                  homework/event/appointment feed as the month grid. */}
+              <div class="grid min-h-0 flex-1 grid-cols-7 gap-1 overflow-hidden rounded-lg border bg-card p-1 shadow-xs">
                 <For each={weekDays()}>
                   {(day) => {
                     const key = dateKey(day);
                     const dayItems = () => itemsByDay().get(key) ?? [];
                     const today = () => dateKey(nowDate()) === key;
                     return (
-                      <button
-                        type="button"
-                        onClick={() => setSelected(key)}
+                      <div
                         class={cn(
-                          "flex min-w-0 flex-col items-center gap-1 rounded-md px-0.5 py-1.5 transition-colors",
-                          key === selected() ? "bg-sky-50 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "hover:bg-muted/40",
+                          "flex min-h-0 min-w-0 flex-col gap-1 rounded-md p-1 transition-colors",
+                          key === selected() ? "bg-sky-50 ring-1 ring-inset ring-sky-400/50 dark:bg-sky-950/40 dark:ring-sky-500/40" : "",
                         )}
                       >
-                        <span class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                          {dayNames()[(day.getDay() + 6) % 7]}
-                        </span>
-                        <span
-                          class={cn(
-                            "inline-flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold",
-                            today() ? "bg-sky-500 text-white" : "text-foreground",
-                          )}
-                        >
-                          {day.getDate()}
-                        </span>
-                        <span class="flex h-1.5 items-center gap-0.5">
-                          <For each={dayItems().slice(0, 3)}>
-                            {(item) => <span class={cn("h-1.5 w-1.5 rounded-full", KIND_STYLES[item.kind].dot)} />}
+                        <button type="button" class="flex shrink-0 flex-col items-center gap-1 rounded-md py-1 hover:bg-muted/40" onClick={() => setSelected(key)}>
+                          <span class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            {dayNames()[(day.getDay() + 6) % 7]}
+                          </span>
+                          <span
+                            class={cn(
+                              "inline-flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-semibold",
+                              today() ? "bg-sky-500 text-white" : "text-foreground",
+                            )}
+                          >
+                            {day.getDate()}
+                          </span>
+                        </button>
+                        <div class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+                          <For each={dayItems()}>
+                            {(item) => (
+                              <a
+                                href={item.href}
+                                class={cn("block min-w-0 rounded px-1.5 py-1 text-[10px] leading-tight font-medium", KIND_STYLES[item.kind].chip)}
+                              >
+                                <span class="block truncate">{clock(item.at)}</span>
+                                <span class="block truncate">{item.title}</span>
+                              </a>
+                            )}
                           </For>
-                        </span>
-                      </button>
+                        </div>
+                      </div>
                     );
                   }}
                 </For>
