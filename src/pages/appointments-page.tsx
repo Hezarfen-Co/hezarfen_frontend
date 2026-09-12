@@ -237,7 +237,7 @@ function AppointmentsContent() {
     {
       id: "student",
       header: t("appointments.student"),
-      cell: (cell) => <span class="font-medium">{personLabel(cell.row.original.requester)}</span>,
+      cell: (cell) => <span class="block truncate font-medium">{personLabel(cell.row.original.requester)}</span>,
     },
     {
       id: "time",
@@ -291,7 +291,7 @@ function AppointmentsContent() {
     {
       id: "teacher",
       header: t("appointments.teacher"),
-      cell: (cell) => <span class="font-medium">{personLabel(cell.row.original.teacher)}</span>,
+      cell: (cell) => <span class="block truncate font-medium">{personLabel(cell.row.original.teacher)}</span>,
     },
     {
       id: "time",
@@ -322,7 +322,7 @@ function AppointmentsContent() {
     {
       id: "teacher",
       header: t("appointments.teacher"),
-      cell: (cell) => <span class="font-medium">{personLabel(cell.row.original.teacher)}</span>,
+      cell: (cell) => <span class="block truncate font-medium">{personLabel(cell.row.original.teacher)}</span>,
     },
     {
       id: "time",
@@ -435,15 +435,15 @@ function AppointmentsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <header class="flex items-center gap-3 border-b border-border pb-5">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <header class="flex items-center gap-3 border-b border-border-hairline pb-5">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-primary">
           <IconCalendarDays class="h-5 w-5" />
         </span>
         <div class="min-w-0">
-          <h1 class="text-2xl font-semibold tracking-tight">{t("appointments.title")}</h1>
+          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("appointments.title")}</h1>
           {/* Staff publish times, everyone else consumes them — one sentence
               cannot describe both without going vague. */}
-          <p class="mt-0.5 text-sm text-muted-foreground">
+          <p class="mt-0.5 text-sm text-text-subtle">
             {isStaff() ? t("appointments.subtitleStaff") : t("appointments.subtitle")}
           </p>
         </div>
@@ -476,7 +476,7 @@ function AppointmentsContent() {
 
         <TabsContent value="appointments" class="mt-0 space-y-4 border-0 bg-transparent p-0 shadow-none">
           <Show when={isStaff()} fallback={
-            <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <section class="data-shell p-4">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
                 <p class="mb-3 text-sm text-muted-foreground">{t("appointments.myBookingsHint")}</p>
@@ -494,7 +494,7 @@ function AppointmentsContent() {
               </Show>
             </section>
           }>
-            <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <section class="data-shell p-4">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
                 <p class="mb-3 text-sm text-muted-foreground">{t("appointments.requestsHint")}</p>
@@ -516,7 +516,7 @@ function AppointmentsContent() {
 
         <TabsContent value="availability" class="mt-0 border-0 bg-transparent p-0 shadow-none">
           <Show when={isStaff()} fallback={
-            <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <section class="data-shell p-4">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
                 <p class="mb-3 text-sm text-muted-foreground">{t("appointments.availableSlotsHint")}</p>
@@ -534,7 +534,7 @@ function AppointmentsContent() {
               </Show>
             </section>
           }>
-            <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <section class="data-shell p-4">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
                 <p class="mb-3 text-sm text-muted-foreground">{t("appointments.mySlotsHint")}</p>
@@ -570,7 +570,7 @@ function AppointmentsContent() {
         <Show when={detailAppt()} keyed>
           {(appointment) => (
             <div class="space-y-5">
-              <div class="grid gap-4 sm:grid-cols-2">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <DetailField label={t("appointments.student")} value={personLabel(appointment.requester)} />
                 <DetailField label={t("appointments.teacher")} value={personLabel(appointment.teacher)} />
                 <DetailField label={t("appointments.status")} value={t(appointmentStatusLabelKey(appointment.status))} />
@@ -603,7 +603,7 @@ function AppointmentsContent() {
         <Show when={detailSlot()} keyed>
           {(slot) => (
             <div class="space-y-5">
-              <div class="grid gap-4 sm:grid-cols-2">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <DetailField label={t("appointments.teacher")} value={personLabel(slot.teacher)} />
                 <DetailField label={t("appointments.time")} value={timeWindow(slot.starts_at, slot.ends_at)} />
                 <DetailField label={t("appointments.series")} value={slot.series || "—"} mono />

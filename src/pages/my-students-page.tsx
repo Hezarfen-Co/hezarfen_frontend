@@ -59,19 +59,19 @@ function MyStudentsContent() {
       <Suspense fallback={<PageSpinner />}>
         <Show when={list()}>
           <Show when={list()!.length > 0} fallback={<EmptyState title={t("common.noResults")} />}>
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <For each={list()}>
                 {(student) => (
                   <button
                     type="button"
-                    class="group flex items-center justify-between rounded-lg border bg-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-muted/40"
+                    class="group flex min-w-0 items-center justify-between rounded-xl border border-border-line bg-surface-base p-4 text-left transition-colors hover:border-primary/50 hover:bg-surface-tint"
                     onClick={() => setSelectedStudent(student)}
                   >
                     <div class="min-w-0">
-                      <div class="truncate font-medium text-foreground">{personLabel(student)}</div>
-                      <div class="truncate text-sm text-muted-foreground">@{student.username}</div>
+                      <div class="truncate font-medium text-text-strong">{personLabel(student)}</div>
+                      <div class="truncate text-sm text-text-subtle">@{student.username}</div>
                     </div>
-                    <IconChevronRight class="h-5 w-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+                    <IconChevronRight class="h-5 w-5 shrink-0 text-text-subtle/70 transition-colors group-hover:text-primary" />
                   </button>
                 )}
               </For>
@@ -165,7 +165,7 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
   return (
     <SidePanel open={!!props.student} onOpenChange={(open) => !open && props.onClose()} title={props.student ? personLabel(props.student) : ""} description={`@${props.student?.username}`}>
       <div class="flex h-full flex-col">
-        <div class="border-b p-4">
+        <div class="border-b border-border-hairline p-4">
           {/* A parent may read their linked students' profiles, so this is safe
               — it 403s only for someone else's child. Close the panel before
               navigating: a click that stays inside this modal never leaves it. */}
@@ -205,25 +205,25 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
             <Switch>
               <Match when={activeTab() === "overview"}>
                 <div class="space-y-3">
-                  <div class="grid gap-3 sm:grid-cols-3">
-                    <article class="rounded-xl border border-border/80 bg-card p-4">
-                      <p class="text-xs font-medium text-muted-foreground">{t("dashboard.stats.average")}</p>
-                      <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatNumber(report()?.overall_average ?? null)}</p>
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <article class="detail-metric-card">
+                      <p class="text-xs font-medium text-text-subtle">{t("dashboard.stats.average")}</p>
+                      <p class="mt-2 text-2xl font-semibold tabular-nums text-text-strong">{formatNumber(report()?.overall_average ?? null)}</p>
                     </article>
-                    <article class="rounded-xl border border-border/80 bg-card p-4">
-                      <p class="text-xs font-medium text-muted-foreground">{t("nav.courses")}</p>
-                      <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{courseRows().length}</p>
+                    <article class="detail-metric-card">
+                      <p class="text-xs font-medium text-text-subtle">{t("nav.courses")}</p>
+                      <p class="mt-2 text-2xl font-semibold tabular-nums text-text-strong">{courseRows().length}</p>
                     </article>
-                    <article class="rounded-xl border border-border/80 bg-card p-4">
-                      <p class="text-xs font-medium text-muted-foreground">{t("attendance.rate")}</p>
-                      <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatPercent(attendanceRate())}</p>
+                    <article class="detail-metric-card">
+                      <p class="text-xs font-medium text-text-subtle">{t("attendance.rate")}</p>
+                      <p class="mt-2 text-2xl font-semibold tabular-nums text-text-strong">{formatPercent(attendanceRate())}</p>
                     </article>
                   </div>
                   <Show when={studentClass()}>
                     {(cls) => (
-                      <article class="flex flex-wrap items-center gap-2 rounded-xl border border-border/80 bg-card p-4 text-sm">
+                      <article class="flex flex-wrap items-center gap-2 rounded-xl border border-border-line bg-surface-base p-4 text-sm">
                         <Badge variant="secondary" class="rounded-full">{cls().name}</Badge>
-                        <span class="text-muted-foreground">
+                        <span class="min-w-0 truncate text-text-subtle">
                           {t("classGroups.homeroomTeacher")}: {cls().teacher ? personLabel(cls().teacher!) : t("classGroups.noTeacher")}
                         </span>
                       </article>
@@ -237,14 +237,14 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
                   <div class="space-y-3">
                     <For each={courseRows()}>
                       {(course) => (
-                        <article class="flex items-center justify-between gap-3 rounded-xl border border-border/80 bg-card p-4">
+                        <article class="flex items-center justify-between gap-3 rounded-xl border border-border-line bg-surface-base p-4">
                           <div class="min-w-0">
-                            <p class="truncate font-medium text-foreground">{course.course.title}</p>
-                            <p class="mt-1 text-xs text-muted-foreground">
+                            <p class="truncate font-medium text-text-strong">{course.course.title}</p>
+                            <p class="mt-1 text-xs text-text-subtle">
                               {course.results.length} {t("nav.exams")}
                             </p>
                           </div>
-                          <Badge variant="secondary" class={cn("mono rounded-full px-2.5 py-0.5 text-xs tabular-nums", course.average == null && "opacity-70")}>
+                          <Badge variant="secondary" class={cn("mono shrink-0 rounded-full px-2.5 py-0.5 text-xs tabular-nums", course.average == null && "opacity-70")}>
                             {formatNumber(course.average)}
                           </Badge>
                         </article>

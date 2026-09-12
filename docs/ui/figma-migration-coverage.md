@@ -137,16 +137,20 @@ Figma Icons page. Temporary Figma URLs are never committed.
 
 ### In progress — existing backend support
 
-1. Parent mobile composition at 393px, then 375px and 320px:
-   dashboard, linked students, messages, payments, and appointments.
-2. System polish: notification panel, branded 404, network/error states,
+1. System polish: notification panel, branded 404, network/error states,
    keyboard/focus audit, dark-mode screenshots, and role/module regression.
 
-Secondary desktop composition and student mobile composition are complete in
-code. Student mobile was reasoned against Tailwind breakpoints rather than
-eyeballed: the 393px, 375px, and 320px screenshot checks in the validation
-checklist are still outstanding and need a running backend and a seeded
-student session.
+Desktop, student mobile and parent mobile composition are complete, and the
+student and parent routes were walked at 393px, 375px and 320px against a
+seeded school rather than reasoned about on paper. Two layout bugs recur and
+are worth checking for in the remaining work: a grid that names only a `sm:`
+or `lg:` column count with no base `grid-cols-1` overflows the page, because
+the single implicit column takes the widest card's min-content; and a table
+cell holding a name with no `truncate` renders nowrap and overlaps the column
+beside it.
+
+Outstanding from the validation checklist: the dark-mode screenshot pass, the
+keyboard/focus audit, and the role/module authorization regression.
 
 ### Waiting for backend or product decisions
 
