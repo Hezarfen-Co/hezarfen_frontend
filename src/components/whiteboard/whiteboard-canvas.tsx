@@ -16,7 +16,7 @@ const WIDTHS = [2, 6, 14];
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 1.25;
-const OVERLAY_CARD = "absolute z-10 flex gap-1.5 rounded-lg border bg-card/90 p-1.5 shadow-xs backdrop-blur-xs";
+const OVERLAY_CARD = "absolute z-10 gap-1.5 rounded-lg border bg-card/90 p-1.5 shadow-xs backdrop-blur-xs";
 
 // Imperative handle the room uses to push server-confirmed marks onto the
 // canvas without re-rendering the whole component per stroke.
@@ -229,6 +229,88 @@ export function WhiteboardCanvas(props: {
         : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
     );
 
+  // Shared button groups rendered twice: once inside the mobile wrapping bar,
+  // once inside the three desktop corner islands. Each instance mounts its own
+  // reactive scope over the same signals above, so both stay in sync.
+  const ToolButtons = () => (
+    <>
+      <button
+        type="button"
+        class={toolClass(activeTool() === "pen")}
+        title={t("draw.pen")}
+        onClick={() => {
+          setErasing(false);
+          setHand(false);
+        }}
+      >
+        <IconEdit class="h-5 w-5" />
+        <span class="sr-only">{t("draw.pen")}</span>
+      </button>
+      <button
+        type="button"
+        class={toolClass(activeTool() === "erase")}
+        title={t("draw.eraser")}
+        onClick={() => {
+          setErasing(true);
+          setHand(false);
+        }}
+      >
+        <IconEraser class="h-5 w-5" />
+        <span class="sr-only">{t("draw.eraser")}</span>
+      </button>
+      <button
+        type="button"
+        class={toolClass(activeTool() === "pan")}
+        title={t("draw.pan")}
+        onClick={() => setHand(true)}
+      >
+        <IconMove class="h-5 w-5" />
+        <span class="sr-only">{t("draw.pan")}</span>
+      </button>
+    </>
+  );
+
+  const ColorSwatches = () => (
+    <For each={COLORS}>
+      {(swatch) => (
+        <button
+          type="button"
+          title={t("draw.color")}
+          class={cn(
+            "h-9 w-9 sm:h-11 sm:w-11 rounded-lg border-2 transition-transform",
+            color() === swatch && activeTool() === "pen"
+              ? "border-foreground scale-105"
+              : "border-border/60 hover:scale-105",
+          )}
+          style={{ "background-color": swatch }}
+          onClick={() => {
+            setColor(swatch);
+            setErasing(false);
+            setHand(false);
+          }}
+        >
+          <span class="sr-only">{swatch}</span>
+        </button>
+      )}
+    </For>
+  );
+
+  const WidthButtons = () => (
+    <For each={WIDTHS}>
+      {(size) => (
+        <button
+          type="button"
+          title={t("draw.width")}
+          class={toolClass(width() === size)}
+          onClick={() => setWidth(size)}
+        >
+          <span class="rounded-full bg-current" style={{ width: `${size + 2}px`, height: `${size + 2}px` }} />
+          <span class="sr-only">{size}</span>
+        </button>
+      )}
+    </For>
+  );
+
   const paperStyle = () => {
     const cell = PAPER_CELL * zoom();
     const p = pan();
@@ -269,88 +351,38 @@ export function WhiteboardCanvas(props: {
           </p>
         </Show>
 
+        {/* Mobile: the three corner islands below overlap each other under ~640px
+            (they need ~520px combined), so under sm they collapse into one
+            wrapping bar instead; desktop keeps the original three corners. */}
+        <div class="absolute inset-x-2 top-2 z-10 flex flex-wrap items-center justify-center gap-1.5 rounded-lg border bg-card/90 p-1.5 shadow-xs backdrop-blur-xs sm:hidden">
+          <div class="flex gap-1.5">
+            <ToolButtons />
+          </div>
+          <div class="flex flex-wrap items-center justify-center gap-1.5" role="group" aria-label={t("draw.color")}>
+            <ColorSwatches />
+          </div>
+          <div class="flex gap-1.5" role="group" aria-label={t("draw.width")}>
+            <WidthButtons />
+          </div>
+        </div>
+
         {/* Top-left island — tools */}
-        <div class={cn(OVERLAY_CARD, "left-2 top-2")}>
-          <button
-            type="button"
-            class={toolClass(activeTool() === "pen")}
-            title={t("draw.pen")}
-            onClick={() => {
-              setErasing(false);
-              setHand(false);
-            }}
-          >
-            <IconEdit class="h-5 w-5" />
-            <span class="sr-only">{t("draw.pen")}</span>
-          </button>
-          <button
-            type="button"
-            class={toolClass(activeTool() === "erase")}
-            title={t("draw.eraser")}
-            onClick={() => {
-              setErasing(true);
-              setHand(false);
-            }}
-          >
-            <IconEraser class="h-5 w-5" />
-            <span class="sr-only">{t("draw.eraser")}</span>
-          </button>
-          <button
-            type="button"
-            class={toolClass(activeTool() === "pan")}
-            title={t("draw.pan")}
-            onClick={() => setHand(true)}
-          >
-            <IconMove class="h-5 w-5" />
-            <span class="sr-only">{t("draw.pan")}</span>
-          </button>
+        <div class={cn(OVERLAY_CARD, "left-2 top-2 hidden sm:flex")}>
+          <ToolButtons />
         </div>
 
         {/* Top-middle island — colours */}
         <div
-          class={cn(OVERLAY_CARD, "left-1/2 top-2 -translate-x-1/2 flex-wrap items-center")}
+          class={cn(OVERLAY_CARD, "left-1/2 top-2 hidden -translate-x-1/2 flex-wrap items-center sm:flex")}
           role="group"
           aria-label={t("draw.color")}
         >
-          <For each={COLORS}>
-            {(swatch) => (
-              <button
-                type="button"
-                title={t("draw.color")}
-                class={cn(
-                  "h-9 w-9 sm:h-11 sm:w-11 rounded-lg border-2 transition-transform",
-                  color() === swatch && activeTool() === "pen"
-                    ? "border-foreground scale-105"
-                    : "border-border/60 hover:scale-105",
-                )}
-                style={{ "background-color": swatch }}
-                onClick={() => {
-                  setColor(swatch);
-                  setErasing(false);
-                  setHand(false);
-                }}
-              >
-                <span class="sr-only">{swatch}</span>
-              </button>
-            )}
-          </For>
+          <ColorSwatches />
         </div>
 
         {/* Top-right island — width */}
-        <div class={cn(OVERLAY_CARD, "right-2 top-2")} role="group" aria-label={t("draw.width")}>
-          <For each={WIDTHS}>
-            {(size) => (
-              <button
-                type="button"
-                title={t("draw.width")}
-                class={toolClass(width() === size)}
-                onClick={() => setWidth(size)}
-              >
-                <span class="rounded-full bg-current" style={{ width: `${size + 2}px`, height: `${size + 2}px` }} />
-                <span class="sr-only">{size}</span>
-              </button>
-            )}
-          </For>
+        <div class={cn(OVERLAY_CARD, "right-2 top-2 hidden sm:flex")} role="group" aria-label={t("draw.width")}>
+          <WidthButtons />
         </div>
 
         {/* Bottom-right zoom */}

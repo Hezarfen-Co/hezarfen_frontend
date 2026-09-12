@@ -1,9 +1,78 @@
 import type { JSX } from "solid-js";
 import { cn } from "@/lib/cn";
+import arrowSquareOutUrl from "@phosphor-icons/core/regular/arrow-square-out.svg?url";
+import bellUrl from "@phosphor-icons/core/regular/bell.svg?url";
+import bookOpenUrl from "@phosphor-icons/core/regular/book-open.svg?url";
+import calendarDotsUrl from "@phosphor-icons/core/regular/calendar-dots.svg?url";
+import caretDownUrl from "@phosphor-icons/core/regular/caret-down.svg?url";
+import chalkboardTeacherUrl from "@phosphor-icons/core/regular/chalkboard-teacher.svg?url";
+import chartPieUrl from "@phosphor-icons/core/regular/chart-pie.svg?url";
+import caretLeftUrl from "@phosphor-icons/core/regular/caret-left.svg?url";
+import caretRightUrl from "@phosphor-icons/core/regular/caret-right.svg?url";
+import caretUpDownUrl from "@phosphor-icons/core/regular/caret-up-down.svg?url";
+import chartBarUrl from "@phosphor-icons/core/regular/chart-bar.svg?url";
+import chartLineUpUrl from "@phosphor-icons/core/regular/chart-line-up.svg?url";
+import chatCircleDotsUrl from "@phosphor-icons/core/regular/chat-circle-dots.svg?url";
+import checkCircleUrl from "@phosphor-icons/core/regular/check-circle.svg?url";
+import checkUrl from "@phosphor-icons/core/regular/check.svg?url";
+import clockUrl from "@phosphor-icons/core/regular/clock.svg?url";
+import clipboardTextUrl from "@phosphor-icons/core/regular/clipboard-text.svg?url";
+import copyUrl from "@phosphor-icons/core/regular/copy.svg?url";
+import downloadSimpleUrl from "@phosphor-icons/core/regular/download-simple.svg?url";
+import examUrl from "@phosphor-icons/core/regular/exam.svg?url";
+import eyeUrl from "@phosphor-icons/core/regular/eye.svg?url";
+import fileTextUrl from "@phosphor-icons/core/regular/file-text.svg?url";
+import funnelUrl from "@phosphor-icons/core/regular/funnel.svg?url";
+import gearUrl from "@phosphor-icons/core/regular/gear.svg?url";
+import graduationCapUrl from "@phosphor-icons/core/regular/graduation-cap.svg?url";
+import houseUrl from "@phosphor-icons/core/regular/house.svg?url";
+import listUrl from "@phosphor-icons/core/regular/list.svg?url";
+import lockSimpleUrl from "@phosphor-icons/core/regular/lock-simple.svg?url";
+import magnifyingGlassUrl from "@phosphor-icons/core/regular/magnifying-glass.svg?url";
+import packageUrl from "@phosphor-icons/core/regular/package.svg?url";
+import paperPlaneTiltUrl from "@phosphor-icons/core/regular/paper-plane-tilt.svg?url";
+import pencilSimpleUrl from "@phosphor-icons/core/regular/pencil-simple.svg?url";
+import plusUrl from "@phosphor-icons/core/regular/plus.svg?url";
+import questionUrl from "@phosphor-icons/core/regular/question.svg?url";
+import scanUrl from "@phosphor-icons/core/regular/scan.svg?url";
+import shieldCheckUrl from "@phosphor-icons/core/regular/shield-check.svg?url";
+import sidebarSimpleUrl from "@phosphor-icons/core/regular/sidebar-simple.svg?url";
+import signOutUrl from "@phosphor-icons/core/regular/sign-out.svg?url";
+import sparkleUrl from "@phosphor-icons/core/regular/sparkle.svg?url";
+import targetUrl from "@phosphor-icons/core/regular/target.svg?url";
+import trashUrl from "@phosphor-icons/core/regular/trash.svg?url";
+import uploadSimpleUrl from "@phosphor-icons/core/regular/upload-simple.svg?url";
+import usersUrl from "@phosphor-icons/core/regular/users.svg?url";
+import warningUrl from "@phosphor-icons/core/regular/warning.svg?url";
+import waveformUrl from "@phosphor-icons/core/regular/waveform.svg?url";
+import wifiHighUrl from "@phosphor-icons/core/regular/wifi-high.svg?url";
+import wifiSlashUrl from "@phosphor-icons/core/regular/wifi-slash.svg?url";
+import xUrl from "@phosphor-icons/core/regular/x.svg?url";
 
 type IconProps = {
   class?: string;
 };
+
+/** Exact Phosphor Regular artwork used by the Figma icon library. A mask keeps
+ * the source SVG local while allowing the icon to inherit the current color. */
+function PhosphorIcon(props: IconProps & { src: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      class={cn("inline-block h-4 w-4 shrink-0 bg-current", props.class)}
+      style={{
+        "mask-image": `url("${props.src}")`,
+        "mask-position": "center",
+        "mask-repeat": "no-repeat",
+        "mask-size": "contain",
+        "-webkit-mask-image": `url("${props.src}")`,
+        "-webkit-mask-position": "center",
+        "-webkit-mask-repeat": "no-repeat",
+        "-webkit-mask-size": "contain",
+      }}
+    />
+  );
+}
 
 /** Shared stroke system: 24 grid, 2px stroke, round caps/joins (Lucide geometry). */
 function Svg(props: IconProps & { children: JSX.Element }) {
@@ -24,34 +93,15 @@ function Svg(props: IconProps & { children: JSX.Element }) {
 }
 
 export function IconLogout(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={signOutUrl} />;
 }
 
 export function IconTrash(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-      <line x1="10" y1="11" x2="10" y2="17" />
-      <line x1="14" y1="11" x2="14" y2="17" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={trashUrl} />;
 }
 
 export function IconLock(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="4" y="10" width="16" height="11" rx="2" />
-      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={lockSimpleUrl} />;
 }
 
 /** Delete-whole-series: a calendar with an ✕ — distinct silhouette from the
@@ -80,20 +130,11 @@ export function IconArchive(props: IconProps) {
 }
 
 export function IconSend(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="m22 2-7 20-4-9-9-4Z" />
-      <path d="M22 2 11 13" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={paperPlaneTiltUrl} />;
 }
 
 export function IconMessage(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={chatCircleDotsUrl} />;
 }
 
 export function IconBotSquare(props: IconProps) {
@@ -108,39 +149,19 @@ export function IconBotSquare(props: IconProps) {
 }
 
 export function IconCheck(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M20 6 9 17l-5-5" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={checkUrl} />;
 }
 
 export function IconCopy(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="9" y="9" width="13" height="13" rx="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={copyUrl} />;
 }
 
 export function IconX(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={xUrl} />;
 }
 
 export function IconAlert(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-      <path d="M12 9v4" />
-      <path d="M12 17h.01" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={warningUrl} />;
 }
 
 export function IconSave(props: IconProps) {
@@ -154,12 +175,7 @@ export function IconSave(props: IconProps) {
 }
 
 export function IconEdit(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M12 20h9" />
-      <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={pencilSimpleUrl} />;
 }
 
 export function IconEraser(props: IconProps) {
@@ -227,22 +243,11 @@ export function IconUndo(props: IconProps) {
 }
 
 export function IconPlus(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={plusUrl} />;
 }
 
 export function IconDownload(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M12 3v12" />
-      <path d="m7 10 5 5 5-5" />
-      <path d="M5 21h14" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={downloadSimpleUrl} />;
 }
 
 export function IconSun(props: IconProps) {
@@ -291,13 +296,7 @@ export function IconZoomOut(props: IconProps) {
 }
 
 export function IconHelpCircle(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-      <path d="M12 17h.01" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={questionUrl} />;
 }
 
 export function IconMessagePlus(props: IconProps) {
@@ -331,27 +330,15 @@ export function IconGlobe(props: IconProps) {
 }
 
 export function IconChevronLeft(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="m15 18-6-6 6-6" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={caretLeftUrl} />;
 }
 
 export function IconChevronRight(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="m9 18 6-6-6-6" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={caretRightUrl} />;
 }
 
 export function IconChevronDown(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="m6 9 6 6 6-6" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={caretDownUrl} />;
 }
 
 export function IconArrowUp(props: IconProps) {
@@ -373,21 +360,11 @@ export function IconArrowDown(props: IconProps) {
 }
 
 export function IconChevronsUpDown(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="m7 15 5 5 5-5" />
-      <path d="m7 9 5-5 5 5" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={caretUpDownUrl} />;
 }
 
 export function IconHome(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
-      <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={houseUrl} />;
 }
 
 export function IconNote(props: IconProps) {
@@ -432,26 +409,11 @@ export function IconFileAudio(props: IconProps) {
 }
 
 export function IconFileText(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M8 13h8" />
-      <path d="M8 17h5" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={fileTextUrl} />;
 }
 
 export function IconHomework(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M15 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6Z" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h3" />
-      <path d="M8 13h5" />
-      <path d="M8 17h3" />
-      <path d="m15 16 4-4 2 2-4 4h-2z" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={clipboardTextUrl} />;
 }
 
 export function IconFileSpreadsheet(props: IconProps) {
@@ -467,53 +429,19 @@ export function IconFileSpreadsheet(props: IconProps) {
 }
 
 export function IconCalendar(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M8 2v4" />
-      <path d="M16 2v4" />
-      <rect width="18" height="18" x="3" y="4" rx="2" />
-      <path d="M3 10h18" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={calendarDotsUrl} />;
 }
 
 export function IconCalendarDays(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M8 2v4" />
-      <path d="M16 2v4" />
-      <rect width="18" height="18" x="3" y="4" rx="2" />
-      <path d="M3 10h18" />
-      <path d="M8 14h.01" />
-      <path d="M12 14h.01" />
-      <path d="M16 14h.01" />
-      <path d="M8 18h.01" />
-      <path d="M12 18h.01" />
-      <path d="M16 18h.01" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={calendarDotsUrl} />;
 }
 
 export function IconClock(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 6v6l4 2" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={clockUrl} />;
 }
 
 export function IconExam(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-      <path d="M12 11h4" />
-      <path d="M12 16h4" />
-      <path d="M8 11h.01" />
-      <path d="M8 16h.01" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={examUrl} />;
 }
 
 export function IconGuide(props: IconProps) {
@@ -527,24 +455,11 @@ export function IconGuide(props: IconProps) {
 }
 
 export function IconUsers(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={usersUrl} />;
 }
 
 export function IconMenu(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M4 5h16" />
-      <path d="M4 12h16" />
-      <path d="M4 19h16" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={listUrl} />;
 }
 
 export function IconDotsVertical(props: IconProps) {
@@ -558,29 +473,15 @@ export function IconDotsVertical(props: IconProps) {
 }
 
 export function IconPanelLeft(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect width="18" height="18" x="3" y="3" rx="2" />
-      <path d="M9 3v18" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={sidebarSimpleUrl} />;
 }
 
 export function IconBook(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={bookOpenUrl} />;
 }
 
 export function IconEye(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
-      <circle cx="12" cy="12" r="3" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={eyeUrl} />;
 }
 
 export function IconEyeOff(props: IconProps) {
@@ -595,55 +496,23 @@ export function IconEyeOff(props: IconProps) {
 }
 
 export function IconChart(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M3 3v16a2 2 0 0 0 2 2h16" />
-      <path d="M7 16v-5" />
-      <path d="M12 16v-9" />
-      <path d="M17 16V8" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={chartBarUrl} />;
 }
 
 export function IconSchool(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
-      <path d="M22 10v6" />
-      <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={graduationCapUrl} />;
 }
 
 export function IconClipboardCheck(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-      <path d="m9 14 2 2 4-4" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={checkCircleUrl} />;
 }
 
 export function IconReportAnalytics(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M8 18v-1" />
-      <path d="M12 18v-6" />
-      <path d="M16 18v-3" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={chartLineUpUrl} />;
 }
 
 export function IconSettings(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-      <circle cx="12" cy="12" r="3" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={gearUrl} />;
 }
 
 export function IconUserCog(props: IconProps) {
@@ -686,40 +555,19 @@ export function IconUtensils(props: IconProps) {
 }
 
 export function IconSearch(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={magnifyingGlassUrl} />;
 }
 
 export function IconSparkles(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M9.9 4.24 12 2l2.1 2.24L17 5l-2.9.76L12 8l-2.1-2.24L7 5z" />
-      <path d="M18 12.5 19.5 11l1.5 1.5 2 .5-2 .5-1.5 1.5L18 13.5l-2-.5z" />
-      <path d="M4 15.5 6.5 13 9 15.5l3 .75-3 .75-2.5 2.5L4 17l-3-.75z" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={sparkleUrl} />;
 }
 
 export function IconUploadCloud(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-      <path d="M12 12v9" />
-      <path d="m16 16-4-4-4 4" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={uploadSimpleUrl} />;
 }
 
 export function IconFilter(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={funnelUrl} />;
 }
 
 export function IconRotateCcw(props: IconProps) {
@@ -751,20 +599,45 @@ export function IconRefresh(props: IconProps) {
 }
 
 export function IconExternalLink(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-      <polyline points="15 3 21 3 21 9" />
-      <line x1="10" y1="14" x2="21" y2="3" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={arrowSquareOutUrl} />;
 }
 
 export function IconBell(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </Svg>
-  );
+  return <PhosphorIcon {...props} src={bellUrl} />;
+}
+
+export function IconChalkboardTeacher(props: IconProps) {
+  return <PhosphorIcon {...props} src={chalkboardTeacherUrl} />;
+}
+
+export function IconChartPie(props: IconProps) {
+  return <PhosphorIcon {...props} src={chartPieUrl} />;
+}
+
+export function IconPackage(props: IconProps) {
+  return <PhosphorIcon {...props} src={packageUrl} />;
+}
+
+export function IconScan(props: IconProps) {
+  return <PhosphorIcon {...props} src={scanUrl} />;
+}
+
+export function IconShieldCheck(props: IconProps) {
+  return <PhosphorIcon {...props} src={shieldCheckUrl} />;
+}
+
+export function IconTarget(props: IconProps) {
+  return <PhosphorIcon {...props} src={targetUrl} />;
+}
+
+export function IconWaveform(props: IconProps) {
+  return <PhosphorIcon {...props} src={waveformUrl} />;
+}
+
+export function IconWifi(props: IconProps) {
+  return <PhosphorIcon {...props} src={wifiHighUrl} />;
+}
+
+export function IconWifiOff(props: IconProps) {
+  return <PhosphorIcon {...props} src={wifiSlashUrl} />;
 }

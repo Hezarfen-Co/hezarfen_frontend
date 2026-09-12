@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -91,6 +92,15 @@ function HomeworkContent() {
   const courseName = (id: string) => courseNames()[id] ?? id;
   const canCreate = () => manageableCourses().length > 0;
   const pageTitle = () => auth.user()?.role === "student" ? t("homework.mineTitle") : t("homework.title");
+  type DueTab = "all" | "open" | "past";
+  const [dueTab, setDueTab] = createSignal<DueTab>("all");
+  const dueFilteredList = createMemo(() => {
+    const now = serverTime()?.now ?? Date.now();
+    const items = list() ?? [];
+    if (dueTab() === "open") return items.filter((item) => item.due_at >= now);
+    if (dueTab() === "past") return items.filter((item) => item.due_at < now);
+    return items;
+  });
 
   createEffect(() => {
     if (!createOpen()) return;
@@ -144,7 +154,7 @@ function HomeworkContent() {
       cell: (cell) => (
         <div class="min-w-0">
           <p class="truncate font-medium">{cell.row.original.title}</p>
-          <p class="truncate text-xs text-muted-foreground">{cell.row.original.description || "—"}</p>
+          <p class="truncate text-xs text-text-subtle">{cell.row.original.description || "—"}</p>
         </div>
       ),
     },
@@ -152,14 +162,14 @@ function HomeworkContent() {
       id: "course",
       accessorFn: (row) => courseName(row.course),
       header: t("nav.courses"),
-      meta: { cellClass: "text-muted-foreground" },
-      cell: (cell) => courseName(cell.row.original.course),
+      meta: { cellClass: "max-w-0 truncate text-text-subtle" },
+      cell: (cell) => <span class="block truncate">{courseName(cell.row.original.course)}</span>,
     },
     {
       id: "due_at",
       accessorFn: (row) => row.due_at,
       header: t("homework.dueAt"),
-      meta: { cellClass: "mono whitespace-nowrap text-muted-foreground" },
+      meta: { cellClass: "mono whitespace-nowrap text-text-subtle" },
       cell: (cell) => formatDateTime(cell.row.original.due_at, locale()),
     },
     {
@@ -211,45 +221,55 @@ function HomeworkContent() {
           <div class="space-y-1.5">
             <Label for="homework-due-global">{t("homework.dueAt")}</Label>
             <div class="grid grid-cols-2 gap-2">
-              <DatePicker id="homework-due-global" class="h-10" placeholder={t("form.datePlaceholder")} value={dueDate()} required onChange={setDueDate} />
-              <Input class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/35" placeholder="17:00" value={dueTime()} required onInput={(event) => setDueTime(event.currentTarget.value)} />
+              <DatePicker id="homework-due-global" class="h-9" placeholder={t("form.datePlaceholder")} value={dueDate()} required onChange={setDueDate} />
+              <Input class="h-9 rounded-md font-mono placeholder:text-text-placeholder" placeholder="17:00" value={dueTime()} required onInput={(event) => setDueTime(event.currentTarget.value)} />
             </div>
           </div>
-          <p class="rounded-xl border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">{t("homework.wholeCourseHelp")}</p>
+          <p class="rounded-xl border border-border-line bg-surface-tint px-3 py-2 text-xs text-text-subtle">{t("homework.wholeCourseHelp")}</p>
           <div class="flex flex-wrap gap-2">
-            <Button type="submit" class="rounded-xl" disabled={pending()}>{t("common.create")}</Button>
-            <Button type="button" variant="outline" class="rounded-xl" onClick={() => setCreateOpen(false)}>{t("common.cancel")}</Button>
+            <Button type="submit" class="rounded-lg" disabled={pending()}>{t("common.create")}</Button>
+            <Button type="button" variant="outline" class="rounded-lg" onClick={() => setCreateOpen(false)}>{t("common.cancel")}</Button>
           </div>
         </form>
       </SidePanel>
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-          <Show when={list.error}>
-            <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-          </Show>
-          <DataTable
-            title={pageTitle()}
-            description={t("homework.listHelp")}
-            actions={
-              <Show when={canCreate()}>
-                <Button type="button" size="sm" class="min-w-30" onClick={() => setCreateOpen(true)}>
-                  <IconPlus class="h-4 w-4" />
-                  {t("homework.add")}
-                </Button>
+      <Tabs value={dueTab()} onChange={(value) => setDueTab(value as DueTab)}>
+        <TabsList aria-label={pageTitle()}>
+          <TabsTrigger value="all">{t("common.all")}</TabsTrigger>
+          <TabsTrigger value="open">{t("homework.tab.open")}</TabsTrigger>
+          <TabsTrigger value="past">{t("homework.tab.past")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={dueTab()} class="mt-4 border-0 bg-transparent p-0 shadow-none">
+          <section class="data-shell space-y-4 p-4">
+            <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
+              <Show when={list.error}>
+                <Alert variant="destructive">{formatApiError(list.error)}</Alert>
               </Show>
-            }
-            columns={columns()}
-            data={list() ?? []}
-            tableClass="table-fixed min-w-5xl"
-            filterColumn="title"
-            enablePagination
-            pageSize={10}
-            empty={t("homework.empty")}
-            storageKey="homework"
-            onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
-          />
-        </Suspense>
-      </section>
+              <DataTable
+                title={pageTitle()}
+                description={t("homework.listHelp")}
+                actions={
+                  <Show when={canCreate()}>
+                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("homework.add")}
+                    </Button>
+                  </Show>
+                }
+                columns={columns()}
+                data={dueFilteredList()}
+                tableClass="table-fixed min-w-5xl"
+                filterColumn="title"
+                enablePagination
+                pageSize={10}
+                empty={t("homework.empty")}
+                storageKey="homework"
+                onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
+              />
+            </Suspense>
+          </section>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

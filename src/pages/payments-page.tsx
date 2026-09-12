@@ -26,6 +26,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -190,7 +191,8 @@ function PaymentsContent() {
     {
       id: "name",
       header: t("payments.student"),
-      cell: (cell) => <span class="font-medium">{personLabel(cell.row.original)}</span>,
+      meta: { cellClass: "truncate" },
+      cell: (cell) => <span class="block truncate font-medium">{personLabel(cell.row.original)}</span>,
     },
     {
       accessorKey: "username",
@@ -206,8 +208,8 @@ function PaymentsContent() {
         if (bal == null) return <span class="text-sm text-muted-foreground">—</span>;
         const inDebt = bal < 0;
         return (
-          <Badge variant="outline" class={inDebt ? "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300" : "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"}>
-            <span class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${inDebt ? "bg-red-500" : "bg-emerald-500"}`} />
+          <Badge variant="outline" class={inDebt ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-success/50 bg-success/10 text-success"}>
+            <span class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${inDebt ? "bg-destructive" : "bg-success"}`} />
             {inDebt ? t("payments.inDebt") : t("payments.settled")}
           </Badge>
         );
@@ -225,7 +227,10 @@ function PaymentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -249,6 +254,33 @@ function PaymentsContent() {
   );
   const entries = () => statement()?.entries.items ?? [];
   const sortedEntries = () => sortStatementEntries(entries());
+  // Figma's Tümü/Gecikmiş/Bu ay/Kapanmış tabs, rebuilt over the statement rows
+  // already fetched for the selected student — `overdue` is the backend's own
+  // rollup field, "closed" reuses the same paid/reversed check as the status
+  // badge below, and "this month" groups by the due date's calendar month.
+  // This is per-student, not the school-wide period totals Figma shows next
+  // to it — those would need a bulk statement read across every student with
+  // an assumed billing period, which no endpoint provides (see report).
+  const [entryTab, setEntryTab] = createSignal("all");
+  const now = new Date();
+  const isThisMonth = (ms: number | null) => {
+    if (ms == null) return false;
+    const d = new Date(ms);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  };
+  const tabFilteredEntries = createMemo(() => {
+    const rows = sortedEntries();
+    switch (entryTab()) {
+      case "overdue":
+        return rows.filter((row) => row.overdue);
+      case "month":
+        return rows.filter((row) => isThisMonth(row.due_at));
+      case "closed":
+        return rows.filter((row) => !row.reversed && row.outstanding_minor <= 0);
+      default:
+        return rows;
+    }
+  });
   const summary = createMemo(() => {
     const rows = entries();
     return {
@@ -312,12 +344,15 @@ function PaymentsContent() {
     {
       id: "plan",
       header: t("payments.plan"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.plan_name ?? "—"}</span>,
+      size: 260,
+      meta: { cellClass: "truncate" },
+      cell: (cell) => <span class="block truncate font-medium">{cell.row.original.plan_name ?? "—"}</span>,
     },
     {
       accessorKey: "due_at",
       header: t("payments.due"),
-      cell: (cell) => <span class="mono text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
+      size: 120,
+      cell: (cell) => <span class="mono whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
     },
     {
       accessorKey: "outstanding_minor",
@@ -335,7 +370,10 @@ function PaymentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center", cellClass: "text-center" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -417,7 +455,10 @@ function PaymentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "text-center" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <div class="flex items-center justify-center gap-1">
           <Button size="sm" variant="outline" class="h-8 gap-1 rounded-lg px-2 text-xs" onClick={() => openAssign(cell.row.original)}>
@@ -535,7 +576,17 @@ function PaymentsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader eyebrow={t("nav.school")} title={t("payments.title")} description={t("payments.subtitle")} />
+      <PageHeader
+        eyebrow={t("nav.school")}
+        title={t("payments.title")}
+        description={t("payments.subtitle")}
+        actions={
+          <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+            {t("payments.exportStatement")}
+            <ComingSoonBadge class="ml-1.5" />
+          </Button>
+        }
+      />
 
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
@@ -555,7 +606,14 @@ function PaymentsContent() {
           <Show
             when={selectedStudent()}
             fallback={
-              <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+              <>
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodBilled")}</p><ComingSoonValue class="mt-1" /></div>
+                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodCollected")}</p><ComingSoonValue class="mt-1" /></div>
+                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodOverdue")}</p><ComingSoonValue class="mt-1" /></div>
+                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodExpected")}</p><ComingSoonValue class="mt-1" /></div>
+              </div>
+              <section class="data-shell space-y-4 p-4">
               <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
                 <Show when={studentsPage.error}>
                   <ErrorAlert message={formatApiError(studentsPage.error)} onRetry={() => void refetchStudents()} />
@@ -596,6 +654,7 @@ function PaymentsContent() {
                 </Show>
               </Suspense>
               </section>
+              </>
             }
           >
             {(current) => (<>
@@ -609,13 +668,13 @@ function PaymentsContent() {
               </Button>
             </div>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.totalDebt")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().billed, moneyLocale())}</p></div>
-              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.collected")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().collected, moneyLocale())}</p></div>
-              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.balance")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p></div>
-              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.overdueCount")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().overdue > 0 }}>{summary().overdue}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.totalDebt")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().billed, moneyLocale())}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.collected")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().collected, moneyLocale())}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.balance")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.overdueCount")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().overdue > 0 }}>{summary().overdue}</p></div>
             </div>
 
-            <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+            <section class="data-shell space-y-4 p-4">
               <Suspense fallback={<DataTableSkeleton columns={5} rows={5} />}>
                 <Show when={statement.error}>
                   <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetchStatement()} />
@@ -631,15 +690,25 @@ function PaymentsContent() {
                     </div>
                   }
                 >
-                  <DataTable
-                    columns={statementColumns()}
-                    data={sortedEntries()}
-                    tableClass="min-w-160"
-                    storageKey="payment-statement"
-                    enablePagination
-                    pageSize={STATEMENT_PAGE_SIZE}
-                    onRowClick={setViewEntry}
-                  />
+                  <div class="space-y-3">
+                    <Tabs value={entryTab()} onChange={setEntryTab}>
+                      <TabsList>
+                        <TabsTrigger value="all">{t("payments.entryTabAll")}</TabsTrigger>
+                        <TabsTrigger value="overdue">{t("payments.entryTabOverdue")}</TabsTrigger>
+                        <TabsTrigger value="month">{t("payments.entryTabMonth")}</TabsTrigger>
+                        <TabsTrigger value="closed">{t("payments.entryTabClosed")}</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                    <DataTable
+                      columns={statementColumns()}
+                      data={tabFilteredEntries()}
+                      tableClass="min-w-160"
+                      storageKey="payment-statement"
+                      enablePagination
+                      pageSize={STATEMENT_PAGE_SIZE}
+                      onRowClick={setViewEntry}
+                    />
+                  </div>
                 </Show>
               </Suspense>
             </section>
@@ -687,12 +756,12 @@ function PaymentsContent() {
         {/* ---------------- Fee plans ---------------- */}
         <TabsContent value="plans" class="space-y-4">
           <div class="flex justify-end">
-            <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={openCreate}>
+            <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
               <IconPlus class="h-4 w-4" />
               {t("payments.createPlan")}
             </Button>
           </div>
-          <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+          <section class="data-shell space-y-4 p-4">
             <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
               <Show when={plans.error}>
                 <ErrorAlert message={formatApiError(plans.error)} onRetry={() => void refetchPlans()} />
@@ -808,8 +877,8 @@ function PaymentsContent() {
             <Textarea id="collect-note" maxlength={500} value={collectNote()} onInput={(e) => setCollectNote(e.currentTarget.value)} />
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setCollectEntry(null)}>{t("common.cancel")}</Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>{t("payments.collect")}</Button>
+            <Button type="button" variant="outline" onClick={() => setCollectEntry(null)}>{t("common.cancel")}</Button>
+            <Button type="submit" disabled={pending()}>{t("payments.collect")}</Button>
           </div>
         </form>
       </SidePanel>
@@ -836,8 +905,8 @@ function PaymentsContent() {
             <Textarea id="correction-note" maxlength={500} value={actionNote()} onInput={(e) => setActionNote(e.currentTarget.value)} />
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setLineAction(null)}>{t("common.cancel")}</Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>{t("common.save")}</Button>
+            <Button type="button" variant="outline" onClick={() => setLineAction(null)}>{t("common.cancel")}</Button>
+            <Button type="submit" disabled={pending()}>{t("common.save")}</Button>
           </div>
         </form>
       </SidePanel>
@@ -881,8 +950,8 @@ function PaymentsContent() {
             </Index>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setPanelOpen(false)}>{t("common.cancel")}</Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>{editing() ? t("common.update") : t("common.create")}</Button>
+            <Button type="button" variant="outline" onClick={() => setPanelOpen(false)}>{t("common.cancel")}</Button>
+            <Button type="submit" disabled={pending()}>{editing() ? t("common.update") : t("common.create")}</Button>
           </div>
         </form>
       </SidePanel>

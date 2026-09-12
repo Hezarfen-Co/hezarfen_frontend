@@ -80,6 +80,7 @@ export async function loginAdmin(): Promise<void> {
   await json("/auth/login", {
     method: "POST",
     body: {
+      school: env.SCHOOL_SLUG ?? "demo",
       username: env.ADMIN_USERNAME ?? "admin",
       password: env.ADMIN_PASSWORD ?? "admin123",
     },

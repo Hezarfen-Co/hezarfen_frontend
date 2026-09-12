@@ -2,7 +2,9 @@ import { For, Show, Suspense, createEffect, createMemo, createSignal } from "sol
 import { useNavigate } from "@tanstack/solid-router";
 import { patchMessageById } from "@/api/messages";
 import { Button } from "@/components/ui/button";
+import { ComingSoonPanel } from "@/components/ui/coming-soon";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   IconBell,
   IconCalendar,
@@ -209,18 +211,16 @@ export function NotificationCenter() {
       >
         <IconBell class="h-4 w-4" />
         <Show when={unreadCount() > 0}>
-          <span class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-2xs ring-2 ring-background">
+          <span class="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-background">
             {unreadCount() > 9 ? "9+" : unreadCount()}
           </span>
         </Show>
       </PopoverTrigger>
 
-      <PopoverContent class="w-80 sm:w-96 rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95 overflow-hidden">
-        {/* Header */}
-        <div class="flex items-center justify-between border-b border-border/80 px-4 py-3 bg-muted/40">
+      <PopoverContent class="w-80 sm:w-96 rounded-xl border border-border-line bg-surface-base p-0 shadow-2xl overflow-hidden">
+        <div class="flex items-center justify-between border-b border-border-hairline px-4 py-3">
           <div class="flex items-center gap-2">
-            <IconBell class="h-4 w-4 text-primary" />
-            <h3 class="text-xs font-bold text-foreground">{t("notifications.title")}</h3>
+            <h3 class="text-sm font-semibold text-text-strong">{t("notifications.title")}</h3>
             <Show when={unreadCount() > 0}>
               <span class="rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[10px] font-bold text-primary">
                 {unreadCount()}
@@ -233,7 +233,7 @@ export function NotificationCenter() {
               type="button"
               variant="ghost"
               size="sm"
-              class="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
+              class="h-7 rounded-lg px-2 text-[11px] font-semibold text-text-subtle hover:bg-destructive/10 hover:text-destructive"
               onClick={handleDismissAll}
               title={t("notifications.clearAll")}
             >
@@ -243,77 +243,82 @@ export function NotificationCenter() {
           </Show>
         </div>
 
-        {/* Notifications List */}
-        <div class="max-h-80 overflow-y-auto p-2 space-y-1">
-          <Suspense
-            fallback={
-              <div class="p-8 text-center text-xs text-muted-foreground">
-                {t("common.loading")}
-              </div>
-            }
-          >
-            <Show
-              when={activeNotifications().length > 0}
+        <Tabs defaultValue="all" class="p-2">
+          <TabsList class="mb-1 w-full">
+            <TabsTrigger value="all" class="flex-1">{t("notifications.tabAll")}</TabsTrigger>
+            <TabsTrigger value="system" class="flex-1">{t("notifications.tabSystem")}</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" class="mt-0 max-h-80 space-y-1 overflow-y-auto">
+            <Suspense
               fallback={
-                <div class="p-8 text-center space-y-2">
-                  <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                    <IconBell class="h-5 w-5" />
-                  </div>
-                  <p class="text-xs font-medium text-muted-foreground">
-                    {t("notifications.empty")}
-                  </p>
+                <div class="p-8 text-center text-xs text-text-subtle">
+                  {t("common.loading")}
                 </div>
               }
             >
-              <For each={activeNotifications()}>
-                {(item) => (
-                  <div
-                    onClick={() => handleSelectNotification(item)}
-                    class="group relative flex items-start gap-3 rounded-xl p-2.5 text-xs transition-colors cursor-pointer hover:bg-accent/60 select-none"
-                  >
-                    {/* Icon by Type */}
-                    <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Show when={item.type === "message"}>
-                        <IconMessage class="h-4 w-4" />
-                      </Show>
-                      <Show when={item.type === "event"}>
-                        <IconCalendar class="h-4 w-4" />
-                      </Show>
-                      <Show when={item.type === "exam"}>
-                        <IconExam class="h-4 w-4" />
-                      </Show>
-                      <Show when={item.type === "homework"}>
-                        <IconHomework class="h-4 w-4" />
-                      </Show>
+              <Show
+                when={activeNotifications().length > 0}
+                fallback={
+                  <div class="space-y-2 p-8 text-center">
+                    <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-surface-tint text-text-subtle">
+                      <IconBell class="h-5 w-5" />
                     </div>
+                    <p class="text-xs font-medium text-text-subtle">
+                      {t("notifications.empty")}
+                    </p>
+                  </div>
+                }
+              >
+                <For each={activeNotifications()}>
+                  {(item) => (
+                    <div
+                      onClick={() => handleSelectNotification(item)}
+                      class="group relative flex cursor-pointer select-none items-start gap-3 rounded-xl p-2.5 text-xs transition-colors hover:bg-surface-tint"
+                    >
+                      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-tint text-text-subtle transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                        <Show when={item.type === "message"}>
+                          <IconMessage class="h-4 w-4" />
+                        </Show>
+                        <Show when={item.type === "event"}>
+                          <IconCalendar class="h-4 w-4" />
+                        </Show>
+                        <Show when={item.type === "exam"}>
+                          <IconExam class="h-4 w-4" />
+                        </Show>
+                        <Show when={item.type === "homework"}>
+                          <IconHomework class="h-4 w-4" />
+                        </Show>
+                      </div>
 
-                    {/* Content */}
-                    <div class="min-w-0 flex-1 pr-6 space-y-0.5">
-                      <div class="flex items-center justify-between gap-1">
-                        <span class="truncate font-bold text-foreground">
+                      <div class="min-w-0 flex-1 space-y-0.5 pr-6">
+                        <span class="block truncate font-semibold text-text-strong">
                           {item.title}
                         </span>
+                        <p class="line-clamp-2 text-[11px] leading-snug text-text-subtle">
+                          {item.description}
+                        </p>
                       </div>
-                      <p class="line-clamp-2 text-[11px] text-muted-foreground leading-snug">
-                        {item.description}
-                      </p>
-                    </div>
 
-                    {/* Single Dismiss Button */}
-                    <button
-                      type="button"
-                      class="absolute right-2 top-2.5 flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/60 opacity-80 sm:opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
-                      title={t("notifications.dismiss")}
-                      onClick={(e) => handleDismissSingle(e, item.id)}
-                    >
-                      <IconX class="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-              </For>
-            </Show>
-          </Suspense>
-        </div>
+                      <button
+                        type="button"
+                        class="absolute right-2 top-2.5 flex h-6 w-6 items-center justify-center rounded-md text-text-subtle/70 opacity-80 transition-all hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+                        title={t("notifications.dismiss")}
+                        onClick={(e) => handleDismissSingle(e, item.id)}
+                      >
+                        <IconX class="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </For>
+              </Show>
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="system" class="mt-0">
+            <ComingSoonPanel title={t("notifications.tabSystem")} class="border-0 p-3" />
+          </TabsContent>
+        </Tabs>
       </PopoverContent>
     </Popover>
   );

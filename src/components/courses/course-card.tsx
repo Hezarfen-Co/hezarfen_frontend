@@ -2,18 +2,30 @@ import { Show } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import type { Course } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
-import { IconBook, IconChevronRight, IconUsers } from "@/components/ui/icons";
+import { Button } from "@/components/ui/button";
+import { ComingSoonBadge } from "@/components/ui/coming-soon";
+import { IconBook, IconChevronRight, IconClipboardCheck, IconClock, IconTarget, IconUsers } from "@/components/ui/icons";
 import { personLabel } from "@/lib/person";
+
+const courseInitials = (title: string) =>
+  title.trim().slice(0, 2).toLocaleUpperCase("tr-TR") || "—";
 
 export function CourseCard(props: {
   course: Course;
   term: string;
   enrolled?: boolean;
+  showTeacherActions?: boolean;
   labels: {
     capacity: string;
     unlimited: string;
     enrolled: string;
     kind: string;
+    weeklyHours: string;
+    competency: string;
+    attendance: string;
+    progress: string;
+    takeAttendance: string;
+    analysis: string;
   };
 }) {
   const teachers = () => [props.course.creator, ...(props.course.teachers ?? [])]
@@ -23,36 +35,57 @@ export function CourseCard(props: {
     <Link
       to="/courses/$id"
       params={{ id: props.course.id }}
-      class="group grid gap-3 rounded-lg border border-border bg-card px-4 py-3 outline-hidden transition-colors hover:border-primary/35 hover:bg-muted/20 focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+      class="group flex h-full flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-4 outline-hidden transition-colors hover:border-primary/35 hover:bg-surface-tint focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <div class="flex min-w-0 items-start gap-3">
-        <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <IconBook class="h-4 w-4" />
+      <div class="flex items-start gap-3">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-xs font-semibold text-text-subtle">
+          {courseInitials(props.course.title)}
         </span>
-        <div class="min-w-0">
-          <div class="flex flex-wrap items-center gap-2">
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-1.5">
             <h2 class="truncate text-base font-semibold tracking-tight">{props.course.title}</h2>
+          </div>
+          <div class="mt-1 flex flex-wrap items-center gap-1.5">
             <Badge variant="outline" class="rounded-md text-[10px] font-medium">{props.labels.kind}</Badge>
             <Show when={props.enrolled}><Badge variant="secondary" class="rounded-md text-[10px]">{props.labels.enrolled}</Badge></Show>
           </div>
-          <p class="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{props.course.description || "—"}</p>
-          <div class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            <span>{props.term}</span>
-            <span class="flex min-w-0 items-center gap-1.5">
-              <IconUsers class="h-3.5 w-3.5 shrink-0" />
-              <span class="truncate">{teachers().map(personLabel).join(", ")}</span>
-            </span>
-          </div>
         </div>
+        <IconChevronRight class="mt-1 h-4 w-4 shrink-0 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-text-default" />
       </div>
 
-      <div class="flex items-center justify-between gap-4 border-t border-border/60 pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
-        <div class="text-left sm:text-right">
-          <p class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{props.labels.capacity}</p>
-          <p class="mt-0.5 font-semibold tabular-nums">{props.course.capacity ?? props.labels.unlimited}</p>
-        </div>
-        <IconChevronRight class="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+      <p class="line-clamp-2 min-h-8 text-sm text-text-subtle">{props.course.description || "—"}</p>
+
+      <div class="mt-auto flex items-center justify-between gap-3 border-t border-border-hairline pt-3 text-xs text-text-subtle">
+        <span class="min-w-0 flex-1 truncate">{props.term}</span>
+        <span class="flex min-w-0 items-center gap-1.5">
+          <IconUsers class="h-3.5 w-3.5 shrink-0" />
+          <span class="max-w-32 truncate">{teachers().map(personLabel).join(", ")}</span>
+        </span>
       </div>
+
+      <div class="flex items-center gap-2 rounded-lg bg-surface-tint px-3 py-2 text-xs text-text-subtle">
+        <IconBook class="h-3.5 w-3.5 shrink-0" />
+        <span class="font-medium text-text-default">{props.labels.capacity}:</span>
+        <span class="tabular-nums">{props.course.capacity ?? props.labels.unlimited}</span>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border-hairline px-3 py-2">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-text-subtle">
+          <span class="flex items-center gap-1"><IconClock class="h-3 w-3 shrink-0" />{props.labels.weeklyHours}</span>
+          <span class="flex items-center gap-1"><IconTarget class="h-3 w-3 shrink-0" />{props.labels.competency}</span>
+          <span class="flex items-center gap-1"><IconClipboardCheck class="h-3 w-3 shrink-0" />{props.labels.attendance}</span>
+          <span>{props.labels.progress}</span>
+        </div>
+        <ComingSoonBadge />
+      </div>
+
+      <Show when={props.showTeacherActions}>
+        <div class="flex flex-wrap items-center gap-2 border-t border-border-hairline pt-3">
+          <Button size="sm" variant="outline" disabled class="h-[26px] rounded-lg px-2.5 text-xs">{props.labels.takeAttendance}</Button>
+          <Button size="sm" variant="outline" disabled class="h-[26px] rounded-lg px-2.5 text-xs">{props.labels.analysis}</Button>
+          <ComingSoonBadge class="ml-auto" />
+        </div>
+      </Show>
     </Link>
   );
 }

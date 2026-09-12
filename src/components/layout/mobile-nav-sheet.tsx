@@ -1,6 +1,6 @@
 import { For, Show, createSignal } from "solid-js";
 import { Link, useRouterState } from "@tanstack/solid-router";
-import { routeNavItem, sidebarNavGroups, type NavItem } from "@/components/layout/nav-items";
+import { routeNavItem, visibleNavGroups, type NavItem } from "@/components/layout/nav-items";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
 import { IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
@@ -27,6 +27,8 @@ export function MobileNavSheet(props: {
   open: boolean;
   onClose: () => void;
   onLogout: () => void | Promise<void>;
+  onOpenCelebi?: () => void;
+  onOpenProfile?: () => void;
 }) {
   const auth = useAuth();
   const t = useT();
@@ -36,9 +38,14 @@ export function MobileNavSheet(props: {
 
   // The primary destinations are already one tap away in the tab bar, so the
   // sheet lists everything else.
-  const groups = () => sidebarNavGroups(auth.user()?.role, modules.enabled());
+  const groups = () => visibleNavGroups(auth.user()?.role, modules.enabled());
   const current = () => routeNavItem(pathname(), auth.user()?.role);
   const badgeFor = (item: NavItem) => (item.id === "messages" ? feed.unreadMessages().total : 0);
+  const runAction = (item: NavItem) => {
+    props.onClose();
+    if (item.action === "celebi") props.onOpenCelebi?.();
+    if (item.action === "profile") props.onOpenProfile?.();
+  };
 
   // Drag-to-dismiss. Only the grab area drives it, so a flick inside the list
   // still scrolls the list. While dragging, the sheet follows the finger with
@@ -135,16 +142,12 @@ export function MobileNavSheet(props: {
                   <For each={group.items}>
                     {(item) => {
                       const active = () => current()?.id === item.id;
-                      return (
-                        <Link
-                          to={item.to}
-                          onClick={props.onClose}
-                          aria-current={active() ? "page" : undefined}
-                          class={cn(
-                            "flex items-center gap-2.5 rounded-md px-3 py-1.5 transition-colors active:bg-muted",
-                            active() ? "text-primary" : "text-foreground",
-                          )}
-                        >
+                      const rowClass = cn(
+                        "flex w-full items-center gap-2.5 rounded-md px-3 py-1.5 text-left transition-colors active:bg-muted",
+                        active() ? "text-primary" : "text-foreground",
+                      );
+                      const content = (
+                        <>
                           <span
                             class={cn(
                               "inline-flex size-7 shrink-0 items-center justify-center rounded-md",
@@ -156,12 +159,31 @@ export function MobileNavSheet(props: {
                           <span class="min-w-0 flex-1 truncate text-[13px] font-medium">
                             {t(item.labelKey)}
                           </span>
+                          <Show when={item.soon}>
+                            <span class="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              {t("nav.soon")}
+                            </span>
+                          </Show>
                           <Show when={badgeFor(item) > 0}>
                             <span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
                               {badgeFor(item) > 99 ? "99+" : badgeFor(item)}
                             </span>
                           </Show>
-                        </Link>
+                        </>
+                      );
+                      return (
+                        <Show
+                          when={!item.action}
+                          fallback={
+                            <button type="button" onClick={() => runAction(item)} class={rowClass}>
+                              {content}
+                            </button>
+                          }
+                        >
+                          <Link to={item.to} onClick={props.onClose} aria-current={active() ? "page" : undefined} class={rowClass}>
+                            {content}
+                          </Link>
+                        </Show>
                       );
                     }}
                   </For>

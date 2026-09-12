@@ -69,7 +69,7 @@ function WorkLogContent() {
       id: "status",
       header: t("work.status"),
       cell: (cell) => (
-        <Badge variant={cell.row.original.check_out == null ? "default" : "secondary"} class="rounded-sm">
+        <Badge variant={cell.row.original.check_out == null ? "default" : "secondary"}>
           {cell.row.original.check_out == null ? t("work.open") : t("work.closed")}
         </Badge>
       ),
@@ -115,13 +115,13 @@ function WorkLogContent() {
               </Show>
             </p>
           </div>
-          <Button type="button" size="lg" class="rounded-sm" variant={openEntry() ? "destructive" : "default"} disabled={pending()} onClick={() => void toggle()}>
+          <Button type="button" size="lg" variant={openEntry() ? "destructive" : "default"} disabled={pending()} onClick={() => void toggle()}>
             {openEntry() ? t("work.checkOut") : t("work.checkIn")}
           </Button>
         </div>
       </section>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+      <section class="data-shell space-y-4 p-4">
         <Suspense fallback={<PageSpinner />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
@@ -132,7 +132,7 @@ function WorkLogContent() {
           >
             <DataTable
               title={t("work.entries")}
-              actions={<Badge variant="secondary" class="mono rounded-lg px-3 py-1">{total()}</Badge>}
+              actions={<Badge variant="secondary" class="mono px-3 py-1">{total()}</Badge>}
               columns={columns()}
               data={pageItems()}
               enablePagination

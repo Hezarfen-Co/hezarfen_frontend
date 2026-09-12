@@ -49,7 +49,7 @@ function mountFeed(inbox: unknown[], unread: { items: unknown[]; total: number }
   return { setMessages, setUnreadMessages };
 }
 
-const badges = () => Array.from(document.querySelectorAll(".bg-rose-500")).map((n) => n.textContent);
+const badges = () => Array.from(document.querySelectorAll(".bg-destructive")).map((n) => n.textContent);
 
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());

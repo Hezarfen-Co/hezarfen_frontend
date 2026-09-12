@@ -1,4 +1,4 @@
-import { For, Show, createMemo, createResource } from "solid-js";
+import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { Link } from "@tanstack/solid-router";
 import { getSettings } from "@/api/settings";
@@ -6,10 +6,11 @@ import type { MarksReport } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { ExamLink } from "@/components/exams/exam-link";
-import { IconChevronDown } from "@/components/ui/icons";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
+import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
 const round = (n: number) => (Math.round(n * 100) / 100).toString();
@@ -29,6 +30,13 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
   const [settings] = createResource(() => getSettings());
   const compact = () => props.compact === true;
   const resultCount = createMemo(() => props.report.courses.reduce((total, course) => total + course.results.length, 0));
+  const [tab, setTab] = createSignal<"general" | "byCourse">("general");
+  const [activeCourseId, setActiveCourseId] = createSignal<string | null>(null);
+  const activeCourse = createMemo(() => {
+    const id = activeCourseId();
+    const courses = props.report.courses;
+    return (id ? courses.find((c) => c.course.id === id) : undefined) ?? courses[0];
+  });
   const columns = createMemo<ColumnDef<MarkRow>[]>(() => [
     {
       accessorKey: "title",
@@ -95,50 +103,112 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
       </section>
 
       <Show when={props.report.courses.length > 0} fallback={<DataTableEmpty class="rounded-lg border border-border bg-card py-10">{t("marks.empty")}</DataTableEmpty>}>
-        <div class="space-y-3">
-          <For each={props.report.courses}>
-            {(block) => (
-              <details name="marks-courses" class="group rounded-lg border border-border bg-card shadow-xs open:ring-1 open:ring-primary/15">
-                <summary class="flex min-w-0 cursor-pointer list-none flex-wrap items-center justify-between gap-3 rounded-lg p-4 outline-hidden transition-colors hover:bg-muted/35 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-                  <div class="min-w-0 flex-1">
-                    <p class={cn("truncate font-semibold", compact() ? "text-sm" : "text-lg")}>
-                      {block.course.title}
-                    </p>
-                    <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div class="h-full rounded-full bg-primary/75" style={{ width: scoreWidth(block.average) }} />
+        <Tabs value={tab()} onChange={(value) => setTab(value === "byCourse" ? "byCourse" : "general")}>
+          <TabsList class="w-full sm:w-fit">
+            <TabsTrigger value="general" class="min-w-0">{t("marks.tabGeneral")}</TabsTrigger>
+            <TabsTrigger value="byCourse" class="min-w-0">{t("marks.tabByCourse")}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <Show when={tab() === "general"}>
+          <div class="overflow-x-auto rounded-lg border border-border bg-card shadow-xs">
+            <table class="w-full min-w-[28rem] table-fixed text-sm">
+              <colgroup>
+                <col class="w-[42%]" />
+                <col class="w-[28%]" />
+                <col class="w-[30%]" />
+              </colgroup>
+              <thead>
+                <tr class="border-b border-border text-left text-xs text-muted-foreground">
+                  <th class="p-3 font-medium">{t("nav.courses")}</th>
+                  <th class="p-3 font-medium">{t("appointments.teacher")}</th>
+                  <th class="p-3 font-medium">{t("marks.courseAvg")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <For each={props.report.courses}>
+                  {(block) => (
+                    <tr class="border-b border-border/60 last:border-0">
+                      <td class="min-w-0 p-3">
+                        <Link to="/courses/$id" params={{ id: block.course.id }} class="block truncate font-medium hover:text-primary hover:underline">
+                          {block.course.title}
+                        </Link>
+                      </td>
+                      <td class="min-w-0 p-3 text-muted-foreground">
+                        <span class="block truncate">
+                          {block.course.teachers && block.course.teachers.length > 0 ? block.course.teachers.map((tr) => personLabel(tr)).join(", ") : "—"}
+                        </span>
+                      </td>
+                      <td class="min-w-0 p-3">
+                        <div class="flex items-center gap-2">
+                          <div class="h-1.5 w-12 min-w-8 shrink overflow-hidden rounded-full bg-muted">
+                            <div class="h-full rounded-full bg-primary" style={{ width: scoreWidth(block.average) }} />
+                          </div>
+                          <span class="mono shrink-0 text-xs font-semibold tabular-nums">{markWithGrade(block.average, block.average_grade)}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </For>
+              </tbody>
+            </table>
+          </div>
+        </Show>
+
+        <Show when={tab() === "byCourse"}>
+          <div class="space-y-3">
+            <div class="flex flex-wrap gap-1.5">
+              <For each={props.report.courses}>
+                {(block) => (
+                  <button
+                    type="button"
+                    class={cn(
+                      "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                      activeCourse()?.course.id === block.course.id
+                        ? "border-border bg-surface-base text-foreground shadow-xs"
+                        : "border-transparent text-muted-foreground hover:bg-muted/60",
+                    )}
+                    onClick={() => setActiveCourseId(block.course.id)}
+                  >
+                    {block.course.title}
+                  </button>
+                )}
+              </For>
+            </div>
+
+            <Show when={activeCourse()} keyed>
+              {(block) => (
+                <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="min-w-0">
+                      <Link to="/courses/$id" params={{ id: block.course.id }} class="inline-flex truncate text-sm font-semibold text-primary hover:underline">
+                        {block.course.title}
+                      </Link>
+                      <p class="mt-0.5 truncate text-xs text-muted-foreground">
+                        {block.course.teachers && block.course.teachers.length > 0 ? block.course.teachers.map((tr) => personLabel(tr)).join(", ") : "—"}
+                      </p>
                     </div>
-                  </div>
-                  <div class="flex shrink-0 items-center gap-3">
                     <div class="text-right">
                       <p class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t("marks.courseAvg")}</p>
                       <p class="mt-0.5 text-xl font-semibold tabular-nums">{markWithGrade(block.average, block.average_grade)}</p>
                     </div>
-                    <IconChevronDown class="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
                   </div>
-                </summary>
-
-                <div class="border-t border-border p-4 pt-3">
-                  <Link
-                    to="/courses/$id"
-                    params={{ id: block.course.id }}
-                    class="mb-3 inline-flex text-xs font-semibold text-primary hover:underline"
-                  >
-                    {block.course.title}
-                  </Link>
-                  <Show when={block.results.length > 0} fallback={<DataTableEmpty class="py-6">{t("exams.noResults")}</DataTableEmpty>}>
-                    <DataTable
-                      class="min-w-0"
-                      columns={columns()}
-                      data={block.results}
-                      tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-xl")}
-                      enableColumnVisibility={false}
-                    />
-                  </Show>
+                  <div class="mt-3">
+                    <Show when={block.results.length > 0} fallback={<DataTableEmpty class="py-6">{t("exams.noResults")}</DataTableEmpty>}>
+                      <DataTable
+                        class="min-w-0"
+                        columns={columns()}
+                        data={block.results}
+                        tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed sm:min-w-xl")}
+                        enableColumnVisibility={false}
+                      />
+                    </Show>
+                  </div>
                 </div>
-              </details>
-            )}
-          </For>
-        </div>
+              )}
+            </Show>
+          </div>
+        </Show>
       </Show>
     </div>
   );

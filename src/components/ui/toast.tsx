@@ -24,10 +24,10 @@ function dismissToast(id: number) {
 export function Toaster() {
   return (
     <Portal>
-      <div class="pointer-events-none fixed inset-x-3 top-4 z-80 flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:w-96">
+      <div class="pointer-events-none fixed inset-x-3 top-4 z-80 flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:w-[380px]">
         <For each={toasts()}>
           {(toast) => (
-            <div class="pointer-events-auto flex w-full items-center gap-3 rounded-lg border border-border bg-background px-3.5 py-2.5 text-foreground shadow-lg">
+            <div class="pointer-events-auto flex min-h-[65px] w-full items-center gap-3 rounded-lg border border-border-line bg-surface-base px-4 py-3 text-foreground shadow-xl shadow-black/10">
               <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                 <IconCheck class="h-3.5 w-3.5" />
               </span>

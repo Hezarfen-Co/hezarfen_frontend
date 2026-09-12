@@ -2,6 +2,7 @@ import { client } from "../client";
 import type { User } from "../client";
 
 export type RegisterBody = {
+  school: string;
   username: string;
   password: string;
 };

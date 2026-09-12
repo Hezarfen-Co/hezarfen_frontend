@@ -69,9 +69,9 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
   const averageY = () => PADDING.top + (1 - Math.min(1, summary()!.average / maxValue())) * plotHeight;
 
   return (
-    <div class={cn("flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm", props.class)}>
+    <div class={cn("flex flex-col gap-4 rounded-xl border border-border-line bg-surface-base p-4", props.class)}>
       <Show when={props.title}>
-        <div class="border-b border-border pb-3">
+        <div class="border-b border-border-hairline pb-3">
           <h3 class="text-sm font-semibold tracking-tight text-foreground">{props.title}</h3>
           <Show when={props.subtitle}>
             <p class="mt-0.5 text-xs text-muted-foreground">{props.subtitle}</p>
@@ -91,19 +91,19 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
         {(stats) => (
           <div class="space-y-3">
             <dl class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div class="rounded-md bg-muted/35 px-2.5 py-2">
+              <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
                 <dt class="text-[10px] text-muted-foreground">{t("dashboard.chartExamCount")}</dt>
                 <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{props.items.length}</dd>
               </div>
-              <div class="rounded-md bg-muted/35 px-2.5 py-2">
+              <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
                 <dt class="text-[10px] text-muted-foreground">{t("dashboard.chartLatest")}</dt>
                 <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{stats().latest.formattedValue ?? stats().latest.value}</dd>
               </div>
-              <div class="rounded-md bg-muted/35 px-2.5 py-2">
+              <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
                 <dt class="text-[10px] text-muted-foreground">{t("dashboard.chartAverage")}</dt>
                 <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{stats().average.toFixed(1)}</dd>
               </div>
-              <div class="rounded-md bg-muted/35 px-2.5 py-2">
+              <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
                 <dt class="text-[10px] text-muted-foreground">{t("dashboard.chartRange")}</dt>
                 <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{stats().minimum.toFixed(1)}–{stats().maximum.toFixed(1)}</dd>
               </div>

@@ -36,7 +36,10 @@ const page = <T,>(items: T[]) => ({ items, total: items.length, limit: 50, offse
 const course = { id: "course-1", title: "Algebra", capacity: 24 };
 
 vi.mock("@/api/time/getTime", () => ({ getTime: async () => ({ now }) }));
-vi.mock("@/api/courses", () => ({ getCourses: async () => page([course]) }));
+vi.mock("@/api/courses", () => ({
+  getCourses: async () => page([course]),
+  getCourseEnrollments: async () => page([]),
+}));
 vi.mock("@/api/reports", () => ({
   getMyCourses: async () => page([course]),
   getMyMarks: async () => ({
@@ -50,6 +53,17 @@ vi.mock("@/api/reports", () => ({
   getMyAttendance: async () => ({
     events: { total: 3, present: 2, absent: 1, late: 0, excused: 0 },
     sessions: { total: 2, present: 1, absent: 0, late: 1, excused: 0 },
+  }),
+  getUserAttendance: async () => ({
+    events: { total: 3, present: 2, absent: 1, late: 0, excused: 0 },
+    sessions: { total: 2, present: 1, absent: 0, late: 1, excused: 0 },
+  }),
+}));
+vi.mock("@/api/payments", () => ({
+  getPaymentStatementByUserId: async () => ({
+    student: { id: "child-1", username: "child", display_name: "Child" },
+    entries: page([]),
+    balance_minor: 0,
   }),
 }));
 vi.mock("@/api/exams", () => ({
@@ -129,6 +143,12 @@ vi.mock("@/api/meals", () => ({
 }));
 vi.mock("@/api/classes", () => ({
   getMyClasses: async () => page([{ id: "class-1", name: "9-A" }]),
+  getClassesByUserId: async () => page([]),
+  getClasses: async () => page([]),
+}));
+vi.mock("@/api/users", () => ({
+  getUsers: async () => page([]),
+  getUserSearch: async () => page([]),
 }));
 
 afterEach(() => {

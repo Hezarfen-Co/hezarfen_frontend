@@ -21,6 +21,10 @@ export default function RegisterPage() {
 function RegisterForm() {
   const navigate = useNavigate();
   const t = useT();
+  // Backend slug bounds (hezarfen_backend MIN_SLUG_LEN / MAX_SLUG_LEN).
+  const MIN_SCHOOL_SLUG_LEN = 2;
+  const MAX_SCHOOL_SLUG_LEN = 32;
+  const [school, setSchool] = createSignal("");
   const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
@@ -31,9 +35,14 @@ function RegisterForm() {
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
+    const s = school().trim();
     const u = username().trim();
     const p = password();
     const cp = confirmPassword();
+    if (s.length < MIN_SCHOOL_SLUG_LEN || s.length > MAX_SCHOOL_SLUG_LEN) {
+      setError(t("auth.schoolHint"));
+      return;
+    }
     const userLimits = limits()?.user;
     if (userLimits && (u.length < userLimits.min_username_len || u.length > userLimits.max_username_len)) {
       setError(t("auth.usernameHint"));
@@ -50,7 +59,7 @@ function RegisterForm() {
     setError("");
     setPending(true);
     try {
-      await postRegister({ username: u, password: p });
+      await postRegister({ school: s, username: u, password: p });
       void navigate({ to: "/login" });
     } catch (err) {
       setError(formatApiError(err));
@@ -68,6 +77,19 @@ function RegisterForm() {
         </div>
 
         <form class="space-y-5" onSubmit={handleSubmit}>
+          <div class="space-y-2">
+            <Label for="register-school">{t("auth.school")}</Label>
+            <Input
+              id="register-school"
+              class="h-9"
+              minlength={MIN_SCHOOL_SLUG_LEN}
+              maxlength={MAX_SCHOOL_SLUG_LEN}
+              required
+              value={school()}
+              onInput={(e) => setSchool(e.currentTarget.value)}
+            />
+          </div>
+
           <div class="space-y-2">
             <Label for="register-username">{t("auth.username")}</Label>
             <Input

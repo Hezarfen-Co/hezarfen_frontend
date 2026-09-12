@@ -13,28 +13,21 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
-import { IconBook, IconChart, IconChevronRight, IconClipboardCheck, IconExam, IconExternalLink, IconHomework } from "@/components/ui/icons";
+import { IconChart, IconChevronRight, IconClipboardCheck, IconExam, IconExternalLink, IconHomework, IconMessage } from "@/components/ui/icons";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { AttendanceReportView } from "@/components/attendance/attendance-report-view";
 import { examKindLabel } from "@/lib/exam-labels";
-import { cn } from "@/lib/cn";
 
-type StudentTab = "overview" | "courses" | "exams" | "homework" | "marks" | "attendance";
+type StudentTab = "marks" | "attendance" | "exams" | "homework";
 type CourseRow = MarksReport["courses"][number];
 type ExamRow = CourseRow["results"][number] & { courseTitle: string };
 
 function formatNumber(value: number | null) {
   if (value == null) return "—";
   return (Math.round(value * 10) / 10).toString();
-}
-
-function formatPercent(value: number | null) {
-  if (value == null) return "—";
-  return `${Math.round(value * 100)}%`;
 }
 
 export default function MyStudentsPage() {
@@ -59,19 +52,19 @@ function MyStudentsContent() {
       <Suspense fallback={<PageSpinner />}>
         <Show when={list()}>
           <Show when={list()!.length > 0} fallback={<EmptyState title={t("common.noResults")} />}>
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <For each={list()}>
                 {(student) => (
                   <button
                     type="button"
-                    class="group flex items-center justify-between rounded-lg border bg-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-muted/40"
+                    class="group flex min-w-0 items-center justify-between rounded-xl border border-border-line bg-surface-base p-4 text-left transition-colors hover:border-primary/50 hover:bg-surface-tint"
                     onClick={() => setSelectedStudent(student)}
                   >
                     <div class="min-w-0">
-                      <div class="truncate font-medium text-foreground">{personLabel(student)}</div>
-                      <div class="truncate text-sm text-muted-foreground">@{student.username}</div>
+                      <div class="truncate font-medium text-text-strong">{personLabel(student)}</div>
+                      <div class="truncate text-sm text-text-subtle">@{student.username}</div>
                     </div>
-                    <IconChevronRight class="h-5 w-5 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+                    <IconChevronRight class="h-5 w-5 shrink-0 text-text-subtle/70 transition-colors group-hover:text-primary" />
                   </button>
                 )}
               </For>
@@ -88,7 +81,7 @@ function MyStudentsContent() {
 function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => void }) {
   const t = useT();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = createSignal<StudentTab>("overview");
+  const [activeTab, setActiveTab] = createSignal<StudentTab>("marks");
 
   const [marksRes] = createResource(
     () => props.student?.id,
@@ -107,11 +100,10 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
   const studentClass = () => classesRes()?.[0] ?? null;
 
   createEffect(() => {
-    if (props.student?.id) setActiveTab("overview");
+    if (props.student?.id) setActiveTab("marks");
   });
 
   const report = () => marksRes() ?? null;
-  const attendance = () => attendanceRes() ?? null;
   const courseRows = createMemo<CourseRow[]>(() => report()?.courses ?? []);
   const examRows = createMemo<ExamRow[]>(() =>
     courseRows().flatMap((course) =>
@@ -121,7 +113,6 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
       })),
     ),
   );
-  const attendanceRate = () => attendance()?.sessions.rate ?? attendance()?.events.rate ?? null;
 
   const examColumns = createMemo<ColumnDef<ExamRow>[]>(() => [
     {
@@ -153,38 +144,59 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
     },
   ]);
 
+  // Ordered to match the Figma per-child screen set (Gelişim raporu →
+  // Devamsızlık → Sınav sonuçları); "Ödevler" has no Figma screen of its own
+  // but is kept — real, working functionality with nowhere else to live.
   const tabs: Array<{ key: StudentTab; icon: Component<{ class?: string }>; label: string }> = [
-    { key: "overview", icon: IconBook, label: t("dashboard.overview") },
-    { key: "courses", icon: IconBook, label: t("nav.courses") },
-    { key: "exams", icon: IconExam, label: t("nav.exams") },
-    { key: "homework", icon: IconHomework, label: t("nav.homework") },
-    { key: "marks", icon: IconChart, label: t("nav.marks") },
+    { key: "marks", icon: IconChart, label: t("nav.progressReport") },
     { key: "attendance", icon: IconClipboardCheck, label: t("nav.attendance") },
+    { key: "exams", icon: IconExam, label: t("nav.examResults") },
+    { key: "homework", icon: IconHomework, label: t("nav.homework") },
   ];
 
   return (
     <SidePanel open={!!props.student} onOpenChange={(open) => !open && props.onClose()} title={props.student ? personLabel(props.student) : ""} description={`@${props.student?.username}`}>
       <div class="flex h-full flex-col">
-        <div class="border-b p-4">
-          {/* A parent may read their linked students' profiles, so this is safe
-              — it 403s only for someone else's child. Close the panel before
-              navigating: a click that stays inside this modal never leaves it. */}
-          <Show when={props.student}>
-            {(s) => (
-              <Button
-                variant="outline"
-                size="sm"
-                class="mb-3 rounded-lg"
-                onClick={() => {
-                  props.onClose();
-                  void navigate({ to: "/profile/$userId", params: { userId: s().id } });
-                }}
-              >
-                <IconExternalLink class="mr-2 h-4 w-4" />
-                {t("profile.viewProfile")}
-              </Button>
-            )}
-          </Show>
+        <div class="border-b border-border-hairline p-4">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            {/* A parent may read their linked students' profiles, so this is safe
+                — it 403s only for someone else's child. Close the panel before
+                navigating: a click that stays inside this modal never leaves it. */}
+            <Show when={props.student}>
+              {(s) => (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="rounded-lg"
+                  onClick={() => {
+                    props.onClose();
+                    void navigate({ to: "/profile/$userId", params: { userId: s().id } });
+                  }}
+                >
+                  <IconExternalLink class="mr-2 h-4 w-4" />
+                  {t("profile.viewProfile")}
+                </Button>
+              )}
+            </Show>
+            <Show when={studentClass()}>
+              {(cls) => (
+                <span class="min-w-0 truncate text-xs text-text-subtle">
+                  {cls().name} · {t("classGroups.homeroomTeacher")}: {cls().teacher ? personLabel(cls().teacher!) : t("classGroups.noTeacher")}
+                </span>
+              )}
+            </Show>
+            <Button
+              size="sm"
+              class="rounded-lg"
+              onClick={() => {
+                props.onClose();
+                void navigate({ to: "/messages" });
+              }}
+            >
+              <IconMessage class="mr-2 h-4 w-4" />
+              {t("messages.newMessage")}
+            </Button>
+          </div>
           <div class="flex flex-wrap gap-2">
             <For each={tabs}>
               {(tab) => {
@@ -203,57 +215,6 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
         <div class="flex-1 overflow-auto p-4">
           <Suspense fallback={<PageSpinner />}>
             <Switch>
-              <Match when={activeTab() === "overview"}>
-                <div class="space-y-3">
-                  <div class="grid gap-3 sm:grid-cols-3">
-                    <article class="rounded-xl border border-border/80 bg-card p-4">
-                      <p class="text-xs font-medium text-muted-foreground">{t("dashboard.stats.average")}</p>
-                      <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatNumber(report()?.overall_average ?? null)}</p>
-                    </article>
-                    <article class="rounded-xl border border-border/80 bg-card p-4">
-                      <p class="text-xs font-medium text-muted-foreground">{t("nav.courses")}</p>
-                      <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{courseRows().length}</p>
-                    </article>
-                    <article class="rounded-xl border border-border/80 bg-card p-4">
-                      <p class="text-xs font-medium text-muted-foreground">{t("attendance.rate")}</p>
-                      <p class="mt-2 text-2xl font-semibold tabular-nums text-foreground">{formatPercent(attendanceRate())}</p>
-                    </article>
-                  </div>
-                  <Show when={studentClass()}>
-                    {(cls) => (
-                      <article class="flex flex-wrap items-center gap-2 rounded-xl border border-border/80 bg-card p-4 text-sm">
-                        <Badge variant="secondary" class="rounded-full">{cls().name}</Badge>
-                        <span class="text-muted-foreground">
-                          {t("classGroups.homeroomTeacher")}: {cls().teacher ? personLabel(cls().teacher!) : t("classGroups.noTeacher")}
-                        </span>
-                      </article>
-                    )}
-                  </Show>
-                </div>
-              </Match>
-
-              <Match when={activeTab() === "courses"}>
-                <Show when={courseRows().length > 0} fallback={<EmptyState title={t("common.noResults")} />}>
-                  <div class="space-y-3">
-                    <For each={courseRows()}>
-                      {(course) => (
-                        <article class="flex items-center justify-between gap-3 rounded-xl border border-border/80 bg-card p-4">
-                          <div class="min-w-0">
-                            <p class="truncate font-medium text-foreground">{course.course.title}</p>
-                            <p class="mt-1 text-xs text-muted-foreground">
-                              {course.results.length} {t("nav.exams")}
-                            </p>
-                          </div>
-                          <Badge variant="secondary" class={cn("mono rounded-full px-2.5 py-0.5 text-xs tabular-nums", course.average == null && "opacity-70")}>
-                            {formatNumber(course.average)}
-                          </Badge>
-                        </article>
-                      )}
-                    </For>
-                  </div>
-                </Show>
-              </Match>
-
               <Match when={activeTab() === "exams"}>
                 <Show when={examRows().length > 0} fallback={<DataTableEmpty>{t("exams.noResults")}</DataTableEmpty>}>
                   <DataTable class="min-w-0" columns={examColumns()} data={examRows()} tableClass="w-full min-w-176 text-sm" enableSorting={false} />

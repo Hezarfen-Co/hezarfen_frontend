@@ -13,13 +13,13 @@ describe("auth API", () => {
     const mockUser = { id: "u1", username: "test" };
     mockFetchSuccess(mockUser);
 
-    const result = await postLogin({ username: "test", password: "password" });
+    const result = await postLogin({ school: "demo", username: "test", password: "password" });
     expect(result).toEqual(mockUser);
 
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/auth/login");
     expect(init?.method).toBe("POST");
-    expect(init?.body).toBe(JSON.stringify({ username: "test", password: "password" }));
+    expect(init?.body).toBe(JSON.stringify({ school: "demo", username: "test", password: "password" }));
   });
 
   it("postLogout calls /auth/logout", async () => {
@@ -36,7 +36,7 @@ describe("auth API", () => {
     const mockUser = { id: "u2", username: "newuser" };
     mockFetchSuccess(mockUser);
 
-    const data = { username: "newuser", password: "password", email: "test@test.com" };
+    const data = { school: "demo", username: "newuser", password: "password", email: "test@test.com" };
     const result = await postRegister(data);
     expect(result).toEqual(mockUser);
 

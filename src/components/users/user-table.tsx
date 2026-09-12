@@ -42,7 +42,7 @@ function UserRoleActions(props: {
         ))}
       </Select>
       <Show when={!isSelf() && dirty()}>
-        <Button type="button" size="sm" class="mt-2 h-10 rounded-md px-3" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
+        <Button type="button" size="sm" class="mt-2" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
           <IconCheck />
           {t("common.update")}
         </Button>
@@ -116,10 +116,13 @@ export function UserTable(props: {
     {
       id: "actions",
       header: t("common.actions"),
-      size: 112,
-      minSize: 112,
+      size: 110,
+      minSize: 110,
       enableHiding: false,
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap", cellClass: "w-28 text-center" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}

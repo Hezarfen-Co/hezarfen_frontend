@@ -170,7 +170,7 @@ export function CourseHomeworkPanel(props: {
       id: "due_at",
       accessorFn: (row) => row.due_at,
       header: t("homework.dueAt"),
-      meta: { cellClass: "mono text-xs text-muted-foreground" },
+      meta: { cellClass: "mono text-xs text-text-subtle" },
       cell: (cell) => formatDateTime(cell.row.original.due_at, locale()),
     },
     {
@@ -234,14 +234,14 @@ export function CourseHomeworkPanel(props: {
           <div class="space-y-1.5">
             <Label for="homework-due-date">{t("homework.dueAt")}</Label>
             <div class="grid grid-cols-2 gap-2">
-              <DatePicker id="homework-due-date" class="h-10" placeholder={t("form.datePlaceholder")} value={dueDate()} required onChange={setDueDate} />
-              <Input class="h-10 rounded-sm font-mono placeholder:text-muted-foreground/35" placeholder="17:00" value={dueTime()} required onInput={(event) => setDueTime(event.currentTarget.value)} />
+              <DatePicker id="homework-due-date" class="h-9" placeholder={t("form.datePlaceholder")} value={dueDate()} required onChange={setDueDate} />
+              <Input class="h-9 rounded-md font-mono placeholder:text-text-placeholder" placeholder="17:00" value={dueTime()} required onInput={(event) => setDueTime(event.currentTarget.value)} />
             </div>
           </div>
-          <p class="rounded-xl border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">{t("homework.wholeCourseHelp")}</p>
+          <p class="rounded-xl border border-border-line bg-surface-tint px-3 py-2 text-xs text-text-subtle">{t("homework.wholeCourseHelp")}</p>
           <div class="flex flex-wrap gap-2">
-            <Button type="submit" class="rounded-xl" disabled={pending() || (subjects() ?? []).length === 0}>{editing() ? t("common.update") : t("common.create")}</Button>
-            <Button type="button" variant="outline" class="rounded-xl" onClick={() => setPanelOpen(false)}>{t("common.cancel")}</Button>
+            <Button type="submit" class="rounded-lg" disabled={pending() || (subjects() ?? []).length === 0}>{editing() ? t("common.update") : t("common.create")}</Button>
+            <Button type="button" variant="outline" class="rounded-lg" onClick={() => setPanelOpen(false)}>{t("common.cancel")}</Button>
           </div>
         </form>
       </SidePanel>

@@ -21,7 +21,9 @@ import { DropdownSelect } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createNow } from "@/lib/create-now";
+import { EXAM_KINDS } from "@/api/client";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDisplayStatus, examStatusMessageKey, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
 import { createFlash } from "@/lib/flash";
@@ -51,8 +53,15 @@ function ExamsContent() {
   const t = useT();
   const { locale } = usePreferences();
   const now = createNow();
-  const [statusFilter, setStatusFilter] = createSignal<ExamDisplayStatus | "all">("all");
+  type ExamTab = "all" | "upcoming" | "completed" | "draft";
+  const examTabGroup = (status: ExamDisplayStatus): ExamTab => {
+    if (status === "draft") return "draft";
+    if (status === "upcoming" || status === "active" || status === "unscheduled") return "upcoming";
+    return "completed";
+  };
+  const [tab, setTab] = createSignal<ExamTab>("all");
   const [courseFilter, setCourseFilter] = createSignal("all");
+  const [kindFilter, setKindFilter] = createSignal("all");
   const [createOpen, setCreateOpen] = createSignal(location().searchStr.includes("action=new"));
   createEffect(() => {
     if (location().searchStr.includes("action=new")) {
@@ -99,8 +108,9 @@ function ExamsContent() {
     const allowed = isStudent() ? new Set(visibleCourses().map((course) => course.id)) : null;
     return items.filter((exam) => {
       if (allowed && !allowed.has(exam.course)) return false;
-      if (statusFilter() !== "all" && examStatus(exam) !== statusFilter()) return false;
+      if (tab() !== "all" && examTabGroup(examStatus(exam)) !== tab()) return false;
       if (courseFilter() !== "all" && exam.course !== courseFilter()) return false;
+      if (kindFilter() !== "all" && String(exam.kind) !== kindFilter()) return false;
       return true;
     });
   };
@@ -177,7 +187,7 @@ function ExamsContent() {
       cell: (cell) => {
         const status = cell.row.original.displayStatus;
         return (
-          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap rounded-full", scheduleStatusClass(examStatusTone(status)))}>
+          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap", scheduleStatusClass(examStatusTone(status)))}>
             <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(status)))} />
             {statusLabel(status)}
           </Badge>
@@ -187,7 +197,10 @@ function ExamsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "text-center" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -265,80 +278,85 @@ function ExamsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-        <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-          <Show when={list.error}>
-            <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-          </Show>
-          <DataTable
-            title={t("exams.title")}
-            description={t("exams.subtitle")}
-            actions={
-              canCreate() ? (
-                <Button type="button" size="sm" class="min-w-30" onClick={openCreateModal}>
-                  <IconPlus class="h-4 w-4" />
-                  {t("exams.create")}
-                </Button>
-              ) : undefined
-            }
-            columns={columns()}
-            data={rows()}
-            tableClass="table-fixed min-w-5xl"
-            filterPlaceholder={t("exams.searchPlaceholder")}
-            searchPredicate={searchExam}
-            enablePagination
-            pageSize={EXAM_PAGE_SIZE}
-            empty={t("exams.empty")}
-            storageKey="exams"
-            onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
-            filters={
-              <div class="flex flex-wrap items-center gap-2.5">
-                <DropdownSelect
-                  labelPrefix={t("attempt.status")}
-                  value={statusFilter()}
-                  onChange={(val) => setStatusFilter(val as ExamDisplayStatus | "all")}
-                  options={[
-                    { value: "all", label: t("common.all") },
-                    { value: "active", label: t("exams.active") },
-                    { value: "upcoming", label: t("exams.upcoming") },
-                    { value: "submitted", label: t("attempt.submitted") },
-                    { value: "expired", label: t("attempt.expired") },
-                    { value: "draft", label: t("exams.draft") },
-                    { value: "finished", label: t("exams.finished") },
-                    { value: "unscheduled", label: t("exams.unscheduled") },
-                  ]}
-                />
+      <Tabs value={tab()} onChange={(value) => setTab(value as ExamTab)}>
+        <TabsList aria-label={t("exams.title")}>
+          <TabsTrigger value="all">{t("common.all")}</TabsTrigger>
+          <TabsTrigger value="upcoming">{t("exams.upcoming")}</TabsTrigger>
+          <TabsTrigger value="completed">{t("exams.finished")}</TabsTrigger>
+          <TabsTrigger value="draft">{t("exams.draft")}</TabsTrigger>
+        </TabsList>
 
-                <DropdownSelect
-                  labelPrefix={t("nav.courses")}
-                  value={courseFilter()}
-                  onChange={(val) => setCourseFilter(val)}
-                  options={[
-                    { value: "all", label: t("common.all") },
-                    ...visibleCourses().map((course) => ({ value: course.id, label: course.title })),
-                  ]}
-                />
+        <TabsContent value={tab()} class="mt-4 border-0 bg-transparent p-0 shadow-none">
+          <section class="data-shell space-y-4 p-4">
+            <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
+              <Show when={list.error}>
+                <Alert variant="destructive">{formatApiError(list.error)}</Alert>
+              </Show>
+              <DataTable
+                title={t("exams.title")}
+                description={t("exams.subtitle")}
+                actions={
+                  canCreate() ? (
+                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreateModal}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("exams.create")}
+                    </Button>
+                  ) : undefined
+                }
+                columns={columns()}
+                data={rows()}
+                tableClass="table-fixed min-w-5xl"
+                filterPlaceholder={t("exams.searchPlaceholder")}
+                searchPredicate={searchExam}
+                enablePagination
+                pageSize={EXAM_PAGE_SIZE}
+                empty={t("exams.empty")}
+                storageKey="exams"
+                onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
+                filters={
+                  <div class="flex flex-wrap items-center gap-2.5">
+                    <DropdownSelect
+                      labelPrefix={t("nav.courses")}
+                      value={courseFilter()}
+                      onChange={(val) => setCourseFilter(val)}
+                      options={[
+                        { value: "all", label: t("common.all") },
+                        ...visibleCourses().map((course) => ({ value: course.id, label: course.title })),
+                      ]}
+                    />
 
-                <Show when={statusFilter() !== "all" || courseFilter() !== "all"}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    class="h-9 rounded-md px-3 text-xs font-medium text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setStatusFilter("all");
-                      setCourseFilter("all");
-                    }}
-                  >
-                    <IconRotateCcw class="h-3.5 w-3.5 mr-1" />
-                    {t("common.resetFilters")}
-                  </Button>
-                </Show>
-              </div>
-            }
-          />
-        </Suspense>
-      </section>
+                    <DropdownSelect
+                      labelPrefix={t("exams.kind")}
+                      value={kindFilter()}
+                      onChange={(val) => setKindFilter(val)}
+                      options={[
+                        { value: "all", label: t("common.all") },
+                        ...EXAM_KINDS.map((kind) => ({ value: kind, label: examKindLabel(kind, t) })),
+                      ]}
+                    />
+
+                    <Show when={courseFilter() !== "all" || kindFilter() !== "all"}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        class="h-8 rounded-lg px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          setCourseFilter("all");
+                          setKindFilter("all");
+                        }}
+                      >
+                        <IconRotateCcw class="h-3.5 w-3.5 mr-1" />
+                        {t("common.resetFilters")}
+                      </Button>
+                    </Show>
+                  </div>
+                }
+              />
+            </Suspense>
+          </section>
+        </TabsContent>
+      </Tabs>
 
       <SidePanel
         open={createOpen()}
@@ -353,13 +371,13 @@ function ExamsContent() {
         description={createdExam() ? t("exams.step2Questions") : t("exams.subtitle")}
         size={createStep() === "questions" ? "wide" : "default"}
       >
-        <div class="mb-4 flex rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-1">
+        <div class="mb-4 flex rounded-md border border-border-line bg-surface-overlay p-1">
           <button
             type="button"
             class={cn(
-              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               createStep() === "details"
-                ? "bg-primary text-primary-foreground shadow-2xs"
+                ? "bg-surface-base text-foreground shadow-xs"
                 : "text-muted-foreground hover:bg-muted/50",
             )}
             onClick={() => setCreateStep("details")}
@@ -370,9 +388,9 @@ function ExamsContent() {
             type="button"
             disabled={!createdExam()}
             class={cn(
-              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               createStep() === "questions"
-                ? "bg-primary text-primary-foreground shadow-2xs"
+                ? "bg-surface-base text-foreground shadow-xs"
                 : createdExam()
                 ? "text-muted-foreground hover:bg-muted/50"
                 : "opacity-40 cursor-not-allowed text-muted-foreground",
@@ -385,7 +403,7 @@ function ExamsContent() {
 
         <Show when={createStep() === "details"}>
           <Show when={!createdExam()}>
-            <div class="mb-4 space-y-1.5 rounded-lg border border-sky-500/15 bg-sky-500/2.5 p-4">
+            <div class="mb-4 space-y-1.5 rounded-xl border border-border-line bg-surface-overlay p-4">
               <label class="text-sm font-medium" for="exam-course">
                 {t("exams.selectCourse")}
               </label>
@@ -431,13 +449,13 @@ function ExamsContent() {
         <Show when={editingExam()}>
           {(exam) => (
             <div class="space-y-4">
-              <div class="flex rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-1">
+              <div class="flex rounded-md border border-border-line bg-surface-overlay p-1">
                 <button
                   type="button"
                   class={cn(
-                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                     editTab() === "details"
-                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      ? "bg-surface-base text-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",
                   )}
                   onClick={() => setEditTab("details")}
@@ -447,9 +465,9 @@ function ExamsContent() {
                 <button
                   type="button"
                   class={cn(
-                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                     editTab() === "questions"
-                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      ? "bg-surface-base text-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",
                   )}
                   onClick={() => setEditTab("questions")}

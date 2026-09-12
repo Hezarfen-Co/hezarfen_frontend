@@ -16,7 +16,7 @@ export function PageHeader(
   return (
     <div
       class={cn(
-        "rounded-xl border border-border/60 bg-card text-card-foreground shadow-sm",
+        "text-foreground",
         props.class,
       )}
     >
@@ -24,8 +24,8 @@ export function PageHeader(
         class={cn(
           "flex flex-col sm:flex-row sm:items-center sm:justify-between",
           props.compact
-            ? "gap-3 px-4 py-3 sm:px-5 sm:py-3.5"
-            : "gap-4 px-4 py-4 sm:px-5 sm:py-5",
+            ? "min-h-[66px] gap-3 py-1"
+            : "min-h-[66px] gap-4 py-1",
         )}
       >
         <div class={cn("min-w-0", props.compact ? "space-y-0.5" : "max-w-2xl space-y-1")}>
@@ -35,7 +35,9 @@ export function PageHeader(
           <h1
             class={cn(
               "font-semibold tracking-tight",
-              props.compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl",
+              props.compact
+                ? "text-xl leading-7 sm:text-[28px] sm:leading-9"
+                : "text-2xl leading-8 sm:text-[28px] sm:leading-9",
             )}
           >
             {props.title}

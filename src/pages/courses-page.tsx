@@ -123,13 +123,13 @@ function CoursesContent() {
   };
 
   return (
-    <div class="space-y-5">
+    <div class="space-y-6">
       <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: kindInSentence() })} description={t("courses.subtitle", { item: kindLabel() })}>
         <form class="space-y-4" onSubmit={createCourse}>
           <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
-          <div class="flex items-center justify-between rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <div class="flex items-center justify-between rounded-xl border border-border-line bg-surface-tint px-3 py-2 text-xs text-text-subtle">
             <span>{t("exams.kind")}</span>
-            <span class="font-medium text-foreground">{kindLabelSingular()}</span>
+            <span class="font-medium text-text-default">{kindLabelSingular()}</span>
           </div>
           <div class="space-y-3">
             <div class="space-y-1.5"><Label for="course-title">{t("form.title")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="course-title" required maxlength={limits.latest?.course.max_title_len} value={title()} onInput={(e) => setTitle(e.currentTarget.value)} /></div>
@@ -143,10 +143,10 @@ function CoursesContent() {
         </form>
       </SidePanel>
 
-      <header class="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
+      <header class="flex flex-wrap items-end justify-between gap-4 border-b border-border-hairline pb-5">
         <div class="space-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight">{pageLabel()}</h1>
-          <p class="text-sm text-muted-foreground">{t("courses.pageSubtitle")}</p>
+          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{pageLabel()}</h1>
+          <p class="text-sm text-text-subtle">{t("courses.pageSubtitle")}</p>
         </div>
         <Show when={canCreate()}>
           <Button size="sm" class="min-w-30 rounded-lg" onClick={() => setShowForm(true)}>
@@ -178,14 +178,14 @@ function CoursesContent() {
         </TabsList>
 
         <TabsContent value={pageKind() ?? "all"} class="mt-4 space-y-4 border-0 bg-transparent p-0 shadow-none">
-          <section class="rounded-lg border border-border bg-card p-3 shadow-xs" aria-label={t("common.search")}>
+          <section class="rounded-xl border border-border-line bg-surface-base p-3" aria-label={t("common.search")}>
             <DataToolbar
               inline
               searchValue={search()}
               searchPlaceholder={t("common.searchPlaceholder")}
               onSearchInput={setSearch}
               filters={
-                <Select wrapperClass="w-40 shrink-0 sm:w-52" class="h-9 rounded-md" aria-label={t("terms.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)}>
+                <Select wrapperClass="w-40 shrink-0 sm:w-52" class="h-8 rounded-lg" aria-label={t("terms.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)}>
                   <option value="all">{t("common.all")}</option>
                   <option value="unassigned">{t("terms.unassigned")}</option>
                   <For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
@@ -203,18 +203,25 @@ function CoursesContent() {
                 when={filteredCourses().length > 0}
                 fallback={<EmptyState kind="courses" title={t("courses.empty", { item: kindLabel() })} />}
               >
-                <div class={list.loading ? "space-y-2 opacity-60 transition-opacity" : "space-y-2 transition-opacity"}>
+                <div class={list.loading ? "grid grid-cols-1 gap-3 opacity-60 transition-opacity sm:grid-cols-2 xl:grid-cols-3" : "grid grid-cols-1 gap-3 transition-opacity sm:grid-cols-2 xl:grid-cols-3"}>
                   <For each={visibleCourses()}>
                     {(course) => (
                       <CourseCard
                         course={course}
                         term={termName(course.term)}
                         enrolled={auth.user()?.role === "student"}
+                        showTeacherActions={hasMinRole(auth.user()?.role, "teacher")}
                         labels={{
                           capacity: t("courses.capacity"),
                           unlimited: t("courses.unlimited"),
                           enrolled: t("courses.enrolled"),
                           kind: courseKindLabel(course.kind, t),
+                          weeklyHours: t("courses.weeklyHours"),
+                          competency: t("courses.competency"),
+                          attendance: t("courses.attendanceRate"),
+                          progress: t("courses.progress"),
+                          takeAttendance: t("courses.takeAttendance"),
+                          analysis: t("courses.analysis"),
                         }}
                       />
                     )}

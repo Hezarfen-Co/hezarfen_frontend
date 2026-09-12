@@ -14,6 +14,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ComingSoonValue } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DetailField } from "@/components/ui/detail-field";
 import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
@@ -88,7 +89,7 @@ function BankQuestionDetailContent() {
         }
       >
         {(current) => (
-          <div class="space-y-5">
+          <div class="mx-auto w-full max-w-[1100px] space-y-6">
             <Show when={error()}>
               <Alert variant="destructive">{error()}</Alert>
             </Show>
@@ -105,11 +106,11 @@ function BankQuestionDetailContent() {
                     </Button>
                   </Link>
                   <Show when={canEdit()}>
-                    <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                    <Button variant="outline" size="sm" class="rounded-lg" onClick={() => setEditing(true)}>
                       <IconEdit class="h-4 w-4" />
                       {t("common.edit")}
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
+                    <Button variant="destructive" size="sm" class="rounded-lg" onClick={() => setDeleteOpen(true)}>
                       <IconTrash class="h-4 w-4" />
                       {t("common.delete")}
                     </Button>
@@ -128,6 +129,18 @@ function BankQuestionDetailContent() {
                 <DetailField label={t("bank.whoCanSee")} value={current().visibility === "school" ? t("bank.sharedWithSchool") : t("bank.onlyMe")} />
                 <DetailField label={t("exams.title")} value={current().source_exam || "—"} mono />
                 <DetailField label={t("admin.id")} value={current().id} mono />
+                <div class="min-w-0 space-y-1">
+                  <p class="text-xs font-medium text-muted-foreground">{t("bank.difficulty")}</p>
+                  <ComingSoonValue />
+                </div>
+                <div class="min-w-0 space-y-1">
+                  <p class="text-xs font-medium text-muted-foreground">{t("bank.correctRate")}</p>
+                  <ComingSoonValue />
+                </div>
+                <div class="min-w-0 space-y-1">
+                  <p class="text-xs font-medium text-muted-foreground">{t("bank.objective")}</p>
+                  <ComingSoonValue />
+                </div>
               </div>
 
               <Show when={current().image}>
@@ -135,7 +148,7 @@ function BankQuestionDetailContent() {
                   <img
                     src={`/api/bank-questions/${current().id}/image`}
                     alt={t("questions.image")}
-                    class="max-h-80 rounded-lg border object-contain"
+                    class="max-h-80 rounded-lg border border-border-line bg-surface-overlay object-contain"
                   />
                   <Show when={canEdit()}>
                     <Button
@@ -154,10 +167,10 @@ function BankQuestionDetailContent() {
 
               <Show when={current().choices?.length}>
                 <div class="space-y-2">
-                  <p class="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("questions.correct")}</p>
+                  <p class="text-xs font-medium text-text-subtle">{t("questions.correct")}</p>
                   <For each={current().choices ?? []}>
                     {(choice, index) => (
-                      <div class="flex items-center gap-3 rounded-lg border bg-card px-3 py-2.5">
+                      <div class="flex items-center gap-3 rounded-md border border-border-line bg-surface-overlay px-3 py-2.5">
                         <Badge variant={choice.id === current().correct ? "default" : "outline"}>{index() + 1}</Badge>
                         <span class="min-w-0 flex-1">{choice.text}</span>
                         <Show when={current().choice_images?.[index()]}>

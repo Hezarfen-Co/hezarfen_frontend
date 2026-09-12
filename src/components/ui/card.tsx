@@ -7,7 +7,7 @@ export function Card(props: ParentProps<ComponentProps<"div">>) {
   return (
     <div
       class={cn(
-        "rounded-lg border bg-card text-card-foreground shadow-sm",
+        "rounded-lg border border-border-line bg-surface-base text-card-foreground shadow-sm",
         local.class,
       )}
       {...rest}

@@ -42,9 +42,9 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
   });
 
   return (
-    <div class={cn("flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm", props.class)}>
+    <div class={cn("flex flex-col gap-4 rounded-xl border border-border-line bg-surface-base p-4", props.class)}>
       <Show when={props.title}>
-        <div class="border-b border-border pb-3">
+        <div class="border-b border-border-hairline pb-3">
           <div>
             <h3 class="text-sm font-semibold tracking-tight text-foreground">{props.title}</h3>
             <Show when={props.subtitle}>
@@ -75,7 +75,7 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
           </div>
 
           {/* Multi-Segmented Progress Gauge Bar */}
-          <div class="flex h-3.5 w-full overflow-hidden rounded-full bg-muted/60 dark:bg-muted/40 p-0.5 border border-border/40">
+          <div class="flex h-3.5 w-full overflow-hidden rounded-full border border-border-hairline bg-surface-fill p-0.5">
             <For each={props.segments}>
               {(segment) => {
                 const pct = () => (calculatedTotal() > 0 ? (segment.value / calculatedTotal()) * 100 : 0);
@@ -96,7 +96,7 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
           <div class="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-2">
             <For each={visibleSegments()}>
               {(segment) => (
-                <div class="flex items-center justify-between rounded-xl border border-border/40 bg-muted/30 px-3 py-2 text-xs">
+                <div class="flex items-center justify-between rounded-lg border border-border-hairline bg-surface-overlay px-3 py-2 text-xs">
                   <div class="flex items-center gap-2 truncate">
                     <span class={cn("h-2.5 w-2.5 shrink-0 rounded-full", segment.colorClass)} />
                     <span class="truncate font-medium text-muted-foreground">{segment.label}</span>

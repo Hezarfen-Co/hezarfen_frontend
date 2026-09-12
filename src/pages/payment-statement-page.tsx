@@ -76,12 +76,12 @@ function StatementContent() {
     {
       id: "plan",
       header: t("payments.planName"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.plan_name ?? "—"}</span>,
+      cell: (cell) => <span class="block truncate font-medium">{cell.row.original.plan_name ?? "—"}</span>,
     },
     {
       accessorKey: "due_at",
       header: t("payments.due"),
-      cell: (cell) => <span class="mono text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
+      cell: (cell) => <span class="mono block whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
     },
     {
       accessorKey: "outstanding_minor",
@@ -99,7 +99,10 @@ function StatementContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -128,11 +131,31 @@ function StatementContent() {
         </div>
       </Show>
 
-      <div class="grid gap-3 sm:grid-cols-3">
-        <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.totalDebt")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().billed, moneyLocale())}</p></div>
-        <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.collected")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().collected, moneyLocale())}</p></div>
-        <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.balance")}</p><p class="mt-1 text-2xl font-semibold tabular-nums" classList={{ "text-destructive": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p></div>
-      </div>
+      <section class="rounded-xl border border-border-line bg-surface-base p-4">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <p class="text-sm font-medium text-text-subtle">{t("payments.collected")}</p>
+          <p class="mono text-lg font-semibold tabular-nums text-text-strong">
+            {formatTry(summary().collected, moneyLocale())}
+            <span class="font-normal text-text-subtle"> / {formatTry(summary().billed, moneyLocale())}</span>
+          </p>
+        </div>
+        <div class="mt-3 h-2 overflow-hidden rounded-full bg-surface-tint">
+          <div
+            class="h-full rounded-full bg-primary"
+            style={{ width: `${summary().billed > 0 ? Math.max(0, Math.min(100, Math.round((summary().collected / summary().billed) * 100))) : 0}%` }}
+          />
+        </div>
+        <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <p class="text-xs font-medium text-text-subtle">{t("payments.totalDebt")}</p>
+            <p class="mt-1 font-semibold tabular-nums text-text-strong">{formatTry(summary().billed, moneyLocale())}</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-text-subtle">{t("payments.balance")}</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums" classList={{ "text-destructive": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p>
+          </div>
+        </div>
+      </section>
 
       <section class="space-y-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={6} />}>
@@ -161,7 +184,7 @@ function StatementContent() {
       >
         <Show when={viewEntry()} keyed>
           {(entry) => (
-            <div class="grid gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <DetailField label={t("payments.amountTry")} value={formatTry(entry.amount_minor, moneyLocale())} />
               <DetailField label={t("payments.credited")} value={formatTry(entry.credited_minor, moneyLocale())} />
               <DetailField label={t("payments.outstanding")} value={formatTry(entry.outstanding_minor, moneyLocale())} />

@@ -1,31 +1,63 @@
-import { Show, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteWorkEntryById } from "@/api/work";
 import { getUserSearch } from "@/api/users";
 import { getUserWorkLog } from "@/api/work";
 import { patchWorkEntryById } from "@/api/work";
-import { ApiError, formatApiError } from "@/api/client";
-import type { PersonRef, WorkEntry } from "@/api/client";
+import { formatApiError } from "@/api/client";
+import { ApiError } from "@/api/client";
+import type { Page, PersonRef, WorkEntry } from "@/api/client";
+import type { Locale } from "@/i18n/messages";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createFlash } from "@/lib/flash";
 import { DatePicker } from "@/components/ui/date-picker";
-import { IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
+import { IconChevronRight, IconEdit, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const PEOPLE_PAGE_SIZE = 10;
+const PEOPLE_PAGE_SIZE = 9;
 const WORK_PAGE_SIZE = 15;
+// Enough to cover a normal check-in/out cadence for one person; when a
+// person's true total exceeds this, we know the fetched page is a partial
+// log and stop deriving "latest activity" / "days this month" from it rather
+// than risk a number that looks precise but silently excludes older rows the
+// backend might have ordered differently than expected.
+const WORK_LOG_FETCH_LIMIT = 500;
+
+type StaffCardStats = {
+  total: number;
+  latest: WorkEntry | null;
+  daysThisMonth: number | null;
+};
+
+function summarizeWorkLog(log: Page<WorkEntry>): StaffCardStats {
+  const complete = log.total <= log.items.length;
+  const latest = log.items.reduce<WorkEntry | null>((max, entry) => (!max || entry.check_in > max.check_in ? entry : max), null);
+  if (!complete) return { total: log.total, latest: null, daysThisMonth: null };
+  const now = new Date();
+  const days = new Set(
+    log.items
+      .filter((entry) => {
+        const d = new Date(entry.check_in);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      })
+      .map((entry) => new Date(entry.check_in).toDateString()),
+  );
+  return { total: log.total, latest, daysThisMonth: days.size };
+}
 function msToDateInput(ms: number): string {
   const d = new Date(ms);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -108,44 +140,45 @@ function StaffWorkContent() {
     { initialValue: emptyEntries },
   );
 
-  const peopleTotal = () => people().length;
-  const peopleRows = () => people();
+  const [staffSearch, setStaffSearch] = createSignal("");
+  const [staffPage, setStaffPage] = createSignal(0);
+
   const entryRows = () => entries().items;
   const peopleLoading = () => people.loading;
   const searchPerson = (person: PersonRef, query: string) =>
     [person.username, person.display_name, person.id].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase());
-  const peopleColumns = createMemo<ColumnDef<PersonRef>[]>(() => [
-    {
-      accessorKey: "username",
-      header: t("admin.username"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.username}</span>,
+
+  const filteredPeople = createMemo(() => {
+    const q = staffSearch().trim();
+    return q ? people().filter((person) => searchPerson(person, q)) : people();
+  });
+  const staffPageCount = createMemo(() => Math.max(1, Math.ceil(filteredPeople().length / PEOPLE_PAGE_SIZE)));
+  const pagedPeople = createMemo(() => filteredPeople().slice(staffPage() * PEOPLE_PAGE_SIZE, staffPage() * PEOPLE_PAGE_SIZE + PEOPLE_PAGE_SIZE));
+  createEffect(() => {
+    staffSearch();
+    setStaffPage(0);
+  });
+
+  // Card stats are only fetched for the staff on the visible page — the same
+  // "bounded to what's on screen" shape as the payments roster balances and
+  // the classes-page member counts, so paging through the whole staff list
+  // never fires more than PEOPLE_PAGE_SIZE work-log requests at once.
+  const [cardStats] = createResource(
+    () => pagedPeople().map((person) => person.id),
+    async (ids) => {
+      const rows = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            return [id, summarizeWorkLog(await getUserWorkLog(id, { limit: WORK_LOG_FETCH_LIMIT }))] as const;
+          } catch {
+            return [id, null] as const;
+          }
+        }),
+      );
+      return new Map(rows);
     },
-    {
-      accessorKey: "display_name",
-      header: t("profile.name"),
-      cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
-    },
-    {
-      id: "actions",
-      header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
-      cell: (cell) => (
-        <TableRowActions
-          label={t("common.actions")}
-          actions={[
-            {
-              label: t("common.view"),
-              icon: <IconEye class="h-4 w-4" />,
-              onSelect: () => {
-                setError("");
-                setViewUser(cell.row.original);
-              },
-            },
-          ]}
-        />
-      ),
-    },
-  ]);
+  );
+
   const entryColumns = createMemo<ColumnDef<WorkEntry>[]>(() => [
     {
       id: "time",
@@ -168,12 +201,15 @@ function StaffWorkContent() {
     {
       id: "status",
       header: t("work.status"),
-      cell: (cell) => <Badge variant={cell.row.original.check_out == null ? "default" : "secondary"} class="rounded-sm">{cell.row.original.check_out == null ? t("work.open") : t("work.closed")}</Badge>,
+      cell: (cell) => <Badge variant={cell.row.original.check_out == null ? "default" : "secondary"}>{cell.row.original.check_out == null ? t("work.open") : t("work.closed")}</Badge>,
     },
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -243,30 +279,54 @@ function StaffWorkContent() {
         <Alert variant="success">{flash()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
-        <Show when={error() && !viewUser() && !editTarget()}>
-          <Alert variant="destructive">{error()}</Alert>
-        </Show>
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="space-y-1">
+          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("work.staffTitle")}</h1>
+          <p class="text-sm text-text-subtle">{t("work.staffSubtitle")}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+            {t("work.addEntry")}
+            <ComingSoonBadge class="ml-1.5" />
+          </Button>
+          <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+            {t("work.planShift")}
+            <ComingSoonBadge class="ml-1.5" />
+          </Button>
+        </div>
+      </div>
 
-        <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
-          <DataTable
-            title={t("work.staffTitle")}
-            description={`${t("work.staffSubtitle")} · ${peopleRows().length} / ${peopleTotal()}`}
-            columns={peopleColumns()}
-            data={peopleRows()}
-            tableClass="min-w-xl"
-            empty={t("work.noTeachers")}
-            searchPredicate={searchPerson}
-            enablePagination
-            pageSize={PEOPLE_PAGE_SIZE}
-            storageKey="staff-work-people"
-            onRowClick={(person) => {
-              setError("");
-              setViewUser(person);
-            }}
-          />
+      <Show when={error() && !viewUser() && !editTarget()}>
+        <Alert variant="destructive">{error()}</Alert>
+      </Show>
+
+      <Input
+        value={staffSearch()}
+        onInput={(e) => setStaffSearch(e.currentTarget.value)}
+        placeholder={t("work.searchPlaceholder")}
+        class="h-9 max-w-md rounded-lg"
+      />
+
+      <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
+        <Show when={pagedPeople().length > 0} fallback={<EmptyState title={t("work.noTeachers")} />}>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <For each={pagedPeople()}>
+              {(person) => (
+                <StaffCard
+                  person={person}
+                  stats={cardStats()?.get(person.id) ?? undefined}
+                  locale={locale()}
+                  onClick={() => {
+                    setError("");
+                    setViewUser(person);
+                  }}
+                />
+              )}
+            </For>
+          </div>
+          <PaginationControls page={staffPage()} totalPages={staffPageCount()} onPageChange={setStaffPage} />
         </Show>
-      </section>
+      </Show>
 
       <SidePanel
         size="wide"
@@ -315,22 +375,22 @@ function StaffWorkContent() {
           <div class="space-y-1.5">
             <Label>{t("work.checkIn")}</Label>
             <div class="grid grid-cols-2 gap-2">
-              <DatePicker id="staff-check-in-date" class="h-10" placeholder={t("form.datePlaceholder")} value={checkInDate()} required onChange={setCheckInDate} />
-              <Input class="h-10 rounded-sm font-mono" placeholder="09:00" value={checkInTime()} required onInput={(e) => setCheckInTime(e.currentTarget.value)} />
+              <DatePicker id="staff-check-in-date" class="h-9" placeholder={t("form.datePlaceholder")} value={checkInDate()} required onChange={setCheckInDate} />
+              <Input class="h-9 rounded-md font-mono" placeholder="09:00" value={checkInTime()} required onInput={(e) => setCheckInTime(e.currentTarget.value)} />
             </div>
           </div>
           <div class="space-y-1.5">
             <Label>{t("work.checkOut")}</Label>
             <div class="grid grid-cols-2 gap-2">
-              <DatePicker id="staff-check-out-date" class="h-10" placeholder={t("form.datePlaceholder")} value={checkOutDate()} required onChange={setCheckOutDate} />
-              <Input class="h-10 rounded-sm font-mono" placeholder="17:00" value={checkOutTime()} required onInput={(e) => setCheckOutTime(e.currentTarget.value)} />
+              <DatePicker id="staff-check-out-date" class="h-9" placeholder={t("form.datePlaceholder")} value={checkOutDate()} required onChange={setCheckOutDate} />
+              <Input class="h-9 rounded-md font-mono" placeholder="17:00" value={checkOutTime()} required onInput={(e) => setCheckOutTime(e.currentTarget.value)} />
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setEditTarget(null)}>
+            <Button type="button" variant="outline" onClick={() => setEditTarget(null)}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending() || !checkInDate().trim() || !checkInTime().trim() || !checkOutDate().trim() || !checkOutTime().trim()}>
+            <Button type="submit" disabled={pending() || !checkInDate().trim() || !checkInTime().trim() || !checkOutDate().trim() || !checkOutTime().trim()}>
               {t("common.update")}
             </Button>
           </div>
@@ -360,5 +420,75 @@ function StaffWorkContent() {
         }}
       />
     </div>
+  );
+}
+
+function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | undefined; locale: Locale; onClick: () => void }) {
+  const t = useT();
+  const latest = () => props.stats?.latest ?? null;
+  const isOpen = () => latest() != null && latest()!.check_out == null;
+  const duration = () => {
+    const entry = latest();
+    if (!entry) return null;
+    return entry.check_out == null ? Date.now() - entry.check_in : entry.duration_ms;
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={props.onClick}
+      class="flex flex-col gap-3 rounded-lg border border-border-line bg-surface-base p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <div class="flex items-center gap-2.5">
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-[15px] font-semibold text-text-strong">{props.person.display_name || props.person.username}</p>
+          <p class="truncate text-xs text-text-subtle">@{props.person.username}</p>
+        </div>
+        <Show when={isOpen()}>
+          <Badge>{t("work.open")}</Badge>
+        </Show>
+        <ComingSoonBadge class="shrink-0" />
+        <IconChevronRight class="h-4 w-4 shrink-0 text-text-subtle" />
+      </div>
+      <div class="flex items-center justify-between gap-2 text-xs">
+        <span class="text-text-subtle">{t("work.location")}</span>
+        <ComingSoonValue />
+      </div>
+
+      <Show
+        when={latest()}
+        fallback={<p class="text-xs text-text-subtle">{t("work.noActivity")}</p>}
+      >
+        {(entry) => (
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <div>
+              <p class="text-text-subtle">{t("work.checkIn")}</p>
+              <p class="mono font-medium text-text-default">{formatDateTime(entry().check_in, props.locale)}</p>
+            </div>
+            <div>
+              <p class="text-text-subtle">{t("work.checkOut")}</p>
+              <p class="mono font-medium text-text-default">{entry().check_out == null ? "—" : formatDateTime(entry().check_out, props.locale)}</p>
+            </div>
+            <div>
+              <p class="text-text-subtle">{t("work.duration")}</p>
+              <p class="mono font-medium text-text-default">{duration() == null ? "—" : formatDurationMinutes(duration(), props.locale)}</p>
+            </div>
+          </div>
+        )}
+      </Show>
+
+      <div class="border-t border-border-hairline pt-2 text-xs text-text-subtle">
+        <Show
+          when={props.stats?.daysThisMonth != null}
+          fallback={<Show when={props.stats}>{t("work.totalEntries", { count: String(props.stats?.total ?? 0) })}</Show>}
+        >
+          {t("work.daysThisMonth", { count: String(props.stats?.daysThisMonth) })}
+        </Show>
+      </div>
+      <div class="flex items-center justify-between gap-2 text-xs">
+        <span class="text-text-subtle">{t("work.quality")}</span>
+        <ComingSoonValue />
+      </div>
+    </button>
   );
 }

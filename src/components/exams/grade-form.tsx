@@ -73,7 +73,7 @@ export function GradeForm(props: {
             <Label for="grade-mark">{t("form.mark")}</Label>
             <Input
               id="grade-mark"
-              class="rounded-sm"
+              class="rounded-md"
               type="number"
               min={0}
               max={100}

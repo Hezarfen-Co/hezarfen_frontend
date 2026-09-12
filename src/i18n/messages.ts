@@ -64,6 +64,14 @@ export type MessageKey =
   | "classGroups.noTeacher"
   | "classGroups.selectTeacher"
   | "classGroups.yourClass"
+  | "classGroups.searchPlaceholder"
+  | "classGroups.allGrades"
+  | "classGroups.studentsCount"
+  | "classGroups.noGrade"
+  | "classGroups.attendanceRate"
+  | "classGroups.competency"
+  | "classGroups.weakestTopic"
+  | "classGroups.mergeClasses"
   | "classBlueprints.tab"
   | "classBlueprints.classesTab"
   | "classBlueprints.title"
@@ -258,6 +266,45 @@ export type MessageKey =
   | "nav.group.grades"
   | "nav.group.community"
   | "nav.group.services"
+  | "nav.group.operations"
+  | "nav.group.ai"
+  | "nav.group.institution"
+  | "nav.group.myClassroom"
+  | "nav.group.study"
+  | "nav.group.other"
+  | "nav.group.myStudent"
+  | "nav.studentsRoster"
+  | "nav.teachersRoster"
+  | "nav.schedule"
+  | "nav.mySchedule"
+  | "nav.mockExams"
+  | "nav.opticalReading"
+  | "nav.hezarfenZeka"
+  | "nav.celebi"
+  | "nav.soundStudio"
+  | "nav.reports"
+  | "nav.licenseModules"
+  | "nav.dataProtection"
+  | "nav.schoolMeals"
+  | "nav.myClasses"
+  | "nav.studentAnalysis"
+  | "nav.pendingApprovals"
+  | "nav.questionGeneration"
+  | "nav.parentCommunication"
+  | "nav.studyPlan"
+  | "nav.topicMastery"
+  | "nav.examResults"
+  | "nav.myHomework"
+  | "nav.progressReport"
+  | "nav.absence"
+  | "nav.childExamResults"
+  | "nav.childStudyPlan"
+  | "nav.appointmentsAndCommunication"
+  | "nav.soon"
+  | "comingSoon.title"
+  | "comingSoon.description"
+  | "comingSoon.emptyTitle"
+  | "comingSoon.emptyDescription"
   | "nav.darkMode"
   | "rightPanel.messagesTitle"
   | "rightPanel.calendarTitle"
@@ -270,6 +317,13 @@ export type MessageKey =
   | "notifications.clearAll"
   | "notifications.dismiss"
   | "notifications.empty"
+  | "notifications.tabAll"
+  | "notifications.tabSystem"
+  | "errors.notFoundDescription"
+  | "errors.accessDeniedDescription"
+  | "network.offlineTitle"
+  | "network.offlineDescription"
+  | "network.reconnect"
   | "parents.title"
   | "parents.subtitle"
   | "common.loading"
@@ -357,6 +411,8 @@ export type MessageKey =
   | "auth.login"
   | "auth.register"
   | "auth.username"
+  | "auth.school"
+  | "auth.schoolHint"
   | "auth.password"
   | "auth.noAccount"
   | "auth.hasAccount"
@@ -520,12 +576,14 @@ export type MessageKey =
   | "dashboard.col.status"
   | "dashboard.type.exam"
   | "dashboard.type.event"
+  | "dashboard.type.payment"
   | "dashboard.type.appointment"
   | "dashboard.type.homework"
   | "dashboard.stats.attendance"
   | "dashboard.stats.homework"
   | "dashboard.stats.students"
   | "dashboard.stats.children"
+  | "dashboard.stats.childAttendance"
   | "dashboard.stats.meals"
   | "dashboard.stats.appointments"
   | "dashboard.attend.present"
@@ -539,6 +597,39 @@ export type MessageKey =
   | "dashboard.quickReview.placeholder"
   | "dashboard.quickReview.practice"
   | "dashboard.quickReview.startQuiz"
+  | "dashboard.analytics"
+  | "dashboard.hero.heading"
+  | "dashboard.hero.searchPlaceholder"
+  | "dashboard.hero.searchEmpty"
+  | "dashboard.teacher.pendingAppointments"
+  | "dashboard.teacher.pendingAppointmentsDesc"
+  | "dashboard.teacher.pendingAppointmentsEmpty"
+  | "dashboard.teacher.schedule"
+  | "dashboard.teacher.classPerformance"
+  | "dashboard.student.thisWeek"
+  | "dashboard.student.thisWeekDesc"
+  | "dashboard.student.thisWeekTotal"
+  | "dashboard.student.todayPlan"
+  | "dashboard.student.mastery"
+  | "dashboard.student.audioWorkshop"
+  | "dashboard.parent.progress"
+  | "dashboard.parent.teacherNotes"
+  | "dashboard.parent.child"
+  | "dashboard.parent.homeroom"
+  | "dashboard.parent.attendanceDetail"
+  | "dashboard.parent.attendanceDetailDesc"
+  | "dashboard.parent.attendanceRate"
+  | "dashboard.parent.payment"
+  | "dashboard.parent.paymentDesc"
+  | "dashboard.parent.paymentEmpty"
+  | "dashboard.parent.installmentsPaid"
+  | "dashboard.parent.nextInstallment"
+  | "dashboard.parent.balance"
+  | "dashboard.quicklinks.students"
+  | "dashboard.quicklinks.classes"
+  | "dashboard.quicklinks.modules"
+  | "dashboard.quicklinks.empty"
+  | "dashboard.admin.rangeThisMonth"
   | "courseNotes.title"
   | "courseNotes.item"
   | "courseNotes.new"
@@ -734,6 +825,7 @@ export type MessageKey =
   | "bank.edit"
   | "bank.owner"
   | "bank.mine"
+  | "bank.usedCount"
   | "bank.created"
   | "bank.copyNotice"
   | "bank.courseHint"
@@ -771,6 +863,13 @@ export type MessageKey =
   | "bank.refresh"
   | "bank.refreshTitle"
   | "bank.refreshBody"
+  | "bank.difficulty"
+  | "bank.correctRate"
+  | "bank.objective"
+  | "bank.source"
+  | "bank.source.institution"
+  | "bank.source.publisher"
+  | "bank.source.ai"
   | "bank.refreshConfirm"
   | "bank.refreshed"
   | "subjects.title"
@@ -853,6 +952,13 @@ export type MessageKey =
   | "exams.helpBody"
   | "admin.title"
   | "admin.subtitle"
+  | "admin.tabAll"
+  | "admin.tabManagers"
+  | "admin.tabTeachers"
+  | "admin.tabParents"
+  | "admin.tabStudents"
+  | "admin.tabInvites"
+  | "admin.inviteUser"
   | "admin.username"
   | "admin.id"
   | "admin.role"
@@ -1028,6 +1134,12 @@ export type MessageKey =
   | "courses.noUpcoming"
   | "courses.nextExam"
   | "courses.nextHomework"
+  | "courses.weeklyHours"
+  | "courses.competency"
+  | "courses.attendanceRate"
+  | "courses.progress"
+  | "courses.takeAttendance"
+  | "courses.analysis"
   | "homework.title"
   | "homework.item"
   | "homework.add"
@@ -1054,6 +1166,11 @@ export type MessageKey =
   | "homework.submissionsHelp"
   | "homework.submitted"
   | "homework.notSubmitted"
+  | "homework.tab.todo"
+  | "homework.tab.submitted"
+  | "homework.tab.graded"
+  | "homework.tab.open"
+  | "homework.tab.past"
   | "homework.result"
   | "homework.grade"
   | "homework.ungrade"
@@ -1074,6 +1191,9 @@ export type MessageKey =
   | "marks.exam"
   | "marks.weight"
   | "marks.mark"
+  | "marks.tabGeneral"
+  | "marks.tabByCourse"
+  | "marks.selectCourse"
   | "exams.mustBelongCourse"
   | "exams.missingCourse"
   | "exams.statistics"
@@ -1195,10 +1315,12 @@ export type MessageKey =
   | "meals.date"
   | "meals.slot"
   | "meals.capacity"
+  | "meals.reservations"
   | "meals.from"
   | "meals.empty"
   | "meals.dishes"
   | "meals.conflict"
+  | "meals.topPick"
   | "meals.menu"
   | "meals.detailHelp"
   | "meals.total"
@@ -1255,6 +1377,7 @@ export type MessageKey =
   | "nav.whiteboards"
   | "whiteboard.title"
   | "whiteboard.subtitle"
+  | "whiteboard.searchPlaceholder"
   | "whiteboard.empty"
   | "whiteboard.create"
   | "whiteboard.edit"
@@ -1336,6 +1459,15 @@ export type MessageKey =
   | "payments.appendOnly"
   | "payments.tabCollect"
   | "payments.tabPlans"
+  | "payments.periodBilled"
+  | "payments.periodCollected"
+  | "payments.periodOverdue"
+  | "payments.periodExpected"
+  | "payments.exportStatement"
+  | "payments.entryTabAll"
+  | "payments.entryTabOverdue"
+  | "payments.entryTabMonth"
+  | "payments.entryTabClosed"
   | "payments.collect"
   | "payments.collectFrom"
   | "payments.totalDebt"
@@ -1400,6 +1532,8 @@ export type MessageKey =
   | "attendance.lookup"
   | "attendance.show"
   | "attendance.forUser"
+  | "attendance.totalAbsence"
+  | "attendance.overallRate"
   | "work.title"
   | "work.subtitle"
   | "work.checkIn"
@@ -1425,12 +1559,21 @@ export type MessageKey =
   | "work.deleteSummary"
   | "work.teacherIdentity"
   | "work.noTeachers"
+  | "work.daysThisMonth"
+  | "work.totalEntries"
+  | "work.noActivity"
+  | "work.searchPlaceholder"
+  | "work.location"
+  | "work.quality"
+  | "work.addEntry"
+  | "work.planShift"
   | "lookup.searchHint"
   | "work.userNotFound"
   | "messages.inbox"
   | "messages.sent"
   | "messages.archive"
   | "messages.trash"
+  | "messages.unread"
   | "messages.newMessage"
   | "messages.recipient"
   | "messages.recipientPlaceholder"
@@ -1608,6 +1751,14 @@ const en: Dict = {
   "classGroups.noTeacher": "Not assigned",
   "classGroups.selectTeacher": "Select a teacher",
   "classGroups.yourClass": "Class",
+  "classGroups.searchPlaceholder": "Search by class, grade or homeroom teacher…",
+  "classGroups.allGrades": "All grades",
+  "classGroups.studentsCount": "{count} students",
+  "classGroups.noGrade": "No grade",
+  "classGroups.attendanceRate": "Attendance",
+  "classGroups.competency": "Competency",
+  "classGroups.weakestTopic": "Weakest topic",
+  "classGroups.mergeClasses": "Merge classes",
   "classBlueprints.tab": "Grade blueprints",
   "classBlueprints.classesTab": "Classes",
   "classBlueprints.title": "Grade blueprints",
@@ -1789,12 +1940,19 @@ const en: Dict = {
   "notifications.clearAll": "Clear all",
   "notifications.dismiss": "Dismiss",
   "notifications.empty": "No new notifications yet.",
+  "notifications.tabAll": "All",
+  "notifications.tabSystem": "System",
+  "errors.notFoundDescription": "The page you're looking for may have moved or been deleted.",
+  "errors.accessDeniedDescription": "Your role can't view this section. Ask an administrator if you need access.",
+  "network.offlineTitle": "You're offline",
+  "network.offlineDescription": "Some actions won't complete until your connection returns.",
+  "network.reconnect": "Reconnect",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
   "nav.questions": "Question pool",
-  "nav.work": "Work log",
+  "nav.work": "Shift",
   "nav.staffWork": "Staff shifts",
-  "nav.users": "Users",
+  "nav.users": "Users & roles",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
   "nav.studentPomodoro": "Student pomodoros",
@@ -1818,6 +1976,45 @@ const en: Dict = {
   "nav.group.grades": "Grades",
   "nav.group.community": "Community",
   "nav.group.services": "School services",
+  "nav.group.operations": "Operations",
+  "nav.group.ai": "AI",
+  "nav.group.institution": "Institution",
+  "nav.group.myClassroom": "My classroom",
+  "nav.group.study": "Study",
+  "nav.group.other": "Other",
+  "nav.group.myStudent": "My student",
+  "nav.studentsRoster": "Students",
+  "nav.teachersRoster": "Teachers",
+  "nav.schedule": "Class schedule",
+  "nav.mySchedule": "My schedule",
+  "nav.mockExams": "Mock exams",
+  "nav.opticalReading": "Optical reading",
+  "nav.hezarfenZeka": "Hezarfen AI",
+  "nav.celebi": "Çelebi",
+  "nav.soundStudio": "Sound studio",
+  "nav.reports": "Reports",
+  "nav.licenseModules": "License & modules",
+  "nav.dataProtection": "Data protection & audit",
+  "nav.schoolMeals": "Cafeteria management",
+  "nav.myClasses": "My classes",
+  "nav.studentAnalysis": "Student analysis",
+  "nav.pendingApprovals": "Pending approvals",
+  "nav.questionGeneration": "Question generation",
+  "nav.parentCommunication": "Parent communication",
+  "nav.studyPlan": "Study plan",
+  "nav.topicMastery": "Topic mastery",
+  "nav.examResults": "My exam results",
+  "nav.myHomework": "My homework",
+  "nav.progressReport": "Progress report",
+  "nav.absence": "Absence",
+  "nav.childExamResults": "Exam results",
+  "nav.childStudyPlan": "Study plan",
+  "nav.appointmentsAndCommunication": "Appointments & messages",
+  "nav.soon": "Coming soon",
+  "comingSoon.title": "Coming soon",
+  "comingSoon.description": "This module is on its way — there is nothing to show here yet.",
+  "comingSoon.emptyTitle": "Not available yet",
+  "comingSoon.emptyDescription": "This part of Hezarfen is still being built. Check back soon.",
   "nav.darkMode": "Dark mode",
   "parents.title": "My Students",
   "parents.subtitle": "Review academic records for the students linked to your account.",
@@ -1906,13 +2103,15 @@ const en: Dict = {
   "auth.login": "Log in",
   "auth.register": "Create account",
   "auth.username": "Username",
+  "auth.school": "School",
+  "auth.schoolHint": "2–32 characters",
   "auth.password": "Password",
   "auth.noAccount": "New here?",
   "auth.hasAccount": "Already registered?",
   "auth.confirmPassword": "Confirm password",
   "auth.passwordMismatch": "Passwords do not match",
-  "auth.loginTitle": "Welcome back",
-  "auth.loginSubtitle": "Sign in to continue to your workspace.",
+  "auth.loginTitle": "Sign in to your account",
+  "auth.loginSubtitle": "Sign in to continue with your school workspace.",
   "auth.registerTitle": "Join Hezarfen",
   "auth.registerSubtitle": "New accounts start as student. Teachers and admins are assigned later.",
   "auth.usernameHint": "3–32 characters",
@@ -2069,12 +2268,14 @@ const en: Dict = {
   "dashboard.col.status": "Status",
   "dashboard.type.exam": "Exam",
   "dashboard.type.event": "Event",
+  "dashboard.type.payment": "Payment",
   "dashboard.type.appointment": "Appointment",
   "dashboard.type.homework": "Homework",
   "dashboard.stats.attendance": "Attendance",
   "dashboard.stats.homework": "Homework",
   "dashboard.stats.students": "Students",
   "dashboard.stats.children": "Children",
+  "dashboard.stats.childAttendance": "Child attendance",
   "dashboard.stats.meals": "Meal menus",
   "dashboard.stats.appointments": "Appointments",
   "dashboard.attend.present": "Present",
@@ -2088,6 +2289,39 @@ const en: Dict = {
   "dashboard.quickReview.placeholder": "Choose a topic to review…",
   "dashboard.quickReview.practice": "Practice",
   "dashboard.quickReview.startQuiz": "Start quiz",
+  "dashboard.analytics": "Analytics",
+  "dashboard.hero.heading": "What are we doing today?",
+  "dashboard.hero.searchPlaceholder": "Search for a student",
+  "dashboard.hero.searchEmpty": "No matching students.",
+  "dashboard.teacher.pendingAppointments": "Pending requests",
+  "dashboard.teacher.pendingAppointmentsDesc": "Appointment requests waiting on you.",
+  "dashboard.teacher.pendingAppointmentsEmpty": "No pending requests.",
+  "dashboard.teacher.schedule": "Today's schedule",
+  "dashboard.teacher.classPerformance": "Class performance",
+  "dashboard.student.thisWeek": "This week",
+  "dashboard.student.thisWeekDesc": "Focus minutes, Monday to Sunday.",
+  "dashboard.student.thisWeekTotal": "{minutes} min this week",
+  "dashboard.student.todayPlan": "Today's plan",
+  "dashboard.student.mastery": "Topic mastery",
+  "dashboard.student.audioWorkshop": "Audio workshop",
+  "dashboard.parent.progress": "Progress",
+  "dashboard.parent.teacherNotes": "Teacher notes",
+  "dashboard.parent.child": "Child",
+  "dashboard.parent.homeroom": "Homeroom teacher: {name}",
+  "dashboard.parent.attendanceDetail": "Attendance",
+  "dashboard.parent.attendanceDetailDesc": "This child's attendance breakdown.",
+  "dashboard.parent.attendanceRate": "Attendance rate",
+  "dashboard.parent.payment": "Payment status",
+  "dashboard.parent.paymentDesc": "This child's fee plan.",
+  "dashboard.parent.paymentEmpty": "No fee plan assigned.",
+  "dashboard.parent.installmentsPaid": "{paid} / {total} installments paid",
+  "dashboard.parent.nextInstallment": "Next installment",
+  "dashboard.parent.balance": "Balance",
+  "dashboard.quicklinks.students": "Students",
+  "dashboard.quicklinks.classes": "Classes",
+  "dashboard.quicklinks.modules": "Modules",
+  "dashboard.quicklinks.empty": "Nothing here yet.",
+  "dashboard.admin.rangeThisMonth": "This month",
   "courseNotes.title": "Lesson notes",
   "courseNotes.item": "lesson note",
   "courseNotes.new": "New lesson note",
@@ -2368,6 +2602,7 @@ const en: Dict = {
   "bank.edit": "Edit template",
   "bank.owner": "Added by",
   "bank.mine": "Mine",
+  "bank.usedCount": "Used",
   "bank.created": "Created",
   "bank.copyNotice": "Adding a template to an exam makes a copy. Editing the template later does not change questions already added.",
   "bank.courseSelect": "Select course",
@@ -2405,6 +2640,13 @@ const en: Dict = {
   "bank.refresh": "Update from template",
   "bank.refreshTitle": "Update this question from its template?",
   "bank.refreshBody": "This question is a copy made from a bank template. Updating replaces its text, points, options, correct answer and pictures with what the template says today. Anything you changed on this copy is lost. It only works before anyone starts the exam, so no student's answers can be affected.",
+  "bank.difficulty": "Difficulty",
+  "bank.correctRate": "Correct rate",
+  "bank.objective": "Objective",
+  "bank.source": "Source",
+  "bank.source.institution": "Institution",
+  "bank.source.publisher": "Publisher",
+  "bank.source.ai": "AI-generated",
   "bank.refreshConfirm": "Yes, update it",
   "bank.refreshed": "Question updated from its template.",
   "subjects.title": "Subjects",
@@ -2488,6 +2730,13 @@ const en: Dict = {
     "Exams belong to an education item. Teachers add them from that detail page with a kind; weighting is defined by the exam kind. Students only see their own mark (or “not graded yet”). Weighted averages appear on the report card.",
   "admin.title": "People & roles",
   "admin.subtitle": "Promote or demote accounts. You cannot change your own role.",
+  "admin.tabAll": "All users",
+  "admin.tabManagers": "Managers",
+  "admin.tabTeachers": "Teachers",
+  "admin.tabParents": "Parents",
+  "admin.tabStudents": "Students",
+  "admin.tabInvites": "Invites",
+  "admin.inviteUser": "Invite user",
   "admin.username": "Username",
   "admin.id": "Id",
   "admin.role": "Role",
@@ -2667,6 +2916,12 @@ const en: Dict = {
   "courses.noUpcoming": "No upcoming work.",
   "courses.nextExam": "Next exam",
   "courses.nextHomework": "Next homework",
+  "courses.weeklyHours": "Weekly hours",
+  "courses.competency": "Competency",
+  "courses.attendanceRate": "Attendance",
+  "courses.progress": "Progress",
+  "courses.takeAttendance": "Take roll call",
+  "courses.analysis": "Analysis",
   "homework.title": "Homework",
   "homework.item": "Homework",
   "homework.add": "Add homework",
@@ -2693,6 +2948,11 @@ const en: Dict = {
   "homework.submissionsHelp": "Review student submissions and record the result.",
   "homework.submitted": "Submitted",
   "homework.notSubmitted": "Not submitted",
+  "homework.tab.todo": "To do",
+  "homework.tab.submitted": "Submitted",
+  "homework.tab.graded": "Graded",
+  "homework.tab.open": "Open",
+  "homework.tab.past": "Past due",
   "homework.result": "Result",
   "homework.grade": "Grade",
   "homework.ungrade": "Ungrade",
@@ -2713,6 +2973,9 @@ const en: Dict = {
   "marks.exam": "Exam",
   "marks.weight": "Weight",
   "marks.mark": "Mark",
+  "marks.tabGeneral": "General",
+  "marks.tabByCourse": "By course",
+  "marks.selectCourse": "Course",
   "exams.mustBelongCourse": "Exams are created under a course. Open a course to add one.",
   "exams.missingCourse": "Course unavailable",
   "exams.statistics": "Statistics",
@@ -2834,10 +3097,12 @@ const en: Dict = {
   "meals.date": "Menu date",
   "meals.slot": "Meal slot",
   "meals.capacity": "Capacity",
+  "meals.reservations": "Reservations",
   "meals.from": "Starting date",
   "meals.empty": "No menus in this date range.",
   "meals.dishes": "dishes",
   "meals.conflict": "Dietary warning",
+  "meals.topPick": "Most picked",
   "meals.menu": "Menu",
   "meals.detailHelp": "Dishes, booking state, dietary warnings, service, and account records.",
   "meals.total": "Total price",
@@ -2889,11 +3154,12 @@ const en: Dict = {
   "meals.editDish": "Edit dish",
   "meals.dishName": "Dish name",
   "meals.priceTry": "Price (TRY)",
-  "nav.payments": "Fees",
+  "nav.payments": "Payments & collection",
   "nav.paymentStatement": "My Fees",
-  "nav.whiteboards": "Whiteboards",
+  "nav.whiteboards": "Board",
   "whiteboard.title": "Whiteboards",
   "whiteboard.subtitle": "Live collaborative sketch boards.",
+  "whiteboard.searchPlaceholder": "Search by title…",
   "whiteboard.empty": "No whiteboards yet.",
   "whiteboard.create": "New whiteboard",
   "whiteboard.edit": "Edit whiteboard",
@@ -2975,6 +3241,15 @@ const en: Dict = {
   "payments.appendOnly": "The ledger is append-only. A correction needs a balancing entry, never an edit.",
   "payments.tabCollect": "Collection",
   "payments.tabPlans": "Fee plans",
+  "payments.periodBilled": "Billed this period",
+  "payments.periodCollected": "Collected",
+  "payments.periodOverdue": "Overdue",
+  "payments.periodExpected": "Expected this month",
+  "payments.exportStatement": "Export statement",
+  "payments.entryTabAll": "All",
+  "payments.entryTabOverdue": "Overdue",
+  "payments.entryTabMonth": "This month",
+  "payments.entryTabClosed": "Closed",
   "payments.collect": "Collect",
   "payments.collectFrom": "Collect payment",
   "payments.totalDebt": "Total billed",
@@ -3039,6 +3314,8 @@ const en: Dict = {
   "attendance.lookup": "Look up a student's attendance report.",
   "attendance.show": "Show attendance",
   "attendance.forUser": "Attendance for {user}",
+  "attendance.totalAbsence": "Total absence",
+  "attendance.overallRate": "Attendance rate",
   "work.title": "Work log",
   "work.subtitle": "Check in and out to log your working hours.",
   "work.checkIn": "Check in",
@@ -3057,6 +3334,14 @@ const en: Dict = {
   "work.staffSubtitle": "Look up a teacher, correct closed stints, or delete entries.",
   "work.teacherIdentity": "Teacher",
   "work.noTeachers": "No teachers found.",
+  "work.daysThisMonth": "{count} days worked this month",
+  "work.totalEntries": "{count} entries logged",
+  "work.noActivity": "No activity yet",
+  "work.searchPlaceholder": "Search staff…",
+  "work.location": "Location",
+  "work.quality": "Work quality",
+  "work.addEntry": "Add entry",
+  "work.planShift": "Plan shift",
   "lookup.searchHint": "Type at least 2 characters to search.",
   "work.userNotFound": "No work log found for this user.",
   "work.show": "Show log",
@@ -3070,6 +3355,7 @@ const en: Dict = {
   "messages.sent": "Sent",
   "messages.archive": "Archive",
   "messages.trash": "Trash",
+  "messages.unread": "unread",
   "messages.newMessage": "New message",
   "messages.recipient": "Recipient",
   "messages.recipientPlaceholder": "Search for name or username...",
@@ -3132,7 +3418,7 @@ const tr: Dict = {
   "ai.skipTyping": "Cevabın tamamını göster",
   "nav.today": "Bugün",
   "nav.classes": "Eğitim",
-  "nav.classGroups": "Şubeler",
+  "nav.classGroups": "Sınıflar",
   "classGroups.title": "Şubeler",
   "classGroups.subtitle": "Aynı dersleri paylaşan öğrenci grupları.",
   "classGroups.newClass": "Yeni şube",
@@ -3163,6 +3449,14 @@ const tr: Dict = {
   "classGroups.noTeacher": "Atanmadı",
   "classGroups.selectTeacher": "Bir öğretmen seç",
   "classGroups.yourClass": "Şube",
+  "classGroups.searchPlaceholder": "Şube, sınıf veya danışman ara…",
+  "classGroups.allGrades": "Tüm sınıflar",
+  "classGroups.studentsCount": "{count} öğrenci",
+  "classGroups.noGrade": "Sınıf yok",
+  "classGroups.attendanceRate": "Devam",
+  "classGroups.competency": "Yetkinlik",
+  "classGroups.weakestTopic": "En zayıf konu",
+  "classGroups.mergeClasses": "Şube birleştir",
   "classBlueprints.tab": "Seviye şablonları",
   "classBlueprints.classesTab": "Şubeler",
   "classBlueprints.title": "Seviye şablonları",
@@ -3344,12 +3638,19 @@ const tr: Dict = {
   "notifications.clearAll": "Tümünü sil",
   "notifications.dismiss": "Sil",
   "notifications.empty": "Henüz yeni bir bildiriminiz yok.",
+  "notifications.tabAll": "Tümü",
+  "notifications.tabSystem": "Sistem",
+  "errors.notFoundDescription": "Aradığın sayfa taşınmış ya da silinmiş olabilir.",
+  "errors.accessDeniedDescription": "Rolün bu bölümü görüntülemeye yetkili değil. Gerekliyse kurum yöneticinden yetki iste.",
+  "network.offlineTitle": "Bağlantın koptu",
+  "network.offlineDescription": "Bağlantı geri gelene kadar bazı işlemler tamamlanmayabilir.",
+  "network.reconnect": "Yeniden bağlan",
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Yoklama",
   "nav.questions": "Soru havuzu",
-  "nav.work": "Çalışma kaydı",
-  "nav.staffWork": "Personel mesaisi",
-  "nav.users": "Kullanıcılar",
+  "nav.work": "Mesai",
+  "nav.staffWork": "Personel Mesai",
+  "nav.users": "Kullanıcılar ve roller",
   "nav.studentMarks": "Öğrenci notları",
   "nav.studentAttendance": "Öğrenci yoklamaları",
   "nav.studentPomodoro": "Öğrenci pomodoroları",
@@ -3373,6 +3674,45 @@ const tr: Dict = {
   "nav.group.grades": "Notlar",
   "nav.group.community": "Topluluk",
   "nav.group.services": "Okul hizmetleri",
+  "nav.group.operations": "Operasyon",
+  "nav.group.ai": "Yapay zekâ",
+  "nav.group.institution": "Kurum",
+  "nav.group.myClassroom": "Sınıfım",
+  "nav.group.study": "Çalışma",
+  "nav.group.other": "Diğer",
+  "nav.group.myStudent": "Öğrencim",
+  "nav.studentsRoster": "Öğrenciler",
+  "nav.teachersRoster": "Öğretmenler",
+  "nav.schedule": "Ders programı",
+  "nav.mySchedule": "Ders programım",
+  "nav.mockExams": "Deneme sınavları",
+  "nav.opticalReading": "Optik okuma",
+  "nav.hezarfenZeka": "Hezarfen Zekâ",
+  "nav.celebi": "Çelebi",
+  "nav.soundStudio": "Ses Atölyesi",
+  "nav.reports": "Raporlar",
+  "nav.licenseModules": "Lisans ve modüller",
+  "nav.dataProtection": "KVKK ve denetim",
+  "nav.schoolMeals": "Yemekhane Yönetimi",
+  "nav.myClasses": "Sınıflarım",
+  "nav.studentAnalysis": "Öğrenci analizi",
+  "nav.pendingApprovals": "Bekleyen onaylar",
+  "nav.questionGeneration": "Soru üretimi",
+  "nav.parentCommunication": "Veli iletişimi",
+  "nav.studyPlan": "Çalışma programım",
+  "nav.topicMastery": "Konu yetkinliğim",
+  "nav.examResults": "Sınav sonuçlarım",
+  "nav.myHomework": "Ödevlerim",
+  "nav.progressReport": "Gelişim raporu",
+  "nav.absence": "Devamsızlık",
+  "nav.childExamResults": "Sınav sonuçları",
+  "nav.childStudyPlan": "Çalışma planı",
+  "nav.appointmentsAndCommunication": "Randevu ve iletişim",
+  "nav.soon": "Yakında",
+  "comingSoon.title": "Yakında",
+  "comingSoon.description": "Bu modül hazırlanıyor — henüz gösterecek bir şey yok.",
+  "comingSoon.emptyTitle": "Henüz kullanıma açık değil",
+  "comingSoon.emptyDescription": "Hezarfen'in bu bölümü hâlâ hazırlanıyor. Yakında tekrar bakın.",
   "nav.darkMode": "Karanlık mod",
   "parents.title": "Öğrencilerim",
   "parents.subtitle": "Size bağlı öğrencilerin akademik kayıtlarını inceleyin.",
@@ -3461,13 +3801,15 @@ const tr: Dict = {
   "auth.login": "Giriş yap",
   "auth.register": "Hesap oluştur",
   "auth.username": "Kullanıcı adı",
+  "auth.school": "Okul",
+  "auth.schoolHint": "2–32 karakter",
   "auth.password": "Şifre",
   "auth.noAccount": "Yeni misin?",
   "auth.hasAccount": "Zaten kayıtlı mısın?",
   "auth.confirmPassword": "Şifreyi onayla",
   "auth.passwordMismatch": "Şifreler eşleşmiyor",
-  "auth.loginTitle": "Tekrar hoş geldin",
-  "auth.loginSubtitle": "Çalışma alanına devam etmek için giriş yap.",
+  "auth.loginTitle": "Hesabına giriş yap",
+  "auth.loginSubtitle": "Okul çalışma alanına devam etmek için giriş yap.",
   "auth.registerTitle": "Hezarfen’e katıl",
   "auth.registerSubtitle": "Yeni hesaplar öğrenci olarak başlar. Öğretmen ve admin rolleri sonradan verilir.",
   "auth.usernameHint": "3–32 karakter",
@@ -3624,12 +3966,14 @@ const tr: Dict = {
   "dashboard.col.status": "Durum",
   "dashboard.type.exam": "Sınav",
   "dashboard.type.event": "Etkinlik",
+  "dashboard.type.payment": "Ödeme",
   "dashboard.type.appointment": "Randevu",
   "dashboard.type.homework": "Ödev",
   "dashboard.stats.attendance": "Yoklama",
   "dashboard.stats.homework": "Ödev",
   "dashboard.stats.students": "Öğrenciler",
   "dashboard.stats.children": "Çocuklar",
+  "dashboard.stats.childAttendance": "Öğrenci devamı",
   "dashboard.stats.meals": "Yemek menüleri",
   "dashboard.stats.appointments": "Randevular",
   "dashboard.attend.present": "Var",
@@ -3643,6 +3987,39 @@ const tr: Dict = {
   "dashboard.quickReview.placeholder": "Tekrar için konu seç…",
   "dashboard.quickReview.practice": "Alıştır",
   "dashboard.quickReview.startQuiz": "Teste başla",
+  "dashboard.analytics": "Analitik",
+  "dashboard.hero.heading": "Bugün ne yapıyoruz?",
+  "dashboard.hero.searchPlaceholder": "Öğrenci ara",
+  "dashboard.hero.searchEmpty": "Eşleşen öğrenci yok.",
+  "dashboard.teacher.pendingAppointments": "Bekleyen talepler",
+  "dashboard.teacher.pendingAppointmentsDesc": "Senden yanıt bekleyen randevu talepleri.",
+  "dashboard.teacher.pendingAppointmentsEmpty": "Bekleyen talep yok.",
+  "dashboard.teacher.schedule": "Bugünün programı",
+  "dashboard.teacher.classPerformance": "Sınıf performansı",
+  "dashboard.student.thisWeek": "Bu hafta",
+  "dashboard.student.thisWeekDesc": "Pazartesiden pazara odaklanma dakikaları.",
+  "dashboard.student.thisWeekTotal": "Bu hafta {minutes} dk",
+  "dashboard.student.todayPlan": "Bugünün planı",
+  "dashboard.student.mastery": "Konu yetkinliğim",
+  "dashboard.student.audioWorkshop": "Ses atölyesi",
+  "dashboard.parent.progress": "Gelişim",
+  "dashboard.parent.teacherNotes": "Öğretmen notları",
+  "dashboard.parent.child": "Öğrenci",
+  "dashboard.parent.homeroom": "Danışman: {name}",
+  "dashboard.parent.attendanceDetail": "Devamsızlık",
+  "dashboard.parent.attendanceDetailDesc": "Bu öğrencinin devam dökümü.",
+  "dashboard.parent.attendanceRate": "Devam oranı",
+  "dashboard.parent.payment": "Ödeme durumu",
+  "dashboard.parent.paymentDesc": "Bu öğrencinin ödeme planı.",
+  "dashboard.parent.paymentEmpty": "Atanmış bir ödeme planı yok.",
+  "dashboard.parent.installmentsPaid": "{paid} / {total} taksit ödendi",
+  "dashboard.parent.nextInstallment": "Sonraki taksit",
+  "dashboard.parent.balance": "Bakiye",
+  "dashboard.quicklinks.students": "Öğrenciler",
+  "dashboard.quicklinks.classes": "Sınıflar",
+  "dashboard.quicklinks.modules": "Modüller",
+  "dashboard.quicklinks.empty": "Henüz bir şey yok.",
+  "dashboard.admin.rangeThisMonth": "Bu ay",
   "courseNotes.title": "Ders notları",
   "courseNotes.item": "ders notu",
   "courseNotes.new": "Yeni ders notu",
@@ -3923,6 +4300,7 @@ const tr: Dict = {
   "bank.edit": "Şablonu düzenle",
   "bank.owner": "Ekleyen",
   "bank.mine": "Benimkiler",
+  "bank.usedCount": "Kullanım",
   "bank.created": "Eklenme",
   "bank.copyNotice": "Şablonu sınava eklemek bir kopya oluşturur. Şablonu sonradan düzenlemek, daha önce eklenmiş soruları değiştirmez.",
   "bank.courseSelect": "Ders seç",
@@ -3960,6 +4338,13 @@ const tr: Dict = {
   "bank.refresh": "Şablondan güncelle",
   "bank.refreshTitle": "Bu soru şablonundan güncellensin mi?",
   "bank.refreshBody": "Bu soru, bir soru bankası şablonundan alınmış bir kopya. Güncellersen sorunun metni, puanı, seçenekleri, doğru cevabı ve resimleri şablonun bugünkü hâliyle değiştirilir. Bu kopyada yaptığın değişiklikler kaybolur. Bu işlem yalnızca sınava kimse başlamadan önce yapılabilir, bu yüzden hiçbir öğrencinin cevabı etkilenmez.",
+  "bank.difficulty": "Zorluk",
+  "bank.correctRate": "Doğru oranı",
+  "bank.objective": "Kazanım",
+  "bank.source": "Kaynak",
+  "bank.source.institution": "Kurum",
+  "bank.source.publisher": "Yayınevi",
+  "bank.source.ai": "Yapay zekâ üretimi",
   "bank.refreshConfirm": "Evet, güncelle",
   "bank.refreshed": "Soru şablonundan güncellendi.",
   "subjects.title": "Konular",
@@ -4043,6 +4428,13 @@ const tr: Dict = {
     "Sınavlar bir eğitim kaydına aittir. Öğretmenler detay sayfasından tür seçerek ekler; ağırlık sınav türünde tanımlıdır. Öğrenciler yalnızca kendi notunu görür. Ağırlıklı ortalamalar Karnem’dedir.",
   "admin.title": "Kişiler ve roller",
   "admin.subtitle": "Hesapların rolünü yükseltin veya düşürün. Kendi rolünüzü değiştiremezsiniz.",
+  "admin.tabAll": "Tüm kullanıcılar",
+  "admin.tabManagers": "Yöneticiler",
+  "admin.tabTeachers": "Öğretmenler",
+  "admin.tabParents": "Veliler",
+  "admin.tabStudents": "Öğrenciler",
+  "admin.tabInvites": "Davetler",
+  "admin.inviteUser": "Kullanıcı davet et",
   "admin.username": "Kullanıcı adı",
   "admin.id": "Id",
   "admin.role": "Rol",
@@ -4222,6 +4614,12 @@ const tr: Dict = {
   "courses.noUpcoming": "Yaklaşan çalışma yok.",
   "courses.nextExam": "Sıradaki sınav",
   "courses.nextHomework": "Sıradaki ödev",
+  "courses.weeklyHours": "Haftalık saat",
+  "courses.competency": "Yetkinlik",
+  "courses.attendanceRate": "Devam",
+  "courses.progress": "İlerleme",
+  "courses.takeAttendance": "Yoklama al",
+  "courses.analysis": "Analiz",
   "homework.title": "Ödevler",
   "homework.item": "Ödev",
   "homework.add": "Ödev ekle",
@@ -4248,6 +4646,11 @@ const tr: Dict = {
   "homework.submissionsHelp": "Öğrenci teslimlerini incele ve sonucu kaydet.",
   "homework.submitted": "Teslim edildi",
   "homework.notSubmitted": "Teslim edilmedi",
+  "homework.tab.todo": "Yapılacak",
+  "homework.tab.submitted": "Teslim edilen",
+  "homework.tab.graded": "Değerlendirilen",
+  "homework.tab.open": "Açık",
+  "homework.tab.past": "Süresi geçen",
   "homework.result": "Sonuç",
   "homework.grade": "Notlandır",
   "homework.ungrade": "Notu kaldır",
@@ -4268,6 +4671,9 @@ const tr: Dict = {
   "marks.exam": "Sınav",
   "marks.weight": "Ağırlık",
   "marks.mark": "Not",
+  "marks.tabGeneral": "Genel",
+  "marks.tabByCourse": "Derslere göre",
+  "marks.selectCourse": "Ders",
   "exams.mustBelongCourse": "Sınavlar ders altında oluşturulur. Eklemek için bir ders aç.",
   "exams.missingCourse": "Ders bilgisi yok",
   "exams.statistics": "İstatistikler",
@@ -4389,10 +4795,12 @@ const tr: Dict = {
   "meals.date": "Menü tarihi",
   "meals.slot": "Öğün",
   "meals.capacity": "Kapasite",
+  "meals.reservations": "Rezervasyon",
   "meals.from": "Başlangıç tarihi",
   "meals.empty": "Bu tarih aralığında menü yok.",
   "meals.dishes": "yemek",
   "meals.conflict": "Beslenme uyarısı",
+  "meals.topPick": "En çok tercih",
   "meals.menu": "Menü",
   "meals.detailHelp": "Yemekler, rezervasyon, beslenme uyarıları, servis ve hesap kayıtları.",
   "meals.total": "Toplam fiyat",
@@ -4444,11 +4852,12 @@ const tr: Dict = {
   "meals.editDish": "Yemeği düzenle",
   "meals.dishName": "Yemek adı",
   "meals.priceTry": "Fiyat (TRY)",
-  "nav.payments": "Ücretler",
+  "nav.payments": "Ödeme ve tahsilat",
   "nav.paymentStatement": "Ücretlerim",
-  "nav.whiteboards": "Beyaz tahtalar",
+  "nav.whiteboards": "Tahta",
   "whiteboard.title": "Beyaz tahtalar",
   "whiteboard.subtitle": "Canlı ortak çizim tahtaları.",
+  "whiteboard.searchPlaceholder": "Başlığa göre ara…",
   "whiteboard.empty": "Henüz beyaz tahta yok.",
   "whiteboard.create": "Yeni tahta",
   "whiteboard.edit": "Tahtayı düzenle",
@@ -4530,6 +4939,15 @@ const tr: Dict = {
   "payments.appendOnly": "Hesap yalnızca eklenir. Düzeltme, düzenleme değil dengeleyici kayıt gerektirir.",
   "payments.tabCollect": "Tahsilat",
   "payments.tabPlans": "Ücret planları",
+  "payments.periodBilled": "Bu dönem tahakkuk",
+  "payments.periodCollected": "Tahsil edilen",
+  "payments.periodOverdue": "Gecikmiş",
+  "payments.periodExpected": "Bu ay beklenen",
+  "payments.exportStatement": "Ekstre indir",
+  "payments.entryTabAll": "Tümü",
+  "payments.entryTabOverdue": "Gecikmiş",
+  "payments.entryTabMonth": "Bu ay",
+  "payments.entryTabClosed": "Kapanmış",
   "payments.collect": "Tahsilat al",
   "payments.collectFrom": "Tahsilat al",
   "payments.totalDebt": "Toplam borç",
@@ -4594,6 +5012,8 @@ const tr: Dict = {
   "attendance.lookup": "Bir öğrencinin yoklama raporunu aç.",
   "attendance.show": "Yoklamayı göster",
   "attendance.forUser": "{user} yoklaması",
+  "attendance.totalAbsence": "Toplam devamsızlık",
+  "attendance.overallRate": "Devam oranı",
   "work.title": "Mesai kaydı",
   "work.subtitle": "Mesai saatlerinizi kaydetmek için giriş ve çıkış yapın.",
   "work.checkIn": "Giriş yap",
@@ -4612,6 +5032,14 @@ const tr: Dict = {
   "work.staffSubtitle": "Öğretmen ara, kapalı mesaileri düzelt veya kayıt sil.",
   "work.teacherIdentity": "Öğretmen",
   "work.noTeachers": "Öğretmen bulunamadı.",
+  "work.daysThisMonth": "Bu ay {count} gün çalıştı",
+  "work.totalEntries": "{count} kayıt",
+  "work.noActivity": "Henüz kayıt yok",
+  "work.searchPlaceholder": "Personel ara…",
+  "work.location": "Konum",
+  "work.quality": "İş kalitesi",
+  "work.addEntry": "Kayıt ekle",
+  "work.planShift": "Vardiya planla",
   "lookup.searchHint": "Aramak için en az 2 karakter yaz.",
   "work.userNotFound": "Bu kullanıcı için mesai kaydı bulunamadı.",
   "work.show": "Kaydı göster",
@@ -4625,6 +5053,7 @@ const tr: Dict = {
   "messages.sent": "Gönderilenler",
   "messages.archive": "Arşiv",
   "messages.trash": "Çöp kutusu",
+  "messages.unread": "okunmamış",
   "messages.newMessage": "Yeni mesaj",
   "messages.recipient": "Alıcı",
   "messages.recipientPlaceholder": "İsim veya kullanıcı adı ara...",

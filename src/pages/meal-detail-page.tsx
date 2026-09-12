@@ -199,7 +199,7 @@ function MealDetailContent() {
             </div>
 
             <Show when={conflicts().length > 0}>
-              <Alert class="border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200"><span class="flex gap-2"><IconAlert class="mt-0.5 h-4 w-4 shrink-0" /><span>{t("meals.conflict")}: {conflicts().join(", ")}</span></span></Alert>
+              <Alert class="border-warning/50 bg-warning/10 text-warning"><span class="flex gap-2"><IconAlert class="mt-0.5 h-4 w-4 shrink-0" /><span>{t("meals.conflict")}: {conflicts().join(", ")}</span></span></Alert>
             </Show>
 
             <Show when={isParent()}>
@@ -217,11 +217,11 @@ function MealDetailContent() {
               <TabsContent value="menu" class="space-y-4">
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <For each={current().dishes}>{(dish) => (
-                    <article class="rounded-lg border border-border/70 bg-card p-4">
-                      <div class="flex justify-between gap-3"><h2 class="font-semibold">{dish.name}</h2><span class="font-semibold">{formatTry(dish.price_minor, moneyLocale())}</span></div>
-                      <p class="mt-2 text-sm text-muted-foreground">{dish.description || "—"}</p>
-                      <div class="mt-3 flex flex-wrap gap-1"><For each={dish.tags}>{(tag) => <Badge variant="outline" class={dish.conflicts.includes(tag) ? "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200" : ""}>{dish.conflicts.includes(tag) ? `⚠ ${tag}` : tag}</Badge>}</For></div>
-                      <Show when={canManage()}><div class="mt-3 flex gap-2 border-t pt-3"><Button variant="outline" size="sm" onClick={() => openDish(dish)}>{t("common.edit")}</Button><Button variant="ghost" size="sm" class="text-destructive" onClick={() => setDeleteDish(dish)}>{t("common.delete")}</Button></div></Show>
+                    <article class="rounded-xl border border-border-line bg-surface-base p-4">
+                      <div class="flex justify-between gap-3"><h2 class="font-semibold text-text-strong">{dish.name}</h2><span class="font-semibold">{formatTry(dish.price_minor, moneyLocale())}</span></div>
+                      <p class="mt-2 text-sm text-text-subtle">{dish.description || "—"}</p>
+                      <div class="mt-3 flex flex-wrap gap-1"><For each={dish.tags}>{(tag) => <Badge variant="outline" class={dish.conflicts.includes(tag) ? "border-warning/50 bg-warning/10 text-warning" : ""}>{dish.conflicts.includes(tag) ? `⚠ ${tag}` : tag}</Badge>}</For></div>
+                      <Show when={canManage()}><div class="mt-3 flex gap-2 border-t border-border-hairline pt-3"><Button variant="outline" size="sm" onClick={() => openDish(dish)}>{t("common.edit")}</Button><Button variant="ghost" size="sm" class="text-destructive" onClick={() => setDeleteDish(dish)}>{t("common.delete")}</Button></div></Show>
                     </article>
                   )}</For>
                 </div>
@@ -236,40 +236,40 @@ function MealDetailContent() {
 
               <TabsContent value="account" class="space-y-4">
                 <div class="grid gap-4 lg:grid-cols-2">
-                  <section class="data-shell p-4"><h2 class="font-semibold">{t("meals.dietaryProfile")}</h2><div class="mt-3 flex flex-wrap gap-1.5"><For each={profile()?.tags ?? []}>{(tag) => <Badge variant="outline" class="border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200">⚠ {tag}</Badge>}</For></div><p class="mt-3 text-sm text-muted-foreground">{profile()?.note || t("meals.noDietaryNotes")}</p></section>
-                  <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold">{t("meals.balance")}</h2><p class="mt-3 text-2xl font-semibold tabular-nums">{formatTry(balance()?.balance_minor ?? 0, moneyLocale())}</p></section></Show>
+                  <section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.dietaryProfile")}</h2><div class="mt-3 flex flex-wrap gap-1.5"><For each={profile()?.tags ?? []}>{(tag) => <Badge variant="outline" class="border-warning/50 bg-warning/10 text-warning">⚠ {tag}</Badge>}</For></div><p class="mt-3 text-sm text-text-subtle">{profile()?.note || t("meals.noDietaryNotes")}</p></section>
+                  <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.balance")}</h2><p class="mt-3 text-2xl font-semibold tabular-nums">{formatTry(balance()?.balance_minor ?? 0, moneyLocale())}</p></section></Show>
                 </div>
-                <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold">{t("meals.ledger")}</h2><div class="mt-3 divide-y divide-border/60"><For each={ledger()?.items ?? []}>{(line) => <div class="flex justify-between gap-3 py-3 text-sm"><div><p class="font-medium">{t(`meals.ledger.${line.kind}` as never)}</p><p class="text-xs text-muted-foreground">{line.note || line.method || "—"} · {formatDateTime(line.created_at, locale())}</p></div><span class="font-semibold tabular-nums">{line.kind === "charge" ? "−" : "+"}{formatTry(line.amount_minor, moneyLocale())}</span></div>}</For></div><Show when={(ledger()?.items.length ?? 0) === 0}><p class="mt-3 text-sm text-muted-foreground">{t("meals.noLedger")}</p></Show></section></Show>
-                <section class="data-shell p-4"><h2 class="font-semibold">{t("meals.attendance")}</h2><div class="mt-3 divide-y divide-border/60"><For each={attendance()?.items ?? []}>{(row) => <div class="flex justify-between gap-3 py-3 text-sm"><span>{row.status}</span><span class="text-muted-foreground">{formatDateTime(row.marked_at, locale())}</span></div>}</For></div></section>
+                <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.ledger")}</h2><div class="mt-3 divide-y divide-border-hairline"><For each={ledger()?.items ?? []}>{(line) => <div class="flex justify-between gap-3 py-3 text-sm"><div><p class="font-medium">{t(`meals.ledger.${line.kind}` as never)}</p><p class="text-xs text-text-subtle">{line.note || line.method || "—"} · {formatDateTime(line.created_at, locale())}</p></div><span class="font-semibold tabular-nums">{line.kind === "charge" ? "−" : "+"}{formatTry(line.amount_minor, moneyLocale())}</span></div>}</For></div><Show when={(ledger()?.items.length ?? 0) === 0}><p class="mt-3 text-sm text-text-subtle">{t("meals.noLedger")}</p></Show></section></Show>
+                <section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.attendance")}</h2><div class="mt-3 divide-y divide-border-hairline"><For each={attendance()?.items ?? []}>{(row) => <div class="flex justify-between gap-3 py-3 text-sm"><span>{row.status}</span><span class="text-text-subtle">{formatDateTime(row.marked_at, locale())}</span></div>}</For></div></section>
               </TabsContent>
 
               <TabsContent value="service" class="space-y-4">
                 <div class="data-shell p-4">
-                  <h2 class="font-semibold">{t("meals.walkIn")}</h2>
+                  <h2 class="font-semibold text-text-strong">{t("meals.walkIn")}</h2>
                   <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end"><div class="min-w-0 flex-1"><UserSearchSelect id="meal-walkin" value={walkIn()} onChange={setWalkIn} placeholder={t("form.selectStudent")} /></div><Button disabled={!walkIn() || pending()} onClick={() => void run(async () => { await postMealAttendance(id(), walkIn(), "served"); setWalkIn(""); await refetchService(); })}>{t("meals.served")}</Button></div>
                 </div>
                 <Show when={serviceAttendance.error || serviceBookings.error}><ErrorAlert message={formatApiError(serviceAttendance.error || serviceBookings.error)} onRetry={() => void refetchService()} /></Show>
                 <div class="space-y-2">
-                  <For each={serviceEntries()}>{(entry) => <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-3"><div><p class="font-medium">{personLabel(entry.student)}</p><p class="text-xs text-muted-foreground">{entry.booking ? t("meals.booked") : t("meals.walkIn")} · {entry.attendance?.status ?? t("meals.notMarked")}</p></div><div class="flex gap-2"><Button size="sm" variant={entry.attendance?.status === "served" ? "default" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "served"); await refetchService(); })}>{t("meals.served")}</Button><Button size="sm" variant={entry.attendance?.status === "missed" ? "destructive" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "missed"); await refetchService(); })}>{t("meals.missed")}</Button><Show when={canManage() && entry.booking?.status === "booked"}><Button size="sm" variant="ghost" class="text-destructive" onClick={() => setCancelBooking(entry.booking)}>{t("meals.cancelBooking")}</Button></Show></div></div>}</For>
+                  <For each={serviceEntries()}>{(entry) => <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-3"><div><p class="font-medium">{personLabel(entry.student)}</p><p class="text-xs text-text-subtle">{entry.booking ? t("meals.booked") : t("meals.walkIn")} · {entry.attendance?.status ?? t("meals.notMarked")}</p></div><div class="flex gap-2"><Button size="sm" variant={entry.attendance?.status === "served" ? "default" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "served"); await refetchService(); })}>{t("meals.served")}</Button><Button size="sm" variant={entry.attendance?.status === "missed" ? "destructive" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "missed"); await refetchService(); })}>{t("meals.missed")}</Button><Show when={canManage() && entry.booking?.status === "booked"}><Button size="sm" variant="ghost" class="text-destructive" onClick={() => setCancelBooking(entry.booking)}>{t("meals.cancelBooking")}</Button></Show></div></div>}</For>
                 </div>
               </TabsContent>
 
               <TabsContent value="manage" class="space-y-5">
-                <div class="flex justify-end"><Button size="sm" onClick={() => openDish()}><IconPlus class="h-4 w-4" />{t("meals.addDish")}</Button></div>
+                <div class="flex justify-end"><Button size="sm" class="rounded-lg" onClick={() => openDish()}><IconPlus class="h-4 w-4" />{t("meals.addDish")}</Button></div>
                 <section class="data-shell space-y-4 p-4">
-                  <h2 class="font-semibold">{t("meals.studentRecord")}</h2>
+                  <h2 class="font-semibold text-text-strong">{t("meals.studentRecord")}</h2>
                   <UserSearchSelect id="meal-record-user" role="student" value={lookupStudent()} onChange={setLookupStudent} label={t("meals.student")} />
                   <Show when={lookupStudent()}>
                     <div class="space-y-3">
-                      <div class="flex flex-wrap gap-2"><For each={settings()?.dietary_tags ?? []}>{(tag) => <label class="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"><input type="checkbox" checked={profileTags().includes(tag)} onChange={() => toggleTag(tag, profileTags(), setProfileTags)} />{tag}</label>}</For></div>
+                      <div class="flex flex-wrap gap-2"><For each={settings()?.dietary_tags ?? []}>{(tag) => <label class="flex items-center gap-2 rounded-lg border border-border-line px-3 py-2 text-sm"><input type="checkbox" checked={profileTags().includes(tag)} onChange={() => toggleTag(tag, profileTags(), setProfileTags)} />{tag}</label>}</For></div>
                       <Textarea maxlength={limits()?.meal.max_dietary_note_len} value={profileNote()} placeholder={t("meals.dietaryNote")} onInput={(e) => setProfileNote(e.currentTarget.value)} />
                       <Button disabled={pending()} onClick={() => void run(async () => { await patchDietaryProfileByUserId(lookupStudent(), { tags: profileTags(), note: profileNote().trim() || null }); await refetchProfile(); })}>{t("common.save")}</Button>
                     </div>
                   </Show>
                 </section>
-                <section class="data-shell p-4"><h2 class="font-semibold">{t("meals.bookingAudit")}</h2><div class="mt-3 divide-y divide-border/60"><For each={audit()?.items ?? []}>{(booking) => <div class="flex justify-between gap-3 py-3 text-sm"><span>{personLabel(booking.student)}</span><Badge variant={booking.status === "booked" ? "default" : "secondary"}>{booking.status}</Badge></div>}</For></div></section>
+                <section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.bookingAudit")}</h2><div class="mt-3 divide-y divide-border-hairline"><For each={audit()?.items ?? []}>{(booking) => <div class="flex justify-between gap-3 py-3 text-sm"><span>{personLabel(booking.student)}</span><Badge variant={booking.status === "booked" ? "default" : "secondary"}>{booking.status}</Badge></div>}</For></div></section>
                 <Show when={isAdmin()}>
-                  <section class="data-shell space-y-3 p-4"><h2 class="font-semibold">{t("meals.recordCredit")}</h2><p class="text-sm text-muted-foreground">{t("meals.creditAppendOnly")}</p><Input type="number" min={0.01} step={0.01} value={creditAmount()} placeholder={t("meals.amountTry")} onInput={(e) => setCreditAmount(e.currentTarget.value)} /><Input maxlength={limits()?.meal.max_ledger_method_len} value={creditMethod()} placeholder={t("meals.method")} onInput={(e) => setCreditMethod(e.currentTarget.value)} /><Textarea maxlength={limits()?.meal.max_ledger_note_len} value={creditNote()} placeholder={t("meals.note")} onInput={(e) => setCreditNote(e.currentTarget.value)} /><Button disabled={!lookupStudent() || pending()} onClick={() => void run(async () => { await postMealCredit({ student_id: lookupStudent(), amount_minor: Math.round(Number(creditAmount()) * 100), method: creditMethod().trim() || undefined, note: creditNote().trim() || undefined }); setCreditAmount(""); setCreditMethod(""); setCreditNote(""); await Promise.all([refetchBalance(), refetchLedger()]); }, t("meals.creditRecorded"))}>{t("meals.recordCredit")}</Button></section>
+                  <section class="data-shell space-y-3 p-4"><h2 class="font-semibold text-text-strong">{t("meals.recordCredit")}</h2><p class="text-sm text-text-subtle">{t("meals.creditAppendOnly")}</p><Input type="number" min={0.01} step={0.01} value={creditAmount()} placeholder={t("meals.amountTry")} onInput={(e) => setCreditAmount(e.currentTarget.value)} /><Input maxlength={limits()?.meal.max_ledger_method_len} value={creditMethod()} placeholder={t("meals.method")} onInput={(e) => setCreditMethod(e.currentTarget.value)} /><Textarea maxlength={limits()?.meal.max_ledger_note_len} value={creditNote()} placeholder={t("meals.note")} onInput={(e) => setCreditNote(e.currentTarget.value)} /><Button disabled={!lookupStudent() || pending()} onClick={() => void run(async () => { await postMealCredit({ student_id: lookupStudent(), amount_minor: Math.round(Number(creditAmount()) * 100), method: creditMethod().trim() || undefined, note: creditNote().trim() || undefined }); setCreditAmount(""); setCreditMethod(""); setCreditNote(""); await Promise.all([refetchBalance(), refetchLedger()]); }, t("meals.creditRecorded"))}>{t("meals.recordCredit")}</Button></section>
                 </Show>
               </TabsContent>
             </Tabs>
@@ -287,7 +287,7 @@ function MealDetailContent() {
                 <div class="space-y-1.5"><Label for="dish-name">{t("meals.dishName")}</Label><Input id="dish-name" required maxlength={limits()?.meal.max_dish_name_len} value={dishName()} onInput={(e) => setDishName(e.currentTarget.value)} /></div>
                 <div class="space-y-1.5"><Label for="dish-description">{t("form.description")}</Label><Textarea id="dish-description" maxlength={limits()?.meal.max_dish_description_len} value={dishDescription()} onInput={(e) => setDishDescription(e.currentTarget.value)} /></div>
                 <div class="space-y-1.5"><Label for="dish-price">{t("meals.priceTry")}</Label><Input id="dish-price" required type="number" min={0} step={0.01} value={dishPrice()} onInput={(e) => setDishPrice(e.currentTarget.value)} /></div>
-                <div class="flex flex-wrap gap-2"><For each={settings()?.dietary_tags ?? []}>{(tag) => <label class="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"><input type="checkbox" checked={dishTags().includes(tag)} onChange={() => toggleTag(tag, dishTags(), setDishTags)} />{tag}</label>}</For></div>
+                <div class="flex flex-wrap gap-2"><For each={settings()?.dietary_tags ?? []}>{(tag) => <label class="flex items-center gap-2 rounded-lg border border-border-line px-3 py-2 text-sm"><input type="checkbox" checked={dishTags().includes(tag)} onChange={() => toggleTag(tag, dishTags(), setDishTags)} />{tag}</label>}</For></div>
                 <Button type="submit" disabled={pending()}>{t("common.save")}</Button>
               </form>
             </SidePanel>

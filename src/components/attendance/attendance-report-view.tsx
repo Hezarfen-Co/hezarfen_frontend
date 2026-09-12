@@ -25,6 +25,18 @@ type CourseAttendanceRow = AttendanceReport["courses"][number];
 export function AttendanceReportView(props: { report: AttendanceReport; compact?: boolean }) {
   const t = useT();
   const compact = () => props.compact === true;
+  const combined = createMemo(() => {
+    const e = props.report.events;
+    const s = props.report.sessions;
+    const total = e.total + s.total;
+    const present = e.present + s.present;
+    return {
+      rate: total > 0 ? present / total : null,
+      absent: e.absent + s.absent,
+      excused: e.excused + s.excused,
+      totalAbsence: e.absent + s.absent + e.excused + s.excused,
+    };
+  });
   const blocks = () => [
     { title: t("attendance.events"), counts: props.report.events, color: "bg-emerald-500" },
     { title: t("attendance.sessions"), counts: props.report.sessions, color: "bg-sky-500" },
@@ -66,20 +78,22 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
 
   return (
     <div class="min-w-0 space-y-4">
-      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-4">
         <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
-          <dt class="text-xs font-medium text-muted-foreground">{t("common.all")}</dt>
-          <dd class="mt-2 text-3xl font-semibold tabular-nums">
-            {props.report.events.total + props.report.sessions.total}
-          </dd>
+          <dt class="text-xs font-medium text-muted-foreground">{t("attendance.overallRate")}</dt>
+          <dd class="mt-2 text-3xl font-semibold tabular-nums">{percent(combined().rate)}</dd>
         </div>
         <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
-          <dt class="text-xs font-medium text-muted-foreground">{t("attendance.events")}</dt>
-          <dd class="mt-2 text-3xl font-semibold tabular-nums">{percent(props.report.events.rate)}</dd>
+          <dt class="text-xs font-medium text-muted-foreground">{t("attendance.totalAbsence")}</dt>
+          <dd class="mt-2 text-3xl font-semibold tabular-nums">{combined().totalAbsence}</dd>
         </div>
         <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
-          <dt class="text-xs font-medium text-muted-foreground">{t("attendance.sessions")}</dt>
-          <dd class="mt-2 text-3xl font-semibold tabular-nums">{percent(props.report.sessions.rate)}</dd>
+          <dt class="text-xs font-medium text-muted-foreground">{t("status.excused")}</dt>
+          <dd class="mt-2 text-3xl font-semibold tabular-nums">{combined().excused}</dd>
+        </div>
+        <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
+          <dt class="text-xs font-medium text-muted-foreground">{t("status.absent")}</dt>
+          <dd class="mt-2 text-3xl font-semibold tabular-nums">{combined().absent}</dd>
         </div>
       </dl>
 
@@ -130,7 +144,7 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
               class="min-w-0"
               columns={columns()}
               data={props.report.courses}
-              tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-160")}
+              tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed sm:min-w-160")}
               enableColumnVisibility={false}
             />
           </Show>

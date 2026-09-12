@@ -413,7 +413,7 @@ export function DataTableFrame(props: ParentProps<{ class?: string }>) {
 
 export function DataTableEmpty(props: ParentProps<{ class?: string }>) {
   return (
-    <div class={cn("rounded-lg border border-dashed border-border/70 bg-muted/15 px-6 py-10 text-center text-sm leading-6 text-muted-foreground", props.class)}>
+    <div class={cn("rounded-xl border border-dashed border-border-line bg-surface-overlay px-6 py-10 text-center text-sm leading-6 text-text-subtle", props.class)}>
       {props.children}
     </div>
   );

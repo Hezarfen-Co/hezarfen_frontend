@@ -54,6 +54,24 @@
   --color-sidebar: hsl(var(--sidebar));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
 
+  /* Hezarfen Figma semantic aliases. Keep page code semantic while matching
+     the shared design vocabulary across light and dark modes. */
+  --color-brand: hsl(var(--brand));
+  --color-brand-accent: hsl(var(--brand-accent));
+  --color-brand-hover: hsl(var(--brand-hover));
+  --color-brand-ink: hsl(var(--brand-ink));
+  --color-brand-wash: hsl(var(--brand-wash));
+  --color-surface-base: hsl(var(--surface-base));
+  --color-surface-overlay: hsl(var(--surface-overlay));
+  --color-surface-tint: hsl(var(--surface-tint));
+  --color-surface-fill: hsl(var(--surface-fill));
+  --color-text-strong: hsl(var(--text-strong));
+  --color-text-default: hsl(var(--text-default));
+  --color-text-subtle: hsl(var(--text-subtle));
+  --color-text-placeholder: hsl(var(--text-placeholder));
+  --color-border-line: hsl(var(--border-line));
+  --color-border-hairline: hsl(var(--border-hairline));
+
   /* bdash radius scale: base 0.5rem, sm=r-4px, md=r-2px, lg=r, xl=r+4px */
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-2xl: calc(var(--radius) + 8px);
@@ -125,25 +143,24 @@
   @apply border border-border/70 bg-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground;
 }
 
-/* AI action button: matches the app logo's orange instead of the theme's
-   primary color, so it reads as a distinct brand accent in the top bar. */
+/* AI action button uses the landing-page brand blue. */
 @utility topbar-ai-control {
-  @apply border border-orange-500/20 bg-orange-500/10 text-orange-500 transition-colors hover:bg-orange-500/16 hover:text-orange-500;
+  @apply border border-brand/20 bg-brand/10 text-brand transition-colors hover:bg-brand/16 hover:text-brand;
 }
 
 @utility data-shell {
-  @apply rounded-lg border border-border bg-card shadow-sm;
+  @apply rounded-xl border border-border-line bg-surface-base;
 }
 
 @utility data-table-wrap {
-  @apply isolate max-h-[65vh] overflow-auto rounded-lg border border-border bg-card;
+  @apply isolate max-h-[65vh] overflow-auto rounded-xl border border-border-line bg-surface-base;
 }
 
 @utility data-table {
   @apply w-full caption-bottom text-sm;
 
   & thead {
-    @apply sticky top-0 z-20 border-b border-border/80 text-muted-foreground;
+    @apply sticky top-0 z-20 border-b border-border-hairline text-text-subtle;
     background-color: color-mix(in srgb, hsl(var(--muted)) 55%, hsl(var(--card)));
   }
 
@@ -152,7 +169,7 @@
      * text-right/center utility on TableHead and force every header left. The
      * TableHead base class provides the left default; alignment stays utility-driven.
      * Title Case (no uppercase transform), light weight, muted. */
-    @apply h-11 overflow-hidden text-ellipsis whitespace-nowrap px-3 text-xs font-medium tracking-normal text-muted-foreground first:pl-4 last:pr-4;
+    @apply h-11 overflow-hidden text-ellipsis whitespace-nowrap px-3 text-xs font-medium tracking-normal text-text-subtle first:pl-4 last:pr-4;
     background-color: color-mix(in srgb, hsl(var(--muted)) 55%, hsl(var(--card)));
   }
 
@@ -162,7 +179,7 @@
   }
 
   & tbody tr {
-    @apply border-b border-border/60 transition-colors data-[state=selected]:bg-muted;
+    @apply border-b border-border-hairline transition-colors data-[state=selected]:bg-muted;
     background-color: hsl(var(--card));
   }
 
@@ -341,28 +358,43 @@
     color-scheme: light;
 
     /* --accent-light / --accent-light-fg are set inline by preferences-context
-       when the user picks an accent color; the fallback here is the neutral
-       default for everyone else. */
-    --ui-accent: var(--accent-light, 0 0% 13%);
-    --background: 0 0% 98%;
-    --foreground: 0 0% 8%;
+       when the user picks an accent color. Figma brand blue is only the
+       default; a saved user palette continues to win. */
+    --brand: 191.94 100% 42.35%;
+    --brand-accent: 191.94 100% 42.35%;
+    --brand-hover: 192.06 100% 37.06%;
+    --brand-ink: 192.46 94.2% 27.06%;
+    --brand-wash: 193.33 75% 95.29%;
+    --surface-base: 0 0% 100%;
+    --surface-overlay: 0 0% 97%;
+    --surface-tint: 0 0% 96%;
+    --surface-fill: 0 0% 90%;
+    --text-strong: 0 0% 4%;
+    --text-default: 240 6% 10%;
+    --text-subtle: 0 0% 45%;
+    --text-placeholder: 0 0% 63%;
+    --border-line: 0 0% 4% / 0.1;
+    --border-hairline: 0 0% 91%;
+    --ui-accent: var(--accent-light, var(--brand));
+    --background: var(--surface-overlay);
+    --foreground: var(--text-default);
     --card: 0 0% 100%;
     --card-foreground: 0 0% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 8%;
     --primary: var(--ui-accent);
     --primary-foreground: var(--accent-light-fg, 0 0% 98%);
-    --secondary: 0 0% 94%;
+    --secondary: var(--surface-fill);
     --secondary-foreground: 0 0% 16%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 40%;
-    --accent: 0 0% 92%;
+    --muted: var(--surface-tint);
+    --muted-foreground: var(--text-subtle);
+    --accent: var(--surface-fill);
     --accent-foreground: 0 0% 13%;
     --destructive: 356 82% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 89%;
-    --input: 0 0% 82%;
-    --ring: var(--accent-light, 0 0% 45%);
+    --border: var(--border-hairline);
+    --input: var(--border-line);
+    --ring: var(--accent-light, var(--brand));
     --radius: 0.5rem;
     --success: 137 63% 39%;
     --warning: 38 92% 50%;
@@ -377,31 +409,41 @@
        a separate, lighter-lightness variant of the same picked hue so it stays
        legible against this theme's near-black background. */
     color-scheme: dark;
-    --ui-accent: var(--accent-dark, 0 0% 92%);
-    --background: 0 0% 4%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 98%;
+    --surface-base: 0 0% 6%;
+    --surface-overlay: 0 0% 6%;
+    --surface-tint: 0 0% 15%;
+    --surface-fill: 0 0% 15%;
+    --text-strong: 0 0% 98%;
+    --text-default: 0 0% 96%;
+    --text-subtle: 0 0% 63%;
+    --text-placeholder: 0 0% 63%;
+    --border-line: 0 0% 20%;
+    --border-hairline: 0 0% 20%;
+    --ui-accent: var(--accent-dark, var(--brand));
+    --background: var(--surface-overlay);
+    --foreground: var(--text-strong);
+    --card: var(--surface-base);
+    --card-foreground: var(--text-strong);
+    --popover: var(--surface-base);
+    --popover-foreground: var(--text-strong);
     --primary: var(--ui-accent);
-    --primary-foreground: var(--accent-dark-fg, 0 0% 6%);
-    --secondary: 0 0% 16%;
+  --primary-foreground: var(--accent-dark-fg, 0 0% 100%);
+    --secondary: var(--surface-fill);
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 13%;
-    --muted-foreground: 0 0% 62%;
-    --accent: 0 0% 18%;
+    --muted: var(--surface-tint);
+    --muted-foreground: var(--text-subtle);
+    --accent: var(--surface-fill);
     --accent-foreground: 0 0% 98%;
     --destructive: 357 94% 64%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 17%;
-    --input: 0 0% 24%;
-    --ring: var(--accent-dark, 0 0% 45%);
+    --border: var(--border-hairline);
+    --input: var(--border-line);
+    --ring: var(--accent-dark, var(--brand));
     --success: 137 58% 58%;
     --warning: 38 92% 54%;
     --info: 219 98% 60%;
-    --surface-elevated: 0 0% 10%;
-    --sidebar: 0 0% 4%;
+    --surface-elevated: var(--surface-fill);
+    --sidebar: var(--surface-base);
     --sidebar-foreground: 0 0% 98%;
   }
 

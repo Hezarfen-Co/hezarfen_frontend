@@ -5,7 +5,7 @@ export function ExamResultBadge(props: { mark?: number | null; notGraded?: boole
   const t = useT();
   if (props.notGraded || props.mark == null) {
     return (
-      <Badge variant="outline" class="rounded-sm px-3 py-1 text-sm">
+      <Badge variant="outline" class="font-medium">
         {t("exams.notGraded")}
       </Badge>
     );
@@ -13,7 +13,7 @@ export function ExamResultBadge(props: { mark?: number | null; notGraded?: boole
   const mark = props.mark;
   const variant = mark >= 70 ? "default" : mark >= 50 ? "secondary" : "destructive";
   return (
-    <Badge variant={variant} class="rounded-sm px-3 py-1 text-base font-semibold">
+    <Badge variant={variant} class="font-semibold tabular-nums">
       {mark}/100
     </Badge>
   );

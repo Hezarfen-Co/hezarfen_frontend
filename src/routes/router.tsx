@@ -7,6 +7,7 @@ import {
 } from "@tanstack/solid-router";
 import { Suspense, createRenderEffect, createRoot, lazy, type Component } from "solid-js";
 import { AppShell } from "@/components/layout/app-shell";
+import { NotFoundPage } from "@/components/system/not-found-page";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { AuthProvider } from "@/stores/auth-context";
 import { ModulesProvider } from "@/stores/modules-context";
@@ -66,6 +67,7 @@ const ProfilePage = lazyRoute(() => import("@/pages/profile-page"));
 const PaymentStatementPage = lazyRoute(() => import("@/pages/payment-statement-page"));
 const WhiteboardsPage = lazyRoute(() => import("@/pages/whiteboards-page"));
 const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
+const ComingSoonPage = lazyRoute(() => import("@/pages/coming-soon-page"));
 
 function RootComponent() {
   return (
@@ -83,14 +85,7 @@ function RootComponent() {
 
 const rootRoute = createRootRoute({
   component: RootComponent,
-  notFoundComponent: () => (
-    <div class="space-y-2 py-16 text-center">
-      <p class="text-lg font-medium">404</p>
-      <a href="/" class="text-sm text-muted-foreground underline-offset-4 hover:underline">
-        Home
-      </a>
-    </div>
-  ),
+  notFoundComponent: () => <NotFoundPage />,
 });
 
 const indexRoute = createRoute({
@@ -396,6 +391,36 @@ const whiteboardRoute = createRoute({
   component: WhiteboardPage,
 });
 
+// One route per Figma menu entry with no backend yet — each gets its own URL
+// (so breadcrumbs, back and direct links behave normally) but all render the
+// same "not ready" page. Slugs are read back by coming-soon-page.tsx.
+const COMING_SOON_SLUGS = [
+  "hezarfen-zeka",
+  "ses-atolyesi",
+  "deneme-sinavlari",
+  "optik-okuma",
+  "raporlar",
+  "lisans-modulleri",
+  "kvkk-denetim",
+  "ogrenciler",
+  "ogretmenler",
+  "ogrenci-analizi",
+  "bekleyen-onaylar",
+  "soru-uretimi",
+  "calisma-programim",
+  "devamsizlik",
+  "sinav-sonuclari-veli",
+  "calisma-plani",
+] as const;
+
+const comingSoonRoutes = COMING_SOON_SLUGS.map((slug) =>
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: `/coming-soon/${slug}`,
+    component: ComingSoonPage,
+  }),
+);
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -445,6 +470,7 @@ const routeTree = rootRoute.addChildren([
   whiteboardRoute,
   myProfileRoute,
   userProfileRoute,
+  ...comingSoonRoutes,
 ]);
 
 function RouterPending() {

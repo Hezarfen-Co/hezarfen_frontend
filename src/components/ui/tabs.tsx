@@ -30,7 +30,7 @@ export function TabsTrigger<T extends ValidComponent = "button">(
   return (
     <TabsPrimitive.Trigger
       class={cn(
-        "group inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent px-3 text-sm font-medium text-muted-foreground transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-selected:border-border data-selected:bg-secondary data-selected:text-secondary-foreground data-selected:shadow-xs",
+        "group inline-flex h-8 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent px-3 text-sm font-medium text-muted-foreground transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-selected:border-border data-selected:bg-surface-base data-selected:text-foreground data-selected:shadow-xs",
         local.class,
       )}
       {...rest}

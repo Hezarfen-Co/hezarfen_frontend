@@ -205,6 +205,10 @@ export function CommandPalette(props: CommandPaletteProps) {
     for (const group of visibleNavGroups(userRole, modules.enabled())) {
       const groupName = t(group.labelKey);
       for (const item of group.items) {
+        // Çelebi and the account-settings entries open an existing shell
+        // surface rather than a route — the palette already offers both
+        // above, wired to the panel/dialog directly.
+        if (item.action) continue;
         list.push({
           id: `page-${item.to}`,
           category: "pages",

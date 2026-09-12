@@ -48,9 +48,9 @@ export const ChartBar: Component<ChartBarProps> = (props) => {
   });
 
   return (
-    <div class={cn("flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm", props.class)}>
+    <div class={cn("flex flex-col gap-4 rounded-xl border border-border-line bg-surface-base p-4", props.class)}>
       <Show when={props.title}>
-        <div class="border-b border-border pb-3">
+        <div class="border-b border-border-hairline pb-3">
           <div>
             <h3 class="text-sm font-semibold tracking-tight text-foreground">{props.title}</h3>
             <Show when={props.subtitle}>
@@ -91,7 +91,7 @@ export const ChartBar: Component<ChartBarProps> = (props) => {
                       </span>
                     </div>
 
-                    <div class="relative h-2.5 w-full overflow-hidden rounded-full bg-muted/60 dark:bg-muted/40">
+                    <div class="relative h-2.5 w-full overflow-hidden rounded-full bg-surface-fill">
                       <div
                         class={cn(
                           "h-full rounded-full transition-all duration-500 ease-out",

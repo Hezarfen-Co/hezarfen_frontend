@@ -1,6 +1,8 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { Show, createSignal } from "solid-js";
+import { Show, createResource, createSignal } from "solid-js";
 import type { User } from "@/api/client";
+import { getMyProfile } from "@/api/users";
+import { avatarRevision } from "@/lib/avatar";
 import type { MessageKey } from "@/i18n/messages";
 import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
 import {
@@ -28,6 +30,18 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = createSignal(false);
 
+  // The auth user carries no avatar meta, so without this both chips below
+  // attempt the image and 404 when there is no photo. One profile read tells
+  // both; it re-reads on every avatar upload/delete via avatarRevision, and
+  // stays unfetched while logged out.
+  const [profile] = createResource(() => (auth.user() ? avatarRevision() : null), () =>
+    getMyProfile(),
+  );
+  const hasAvatar = () => {
+    const p = profile();
+    return p ? p.avatar !== null : false;
+  };
+
   return (
     <>
       <Show when={auth.user()}>
@@ -49,6 +63,7 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                 <UserAvatar
                   userId={u().id}
                   name={name()}
+                  hasAvatar={hasAvatar()}
                   size="sm"
                   class={props.collapsed ? "h-9 w-9" : undefined}
                 />
@@ -68,7 +83,7 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                   class="m-1.5 gap-2.5 rounded-xl bg-muted/70 p-2.5 focus:bg-muted data-highlighted:bg-muted dark:bg-white/8 dark:focus:bg-white/10 dark:data-highlighted:bg-white/10"
                   onSelect={() => void navigate({ to: "/profile/me" })}
                 >
-                  <UserAvatar userId={u().id} name={name()} size="md" class="ring-0" />
+                  <UserAvatar userId={u().id} name={name()} hasAvatar={hasAvatar()} size="md" class="ring-0" />
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-sm font-semibold">{name()}</span>
                     <span class="block truncate text-xs text-muted-foreground dark:text-white/60">{t("profile.myProfile")}</span>
