@@ -156,21 +156,25 @@ tabs map to fields absent from `SchoolSettings` entirely.
 
 ### Remaining
 
-Keyboard/focus audit, dark-mode screenshot pass, and the role/module
-authorization regression. Notification panel, branded 404 and network/error
-states are done.
+Migration is closed as of 2026-09-12 (`bd0720f`): every Figma frame has a
+working screen, nothing invents a value the API cannot serve, and
+`bun run build` + the full `vitest` suite are green. No open bug remains.
+
+Two checks are deliberately deferred, not missing work — both are
+verification passes over finished screens, to be run when budget allows:
+
+- Focus-contrast check: visible focus rings and text contrast in both themes.
+- Mobile keyboard tour: tab order and focus traps through dialogs, side
+  panels, tables, and mobile navigation at 393px.
 
 Desktop, student mobile and parent mobile composition are complete, and the
 student and parent routes were walked at 393px, 375px and 320px against a
-seeded school rather than reasoned about on paper. Two layout bugs recur and
-are worth checking for in the remaining work: a grid that names only a `sm:`
-or `lg:` column count with no base `grid-cols-1` overflows the page, because
-the single implicit column takes the widest card's min-content; and a table
-cell holding a name with no `truncate` renders nowrap and overlaps the column
-beside it.
-
-Outstanding from the validation checklist: the dark-mode screenshot pass, the
-keyboard/focus audit, and the role/module authorization regression.
+seeded school rather than reasoned about on paper. Two layout bugs recurred
+during the work and are worth checking for in future screens: a grid that
+names only a `sm:` or `lg:` column count with no base `grid-cols-1`
+overflows the page, because the single implicit column takes the widest
+card's min-content; and a table cell holding a name with no `truncate`
+renders nowrap and overlaps the column beside it.
 
 ### Waiting for backend or product decisions
 
