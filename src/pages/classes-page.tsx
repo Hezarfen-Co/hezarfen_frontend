@@ -33,7 +33,7 @@ import { useT } from "@/stores/preferences-context";
 const MEMBER_COUNT_FETCH_CAP = 200;
 
 export default function ClassesPage() {
-  return <RouteGuard><ClassesContent /></RouteGuard>;
+  return <RouteGuard minRole="teacher"><ClassesContent /></RouteGuard>;
 }
 
 function ClassesContent() {
