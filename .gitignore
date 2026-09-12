@@ -32,3 +32,6 @@ test-results
 
 # SurrealDB CLI REPL history (kb queries); see .claude/kb-sync.sh
 history.txt
+
+# Browser-verification screenshots land in the repo root; never commit them
+/*.png
