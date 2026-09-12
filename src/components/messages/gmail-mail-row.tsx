@@ -47,9 +47,9 @@ export function GmailMailRow(props: GmailMailRowProps) {
         // A phone cannot fit sender, subject, snippet, date and actions on one
         // 40px line, so below sm: the row stacks and grows to a thumb-sized
         // target; from sm: up it stays the dense single line it always was.
-        "group relative flex shrink-0 cursor-pointer select-none flex-col gap-0.5 border-b border-l-4 border-border/60 px-3 py-2.5 text-xs transition-colors duration-150",
+        "group relative flex shrink-0 cursor-pointer select-none flex-col gap-0.5 border-b border-l-4 border-border-hairline px-3 py-2.5 text-xs transition-colors duration-150",
         "sm:h-10 sm:flex-row sm:items-center sm:gap-3 sm:px-4 sm:py-0",
-        unread() ? "border-l-primary bg-card font-semibold text-foreground hover:bg-accent/40" : "border-l-transparent bg-background/60 text-muted-foreground hover:bg-muted/50",
+        unread() ? "border-l-primary bg-surface-base font-semibold text-foreground hover:bg-accent/40" : "border-l-transparent bg-surface-overlay text-muted-foreground hover:bg-muted/50",
         props.isSelected && "bg-accent/80 text-foreground"
       )}
       onClick={props.onSelect}
@@ -66,7 +66,7 @@ export function GmailMailRow(props: GmailMailRowProps) {
           {isSent() ? `${t("messages.to")}${peerName()}` : peerName()}
         </span>
         <Show when={role()}>
-          <span class="shrink-0 text-[9px] uppercase font-mono px-1 py-0.2 rounded bg-muted text-muted-foreground border border-border/50">
+          <span class="shrink-0 text-[9px] uppercase font-mono px-1 py-0.2 rounded bg-muted text-muted-foreground border border-border-hairline">
             {t(`role.${role()}` as any)}
           </span>
         </Show>

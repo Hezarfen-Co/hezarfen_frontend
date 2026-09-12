@@ -53,7 +53,7 @@ function WhiteboardsContent() {
         title={t("whiteboard.title")}
         description={t("whiteboard.subtitle")}
         actions={
-          <Button type="button" onClick={() => setCreateOpen(true)}>
+          <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
             <IconPlus class="h-4 w-4" />
             {t("whiteboard.create")}
           </Button>
@@ -112,24 +112,24 @@ function BoardCard(props: { board: Board; isCreator: boolean; onOpen: () => void
   return (
     <button
       type="button"
-      class="flex w-full cursor-pointer flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 text-left shadow-xs outline-hidden transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:bg-muted/25 hover:shadow-sm focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-ring active:translate-y-0"
+      class="flex w-full cursor-pointer flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-4 text-left shadow-xs outline-hidden transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:bg-surface-tint focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-ring active:translate-y-0"
       onClick={props.onOpen}
     >
       <div class="flex items-start justify-between gap-2">
-        <h3 class="min-w-0 truncate font-semibold">{props.board.title}</h3>
+        <h3 class="min-w-0 truncate font-semibold text-text-strong">{props.board.title}</h3>
         <div class="flex shrink-0 gap-1">
           <Show when={props.board.closed_at != null}>
-            <Badge variant="outline" class="rounded-full text-amber-600">{t("whiteboard.closedBadge")}</Badge>
+            <Badge variant="warning">{t("whiteboard.closedBadge")}</Badge>
           </Show>
           <Show when={props.board.locked && props.board.closed_at == null}>
-            <Badge variant="outline" class="rounded-full">{t("whiteboard.lockedBadge")}</Badge>
+            <Badge variant="outline">{t("whiteboard.lockedBadge")}</Badge>
           </Show>
           <Show when={props.isCreator}>
-            <Badge variant="outline" class="rounded-full">{t("whiteboard.creator")}</Badge>
+            <Badge variant="outline">{t("whiteboard.creator")}</Badge>
           </Show>
         </div>
       </div>
-      <p class="text-xs text-muted-foreground">
+      <p class="text-xs text-text-subtle">
         {t("whiteboard.createdAt")}: {props.createdLabel} · {props.board.participants.length + 1} {t("whiteboard.participants").toLowerCase()}
       </p>
     </button>

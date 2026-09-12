@@ -110,7 +110,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
   return (
     <div class="flex flex-col h-full bg-background overflow-auto">
       {/* Top Gmail Navigation & Action Bar */}
-      <div class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card/90 px-3 py-2.5 backdrop-blur-xs sm:px-4">
+      <div class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border-hairline bg-surface-base/90 px-3 py-2.5 backdrop-blur-xs sm:px-4">
         {/* The action set is wider than a phone, so it scrolls sideways instead
             of squeezing every button or wrapping into a second bar. */}
         <div class="no-scrollbar flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
@@ -224,7 +224,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
       {/* Main Mail Content View Container */}
       <div class="flex-1 p-4 sm:p-6 max-w-4xl mx-auto w-full space-y-6">
         {/* Email Subject Title Header */}
-        <div class="flex items-center justify-between gap-3 border-b pb-4">
+        <div class="flex items-center justify-between gap-3 border-b border-border-hairline pb-4">
           <div class="flex items-center gap-3">
             <h1 class="text-xl font-bold tracking-tight text-foreground">
               {props.message.subject}
@@ -240,7 +240,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
         {/* Sender Info Card */}
         <div class="flex items-start justify-between gap-4">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-sm text-primary-foreground shadow-2xs">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-sm text-primary-foreground">
               {peerName().charAt(0).toUpperCase()}
             </div>
             <div class="min-w-0">
@@ -275,13 +275,13 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
         </div>
 
         {/* Email Body Card */}
-        <div class="rounded-lg border border-border/80 bg-card p-6 shadow-2xs leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
+        <div class="rounded-xl border border-border-line bg-surface-base p-6 leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
           <div innerHTML={props.message.body} />
         </div>
 
         {/* Gmail Style Inline Reply Area */}
         <Show when={!isSent()}>
-          <div class="pt-4 border-t">
+          <div class="pt-4 border-t border-border-hairline">
             <Show
               when={isReplying()}
               fallback={
@@ -289,7 +289,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                 <div class="flex items-center gap-3">
                   <Button
                     variant="outline"
-                    class="rounded-xl px-5 h-9 text-xs font-semibold hover:bg-accent"
+                    class="rounded-lg px-5 h-9 text-xs font-semibold hover:bg-accent"
                     onClick={handleStartReply}
                   >
                     <IconMessage class="mr-2 h-4 w-4" />
@@ -301,9 +301,9 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
               {/* Gmail Inline Reply Editor */}
               <form
                 onSubmit={handleSendReply}
-                class="rounded-lg border border-border bg-card p-4 shadow-xs space-y-3"
+                class="rounded-xl border border-border-line bg-surface-base p-4 shadow-xs space-y-3"
               >
-                <div class="flex items-center justify-between text-xs border-b pb-2">
+                <div class="flex items-center justify-between text-xs border-b border-border-hairline pb-2">
                   <div class="flex items-center gap-2">
                     <span class="font-bold text-foreground">{t("messages.replyTo")}</span>
                     <Badge variant="secondary" class="text-xs font-medium">
@@ -334,7 +334,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                   <Button
                     type="submit"
                     size="sm"
-                    class="rounded-xl px-5 h-9 bg-primary font-semibold text-primary-foreground shadow-2xs hover:bg-primary/90"
+                    class="rounded-lg px-5 h-9 font-semibold"
                     disabled={sending() || !replyBody().trim()}
                   >
                     <IconSend class="mr-2 h-4 w-4" />

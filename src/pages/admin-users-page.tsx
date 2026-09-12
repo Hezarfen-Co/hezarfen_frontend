@@ -50,9 +50,7 @@ function AdminUsersContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader eyebrow={t("nav.users")} title={t("admin.title")} description={t("admin.subtitle")} />
-      </div>
+      <PageHeader eyebrow={t("nav.users")} title={t("admin.title")} description={t("admin.subtitle")} />
 
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
@@ -63,7 +61,7 @@ function AdminUsersContent() {
         <For each={ROLES}>{(role) => <Metric role={role} label={t(`role.${role}` as MessageKey)} value={roleCount(role)} />}</For>
       </section>
 
-      <div class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+      <div class="data-shell space-y-4 p-4">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={list()}>
             <UserTable
@@ -92,7 +90,7 @@ function AdminUsersContent() {
 function Metric(props: { role: Role; label: string; value: number }) {
   return (
     <article class="data-shell p-4">
-      <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{props.label}</p>
+      <p class="text-xs font-medium text-text-subtle">{props.label}</p>
       <p class="mono mt-2 text-2xl font-semibold tabular-nums">{props.value}</p>
     </article>
   );

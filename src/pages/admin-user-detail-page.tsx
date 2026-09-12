@@ -102,7 +102,7 @@ function AdminUserDetailContent() {
               <DetailField label={t("profile.birthDate")} value={current().birth_date || "—"} />
               <DetailField label={t("admin.id")} value={current().id} mono />
               <div class="space-y-1.5">
-                <p class="text-xs font-medium text-muted-foreground">{t("admin.role")}</p>
+                <p class="text-xs font-medium text-text-subtle">{t("admin.role")}</p>
                 <div class="flex gap-2">
                   <Select
                     class="h-9"

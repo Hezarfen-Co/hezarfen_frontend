@@ -86,11 +86,11 @@ export function BankQuestionForm(props: {
 
   return (
     <div class="space-y-4">
-      <p class="rounded-lg border border-amber-500/20 bg-amber-500/8 px-3 py-2 text-xs text-muted-foreground">
+      <p class="rounded-md border border-border-line bg-surface-overlay px-3 py-2 text-xs text-text-subtle">
         {t("bank.copyNotice")}
       </p>
 
-      <div class="space-y-1.5 rounded-lg border bg-card p-3.5 shadow-xs">
+      <div class="space-y-1.5 rounded-xl border border-border-line bg-surface-overlay p-3.5">
         <Label for="bank-course" class="text-xs font-semibold text-muted-foreground">{t("nav.courses")}</Label>
         <Select
           id="bank-course"
@@ -107,7 +107,7 @@ export function BankQuestionForm(props: {
         <p class="text-[11px] text-muted-foreground">{t("bank.courseHint")}</p>
       </div>
 
-      <div class="space-y-1.5 rounded-lg border bg-card p-3.5 shadow-xs">
+      <div class="space-y-1.5 rounded-xl border border-border-line bg-surface-overlay p-3.5">
         <Label for="bank-visibility" class="text-xs font-semibold text-muted-foreground">{t("bank.whoCanSee")}</Label>
         <Select
           id="bank-visibility"

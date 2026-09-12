@@ -2,29 +2,31 @@
 
 ## Source
 
-bDash is Hezarfen's visual source of truth. Hezarfen keeps its SolidJS
-architecture, Kobalte behavior, content model, workflows, semantic status colors,
-and accessibility. React/Radix implementation details are not copied.
+The `Hezarfen App Design` Figma file (`E8K670gsUx87yMOySGWrKf`) is the layout
+and component source of truth. The public landing project at
+`/Users/burakboduroglu/Projects/hezarfen` is the brand source of truth for the
+logo and blue palette. Hezarfen keeps its SolidJS architecture, Kobalte
+behavior, content model, workflows, semantic status colors, and accessibility.
+Static sample content from Figma never replaces live application data.
 
 ## Color
 
 Light:
 
-- background, card, popover, sidebar: `#F8F9FA`
-- foreground: `#212529`
-- primary: `#495057`; primary foreground: `#F8F9FA`
-- secondary and muted: `#DEE2E6`
-- accent and border: `#CED4DA`
-- input: `#ADB5BD`; muted foreground and ring: `#6C757D`
+- brand and brand accent: `#00ADD8`; brand hover: `#0097BD`
+- surface/base: `#FFFFFF`; surface/overlay: `#F7F7F7`
+- surface/tint: `#F5F5F5`; surface/fill: `#E5E5E5`
+- text/strong: `#0A0A0A`; text/default: `#18181B`
+- text/subtle: `#737373`; text/placeholder: `#A1A1A1`
+- border/line: `rgba(10, 10, 10, 0.1)`; border/hairline: `#E9E9E9`
 
 Dark:
 
-- background, card, popover, sidebar: `#212529`
-- foreground: `#F8F9FA`
-- primary: `#CED4DA`; primary foreground: `#212529`
-- secondary and muted: `#495057`
-- accent: `#6C757D`; border: `#495057`; input: `#6C757D`
-- muted foreground: `#CED4DA`; ring: `#ADB5BD`
+- surface/base and background: `#0F0F0F`
+- surface/overlay, tint, and fill: `#262626`
+- text/strong: `#FAFAFA`; text/default: `#F5F5F5`
+- text/subtle and placeholder: `#A1A1A1`; border: `#333333`
+- brand stays `#00ADD8`; brand hover stays `#0097BD`
 
 Success, warning, destructive, and info remain semantic. Custom palette choice
 continues to override `--ui-accent`, which feeds `--primary`.
@@ -41,10 +43,11 @@ continues to override `--ui-accent`, which feeds `--primary`.
 
 - Base radius: `0.5rem`
 - Controls and menus: `rounded-md`
-- Cards and tables: `rounded-lg`
-- Resource/page header: `rounded-xl`
-- Default control: `h-9`; small control: `h-8`; large control: `h-10`
-- Content surfaces: `shadow-sm`; menus/popovers: `shadow-xl shadow-black/10`
+- Cards, tables, dialogs, and empty states: `rounded-xl`
+- Page headers are plain content hierarchy, not decorative cards
+- Default control: `h-9`; small button: `26px`; tabs: `32px`; badges: `20px`
+- Content surfaces use a hairline border without a standing shadow; menus and
+  overlays use the documented contextual elevation
 - Dialogs and side panels: `shadow-2xl shadow-black/20`
 - Content surfaces stay opaque. Blur is limited to modal overlays and table
   headers where hierarchy needs it.
@@ -59,7 +62,7 @@ display-font, translucent surface, or custom shadow rules.
 
 ## DataTable
 
-- Table shell: `rounded-lg border bg-card`
+- Table shell: `rounded-xl border-border-line bg-surface-base`
 - Header: sticky, `text-xs` medium **Title Case** (no uppercase transform),
   `tracking-normal`, muted foreground/background
 - Body: flat rows (no zebra), restrained hover, `tabular-nums` cells so digits

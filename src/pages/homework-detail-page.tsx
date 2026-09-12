@@ -61,20 +61,20 @@ export default function HomeworkDetailPage() {
                 }
               />
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("nav.courses")}</p>
-                  <p class="mt-1 font-medium">{course()?.title ?? item().course}</p>
+                <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("nav.courses")}</p>
+                  <p class="mt-1 font-medium text-text-default">{course()?.title ?? item().course}</p>
                 </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("subjects.subject")}</p>
-                  <p class="mt-1 font-medium">{subject()?.name ?? item().subject}</p>
+                <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("subjects.subject")}</p>
+                  <p class="mt-1 font-medium text-text-default">{subject()?.name ?? item().subject}</p>
                 </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("homework.dueAt")}</p>
-                  <p class="mono mt-1 font-medium tabular-nums">{formatDateTime(item().due_at, locale())}</p>
+                <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("homework.dueAt")}</p>
+                  <p class="mono mt-1 font-medium tabular-nums text-text-default">{formatDateTime(item().due_at, locale())}</p>
                 </div>
-                <div class="detail-metric-card">
-                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("homework.assigned")}</p>
+                <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
+                  <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("homework.assigned")}</p>
                   <Badge variant="outline" class="mt-2 rounded-full">
                     {item().assigned?.length ? t("common.countItem", { count: item().assigned!.length, item: t("courses.rosterItem") }) : t("homework.wholeCourse")}
                   </Badge>

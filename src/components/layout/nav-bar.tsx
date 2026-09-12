@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/solid-router";
 import { Show, createSignal } from "solid-js";
+import { LogoMark } from "@/components/brand/logo-mark";
 import { Button } from "@/components/ui/button";
 import { SideNav } from "@/components/layout/side-nav";
 import { UserMenu } from "@/components/layout/user-menu";
@@ -32,8 +33,8 @@ export function NavBar() {
           </Show>
 
           <Link to="/" class="flex min-w-0 items-center gap-2.5">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-              H
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center text-foreground">
+              <LogoMark size={28} />
             </span>
             <span class="truncate text-base font-semibold tracking-tight sm:text-lg">
               {t("app.name")}
@@ -63,7 +64,9 @@ export function NavBar() {
           <aside class="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-border bg-sidebar pb-[max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))] pt-[env(safe-area-inset-top)] shadow-sm">
             <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
               <span class="flex min-w-0 items-center gap-2">
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">H</span>
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center text-foreground">
+                  <LogoMark size={28} />
+                </span>
                 <span class="truncate text-base font-semibold">{t("app.name")}</span>
               </span>
               <Button

@@ -99,7 +99,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
           {(submission) => (
             <div class="space-y-1">
               <Badge variant="secondary" class="rounded-full">{t("homework.submitted")}</Badge>
-              <p class="text-xs text-muted-foreground">{formatDateTime(submission().updated_at, locale())}</p>
+              <p class="text-xs text-text-subtle">{formatDateTime(submission().updated_at, locale())}</p>
               <Show when={submission().late}><p class="text-xs text-amber-600">{t("homework.late")}</p></Show>
             </div>
           )}
@@ -110,7 +110,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
       id: "result",
       header: t("homework.result"),
       cell: (cell) => (
-        <Show when={cell.row.original.result} fallback={<span class="text-muted-foreground">—</span>}>
+        <Show when={cell.row.original.result} fallback={<span class="text-text-subtle">—</span>}>
           {(result) => (
             <div class="space-y-1">
               <Badge variant="outline" class="rounded-full">{statusLabel(result().status)}</Badge>
@@ -145,7 +145,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
     <section class="data-shell space-y-4 p-5">
       <div>
         <h2 class="text-lg font-semibold">{t("homework.submissions")}</h2>
-        <p class="mt-1 text-sm text-muted-foreground">{t("homework.submissionsHelp")}</p>
+        <p class="mt-1 text-sm text-text-subtle">{t("homework.submissionsHelp")}</p>
       </div>
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
       <Show when={error() && !gradeTarget()}><Alert variant="destructive">{error()}</Alert></Show>
@@ -178,18 +178,18 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
         <Show when={viewTarget()?.submission}>
           {(submission) => (
             <div class="space-y-4">
-              <div class="rounded-lg border bg-muted/20 p-3">
-                <p class="text-xs text-muted-foreground">{t("exams.textAnswer")}</p>
+              <div class="rounded-xl border border-border-line bg-surface-tint p-3">
+                <p class="text-xs text-text-subtle">{t("exams.textAnswer")}</p>
                 <Show
                   when={submission().text}
-                  fallback={<p class="mt-2 text-sm text-muted-foreground">{t("homework.noAnswer")}</p>}
+                  fallback={<p class="mt-2 text-sm text-text-subtle">{t("homework.noAnswer")}</p>}
                 >
                   {(text) => <div class="mt-2 text-sm leading-relaxed" innerHTML={text()} />}
                 </Show>
               </div>
               {/* Skipped entirely (not just an empty placeholder) when there are no files — this is a read-only view, so a "no files" row would just be dead weight. */}
               <Show when={submission().files.length > 0}>
-                <div class="space-y-2 rounded-lg border bg-background/70 p-3">
+                <div class="space-y-2 rounded-xl border border-border-line bg-surface-base p-3">
                   <div class="flex items-center gap-2">
                     <p class="text-sm font-medium">{t("notes.files")}</p>
                     <Badge variant="secondary" class="rounded-full">{submission().files.length}</Badge>
@@ -199,11 +199,11 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
                       {(file) => {
                         const meta = fileTypeMeta(file);
                         return (
-                          <li class="flex items-center gap-2 rounded-lg border bg-card px-2.5 py-2 text-sm">
-                            <span class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border ${meta.class}`}>{meta.icon}</span>
+                          <li class="flex items-center gap-2 rounded-xl border border-border-hairline bg-surface-base px-2.5 py-2 text-sm">
+                            <span class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border-hairline ${meta.class}`}>{meta.icon}</span>
                             <div class="min-w-0 flex-1">
                               <p class="truncate font-medium">{file.name}</p>
-                              <p class="text-xs text-muted-foreground">{formatBytes(file.size)}</p>
+                              <p class="text-xs text-text-subtle">{formatBytes(file.size)}</p>
                             </div>
                             <a href={getHomeworkRosterSubmissionFileUrl(props.homeworkId, viewTarget()!.user, file.id)} download={file.name}>
                               <Button type="button" size="icon" variant="ghost" class="h-7 w-7 rounded-lg" title={t("notes.downloadFile")}>

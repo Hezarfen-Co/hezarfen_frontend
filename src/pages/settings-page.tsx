@@ -167,12 +167,12 @@ function SettingsContent() {
               <span class="text-xs text-muted-foreground">{t("settings.unsaved")}</span>
             </Show>
             <Show when={saved() && !dirty()}>
-              <span class="text-xs text-emerald-700 dark:text-emerald-300">{t("settings.saved")}</span>
+              <span class="text-xs text-success">{t("settings.saved")}</span>
             </Show>
             <Button
               type="button"
               size="sm"
-              class="min-w-30 rounded-lg"
+              class="min-w-[7.5rem] rounded-lg"
               disabled={pending() || !dirty()}
               onClick={() => void save()}
             >
@@ -211,7 +211,7 @@ function SettingsContent() {
                         <h2 class="text-base font-semibold">{t("settings.examKinds")}</h2>
                         <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{t("settings.examKindsHelp")}</p>
                       </div>
-                      <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">
+                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">
                         {examKinds().length}
                       </Badge>
                     </div>
@@ -293,7 +293,7 @@ function SettingsContent() {
                         <h2 class="text-base font-semibold">{t("settings.attendanceStatuses")}</h2>
                         <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{t("settings.attendanceHelp")}</p>
                       </div>
-                      <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">
+                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">
                         {attendanceStatuses().length}
                       </Badge>
                     </div>
@@ -382,7 +382,7 @@ function SettingsContent() {
                         <h2 class="text-base font-semibold">{t("settings.gradeBands")}</h2>
                         <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{t("settings.gradeBandsHelp")}</p>
                       </div>
-                      <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">
+                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">
                         {gradeBands().length}
                       </Badge>
                     </div>
@@ -469,7 +469,7 @@ function SettingsContent() {
                   </div>
                   <div class="space-y-1.5">
                     <Label for="meal-cutoff" class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{t("settings.mealCutoff")}</Label>
-                    <Input id="meal-cutoff" class="h-10 rounded-md text-right font-mono" type="number" min={0} max={limits()?.meal.max_cancel_cutoff_minutes} value={mealCutoff()} placeholder={t("settings.noCutoff")} onInput={(e) => setMealCutoff(e.currentTarget.value)} />
+                    <Input id="meal-cutoff" class="h-9 rounded-md text-right font-mono" type="number" min={0} max={limits()?.meal.max_cancel_cutoff_minutes} value={mealCutoff()} placeholder={t("settings.noCutoff")} onInput={(e) => setMealCutoff(e.currentTarget.value)} />
                   </div>
                 </div>
               </section>
@@ -479,7 +479,7 @@ function SettingsContent() {
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
                       <h2 class="text-base font-semibold">{t("settings.mealSlot")}</h2>
-                      <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">{mealSlots().length}</Badge>
+                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">{mealSlots().length}</Badge>
                     </div>
                   </header>
                   <div class="flex-1 space-y-2 p-4">
@@ -522,7 +522,7 @@ function SettingsContent() {
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
                       <h2 class="text-base font-semibold">{t("settings.dietaryTags")}</h2>
-                      <Badge variant="secondary" class="mono shrink-0 rounded-sm tabular-nums">{dietaryTags().length}</Badge>
+                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">{dietaryTags().length}</Badge>
                     </div>
                   </header>
                   <div class="flex-1 space-y-2 p-4">
@@ -562,7 +562,7 @@ function SettingsContent() {
                   </div>
                   <Input
                     aria-label={t("settings.maxFileSize")}
-                    class="h-10 rounded-md text-right font-mono"
+                    class="h-9 rounded-md text-right font-mono"
                     type="number"
                     min={(limits()?.file.min_max_file_bytes ?? 1024) / BYTES_PER_MIB}
                     max={(limits()?.file.max_max_file_bytes ?? 25 * BYTES_PER_MIB) / BYTES_PER_MIB}

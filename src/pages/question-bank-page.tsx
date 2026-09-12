@@ -145,7 +145,7 @@ function QuestionBankContent() {
             </Badge>
           }
         >
-          <Badge variant="outline" class="gap-1 whitespace-nowrap border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+          <Badge variant="outline" class="gap-1 whitespace-nowrap border-success/50 bg-success/10 text-success">
             <IconUsers class="h-3 w-3" />
             {t("bank.sharedWithSchool")}
           </Badge>
@@ -155,7 +155,10 @@ function QuestionBankContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-[7rem] text-center whitespace-nowrap", cellClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -198,7 +201,7 @@ function QuestionBankContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+      <section class="data-shell space-y-4 p-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -208,7 +211,7 @@ function QuestionBankContent() {
             description={`${t("bank.subtitle")} ${t("bank.countTotal", { total: total() })}`}
             actions={
               <Show when={manageableCourses().length > 0}>
-                <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={() => setCreateOpen(true)}>
+                <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
                   <IconPlus class="h-4 w-4" />
                   {t("bank.create")}
                 </Button>

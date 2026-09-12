@@ -177,7 +177,7 @@ function ExamsContent() {
       cell: (cell) => {
         const status = cell.row.original.displayStatus;
         return (
-          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap rounded-full", scheduleStatusClass(examStatusTone(status)))}>
+          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap", scheduleStatusClass(examStatusTone(status)))}>
             <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(status)))} />
             {statusLabel(status)}
           </Badge>
@@ -187,7 +187,10 @@ function ExamsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "text-center" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -265,7 +268,7 @@ function ExamsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+      <section class="data-shell space-y-4 p-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -275,7 +278,7 @@ function ExamsContent() {
             description={t("exams.subtitle")}
             actions={
               canCreate() ? (
-                <Button type="button" size="sm" class="min-w-30" onClick={openCreateModal}>
+                <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreateModal}>
                   <IconPlus class="h-4 w-4" />
                   {t("exams.create")}
                 </Button>
@@ -324,7 +327,7 @@ function ExamsContent() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    class="h-9 rounded-md px-3 text-xs font-medium text-muted-foreground hover:text-foreground"
+                    class="h-8 rounded-lg px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground"
                     onClick={() => {
                       setStatusFilter("all");
                       setCourseFilter("all");
@@ -353,13 +356,13 @@ function ExamsContent() {
         description={createdExam() ? t("exams.step2Questions") : t("exams.subtitle")}
         size={createStep() === "questions" ? "wide" : "default"}
       >
-        <div class="mb-4 flex rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-1">
+        <div class="mb-4 flex rounded-md border border-border-line bg-surface-overlay p-1">
           <button
             type="button"
             class={cn(
-              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               createStep() === "details"
-                ? "bg-primary text-primary-foreground shadow-2xs"
+                ? "bg-surface-base text-foreground shadow-xs"
                 : "text-muted-foreground hover:bg-muted/50",
             )}
             onClick={() => setCreateStep("details")}
@@ -370,9 +373,9 @@ function ExamsContent() {
             type="button"
             disabled={!createdExam()}
             class={cn(
-              "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               createStep() === "questions"
-                ? "bg-primary text-primary-foreground shadow-2xs"
+                ? "bg-surface-base text-foreground shadow-xs"
                 : createdExam()
                 ? "text-muted-foreground hover:bg-muted/50"
                 : "opacity-40 cursor-not-allowed text-muted-foreground",
@@ -385,7 +388,7 @@ function ExamsContent() {
 
         <Show when={createStep() === "details"}>
           <Show when={!createdExam()}>
-            <div class="mb-4 space-y-1.5 rounded-lg border border-sky-500/15 bg-sky-500/2.5 p-4">
+            <div class="mb-4 space-y-1.5 rounded-xl border border-border-line bg-surface-overlay p-4">
               <label class="text-sm font-medium" for="exam-course">
                 {t("exams.selectCourse")}
               </label>
@@ -431,13 +434,13 @@ function ExamsContent() {
         <Show when={editingExam()}>
           {(exam) => (
             <div class="space-y-4">
-              <div class="flex rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-1">
+              <div class="flex rounded-md border border-border-line bg-surface-overlay p-1">
                 <button
                   type="button"
                   class={cn(
-                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                     editTab() === "details"
-                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      ? "bg-surface-base text-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",
                   )}
                   onClick={() => setEditTab("details")}
@@ -447,9 +450,9 @@ function ExamsContent() {
                 <button
                   type="button"
                   class={cn(
-                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                     editTab() === "questions"
-                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      ? "bg-surface-base text-foreground shadow-xs"
                       : "text-muted-foreground hover:bg-muted/50",
                   )}
                   onClick={() => setEditTab("questions")}

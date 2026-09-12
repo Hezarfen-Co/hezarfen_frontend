@@ -57,7 +57,7 @@ export function CourseNotesPanel(props: {
   };
 
   return (
-    <section class="min-w-0 space-y-4 rounded-lg border border-border/60 bg-card/60 p-3 shadow-xs sm:p-4 dark:border-white/8 dark:bg-card/40">
+    <section class="min-w-0 space-y-4 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4">
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>

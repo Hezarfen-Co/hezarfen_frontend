@@ -36,7 +36,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                 title={t(item.labelKey)}
                 aria-current={active() ? "page" : undefined}
                 class={cn(
-                  "relative flex h-9 items-center rounded-md text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                  "relative flex h-[34px] items-center rounded-lg text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                   props.collapsed ? "mx-auto h-10 w-12 justify-center px-0" : "gap-3 px-3",
                   active()
                     ? "bg-primary/10 text-primary"
@@ -81,7 +81,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                       class={cn(
                         // Active submenu item: bold foreground text + a bright segment over
                         // the group's left guide line (no filled pill).
-                        "relative flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                        "relative flex h-[30px] items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                         itemActive()
                           ? "font-semibold text-foreground before:absolute before:-left-[9px] before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:bg-foreground"
                           : "font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground",
@@ -116,7 +116,7 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                 <details class="group/nav" open={active()}>
                   <summary
                     class={cn(
-                      "flex h-9 cursor-pointer list-none items-center gap-3 rounded-md px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
+                      "flex h-[34px] cursor-pointer list-none items-center gap-3 rounded-lg px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
                       active()
                         ? "bg-muted/70 text-foreground"
                         : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",

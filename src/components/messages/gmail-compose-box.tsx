@@ -81,11 +81,11 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
   return (
     <Show when={props.open}>
       <div
-        class="fixed inset-x-0 bottom-0 z-50 w-full rounded-t-2xl border border-border/80 bg-card pb-[max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))] shadow-2xl transition-all duration-200 sm:inset-x-auto sm:right-6 sm:w-[560px] sm:rounded-t-lg sm:pb-0"
+        class="fixed inset-x-0 bottom-0 z-50 w-full rounded-t-2xl border border-border-line bg-surface-base pb-[max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))] shadow-2xl shadow-black/20 transition-all duration-200 sm:inset-x-auto sm:right-6 sm:w-[560px] sm:rounded-t-xl sm:pb-0"
         style={{ "max-height": isMinimized() ? "44px" : "640px" }}
       >
         {/* Gmail Header */}
-        <div class="flex h-9 items-center justify-between rounded-t-lg border-b bg-muted/80 px-4">
+        <div class="flex h-9 items-center justify-between rounded-t-xl border-b border-border-hairline bg-surface-overlay px-4">
           <div class="flex items-center gap-2">
             <span class="h-2.5 w-2.5 rounded-full bg-primary" />
             <h3 class="text-xs font-bold text-foreground truncate max-w-[340px]">
@@ -116,7 +116,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
         <Show when={!isMinimized()}>
           <form class="flex h-[min(520px,60vh)] flex-col sm:h-[520px]" onSubmit={handleSend}>
             {/* Recipient Line */}
-            <div class="flex items-center border-b px-3 py-1.5 gap-2 text-xs">
+            <div class="flex items-center border-b border-border-hairline px-3 py-1.5 gap-2 text-xs">
               <span class="w-12 font-medium text-muted-foreground shrink-0">
                 {t("messages.recipient")}:
               </span>
@@ -132,7 +132,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
             </div>
 
             {/* Subject Line */}
-            <div class="flex items-center border-b px-3 py-1 gap-2 text-xs">
+            <div class="flex items-center border-b border-border-hairline px-3 py-1 gap-2 text-xs">
               <span class="w-12 font-medium text-muted-foreground shrink-0">
                 {t("form.title")}:
               </span>
@@ -147,7 +147,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
             </div>
 
             {/* Optional Label Tag Line */}
-            <div class="flex items-center border-b px-3 py-1 gap-2 text-xs">
+            <div class="flex items-center border-b border-border-hairline px-3 py-1 gap-2 text-xs">
               <span class="w-12 font-medium text-muted-foreground shrink-0">
                 Etiket:
               </span>
@@ -175,11 +175,11 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
             </Show>
 
             {/* Gmail Bottom Action Toolbar */}
-            <div class="flex items-center justify-between border-t bg-muted/30 px-3 py-2.5">
+            <div class="flex items-center justify-between border-t border-border-hairline bg-surface-tint px-3 py-2.5">
               <Button
                 type="submit"
                 size="sm"
-                class="h-9 rounded-md bg-primary px-5 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                class="h-9 rounded-lg px-5 font-semibold"
                 disabled={pending()}
               >
                 <IconSend class="mr-2 h-4 w-4" />

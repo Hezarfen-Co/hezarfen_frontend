@@ -211,10 +211,10 @@ export function ExamQuestionsPanel(props: {
         <Alert variant="success">{flash()}</Alert>
       </Show>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border-hairline pb-3">
         <div class="flex items-center gap-2">
           <h2 class="text-base font-semibold">{t("questions.title")}</h2>
-          <Badge variant="secondary" class="rounded-full font-mono text-xs">
+          <Badge variant="secondary" class="font-mono text-xs">
             {questionCount()}
           </Badge>
         </div>
@@ -288,13 +288,13 @@ export function ExamQuestionsPanel(props: {
         />
       </FormDialog>
 
-      {error() && <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      {error() && <p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
       <Suspense fallback={<PageSpinner />}>
         <Show
           when={questionList().length > 0}
           fallback={
-            <div class="rounded-lg border border-dashed p-6 text-center">
+            <div class="rounded-xl border border-dashed border-border-line bg-surface-overlay p-6 text-center">
               <p class="text-sm text-muted-foreground">{t("questions.empty")}</p>
               <Show when={!props.readOnly}>
                 <Button
@@ -318,7 +318,7 @@ export function ExamQuestionsPanel(props: {
             <ol class="space-y-3">
               <For each={pageItems()}>
                 {(q, index) => (
-                  <li class="rounded-lg border bg-card p-4 shadow-2xs">
+                  <li class="rounded-xl border border-border-line bg-surface-base p-4">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                       <div class="min-w-0 flex-1 space-y-2.5">
                         <div class="flex flex-wrap items-center gap-2">
@@ -335,13 +335,13 @@ export function ExamQuestionsPanel(props: {
                           {/* One badge per direction: a question can be both (added
                               from the bank, then saved back), so they stack. */}
                           <Show when={isFromBank(q)}>
-                            <Badge variant="outline" class="gap-1 border-sky-500/40 text-sky-700 dark:text-sky-400">
+                            <Badge variant="outline" class="gap-1 border-brand/40 text-brand">
                               <IconArchive class="h-3 w-3" />
                               {t("bank.fromBankBadge")}
                             </Badge>
                           </Show>
                           <Show when={isSavedToBank(q)}>
-                            <Badge variant="outline" class="gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400">
+                            <Badge variant="outline" class="gap-1 border-warning/50 bg-warning/10 text-warning">
                               <IconArchive class="h-3 w-3" />
                               {t("bank.savedToBankBadge")}
                             </Badge>
@@ -351,7 +351,7 @@ export function ExamQuestionsPanel(props: {
                           <img
                             src={`/api/exams/${props.examId}/questions/${q.id}/image`}
                             alt={t("questions.image")}
-                            class="h-56 w-full max-w-2xl rounded-md border bg-muted/20 object-contain"
+                            class="h-56 w-full max-w-2xl rounded-md border border-border-line bg-surface-overlay object-contain"
                           />
                         </Show>
                         <Show when={!props.readOnly && q.image}>
@@ -375,10 +375,10 @@ export function ExamQuestionsPanel(props: {
                                   class={
                                     choice.id === q.correct
                                       ? "flex items-start gap-3 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 font-medium text-foreground"
-                                      : "flex items-start gap-3 rounded-md border border-transparent bg-muted/30 px-3 py-2 text-muted-foreground"
+                                      : "flex items-start gap-3 rounded-md border border-border-hairline bg-surface-overlay px-3 py-2 text-muted-foreground"
                                   }
                                 >
-                                  <span class="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-[3px] border bg-background font-mono text-[11px] font-bold text-foreground shadow-2xs">
+                                  <span class="mt-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-[3px] border border-border-line bg-surface-base font-mono text-[11px] font-bold text-foreground">
                                     {String.fromCharCode(65 + choiceIndex())}
                                   </span>
                                   <span class="min-w-0 flex-1 space-y-2 whitespace-pre-wrap">
@@ -477,7 +477,7 @@ export function ExamQuestionsPanel(props: {
                   type="button"
                   variant="outline"
                   size="sm"
-                  class="h-8 gap-1 text-xs"
+                class="h-8 gap-1 rounded-lg text-xs"
                   disabled={safePage() <= 0}
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                 >
@@ -491,7 +491,7 @@ export function ExamQuestionsPanel(props: {
                   type="button"
                   variant="outline"
                   size="sm"
-                  class="h-8 gap-1 text-xs"
+                class="h-8 gap-1 rounded-lg text-xs"
                   disabled={safePage() >= totalPages() - 1}
                   onClick={() => setPage((p) => Math.min(totalPages() - 1, p + 1))}
                 >

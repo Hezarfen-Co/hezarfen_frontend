@@ -23,10 +23,10 @@ export function CourseCard(props: {
     <Link
       to="/courses/$id"
       params={{ id: props.course.id }}
-      class="group grid gap-3 rounded-lg border border-border bg-card px-4 py-3 outline-hidden transition-colors hover:border-primary/35 hover:bg-muted/20 focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+      class="group grid gap-3 rounded-xl border border-border-line bg-surface-base px-4 py-3 outline-hidden transition-colors hover:border-primary/35 hover:bg-surface-tint focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
     >
       <div class="flex min-w-0 items-start gap-3">
-        <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
           <IconBook class="h-4 w-4" />
         </span>
         <div class="min-w-0">
@@ -35,8 +35,8 @@ export function CourseCard(props: {
             <Badge variant="outline" class="rounded-md text-[10px] font-medium">{props.labels.kind}</Badge>
             <Show when={props.enrolled}><Badge variant="secondary" class="rounded-md text-[10px]">{props.labels.enrolled}</Badge></Show>
           </div>
-          <p class="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{props.course.description || "—"}</p>
-          <div class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <p class="mt-0.5 line-clamp-1 text-sm text-text-subtle">{props.course.description || "—"}</p>
+          <div class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-subtle">
             <span>{props.term}</span>
             <span class="flex min-w-0 items-center gap-1.5">
               <IconUsers class="h-3.5 w-3.5 shrink-0" />
@@ -46,12 +46,12 @@ export function CourseCard(props: {
         </div>
       </div>
 
-      <div class="flex items-center justify-between gap-4 border-t border-border/60 pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+      <div class="flex items-center justify-between gap-4 border-t border-border-hairline pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
         <div class="text-left sm:text-right">
-          <p class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{props.labels.capacity}</p>
+          <p class="text-[10px] font-medium uppercase tracking-wider text-text-subtle">{props.labels.capacity}</p>
           <p class="mt-0.5 font-semibold tabular-nums">{props.course.capacity ?? props.labels.unlimited}</p>
         </div>
-        <IconChevronRight class="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+        <IconChevronRight class="h-4 w-4 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-text-default" />
       </div>
     </Link>
   );

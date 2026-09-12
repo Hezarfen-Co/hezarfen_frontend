@@ -41,10 +41,10 @@ export function SidePanel(
   return (
     <DialogPrimitive open={props.open} onOpenChange={props.onOpenChange} modal={false} preventScroll>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/80 transition-opacity duration-200 data-closed:opacity-0 data-expanded:opacity-100" />
+        <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-[rgba(13,15,23,0.55)] transition-opacity duration-200 data-closed:opacity-0 data-expanded:opacity-100" />
         <DialogPrimitive.Content
           class={cn(
-            "fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l border-border bg-background text-foreground shadow-2xl shadow-black/20 outline-hidden",
+            "fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l border-border-line bg-surface-base text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.16)] outline-hidden",
             // The panel spans the whole display, so it has to keep its own
             // header out from under the status bar and its footer off the
             // gesture bar. Both insets are 0 in a desktop browser.
@@ -54,7 +54,7 @@ export function SidePanel(
             props.class,
           )}
         >
-          <div class="flex shrink-0 items-start justify-between gap-4 border-b border-border px-5 py-4">
+          <div class="flex shrink-0 items-start justify-between gap-4 border-b border-border-hairline px-5 py-4">
             <div class="min-w-0 flex-1 space-y-1">
               <DialogPrimitive.Title class="truncate text-base font-semibold leading-6 tracking-tight">
                 {props.title}

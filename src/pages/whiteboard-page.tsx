@@ -204,7 +204,7 @@ function WhiteboardContent() {
                     <IconChevronLeft class="h-4 w-4" />
                     {t("common.back")}
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setHistoryOpen(true)}>
                     {t("whiteboard.history")}
                   </Button>
                   <Button type="button" size="sm" class="rounded-lg" onClick={() => setSettingsOpen(true)}>
@@ -213,7 +213,7 @@ function WhiteboardContent() {
                   <Show when={isCreator()}>
                     <DropdownMenu placement="bottom-end" gutter={8}>
                       <DropdownMenuTrigger
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/80 bg-muted/45 text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-line bg-surface-tint text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary"
                         aria-label={t("common.actions")}
                         title={t("common.actions")}
                       >
@@ -230,7 +230,7 @@ function WhiteboardContent() {
                             {t("whiteboard.clear")}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem class="text-amber-700 focus:bg-amber-500/10 focus:text-amber-800 data-highlighted:bg-amber-500/10 data-highlighted:text-amber-800 dark:text-amber-400" disabled={busy()} onSelect={() => setTimeout(() => setCloseOpen(true), 0)}>
+                          <DropdownMenuItem class="text-warning focus:bg-warning/10 focus:text-warning data-highlighted:bg-warning/10 data-highlighted:text-warning" disabled={busy()} onSelect={() => setTimeout(() => setCloseOpen(true), 0)}>
                             <IconLock class="h-4 w-4" />
                             {t("whiteboard.close")}
                           </DropdownMenuItem>
@@ -259,20 +259,20 @@ function WhiteboardContent() {
                 onConnectionChange={setConnection}
                 onDeleted={() => navigate({ to: "/whiteboards" })}
               />
-              <aside class="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-xs">
-                <div class="space-y-2 border-b border-border/70 bg-muted/30 px-4 py-3">
+              <aside class="overflow-hidden rounded-xl border border-border-line bg-surface-base shadow-xs">
+                <div class="space-y-2 border-b border-border-hairline bg-surface-tint px-4 py-3">
                   <div class="flex items-center justify-between gap-2">
-                    <h3 class="text-sm font-semibold">{t("whiteboard.roster")}</h3>
-                    <Badge variant="secondary" class="rounded-full">{roster().length}</Badge>
+                    <h3 class="text-sm font-semibold text-text-strong">{t("whiteboard.roster")}</h3>
+                    <Badge variant="secondary">{roster().length}</Badge>
                   </div>
                   <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <span class={connection() === "connected" ? "h-2 w-2 rounded-full bg-success" : "h-2 w-2 rounded-full bg-warning"} />
                     {connection() === "connected" ? t("ws.connected") : connection() === "connecting" ? t("ws.connecting") : t("ws.disconnected")}
                   </span>
                   <div class="flex flex-wrap gap-1.5">
-                    <Show when={closed()}><Badge variant="outline" class="rounded-full border-amber-500/40 bg-amber-500/10 text-amber-700">{t("whiteboard.closedBadge")}</Badge></Show>
-                    <Show when={locked() && !closed()}><Badge variant="outline" class="rounded-full">{t("whiteboard.lockedBadge")}</Badge></Show>
-                    <Show when={!isParticipant()}><Badge variant="outline" class="rounded-full">{t("whiteboard.readOnlyBadge")}</Badge></Show>
+                    <Show when={closed()}><Badge variant="warning">{t("whiteboard.closedBadge")}</Badge></Show>
+                    <Show when={locked() && !closed()}><Badge variant="outline">{t("whiteboard.lockedBadge")}</Badge></Show>
+                    <Show when={!isParticipant()}><Badge variant="outline">{t("whiteboard.readOnlyBadge")}</Badge></Show>
                   </div>
                 </div>
                 <ul class="space-y-1 p-2">
@@ -286,7 +286,7 @@ function WhiteboardContent() {
                           <span class="flex min-w-0 items-center gap-1.5">
                             <span class="truncate text-sm font-medium">{nameOf(userId)}</span>
                             <Show when={userId === live().creator}>
-                              <Badge variant="outline" class="shrink-0 rounded-full text-[10px]">{t("whiteboard.creator")}</Badge>
+                              <Badge variant="outline" class="shrink-0 text-[10px]">{t("whiteboard.creator")}</Badge>
                             </Show>
                           </span>
                           <span class="block truncate text-xs text-muted-foreground">{roleOf(userId) || userId}</span>
@@ -351,7 +351,7 @@ function WhiteboardContent() {
               summary={b().title}
               confirmLabel={t("whiteboard.close")}
               icon={<IconLock class="h-4 w-4" />}
-              iconClass="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+              iconClass="border-warning/40 bg-warning/10 text-warning"
               onConfirm={doClose}
             />
             <ConfirmDialog

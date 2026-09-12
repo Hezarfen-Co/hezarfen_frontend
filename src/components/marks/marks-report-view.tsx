@@ -130,7 +130,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
                       class="min-w-0"
                       columns={columns()}
                       data={block.results}
-                      tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-xl")}
+                      tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed sm:min-w-xl")}
                       enableColumnVisibility={false}
                     />
                   </Show>

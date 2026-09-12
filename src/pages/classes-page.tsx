@@ -75,7 +75,10 @@ function ClassesContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] px-2 text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <Show when={canManage()}>
           <TableRowActions
@@ -131,7 +134,7 @@ function ClassesContent() {
             <UserSearchSelect id="class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
           </div>
           <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
-          <div class="flex gap-2 border-t pt-4"><Button type="submit" disabled={pending()}>{t("common.create")}</Button><Button type="button" variant="outline" onClick={() => setShowForm(false)}>{t("common.cancel")}</Button></div>
+          <div class="flex gap-2 border-t border-border-hairline pt-4"><Button type="submit" disabled={pending()}>{t("common.create")}</Button><Button type="button" variant="outline" onClick={() => setShowForm(false)}>{t("common.cancel")}</Button></div>
         </form>
       </SidePanel>
 

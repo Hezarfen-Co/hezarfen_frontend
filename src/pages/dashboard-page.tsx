@@ -437,18 +437,18 @@ function DashboardContent() {
   });
 
   return (
-    <div class="space-y-5">
-        <header class="flex flex-wrap items-end justify-between gap-3">
+    <div class="space-y-6">
+        <header class="flex min-h-[66px] flex-wrap items-center justify-between gap-3 border-b border-border-hairline pb-4">
           <div class="space-y-1">
-            <h1 class="text-2xl font-semibold tracking-tight">{t("dashboard.welcomeBack", { name: fullName() })}</h1>
-            <p class="text-sm text-muted-foreground">{t("dashboard.welcomeHint")}</p>
+            <h1 class="text-[28px] font-semibold leading-9 tracking-[-0.02em] text-text-strong">{t("dashboard.welcomeBack", { name: fullName() })}</h1>
+            <p class="text-sm text-text-subtle">{t("dashboard.welcomeHint")}</p>
           </div>
           <div class="flex items-center gap-2">
-            <Badge variant="outline" class="rounded-full bg-muted/40">{t(roleKeys[role()])}</Badge>
+            <Badge variant="outline" class="bg-surface-overlay">{t(roleKeys[role()])}</Badge>
             <Show when={myClass()}>
-              {(cls) => <Badge variant="outline" class="rounded-full bg-muted/40">{cls().name}</Badge>}
+              {(cls) => <Badge variant="outline" class="bg-surface-overlay">{cls().name}</Badge>}
             </Show>
-            <time class="text-sm tabular-nums text-muted-foreground">
+            <time class="text-sm tabular-nums text-text-subtle">
               {new Intl.DateTimeFormat(locale() === "tr" ? "tr-TR" : "en-GB", { dateStyle: "medium" }).format(now())}
             </time>
           </div>
@@ -460,19 +460,19 @@ function DashboardContent() {
           </Show>
 
           <section class="space-y-3" aria-labelledby="highlights-heading">
-            <h2 id="highlights-heading" class="text-sm font-semibold">{t("dashboard.highlights")}</h2>
+            <h2 id="highlights-heading" class="text-sm font-semibold text-text-strong">{t("dashboard.highlights")}</h2>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <For each={stats()}>
                 {(stat) => (
-                  <div class="rounded-lg border border-border bg-card px-4 py-3.5 shadow-xs">
+                  <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
                     <div class="flex items-center gap-2">
-                      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground">
+                      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-tint text-text-subtle">
                         <stat.Icon class="h-4 w-4" />
                       </span>
-                      <p class="min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground">{t(stat.labelKey)}</p>
+                      <p class="min-w-0 flex-1 truncate text-xs font-medium text-text-subtle">{t(stat.labelKey)}</p>
                     </div>
                     <div class="mt-3">
-                      <p class="mono tabular-nums text-2xl font-bold tracking-tight">{stat.value}</p>
+                      <p class="mono tabular-nums text-2xl font-semibold tracking-[-0.02em] text-text-strong">{stat.value}</p>
                     </div>
                   </div>
                 )}
@@ -522,7 +522,7 @@ function DashboardContent() {
             </div>
           </Show>
 
-          <section class="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-xs" aria-labelledby="deadlines-heading">
+          <section class="flex flex-col gap-4 rounded-xl border border-border-line bg-surface-base p-4" aria-labelledby="deadlines-heading">
             <h2 id="deadlines-heading" class="text-base font-semibold tracking-tight">{t("dashboard.deadlines")}</h2>
             <DataTable
               columns={deadlineColumns()}

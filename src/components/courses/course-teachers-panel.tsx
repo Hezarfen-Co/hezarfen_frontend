@@ -49,7 +49,7 @@ export function CourseTeachersPanel(props: {
               <Button
                 variant="ghost"
                 size="sm"
-                class="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                class="h-8 w-8 rounded-lg p-0 text-destructive hover:bg-destructive/10"
                 onClick={() => setRemoveTarget(cell.row.original)}
               >
                 <IconTrash class="h-4 w-4" />

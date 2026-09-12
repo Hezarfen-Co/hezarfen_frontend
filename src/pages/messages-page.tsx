@@ -164,21 +164,20 @@ export default function MessagesPage() {
   return (
     <RouteGuard>
       <div class="min-h-[50vh] bg-background sm:min-h-[calc(100vh-7rem)]">
-        <section class="data-shell overflow-hidden p-0 border-none">
+        <section class="data-shell overflow-hidden p-0">
           <div class="flex min-h-[50vh] flex-col sm:min-h-[calc(100vh-7rem)]">
             {/* Folder toolbar — the app shell already owns the global sidebar. */}
-            <aside class="flex flex-wrap items-center gap-2 border-b bg-card/60 px-3 py-2.5">
+            <aside class="flex flex-wrap items-center gap-2 border-b border-border-hairline bg-surface-overlay px-3 py-2.5">
               {/* Compose Button */}
               <Button
-                variant="outline"
                 size="sm"
-                class="order-2 ml-auto h-9 shrink-0 rounded-lg text-xs"
+                class="order-2 ml-auto shrink-0 rounded-lg text-xs"
                 onClick={() => {
                   setReplyData(null);
                   setComposeOpen(true);
                 }}
               >
-                <IconPlus class="h-5 w-5 text-primary" />
+                <IconPlus class="h-5 w-5" />
                 <span>{t("messages.newMessage")}</span>
               </Button>
 
@@ -283,13 +282,13 @@ export default function MessagesPage() {
             <main class="flex-1 flex flex-col min-w-0 bg-background">
               {/* Top Header Toolbar */}
               <Show when={!selected()}>
-                <div class="flex flex-col gap-2 border-b bg-card/40 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
+                <div class="flex flex-col gap-2 border-b border-border-hairline bg-surface-overlay px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
                   <div class="flex w-full items-center gap-2 sm:max-w-xl">
                     {/* Gmail Refresh Button */}
                     <Button
                       variant="outline"
                       size="sm"
-                      class="h-9 px-3 rounded-full text-xs font-semibold shrink-0"
+                      class="h-8 px-3 rounded-lg text-[13px] font-semibold shrink-0"
                       onClick={handleRefresh}
                       disabled={isRefreshing()}
                       title={t("messages.refreshList")}
@@ -304,9 +303,9 @@ export default function MessagesPage() {
                     </Button>
 
                     <div class="relative w-full">
-                      <IconSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <IconSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
                       <Input
-                        class="h-9 rounded-full bg-muted/40 pl-9 pr-4 text-xs border-none focus-visible:ring-1"
+                        class="h-8 rounded-lg bg-surface-tint pl-9 pr-4 text-[13px] border-none focus-visible:ring-1"
                         placeholder={t("messages.search")}
                         value={query()}
                         onInput={(event) => setQuery(event.currentTarget.value)}
@@ -319,7 +318,7 @@ export default function MessagesPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        class="h-8 rounded-lg text-xs text-destructive hover:bg-destructive/10"
+                        class="h-8 rounded-lg text-[13px] text-destructive hover:bg-destructive/10"
                         onClick={handleEmptyTrash}
                       >
                         <IconTrash class="mr-1.5 h-3.5 w-3.5" />
@@ -328,7 +327,7 @@ export default function MessagesPage() {
                     </Show>
 
                     <Show when={messagePage()}>
-                      <span class="font-mono text-xs text-muted-foreground shrink-0">
+                      <span class="font-mono text-xs text-text-subtle shrink-0">
                         {messagePage()!.total > 0
                           ? `${(page() - 1) * limit + 1}-${Math.min(page() * limit, messagePage()!.total)} / ${messagePage()!.total}`
                           : "0 / 0"}
@@ -400,7 +399,7 @@ export default function MessagesPage() {
                       </Suspense>
 
                       <Show when={messagePage() && messagePage()!.total > limit}>
-                        <div class="p-4 border-t">
+                        <div class="p-4 border-t border-border-hairline">
                           <PaginationControls
                             page={page()}
                             onPageChange={setPage}

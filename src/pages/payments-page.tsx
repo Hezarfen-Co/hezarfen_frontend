@@ -206,8 +206,8 @@ function PaymentsContent() {
         if (bal == null) return <span class="text-sm text-muted-foreground">—</span>;
         const inDebt = bal < 0;
         return (
-          <Badge variant="outline" class={inDebt ? "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300" : "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"}>
-            <span class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${inDebt ? "bg-red-500" : "bg-emerald-500"}`} />
+          <Badge variant="outline" class={inDebt ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-success/50 bg-success/10 text-success"}>
+            <span class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${inDebt ? "bg-destructive" : "bg-success"}`} />
             {inDebt ? t("payments.inDebt") : t("payments.settled")}
           </Badge>
         );
@@ -225,7 +225,10 @@ function PaymentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -335,7 +338,10 @@ function PaymentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center", cellClass: "text-center" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -417,7 +423,10 @@ function PaymentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "text-center" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <div class="flex items-center justify-center gap-1">
           <Button size="sm" variant="outline" class="h-8 gap-1 rounded-lg px-2 text-xs" onClick={() => openAssign(cell.row.original)}>
@@ -555,7 +564,7 @@ function PaymentsContent() {
           <Show
             when={selectedStudent()}
             fallback={
-              <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+              <section class="data-shell space-y-4 p-4">
               <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
                 <Show when={studentsPage.error}>
                   <ErrorAlert message={formatApiError(studentsPage.error)} onRetry={() => void refetchStudents()} />
@@ -609,13 +618,13 @@ function PaymentsContent() {
               </Button>
             </div>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.totalDebt")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().billed, moneyLocale())}</p></div>
-              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.collected")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().collected, moneyLocale())}</p></div>
-              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.balance")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p></div>
-              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("payments.overdueCount")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().overdue > 0 }}>{summary().overdue}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.totalDebt")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().billed, moneyLocale())}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.collected")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().collected, moneyLocale())}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.balance")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.overdueCount")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().overdue > 0 }}>{summary().overdue}</p></div>
             </div>
 
-            <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+            <section class="data-shell space-y-4 p-4">
               <Suspense fallback={<DataTableSkeleton columns={5} rows={5} />}>
                 <Show when={statement.error}>
                   <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetchStatement()} />
@@ -687,12 +696,12 @@ function PaymentsContent() {
         {/* ---------------- Fee plans ---------------- */}
         <TabsContent value="plans" class="space-y-4">
           <div class="flex justify-end">
-            <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={openCreate}>
+            <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
               <IconPlus class="h-4 w-4" />
               {t("payments.createPlan")}
             </Button>
           </div>
-          <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+          <section class="data-shell space-y-4 p-4">
             <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
               <Show when={plans.error}>
                 <ErrorAlert message={formatApiError(plans.error)} onRetry={() => void refetchPlans()} />
@@ -808,8 +817,8 @@ function PaymentsContent() {
             <Textarea id="collect-note" maxlength={500} value={collectNote()} onInput={(e) => setCollectNote(e.currentTarget.value)} />
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setCollectEntry(null)}>{t("common.cancel")}</Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>{t("payments.collect")}</Button>
+            <Button type="button" variant="outline" onClick={() => setCollectEntry(null)}>{t("common.cancel")}</Button>
+            <Button type="submit" disabled={pending()}>{t("payments.collect")}</Button>
           </div>
         </form>
       </SidePanel>
@@ -836,8 +845,8 @@ function PaymentsContent() {
             <Textarea id="correction-note" maxlength={500} value={actionNote()} onInput={(e) => setActionNote(e.currentTarget.value)} />
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setLineAction(null)}>{t("common.cancel")}</Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>{t("common.save")}</Button>
+            <Button type="button" variant="outline" onClick={() => setLineAction(null)}>{t("common.cancel")}</Button>
+            <Button type="submit" disabled={pending()}>{t("common.save")}</Button>
           </div>
         </form>
       </SidePanel>
@@ -881,8 +890,8 @@ function PaymentsContent() {
             </Index>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setPanelOpen(false)}>{t("common.cancel")}</Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending()}>{editing() ? t("common.update") : t("common.create")}</Button>
+            <Button type="button" variant="outline" onClick={() => setPanelOpen(false)}>{t("common.cancel")}</Button>
+            <Button type="submit" disabled={pending()}>{editing() ? t("common.update") : t("common.create")}</Button>
           </div>
         </form>
       </SidePanel>

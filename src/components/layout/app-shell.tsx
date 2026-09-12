@@ -1,5 +1,6 @@
 import { Show, createMemo, createSignal, type ParentProps } from "solid-js";
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
+import { LogoMark } from "@/components/brand/logo-mark";
 import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
 import { CelebiPanel } from "@/components/layout/celebi-panel";
 import { CommandPalette } from "@/components/layout/command-palette";
@@ -20,7 +21,7 @@ import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 
-const SIDEBAR_EXPANDED = "w-60";
+const SIDEBAR_EXPANDED = "w-[260px]";
 const SIDEBAR_COLLAPSED = "w-24";
 
 export function AppShell(props: ParentProps) {
@@ -48,7 +49,7 @@ export function AppShell(props: ParentProps) {
 
   return (
     <div class="min-h-[var(--app-viewport)] bg-background text-foreground">
-      <Show when={!auth.user()}>
+      <Show when={!auth.user() && location().pathname !== "/login"}>
         <NavBar />
       </Show>
       <ShellFeedProvider>
@@ -63,7 +64,7 @@ export function AppShell(props: ParentProps) {
             <div
               class={cn(
                 "flex shrink-0 items-center gap-2 border-b border-border/70",
-                collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-16 px-3",
+                collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-[45px] px-3",
               )}
             >
               <Link
@@ -71,8 +72,8 @@ export function AppShell(props: ParentProps) {
                 class={cn("flex min-w-0 items-center gap-2.5", collapsed() ? "justify-center" : "flex-1")}
                 title={t("app.name")}
               >
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-                  H
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center text-foreground">
+                  <LogoMark size={28} />
                 </span>
                 <Show when={!collapsed()}>
                   <span class="truncate text-base font-semibold tracking-tight text-foreground dark:text-white 2xl:text-lg">{t("app.name")}</span>
@@ -109,8 +110,8 @@ export function AppShell(props: ParentProps) {
 
         <main class="min-w-0 flex-1">
           <Show when={auth.user() && !fullScreen()}>
-            <header class="sticky top-[env(safe-area-inset-top)] z-30 flex h-16 items-center gap-3 border-b border-border/70 bg-background px-4 sm:px-6 lg:px-8">
-              <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-52 lg:w-60">
+            <header class="sticky top-[env(safe-area-inset-top)] z-30 flex h-[45px] items-center gap-3 border-b border-border/70 bg-background px-4 sm:px-6 lg:px-4">
+              <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-52 lg:w-[260px]">
                 <Show when={location().pathname !== "/"}>
                   <button
                     type="button"
@@ -162,9 +163,9 @@ export function AppShell(props: ParentProps) {
           </Show>
           <div
             class={cn(
-              "mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-6",
-              auth.user() && !fullScreen() && "pb-[calc(5rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] lg:pb-6",
-              wide() ? "max-w-none" : "max-w-[1280px] xl:max-w-[1600px] 2xl:max-w-none",
+              "mx-auto w-full px-4 py-6 sm:px-6 lg:px-10 lg:py-6",
+              auth.user() && !fullScreen() && "pb-[calc(3.5rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] lg:pb-6",
+              wide() ? "max-w-none" : "max-w-[1180px]",
             )}
           >
             {props.children}

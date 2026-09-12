@@ -133,9 +133,9 @@ export const ChartHeatmap: Component<ChartHeatmapProps> = (props) => {
   const hasData = createMemo(() => maxValue() > 0);
 
   return (
-    <div class={cn("flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm", props.class)}>
+    <div class={cn("flex flex-col gap-4 rounded-xl border border-border-line bg-surface-base p-4", props.class)}>
       <Show when={props.title}>
-        <div class="border-b border-border pb-3">
+        <div class="border-b border-border-hairline pb-3">
           <h3 class="text-sm font-semibold tracking-tight text-foreground">{props.title}</h3>
           <Show when={props.subtitle}>
             <p class="mt-0.5 text-xs text-muted-foreground">{props.subtitle}</p>
@@ -215,7 +215,7 @@ export const ChartHeatmap: Component<ChartHeatmapProps> = (props) => {
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-t border-border-hairline pt-3">
           <Show when={props.footer}>
             <p class="text-[11px] text-muted-foreground">{props.footer}</p>
           </Show>

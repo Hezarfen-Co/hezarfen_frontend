@@ -42,7 +42,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
     {
       accessorKey: "description",
       header: t("form.description"),
-      meta: { cellClass: "text-sm text-muted-foreground" },
+      meta: { cellClass: "text-sm text-text-subtle" },
       cell: (cell) => cell.row.original.description || "—",
     },
     ...(props.canManage
@@ -123,10 +123,10 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
           </div>
           {error() && <p class="text-sm text-destructive">{error()}</p>}
           <div class="flex flex-wrap gap-2">
-            <Button type="submit" class="rounded-sm" disabled={pending()}>
+            <Button type="submit" class="rounded-lg" disabled={pending()}>
               {editing() ? t("common.update") : t("common.create")}
             </Button>
-            <Button type="button" variant="outline" class="rounded-sm" onClick={() => setPanelOpen(false)}>
+            <Button type="button" variant="outline" class="rounded-lg" onClick={() => setPanelOpen(false)}>
               {t("common.cancel")}
             </Button>
           </div>
@@ -157,7 +157,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
         }}
       />
 
-      {error() && <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      {error() && <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
       <Suspense fallback={<DataTableSkeleton />}>
         <Show when={(subjects() ?? []).length > 0} fallback={<EmptyState title={t("subjects.empty")} />}>

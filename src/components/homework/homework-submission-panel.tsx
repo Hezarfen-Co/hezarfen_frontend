@@ -141,7 +141,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
     <section class="data-shell space-y-4 p-5">
       <div>
         <h2 class="text-lg font-semibold">{t("homework.submit")}</h2>
-        <p class="mt-1 text-sm text-muted-foreground">{t("homework.submitHelp")}</p>
+        <p class="mt-1 text-sm text-text-subtle">{t("homework.submitHelp")}</p>
       </div>
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
@@ -152,7 +152,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
       <Suspense fallback={<PageSpinner />}>
         <Show when={result()}>
           {(row) => (
-            <div class="rounded-lg border bg-muted/20 p-3 text-sm">
+            <div class="rounded-xl border border-border-line bg-surface-tint p-3 text-sm">
               <div class="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" class="rounded-full">{statusLabel(row().status)}</Badge>
                 <Show when={row().mark != null}>
@@ -180,7 +180,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
             </Show>
           </div>
         </form>
-        <div class={cn("rounded-lg border bg-background/70 p-3", hasFiles() && "space-y-3")}>
+        <div class={cn("rounded-xl border border-border-line bg-surface-base p-3", hasFiles() && "space-y-3")}>
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <p class="text-sm font-medium">{t("notes.files")}</p>
@@ -201,11 +201,11 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
                 {(file) => {
                   const meta = fileTypeMeta(file);
                   return (
-                    <li class="flex items-center gap-2 rounded-lg border bg-card px-2.5 py-2 text-sm">
-                      <span class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border ${meta.class}`}>{meta.icon}</span>
+                    <li class="flex items-center gap-2 rounded-xl border border-border-hairline bg-surface-base px-2.5 py-2 text-sm">
+                      <span class={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border-hairline ${meta.class}`}>{meta.icon}</span>
                       <div class="min-w-0 flex-1">
                         <p class="truncate font-medium">{file.name}</p>
-                        <p class="text-xs text-muted-foreground">{formatBytes(file.size)}</p>
+                        <p class="text-xs text-text-subtle">{formatBytes(file.size)}</p>
                       </div>
                       <a href={getHomeworkSubmissionFileUrl(props.homeworkId, file.id)} download={file.name}>
                         <Button type="button" size="icon" variant="ghost" class="h-7 w-7 rounded-lg" title={t("notes.downloadFile")}>
@@ -222,7 +222,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
             </ul>
             <Show when={submission()}>
               {(row) => (
-                <p class="text-xs text-muted-foreground">
+                <p class="text-xs text-text-subtle">
                   {t("homework.submittedAt")}: {formatDateTime(row().updated_at, locale())}
                   <Show when={row().late}> · {t("homework.late")}</Show>
                 </p>

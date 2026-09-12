@@ -206,8 +206,8 @@ export function ExamForm(props: {
     <>
       <form class="space-y-4" onSubmit={handleSubmit}>
         {/* Section 1: Basic Info */}
-        <div class="space-y-3 rounded-lg border border-sky-500/15 bg-sky-500/2.5 p-4 shadow-xs">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionBasic")}</h3>
+        <div class="space-y-3 rounded-xl border border-border-line bg-surface-overlay p-4">
+          <h3 class="text-xs font-semibold text-text-subtle">{t("exams.sectionBasic")}</h3>
           <div class="space-y-1.5">
             <Label for="exam-title">{t("form.title")}</Label>
             <Input
@@ -241,8 +241,8 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 2: Mode & Schedule */}
-        <div class="space-y-3 rounded-lg border border-amber-500/15 bg-amber-500/3 p-4 shadow-xs">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionSchedule")}</h3>
+        <div class="space-y-3 rounded-xl border border-border-line bg-surface-overlay p-4">
+          <h3 class="text-xs font-semibold text-text-subtle">{t("exams.sectionSchedule")}</h3>
           <div class="space-y-1.5">
             <Label for="exam-mode">{t("exams.mode")}</Label>
             <Select
@@ -319,8 +319,8 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 3: Time Limit / Duration */}
-        <div class="space-y-3 rounded-lg border border-indigo-500/15 bg-indigo-500/3 p-4 shadow-xs">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionDuration")}</h3>
+        <div class="space-y-3 rounded-xl border border-border-line bg-surface-overlay p-4">
+          <h3 class="text-xs font-semibold text-text-subtle">{t("exams.sectionDuration")}</h3>
           <label class="flex items-center gap-2 text-sm font-medium">
             <input
               type="checkbox"
@@ -339,7 +339,7 @@ export function ExamForm(props: {
                 type="number"
                 min={1}
                 max={1440}
-                class="mt-1.5 h-9 bg-background/60"
+                class="mt-1.5 h-9"
                 placeholder="60"
                 value={durationMinutes()}
                 onInput={(e) => setDurationMinutes(e.currentTarget.value)}
@@ -349,10 +349,10 @@ export function ExamForm(props: {
         </div>
 
         {/* Section 4: Participation & Attempts */}
-        <div class="space-y-3 rounded-lg border border-emerald-500/15 bg-emerald-500/3 p-4 shadow-xs">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("exams.sectionAccess")}</h3>
+        <div class="space-y-3 rounded-xl border border-border-line bg-surface-overlay p-4">
+          <h3 class="text-xs font-semibold text-text-subtle">{t("exams.sectionAccess")}</h3>
 
-          <div class="rounded-xl border bg-background/60 px-3 py-2">
+          <div class="rounded-md border border-border-line bg-surface-base px-3 py-2">
             <label class="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
@@ -372,7 +372,7 @@ export function ExamForm(props: {
               <div class="ml-6 mt-2 flex items-center gap-2">
                 <Input
                   id="exam-max-attempts"
-                  class="h-10 w-20 text-center"
+                  class="h-9 w-20 text-center"
                   type="number"
                   min={1}
                   step={1}
@@ -385,7 +385,7 @@ export function ExamForm(props: {
             </Show>
           </div>
 
-          <label class="flex items-start gap-2 rounded-xl border bg-background/60 px-3 py-2 text-sm">
+          <label class="flex items-start gap-2 rounded-md border border-border-line bg-surface-base px-3 py-2 text-sm">
             <input
               type="checkbox"
               class="mt-0.5 h-4 w-4 shrink-0 rounded border-border"
@@ -398,7 +398,7 @@ export function ExamForm(props: {
             </div>
           </label>
 
-          <label class="flex items-start gap-2 rounded-xl border bg-background/60 px-3 py-2 text-sm">
+          <label class="flex items-start gap-2 rounded-md border border-border-line bg-surface-base px-3 py-2 text-sm">
             <input
               type="checkbox"
               class="mt-0.5 h-4 w-4 shrink-0 rounded border-border"
@@ -411,7 +411,7 @@ export function ExamForm(props: {
             </div>
           </label>
 
-          <label class="flex items-start gap-2 rounded-xl border bg-background/60 px-3 py-2 text-sm">
+          <label class="flex items-start gap-2 rounded-md border border-border-line bg-surface-base px-3 py-2 text-sm">
             <input
               type="checkbox"
               class="mt-0.5 h-4 w-4 shrink-0 rounded border-border"
@@ -427,12 +427,12 @@ export function ExamForm(props: {
 
         {error() && <p class="text-sm text-destructive">{error()}</p>}
 
-        <div class="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2 border-t border-border bg-background px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
-          <Button type="submit" class="flex-1 sm:flex-none" disabled={pending()}>
+        <div class="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2 border-t border-border-hairline bg-surface-base px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
+          <Button type="submit" class="flex-1 rounded-lg sm:flex-none" disabled={pending()}>
             {props.submitLabel ?? t("common.save")}
           </Button>
           {props.onCancel && (
-            <Button type="button" variant="outline" class="flex-1 sm:flex-none" onClick={props.onCancel}>
+            <Button type="button" variant="outline" class="flex-1 rounded-lg sm:flex-none" onClick={props.onCancel}>
               {t("common.cancel")}
             </Button>
           )}

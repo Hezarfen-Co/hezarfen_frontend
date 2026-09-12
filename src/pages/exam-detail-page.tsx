@@ -328,7 +328,10 @@ function ExamDetailContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -384,8 +387,8 @@ function ExamDetailContent() {
         {(ex) => (
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
-          <div class="mx-auto w-full max-w-[1440px] space-y-6">
-            <div class="sticky top-14 z-10 -mx-4 space-y-2 bg-background px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+          <div class="mx-auto w-full max-w-[1100px] space-y-6">
+            <div class="sticky top-14 z-10 -mx-4 space-y-2 bg-surface-overlay px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
               <nav class="detail-breadcrumb">
                 <Link to="/exams">{t("exams.title")}</Link>
                 <span aria-hidden>›</span>
@@ -394,7 +397,6 @@ function ExamDetailContent() {
               <PageHeader
                 title={ex().title}
                 description={ex().description || "—"}
-                class="border-border/70"
                 actions={
                   <div class="flex flex-wrap items-center gap-2">
                     <Show when={isStudent() && !isDraft() && isSittable()}>
@@ -402,14 +404,14 @@ function ExamDetailContent() {
                         <Show when={noAttemptsLeft()}
                           fallback={
                             <Link to="/exam-room/$id" params={{ id: id() }}>
-                              <Button size="sm" class="flex-1 rounded-xl sm:flex-none">
+                              <Button size="sm" class="flex-1 rounded-lg sm:flex-none">
                                 <IconExam class="h-4 w-4" />
                                 {ownAttempt()?.status === "in_progress" && !ownAttemptClosedByExit() ? t("attempt.resume") : t("attempt.openRoom")}
                               </Button>
                             </Link>
                           }
                         >
-                          <Badge variant="secondary" class="flex-1 rounded-xl px-3 py-2 text-center sm:flex-none">
+                          <Badge variant="secondary" class="flex-1 px-3 py-2 text-center sm:flex-none">
                             {ownAttempt()?.status === "submitted" ? t("attempt.submitted") : ownAttempt()?.status === "expired" ? t("attempt.expired") : t("attempt.noAttemptsLeft")}
                           </Badge>
                         </Show>
@@ -417,7 +419,7 @@ function ExamDetailContent() {
                     </Show>
                     <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
                       <Link to="/exams/$id/live" params={{ id: id() }}>
-                        <Button size="sm" class="flex-1 rounded-xl sm:flex-none">
+                        <Button size="sm" class="flex-1 rounded-lg sm:flex-none">
                           <IconEye class="h-4 w-4" />
                           {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                         </Button>
@@ -448,20 +450,20 @@ function ExamDetailContent() {
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                   <Badge
                     variant="outline"
-                    class={cn("w-fit rounded-full capitalize !bg-transparent !text-foreground", scheduleStatusClass(examStatusTone(detailStatus())))}
+                    class={cn("w-fit capitalize !bg-transparent !text-foreground", scheduleStatusClass(examStatusTone(detailStatus())))}
                   >
                     <span class="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
                     {detailStatusLabel()}
                   </Badge>
-                  <Badge variant="outline" class="rounded-full">
+                  <Badge variant="outline">
                     {examKindLabel(String(ex().kind), t)}
                   </Badge>
                 </div>
               </PageHeader>
             </div>
             <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3.5">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3.5">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
                   <IconExam class="h-4 w-4" />
                 </span>
                 <div class="min-w-0">
@@ -469,8 +471,8 @@ function ExamDetailContent() {
                   <p class="truncate text-sm font-semibold">{examModeLabel(ex().mode)}</p>
                 </div>
               </div>
-              <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3.5">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3.5">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
                   <IconRefresh class="h-4 w-4" />
                 </span>
                 <div class="min-w-0">
@@ -485,8 +487,8 @@ function ExamDetailContent() {
                   </Show>
                 </div>
               </div>
-              <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3.5">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3.5">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
                   <IconCalendarDays class="h-4 w-4" />
                 </span>
                 <div class="min-w-0">
@@ -499,8 +501,8 @@ function ExamDetailContent() {
                   </Show>
                 </div>
               </div>
-              <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3.5">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3.5">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
                   <IconClock class="h-4 w-4" />
                 </span>
                 <div class="min-w-0">
@@ -532,7 +534,7 @@ function ExamDetailContent() {
                     <button
                       type="button"
                       onClick={() => setMarkOpen((v) => !v)}
-                      class="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left text-sm shadow-xs transition-colors hover:bg-muted/40"
+                      class="flex w-full items-center justify-between gap-3 rounded-md border border-border-line bg-surface-base px-4 py-3 text-left text-sm transition-colors hover:bg-surface-overlay"
                     >
                       <span class="inline-flex items-center gap-2 font-medium">
                         <IconEdit class="h-4 w-4" />
@@ -550,7 +552,7 @@ function ExamDetailContent() {
                         <div class="flex items-end gap-2">
                           <Input
                             id="answer-sheet-mark"
-                            class="h-10 flex-1 rounded-lg"
+                            class="h-9 flex-1 rounded-lg"
                             type="number"
                             min={0}
                             max={100}
@@ -559,7 +561,7 @@ function ExamDetailContent() {
                             onInput={(event) => setClampedAnswerMark(event.currentTarget.value)}
                           />
                           <span class="pb-2 text-sm text-muted-foreground">/ 100</span>
-                          <Button type="submit" class="h-10 rounded-lg shrink-0" disabled={answerPending() || answerResult.loading}>
+                          <Button type="submit" size="sm" class="rounded-lg shrink-0" disabled={answerPending() || answerResult.loading}>
                             {t("common.save")}
                           </Button>
                         </div>
@@ -569,7 +571,7 @@ function ExamDetailContent() {
                       </form>
                     </Show>
                     <Show when={(markHistory()?.length ?? 0) > 1}>
-                      <div class="rounded-lg border border-border bg-card px-4 py-3">
+                      <div class="rounded-md border border-border-line bg-surface-overlay px-4 py-3">
                         <p class="text-xs font-medium text-muted-foreground">{t("exams.markHistory")}</p>
                         <ul class="mt-2 space-y-1">
                           <For each={markHistory()}>
@@ -640,9 +642,9 @@ function ExamDetailContent() {
 
             <Show when={isStudent() && ownResult()}>
               {(result) => (
-                <section class="space-y-4 rounded-lg border border-border/70 bg-card p-4" aria-labelledby="own-exam-result">
+                <section class="data-shell space-y-4 p-4" aria-labelledby="own-exam-result">
                   <div class="flex flex-wrap items-center gap-3">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
                       <IconClipboardCheck class="h-4 w-4" />
                     </span>
                     <h2 id="own-exam-result" class="text-base font-semibold">{t("exams.yourResult")}</h2>
@@ -657,31 +659,31 @@ function ExamDetailContent() {
 
             <Show when={hasCourseManagementRights()}>
               <Tabs value={examTab()} onChange={setExamTab} class="space-y-3">
-                <TabsList class="border-primary/10 bg-card/80 shadow-sm">
+                <TabsList>
                   <TabsTrigger value="statistics"><IconChart class="h-4 w-4" />{t("exams.statistics")}</TabsTrigger>
                   <TabsTrigger value="questions"><IconExam class="h-4 w-4" />{t("questions.title")}</TabsTrigger>
                   <TabsTrigger value="results"><IconClipboardCheck class="h-4 w-4" />{t("exams.results")}</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="statistics" forceMount class="border-border/60 bg-card/80 shadow-sm">
+                <TabsContent value="statistics" forceMount class="data-shell p-4">
                   <Suspense fallback={<DataTableSkeleton columns={4} />}>
                     <Show when={stats()}>
                       {(s) => (
                         <div class="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                          <div class="rounded-xl border border-border/70 bg-card p-4">
-                            <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.graded")}</p>
+                          <div class="rounded-xl border border-border-line bg-surface-overlay p-4">
+                            <p class="text-xs font-medium text-text-subtle">{t("exams.graded")}</p>
                             <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().graded}</p>
                           </div>
-                          <div class="rounded-xl border border-border/70 bg-card p-4">
-                            <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.average")}</p>
+                          <div class="rounded-xl border border-border-line bg-surface-overlay p-4">
+                            <p class="text-xs font-medium text-text-subtle">{t("exams.average")}</p>
                             <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
                           </div>
-                          <div class="rounded-xl border border-border/70 bg-card p-4">
-                            <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.min")}</p>
+                          <div class="rounded-xl border border-border-line bg-surface-overlay p-4">
+                            <p class="text-xs font-medium text-text-subtle">{t("exams.min")}</p>
                             <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
                           </div>
-                          <div class="rounded-xl border border-border/70 bg-card p-4">
-                            <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("exams.max")}</p>
+                          <div class="rounded-xl border border-border-line bg-surface-overlay p-4">
+                            <p class="text-xs font-medium text-text-subtle">{t("exams.max")}</p>
                             <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
                           </div>
                         </div>
@@ -690,13 +692,13 @@ function ExamDetailContent() {
                   </Suspense>
                 </TabsContent>
 
-                <TabsContent value="questions" forceMount class="border-border/60 bg-card/80 shadow-sm">
+                <TabsContent value="questions" forceMount class="data-shell p-4">
                   <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded />
                 </TabsContent>
 
-                <TabsContent value="results" forceMount class="space-y-4 border-border/60 bg-card/80 shadow-sm">
+                <TabsContent value="results" forceMount class="data-shell space-y-4 p-4">
                   <div class="flex flex-wrap items-center justify-between gap-3">
-                    <Badge variant="secondary" class="rounded-full">{`${resultTotal()} ${t("exams.studentResults")}`}</Badge>
+                    <Badge variant="secondary">{`${resultTotal()} ${t("exams.studentResults")}`}</Badge>
                     <div class="flex flex-wrap items-center gap-2">
                       <Show when={isFinished()}>
                         <label
@@ -765,7 +767,7 @@ function ExamDetailContent() {
               <Alert variant="success">{flash()}</Alert>
             </Show>
             {error() && (
-              <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+              <p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
             <ConfirmDialog

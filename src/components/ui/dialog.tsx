@@ -18,14 +18,14 @@ export function DialogContent<T extends ValidComponent = "div">(
   ]);
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm transition-opacity duration-200" />
+      <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-[rgba(13,15,23,0.55)] transition-opacity duration-200" />
       {/* flex center — animate-fade-up must not own transform positioning */}
       {/* The centring box is inset by the system bars, so a tall dialog is
           never clipped by the status bar or the gesture bar. */}
       <div class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-3 pb-[calc(0.75rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] pt-[calc(0.75rem+env(safe-area-inset-top))] sm:p-4">
         <DialogPrimitive.Content
           class={cn(
-            "pointer-events-auto relative flex max-h-[min(100%,48rem)] w-full max-w-lg flex-col overflow-hidden border border-border/80 bg-background text-foreground shadow-2xl shadow-black/20 outline-hidden animate-fade-up sm:rounded-lg",
+            "pointer-events-auto relative flex max-h-[min(100%,48rem)] w-full max-w-[480px] flex-col overflow-hidden border border-border-line bg-surface-base text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.16)] outline-hidden animate-fade-up sm:rounded-2xl",
             local.class,
           )}
           // Standard dialogs dismiss outside/ESC; pass false only when losing
@@ -50,11 +50,11 @@ export function DialogContent<T extends ValidComponent = "div">(
 }
 
 export function DialogHeader(props: ParentProps<{ class?: string }>) {
-  return <div class={cn("flex flex-col space-y-1.5 border-b border-border/80 px-5 py-4 pr-14 text-center sm:px-6 sm:text-left", props.class)}>{props.children}</div>;
+  return <div class={cn("flex flex-col space-y-1.5 border-b border-border-hairline px-5 py-5 pr-14 text-center sm:px-7 sm:text-left", props.class)}>{props.children}</div>;
 }
 
 export function DialogBody(props: ParentProps<{ class?: string }>) {
-  return <div class={cn("overflow-y-auto overscroll-contain px-5 py-4 sm:px-6", props.class)}>{props.children}</div>;
+  return <div class={cn("overflow-y-auto overscroll-contain px-5 py-5 sm:px-7", props.class)}>{props.children}</div>;
 }
 
 export function DialogTitle<T extends ValidComponent = "h2">(

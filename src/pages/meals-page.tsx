@@ -68,7 +68,7 @@ function MealsContent() {
 
   return (
     <div class="space-y-5">
-      <PageHeader eyebrow={t("nav.group.community")} title={t("meals.title")} description={t("meals.subtitle")} actions={<Show when={canManage()}><Button size="sm" class="min-w-30 rounded-lg" onClick={() => { setNewSlot(settings()?.meal_slots[0]?.name ?? ""); setShowCreate(true); }}><IconPlus class="h-4 w-4" />{t("meals.publish")}</Button></Show>} />
+      <PageHeader eyebrow={t("nav.group.community")} title={t("meals.title")} description={t("meals.subtitle")} actions={<Show when={canManage()}><Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => { setNewSlot(settings()?.meal_slots[0]?.name ?? ""); setShowCreate(true); }}><IconPlus class="h-4 w-4" />{t("meals.publish")}</Button></Show>} />
       <SidePanel open={showCreate()} onOpenChange={setShowCreate} title={t("meals.publish")} description={t("meals.publishHelp")}>
         <form class="space-y-4" onSubmit={publish}>
           <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
@@ -76,7 +76,7 @@ function MealsContent() {
           <div class="space-y-1.5"><Label for="meal-slot">{t("meals.slot")}</Label><Select id="meal-slot" required value={newSlot()} onChange={(e) => setNewSlot(e.currentTarget.value)}><For each={settings()?.meal_slots ?? []}>{(item) => <option value={item.name}>{item.name}</option>}</For></Select></div>
           <div class="space-y-1.5"><Label for="meal-capacity">{t("meals.capacity")}</Label><Input id="meal-capacity" type="number" min={0} max={limits()?.meal.max_menu_capacity} value={capacity()} onInput={(e) => setCapacity(e.currentTarget.value)} /></div>
           <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
-          <div class="flex gap-2 border-t pt-4"><Button type="submit" disabled={pending()}>{t("common.create")}</Button><Button type="button" variant="outline" onClick={() => setShowCreate(false)}>{t("common.cancel")}</Button></div>
+          <div class="flex gap-2 border-t border-border-hairline pt-4"><Button type="submit" disabled={pending()}>{t("common.create")}</Button><Button type="button" variant="outline" onClick={() => setShowCreate(false)}>{t("common.cancel")}</Button></div>
         </form>
       </SidePanel>
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>

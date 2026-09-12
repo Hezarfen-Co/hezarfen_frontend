@@ -357,6 +357,8 @@ export type MessageKey =
   | "auth.login"
   | "auth.register"
   | "auth.username"
+  | "auth.school"
+  | "auth.schoolHint"
   | "auth.password"
   | "auth.noAccount"
   | "auth.hasAccount"
@@ -1906,13 +1908,15 @@ const en: Dict = {
   "auth.login": "Log in",
   "auth.register": "Create account",
   "auth.username": "Username",
+  "auth.school": "School",
+  "auth.schoolHint": "2–32 characters",
   "auth.password": "Password",
   "auth.noAccount": "New here?",
   "auth.hasAccount": "Already registered?",
   "auth.confirmPassword": "Confirm password",
   "auth.passwordMismatch": "Passwords do not match",
-  "auth.loginTitle": "Welcome back",
-  "auth.loginSubtitle": "Sign in to continue to your workspace.",
+  "auth.loginTitle": "Sign in to your account",
+  "auth.loginSubtitle": "Sign in to continue with your school workspace.",
   "auth.registerTitle": "Join Hezarfen",
   "auth.registerSubtitle": "New accounts start as student. Teachers and admins are assigned later.",
   "auth.usernameHint": "3–32 characters",
@@ -3461,13 +3465,15 @@ const tr: Dict = {
   "auth.login": "Giriş yap",
   "auth.register": "Hesap oluştur",
   "auth.username": "Kullanıcı adı",
+  "auth.school": "Okul",
+  "auth.schoolHint": "2–32 karakter",
   "auth.password": "Şifre",
   "auth.noAccount": "Yeni misin?",
   "auth.hasAccount": "Zaten kayıtlı mısın?",
   "auth.confirmPassword": "Şifreyi onayla",
   "auth.passwordMismatch": "Şifreler eşleşmiyor",
-  "auth.loginTitle": "Tekrar hoş geldin",
-  "auth.loginSubtitle": "Çalışma alanına devam etmek için giriş yap.",
+  "auth.loginTitle": "Hesabına giriş yap",
+  "auth.loginSubtitle": "Okul çalışma alanına devam etmek için giriş yap.",
   "auth.registerTitle": "Hezarfen’e katıl",
   "auth.registerSubtitle": "Yeni hesaplar öğrenci olarak başlar. Öğretmen ve admin rolleri sonradan verilir.",
   "auth.usernameHint": "3–32 karakter",

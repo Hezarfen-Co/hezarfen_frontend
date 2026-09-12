@@ -130,7 +130,7 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
               class="min-w-0"
               columns={columns()}
               data={props.report.courses}
-              tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed min-w-160")}
+              tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed sm:min-w-160")}
               enableColumnVisibility={false}
             />
           </Show>

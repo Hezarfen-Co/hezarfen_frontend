@@ -231,7 +231,7 @@ function CourseDetailContent() {
         <Badge variant="outline" class="rounded-full capitalize">
           {examKindLabel(String(cell.row.original.kind), t)}
           <Show when={examWeight(cell.row.original, settings()?.exam_kinds)}>
-            {(weight) => <span class="ml-1 text-muted-foreground">({t("courses.weight")}: {weight()})</span>}
+            {(weight) => <span class="ml-1 text-text-subtle">({t("courses.weight")}: {weight()})</span>}
           </Show>
         </Badge>
       ),
@@ -302,7 +302,7 @@ function CourseDetailContent() {
               <PageHeader
                 title={c().title}
                 description={c().description || "—"}
-                class="border-border/70"
+                class="border-border-line"
                 actions={
                   <Show when={canManage()}>
                     <TableRowActions
@@ -327,41 +327,41 @@ function CourseDetailContent() {
                 }
               />
               <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
                     <IconBook class="h-4 w-4" />
                   </span>
                   <div class="min-w-0">
-                    <p class="text-xs font-medium text-muted-foreground">{t("courses.kind")}</p>
-                    <p class="truncate text-sm font-semibold">{courseKindLabel(c().kind)}</p>
+                    <p class="text-xs font-medium text-text-subtle">{t("courses.kind")}</p>
+                    <p class="truncate text-sm font-semibold text-text-default">{courseKindLabel(c().kind)}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
                     <IconCalendarDays class="h-4 w-4" />
                   </span>
                   <div class="min-w-0">
-                    <p class="text-xs font-medium text-muted-foreground">{t("terms.term")}</p>
-                    <p class="truncate text-sm font-semibold">{terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}</p>
+                    <p class="text-xs font-medium text-text-subtle">{t("terms.term")}</p>
+                    <p class="truncate text-sm font-semibold text-text-default">{terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
                     <IconUsers class="h-4 w-4" />
                   </span>
                   <div class="min-w-0">
-                    <p class="text-xs font-medium text-muted-foreground">{t("courses.capacity")}</p>
-                    <p class="mono truncate text-sm font-semibold">{c().capacity == null ? "—" : hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}</p>
+                    <p class="text-xs font-medium text-text-subtle">{t("courses.capacity")}</p>
+                    <p class="mono truncate text-sm font-semibold text-text-default">{c().capacity == null ? "—" : hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-card p-3">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
                     <IconExam class="h-4 w-4" />
                   </span>
                   <div class="min-w-0">
-                    <p class="text-xs font-medium text-muted-foreground">{t("courses.nextExam")}</p>
-                    <Show when={nextExam()} fallback={<p class="truncate text-sm font-semibold">{t("courses.noUpcoming")}</p>}>
-                      {(exam) => <ExamLink examId={exam().id} class="block truncate text-sm font-semibold hover:text-primary hover:underline">{exam().title}</ExamLink>}
+                    <p class="text-xs font-medium text-text-subtle">{t("courses.nextExam")}</p>
+                    <Show when={nextExam()} fallback={<p class="truncate text-sm font-semibold text-text-default">{t("courses.noUpcoming")}</p>}>
+                      {(exam) => <ExamLink examId={exam().id} class="block truncate text-sm font-semibold text-text-default hover:text-primary hover:underline">{exam().title}</ExamLink>}
                     </Show>
                   </div>
                 </div>
@@ -422,7 +422,7 @@ function CourseDetailContent() {
                   }, t("common.saved"));
                 }}
               >
-                <div class="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-4">
+                <div class="space-y-3 rounded-xl border border-border-line bg-surface-tint p-4">
                   <div class="space-y-1.5">
                     <Label for="edit-course-title">{t("form.title")}</Label>
                     <Input
@@ -444,7 +444,7 @@ function CourseDetailContent() {
                     />
                   </div>
                 </div>
-                <div class="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-4">
+                <div class="space-y-3 rounded-xl border border-border-line bg-surface-tint p-4">
                   <div class="space-y-1.5">
                     <Label for="edit-course-kind">{t("courses.kind")}</Label>
                     <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
@@ -463,7 +463,7 @@ function CourseDetailContent() {
                     <Input id="edit-course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
                   </div>
                 </div>
-                <div class="sticky bottom-0 -mx-5 flex flex-wrap gap-2 border-t border-border bg-background px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
+                <div class="sticky bottom-0 -mx-5 flex flex-wrap gap-2 border-t border-border-line bg-surface-base px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
                   <Button type="submit" class="flex-1 rounded-xl sm:flex-none" disabled={pending()}>
                     {t("common.update")}
                   </Button>
@@ -487,14 +487,14 @@ function CourseDetailContent() {
               description={createdCourseExam() ? t("exams.step2Questions") : c().title}
               size={examCreateStep() === "questions" ? "wide" : "default"}
             >
-              <div class="mb-4 flex rounded-lg border border-border/60 bg-muted/30 p-1">
+              <div class="mb-4 flex rounded-xl border border-border-line bg-surface-tint p-1">
                 <button
                   type="button"
                   class={cn(
-                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                    "rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
                     examCreateStep() === "details"
                       ? "bg-primary text-primary-foreground shadow-2xs"
-                      : "text-muted-foreground hover:bg-muted/50",
+                      : "text-text-subtle hover:bg-surface-fill",
                   )}
                   onClick={() => setExamCreateStep("details")}
                 >
@@ -504,12 +504,12 @@ function CourseDetailContent() {
                   type="button"
                   disabled={!createdCourseExam()}
                   class={cn(
-                    "rounded-xl px-3 py-2 text-xs font-semibold transition-colors",
+                    "rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
                     examCreateStep() === "questions"
                       ? "bg-primary text-primary-foreground shadow-2xs"
                       : createdCourseExam()
-                      ? "text-muted-foreground hover:bg-muted/50"
-                      : "opacity-40 cursor-not-allowed text-muted-foreground",
+                      ? "text-text-subtle hover:bg-surface-fill"
+                      : "opacity-40 cursor-not-allowed text-text-subtle",
                   )}
                   onClick={() => createdCourseExam() && setExamCreateStep("questions")}
                 >
@@ -598,11 +598,11 @@ function CourseDetailContent() {
               <Alert variant="success">{flash()}</Alert>
             </Show>
             {error() && (
-              <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+              <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
             )}
 
             <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-4">
-              <TabsList class="grid w-full grid-cols-2 sm:grid-cols-3 xl:grid-cols-7" aria-label={c().title}>
+              <TabsList class="flex w-full justify-start overflow-x-auto sm:grid sm:grid-cols-3 xl:grid-cols-7" aria-label={c().title}>
                 <TabsTrigger value="subjects" class="min-w-0"><IconBook class="h-4 w-4" />{t("subjects.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{subjectCount()}</Badge></TabsTrigger>
                 <TabsTrigger value="exams" class="min-w-0"><IconExam class="h-4 w-4" />{t("courses.exams")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{examCount()}</Badge></TabsTrigger>
                 <TabsTrigger value="homework" class="min-w-0"><IconHomework class="h-4 w-4" />{t("homework.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{homeworkCount()}</Badge></TabsTrigger>
@@ -662,7 +662,7 @@ function CourseDetailContent() {
               <TabsContent value="teachers" class="space-y-3">
                 <div class="flex flex-wrap items-center gap-2 text-sm">
                   <Badge variant="secondary" class="rounded-full">{countDescription(assignedTeacherCount(), t("courses.teachers"))}</Badge>
-                  <span class="inline-flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                  <span class="inline-flex min-w-0 items-center gap-1.5 text-text-subtle">
                     <IconSchool class="h-4 w-4 shrink-0" />
                     <span>{t("common.creator")}:</span>
                     <span class="truncate font-medium text-foreground">{c().creator.display_name || c().creator.username}</span>

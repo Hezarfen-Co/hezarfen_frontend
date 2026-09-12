@@ -128,7 +128,10 @@ function StaffWorkContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -168,12 +171,15 @@ function StaffWorkContent() {
     {
       id: "status",
       header: t("work.status"),
-      cell: (cell) => <Badge variant={cell.row.original.check_out == null ? "default" : "secondary"} class="rounded-sm">{cell.row.original.check_out == null ? t("work.open") : t("work.closed")}</Badge>,
+      cell: (cell) => <Badge variant={cell.row.original.check_out == null ? "default" : "secondary"}>{cell.row.original.check_out == null ? t("work.open") : t("work.closed")}</Badge>,
     },
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      meta: {
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+      },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -243,7 +249,7 @@ function StaffWorkContent() {
         <Alert variant="success">{flash()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+      <section class="data-shell space-y-4 p-4">
         <Show when={error() && !viewUser() && !editTarget()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
@@ -315,22 +321,22 @@ function StaffWorkContent() {
           <div class="space-y-1.5">
             <Label>{t("work.checkIn")}</Label>
             <div class="grid grid-cols-2 gap-2">
-              <DatePicker id="staff-check-in-date" class="h-10" placeholder={t("form.datePlaceholder")} value={checkInDate()} required onChange={setCheckInDate} />
-              <Input class="h-10 rounded-sm font-mono" placeholder="09:00" value={checkInTime()} required onInput={(e) => setCheckInTime(e.currentTarget.value)} />
+              <DatePicker id="staff-check-in-date" class="h-9" placeholder={t("form.datePlaceholder")} value={checkInDate()} required onChange={setCheckInDate} />
+              <Input class="h-9 rounded-md font-mono" placeholder="09:00" value={checkInTime()} required onInput={(e) => setCheckInTime(e.currentTarget.value)} />
             </div>
           </div>
           <div class="space-y-1.5">
             <Label>{t("work.checkOut")}</Label>
             <div class="grid grid-cols-2 gap-2">
-              <DatePicker id="staff-check-out-date" class="h-10" placeholder={t("form.datePlaceholder")} value={checkOutDate()} required onChange={setCheckOutDate} />
-              <Input class="h-10 rounded-sm font-mono" placeholder="17:00" value={checkOutTime()} required onInput={(e) => setCheckOutTime(e.currentTarget.value)} />
+              <DatePicker id="staff-check-out-date" class="h-9" placeholder={t("form.datePlaceholder")} value={checkOutDate()} required onChange={setCheckOutDate} />
+              <Input class="h-9 rounded-md font-mono" placeholder="17:00" value={checkOutTime()} required onInput={(e) => setCheckOutTime(e.currentTarget.value)} />
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setEditTarget(null)}>
+            <Button type="button" variant="outline" onClick={() => setEditTarget(null)}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" class="h-10 rounded-lg" disabled={pending() || !checkInDate().trim() || !checkInTime().trim() || !checkOutDate().trim() || !checkOutTime().trim()}>
+            <Button type="submit" disabled={pending() || !checkInDate().trim() || !checkInTime().trim() || !checkOutDate().trim() || !checkOutTime().trim()}>
               {t("common.update")}
             </Button>
           </div>
