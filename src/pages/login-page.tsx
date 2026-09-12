@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/solid-router";
 import { createResource, createSignal, Show } from "solid-js";
 import { postLogin } from "@/api/auth";
 import { getLimits } from "@/api/limits";
-import { formatApiError } from "@/api/client";
+import { ApiError, formatApiError, formatApiErrorMessage } from "@/api/client";
 import { LogoMark } from "@/components/brand/logo-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,7 +60,14 @@ function LoginForm() {
       await auth.refresh();
       void navigate({ to: "/" });
     } catch (err) {
-      setError(formatApiError(err));
+      // On this page a 401 means the credentials were wrong, not that a
+      // session lapsed — the generic "sign in to continue" reads as nonsense
+      // to someone who is already looking at the sign-in form.
+      setError(
+        err instanceof ApiError && err.status === 401
+          ? formatApiErrorMessage("invalid credentials")
+          : formatApiError(err),
+      );
     } finally {
       setPending(false);
     }
