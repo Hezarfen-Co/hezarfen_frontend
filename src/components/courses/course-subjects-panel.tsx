@@ -37,13 +37,13 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
     {
       accessorKey: "name",
       header: t("subjects.name"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.name}</span>,
+      cell: (cell) => <span class="block truncate font-medium">{cell.row.original.name}</span>,
     },
     {
       accessorKey: "description",
       header: t("form.description"),
       meta: { cellClass: "text-sm text-text-subtle" },
-      cell: (cell) => cell.row.original.description || "—",
+      cell: (cell) => <span class="block truncate">{cell.row.original.description || "—"}</span>,
     },
     ...(props.canManage
       ? [{

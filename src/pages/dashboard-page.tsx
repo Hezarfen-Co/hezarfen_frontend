@@ -384,7 +384,7 @@ function DashboardContent() {
       header: t("dashboard.col.task"),
       enableSorting: false,
       meta: { headerClass },
-      cell: (info) => <span class="font-medium">{info.row.original.title}</span>,
+      cell: (info) => <span class="block truncate font-medium">{info.row.original.title}</span>,
     },
     {
       accessorKey: "kind",
@@ -481,7 +481,7 @@ function DashboardContent() {
           </section>
 
           <Show when={role() !== "parent"}>
-            <div class="grid gap-3 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
               <Show when={role() === "student"}>
                 <ChartBar
                   title={t("dashboard.progressOverview")}
