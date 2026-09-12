@@ -1,4 +1,4 @@
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
 import { Link, useRouterState } from "@tanstack/solid-router";
 import { routeNavItem, visibleNavGroups, type NavItem } from "@/components/layout/nav-items";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
@@ -53,7 +53,26 @@ export function MobileNavSheet(props: {
   const [dragY, setDragY] = createSignal(0);
   const [dragging, setDragging] = createSignal(false);
   let startY = 0;
-
+  // Keyboard users arrive here through the Menü tab control. Park focus on
+  // the close button while the sheet is up (Escape closes it too) and hand
+  // focus back to the Menü trigger on dismiss, so focus never strands on
+  // the body or inside an off-screen panel.
+  let closeBtn: HTMLButtonElement | undefined;
+  let wasOpen = false;
+  createEffect(() => {
+    if (props.open) {
+      wasOpen = true;
+      closeBtn?.focus();
+      const onKey = (event: KeyboardEvent) => {
+        if (event.key === "Escape") props.onClose();
+      };
+      window.addEventListener("keydown", onKey);
+      onCleanup(() => window.removeEventListener("keydown", onKey));
+    } else if (wasOpen) {
+      wasOpen = false;
+      document.getElementById("mobile-menu-trigger")?.focus();
+    }
+  });
   const startDrag = (event: PointerEvent) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     startY = event.clientY;
@@ -122,6 +141,9 @@ export function MobileNavSheet(props: {
           <h2 class="text-base font-semibold">{t("nav.menu")}</h2>
           <button
             type="button"
+            ref={(el) => {
+              closeBtn = el;
+            }}
             onClick={props.onClose}
             aria-label={t("nav.close")}
             class="topbar-control flex h-8 w-8 items-center justify-center rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"

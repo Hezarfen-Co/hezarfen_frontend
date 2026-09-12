@@ -156,21 +156,31 @@ tabs map to fields absent from `SchoolSettings` entirely.
 
 ### Remaining
 
-Keyboard/focus audit, dark-mode screenshot pass, and the role/module
-authorization regression. Notification panel, branded 404 and network/error
-states are done.
+Migration is closed as of 2026-09-12 (`bd0720f`): every Figma frame has a
+working screen, nothing invents a value the API cannot serve, and
+`bun run build` + the full `vitest` suite are green. No open bug remains.
+
+Both deferred checks ran green on 2026-09-12 against `test-okulu` (admin),
+via throwaway Playwright tours (specs deleted after the run, nothing kept):
+
+- Focus-contrast check: every Tab stop on the dashboard in light and dark,
+  desktop and mobile, carries a visible indicator at ≥3:1 (computed per
+  stop, not eyeballed). Two real fixes came out of it: translucent
+  `ring-*/NN` focus utilities are now solid `ring-ring` across primitives,
+  and the light-theme `--ring` is Figma's `brand-ink` (brand blue was
+  2.5:1 on light surfaces).
+- Mobile keyboard tour: Menü opens the sheet with focus parked on its close
+  button, Escape closes it and returns focus to the Menü trigger, deadline
+  rows activate with Enter, and no focus is ever lost to the body.
 
 Desktop, student mobile and parent mobile composition are complete, and the
 student and parent routes were walked at 393px, 375px and 320px against a
-seeded school rather than reasoned about on paper. Two layout bugs recur and
-are worth checking for in the remaining work: a grid that names only a `sm:`
-or `lg:` column count with no base `grid-cols-1` overflows the page, because
-the single implicit column takes the widest card's min-content; and a table
-cell holding a name with no `truncate` renders nowrap and overlaps the column
-beside it.
-
-Outstanding from the validation checklist: the dark-mode screenshot pass, the
-keyboard/focus audit, and the role/module authorization regression.
+seeded school rather than reasoned about on paper. Two layout bugs recurred
+during the work and are worth checking for in future screens: a grid that
+names only a `sm:` or `lg:` column count with no base `grid-cols-1`
+overflows the page, because the single implicit column takes the widest
+card's min-content; and a table cell holding a name with no `truncate`
+renders nowrap and overlaps the column beside it.
 
 ### Waiting for backend or product decisions
 

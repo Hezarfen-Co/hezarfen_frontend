@@ -47,6 +47,7 @@ export function MobileTabBar(props: { onMenu: () => void }) {
         </For>
         <li class="min-w-0">
           <button
+            id="mobile-menu-trigger"
             type="button"
             aria-label={t("nav.menu")}
             class="flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[10px] font-medium text-muted-foreground"

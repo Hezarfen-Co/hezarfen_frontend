@@ -648,7 +648,7 @@ function DashboardContent() {
                 value={searchInput()}
                 onInput={(event) => onSearchInput(event.currentTarget.value)}
                 placeholder={t("dashboard.hero.searchPlaceholder")}
-                class="h-[46px] w-full rounded-lg border border-border-line bg-surface-base pl-11 pr-4 text-sm text-text-default shadow-sm placeholder:text-text-placeholder focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70"
+                class="h-[46px] w-full rounded-lg border border-border-line bg-surface-base pl-11 pr-4 text-sm text-text-default shadow-sm placeholder:text-text-placeholder focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               />
               <Show when={searchQuery() && searchResults()}>
                 <div class="absolute left-0 right-0 top-[calc(100%+6px)] z-10 rounded-lg border border-border-line bg-surface-base py-1 text-left shadow-md">

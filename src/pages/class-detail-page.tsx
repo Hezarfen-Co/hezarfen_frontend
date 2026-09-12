@@ -40,7 +40,7 @@ import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
 export default function ClassDetailPage() {
-  return <RouteGuard><ClassDetailContent /></RouteGuard>;
+  return <RouteGuard minRole="teacher"><ClassDetailContent /></RouteGuard>;
 }
 
 function ClassDetailContent() {

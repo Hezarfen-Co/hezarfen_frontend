@@ -22,7 +22,7 @@ export function CelebiSuggestions(props: { onPick: (text: string) => void }) {
         {(key) => (
           <button
             type="button"
-            class="rounded-xl border border-border bg-card px-3 py-2.5 text-left text-xs leading-5 text-foreground shadow-xs transition-all hover:border-primary/40 hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50"
+            class="rounded-xl border border-border bg-card px-3 py-2.5 text-left text-xs leading-5 text-foreground shadow-xs transition-all hover:border-primary/40 hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => props.onPick(t(key))}
           >
             {t(key)}

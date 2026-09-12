@@ -30,7 +30,7 @@ export function CelebiReplyActions(props: {
           {(target) => (
             <button
               type="button"
-              class="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-primary/20 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50"
+              class="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-primary/20 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               onClick={() => props.onNavigate(target())}
             >
               <span class="truncate">{label()}</span>
@@ -50,7 +50,7 @@ export function CelebiReplyActions(props: {
                 {(text) => (
                   <button
                     type="button"
-                    class="max-w-full rounded-full border border-border bg-card px-2.5 py-1 text-left text-xs leading-5 text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50"
+                  class="max-w-full rounded-full border border-border bg-card px-2.5 py-1 text-left text-xs leading-5 text-foreground transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={() => props.onPick(text)}
                   >
                     {text}

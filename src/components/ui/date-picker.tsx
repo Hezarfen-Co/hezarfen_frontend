@@ -146,11 +146,11 @@ export function DatePicker(props: {
             on:pointerdown={(e) => e.stopPropagation()}
           >
             <div class="mb-3 flex items-center justify-between gap-2">
-              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70" onClick={() => moveMonth(-1)}>
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(-1)}>
                 <IconChevronLeft class="h-4 w-4" />
               </button>
               <p class="min-w-0 truncate px-2 text-sm font-semibold capitalize">{monthLabel()}</p>
-              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70" onClick={() => moveMonth(1)}>
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(1)}>
                 <IconChevronRight class="h-4 w-4" />
               </button>
             </div>
@@ -165,7 +165,7 @@ export function DatePicker(props: {
                       <button
                         type="button"
                         class={cn(
-                          "inline-flex h-9 items-center justify-center rounded-md border border-transparent p-0 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70",
+                          "inline-flex h-9 items-center justify-center rounded-md border border-transparent p-0 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                           isSameDay(today, day()) && "border-primary/50 text-primary",
                           sameDay(selected(), day()) && "border-primary bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 hover:text-primary-foreground",
                         )}
@@ -183,7 +183,7 @@ export function DatePicker(props: {
             </div>
             <button
               type="button"
-              class="mt-2 inline-flex h-9 w-full items-center justify-center rounded-md border bg-background px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70"
+              class="mt-2 inline-flex h-9 w-full items-center justify-center rounded-md border bg-background px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               onClick={(event) => {
                 event.stopPropagation();
                 pick(today);
