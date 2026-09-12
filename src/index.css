@@ -135,10 +135,6 @@
   }
 }
 
-@utility focus-ring {
-  @apply focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/75 focus-visible:ring-offset-1 focus-visible:ring-offset-background;
-}
-
 @utility topbar-control {
   @apply border border-border/70 bg-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground;
 }
@@ -394,7 +390,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: var(--border-hairline);
     --input: var(--border-line);
-    --ring: var(--accent-light, var(--brand));
+    --ring: var(--accent-light, var(--brand-ink));
     --radius: 0.5rem;
     --success: 137 63% 39%;
     --warning: 38 92% 50%;

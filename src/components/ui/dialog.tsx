@@ -37,7 +37,7 @@ export function DialogContent<T extends ValidComponent = "div">(
         >
           <DialogPrimitive.CloseButton
             type="button"
-            class="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-sm text-muted-foreground transition-all hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2"
+            class="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-sm text-muted-foreground transition-all hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Close"
           >
             <IconX class="h-4 w-4" />

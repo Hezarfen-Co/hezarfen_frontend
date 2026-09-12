@@ -50,7 +50,7 @@ export function CelebiComposer(props: {
         submit();
       }}
     >
-      <div class="flex items-end gap-2 rounded-lg border border-border bg-card px-3 py-2 shadow-sm transition-all focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/25">
+      <div class="flex items-end gap-2 rounded-lg border border-border bg-card px-3 py-2 shadow-sm transition-all focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-ring">
         <Textarea
           ref={field}
           rows={1}

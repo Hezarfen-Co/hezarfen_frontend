@@ -65,7 +65,7 @@ export function SidePanel(
                 </DialogPrimitive.Description>
               )}
             </div>
-            <DialogPrimitive.CloseButton class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70">
+            <DialogPrimitive.CloseButton class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               <IconX class="h-4 w-4" />
             </DialogPrimitive.CloseButton>
           </div>

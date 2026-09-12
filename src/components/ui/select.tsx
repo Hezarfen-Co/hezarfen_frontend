@@ -34,7 +34,7 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
       <DropdownMenuTrigger
         disabled={props.disabled}
         class={cn(
-          "inline-flex h-8 items-center justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/40 px-2.5 text-[13px] font-medium text-foreground transition-all hover:border-border hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex h-8 items-center justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/40 px-2.5 text-[13px] font-medium text-foreground transition-all hover:border-border hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
           props.triggerClass,
           props.class,
         )}
@@ -91,7 +91,7 @@ export function Select(props: SelectProps) {
       <select
         class={cn(
           "flex h-9 w-full appearance-none rounded-md border border-input bg-background/90 py-2 pl-3 pr-9 text-sm text-foreground shadow-sm transition-all",
-          "hover:border-ring/45 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-1",
+          "hover:border-ring/45 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
           "disabled:cursor-not-allowed disabled:opacity-50 [&>option]:bg-popover [&>option]:text-popover-foreground [&>option]:py-1.5",
           local.class,
         )}

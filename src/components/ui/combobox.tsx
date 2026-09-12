@@ -16,7 +16,7 @@ export function ComboboxControl<T extends ValidComponent = "div">(
     <ComboboxPrimitive.Control
       class={cn(
         "relative flex h-9 w-full items-center rounded-md border border-input bg-background/90 shadow-sm transition-all",
-        "hover:border-ring/45 focus-within:ring-2 focus-within:ring-ring/70 focus-within:ring-offset-1 data-disabled:cursor-not-allowed data-disabled:opacity-50",
+        "hover:border-ring/45 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 data-disabled:cursor-not-allowed data-disabled:opacity-50",
         local.class,
       )}
       {...rest}

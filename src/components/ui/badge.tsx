@@ -4,7 +4,7 @@ import { splitProps } from "solid-js";
 import { cn } from "@/lib/cn";
 
 const badgeVariants = cva(
-  "inline-flex h-5 min-h-5 items-center rounded-full border px-2 text-xs font-semibold leading-none transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring/70 focus:ring-offset-1",
+  "inline-flex h-5 min-h-5 items-center rounded-full border px-2 text-xs font-semibold leading-none transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-1",
   {
     variants: {
       variant: {

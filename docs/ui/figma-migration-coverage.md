@@ -160,12 +160,18 @@ Migration is closed as of 2026-09-12 (`bd0720f`): every Figma frame has a
 working screen, nothing invents a value the API cannot serve, and
 `bun run build` + the full `vitest` suite are green. No open bug remains.
 
-Two checks are deliberately deferred, not missing work — both are
-verification passes over finished screens, to be run when budget allows:
+Both deferred checks ran green on 2026-09-12 against `test-okulu` (admin),
+via throwaway Playwright tours (specs deleted after the run, nothing kept):
 
-- Focus-contrast check: visible focus rings and text contrast in both themes.
-- Mobile keyboard tour: tab order and focus traps through dialogs, side
-  panels, tables, and mobile navigation at 393px.
+- Focus-contrast check: every Tab stop on the dashboard in light and dark,
+  desktop and mobile, carries a visible indicator at ≥3:1 (computed per
+  stop, not eyeballed). Two real fixes came out of it: translucent
+  `ring-*/NN` focus utilities are now solid `ring-ring` across primitives,
+  and the light-theme `--ring` is Figma's `brand-ink` (brand blue was
+  2.5:1 on light surfaces).
+- Mobile keyboard tour: Menü opens the sheet with focus parked on its close
+  button, Escape closes it and returns focus to the Menü trigger, deadline
+  rows activate with Enter, and no focus is ever lost to the body.
 
 Desktop, student mobile and parent mobile composition are complete, and the
 student and parent routes were walked at 393px, 375px and 320px against a

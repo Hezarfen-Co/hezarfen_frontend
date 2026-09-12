@@ -53,7 +53,7 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
               <DropdownMenuTrigger
                 class={cn(
                   "flex w-full items-center text-left outline-hidden transition-colors",
-                  "focus-visible:ring-2 focus-visible:ring-ring dark:focus-visible:ring-white/30",
+                  "focus-visible:ring-2 focus-visible:ring-ring",
                   props.collapsed
                     ? "h-9 justify-center rounded-md px-0 text-foreground hover:bg-muted/70 data-expanded:bg-muted/70 dark:text-white dark:hover:bg-white/8 dark:data-expanded:bg-white/8"
                     : "h-10 gap-2 rounded-md px-2 text-foreground hover:bg-muted/70 data-expanded:bg-muted/70 dark:text-white dark:hover:bg-white/8 dark:data-expanded:bg-white/8",
