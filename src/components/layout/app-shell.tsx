@@ -93,7 +93,11 @@ export function AppShell(props: ParentProps) {
             </div>
 
             <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-2.5">
-              <SideNav collapsed={collapsed()} />
+              <SideNav
+                collapsed={collapsed()}
+                onOpenCelebi={() => setCelebiOpen(true)}
+                onOpenProfile={() => setProfileOpen(true)}
+              />
             </div>
 
             <SidebarAccount collapsed={collapsed()} onLogout={logout} />
@@ -105,6 +109,8 @@ export function AppShell(props: ParentProps) {
             open={mobileOpen()}
             onClose={() => setMobileOpen(false)}
             onLogout={logout}
+            onOpenCelebi={() => setCelebiOpen(true)}
+            onOpenProfile={() => setProfileOpen(true)}
           />
         </Show>
 

@@ -5,6 +5,8 @@ import bellUrl from "@phosphor-icons/core/regular/bell.svg?url";
 import bookOpenUrl from "@phosphor-icons/core/regular/book-open.svg?url";
 import calendarDotsUrl from "@phosphor-icons/core/regular/calendar-dots.svg?url";
 import caretDownUrl from "@phosphor-icons/core/regular/caret-down.svg?url";
+import chalkboardTeacherUrl from "@phosphor-icons/core/regular/chalkboard-teacher.svg?url";
+import chartPieUrl from "@phosphor-icons/core/regular/chart-pie.svg?url";
 import caretLeftUrl from "@phosphor-icons/core/regular/caret-left.svg?url";
 import caretRightUrl from "@phosphor-icons/core/regular/caret-right.svg?url";
 import caretUpDownUrl from "@phosphor-icons/core/regular/caret-up-down.svg?url";
@@ -27,17 +29,22 @@ import houseUrl from "@phosphor-icons/core/regular/house.svg?url";
 import listUrl from "@phosphor-icons/core/regular/list.svg?url";
 import lockSimpleUrl from "@phosphor-icons/core/regular/lock-simple.svg?url";
 import magnifyingGlassUrl from "@phosphor-icons/core/regular/magnifying-glass.svg?url";
+import packageUrl from "@phosphor-icons/core/regular/package.svg?url";
 import paperPlaneTiltUrl from "@phosphor-icons/core/regular/paper-plane-tilt.svg?url";
 import pencilSimpleUrl from "@phosphor-icons/core/regular/pencil-simple.svg?url";
 import plusUrl from "@phosphor-icons/core/regular/plus.svg?url";
 import questionUrl from "@phosphor-icons/core/regular/question.svg?url";
+import scanUrl from "@phosphor-icons/core/regular/scan.svg?url";
+import shieldCheckUrl from "@phosphor-icons/core/regular/shield-check.svg?url";
 import sidebarSimpleUrl from "@phosphor-icons/core/regular/sidebar-simple.svg?url";
 import signOutUrl from "@phosphor-icons/core/regular/sign-out.svg?url";
 import sparkleUrl from "@phosphor-icons/core/regular/sparkle.svg?url";
+import targetUrl from "@phosphor-icons/core/regular/target.svg?url";
 import trashUrl from "@phosphor-icons/core/regular/trash.svg?url";
 import uploadSimpleUrl from "@phosphor-icons/core/regular/upload-simple.svg?url";
 import usersUrl from "@phosphor-icons/core/regular/users.svg?url";
 import warningUrl from "@phosphor-icons/core/regular/warning.svg?url";
+import waveformUrl from "@phosphor-icons/core/regular/waveform.svg?url";
 import xUrl from "@phosphor-icons/core/regular/x.svg?url";
 
 type IconProps = {
@@ -595,4 +602,32 @@ export function IconExternalLink(props: IconProps) {
 
 export function IconBell(props: IconProps) {
   return <PhosphorIcon {...props} src={bellUrl} />;
+}
+
+export function IconChalkboardTeacher(props: IconProps) {
+  return <PhosphorIcon {...props} src={chalkboardTeacherUrl} />;
+}
+
+export function IconChartPie(props: IconProps) {
+  return <PhosphorIcon {...props} src={chartPieUrl} />;
+}
+
+export function IconPackage(props: IconProps) {
+  return <PhosphorIcon {...props} src={packageUrl} />;
+}
+
+export function IconScan(props: IconProps) {
+  return <PhosphorIcon {...props} src={scanUrl} />;
+}
+
+export function IconShieldCheck(props: IconProps) {
+  return <PhosphorIcon {...props} src={shieldCheckUrl} />;
+}
+
+export function IconTarget(props: IconProps) {
+  return <PhosphorIcon {...props} src={targetUrl} />;
+}
+
+export function IconWaveform(props: IconProps) {
+  return <PhosphorIcon {...props} src={waveformUrl} />;
 }

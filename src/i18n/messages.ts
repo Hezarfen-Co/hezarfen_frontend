@@ -258,6 +258,45 @@ export type MessageKey =
   | "nav.group.grades"
   | "nav.group.community"
   | "nav.group.services"
+  | "nav.group.operations"
+  | "nav.group.ai"
+  | "nav.group.institution"
+  | "nav.group.myClassroom"
+  | "nav.group.study"
+  | "nav.group.other"
+  | "nav.group.myStudent"
+  | "nav.studentsRoster"
+  | "nav.teachersRoster"
+  | "nav.schedule"
+  | "nav.mySchedule"
+  | "nav.mockExams"
+  | "nav.opticalReading"
+  | "nav.hezarfenZeka"
+  | "nav.celebi"
+  | "nav.soundStudio"
+  | "nav.reports"
+  | "nav.licenseModules"
+  | "nav.dataProtection"
+  | "nav.schoolMeals"
+  | "nav.myClasses"
+  | "nav.studentAnalysis"
+  | "nav.pendingApprovals"
+  | "nav.questionGeneration"
+  | "nav.parentCommunication"
+  | "nav.studyPlan"
+  | "nav.topicMastery"
+  | "nav.examResults"
+  | "nav.myHomework"
+  | "nav.progressReport"
+  | "nav.absence"
+  | "nav.childExamResults"
+  | "nav.childStudyPlan"
+  | "nav.appointmentsAndCommunication"
+  | "nav.soon"
+  | "comingSoon.title"
+  | "comingSoon.description"
+  | "comingSoon.emptyTitle"
+  | "comingSoon.emptyDescription"
   | "nav.darkMode"
   | "rightPanel.messagesTitle"
   | "rightPanel.calendarTitle"
@@ -1794,9 +1833,9 @@ const en: Dict = {
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Attendance",
   "nav.questions": "Question pool",
-  "nav.work": "Work log",
+  "nav.work": "Shift",
   "nav.staffWork": "Staff shifts",
-  "nav.users": "Users",
+  "nav.users": "Users & roles",
   "nav.studentMarks": "Student marks",
   "nav.studentAttendance": "Student attendance",
   "nav.studentPomodoro": "Student pomodoros",
@@ -1820,6 +1859,45 @@ const en: Dict = {
   "nav.group.grades": "Grades",
   "nav.group.community": "Community",
   "nav.group.services": "School services",
+  "nav.group.operations": "Operations",
+  "nav.group.ai": "AI",
+  "nav.group.institution": "Institution",
+  "nav.group.myClassroom": "My classroom",
+  "nav.group.study": "Study",
+  "nav.group.other": "Other",
+  "nav.group.myStudent": "My student",
+  "nav.studentsRoster": "Students",
+  "nav.teachersRoster": "Teachers",
+  "nav.schedule": "Class schedule",
+  "nav.mySchedule": "My schedule",
+  "nav.mockExams": "Mock exams",
+  "nav.opticalReading": "Optical reading",
+  "nav.hezarfenZeka": "Hezarfen AI",
+  "nav.celebi": "Çelebi",
+  "nav.soundStudio": "Sound studio",
+  "nav.reports": "Reports",
+  "nav.licenseModules": "License & modules",
+  "nav.dataProtection": "Data protection & audit",
+  "nav.schoolMeals": "Cafeteria management",
+  "nav.myClasses": "My classes",
+  "nav.studentAnalysis": "Student analysis",
+  "nav.pendingApprovals": "Pending approvals",
+  "nav.questionGeneration": "Question generation",
+  "nav.parentCommunication": "Parent communication",
+  "nav.studyPlan": "Study plan",
+  "nav.topicMastery": "Topic mastery",
+  "nav.examResults": "My exam results",
+  "nav.myHomework": "My homework",
+  "nav.progressReport": "Progress report",
+  "nav.absence": "Absence",
+  "nav.childExamResults": "Exam results",
+  "nav.childStudyPlan": "Study plan",
+  "nav.appointmentsAndCommunication": "Appointments & messages",
+  "nav.soon": "Coming soon",
+  "comingSoon.title": "Coming soon",
+  "comingSoon.description": "This module is on its way — there is nothing to show here yet.",
+  "comingSoon.emptyTitle": "Not available yet",
+  "comingSoon.emptyDescription": "This part of Hezarfen is still being built. Check back soon.",
   "nav.darkMode": "Dark mode",
   "parents.title": "My Students",
   "parents.subtitle": "Review academic records for the students linked to your account.",
@@ -2893,9 +2971,9 @@ const en: Dict = {
   "meals.editDish": "Edit dish",
   "meals.dishName": "Dish name",
   "meals.priceTry": "Price (TRY)",
-  "nav.payments": "Fees",
+  "nav.payments": "Payments & collection",
   "nav.paymentStatement": "My Fees",
-  "nav.whiteboards": "Whiteboards",
+  "nav.whiteboards": "Board",
   "whiteboard.title": "Whiteboards",
   "whiteboard.subtitle": "Live collaborative sketch boards.",
   "whiteboard.empty": "No whiteboards yet.",
@@ -3136,7 +3214,7 @@ const tr: Dict = {
   "ai.skipTyping": "Cevabın tamamını göster",
   "nav.today": "Bugün",
   "nav.classes": "Eğitim",
-  "nav.classGroups": "Şubeler",
+  "nav.classGroups": "Sınıflar",
   "classGroups.title": "Şubeler",
   "classGroups.subtitle": "Aynı dersleri paylaşan öğrenci grupları.",
   "classGroups.newClass": "Yeni şube",
@@ -3351,9 +3429,9 @@ const tr: Dict = {
   "nav.pomodoro": "Pomodoro",
   "nav.attendance": "Yoklama",
   "nav.questions": "Soru havuzu",
-  "nav.work": "Çalışma kaydı",
-  "nav.staffWork": "Personel mesaisi",
-  "nav.users": "Kullanıcılar",
+  "nav.work": "Mesai",
+  "nav.staffWork": "Personel Mesai",
+  "nav.users": "Kullanıcılar ve roller",
   "nav.studentMarks": "Öğrenci notları",
   "nav.studentAttendance": "Öğrenci yoklamaları",
   "nav.studentPomodoro": "Öğrenci pomodoroları",
@@ -3377,6 +3455,45 @@ const tr: Dict = {
   "nav.group.grades": "Notlar",
   "nav.group.community": "Topluluk",
   "nav.group.services": "Okul hizmetleri",
+  "nav.group.operations": "Operasyon",
+  "nav.group.ai": "Yapay zekâ",
+  "nav.group.institution": "Kurum",
+  "nav.group.myClassroom": "Sınıfım",
+  "nav.group.study": "Çalışma",
+  "nav.group.other": "Diğer",
+  "nav.group.myStudent": "Öğrencim",
+  "nav.studentsRoster": "Öğrenciler",
+  "nav.teachersRoster": "Öğretmenler",
+  "nav.schedule": "Ders programı",
+  "nav.mySchedule": "Ders programım",
+  "nav.mockExams": "Deneme sınavları",
+  "nav.opticalReading": "Optik okuma",
+  "nav.hezarfenZeka": "Hezarfen Zekâ",
+  "nav.celebi": "Çelebi",
+  "nav.soundStudio": "Ses Atölyesi",
+  "nav.reports": "Raporlar",
+  "nav.licenseModules": "Lisans ve modüller",
+  "nav.dataProtection": "KVKK ve denetim",
+  "nav.schoolMeals": "Yemekhane Yönetimi",
+  "nav.myClasses": "Sınıflarım",
+  "nav.studentAnalysis": "Öğrenci analizi",
+  "nav.pendingApprovals": "Bekleyen onaylar",
+  "nav.questionGeneration": "Soru üretimi",
+  "nav.parentCommunication": "Veli iletişimi",
+  "nav.studyPlan": "Çalışma programım",
+  "nav.topicMastery": "Konu yetkinliğim",
+  "nav.examResults": "Sınav sonuçlarım",
+  "nav.myHomework": "Ödevlerim",
+  "nav.progressReport": "Gelişim raporu",
+  "nav.absence": "Devamsızlık",
+  "nav.childExamResults": "Sınav sonuçları",
+  "nav.childStudyPlan": "Çalışma planı",
+  "nav.appointmentsAndCommunication": "Randevu ve iletişim",
+  "nav.soon": "Yakında",
+  "comingSoon.title": "Yakında",
+  "comingSoon.description": "Bu modül hazırlanıyor — henüz gösterecek bir şey yok.",
+  "comingSoon.emptyTitle": "Henüz kullanıma açık değil",
+  "comingSoon.emptyDescription": "Hezarfen'in bu bölümü hâlâ hazırlanıyor. Yakında tekrar bakın.",
   "nav.darkMode": "Karanlık mod",
   "parents.title": "Öğrencilerim",
   "parents.subtitle": "Size bağlı öğrencilerin akademik kayıtlarını inceleyin.",
@@ -4450,9 +4567,9 @@ const tr: Dict = {
   "meals.editDish": "Yemeği düzenle",
   "meals.dishName": "Yemek adı",
   "meals.priceTry": "Fiyat (TRY)",
-  "nav.payments": "Ücretler",
+  "nav.payments": "Ödeme ve tahsilat",
   "nav.paymentStatement": "Ücretlerim",
-  "nav.whiteboards": "Beyaz tahtalar",
+  "nav.whiteboards": "Tahta",
   "whiteboard.title": "Beyaz tahtalar",
   "whiteboard.subtitle": "Canlı ortak çizim tahtaları.",
   "whiteboard.empty": "Henüz beyaz tahta yok.",

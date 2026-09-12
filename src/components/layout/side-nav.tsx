@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 import { Link, useNavigate, useRouterState } from "@tanstack/solid-router";
-import { primaryNavItems, routeNavItem, sidebarNavGroups, type NavItem } from "@/components/layout/nav-items";
+import { HOME_ITEM, routeNavItem, visibleNavGroups, type NavItem } from "@/components/layout/nav-items";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
@@ -9,7 +9,12 @@ import { useModules } from "@/stores/modules-context";
 import { useShellFeed } from "@/stores/shell-feed-context";
 import { useT } from "@/stores/preferences-context";
 
-export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean }) {
+export function SideNav(props: {
+  onNavigate?: () => void;
+  collapsed?: boolean;
+  onOpenCelebi?: () => void;
+  onOpenProfile?: () => void;
+}) {
   const auth = useAuth();
   const t = useT();
   const feed = useShellFeed();
@@ -17,16 +22,22 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-  const primary = () => primaryNavItems(auth.user()?.role, modules.enabled());
-  const groups = () => sidebarNavGroups(auth.user()?.role, modules.enabled());
+  const home = () => (auth.user() ? [HOME_ITEM] : []);
+  const groups = () => visibleNavGroups(auth.user()?.role, modules.enabled());
   const current = () => routeNavItem(pathname(), auth.user()?.role);
   const unread = () => feed.unreadMessages().total;
   const badgeFor = (item: NavItem) => (item.id === "messages" ? unread() : 0);
 
+  const runAction = (item: NavItem) => {
+    props.onNavigate?.();
+    if (item.action === "celebi") props.onOpenCelebi?.();
+    if (item.action === "profile") props.onOpenProfile?.();
+  };
+
   return (
     <nav class="flex h-full flex-col gap-1" aria-label={t("nav.menu")}>
       <div class="grid gap-1">
-        <For each={primary()}>
+        <For each={home()}>
           {(item) => {
             const active = () => current()?.id === item.id;
             return (
@@ -45,20 +56,6 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
               >
                 <item.Icon class="h-4 w-4 shrink-0" />
                 <span class={props.collapsed ? "sr-only" : "truncate"}>{t(item.labelKey)}</span>
-                <Show when={badgeFor(item) > 0}>
-                  <Show
-                    when={!props.collapsed}
-                    fallback={
-                      <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
-                        {unread() > 9 ? "9+" : unread()}
-                      </span>
-                    }
-                  >
-                    <span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
-                      {unread() > 9 ? "9+" : unread()}
-                    </span>
-                  </Show>
-                </Show>
               </Link>
             );
           }}
@@ -72,38 +69,43 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
               <For each={group.items}>
                 {(item: NavItem) => {
                   const itemActive = () => current()?.id === item.id;
-                  return (
-                    <Link
-                      to={item.to}
-                      onClick={() => props.onNavigate?.()}
-                      title={t(item.labelKey)}
-                      aria-current={itemActive() ? "page" : undefined}
-                      class={cn(
-                        // Active submenu item: bold foreground text + a bright segment over
-                        // the group's left guide line (no filled pill).
-                        "relative flex h-[30px] items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-                        itemActive()
-                          ? "font-semibold text-foreground before:absolute before:-left-[9px] before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:bg-foreground"
-                          : "font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                      )}
-                    >
+                  const linkClass = cn(
+                    // Active submenu item: bold foreground text + a bright segment over
+                    // the group's left guide line (no filled pill).
+                    "relative flex h-[30px] items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                    itemActive()
+                      ? "font-semibold text-foreground before:absolute before:-left-[9px] before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:bg-foreground"
+                      : "font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                  );
+                  const content = (
+                    <>
                       <item.Icon class="h-4 w-4 shrink-0 opacity-80" />
                       <span class="truncate">{t(item.labelKey)}</span>
-                      <Show when={badgeFor(item) > 0}>
-                        <Show
-                          when={!props.collapsed}
-                          fallback={
-                            <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
-                              {unread() > 9 ? "9+" : unread()}
-                            </span>
-                          }
-                        >
-                          <span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
-                            {unread() > 9 ? "9+" : unread()}
-                          </span>
-                        </Show>
+                      <Show when={item.soon}>
+                        <span class="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {t("nav.soon")}
+                        </span>
                       </Show>
-                    </Link>
+                      <Show when={badgeFor(item) > 0}>
+                        <span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
+                          {unread() > 9 ? "9+" : unread()}
+                        </span>
+                      </Show>
+                    </>
+                  );
+                  return (
+                    <Show
+                      when={!item.action}
+                      fallback={
+                        <button type="button" onClick={() => runAction(item)} title={t(item.labelKey)} class={cn(linkClass, "w-full text-left")}>
+                          {content}
+                        </button>
+                      }
+                    >
+                      <Link to={item.to} onClick={() => props.onNavigate?.()} title={t(item.labelKey)} aria-current={itemActive() ? "page" : undefined} class={linkClass}>
+                        {content}
+                      </Link>
+                    </Show>
                   );
                 }}
               </For>
@@ -154,12 +156,21 @@ export function SideNav(props: { onNavigate?: () => void; collapsed?: boolean })
                       <DropdownMenuItem
                         class="min-h-8 gap-2.5 rounded-md px-2.5 py-1.5 text-[13px]"
                         onSelect={() => {
+                          if (item.action) {
+                            runAction(item);
+                            return;
+                          }
                           props.onNavigate?.();
                           void navigate({ to: item.to });
                         }}
                       >
                         <item.Icon class="h-4 w-4 shrink-0" />
                         <span>{t(item.labelKey)}</span>
+                        <Show when={item.soon}>
+                          <span class="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            {t("nav.soon")}
+                          </span>
+                        </Show>
                         <Show when={badgeFor(item) > 0}>
                           <span class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
                             {unread() > 9 ? "9+" : unread()}
