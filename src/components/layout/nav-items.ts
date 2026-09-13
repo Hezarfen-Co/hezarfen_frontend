@@ -97,8 +97,8 @@ const ADMIN_GROUPS: NavGroup[] = [
     labelKey: "nav.group.operations",
     Icon: IconSchool,
     items: [
-      { id: "students-roster", to: "/coming-soon/ogrenciler", labelKey: "nav.studentsRoster", Icon: IconUsers, soon: true, minRole: "manager" },
-      { id: "teachers-roster", to: "/coming-soon/ogretmenler", labelKey: "nav.teachersRoster", Icon: IconChalkboardTeacher, soon: true, minRole: "manager" },
+      { id: "students-roster", to: "/management/students", labelKey: "nav.studentsRoster", Icon: IconUsers, minRole: "manager" },
+      { id: "teachers-roster", to: "/management/teachers", labelKey: "nav.teachersRoster", Icon: IconChalkboardTeacher, minRole: "manager" },
       { id: "class-groups", to: "/management/classes", labelKey: "nav.classGroups", Icon: IconSchool, minRole: "teacher" },
       { id: "courses", to: "/courses", labelKey: "nav.courses", Icon: IconBook, module: "courses" },
       { id: "terms", to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendar, minRole: "manager" },

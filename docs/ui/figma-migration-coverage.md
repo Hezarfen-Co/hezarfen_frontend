@@ -71,6 +71,9 @@ are used; unknown values are not inferred.
 | `/management/payments` | Admin payments | Keep ledger and permission behavior |
 | `/management/staff-work` | Admin staff work | Keep existing read/update/delete contract |
 | `/admin/users`, `/admin/users/:id` | Admin users and roles | Keep admin guard and critical confirmations |
+| `/management/students` | ADM-02 Öğrenciler | Real roster + class/term filters; mastery, attendance, plan and risk columns stay "yakında" |
+| `/management/teachers` | ADM-08 Öğretmenler | Real roster + homeroom class count; branch, load, AI acceptance and status stay "yakında" |
+| `/management/modules` | ADM-05 Lisans ve modüller | Real enabled/total modules per package; price, seats, renewal and invoices stay "yakında" |
 | `/students` | Parent development views | Keep linked-child authorization |
 | `/meals`, `/meals/:id` | Admin cafeteria | Keep menu, booking, balance, and attendance behavior |
 | `/payments` | Parent/student statement | Remain read-only until a payment-provider API exists |
@@ -110,6 +113,8 @@ Keep the current UI and behavior until a specific design is added:
 - `/management/pomodoros`
 - `/management/terms`
 - `/whiteboards/:id` live canvas details beyond the list concept
+- `/builder/login`, `/builder`, `/builder/schools/:slug` (vendor operator console)
+- `/students/attendance`, `/students/exams`, `/students/study` parent tab routes
 - `/meals/:id` detailed account/service/management tabs
 - `/studies`, `/clubs`, and `/attendance` redirect aliases
 

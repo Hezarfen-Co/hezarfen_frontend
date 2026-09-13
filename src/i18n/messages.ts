@@ -305,6 +305,35 @@ export type MessageKey =
   | "comingSoon.description"
   | "comingSoon.emptyTitle"
   | "comingSoon.emptyDescription"
+  | "roster.student"
+  | "roster.teacher"
+  | "roster.class"
+  | "roster.classAll"
+  | "roster.term"
+  | "roster.termAll"
+  | "roster.mastery"
+  | "roster.attendance"
+  | "roster.planAdherence"
+  | "roster.status"
+  | "roster.branch"
+  | "roster.weeklyLessons"
+  | "roster.suggestionAcceptance"
+  | "roster.tabAll"
+  | "roster.tabActive"
+  | "roster.tabNew"
+  | "roster.tabAtRisk"
+  | "roster.tabLeft"
+  | "roster.tabPermanent"
+  | "roster.tabContract"
+  | "roster.tabAdvisor"
+  | "roster.import"
+  | "roster.addStudent"
+  | "roster.addTeacher"
+  | "roster.studentsSubtitle"
+  | "roster.teachersSubtitle"
+  | "roster.searchStudents"
+  | "roster.searchTeachers"
+  | "roster.noTeachers"
   | "builder.console"
   | "builder.logout"
   | "builder.loginTitle"
@@ -350,6 +379,22 @@ export type MessageKey =
   | "modules.requires"
   | "modules.on"
   | "modules.off"
+  | "modules.module"
+  | "modules.active"
+  | "modules.unitPrice"
+  | "modules.activeSeats"
+  | "modules.annualAmount"
+  | "modules.annualTotal"
+  | "modules.tabOverview"
+  | "modules.tabUsage"
+  | "modules.tabInvoices"
+  | "modules.tabContract"
+  | "modules.downloadInvoices"
+  | "modules.addLicense"
+  | "modules.fullPackage"
+  | "modules.customPackage"
+  | "modules.renewal"
+  | "modules.recentInvoices"
   | "modules.conflictRequires"
   | "modules.conflictRequiredBy"
   | "module.appointments"
@@ -2087,6 +2132,35 @@ const en: Dict = {
   "comingSoon.description": "This module is on its way — there is nothing to show here yet.",
   "comingSoon.emptyTitle": "Not available yet",
   "comingSoon.emptyDescription": "This part of Hezarfen is still being built. Check back soon.",
+  "roster.student": "Student",
+  "roster.teacher": "Teacher",
+  "roster.class": "Class",
+  "roster.classAll": "Class: All",
+  "roster.term": "Term",
+  "roster.termAll": "Term: All",
+  "roster.mastery": "Topic mastery",
+  "roster.attendance": "Attendance",
+  "roster.planAdherence": "Plan adherence",
+  "roster.status": "Status",
+  "roster.branch": "Branch",
+  "roster.weeklyLessons": "Weekly lessons",
+  "roster.suggestionAcceptance": "Suggestion acceptance",
+  "roster.tabAll": "All",
+  "roster.tabActive": "Active",
+  "roster.tabNew": "New enrolment",
+  "roster.tabAtRisk": "At risk",
+  "roster.tabLeft": "Left",
+  "roster.tabPermanent": "Permanent",
+  "roster.tabContract": "Contract",
+  "roster.tabAdvisor": "Advisor",
+  "roster.import": "Import",
+  "roster.addStudent": "Add student",
+  "roster.addTeacher": "Add teacher",
+  "roster.studentsSubtitle": "Every student in the school, with their class.",
+  "roster.teachersSubtitle": "Every teacher in the school and the classes they lead.",
+  "roster.searchStudents": "Search student name or username…",
+  "roster.searchTeachers": "Search teacher name or username…",
+  "roster.noTeachers": "No teachers yet.",
   "builder.console": "Operator console",
   "builder.logout": "Sign out",
   "builder.loginTitle": "Operator sign-in",
@@ -2124,7 +2198,7 @@ const en: Dict = {
   "builder.editSchool": "Edit school",
   "builder.editSchoolHint": "Rename the school or change its status.",
   "builder.suspendHint": "Suspension is immediate: every user of the school is refused, login included.",
-  "modules.subtitle": "The modules your school has, grouped by package.",
+  "modules.subtitle": "Modular by design: the school has only the components it needs.",
   "modules.readOnlyHint": "Modules are enabled or disabled by your Hezarfen provider.",
   "modules.enabledCount": "{on} of {total} enabled",
   "modules.enableAll": "Enable all",
@@ -2133,6 +2207,22 @@ const en: Dict = {
   "modules.on": "On",
   "modules.conflictRequires": "{module} needs {needed}, which is not enabled.",
   "modules.conflictRequiredBy": "{module} cannot be turned off: {dependents} depend on it.",
+  "modules.module": "Module",
+  "modules.active": "Active",
+  "modules.unitPrice": "Unit price",
+  "modules.activeSeats": "Active seats",
+  "modules.annualAmount": "Annual amount",
+  "modules.annualTotal": "annual total",
+  "modules.tabOverview": "Overview",
+  "modules.tabUsage": "Usage",
+  "modules.tabInvoices": "Invoices",
+  "modules.tabContract": "Contract",
+  "modules.downloadInvoices": "Download invoices",
+  "modules.addLicense": "Add license",
+  "modules.fullPackage": "Full package",
+  "modules.customPackage": "Custom package",
+  "modules.renewal": "Renewal",
+  "modules.recentInvoices": "Recent invoices",
   "modules.off": "Off",
   "module.appointments": "Appointments",
   "module.attendance": "Attendance",
@@ -3857,6 +3947,35 @@ const tr: Dict = {
   "comingSoon.description": "Bu modül hazırlanıyor — henüz gösterecek bir şey yok.",
   "comingSoon.emptyTitle": "Henüz kullanıma açık değil",
   "comingSoon.emptyDescription": "Hezarfen'in bu bölümü hâlâ hazırlanıyor. Yakında tekrar bakın.",
+  "roster.student": "Öğrenci",
+  "roster.teacher": "Öğretmen",
+  "roster.class": "Sınıf",
+  "roster.classAll": "Sınıf: Tümü",
+  "roster.term": "Dönem",
+  "roster.termAll": "Dönem: Tümü",
+  "roster.mastery": "Konu yetkinliği",
+  "roster.attendance": "Devam",
+  "roster.planAdherence": "Plan uyumu",
+  "roster.status": "Durum",
+  "roster.branch": "Branş",
+  "roster.weeklyLessons": "Haftalık ders",
+  "roster.suggestionAcceptance": "Öneri kabulü",
+  "roster.tabAll": "Tümü",
+  "roster.tabActive": "Aktif",
+  "roster.tabNew": "Yeni kayıt",
+  "roster.tabAtRisk": "Risk altında",
+  "roster.tabLeft": "Ayrılan",
+  "roster.tabPermanent": "Kadrolu",
+  "roster.tabContract": "Ücretli",
+  "roster.tabAdvisor": "Danışman",
+  "roster.import": "İçe aktar",
+  "roster.addStudent": "Öğrenci ekle",
+  "roster.addTeacher": "Öğretmen ekle",
+  "roster.studentsSubtitle": "Kurumdaki tüm öğrenciler, sınıflarıyla birlikte.",
+  "roster.teachersSubtitle": "Kurumdaki öğretmenler ve sınıf öğretmenliği yaptıkları sınıflar.",
+  "roster.searchStudents": "Öğrenci adı veya kullanıcı adı ara…",
+  "roster.searchTeachers": "Öğretmen adı veya kullanıcı adı ara…",
+  "roster.noTeachers": "Henüz öğretmen yok.",
   "builder.console": "Operatör konsolu",
   "builder.logout": "Çıkış yap",
   "builder.loginTitle": "Operatör girişi",
@@ -3894,7 +4013,7 @@ const tr: Dict = {
   "builder.editSchool": "Okulu düzenle",
   "builder.editSchoolHint": "Okulun adını veya durumunu değiştir.",
   "builder.suspendHint": "Askıya alma anında geçerlidir: okulun tüm kullanıcıları, giriş dahil, reddedilir.",
-  "modules.subtitle": "Okulunun sahip olduğu modüller, paketlere göre.",
+  "modules.subtitle": "Modüler yapı: okulun yalnızca ihtiyaç duyduğu bileşenlere sahip olur.",
   "modules.readOnlyHint": "Modüller Hezarfen sağlayıcın tarafından açılır veya kapatılır.",
   "modules.enabledCount": "{total} modülden {on} açık",
   "modules.enableAll": "Hepsini aç",
@@ -3903,6 +4022,22 @@ const tr: Dict = {
   "modules.on": "Açık",
   "modules.conflictRequires": "{module} için {needed} açık olmalı.",
   "modules.conflictRequiredBy": "{module} kapatılamaz: {dependents} buna bağlı.",
+  "modules.module": "Modül",
+  "modules.active": "Etkin",
+  "modules.unitPrice": "Birim fiyat",
+  "modules.activeSeats": "Aktif lisans",
+  "modules.annualAmount": "Yıllık tutar",
+  "modules.annualTotal": "yıllık toplam",
+  "modules.tabOverview": "Genel bakış",
+  "modules.tabUsage": "Kullanım",
+  "modules.tabInvoices": "Faturalar",
+  "modules.tabContract": "Sözleşme",
+  "modules.downloadInvoices": "Faturaları indir",
+  "modules.addLicense": "Lisans ekle",
+  "modules.fullPackage": "Tam paket",
+  "modules.customPackage": "Özel paket",
+  "modules.renewal": "Yenileme",
+  "modules.recentInvoices": "Son faturalar",
   "modules.off": "Kapalı",
   "module.appointments": "Randevular",
   "module.attendance": "Yoklama",

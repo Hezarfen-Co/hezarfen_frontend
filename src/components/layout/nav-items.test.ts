@@ -141,6 +141,10 @@ test("license modules is a real admin page and the work log includes admin", () 
   expect(licenseModules?.to).toBe("/management/modules");
   expect(licenseModules?.soon).toBeFalsy();
   expect(admin.map((i) => i.to)).toContain("/work");
+  expect(admin.filter((i) => i.id.endsWith("-roster")).map((i) => [i.to, i.soon ?? false])).toEqual([
+    ["/management/students", false],
+    ["/management/teachers", false],
+  ]);
   expect(visibleNavGroups("manager").flatMap((g) => g.items).map((i) => i.id)).not.toContain("license-modules");
 });
 

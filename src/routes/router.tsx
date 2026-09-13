@@ -68,6 +68,8 @@ const PaymentStatementPage = lazyRoute(() => import("@/pages/payment-statement-p
 const WhiteboardsPage = lazyRoute(() => import("@/pages/whiteboards-page"));
 const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
 const ComingSoonPage = lazyRoute(() => import("@/pages/coming-soon-page"));
+const StudentsRosterPage = lazyRoute(() => import("@/pages/students-roster-page"));
+const TeachersRosterPage = lazyRoute(() => import("@/pages/teachers-roster-page"));
 const LicenseModulesPage = lazyRoute(() => import("@/pages/license-modules-page"));
 const BuilderLoginPage = lazyRoute(() => import("@/pages/builder-login-page"));
 const BuilderSchoolsPage = lazyRoute(() => import("@/pages/builder-schools-page"));
@@ -413,6 +415,18 @@ const whiteboardRoute = createRoute({
   component: WhiteboardPage,
 });
 
+const studentsRosterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/students",
+  component: StudentsRosterPage,
+});
+
+const teachersRosterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/teachers",
+  component: TeachersRosterPage,
+});
+
 const licenseModulesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/management/modules",
@@ -449,8 +463,6 @@ const COMING_SOON_SLUGS = [
   "optik-okuma",
   "raporlar",
   "kvkk-denetim",
-  "ogrenciler",
-  "ogretmenler",
   "ogrenci-analizi",
   "bekleyen-onaylar",
   "soru-uretimi",
@@ -515,6 +527,8 @@ const routeTree = rootRoute.addChildren([
   paymentStatementRoute,
   whiteboardsRoute,
   whiteboardRoute,
+  studentsRosterRoute,
+  teachersRosterRoute,
   licenseModulesRoute,
   builderLoginRoute,
   builderSchoolsRoute,
