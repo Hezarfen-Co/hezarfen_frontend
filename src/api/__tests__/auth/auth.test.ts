@@ -33,12 +33,12 @@ describe("auth API", () => {
   });
 
   it("postRegister calls /auth/register with data", async () => {
-    const mockUser = { id: "u2", username: "newuser" };
-    mockFetchSuccess(mockUser);
+    const mockResponse = { username: "newuser", role: "student" };
+    mockFetchSuccess(mockResponse);
 
-    const data = { school: "demo", username: "newuser", password: "password", email: "test@test.com" };
+    const data = { school: "demo", username: "newuser", password: "password" };
     const result = await postRegister(data);
-    expect(result).toEqual(mockUser);
+    expect(result).toEqual(mockResponse);
 
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/auth/register");

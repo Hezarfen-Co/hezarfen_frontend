@@ -1,5 +1,5 @@
 import { client } from "../client";
-import type { User } from "../client";
+import type { Role } from "../client";
 
 export type RegisterBody = {
   school: string;
@@ -7,6 +7,12 @@ export type RegisterBody = {
   password: string;
 };
 
-export function postRegister(body: RegisterBody): Promise<User> {
-  return client<User>("/auth/register", { method: "POST", body });
+/** Backend answers 201 {username, role} only — anti-enumeration, no id. */
+export type RegisterResponse = {
+  username: string;
+  role: Role;
+};
+
+export function postRegister(body: RegisterBody): Promise<RegisterResponse> {
+  return client<RegisterResponse>("/auth/register", { method: "POST", body });
 }

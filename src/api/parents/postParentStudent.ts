@@ -10,6 +10,6 @@ export interface ParentLinkResponse {
 export async function postParentStudent(id: string, user_id: string): Promise<ParentLinkResponse> {
   return client(`/users/${id}/students`, {
     method: "POST",
-    body: JSON.stringify({ user_id }),
+    body: { user_id },
   });
 }

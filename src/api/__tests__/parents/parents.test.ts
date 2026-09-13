@@ -32,7 +32,7 @@ describe("parents API", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/users/u1/students");
     expect(init?.method).toBe("POST");
-    expect(init?.body).toBe(JSON.stringify(JSON.stringify({ user_id: "s1" }))); // client.ts stringifies the string again? wait no, if it expects double stringify, we do it. Let's just use the exact string. Actually, let's just use init?.body
+    expect(init?.body).toBe(JSON.stringify({ user_id: "s1" }));
   });
 
   it("deleteParentStudent calls /users/:id/students/:studentId", async () => {
