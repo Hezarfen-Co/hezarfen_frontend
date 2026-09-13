@@ -9,7 +9,7 @@ import {
   postBoardClear,
   postBoardClose,
 } from "@/api/boards";
-import { getUsers } from "@/api/users";
+import { getUserProfile, getUsers } from "@/api/users";
 import { formatApiError } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { WhiteboardRoom, type BoardLiveState } from "@/components/whiteboard/whiteboard-room-ws";
@@ -116,12 +116,13 @@ function WhiteboardContent() {
       if (me) return [me.name, me.surname].filter(Boolean).join(" ") || me.username;
     }
     const u = (users() ?? []).find((x) => x.id === userId);
-    if (!u) return userId;
+    if (!u) return profiles.latest?.get(userId)?.name ?? userId;
     return [u.name, u.surname].filter(Boolean).join(" ") || u.username;
   };
   const roleOf = (userId: string) => {
     const u = (users() ?? []).find((x) => x.id === userId);
-    return u ? t(`role.${u.role}` as MessageKey) : "";
+    const role = u?.role ?? profiles.latest?.get(userId)?.role ?? (userId === meId() ? auth.user()?.role : undefined);
+    return role ? t(`role.${role}` as MessageKey) : "";
   };
   const roster = () => {
     const creator = live().creator;
@@ -129,6 +130,27 @@ function WhiteboardContent() {
     return creator ? [creator, ...parts] : parts;
   };
   const isParticipant = () => roster().includes(meId());
+
+  // Below admin, resolve each roster id through its public profile — any
+  // signed-in account may read one (a parent only their linked students; the
+  // rest 403 and keep the id). The roster is small and capped by the backend.
+  const [profiles] = createResource(
+    () => (isAdmin() ? null : roster().filter((userId) => userId !== meId()).sort().join(",") || null),
+    async (key) => {
+      const entries = await Promise.all(
+        key.split(",").map(async (userId) => {
+          try {
+            const p = await getUserProfile(userId);
+            return [userId, { name: p.display_name || p.username, role: p.role }] as const;
+          } catch {
+            return null;
+          }
+        }),
+      );
+      return new Map(entries.filter((entry) => entry !== null));
+    },
+  );
+
 
   const [error, setError] = createSignal("");
   const [busy, setBusy] = createSignal(false);

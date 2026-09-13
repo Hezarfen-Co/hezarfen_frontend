@@ -39,6 +39,10 @@ badge). Each screen overrides only its open group and active row. When the
 nav tree changes in code, update the sidebar component, not individual
 screens. `Web / Switch` (Off/On) backs module and review toggles.
 
+Color variables `brand/default`, `brand/hover`, `brand/accent`, `text/link`
+and `border/focus` carry the app's values (#00ADD8 brand, #046B86 light
+focus ring), so Figma and the app no longer differ on the brand color.
+
 The shell matches the app too: `Web / Sidebar / *` is full height with the
 `Brand / Logo Mark` row on top and the account row at the bottom, and
 `Web / Top Bar` is the 1180px content header (back, route label, command
@@ -69,7 +73,7 @@ were swapped for these component instances; their content is raw layers.
 | Route | Figma coverage | Migration rule |
 |---|---|---|
 | `/` | Admin, teacher, student, parent dashboards | Restyle role branches; keep read-only, API-backed data |
-| `/login` | SYS-01 | Visual migration; keep current auth contract |
+| `/login` | SYS-01 Giriş | Captured from the running app; the earlier e-mail/SSO design lives on the `90 Arşiv` page |
 | `/courses`, `/courses/:id` | Teacher/student classes and mobile lessons | Reuse current course/enrollment behavior |
 | `/homework`, `/homework/:id` | Teacher/student homework | Reuse DataTable, submissions, files, and role gates |
 | `/exams`, `/exams/:id` | Admin/teacher/student exams and results | Keep draft/publish, attempts, grading, and statistics gates |
@@ -100,6 +104,11 @@ were swapped for these component instances; their content is raw layers.
 | `/questions`, `/questions/:id` | TCH-15 Soru Havuzu, STU-13 Soru Detayı | Captured from the running app |
 | `/notes` | STU-12 Defter | Captured from the running app |
 | `/guide`, `/profile/me`, `/register` | SYS-08 Rehber, SYS-09 Profilim, SYS-10 Kayıt Ol | Captured from the running app |
+| `/exam-room/:id` | STU-14 Sınav Odası | Captured from the running app (attempt in progress) |
+| `/exams/:id/live` | TCH-16 Canlı Sınav İzleme | Captured from the running app |
+| `/whiteboards/:id` | TCH-17 Tahta Çizim Ekranı | Captured from the running app |
+| `/meals/:id` | ADM-28 Yemek Menüsü Detayı | Captured from the running app (staff view) |
+| `/profile/:userId` | ADM-29 Kullanıcı Profili | Captured from the running app |
 | `/builder/login` | BLD-01 Operatör Girişi | Builder session only; linked from the SYS-01/login footer |
 | `/builder` | BLD-02 Okullar, BLD-02a Yeni Okul | Create, suspend/activate, delete |
 | `/builder/schools/:slug` | BLD-03 Okul Detayı, BLD-03a Okula Gir | Module switchboard, password reset, enter as admin |
@@ -128,12 +137,7 @@ false actions:
 
 Keep the current UI and behavior until a specific design is added:
 
-- `/profile/:userId` (another user's profile)
-- `/exam-room/:id`
-- `/exams/:id/live`
-- `/whiteboards/:id` live canvas details beyond the list concept
 - `/students/attendance`, `/students/exams`, `/students/study` parent tab routes
-- `/meals/:id` detailed account/service/management tabs
 - `/studies`, `/clubs`, and `/attendance` redirect aliases
 
 ## Asset policy
