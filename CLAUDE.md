@@ -4,7 +4,7 @@ SolidJS + TypeScript + TanStack Router + shadcn-solid, Vite/Bun.
 Read-only status-board dashboard; Turkish/English i18n.
 Bilingual codebase: Turkish UI labels, English code + commits.
 
-**AGENTS.md mirrors this for Codex/OpenCode.** Update CLAUDE.md first, then copy.
+**AGENTS.md mirrors this for OpenCode.** Update CLAUDE.md first, then copy.
 
 ## Gotchas
 
@@ -26,7 +26,5 @@ Bilingual codebase: Turkish UI labels, English code + commits.
 
 Load on demand by area — `solidjs-pitfalls` | `ui-conventions` | `api-layer` |
 `commit-workflow` | `dashboard-design`. Source of truth: `.claude/skills/<name>/SKILL.md`.
-`.codex/skills/` is a generated mirror — edit `.claude`, then `bun run sync-skills`
-(a pre-commit hook blocks drift).
 
 Deeper docs by area: `docs/ui/` · `docs/auth/` · `docs/frontend/` · `docs/backend/`.

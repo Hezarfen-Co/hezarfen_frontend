@@ -11,10 +11,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:watch": "vitest",
-    "test:contract": "vitest run --config vitest.contract.config.ts",
-    "sync-skills": "bun run scripts/sync-skills.ts",
-    "check-skills": "bun run scripts/sync-skills.ts --check",
-    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
+    "test:contract": "vitest run --config vitest.contract.config.ts"
   },
   "dependencies": {
     "@kobalte/core": "^0.13.12",

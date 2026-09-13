@@ -27,7 +27,5 @@ Bilingual codebase: Turkish UI labels, English code + commits.
 
 Load on demand by area — `solidjs-pitfalls` | `ui-conventions` | `api-layer` |
 `commit-workflow` | `dashboard-design`. Source of truth: `.claude/skills/<name>/SKILL.md`.
-`.codex/skills/` is a generated mirror — edit `.claude`, then `bun run sync-skills`
-(a pre-commit hook blocks drift).
 
 Deeper docs by area: `docs/ui/` · `docs/auth/` · `docs/frontend/` · `docs/backend/`.
