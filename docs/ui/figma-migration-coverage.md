@@ -2,7 +2,7 @@
 
 Source: `Hezarfen App Design` (`E8K670gsUx87yMOySGWrKf`)
 
-Last reviewed: 2026-09-12
+Last reviewed: 2026-09-13
 
 This document is the route-level source of truth for the Figma migration. A
 Figma example never replaces a working authorization rule, API contract,
@@ -15,16 +15,17 @@ must always be replaced with real application data.
 |---|---:|---|
 | Components | `3:3` | Shared controls, navigation, data display, and feedback audited |
 | Icons | `3:4` | 84 Phosphor Regular 16px icons audited; shared app glyphs migrated |
-| Admin | `3:5` | 24 screens plus 2 modal variants audited |
-| Teacher | `3:6` | 14 screens plus 2 modal variants audited |
-| Student | `3:7` | 11 screens plus 2 modal variants audited |
-| Parent | `3:8` | 8 screens audited |
-| System | `103:2` | 7 screens audited |
+| Admin | `3:5` | ADM-01..29 are captures of the running app (ADM-07 and ADM-24a archived) |
+| Teacher | `3:6` | TCH-01..17 are app captures (TCH-14a archived) |
+| Student | `3:7` | STU-01..14 are app captures (STU-10a archived) |
+| Parent | `3:8` | PAR-01..08 are app captures |
+| System | `103:2` | SYS-01, 05, 07..10 are app captures (SYS-02, 03, 04, 06 archived) |
 | Builder — Operatör | `205:23536` | BLD-01 login, BLD-02 schools, BLD-02a new school panel, BLD-03 school detail, BLD-03a enter-school panel |
 | Mobile Kit | `40:2` | Shared 393px mobile primitives audited |
-| Student Mobile | `40:3` | 9 screens audited |
-| Parent Mobile | `40:4` | 6 screens audited |
-| Dark Mode | `113:9393` | 10 reference screens audited |
+| Student Mobile | `40:3` | STU-M01..M09 are 393x852 app captures |
+| Parent Mobile | `40:4` | PAR-M01..M06 are 393x852 app captures |
+| Dark Mode | `113:9393` | 10 web and 7 mobile app captures in dark theme; REF sheet kept |
+| 90 Arşiv | `247:12342` | Original hand-drawn designs, tagged by source page |
 
 The Cover manifest also names a Foundations page, but no Foundations node URL
 was supplied. Exact values already exposed by component and dark-mode contexts
@@ -49,6 +50,25 @@ The shell matches the app too: `Web / Sidebar / *` is full height with the
 center, messages, notifications, Çelebi'ye sor) at x=260. Screens added from
 the running app are `generate_figma_design` captures whose sidebar and top bar
 were swapped for these component instances; their content is raw layers.
+
+## Full app parity (2026-09-13)
+
+Every screen on the role, system, mobile and dark-mode pages is now a
+`generate_figma_design` capture of the running app against the local backend,
+so Figma shows exactly what the app renders, including real empty states.
+Rules the captures follow:
+
+- Desktop captures swap their sidebar and top bar for the `Web / Sidebar / *`
+  and `Web / Top Bar` instances; mobile captures keep raw layers.
+- Features the backend does not serve are captured on their
+  `/coming-soon/<slug>` page ("yakında"), never drawn with invented data.
+- Dialogs, panels and the notification popover are cropped to the viewport
+  (1440x1024 or 393x852); tall pages keep their full height on role pages.
+- Designs with no app counterpart (password reset, institution picker, setup
+  wizard, empty-state sheet, invite-code board and other screens without a route)
+  moved to `90 Arşiv` with a `[Page]` name prefix instead of being deleted.
+- To refresh a screen, recapture it and swap the shell again; do not edit the
+  captured content by hand.
 
 ## Implemented foundation
 
@@ -137,7 +157,6 @@ false actions:
 
 Keep the current UI and behavior until a specific design is added:
 
-- `/students/attendance`, `/students/exams`, `/students/study` parent tab routes
 - `/studies`, `/clubs`, and `/attendance` redirect aliases
 
 ## Asset policy
