@@ -20,6 +20,7 @@ must always be replaced with real application data.
 | Student | `3:7` | 11 screens plus 2 modal variants audited |
 | Parent | `3:8` | 8 screens audited |
 | System | `103:2` | 7 screens audited |
+| Builder — Operatör | `205:23536` | BLD-01 login, BLD-02 schools, BLD-02a new school panel, BLD-03 school detail, BLD-03a enter-school panel |
 | Mobile Kit | `40:2` | Shared 393px mobile primitives audited |
 | Student Mobile | `40:3` | 9 screens audited |
 | Parent Mobile | `40:4` | 6 screens audited |
@@ -28,6 +29,15 @@ must always be replaced with real application data.
 The Cover manifest also names a Foundations page, but no Foundations node URL
 was supplied. Exact values already exposed by component and dark-mode contexts
 are used; unknown values are not inferred.
+
+## Navigation sync (2026-09-13)
+
+The four `Web / Sidebar / *` components mirror `src/components/layout/nav-items.ts`
+as an accordion, the way the app renders them: `Web / Nav Group` headers
+(Collapsed/Open) over `Web / Nav Group Item` rows (Default/Active, "Yakında"
+badge). Each screen overrides only its open group and active row. When the
+nav tree changes in code, update the sidebar component, not individual
+screens. `Web / Switch` (Off/On) backs module and review toggles.
 
 ## Implemented foundation
 
@@ -77,6 +87,9 @@ are used; unknown values are not inferred.
 | `/students` | Parent development views | Keep linked-child authorization |
 | `/meals`, `/meals/:id` | Admin cafeteria | Keep menu, booking, balance, and attendance behavior |
 | `/payments` | Parent/student statement | Remain read-only until a payment-provider API exists |
+| `/builder/login` | BLD-01 Operatör Girişi | Builder session only; linked from the SYS-01/login footer |
+| `/builder` | BLD-02 Okullar, BLD-02a Yeni Okul | Create, suspend/activate, delete |
+| `/builder/schools/:slug` | BLD-03 Okul Detayı, BLD-03a Okula Gir | Module switchboard, password reset, enter as admin |
 
 ## Figma features blocked by product or backend scope
 
@@ -113,7 +126,6 @@ Keep the current UI and behavior until a specific design is added:
 - `/management/pomodoros`
 - `/management/terms`
 - `/whiteboards/:id` live canvas details beyond the list concept
-- `/builder/login`, `/builder`, `/builder/schools/:slug` (vendor operator console)
 - `/students/attendance`, `/students/exams`, `/students/study` parent tab routes
 - `/meals/:id` detailed account/service/management tabs
 - `/studies`, `/clubs`, and `/attendance` redirect aliases
