@@ -39,6 +39,13 @@ badge). Each screen overrides only its open group and active row. When the
 nav tree changes in code, update the sidebar component, not individual
 screens. `Web / Switch` (Off/On) backs module and review toggles.
 
+The shell matches the app too: `Web / Sidebar / *` is full height with the
+`Brand / Logo Mark` row on top and the account row at the bottom, and
+`Web / Top Bar` is the 1180px content header (back, route label, command
+center, messages, notifications, Çelebi'ye sor) at x=260. Screens added from
+the running app are `generate_figma_design` captures whose sidebar and top bar
+were swapped for these component instances; their content is raw layers.
+
 ## Implemented foundation
 
 - Figma semantic light/dark aliases with the landing page's `#00ADD8` brand
@@ -87,6 +94,12 @@ screens. `Web / Switch` (Off/On) backs module and review toggles.
 | `/students` | Parent development views | Keep linked-child authorization |
 | `/meals`, `/meals/:id` | Admin cafeteria | Keep menu, booking, balance, and attendance behavior |
 | `/payments` | Parent/student statement | Remain read-only until a payment-provider API exists |
+| `/management/terms` | ADM-25 Dönemler | Captured from the running app |
+| `/events`, `/events/:id` | ADM-26 Etkinlikler, ADM-26a Etkinlik Detayı | Captured from the running app |
+| `/management/pomodoros` | ADM-27 Öğrenci Pomodoroları | Captured from the running app |
+| `/questions`, `/questions/:id` | TCH-15 Soru Havuzu, STU-13 Soru Detayı | Captured from the running app |
+| `/notes` | STU-12 Defter | Captured from the running app |
+| `/guide`, `/profile/me`, `/register` | SYS-08 Rehber, SYS-09 Profilim, SYS-10 Kayıt Ol | Captured from the running app |
 | `/builder/login` | BLD-01 Operatör Girişi | Builder session only; linked from the SYS-01/login footer |
 | `/builder` | BLD-02 Okullar, BLD-02a Yeni Okul | Create, suspend/activate, delete |
 | `/builder/schools/:slug` | BLD-03 Okul Detayı, BLD-03a Okula Gir | Module switchboard, password reset, enter as admin |
@@ -115,16 +128,9 @@ false actions:
 
 Keep the current UI and behavior until a specific design is added:
 
-- `/register`
-- `/guide`
-- `/profile/me`, `/profile/:userId`
-- `/notes`
-- `/questions`, `/questions/:id`
-- `/events`, `/events/:id`
+- `/profile/:userId` (another user's profile)
 - `/exam-room/:id`
 - `/exams/:id/live`
-- `/management/pomodoros`
-- `/management/terms`
 - `/whiteboards/:id` live canvas details beyond the list concept
 - `/students/attendance`, `/students/exams`, `/students/study` parent tab routes
 - `/meals/:id` detailed account/service/management tabs
