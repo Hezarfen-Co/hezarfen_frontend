@@ -154,6 +154,11 @@ function LoginForm() {
             {t("auth.register")}
           </Link>
         </p>
+        <p class="mt-3 text-center text-xs text-text-subtle">
+          <Link to="/builder/login" class="underline-offset-4 hover:text-foreground hover:underline">
+            {t("builder.operatorLogin")}
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -1,27 +1,39 @@
 import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
-import { useNavigate } from "@tanstack/solid-router";
+import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getClassesByUserId } from "@/api/classes";
 import { getMyStudents } from "@/api/parents";
+import { getPomodoroByUser } from "@/api/pomodoro";
 import { getUserMarks } from "@/api/reports";
 import { getUserAttendance } from "@/api/reports";
-import type { MarksReport, PersonRef } from "@/api/client";
+import { formatApiError, type MarksReport, type PersonRef } from "@/api/client";
 import { HomeworkReportView } from "@/components/homework/homework-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
-import { IconChart, IconChevronRight, IconClipboardCheck, IconExam, IconExternalLink, IconHomework, IconMessage } from "@/components/ui/icons";
+import { IconChart, IconChevronRight, IconClipboardCheck, IconClock, IconExam, IconExternalLink, IconHomework, IconMessage } from "@/components/ui/icons";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { AttendanceReportView } from "@/components/attendance/attendance-report-view";
+import { PomodoroLogView } from "@/components/pomodoro/pomodoro-log-view";
+import { useModules } from "@/stores/modules-context";
 import { examKindLabel } from "@/lib/exam-labels";
 
-type StudentTab = "marks" | "attendance" | "exams" | "homework";
+type StudentTab = "marks" | "attendance" | "exams" | "homework" | "study";
+
+// /students opens a child on the progress report; the parent sidebar's
+// Devamsızlık / Sınav sonuçları / Çalışma planı entries are the same page
+// landing on another tab (/students/attendance, /students/exams, /students/study).
+function tabFromPath(pathname: string): StudentTab {
+  const segment = pathname.split("/")[2];
+  return segment === "attendance" || segment === "exams" || segment === "study" ? segment : "marks";
+}
 type CourseRow = MarksReport["courses"][number];
 type ExamRow = CourseRow["results"][number] & { courseTitle: string };
 
@@ -41,7 +53,18 @@ export default function MyStudentsPage() {
 function MyStudentsContent() {
   const t = useT();
   const [list] = createResource(async () => (await getMyStudents()).items);
+  const location = useLocation();
   const [selectedStudent, setSelectedStudent] = createSignal<PersonRef | null>(null);
+  const routeTab = () => tabFromPath(location().pathname);
+  // A parent with a single linked child has nothing to pick: open that child
+  // once, so a sidebar tab entry lands straight on its data.
+  let autoOpened = false;
+  createEffect(() => {
+    const items = list();
+    if (autoOpened || !items || items.length !== 1) return;
+    autoOpened = true;
+    setSelectedStudent(items[0]);
+  });
 
   return (
     <div class="space-y-6">
@@ -73,14 +96,15 @@ function MyStudentsContent() {
         </Show>
       </Suspense>
 
-      <StudentDetailPanel student={selectedStudent()} onClose={() => setSelectedStudent(null)} />
+      <StudentDetailPanel student={selectedStudent()} initialTab={routeTab()} onClose={() => setSelectedStudent(null)} />
     </div>
   );
 }
 
-function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => void }) {
+function StudentDetailPanel(props: { student: PersonRef | null; initialTab: StudentTab; onClose: () => void }) {
   const t = useT();
   const navigate = useNavigate();
+  const modules = useModules();
   const [activeTab, setActiveTab] = createSignal<StudentTab>("marks");
 
   const [marksRes] = createResource(
@@ -99,8 +123,24 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
   );
   const studentClass = () => classesRes()?.[0] ?? null;
 
+  // Fetched only once the tab is opened: the pomodoro nest can be switched
+  // off per school, and the other tabs must not pay for it.
+  const [studyError, setStudyError] = createSignal("");
+  const [pomodoroRes] = createResource(
+    () => (activeTab() === "study" ? props.student?.id : undefined),
+    async (id) => {
+      setStudyError("");
+      try {
+        return await getPomodoroByUser(id, { limit: 50 });
+      } catch (err) {
+        setStudyError(formatApiError(err));
+        return null;
+      }
+    },
+  );
+
   createEffect(() => {
-    if (props.student?.id) setActiveTab("marks");
+    if (props.student?.id) setActiveTab(props.initialTab);
   });
 
   const report = () => marksRes() ?? null;
@@ -147,12 +187,13 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
   // Ordered to match the Figma per-child screen set (Gelişim raporu →
   // Devamsızlık → Sınav sonuçları); "Ödevler" has no Figma screen of its own
   // but is kept — real, working functionality with nowhere else to live.
-  const tabs: Array<{ key: StudentTab; icon: Component<{ class?: string }>; label: string }> = [
+  const tabs = createMemo<Array<{ key: StudentTab; icon: Component<{ class?: string }>; label: string }>>(() => [
     { key: "marks", icon: IconChart, label: t("nav.progressReport") },
     { key: "attendance", icon: IconClipboardCheck, label: t("nav.attendance") },
-    { key: "exams", icon: IconExam, label: t("nav.examResults") },
+    { key: "exams", icon: IconExam, label: t("nav.childExamResults") },
     { key: "homework", icon: IconHomework, label: t("nav.homework") },
-  ];
+    ...(modules.isEnabled("pomodoro") ? [{ key: "study" as const, icon: IconClock, label: t("nav.childStudyPlan") }] : []),
+  ]);
 
   return (
     <SidePanel open={!!props.student} onOpenChange={(open) => !open && props.onClose()} title={props.student ? personLabel(props.student) : ""} description={`@${props.student?.username}`}>
@@ -198,7 +239,7 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
             </Button>
           </div>
           <div class="flex flex-wrap gap-2">
-            <For each={tabs}>
+            <For each={tabs()}>
               {(tab) => {
                 const Icon = tab.icon;
                 return (
@@ -230,6 +271,15 @@ function StudentDetailPanel(props: { student: PersonRef | null; onClose: () => v
               <Match when={activeTab() === "marks"}>
                 <Show when={marksRes()} fallback={<PageSpinner />}>
                   <MarksReportView report={marksRes()!} />
+                </Show>
+              </Match>
+
+              <Match when={activeTab() === "study"}>
+                <Show when={studyError()}>
+                  <ErrorAlert message={studyError()} />
+                </Show>
+                <Show when={pomodoroRes()}>
+                  {(log) => <PomodoroLogView log={log()} />}
                 </Show>
               </Match>
 

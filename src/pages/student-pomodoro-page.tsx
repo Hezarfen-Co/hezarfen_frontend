@@ -2,18 +2,18 @@ import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getPomodoroByUser } from "@/api/pomodoro";
 import { getUserSearch } from "@/api/users";
-import type { PersonRef, PomodoroSession } from "@/api/client";
+import type { PersonRef } from "@/api/client";
 import { ApiError, formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { PomodoroLogView } from "@/components/pomodoro/pomodoro-log-view";
 import { Alert } from "@/components/ui/alert";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { formatDateTime, formatDurationClock } from "@/lib/format";
 import { personLabel } from "@/lib/person";
-import { usePreferences, useT } from "@/stores/preferences-context";
+import { useT } from "@/stores/preferences-context";
 
 const PAGE_SIZE = 10;
 
@@ -27,7 +27,6 @@ export default function StudentPomodoroPage() {
 
 function StudentPomodoroContent() {
   const t = useT();
-  const { locale } = usePreferences();
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
   const [error, setError] = createSignal("");
 
@@ -98,23 +97,6 @@ function StudentPomodoroContent() {
       ),
     },
   ]);
-  const logColumns = createMemo<ColumnDef<PomodoroSession>[]>(() => [
-    {
-      accessorKey: "started_at",
-      header: t("pomodoro.startedAt"),
-      cell: (cell) => <span class="mono whitespace-nowrap">{formatDateTime(cell.row.original.started_at, locale())}</span>,
-    },
-    {
-      accessorKey: "finished_at",
-      header: t("pomodoro.finishedAt"),
-      cell: (cell) => <span class="mono whitespace-nowrap">{formatDateTime(cell.row.original.finished_at, locale())}</span>,
-    },
-    {
-      accessorKey: "duration_ms",
-      header: t("pomodoro.duration"),
-      cell: (cell) => <span class="mono tabular-nums">{formatDurationClock(cell.row.original.duration_ms)}</span>,
-    },
-  ]);
 
   return (
     <div class="space-y-6">
@@ -163,15 +145,7 @@ function StudentPomodoroContent() {
             <p class="text-sm text-muted-foreground">{t("common.loading")}</p>
           </Show>
           <Show when={log()}>
-            {(p) => (
-              <div class="space-y-4">
-            <div class="detail-metric-card">
-              <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.total")}</p>
-                  <p class="mono mt-2 text-3xl font-semibold tabular-nums">{formatDurationClock(p().total_focus_ms)}</p>
-            </div>
-                <DataTable columns={logColumns()} data={p().items} empty={t("pomodoro.empty")} enablePagination pageSize={10} />
-          </div>
-            )}
+            {(p) => <PomodoroLogView log={p()} />}
           </Show>
         </div>
       </SidePanel>

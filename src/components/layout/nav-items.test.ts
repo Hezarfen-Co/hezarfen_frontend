@@ -16,7 +16,7 @@ test("invalid role destinations stay hidden", () => {
   expect(visibleNavItems("parent").map((item) => item.to)).not.toContain("/management/staff-work");
 });
 
-test("admin's sidebar mirrors the Figma Operasyon / Yapay zekâ / Kurum tree", () => {
+test("admin's sidebar keeps the Figma Operasyon / Yapay zekâ / Kurum tree plus every backed page", () => {
   expect(
     visibleNavGroups("admin").map((group) => ({
       id: group.id,
@@ -29,10 +29,20 @@ test("admin's sidebar mirrors the Figma Operasyon / Yapay zekâ / Kurum tree", (
         "students-roster",
         "teachers-roster",
         "class-groups",
+        "courses",
+        "terms",
         "schedule",
+        "events",
         "student-attendance",
+        "student-marks",
+        "student-pomodoros",
+        "homework",
         "exams",
         "question-bank",
+        "questions",
+        "notes",
+        "whiteboards",
+        "appointments",
         "mock-exams",
         "optical-reading",
         "payments-collection",
@@ -41,46 +51,62 @@ test("admin's sidebar mirrors the Figma Operasyon / Yapay zekâ / Kurum tree", (
     { id: "ai", items: ["hezarfen-zeka", "celebi", "sound-studio"] },
     {
       id: "institution",
-      items: ["reports", "license-modules", "users", "data-protection", "school-meals", "staff-work", "settings"],
+      items: ["reports", "license-modules", "users", "data-protection", "school-meals", "staff-work", "work", "settings"],
     },
   ]);
 });
 
 test("manager sees the same admin tree minus the admin-only entries", () => {
   const institution = visibleNavGroups("manager").find((group) => group.id === "institution");
-  expect(institution?.items.map((item) => item.id)).toEqual(["reports", "school-meals", "staff-work", "settings"]);
+  expect(institution?.items.map((item) => item.id)).toEqual(["reports", "school-meals", "staff-work", "work", "settings"]);
   expect(institution?.items.map((item) => item.id)).not.toContain("license-modules");
   expect(institution?.items.map((item) => item.id)).not.toContain("users");
   expect(institution?.items.map((item) => item.id)).not.toContain("data-protection");
 });
 
-test("teacher's sidebar mirrors the Figma Sınıfım / Yapay zekâ / Diğer tree", () => {
+test("teacher's sidebar keeps the Figma Sınıfım / Yapay zekâ / Diğer tree plus every backed page", () => {
   expect(
     visibleNavGroups("teacher").map((group) => ({
       id: group.id,
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
-    { id: "my-classroom", items: ["my-classes", "my-schedule", "student-attendance", "homework", "exams", "whiteboards"] },
+    {
+      id: "my-classroom",
+      items: [
+        "my-classes",
+        "my-schedule",
+        "courses",
+        "student-attendance",
+        "student-marks",
+        "student-pomodoros",
+        "homework",
+        "exams",
+        "question-bank",
+        "questions",
+        "notes",
+        "whiteboards",
+      ],
+    },
     { id: "ai", items: ["student-analysis", "pending-approvals", "question-generation", "sound-studio"] },
-    { id: "other", items: ["parent-communication", "work", "settings-teacher"] },
+    { id: "other", items: ["parent-communication", "appointments", "events", "meals", "work", "settings-teacher"] },
   ]);
 });
 
-test("student's sidebar mirrors the Figma Çalışma / Yapay zekâ / Diğer tree", () => {
+test("student's sidebar keeps the Figma Çalışma / Yapay zekâ / Diğer tree plus every backed page", () => {
   expect(
     visibleNavGroups("student").map((group) => ({
       id: group.id,
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
-    { id: "study", items: ["study-plan", "topic-mastery", "exam-results", "my-homework", "whiteboards", "pomodoro"] },
+    { id: "study", items: ["study-plan", "topic-mastery", "exam-results", "my-homework", "courses", "notes", "questions", "whiteboards", "pomodoro"] },
     { id: "ai", items: ["celebi", "sound-studio"] },
-    { id: "other", items: ["calendar", "settings-student"] },
+    { id: "other", items: ["calendar", "events", "messages", "appointments", "meals", "settings-student"] },
   ]);
 });
 
-test("parent's sidebar mirrors the Figma Öğrencim / Kurum tree", () => {
+test("parent's sidebar keeps the Figma Öğrencim / Kurum tree plus every backed page", () => {
   expect(
     visibleNavGroups("parent").map((group) => ({
       id: group.id,
@@ -88,16 +114,38 @@ test("parent's sidebar mirrors the Figma Öğrencim / Kurum tree", () => {
     })),
   ).toEqual([
     { id: "my-student", items: ["progress-report", "absence", "child-exam-results", "child-study-plan"] },
-    { id: "institution", items: ["payment-statement", "appointments", "settings-parent"] },
+    { id: "institution", items: ["payment-statement", "appointments", "messages", "calendar", "events", "meals", "settings-parent"] },
   ]);
 });
 
-test("appointments is a parent-only sidebar entry, matching the Figma parent screen", () => {
-  expect(visibleNavGroups("parent").flatMap((g) => g.items).map((i) => i.to)).toContain("/appointments");
-  for (const role of ["student", "teacher", "manager", "admin"] as const) {
-    const paths = [...primaryNavItems(role).map((i) => i.to), ...visibleNavGroups(role).flatMap((g) => g.items.map((i) => i.to))];
-    expect(paths).not.toContain("/appointments");
+test("appointments and meals are reachable from every role's sidebar", () => {
+  for (const role of ["student", "parent", "teacher", "manager", "admin"] as const) {
+    const paths = visibleNavGroups(role).flatMap((g) => g.items.map((i) => i.to));
+    expect(paths).toContain("/appointments");
+    expect(paths).toContain("/meals");
   }
+});
+
+test("parent's child entries open the progress page on their own tab, not a placeholder", () => {
+  const items = visibleNavGroups("parent").flatMap((g) => g.items);
+  expect(items.filter((i) => i.soon).map((i) => i.id)).toEqual([]);
+  expect(routeNavItem("/students/attendance", "parent")?.id).toBe("absence");
+  expect(routeNavItem("/students/exams", "parent")?.id).toBe("child-exam-results");
+  expect(routeNavItem("/students/study", "parent")?.id).toBe("child-study-plan");
+  expect(routeNavItem("/students", "parent")?.id).toBe("progress-report");
+});
+
+test("license modules is a real admin page and the work log includes admin", () => {
+  const admin = visibleNavGroups("admin").flatMap((g) => g.items);
+  const licenseModules = admin.find((i) => i.id === "license-modules");
+  expect(licenseModules?.to).toBe("/management/modules");
+  expect(licenseModules?.soon).toBeFalsy();
+  expect(admin.map((i) => i.to)).toContain("/work");
+  expect(admin.filter((i) => i.id.endsWith("-roster")).map((i) => [i.to, i.soon ?? false])).toEqual([
+    ["/management/students", false],
+    ["/management/teachers", false],
+  ]);
+  expect(visibleNavGroups("manager").flatMap((g) => g.items).map((i) => i.id)).not.toContain("license-modules");
 });
 
 test("entries with no backend yet are flagged soon and route to the shared placeholder", () => {

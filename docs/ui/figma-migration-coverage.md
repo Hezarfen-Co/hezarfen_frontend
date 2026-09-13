@@ -20,6 +20,7 @@ must always be replaced with real application data.
 | Student | `3:7` | 11 screens plus 2 modal variants audited |
 | Parent | `3:8` | 8 screens audited |
 | System | `103:2` | 7 screens audited |
+| Builder — Operatör | `205:23536` | BLD-01 login, BLD-02 schools, BLD-02a new school panel, BLD-03 school detail, BLD-03a enter-school panel |
 | Mobile Kit | `40:2` | Shared 393px mobile primitives audited |
 | Student Mobile | `40:3` | 9 screens audited |
 | Parent Mobile | `40:4` | 6 screens audited |
@@ -28,6 +29,22 @@ must always be replaced with real application data.
 The Cover manifest also names a Foundations page, but no Foundations node URL
 was supplied. Exact values already exposed by component and dark-mode contexts
 are used; unknown values are not inferred.
+
+## Navigation sync (2026-09-13)
+
+The four `Web / Sidebar / *` components mirror `src/components/layout/nav-items.ts`
+as an accordion, the way the app renders them: `Web / Nav Group` headers
+(Collapsed/Open) over `Web / Nav Group Item` rows (Default/Active, "Yakında"
+badge). Each screen overrides only its open group and active row. When the
+nav tree changes in code, update the sidebar component, not individual
+screens. `Web / Switch` (Off/On) backs module and review toggles.
+
+The shell matches the app too: `Web / Sidebar / *` is full height with the
+`Brand / Logo Mark` row on top and the account row at the bottom, and
+`Web / Top Bar` is the 1180px content header (back, route label, command
+center, messages, notifications, Çelebi'ye sor) at x=260. Screens added from
+the running app are `generate_figma_design` captures whose sidebar and top bar
+were swapped for these component instances; their content is raw layers.
 
 ## Implemented foundation
 
@@ -71,9 +88,21 @@ are used; unknown values are not inferred.
 | `/management/payments` | Admin payments | Keep ledger and permission behavior |
 | `/management/staff-work` | Admin staff work | Keep existing read/update/delete contract |
 | `/admin/users`, `/admin/users/:id` | Admin users and roles | Keep admin guard and critical confirmations |
+| `/management/students` | ADM-02 Öğrenciler | Real roster + class/term filters; mastery, attendance, plan and risk columns stay "yakında" |
+| `/management/teachers` | ADM-08 Öğretmenler | Real roster + homeroom class count; branch, load, AI acceptance and status stay "yakında" |
+| `/management/modules` | ADM-05 Lisans ve modüller | Real enabled/total modules per package; price, seats, renewal and invoices stay "yakında" |
 | `/students` | Parent development views | Keep linked-child authorization |
 | `/meals`, `/meals/:id` | Admin cafeteria | Keep menu, booking, balance, and attendance behavior |
 | `/payments` | Parent/student statement | Remain read-only until a payment-provider API exists |
+| `/management/terms` | ADM-25 Dönemler | Captured from the running app |
+| `/events`, `/events/:id` | ADM-26 Etkinlikler, ADM-26a Etkinlik Detayı | Captured from the running app |
+| `/management/pomodoros` | ADM-27 Öğrenci Pomodoroları | Captured from the running app |
+| `/questions`, `/questions/:id` | TCH-15 Soru Havuzu, STU-13 Soru Detayı | Captured from the running app |
+| `/notes` | STU-12 Defter | Captured from the running app |
+| `/guide`, `/profile/me`, `/register` | SYS-08 Rehber, SYS-09 Profilim, SYS-10 Kayıt Ol | Captured from the running app |
+| `/builder/login` | BLD-01 Operatör Girişi | Builder session only; linked from the SYS-01/login footer |
+| `/builder` | BLD-02 Okullar, BLD-02a Yeni Okul | Create, suspend/activate, delete |
+| `/builder/schools/:slug` | BLD-03 Okul Detayı, BLD-03a Okula Gir | Module switchboard, password reset, enter as admin |
 
 ## Figma features blocked by product or backend scope
 
@@ -99,17 +128,11 @@ false actions:
 
 Keep the current UI and behavior until a specific design is added:
 
-- `/register`
-- `/guide`
-- `/profile/me`, `/profile/:userId`
-- `/notes`
-- `/questions`, `/questions/:id`
-- `/events`, `/events/:id`
+- `/profile/:userId` (another user's profile)
 - `/exam-room/:id`
 - `/exams/:id/live`
-- `/management/pomodoros`
-- `/management/terms`
 - `/whiteboards/:id` live canvas details beyond the list concept
+- `/students/attendance`, `/students/exams`, `/students/study` parent tab routes
 - `/meals/:id` detailed account/service/management tabs
 - `/studies`, `/clubs`, and `/attendance` redirect aliases
 

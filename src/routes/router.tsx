@@ -68,6 +68,12 @@ const PaymentStatementPage = lazyRoute(() => import("@/pages/payment-statement-p
 const WhiteboardsPage = lazyRoute(() => import("@/pages/whiteboards-page"));
 const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
 const ComingSoonPage = lazyRoute(() => import("@/pages/coming-soon-page"));
+const StudentsRosterPage = lazyRoute(() => import("@/pages/students-roster-page"));
+const TeachersRosterPage = lazyRoute(() => import("@/pages/teachers-roster-page"));
+const LicenseModulesPage = lazyRoute(() => import("@/pages/license-modules-page"));
+const BuilderLoginPage = lazyRoute(() => import("@/pages/builder-login-page"));
+const BuilderSchoolsPage = lazyRoute(() => import("@/pages/builder-schools-page"));
+const BuilderSchoolDetailPage = lazyRoute(() => import("@/pages/builder-school-detail-page"));
 
 function RootComponent() {
   return (
@@ -325,6 +331,24 @@ const myStudentsRoute = createRoute({
   component: MyStudentsPage,
 });
 
+const myStudentsAttendanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/students/attendance",
+  component: MyStudentsPage,
+});
+
+const myStudentsExamsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/students/exams",
+  component: MyStudentsPage,
+});
+
+const myStudentsStudyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/students/study",
+  component: MyStudentsPage,
+});
+
 const questionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/questions",
@@ -391,6 +415,44 @@ const whiteboardRoute = createRoute({
   component: WhiteboardPage,
 });
 
+const studentsRosterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/students",
+  component: StudentsRosterPage,
+});
+
+const teachersRosterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/teachers",
+  component: TeachersRosterPage,
+});
+
+const licenseModulesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/modules",
+  component: LicenseModulesPage,
+});
+
+// The vendor surface: a builder session, not a school user, so none of these
+// render the school shell's sidebar (there is no school user to draw it for).
+const builderLoginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/builder/login",
+  component: BuilderLoginPage,
+});
+
+const builderSchoolsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/builder",
+  component: BuilderSchoolsPage,
+});
+
+const builderSchoolDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/builder/schools/$slug",
+  component: BuilderSchoolDetailPage,
+});
+
 // One route per Figma menu entry with no backend yet — each gets its own URL
 // (so breadcrumbs, back and direct links behave normally) but all render the
 // same "not ready" page. Slugs are read back by coming-soon-page.tsx.
@@ -400,17 +462,11 @@ const COMING_SOON_SLUGS = [
   "deneme-sinavlari",
   "optik-okuma",
   "raporlar",
-  "lisans-modulleri",
   "kvkk-denetim",
-  "ogrenciler",
-  "ogretmenler",
   "ogrenci-analizi",
   "bekleyen-onaylar",
   "soru-uretimi",
   "calisma-programim",
-  "devamsizlik",
-  "sinav-sonuclari-veli",
-  "calisma-plani",
 ] as const;
 
 const comingSoonRoutes = COMING_SOON_SLUGS.map((slug) =>
@@ -457,6 +513,9 @@ const routeTree = rootRoute.addChildren([
   adminUserDetailRoute,
   guideRoute,
   myStudentsRoute,
+  myStudentsAttendanceRoute,
+  myStudentsExamsRoute,
+  myStudentsStudyRoute,
   questionsRoute,
   questionDetailRoute,
   calendarRoute,
@@ -468,6 +527,12 @@ const routeTree = rootRoute.addChildren([
   paymentStatementRoute,
   whiteboardsRoute,
   whiteboardRoute,
+  studentsRosterRoute,
+  teachersRosterRoute,
+  licenseModulesRoute,
+  builderLoginRoute,
+  builderSchoolsRoute,
+  builderSchoolDetailRoute,
   myProfileRoute,
   userProfileRoute,
   ...comingSoonRoutes,

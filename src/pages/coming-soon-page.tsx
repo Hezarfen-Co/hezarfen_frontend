@@ -18,17 +18,11 @@ const COMING_SOON_LABELS: Record<string, MessageKey> = {
   "deneme-sinavlari": "nav.mockExams",
   "optik-okuma": "nav.opticalReading",
   raporlar: "nav.reports",
-  "lisans-modulleri": "nav.licenseModules",
   "kvkk-denetim": "nav.dataProtection",
-  ogrenciler: "nav.studentsRoster",
-  ogretmenler: "nav.teachersRoster",
   "ogrenci-analizi": "nav.studentAnalysis",
   "bekleyen-onaylar": "nav.pendingApprovals",
   "soru-uretimi": "nav.questionGeneration",
   "calisma-programim": "nav.studyPlan",
-  devamsizlik: "nav.absence",
-  "sinav-sonuclari-veli": "nav.childExamResults",
-  "calisma-plani": "nav.childStudyPlan",
 };
 
 export default function ComingSoonPage() {
