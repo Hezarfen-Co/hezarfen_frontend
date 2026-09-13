@@ -22,7 +22,7 @@ const WORK_PAGE_SIZE = 15;
 
 export default function WorkLogPage() {
   return (
-    <RouteGuard minRole="teacher" maxRole="manager">
+    <RouteGuard minRole="teacher">
       <WorkLogContent />
     </RouteGuard>
   );

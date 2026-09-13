@@ -29,6 +29,25 @@
 | Settings `/management/settings` | ❌ | ❌ | ✅ | ✅ |
 | Terms `/management/terms` | ❌ | ❌ | ✅ | ✅ |
 | User management `/admin/users` | ❌ | ❌ | ❌ | ✅ |
+| License & modules `/management/modules` (read-only) | ❌ | ❌ | ❌ | ✅ |
+| Student pomodoro lookup `/management/pomodoros` | ❌ | ✅ | ✅ | ✅ |
+
+Parent pages: `/students` (progress report) plus `/students/attendance`,
+`/students/exams`, `/students/study` — the same page opening a linked child on
+that tab. Study reads `GET /pomodoro/{user}` (parent link), shown only when the
+school has the `pomodoro` module.
+
+## Builder (Operator) Surface
+
+Not a school role. A builder session (`builder.` cookie) is 401 on every school
+route and a school session is 401 here, so these pages carry their own
+`BuilderProvider`/`BuilderGuard` instead of `RouteGuard`.
+
+| Page | Purpose |
+|---|---|
+| `/builder/login` | Operator sign-in (linked from the school login footer) |
+| `/builder` | School list: create (with first admin + module set), suspend/activate, delete |
+| `/builder/schools/:slug` | Rename/status, module switchboard (per module + per package), admin password reset, enter as admin |
 
 ## Primary Navigation per Role
 
@@ -44,8 +63,11 @@
 | Meals `/meals` | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 Primary destinations stay compact. Every role-valid list page is also exposed
-in the grouped sidebar/mobile drawer; Education and Community are collapsible.
-Appointments is directly available there for every role. Detail pages remain
+in the grouped sidebar/mobile drawer, gated by the school's modules:
+courses, notes, questions, events, meals, appointments and messages for every
+role the backend serves them to; terms, student marks/pomodoro lookups and the
+work log for staff; license modules for admin. Appointments is directly
+available there for every role. Detail pages remain
 reachable from their parent lists, and Guide remains in the account menu.
 
 ## Dashboard Scope per Role

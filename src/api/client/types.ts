@@ -133,6 +133,32 @@ export type NoteFile = {
   size: number;
 };
 
+/** The deployment operator behind a `builder.` session cookie — no role, no school. */
+export type Builder = {
+  id: string;
+  username: string;
+};
+
+export type SchoolStatus = "active" | "suspended";
+
+/** One school of the deployment, as the builder surface sees it. */
+export type School = {
+  slug: string;
+  name: string;
+  /** A suspended school refuses every one of its own users, login included. */
+  status: SchoolStatus;
+  /** UTC unix-milliseconds. */
+  created_at: number;
+  /** Bought modules, sorted by name. */
+  modules: string[];
+};
+
+/** One school's entitlements, both halves of the catalog. */
+export type SchoolModules = {
+  enabled: string[];
+  disabled: string[];
+};
+
 /** The caller's school entitlements: every switched-on module, sorted by name. */
 export type EnabledModules = {
   enabled: string[];

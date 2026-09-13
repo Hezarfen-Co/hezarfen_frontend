@@ -37,6 +37,7 @@ import {
   IconSearch,
   IconUsers,
   IconUtensils,
+  IconPackage,
 } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import type { MessageKey } from "@/i18n/messages";
@@ -44,7 +45,10 @@ import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { formatTry } from "@/lib/meals";
 import { personLabel } from "@/lib/person";
+import { packageLabel } from "@/lib/module-labels";
 import { hasMinRole } from "@/lib/roles";
+import { getModulesCatalog } from "@/api/modules";
+import { useModules } from "@/stores/modules-context";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -309,6 +313,28 @@ function DashboardContent() {
       Icon: IconBook,
     })),
   );
+
+  // The school's own entitlements per package: the catalog is deploy-constant,
+  // the enabled set is already in the shell's modules context.
+  const schoolModules = useModules();
+  const [moduleCatalog] = createResource(
+    () => (isAdminHome() ? true : null),
+    () => getModulesCatalog().catch(() => null),
+  );
+  const moduleQuickLinks = createMemo<QuickLinkRow[]>(() => {
+    const catalog = moduleCatalog();
+    const enabled = schoolModules.enabled();
+    if (!catalog || !enabled) return [];
+    return catalog.packages.map((pkg) => {
+      const on = pkg.modules.filter((module) => enabled.includes(module));
+      return {
+        id: pkg.package,
+        primary: packageLabel(pkg.package, t),
+        secondary: `${on.length}/${pkg.modules.length}`,
+        Icon: IconPackage,
+      };
+    });
+  });
 
   // Hero search. `/users/search` is the only search endpoint the app has, so
   // this box only ever finds students — it never claims to search classes,
@@ -685,7 +711,12 @@ function DashboardContent() {
                 empty={t("dashboard.quicklinks.empty")}
                 onOpen={(row) => navigate({ to: "/management/classes/$id", params: { id: row.id } })}
               />
-              <ComingSoonPanel class="text-left" title={t("dashboard.quicklinks.modules")} />
+              <QuickLinkColumn
+                title={t("dashboard.quicklinks.modules")}
+                rows={moduleQuickLinks()}
+                empty={t("dashboard.quicklinks.empty")}
+                onOpen={() => navigate({ to: "/management/modules" })}
+              />
             </div>
           </header>
         </Show>

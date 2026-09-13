@@ -35,6 +35,10 @@ const DAY = 24 * 60 * 60 * 1000;
 const page = <T,>(items: T[]) => ({ items, total: items.length, limit: 50, offset: 0 });
 const course = { id: "course-1", title: "Algebra", capacity: 24 };
 
+vi.mock("@/stores/modules-context", () => ({
+  useModules: () => ({ enabled: () => null, isEnabled: () => true, refresh: () => {} }),
+}));
+vi.mock("@/api/modules", () => ({ getModulesCatalog: async () => ({ modules: [], packages: [] }) }));
 vi.mock("@/api/time/getTime", () => ({ getTime: async () => ({ now }) }));
 vi.mock("@/api/courses", () => ({
   getCourses: async () => page([course]),

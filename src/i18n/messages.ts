@@ -305,6 +305,78 @@ export type MessageKey =
   | "comingSoon.description"
   | "comingSoon.emptyTitle"
   | "comingSoon.emptyDescription"
+  | "builder.console"
+  | "builder.logout"
+  | "builder.loginTitle"
+  | "builder.loginSubtitle"
+  | "builder.backToSchoolLogin"
+  | "builder.operatorLogin"
+  | "builder.statusActive"
+  | "builder.statusSuspended"
+  | "builder.createSchool"
+  | "builder.createSchoolHint"
+  | "builder.slug"
+  | "builder.slugHint"
+  | "builder.schoolName"
+  | "builder.adminUsername"
+  | "builder.adminPassword"
+  | "builder.sellEverything"
+  | "builder.schools"
+  | "builder.schoolsSubtitle"
+  | "builder.status"
+  | "builder.modules"
+  | "builder.createdAt"
+  | "builder.suspend"
+  | "builder.activate"
+  | "builder.noSchools"
+  | "builder.deleteSchool"
+  | "builder.deleteSchoolWarning"
+  | "builder.enterSchool"
+  | "builder.enterSchoolHint"
+  | "builder.enterSuspendedHint"
+  | "builder.resetAdminPassword"
+  | "builder.resetAdminPasswordHint"
+  | "builder.newPassword"
+  | "builder.passwordResetDone"
+  | "builder.modulesHint"
+  | "builder.editSchool"
+  | "builder.editSchoolHint"
+  | "builder.suspendHint"
+  | "modules.subtitle"
+  | "modules.readOnlyHint"
+  | "modules.enabledCount"
+  | "modules.enableAll"
+  | "modules.disableAll"
+  | "modules.requires"
+  | "modules.on"
+  | "modules.off"
+  | "modules.conflictRequires"
+  | "modules.conflictRequiredBy"
+  | "module.appointments"
+  | "module.attendance"
+  | "module.bank_questions"
+  | "module.boards"
+  | "module.chatbot"
+  | "module.classes"
+  | "module.course_notes"
+  | "module.courses"
+  | "module.events"
+  | "module.exams"
+  | "module.homework"
+  | "module.marks"
+  | "module.meals"
+  | "module.messages"
+  | "module.notes"
+  | "module.payments"
+  | "module.pomodoro"
+  | "module.questions"
+  | "module.sessions"
+  | "module.subjects"
+  | "module.work"
+  | "package.academics"
+  | "package.ai"
+  | "package.communication"
+  | "package.operations"
   | "nav.darkMode"
   | "rightPanel.messagesTitle"
   | "rightPanel.calendarTitle"
@@ -2015,6 +2087,78 @@ const en: Dict = {
   "comingSoon.description": "This module is on its way — there is nothing to show here yet.",
   "comingSoon.emptyTitle": "Not available yet",
   "comingSoon.emptyDescription": "This part of Hezarfen is still being built. Check back soon.",
+  "builder.console": "Operator console",
+  "builder.logout": "Sign out",
+  "builder.loginTitle": "Operator sign-in",
+  "builder.loginSubtitle": "Manage the schools on this deployment.",
+  "builder.backToSchoolLogin": "Back to school sign-in",
+  "builder.operatorLogin": "Operator sign-in",
+  "builder.statusActive": "Active",
+  "builder.statusSuspended": "Suspended",
+  "builder.createSchool": "New school",
+  "builder.createSchoolHint": "Creates the school's database and its first admin in one step.",
+  "builder.slug": "School code",
+  "builder.slugHint": "Lowercase letters, digits and hyphens. Cannot be changed later.",
+  "builder.schoolName": "School name",
+  "builder.adminUsername": "Admin username",
+  "builder.adminPassword": "Admin password",
+  "builder.sellEverything": "Enable every module in the catalog",
+  "builder.schools": "Schools",
+  "builder.schoolsSubtitle": "Every school on this deployment",
+  "builder.status": "Status",
+  "builder.modules": "Modules",
+  "builder.createdAt": "Created",
+  "builder.suspend": "Suspend",
+  "builder.activate": "Activate",
+  "builder.noSchools": "No schools yet.",
+  "builder.deleteSchool": "Delete school",
+  "builder.deleteSchoolWarning": "All of this school's data and uploaded files are destroyed for good. This cannot be undone.",
+  "builder.enterSchool": "Enter school",
+  "builder.enterSchoolHint": "Signs this browser in as one of the school's admins for support. Your operator session ends.",
+  "builder.enterSuspendedHint": "A suspended school cannot be entered.",
+  "builder.resetAdminPassword": "Reset admin password",
+  "builder.resetAdminPasswordHint": "Sets a new password for an admin of this school and signs that account out everywhere.",
+  "builder.newPassword": "New password",
+  "builder.passwordResetDone": "Password reset. That admin's sessions were revoked.",
+  "builder.modulesHint": "Changes apply on the school's very next request.",
+  "builder.editSchool": "Edit school",
+  "builder.editSchoolHint": "Rename the school or change its status.",
+  "builder.suspendHint": "Suspension is immediate: every user of the school is refused, login included.",
+  "modules.subtitle": "The modules your school has, grouped by package.",
+  "modules.readOnlyHint": "Modules are enabled or disabled by your Hezarfen provider.",
+  "modules.enabledCount": "{on} of {total} enabled",
+  "modules.enableAll": "Enable all",
+  "modules.disableAll": "Disable all",
+  "modules.requires": "Requires",
+  "modules.on": "On",
+  "modules.conflictRequires": "{module} needs {needed}, which is not enabled.",
+  "modules.conflictRequiredBy": "{module} cannot be turned off: {dependents} depend on it.",
+  "modules.off": "Off",
+  "module.appointments": "Appointments",
+  "module.attendance": "Attendance",
+  "module.bank_questions": "Question bank",
+  "module.boards": "Board",
+  "module.chatbot": "Çelebi assistant",
+  "module.classes": "Classes",
+  "module.course_notes": "Course notes",
+  "module.courses": "Courses",
+  "module.events": "Events",
+  "module.exams": "Exams",
+  "module.homework": "Homework",
+  "module.marks": "Marks",
+  "module.meals": "Meals",
+  "module.messages": "Messages",
+  "module.notes": "Notebook",
+  "module.payments": "Payments",
+  "module.pomodoro": "Pomodoro",
+  "module.questions": "Question pool",
+  "module.sessions": "Lesson sessions",
+  "module.subjects": "Subjects",
+  "module.work": "Shift",
+  "package.academics": "Academics",
+  "package.ai": "AI",
+  "package.communication": "Communication",
+  "package.operations": "Operations",
   "nav.darkMode": "Dark mode",
   "parents.title": "My Students",
   "parents.subtitle": "Review academic records for the students linked to your account.",
@@ -3713,6 +3857,78 @@ const tr: Dict = {
   "comingSoon.description": "Bu modül hazırlanıyor — henüz gösterecek bir şey yok.",
   "comingSoon.emptyTitle": "Henüz kullanıma açık değil",
   "comingSoon.emptyDescription": "Hezarfen'in bu bölümü hâlâ hazırlanıyor. Yakında tekrar bakın.",
+  "builder.console": "Operatör konsolu",
+  "builder.logout": "Çıkış yap",
+  "builder.loginTitle": "Operatör girişi",
+  "builder.loginSubtitle": "Bu kurulumdaki okulları yönet.",
+  "builder.backToSchoolLogin": "Okul girişine dön",
+  "builder.operatorLogin": "Operatör girişi",
+  "builder.statusActive": "Aktif",
+  "builder.statusSuspended": "Askıda",
+  "builder.createSchool": "Yeni okul",
+  "builder.createSchoolHint": "Okulun veritabanını ve ilk yöneticisini tek adımda oluşturur.",
+  "builder.slug": "Okul kodu",
+  "builder.slugHint": "Küçük harf, rakam ve tire. Sonradan değiştirilemez.",
+  "builder.schoolName": "Okul adı",
+  "builder.adminUsername": "Yönetici kullanıcı adı",
+  "builder.adminPassword": "Yönetici şifresi",
+  "builder.sellEverything": "Katalogdaki tüm modülleri aç",
+  "builder.schools": "Okullar",
+  "builder.schoolsSubtitle": "Bu kurulumdaki tüm okullar",
+  "builder.status": "Durum",
+  "builder.modules": "Modüller",
+  "builder.createdAt": "Oluşturulma",
+  "builder.suspend": "Askıya al",
+  "builder.activate": "Aktifleştir",
+  "builder.noSchools": "Henüz okul yok.",
+  "builder.deleteSchool": "Okulu sil",
+  "builder.deleteSchoolWarning": "Bu okulun tüm verileri ve yüklenen dosyaları kalıcı olarak silinir. Geri alınamaz.",
+  "builder.enterSchool": "Okula gir",
+  "builder.enterSchoolHint": "Destek için bu tarayıcıda okulun bir yöneticisi olarak oturum açar. Operatör oturumun kapanır.",
+  "builder.enterSuspendedHint": "Askıdaki bir okula girilemez.",
+  "builder.resetAdminPassword": "Yönetici şifresini sıfırla",
+  "builder.resetAdminPasswordHint": "Bu okulun bir yöneticisine yeni şifre verir ve o hesabın tüm oturumlarını kapatır.",
+  "builder.newPassword": "Yeni şifre",
+  "builder.passwordResetDone": "Şifre sıfırlandı. O yöneticinin oturumları kapatıldı.",
+  "builder.modulesHint": "Değişiklikler okulun bir sonraki isteğinde geçerli olur.",
+  "builder.editSchool": "Okulu düzenle",
+  "builder.editSchoolHint": "Okulun adını veya durumunu değiştir.",
+  "builder.suspendHint": "Askıya alma anında geçerlidir: okulun tüm kullanıcıları, giriş dahil, reddedilir.",
+  "modules.subtitle": "Okulunun sahip olduğu modüller, paketlere göre.",
+  "modules.readOnlyHint": "Modüller Hezarfen sağlayıcın tarafından açılır veya kapatılır.",
+  "modules.enabledCount": "{total} modülden {on} açık",
+  "modules.enableAll": "Hepsini aç",
+  "modules.disableAll": "Hepsini kapat",
+  "modules.requires": "Gerektirir",
+  "modules.on": "Açık",
+  "modules.conflictRequires": "{module} için {needed} açık olmalı.",
+  "modules.conflictRequiredBy": "{module} kapatılamaz: {dependents} buna bağlı.",
+  "modules.off": "Kapalı",
+  "module.appointments": "Randevular",
+  "module.attendance": "Yoklama",
+  "module.bank_questions": "Soru bankası",
+  "module.boards": "Tahta",
+  "module.chatbot": "Çelebi asistanı",
+  "module.classes": "Sınıflar",
+  "module.course_notes": "Ders notları",
+  "module.courses": "Dersler",
+  "module.events": "Etkinlikler",
+  "module.exams": "Sınavlar",
+  "module.homework": "Ödevler",
+  "module.marks": "Notlar",
+  "module.meals": "Yemekler",
+  "module.messages": "Mesajlar",
+  "module.notes": "Defter",
+  "module.payments": "Ödemeler",
+  "module.pomodoro": "Pomodoro",
+  "module.questions": "Soru havuzu",
+  "module.sessions": "Ders oturumları",
+  "module.subjects": "Konular",
+  "module.work": "Mesai",
+  "package.academics": "Akademik",
+  "package.ai": "Yapay zekâ",
+  "package.communication": "İletişim",
+  "package.operations": "Operasyon",
   "nav.darkMode": "Karanlık mod",
   "parents.title": "Öğrencilerim",
   "parents.subtitle": "Size bağlı öğrencilerin akademik kayıtlarını inceleyin.",
