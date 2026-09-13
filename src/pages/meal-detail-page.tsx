@@ -95,7 +95,9 @@ function MealDetailContent() {
   createEffect(() => {
     if (isParent() && !selectedStudent() && children()?.items[0]) setSelectedStudent(children()!.items[0].id);
   });
-  const targetId = () => isStudent() ? auth.user()!.id : isParent() ? selectedStudent() : lookupStudent();
+  // null, not "", until a student is chosen: createResource still fetches on an
+  // empty-string source, and `/meals/profiles/` 404s the whole page for staff.
+  const targetId = () => (isStudent() ? auth.user()!.id : isParent() ? selectedStudent() : lookupStudent()) || null;
   const canBook = () => (isStudent() || isParent()) && !!targetId();
 
   const [bookings, { refetch: refetchBookings }] = createResource(() => canBook(), async (enabled) => enabled ? getMyMealBookings({ limit: 100 }) : null);
@@ -229,7 +231,7 @@ function MealDetailContent() {
                 <Show when={canBook()}>
                   <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-4">
                     <div><p class="font-semibold">{activeBooking() ? t("meals.booked") : t("meals.notBooked")}</p><p class="text-sm text-muted-foreground">{cutoffClosed() ? t("meals.cutoffPassed") : t("meals.bookingHelp")}</p></div>
-                    <Show when={activeBooking()} fallback={<Button disabled={pending() || cutoffClosed()} onClick={() => void run(async () => { await postMealBooking(id(), isParent() ? targetId() : undefined); await Promise.all([refetchBookings(), refetchBalance(), refetchLedger()]); }, t("meals.booked"))}>{t("meals.book")}</Button>}><Button variant="destructive" disabled={pending() || cutoffClosed()} onClick={() => setCancelOpen(true)}>{t("meals.cancelBooking")}</Button></Show>
+                    <Show when={activeBooking()} fallback={<Button disabled={pending() || cutoffClosed()} onClick={() => void run(async () => { await postMealBooking(id(), isParent() ? targetId() ?? undefined : undefined); await Promise.all([refetchBookings(), refetchBalance(), refetchLedger()]); }, t("meals.booked"))}>{t("meals.book")}</Button>}><Button variant="destructive" disabled={pending() || cutoffClosed()} onClick={() => setCancelOpen(true)}>{t("meals.cancelBooking")}</Button></Show>
                   </div>
                 </Show>
               </TabsContent>
