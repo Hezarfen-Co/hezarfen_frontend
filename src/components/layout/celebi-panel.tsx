@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createSignal, onCleanup, untrack } from "solid-js";
+import { For, Match, Show, Switch, createEffect, createSignal, on, onCleanup, untrack } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import { deleteChatbotThreadById, getChatbotMessageById, getChatbotThreadMessages, getChatbotThreads, patchChatbotThreadById, postChatbotMessage, postChatbotThread, type ChatbotMessage, type ChatbotThread } from "@/api/chatbot";
 import { formatApiError } from "@/api/client";
@@ -6,10 +6,11 @@ import { CelebiComposer } from "@/components/layout/celebi-composer";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { CelebiReplyActions } from "@/components/layout/celebi-reply-actions";
 import { CelebiThinkingLabel } from "@/components/layout/celebi-thinking-label";
+import { CelebiThreadList } from "@/components/layout/celebi-thread-list";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableSearch } from "@/components/ui/data-table-search";
 import { EmptyInline } from "@/components/ui/empty-inline";
-import { IconAlert, IconBotSquare, IconChevronDown, IconCopy, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconAlert, IconBotSquare, IconChevronDown, IconChevronLeft, IconCopy, IconEdit, IconMessage, IconPlus } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -32,7 +33,11 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   const [draft, setDraft] = createSignal("");
   const [messages, setMessages] = createSignal<PanelMessage[]>([]);
   const [threadId, setThreadId] = createSignal<string>();
-  const [threads, setThreads] = createSignal<ChatbotThread[]>([]);
+  const [threadTitle, setThreadTitle] = createSignal<string | null>(null);
+  // History lives in its own view so a long list pages instead of piling up
+  // as chips above the transcript.
+  const [view, setView] = createSignal<"chat" | "threads">("chat");
+  const [threadsVersion, setThreadsVersion] = createSignal(0);
   const [sending, setSending] = createSignal(false);
   const [copiedId, setCopiedId] = createSignal<string>();
   const [searchQuery, setSearchQuery] = createSignal("");
@@ -111,7 +116,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     transcript.scrollTo({ top: transcript.scrollHeight, behavior: "smooth" });
   };
   const handleTranscriptScroll = () => {
-    if (!transcript) return;
+    if (!transcript || view() !== "chat") return;
     const top = transcript.scrollTop;
     const distance = transcript.scrollHeight - top - transcript.clientHeight;
     // A shrinking transcript (search filtering) clamps scrollTop down too, but
@@ -138,6 +143,18 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     requestAnimationFrame(() => { if (pinned()) pinToBottom(); });
   });
 
+  // `display: none` can drop a scroll offset, so coming back from the history
+  // view restores it: the bottom when pinned, else where the reader left off.
+  createEffect(on(view, (current, previous) => {
+    if (current !== "chat" || previous !== "threads") return;
+    const saved = lastScrollTop;
+    requestAnimationFrame(() => {
+      if (!transcript) return;
+      if (pinned()) pinToBottom();
+      else transcript.scrollTop = lastScrollTop = saved;
+    });
+  }));
+
   let pollTimer: number | undefined;
   let stream: EventSource | undefined;
 
@@ -146,15 +163,27 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     pollTimer = undefined;
   };
   const stopStream = () => { stream?.close(); stream = undefined; };
-  const loadThreads = async () => { try { setThreads((await getChatbotThreads({ limit: 100 })).items); } catch { /* history is non-blocking */ } };
-  const openThread = async (id: string) => { stopPolling(); stopStream(); stopReveal(); setPinned(true); setUnread(false); setThreadId(id); setMessages((await getChatbotThreadMessages(id, { limit: 500 })).items); };
-  const createThread = () => { stopPolling(); stopStream(); stopReveal(); setThreadId(undefined); setMessages([]); };
+  // The history view refetches its page on the version bump; the header title
+  // of the open chat is refreshed from the newest threads, where it sits once
+  // it has just been written to.
+  const loadThreads = async () => {
+    setThreadsVersion((version) => version + 1);
+    const active = threadId();
+    if (!active) return;
+    try {
+      const match = (await getChatbotThreads({ limit: 10 })).items.find((thread) => thread.id === active);
+      if (match && threadId() === active) setThreadTitle(match.title);
+    } catch { /* history is non-blocking */ }
+  };
+  const openThread = async (thread: ChatbotThread) => { stopPolling(); stopStream(); stopReveal(); setPinned(true); setUnread(false); setView("chat"); setSearchQuery(""); setThreadId(thread.id); setThreadTitle(thread.title); setMessages((await getChatbotThreadMessages(thread.id, { limit: 500 })).items); };
+  const createThread = () => { stopPolling(); stopStream(); stopReveal(); setSearchQuery(""); setThreadId(undefined); setThreadTitle(null); setMessages([]); };
   // Rename and delete go through the shared confirm dialog, never the
   // browser's own prompt()/confirm() boxes.
   const [renaming, setRenaming] = createSignal<ChatbotThread | null>(null);
   const [removing, setRemoving] = createSignal<ChatbotThread | null>(null);
   const renameThread = async (thread: ChatbotThread, title: string | undefined) => {
-    await patchChatbotThreadById(thread.id, { title: title?.trim() || null });
+    const updated = await patchChatbotThreadById(thread.id, { title: title?.trim() || null });
+    if (threadId() === thread.id) setThreadTitle(updated.title);
     await loadThreads();
   };
   const removeThread = async (thread: ChatbotThread) => {
@@ -162,7 +191,6 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     if (threadId() === thread.id) createThread();
     await loadThreads();
   };
-  createEffect(() => { if (props.open) void loadThreads(); });
 
   const failureMessage = (code: string | null) => {
     if (locale() === "tr") return code ? `Yanıt alınamadı (${code}).` : "Yanıt alınamadı. Lütfen tekrar dene.";
@@ -253,27 +281,46 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   return (
     <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("ai.title")} description={t("ai.description")} bodyClass="overflow-hidden">
       <div class="flex h-full min-h-0 flex-col">
-        <div class="mb-3 flex shrink-0 gap-2 overflow-x-auto border-b border-border pb-3">
-          <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={createThread}>
-            <IconPlus class="h-3.5 w-3.5" />
-            {locale() === "tr" ? "Yeni sohbet" : "New chat"}
-          </button>
-          <For each={threads()}>
-            {(thread) => (
-              <div class={cn("flex h-8 shrink-0 items-center overflow-hidden rounded-lg border border-border", thread.id === threadId() ? "bg-accent" : "bg-card")}>
-                <button type="button" class="max-w-[10rem] truncate px-2.5 text-xs text-foreground" onClick={() => void openThread(thread.id)}>
-                  {thread.title || (locale() === "tr" ? "Adsız sohbet" : "Untitled chat")}
-                </button>
-                <button type="button" class="flex h-full w-7 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={locale() === "tr" ? "Sohbeti yeniden adlandır" : "Rename chat"} onClick={() => setRenaming(thread)}>
-                  <IconEdit class="h-3.5 w-3.5" />
-                </button>
-                <button type="button" class="flex h-full w-7 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" aria-label={locale() === "tr" ? "Sohbeti sil" : "Delete chat"} onClick={() => setRemoving(thread)}>
-                  <IconTrash class="h-3.5 w-3.5" />
-                </button>
-              </div>
-            )}
-          </For>
+        <div class="mb-3 flex shrink-0 items-center gap-2 border-b border-border pb-3">
+          <Show
+            when={view() === "chat"}
+            fallback={
+              <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={() => setView("chat")}>
+                <IconChevronLeft class="h-3.5 w-3.5" />
+                {t("common.back")}
+              </button>
+            }
+          >
+            <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={createThread}>
+              <IconPlus class="h-3.5 w-3.5" />
+              {t("ai.newChat")}
+            </button>
+          </Show>
+          <span class="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+            {view() === "threads" ? t("ai.chats") : threadId() ? threadTitle() || t("ai.untitledChat") : t("ai.newChat")}
+          </span>
+          <Show when={view() === "chat"}>
+            <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={() => setView("threads")}>
+              <IconMessage class="h-3.5 w-3.5" />
+              {t("ai.chats")}
+            </button>
+          </Show>
         </div>
+        <Show when={view() === "threads"}>
+          <div class="min-h-0 flex-1">
+            <CelebiThreadList
+              activeId={threadId()}
+              version={threadsVersion()}
+              onOpen={(thread) => void openThread(thread)}
+              onRename={setRenaming}
+              onRemove={setRemoving}
+            />
+          </div>
+        </Show>
+        {/* Hidden rather than unmounted while the history is open, so going
+            back lands on the same scroll position and a streaming answer
+            keeps writing. */}
+        <div class={cn("flex min-h-0 flex-1 flex-col", view() !== "chat" && "hidden")}>
         <div class="mb-3 shrink-0">
           <DataTableSearch value={searchQuery()} onChange={setSearchQuery} placeholder={t("ai.searchPlaceholder")} class="w-full" />
         </div>
@@ -379,6 +426,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             onSubmit={() => void send()}
             disabled={!draft().trim() || sending()}
           />
+        </div>
         </div>
       </div>
       <ConfirmDialog

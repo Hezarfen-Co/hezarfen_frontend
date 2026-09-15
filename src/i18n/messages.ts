@@ -28,6 +28,9 @@ export type MessageKey =
   | "ai.searchPlaceholder"
   | "ai.scrollToLatest"
   | "ai.newMessages"
+  | "ai.newChat"
+  | "ai.chats"
+  | "ai.noChats"
   | "ai.noSearchResults"
   | "nav.today"
   | "nav.classes"
@@ -1915,6 +1918,9 @@ const en: Dict = {
   "ai.searchPlaceholder": "Search this chat...",
   "ai.scrollToLatest": "Latest",
   "ai.newMessages": "New message",
+  "ai.newChat": "New chat",
+  "ai.chats": "Chats",
+  "ai.noChats": "No chats yet. Start one and it will appear here.",
   "ai.noSearchResults": "No messages match your search.",
   "nav.today": "Today",
   "nav.classes": "Courses",
@@ -3813,6 +3819,9 @@ const tr: Dict = {
   "ai.searchPlaceholder": "Bu sohbette ara...",
   "ai.scrollToLatest": "En alta git",
   "ai.newMessages": "Yeni mesaj",
+  "ai.newChat": "Yeni sohbet",
+  "ai.chats": "Sohbetler",
+  "ai.noChats": "Henüz sohbet yok. Başlattığın sohbetler burada görünür.",
   "ai.noSearchResults": "Aramanla eşleşen mesaj yok.",
   "nav.today": "Bugün",
   "nav.classes": "Dersler",
