@@ -254,20 +254,12 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             )}
           </For>
         </div>
-        <div class="mb-3 flex shrink-0 items-center gap-2">
-          <DataTableSearch value={searchQuery()} onChange={setSearchQuery} placeholder={t("ai.searchPlaceholder")} class="min-w-0 flex-1" />
-          <Show when={showScrollToLatest()}>
-            <button
-              type="button"
-              class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
-              onClick={scrollToLatest}
-              aria-label={t("ai.scrollToLatest")}
-            >
-              <IconChevronDown class="h-3.5 w-3.5" />
-              <span class="hidden sm:inline">{t("ai.scrollToLatest")}</span>
-            </button>
-          </Show>
+        <div class="mb-3 shrink-0">
+          <DataTableSearch value={searchQuery()} onChange={setSearchQuery} placeholder={t("ai.searchPlaceholder")} class="w-full" />
         </div>
+        {/* The jump control floats over the bottom of the transcript, next to
+            the newest message it leads to, instead of sitting up by search. */}
+        <div class="relative flex min-h-0 flex-1 flex-col">
         <div ref={transcript} onScroll={handleTranscriptScroll} class="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
           <Show
           when={messages().length > 0}
@@ -282,7 +274,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           <div class="flex flex-col gap-3">
             <For each={filteredMessages()}>
               {(message) => (
-                <div class={message.role === "user" ? "ml-8 rounded-lg rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground" : "mr-6 rounded-lg rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
+                <div class={message.role === "user" ? "ml-8 rounded-lg rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground selection:bg-primary-foreground selection:text-primary" : "mr-6 rounded-lg rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
                   <Switch>
                     <Match when={message.role === "user"}>
                       <p class="whitespace-pre-wrap leading-6">{message.content}</p>
@@ -345,6 +337,18 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           </div>
           </Show>
           </Show>
+        </div>
+        <Show when={showScrollToLatest()}>
+          <button
+            type="button"
+            class="absolute bottom-3 left-1/2 inline-flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 text-xs font-medium text-foreground shadow-md backdrop-blur transition-colors hover:bg-accent"
+            onClick={scrollToLatest}
+            aria-label={t("ai.scrollToLatest")}
+          >
+            <IconChevronDown class="h-3.5 w-3.5" />
+            {t("ai.scrollToLatest")}
+          </button>
+        </Show>
         </div>
         <div class="mt-4 shrink-0">
           <CelebiComposer
