@@ -12,9 +12,11 @@
 #
 # Keys read from hezarfen_frontend.env (full docs in
 # deploy/hezarfen_frontend.env.example):
-#   BACKEND_ORIGIN                   the origin /api/* is proxied to; must be
-#                                    reachable from inside the container
-#   PORT                             listen port + published port, default 5173
+#   BACKEND_ORIGIN                   the origin /api/* is proxied to; reaches
+#                                    the container through env_file, so it needs
+#                                    no flag — but only on (re)start
+#   PORT                             listen port + published port (interpolated,
+#                                    hence the --env-file below), default 5173
 #
 # Env-only restart (re-runs `compose up -d`, recreating the container when its
 # environment changed):

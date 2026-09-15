@@ -8,12 +8,18 @@
 #             from deploy/hezarfen_frontend.env.example)
 #
 # Interpolation reads the --env-file arguments (hezarfen_frontend.env first,
-# deploy-owned stack.env second). The `env_file:` on the service passes the
-# same file into the container, so extra keys reach it without being listed in
-# `environment:`. `environment:` wins over `env_file`, which is why every knob
-# is interpolated here: one operator file then drives compose AND the
-# container. PORT moves the listener, the published port and the healthcheck
-# together; BACKEND_ORIGIN moves the proxy target.
+# deploy-owned stack.env second); the service's `env_file:` passes that same
+# file into the container. BACKEND_ORIGIN is deliberately NOT listed under
+# `environment:` — a listed key wins over `env_file:`, which would shadow the
+# file with this file's default whenever compose runs without --env-file.
+# server.ts keeps the same default built in, so nothing is lost on a laptop and
+# the operator's file is authoritative on a server. PORT stays listed: the
+# publish above is interpolated from it, and one source has to move the
+# listener and the publish together.
+#
+# The value is read when the container STARTS: editing the file needs a
+# recreate (`podman compose up -d`, or `systemctl --user restart
+# hezarfen_frontend_compose`), not a `podman restart`.
 
 services:
   frontend:
@@ -35,14 +41,11 @@ services:
         required: false
     environment:
       # Listen port, read from hezarfen_frontend.env (passed as --env-file by
-      # the systemd unit and the deploy; see the header note). server.ts reads
-      # PORT, so this one value moves the container, the publish above and the
-      # healthcheck together.
+      # the systemd unit and the deploy). server.ts reads PORT, so this one
+      # value moves the container, the publish above and the healthcheck
+      # together — and keeping it here is what stops the publish and the
+      # listener from drifting when no --env-file is given.
       PORT: "${PORT:-5173}"
-      # Remote backend origin; server.ts keeps browser traffic same-origin by
-      # proxying /api/* (HTTP and WebSocket) here. Must be reachable FROM
-      # INSIDE the container.
-      BACKEND_ORIGIN: ${BACKEND_ORIGIN:-https://hezarfen.dizey.sh}
     restart: unless-stopped
     healthcheck:
       # Bun-based: the slim runtime image ships no curl. Reads the container's
