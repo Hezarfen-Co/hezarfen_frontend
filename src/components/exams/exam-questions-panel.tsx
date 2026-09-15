@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
+import { SidePanel } from "@/components/ui/side-panel";
 import { BankQuestionPicker } from "@/components/exams/bank-question-picker";
 import { QuestionForm, type QuestionValues } from "@/components/exams/question-form";
 import { IconArchive, IconChevronLeft, IconChevronRight, IconPlus, IconRefresh, IconTrash } from "@/components/ui/icons";
@@ -27,6 +28,11 @@ import { createFlash } from "@/lib/flash";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+
+/** Close after the current pointer gesture so the tap cannot reopen the surface. */
+const closeAfterGesture = (close: () => void) => {
+  setTimeout(close, 0);
+};
 
 const QUESTION_PAGE_SIZE = 1;
 
@@ -136,7 +142,7 @@ export function ExamQuestionsPanel(props: {
 
   const insertFromBank = async (bankQuestionId: string, subjectId: string) => {
     await postExamQuestionFromBank(props.examId, bankQuestionId, subjectId);
-    setBankOpen(false);
+    closeAfterGesture(() => setBankOpen(false));
     setFlash(t("bank.inserted"));
     await refetch();
   };
@@ -249,18 +255,22 @@ export function ExamQuestionsPanel(props: {
         </Show>
       </div>
 
-      <FormDialog
+      <SidePanel
         open={bankOpen() && !props.readOnly}
-        onOpenChange={setBankOpen}
+        onOpenChange={(open) => {
+          if (open) setBankOpen(true);
+          else closeAfterGesture(() => setBankOpen(false));
+        }}
         title={t("bank.pickTemplate")}
         description={t("bank.title")}
+        size="wide"
       >
         <BankQuestionPicker
           subjects={subjects() ?? []}
           onInsert={insertFromBank}
-          onCancel={() => setBankOpen(false)}
+          onCancel={() => closeAfterGesture(() => setBankOpen(false))}
         />
-      </FormDialog>
+      </SidePanel>
 
       <FormDialog
         open={formOpen() || editing() != null}
@@ -281,8 +291,12 @@ export function ExamQuestionsPanel(props: {
           choiceImageSrc={(choiceId) => `/api/exams/${props.examId}/questions/${editing()?.id}/choices/${choiceId}/image`}
           loadImageBlob={editing() ? () => getExamQuestionImageBlob(props.examId, editing()!.id) : undefined}
           onCancel={() => {
-            setEditing(null);
-            setFormOpen(false);
+            // In-body Cancel bypasses FormDialog's deferred onOpenChange, so
+            // defer here too — otherwise the same tap can reopen the form.
+            closeAfterGesture(() => {
+              setEditing(null);
+              setFormOpen(false);
+            });
           }}
           onSubmit={submit}
         />
