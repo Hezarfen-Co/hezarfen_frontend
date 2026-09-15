@@ -58,6 +58,8 @@ export type NavGroup = {
   labelKey: MessageKey;
   Icon: Component<{ class?: string }>;
   items: NavItem[];
+  /** Starts folded in the sidebar until the viewer opens it (the "yakında" shelf). */
+  defaultFolded?: boolean;
 };
 
 export const HOME_ITEM: NavItem = {
@@ -88,45 +90,61 @@ function settingsAction(id: string): NavItem {
   return { id, to: "", labelKey: "nav.settings", Icon: IconSettings, action: "profile" };
 }
 
-// Admin and manager share one Figma information architecture (Operasyon /
-// Yapay zekâ / Kurum) — manager just qualifies for fewer of its items, via
-// the same minRole gates the rest of this file already uses.
+// Every role's tree is short, labelled sections that stay open (Fintables
+// style) instead of a few accordions hiding 20 entries each. Entries without a
+// backend yet all move to one trailing "Yakında" section, folded by default, so
+// they stay visible without crowding the live pages.
+function soonGroup(items: NavItem[]): NavGroup {
+  return { id: "soon", labelKey: "nav.soon", Icon: IconTarget, items, defaultFolded: true };
+}
+
+// Admin and manager share one tree — manager just qualifies for fewer of its
+// items, via the same minRole gates the rest of this file already uses.
 const ADMIN_GROUPS: NavGroup[] = [
   {
-    id: "operations",
-    labelKey: "nav.group.operations",
+    id: "school",
+    labelKey: "nav.group.school",
     Icon: IconSchool,
     items: [
       { id: "students-roster", to: "/management/students", labelKey: "nav.studentsRoster", Icon: IconUsers, minRole: "manager" },
       { id: "teachers-roster", to: "/management/teachers", labelKey: "nav.teachersRoster", Icon: IconChalkboardTeacher, minRole: "manager" },
       { id: "class-groups", to: "/management/classes", labelKey: "nav.classGroups", Icon: IconSchool, minRole: "teacher" },
-      { id: "courses", to: "/courses", labelKey: "nav.courses", Icon: IconBook, module: "courses" },
       { id: "terms", to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendar, minRole: "manager" },
       { id: "schedule", to: "/calendar", labelKey: "nav.schedule", Icon: IconCalendarDays, minRole: "manager" },
-      { id: "events", to: "/events", labelKey: "nav.events", Icon: IconCalendarDays, module: "events" },
-      { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, minRole: "teacher", module: "attendance" },
-      { id: "student-marks", to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher", module: "marks" },
-      { id: "student-pomodoros", to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher", module: "pomodoro" },
+    ],
+  },
+  {
+    id: "teaching",
+    labelKey: "nav.group.teaching",
+    Icon: IconBook,
+    items: [
+      { id: "courses", to: "/courses", labelKey: "nav.courses", Icon: IconBook, module: "courses" },
       { id: "homework", to: "/homework", labelKey: "nav.homework", Icon: IconHomework, module: "homework" },
       { id: "exams", to: "/exams", labelKey: "nav.exams", Icon: IconExam, minRole: "teacher", module: "exams" },
       { id: "question-bank", to: "/question-bank", labelKey: "nav.questionBank", Icon: IconArchive, minRole: "teacher", module: "bank_questions" },
       { id: "questions", to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle, module: "questions" },
       { id: "notes", to: "/notes", labelKey: "nav.notes", Icon: IconNote, module: "notes" },
       { id: "whiteboards", to: "/whiteboards", labelKey: "nav.whiteboards", Icon: IconEdit, module: "boards" },
-      { id: "appointments", to: "/appointments", labelKey: "nav.appointments", Icon: IconClock, module: "appointments" },
-      { id: "mock-exams", to: "/coming-soon/deneme-sinavlari", labelKey: "nav.mockExams", Icon: IconTarget, soon: true, minRole: "manager" },
-      { id: "optical-reading", to: "/coming-soon/optik-okuma", labelKey: "nav.opticalReading", Icon: IconScan, soon: true, minRole: "manager" },
-      { id: "payments-collection", to: "/management/payments", labelKey: "nav.payments", Icon: IconReportAnalytics, minRole: "manager", module: "payments" },
     ],
   },
   {
-    id: "ai",
-    labelKey: "nav.group.ai",
-    Icon: IconSparkles,
+    id: "tracking",
+    labelKey: "nav.group.tracking",
+    Icon: IconClipboardCheck,
     items: [
-      { id: "hezarfen-zeka", to: "/coming-soon/hezarfen-zeka", labelKey: "nav.hezarfenZeka", Icon: IconBotSquare, soon: true, minRole: "manager" },
-      CELEBI_ITEM,
-      SOUND_STUDIO_ITEM,
+      { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, minRole: "teacher", module: "attendance" },
+      { id: "student-marks", to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher", module: "marks" },
+      { id: "student-pomodoros", to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, minRole: "teacher", module: "pomodoro" },
+    ],
+  },
+  {
+    id: "services",
+    labelKey: "nav.group.services",
+    Icon: IconCalendarDays,
+    items: [
+      { id: "events", to: "/events", labelKey: "nav.events", Icon: IconCalendarDays, module: "events" },
+      { id: "appointments", to: "/appointments", labelKey: "nav.appointments", Icon: IconClock, module: "appointments" },
+      { id: "school-meals", to: "/meals", labelKey: "nav.schoolMeals", Icon: IconUtensils, minRole: "manager", module: "meals" },
     ],
   },
   {
@@ -134,16 +152,28 @@ const ADMIN_GROUPS: NavGroup[] = [
     labelKey: "nav.group.institution",
     Icon: IconUserCog,
     items: [
-      { id: "reports", to: "/coming-soon/raporlar", labelKey: "nav.reports", Icon: IconChartPie, soon: true, minRole: "manager" },
-      { id: "license-modules", to: "/management/modules", labelKey: "nav.licenseModules", Icon: IconPackage, minRole: "admin" },
-      { id: "users", to: "/admin/users", labelKey: "nav.users", Icon: IconUserCog, minRole: "admin" },
-      { id: "data-protection", to: "/coming-soon/kvkk-denetim", labelKey: "nav.dataProtection", Icon: IconShieldCheck, soon: true, minRole: "admin" },
-      { id: "school-meals", to: "/meals", labelKey: "nav.schoolMeals", Icon: IconUtensils, minRole: "manager", module: "meals" },
+      { id: "payments-collection", to: "/management/payments", labelKey: "nav.payments", Icon: IconReportAnalytics, minRole: "manager", module: "payments" },
       { id: "staff-work", to: "/management/staff-work", labelKey: "nav.staffWork", Icon: IconBriefcase, minRole: "manager", module: "work" },
       { id: "work", to: "/work", labelKey: "nav.work", Icon: IconClock, minRole: "teacher", module: "work" },
+      { id: "users", to: "/admin/users", labelKey: "nav.users", Icon: IconUserCog, minRole: "admin" },
+      { id: "license-modules", to: "/management/modules", labelKey: "nav.licenseModules", Icon: IconPackage, minRole: "admin" },
       { id: "settings", to: "/management/settings", labelKey: "nav.settings", Icon: IconSettings, minRole: "manager" },
     ],
   },
+  {
+    id: "ai",
+    labelKey: "nav.group.ai",
+    Icon: IconSparkles,
+    items: [CELEBI_ITEM],
+  },
+  soonGroup([
+    { id: "mock-exams", to: "/coming-soon/deneme-sinavlari", labelKey: "nav.mockExams", Icon: IconTarget, soon: true, minRole: "manager" },
+    { id: "optical-reading", to: "/coming-soon/optik-okuma", labelKey: "nav.opticalReading", Icon: IconScan, soon: true, minRole: "manager" },
+    { id: "reports", to: "/coming-soon/raporlar", labelKey: "nav.reports", Icon: IconChartPie, soon: true, minRole: "manager" },
+    { id: "data-protection", to: "/coming-soon/kvkk-denetim", labelKey: "nav.dataProtection", Icon: IconShieldCheck, soon: true, minRole: "admin" },
+    { id: "hezarfen-zeka", to: "/coming-soon/hezarfen-zeka", labelKey: "nav.hezarfenZeka", Icon: IconBotSquare, soon: true, minRole: "manager" },
+    SOUND_STUDIO_ITEM,
+  ]),
 ];
 
 const TEACHER_GROUPS: NavGroup[] = [
@@ -155,26 +185,29 @@ const TEACHER_GROUPS: NavGroup[] = [
       { id: "my-classes", to: "/management/classes", labelKey: "nav.myClasses", Icon: IconSchool },
       { id: "my-schedule", to: "/calendar", labelKey: "nav.mySchedule", Icon: IconCalendarDays },
       { id: "courses", to: "/courses", labelKey: "nav.courses", Icon: IconBook, module: "courses" },
+    ],
+  },
+  {
+    id: "tracking",
+    labelKey: "nav.group.tracking",
+    Icon: IconClipboardCheck,
+    items: [
       { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, module: "attendance" },
       { id: "student-marks", to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, module: "marks" },
       { id: "student-pomodoros", to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconClock, module: "pomodoro" },
+    ],
+  },
+  {
+    id: "teaching",
+    labelKey: "nav.group.teaching",
+    Icon: IconBook,
+    items: [
       { id: "homework", to: "/homework", labelKey: "nav.homework", Icon: IconHomework, module: "homework" },
       { id: "exams", to: "/exams", labelKey: "nav.exams", Icon: IconExam, module: "exams" },
       { id: "question-bank", to: "/question-bank", labelKey: "nav.questionBank", Icon: IconArchive, module: "bank_questions" },
       { id: "questions", to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle, module: "questions" },
       { id: "notes", to: "/notes", labelKey: "nav.notes", Icon: IconNote, module: "notes" },
       { id: "whiteboards", to: "/whiteboards", labelKey: "nav.whiteboards", Icon: IconEdit, module: "boards" },
-    ],
-  },
-  {
-    id: "ai",
-    labelKey: "nav.group.ai",
-    Icon: IconSparkles,
-    items: [
-      { id: "student-analysis", to: "/coming-soon/ogrenci-analizi", labelKey: "nav.studentAnalysis", Icon: IconChart, soon: true },
-      { id: "pending-approvals", to: "/coming-soon/bekleyen-onaylar", labelKey: "nav.pendingApprovals", Icon: IconHelpCircle, soon: true },
-      { id: "question-generation", to: "/coming-soon/soru-uretimi", labelKey: "nav.questionGeneration", Icon: IconEdit, soon: true },
-      SOUND_STUDIO_ITEM,
     ],
   },
   {
@@ -190,6 +223,12 @@ const TEACHER_GROUPS: NavGroup[] = [
       settingsAction("settings-teacher"),
     ],
   },
+  soonGroup([
+    { id: "student-analysis", to: "/coming-soon/ogrenci-analizi", labelKey: "nav.studentAnalysis", Icon: IconChart, soon: true },
+    { id: "pending-approvals", to: "/coming-soon/bekleyen-onaylar", labelKey: "nav.pendingApprovals", Icon: IconHelpCircle, soon: true },
+    { id: "question-generation", to: "/coming-soon/soru-uretimi", labelKey: "nav.questionGeneration", Icon: IconEdit, soon: true },
+    SOUND_STUDIO_ITEM,
+  ]),
 ];
 
 const STUDENT_GROUPS: NavGroup[] = [
@@ -198,22 +237,28 @@ const STUDENT_GROUPS: NavGroup[] = [
     labelKey: "nav.group.study",
     Icon: IconSchool,
     items: [
-      { id: "study-plan", to: "/coming-soon/calisma-programim", labelKey: "nav.studyPlan", Icon: IconClock, soon: true },
       { id: "topic-mastery", to: "/marks", labelKey: "nav.topicMastery", Icon: IconChart, exactRole: "student", module: "marks" },
       { id: "exam-results", to: "/exams", labelKey: "nav.examResults", Icon: IconExam, module: "exams" },
       { id: "my-homework", to: "/homework", labelKey: "nav.myHomework", Icon: IconHomework, module: "homework" },
+      { id: "pomodoro", to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student", module: "pomodoro" },
+    ],
+  },
+  {
+    id: "teaching",
+    labelKey: "nav.group.teaching",
+    Icon: IconBook,
+    items: [
       { id: "courses", to: "/courses", labelKey: "nav.courses", Icon: IconBook, module: "courses" },
       { id: "notes", to: "/notes", labelKey: "nav.notes", Icon: IconNote, module: "notes" },
       { id: "questions", to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle, module: "questions" },
       { id: "whiteboards", to: "/whiteboards", labelKey: "nav.whiteboards", Icon: IconEdit, module: "boards" },
-      { id: "pomodoro", to: "/pomodoro", labelKey: "nav.pomodoro", Icon: IconClock, exactRole: "student", module: "pomodoro" },
     ],
   },
   {
     id: "ai",
     labelKey: "nav.group.ai",
     Icon: IconSparkles,
-    items: [CELEBI_ITEM, SOUND_STUDIO_ITEM],
+    items: [CELEBI_ITEM],
   },
   {
     id: "other",
@@ -228,6 +273,10 @@ const STUDENT_GROUPS: NavGroup[] = [
       settingsAction("settings-student"),
     ],
   },
+  soonGroup([
+    { id: "study-plan", to: "/coming-soon/calisma-programim", labelKey: "nav.studyPlan", Icon: IconClock, soon: true },
+    SOUND_STUDIO_ITEM,
+  ]),
 ];
 
 const PARENT_GROUPS: NavGroup[] = [

@@ -315,6 +315,8 @@ export type MessageKey =
   | "nav.group.study"
   | "nav.group.other"
   | "nav.group.myStudent"
+  | "nav.group.teaching"
+  | "nav.group.tracking"
   | "nav.studentsRoster"
   | "nav.teachersRoster"
   | "nav.schedule"
@@ -1449,6 +1451,7 @@ export type MessageKey =
   | "settings.empty"
   | "settings.maxFileSize"
   | "settings.maxFileSizeHelp"
+  | "whiteboard.participantCount"
   | "settings.maxFileSizeInvalid"
   | "settings.mealSlotNameInvalid"
   | "settings.aiPolicy"
@@ -2192,6 +2195,8 @@ const en: Dict = {
   "nav.group.study": "Study",
   "nav.group.other": "Other",
   "nav.group.myStudent": "My student",
+  "nav.group.teaching": "Teaching & content",
+  "nav.group.tracking": "Student tracking",
   "nav.studentsRoster": "Students",
   "nav.teachersRoster": "Teachers",
   "nav.schedule": "Class schedule",
@@ -3397,7 +3402,8 @@ const en: Dict = {
   "settings.unsaved": "Unsaved changes",
   "settings.empty": "No rows yet.",
   "settings.maxFileSize": "Max note file size",
-  "settings.maxFileSizeHelp": "Per-file upload cap for note attachments, in MiB. Backend accepts 0.001-25 MiB.",
+  "settings.maxFileSizeHelp": "Per-file upload cap for note attachments, in MiB. Allowed range: 0.001–25 MiB.",
+  "whiteboard.participantCount": "Participants: {count}",
   "settings.maxFileSizeInvalid": "Enter a valid file size.",
   "settings.mealSlotNameInvalid": "A meal slot name can't contain / \\ ? # or %.",
   "settings.aiPolicy": "AI policy",
@@ -4057,6 +4063,8 @@ const tr: Dict = {
   "nav.group.study": "Çalışma",
   "nav.group.other": "Diğer",
   "nav.group.myStudent": "Öğrencim",
+  "nav.group.teaching": "Eğitim ve içerik",
+  "nav.group.tracking": "Öğrenci takibi",
   "nav.studentsRoster": "Öğrenciler",
   "nav.teachersRoster": "Öğretmenler",
   "nav.schedule": "Ders programı",
@@ -5262,7 +5270,8 @@ const tr: Dict = {
   "settings.unsaved": "Kaydedilmemiş değişiklikler",
   "settings.empty": "Henüz satır yok.",
   "settings.maxFileSize": "Not dosyası boyut sınırı",
-  "settings.maxFileSizeHelp": "Not ekleri için dosya başına yükleme sınırı, MiB cinsinden. Backend 0.001-25 MiB kabul eder.",
+  "settings.maxFileSizeHelp": "Not ekleri için dosya başına yükleme sınırı, MiB cinsinden. İzin verilen aralık: 0,001–25 MiB.",
+  "whiteboard.participantCount": "Katılımcı: {count}",
   "settings.maxFileSizeInvalid": "Geçerli bir dosya boyutu gir.",
   "settings.mealSlotNameInvalid": "Öğün adı / \\ ? # veya % içeremez.",
   "settings.aiPolicy": "Yapay zekâ politikası",

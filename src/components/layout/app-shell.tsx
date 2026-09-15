@@ -13,7 +13,6 @@ import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
-import { Button } from "@/components/ui/button";
 import { IconChevronLeft, IconPanelLeft, IconSearch, IconSparkles } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
@@ -64,8 +63,8 @@ export function AppShell(props: ParentProps) {
           >
             <div
               class={cn(
-                "flex shrink-0 items-center gap-2 border-b border-border/70",
-                collapsed() ? "h-auto flex-col justify-center gap-1.5 px-2 py-2" : "h-[45px] px-3",
+                "flex h-[45px] shrink-0 items-center border-b border-border/70",
+                collapsed() ? "justify-center px-2" : "px-3",
               )}
             >
               <Link
@@ -80,17 +79,6 @@ export function AppShell(props: ParentProps) {
                   <span class="truncate text-base font-semibold tracking-tight text-foreground dark:text-white 2xl:text-lg">{t("app.name")}</span>
                 </Show>
               </Link>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                class="h-8 w-8 shrink-0 justify-center rounded-md px-0 text-muted-foreground hover:bg-secondary hover:text-foreground dark:text-white/70 dark:hover:bg-white/8 dark:hover:text-white"
-                aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
-                title={collapsed() ? t("nav.expand") : t("nav.collapse")}
-                onClick={() => prefs.toggleSidebar()}
-              >
-                <IconPanelLeft class={cn("h-4 w-4 shrink-0 transition-transform duration-200", collapsed() && "scale-x-[-1]")} />
-              </Button>
             </div>
 
             <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-2.5">
@@ -102,6 +90,27 @@ export function AppShell(props: ParentProps) {
             </div>
 
             <SidebarAccount collapsed={collapsed()} onLogout={logout} />
+
+            {/* Collapse toggle sits under the account chip, pinned to the sidebar
+                foot, so the logo header keeps the same 45px height as the topbar. */}
+            <div class="shrink-0 px-2 pb-2">
+              <button
+                type="button"
+                class={cn(
+                  "flex h-8 w-full items-center rounded-md text-[12px] font-medium text-muted-foreground outline-hidden transition-colors hover:bg-muted/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring dark:text-white/60 dark:hover:bg-white/8 dark:hover:text-white",
+                  collapsed() ? "justify-center px-0" : "gap-2.5 px-2.5",
+                )}
+                aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
+                aria-expanded={!collapsed()}
+                title={collapsed() ? t("nav.expand") : t("nav.collapse")}
+                onClick={() => prefs.toggleSidebar()}
+              >
+                <IconPanelLeft class={cn("h-4 w-4 shrink-0 transition-transform duration-200", collapsed() && "scale-x-[-1]")} />
+                <Show when={!collapsed()}>
+                  <span class="truncate">{t("nav.collapse")}</span>
+                </Show>
+              </button>
+            </div>
           </aside>
         </Show>
 

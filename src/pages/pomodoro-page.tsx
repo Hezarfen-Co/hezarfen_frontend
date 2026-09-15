@@ -179,7 +179,6 @@ function PomodoroContent() {
   return (
     <div class="space-y-6">
       <PageHeader
-        eyebrow={t("nav.pomodoro")}
         title={t("pomodoro.title")}
         description={t("pomodoro.subtitle")}
       />

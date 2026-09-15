@@ -85,7 +85,7 @@ function GuideContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader eyebrow={t("nav.guide")} title={t("guide.title")} description={t("guide.subtitle")} />
+      <PageHeader title={t("guide.title")} description={t("guide.subtitle")} />
 
       <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-6">
         <div>

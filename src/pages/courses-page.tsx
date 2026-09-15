@@ -201,7 +201,7 @@ function CoursesContent() {
             >
               <Show
                 when={filteredCourses().length > 0}
-                fallback={<EmptyState kind="courses" title={t("courses.empty", { item: kindLabel() })} />}
+                fallback={<EmptyState kind="courses" title={t("courses.empty", { item: kindInSentence() })} />}
               >
                 <div class={list.loading ? "grid grid-cols-1 gap-3 opacity-60 transition-opacity sm:grid-cols-2 xl:grid-cols-3" : "grid grid-cols-1 gap-3 transition-opacity sm:grid-cols-2 xl:grid-cols-3"}>
                   <For each={visibleCourses()}>

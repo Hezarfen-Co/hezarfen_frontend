@@ -577,7 +577,6 @@ function PaymentsContent() {
   return (
     <div class="space-y-6">
       <PageHeader
-        eyebrow={t("nav.school")}
         title={t("payments.title")}
         description={t("payments.subtitle")}
         actions={

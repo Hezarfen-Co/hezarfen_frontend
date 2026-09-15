@@ -12,6 +12,10 @@ const EXAM_KIND_LABELS: Record<KnownExamKind, MessageKey> = {
   oral: "exams.kind.oral",
 };
 
+export function isKnownExamKind(kind: string): kind is KnownExamKind {
+  return kind in EXAM_KIND_LABELS;
+}
+
 export function examKindLabel(kind: string, t: T): string {
   return kind in EXAM_KIND_LABELS ? t(EXAM_KIND_LABELS[kind as KnownExamKind]) : kind;
 }

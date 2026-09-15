@@ -119,7 +119,6 @@ function StatementContent() {
   return (
     <div class="space-y-6">
       <PageHeader
-        eyebrow={t("nav.paymentStatement")}
         title={t("payments.statementTitle")}
         description={t("payments.statementSubtitle")}
       />

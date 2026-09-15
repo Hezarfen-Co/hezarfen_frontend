@@ -78,7 +78,6 @@ function QuestionsContent() {
   return (
     <div class="space-y-6">
       <PageHeader
-        eyebrow={t("nav.group.community")}
         title={t("pool.title")}
         description={t("pool.subtitle")}
         actions={

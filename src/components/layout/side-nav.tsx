@@ -1,6 +1,6 @@
-import { For, Show } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import { Link, useNavigate, useRouterState } from "@tanstack/solid-router";
-import { HOME_ITEM, routeNavItem, visibleNavGroups, type NavItem } from "@/components/layout/nav-items";
+import { HOME_ITEM, routeNavItem, visibleNavGroups, type NavGroup, type NavItem } from "@/components/layout/nav-items";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
@@ -8,6 +8,17 @@ import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
 import { useShellFeed } from "@/stores/shell-feed-context";
 import { useT } from "@/stores/preferences-context";
+
+const FOLDED_KEY = "hezarfen.navFolded";
+
+function readFolded(): Record<string, boolean> {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(FOLDED_KEY) ?? "{}");
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
 
 export function SideNav(props: {
   onNavigate?: () => void;
@@ -27,6 +38,18 @@ export function SideNav(props: {
   const current = () => routeNavItem(pathname(), auth.user()?.role);
   const unread = () => feed.unreadMessages().total;
   const badgeFor = (item: NavItem) => (item.id === "messages" ? unread() : 0);
+
+  const [folded, setFolded] = createSignal<Record<string, boolean>>(readFolded());
+  const isFolded = (group: NavGroup) => folded()[group.id] ?? group.defaultFolded ?? false;
+  const toggleGroup = (group: NavGroup) => {
+    const next = { ...folded(), [group.id]: !isFolded(group) };
+    setFolded(next);
+    try {
+      localStorage.setItem(FOLDED_KEY, JSON.stringify(next));
+    } catch {
+      // Private mode / quota: folding still works for this session.
+    }
+  };
 
   const runAction = (item: NavItem) => {
     props.onNavigate?.();
@@ -64,22 +87,22 @@ export function SideNav(props: {
       <For each={groups()}>
         {(group) => {
           const active = () => group.items.some((item) => current()?.id === item.id);
+          // The section holding the current page never folds away under the viewer.
+          const open = () => active() || !isFolded(group);
           const renderLinks = () => (
             <div class="grid gap-px">
               <For each={group.items}>
                 {(item: NavItem) => {
                   const itemActive = () => current()?.id === item.id;
                   const linkClass = cn(
-                    // Active submenu item: bold foreground text + a bright segment over
-                    // the group's left guide line (no filled pill).
-                    "relative flex h-[30px] items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                    "relative flex h-[30px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     itemActive()
-                      ? "font-semibold text-foreground before:absolute before:-left-[9px] before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:bg-foreground"
-                      : "font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                   );
                   const content = (
                     <>
-                      <item.Icon class="h-4 w-4 shrink-0 opacity-80" />
+                      <item.Icon class="h-4 w-4 shrink-0" />
                       <span class="truncate">{t(item.labelKey)}</span>
                       <Show when={item.soon}>
                         <span class="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -115,21 +138,23 @@ export function SideNav(props: {
             <Show
               when={props.collapsed}
               fallback={
-                <details class="group/nav" open={active()}>
-                  <summary
-                    class={cn(
-                      "flex h-[34px] cursor-pointer list-none items-center gap-3 rounded-lg px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden",
-                      active()
-                        ? "bg-muted/70 text-foreground"
-                        : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                    )}
+                <section class="mt-2 first:mt-0">
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group)}
+                    aria-expanded={open()}
+                    class="group/section flex h-7 w-full items-center gap-1.5 rounded-md px-3 text-left text-[11px] font-semibold tracking-wide text-muted-foreground/80 outline-hidden transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <group.Icon class="h-4 w-4 shrink-0" />
                     <span class="truncate">{t(group.labelKey)}</span>
-                    <IconChevronRight class="ml-auto h-3.5 w-3.5 shrink-0 opacity-60 transition-transform duration-200 group-open/nav:rotate-90" />
-                  </summary>
-                  <div class="mt-0.5 ml-[1.15rem] border-l border-border/70 pl-2">{renderLinks()}</div>
-                </details>
+                    <IconChevronRight
+                      class={cn(
+                        "ml-auto h-3 w-3 shrink-0 transition-[transform,opacity] duration-200",
+                        open() ? "rotate-90 opacity-0 group-hover/section:opacity-60 group-focus-visible/section:opacity-60" : "opacity-60",
+                      )}
+                    />
+                  </button>
+                  <Show when={open()}>{renderLinks()}</Show>
+                </section>
               }
             >
               <DropdownMenu placement="right-start" gutter={8}>

@@ -147,7 +147,7 @@ function BoardCard(props: { board: Board; isCreator: boolean; onOpen: () => void
         </div>
       </div>
       <p class="text-xs text-text-subtle">
-        {t("whiteboard.createdAt")}: {props.createdLabel} · {props.board.participants.length + 1} {t("whiteboard.participants").toLowerCase()}
+        {t("whiteboard.createdAt")}: {props.createdLabel} · {t("whiteboard.participantCount", { count: props.board.participants.length + 1 })}
       </p>
     </button>
   );

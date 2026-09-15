@@ -16,94 +16,75 @@ test("invalid role destinations stay hidden", () => {
   expect(visibleNavItems("parent").map((item) => item.to)).not.toContain("/management/staff-work");
 });
 
-test("admin's sidebar keeps the Figma Operasyon / Yapay zekâ / Kurum tree plus every backed page", () => {
+test("admin's sidebar splits into short labelled sections with the soon shelf last", () => {
   expect(
     visibleNavGroups("admin").map((group) => ({
       id: group.id,
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
-    {
-      id: "operations",
-      items: [
-        "students-roster",
-        "teachers-roster",
-        "class-groups",
-        "courses",
-        "terms",
-        "schedule",
-        "events",
-        "student-attendance",
-        "student-marks",
-        "student-pomodoros",
-        "homework",
-        "exams",
-        "question-bank",
-        "questions",
-        "notes",
-        "whiteboards",
-        "appointments",
-        "mock-exams",
-        "optical-reading",
-        "payments-collection",
-      ],
-    },
-    { id: "ai", items: ["hezarfen-zeka", "celebi", "sound-studio"] },
-    {
-      id: "institution",
-      items: ["reports", "license-modules", "users", "data-protection", "school-meals", "staff-work", "work", "settings"],
-    },
+    { id: "school", items: ["students-roster", "teachers-roster", "class-groups", "terms", "schedule"] },
+    { id: "teaching", items: ["courses", "homework", "exams", "question-bank", "questions", "notes", "whiteboards"] },
+    { id: "tracking", items: ["student-attendance", "student-marks", "student-pomodoros"] },
+    { id: "services", items: ["events", "appointments", "school-meals"] },
+    { id: "institution", items: ["payments-collection", "staff-work", "work", "users", "license-modules", "settings"] },
+    { id: "ai", items: ["celebi"] },
+    { id: "soon", items: ["mock-exams", "optical-reading", "reports", "data-protection", "hezarfen-zeka", "sound-studio"] },
   ]);
 });
 
 test("manager sees the same admin tree minus the admin-only entries", () => {
-  const institution = visibleNavGroups("manager").find((group) => group.id === "institution");
-  expect(institution?.items.map((item) => item.id)).toEqual(["reports", "school-meals", "staff-work", "work", "settings"]);
-  expect(institution?.items.map((item) => item.id)).not.toContain("license-modules");
-  expect(institution?.items.map((item) => item.id)).not.toContain("users");
-  expect(institution?.items.map((item) => item.id)).not.toContain("data-protection");
+  const groups = visibleNavGroups("manager");
+  const institution = groups.find((group) => group.id === "institution");
+  expect(institution?.items.map((item) => item.id)).toEqual(["payments-collection", "staff-work", "work", "settings"]);
+  const ids = groups.flatMap((group) => group.items.map((item) => item.id));
+  expect(ids).not.toContain("license-modules");
+  expect(ids).not.toContain("users");
+  expect(ids).not.toContain("data-protection");
 });
 
-test("teacher's sidebar keeps the Figma Sınıfım / Yapay zekâ / Diğer tree plus every backed page", () => {
+test("teacher's sidebar splits into short labelled sections with the soon shelf last", () => {
   expect(
     visibleNavGroups("teacher").map((group) => ({
       id: group.id,
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
-    {
-      id: "my-classroom",
-      items: [
-        "my-classes",
-        "my-schedule",
-        "courses",
-        "student-attendance",
-        "student-marks",
-        "student-pomodoros",
-        "homework",
-        "exams",
-        "question-bank",
-        "questions",
-        "notes",
-        "whiteboards",
-      ],
-    },
-    { id: "ai", items: ["student-analysis", "pending-approvals", "question-generation", "sound-studio"] },
+    { id: "my-classroom", items: ["my-classes", "my-schedule", "courses"] },
+    { id: "tracking", items: ["student-attendance", "student-marks", "student-pomodoros"] },
+    { id: "teaching", items: ["homework", "exams", "question-bank", "questions", "notes", "whiteboards"] },
     { id: "other", items: ["parent-communication", "appointments", "events", "meals", "work", "settings-teacher"] },
+    { id: "soon", items: ["student-analysis", "pending-approvals", "question-generation", "sound-studio"] },
   ]);
 });
 
-test("student's sidebar keeps the Figma Çalışma / Yapay zekâ / Diğer tree plus every backed page", () => {
+test("student's sidebar splits into short labelled sections with the soon shelf last", () => {
   expect(
     visibleNavGroups("student").map((group) => ({
       id: group.id,
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
-    { id: "study", items: ["study-plan", "topic-mastery", "exam-results", "my-homework", "courses", "notes", "questions", "whiteboards", "pomodoro"] },
-    { id: "ai", items: ["celebi", "sound-studio"] },
+    { id: "study", items: ["topic-mastery", "exam-results", "my-homework", "pomodoro"] },
+    { id: "teaching", items: ["courses", "notes", "questions", "whiteboards"] },
+    { id: "ai", items: ["celebi"] },
     { id: "other", items: ["calendar", "events", "messages", "appointments", "meals", "settings-student"] },
+    { id: "soon", items: ["study-plan", "sound-studio"] },
   ]);
+});
+
+test("every soon entry sits in the folded soon shelf and nowhere else", () => {
+  for (const role of ["student", "parent", "teacher", "manager", "admin"] as const) {
+    for (const group of visibleNavGroups(role)) {
+      const soon = group.items.filter((item) => item.soon);
+      if (group.id === "soon") {
+        expect(group.defaultFolded).toBe(true);
+        expect(soon).toHaveLength(group.items.length);
+      } else {
+        expect(soon).toHaveLength(0);
+      }
+    }
+  }
 });
 
 test("parent's sidebar keeps the Figma Öğrencim / Kurum tree plus every backed page", () => {

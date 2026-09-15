@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { examKindLabel, isKnownExamKind } from "@/lib/exam-labels";
+import { moduleLabel, packageLabel } from "@/lib/module-labels";
 import { getAttendanceStatusMeta } from "@/lib/attendance-status";
 import { cn } from "@/lib/cn";
 import { dirtySettingsPatch, minuteToUtcTime, utcTimeToMinute } from "@/lib/meals";
@@ -158,7 +160,6 @@ function SettingsContent() {
   return (
     <div class="space-y-6">
       <PageHeader
-        eyebrow={t("nav.admin")}
         title={t("settings.title")}
         description={t("settings.subtitle")}
         actions={
@@ -230,17 +231,28 @@ function SettingsContent() {
                       <Index each={examKinds()}>
                         {(item, index) => (
                           <div class="grid grid-cols-[minmax(0,1fr)_4.5rem_2.25rem] items-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-1.5 shadow-2xs">
-                            <Input
-                              aria-label={t("settings.name")}
-                              class="h-9 rounded-md border-0 bg-transparent shadow-none focus-visible:ring-1"
-                              value={item().name}
-                              placeholder={t("settings.name")}
-                              onInput={(e) =>
-                                setExamKinds((rows) =>
-                                  rows.map((row, i) => (i === index ? { ...row, name: e.currentTarget.value } : row)),
-                                )
+                            {/* Built-in kinds are keys other records point at: show their
+                                localized name and keep the key fixed; only custom kinds are renamed. */}
+                            <Show
+                              when={!isKnownExamKind(item().name)}
+                              fallback={
+                                <span class="flex h-9 min-w-0 items-center px-3 text-sm" title={item().name}>
+                                  <span class="truncate">{examKindLabel(item().name, t)}</span>
+                                </span>
                               }
-                            />
+                            >
+                              <Input
+                                aria-label={t("settings.name")}
+                                class="h-9 rounded-md border-0 bg-transparent shadow-none focus-visible:ring-1"
+                                value={item().name}
+                                placeholder={t("settings.name")}
+                                onInput={(e) =>
+                                  setExamKinds((rows) =>
+                                    rows.map((row, i) => (i === index ? { ...row, name: e.currentTarget.value } : row)),
+                                  )
+                                }
+                              />
+                            </Show>
                             <Input
                               aria-label={t("settings.weight")}
                               class="h-9 rounded-md border-0 bg-muted/40 text-center font-mono shadow-none focus-visible:ring-1"
@@ -608,12 +620,12 @@ function SettingsContent() {
                         <For each={info().catalog.packages}>
                           {(pkg) => (
                             <div class="space-y-1.5">
-                              <h3 class="text-sm font-medium capitalize">{pkg.package}</h3>
+                              <h3 class="text-sm font-medium">{packageLabel(pkg.package, t)}</h3>
                               <div class="flex flex-wrap gap-1.5">
                                 <For each={pkg.modules}>
                                   {(name) => (
                                     <Badge variant={info().mine.enabled.includes(name) ? "secondary" : "outline"} class="rounded-full">
-                                      {name}
+                                      {moduleLabel(name, t)}
                                     </Badge>
                                   )}
                                 </For>

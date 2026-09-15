@@ -88,7 +88,7 @@ function MealsContent() {
 
   return (
     <div class="space-y-5">
-      <PageHeader eyebrow={t("nav.group.community")} title={t("meals.title")} description={t("meals.subtitle")} actions={<Show when={canManage()}><Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => { setNewSlot(settings()?.meal_slots[0]?.name ?? ""); setShowCreate(true); }}><IconPlus class="h-4 w-4" />{t("meals.publish")}</Button></Show>} />
+      <PageHeader title={t("meals.title")} description={t("meals.subtitle")} actions={<Show when={canManage()}><Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => { setNewSlot(settings()?.meal_slots[0]?.name ?? ""); setShowCreate(true); }}><IconPlus class="h-4 w-4" />{t("meals.publish")}</Button></Show>} />
       <SidePanel open={showCreate()} onOpenChange={setShowCreate} title={t("meals.publish")} description={t("meals.publishHelp")}>
         <form class="space-y-4" onSubmit={publish}>
           <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
