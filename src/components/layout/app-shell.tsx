@@ -36,7 +36,6 @@ export function AppShell(props: ParentProps) {
   const [profileOpen, setProfileOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
-  const wide = () => location().pathname.startsWith("/exam-room/") || location().searchStr.includes("answerUser=") || location().pathname === "/messages";
   const fullScreen = () => location().pathname.startsWith("/exam-room/");
   const routeLabel = createMemo(() => {
     const key = routeLabelKey(location().pathname, auth.user()?.role);
@@ -166,9 +165,10 @@ export function AppShell(props: ParentProps) {
           </Show>
           <div
             class={cn(
-              "mx-auto w-full px-4 py-6 sm:px-6 lg:px-10 lg:py-6",
+              // Every page fills the content column, as Messages always did: a
+              // fixed 1180px cap left wide screens mostly empty margin.
+              "w-full px-4 py-6 sm:px-6 lg:px-10 lg:py-6",
               auth.user() && !fullScreen() && "pb-[calc(3.5rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] lg:pb-6",
-              wide() ? "max-w-none" : "max-w-[1180px]",
             )}
           >
             {props.children}
