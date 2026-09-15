@@ -50,6 +50,13 @@ Active project reference docs (read the relevant one before changing that area):
 - Table-page headers fold into the `DataTable` title/description/actions area; do not render a separate `PageHeader` above table-primary pages.
 - Search inputs, dropdown filters, filter buttons, and column controls share the same compact height/radius (`h-8 rounded-lg`, `text-[13px]`) unless the shared component changes the standard globally. Page-header primary actions may stay `h-9`.
 - Pages/domain components must not import or render `Table` primitives directly; only the `DataTable` wrapper and table primitive files may.
+- Every list page uses one card: optional `Tabs` above, then `section.data-shell` holding the `DataTable` (its `title`/`description`/`actions`). Card-grid lists use `DataSection` from `src/components/ui/data-section.tsx` for the same header. No standalone `PageHeader`/`h1` above a list, and no row counts in descriptions (the pager shows them).
+
+## Shared pickers & empty states
+
+- Dropdowns: `Select` (drop-in for `<select>` + `<option>`, renders the app menu), `DropdownSelect` (options array), `SearchableSelect` (long lists). Never a raw `<select>`, `type="date"` input (use `DatePicker`) or an ad-hoc search `Input` (use `DataTableSearch`).
+- Confirmations and text prompts go through `ConfirmDialog`; never `window.confirm/prompt/alert`.
+- Empty states: `EmptyState` (full panel, `kind` picks the unDraw scene) or `EmptyInline` (cards/charts). Scenes live in `src/assets/illustrations/` (license + slugs in its README); pixel glyphs come from `PixelIcon` (pixelarticons, MIT).
 
 ## Date/time & attendance
 
