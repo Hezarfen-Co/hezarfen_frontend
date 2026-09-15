@@ -142,7 +142,11 @@ export function ExamQuestionsPanel(props: {
 
   const insertFromBank = async (bankQuestionId: string, subjectId: string) => {
     await postExamQuestionFromBank(props.examId, bankQuestionId, subjectId);
-    closeAfterGesture(() => setBankOpen(false));
+    // The request finishes after the original pointer gesture, so deferring
+    // this close leaves the panel open until another event loop turn and can
+    // race with the surrounding refetch. Close the controlled surface now;
+    // the async request already guarantees the tap cannot fall through.
+    setBankOpen(false);
     setFlash(t("bank.inserted"));
     await refetch();
   };
@@ -268,7 +272,7 @@ export function ExamQuestionsPanel(props: {
         <BankQuestionPicker
           subjects={subjects() ?? []}
           onInsert={insertFromBank}
-          onCancel={() => closeAfterGesture(() => setBankOpen(false))}
+          onCancel={() => setBankOpen(false)}
         />
       </SidePanel>
 

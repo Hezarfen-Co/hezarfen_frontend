@@ -6,6 +6,7 @@ import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GuestGuard } from "@/components/layout/guest-guard";
 import { IconEye, IconEyeOff } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useAuth } from "@/stores/auth-context";
@@ -20,9 +21,11 @@ const MAX_PASSWORD_LEN = 128;
 
 export default function BuilderLoginPage() {
   return (
-    <BuilderProvider>
-      <BuilderLoginGate />
-    </BuilderProvider>
+    <GuestGuard>
+      <BuilderProvider>
+        <BuilderLoginGate />
+      </BuilderProvider>
+    </GuestGuard>
   );
 }
 
