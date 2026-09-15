@@ -30,12 +30,23 @@ export function SidebarAccount(props: {
   menuPlacement?: "right-end" | "top-start";
   /** When set (mobile sheet), host closes the sheet and opens the shared profile dialog. */
   onOpenSettings?: () => void;
+  /** Mobile sheet: dismiss the sheet before route changes from this menu. */
+  onNavigateAway?: () => void;
 }) {
   const auth = useAuth();
   const prefs = usePreferences();
   const t = useT();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = createSignal(false);
+
+  const leave = (go: () => void) => {
+    // Defer so the account menu finishes closing before the sheet dismisses
+    // or a route change remounts focus.
+    setTimeout(() => {
+      props.onNavigateAway?.();
+      go();
+    }, 0);
+  };
 
   const openSettings = () => {
     // Defer so the menu finishes closing/restoring focus before another
@@ -98,7 +109,7 @@ export function SidebarAccount(props: {
               <DropdownMenuContent class="w-72 rounded-xl border-border bg-popover p-0 text-popover-foreground shadow-xl shadow-black/10">
                 <DropdownMenuItem
                   class="m-1.5 gap-2.5 rounded-xl bg-muted/70 p-2.5 focus:bg-muted data-highlighted:bg-muted dark:bg-white/8 dark:focus:bg-white/10 dark:data-highlighted:bg-white/10"
-                  onSelect={() => void navigate({ to: "/profile/me" })}
+                  onSelect={() => leave(() => void navigate({ to: "/profile/me" }))}
                 >
                   <UserAvatar userId={u().id} name={name()} hasAvatar={hasAvatar()} size="md" class="ring-0" />
                   <span class="min-w-0 flex-1">
@@ -108,7 +119,7 @@ export function SidebarAccount(props: {
                   <IconChevronRight class="h-3.5 w-3.5 shrink-0 text-muted-foreground dark:text-white/50" />
                 </DropdownMenuItem>
                 <div class="px-1.5 pb-1.5">
-                <DropdownMenuItem class="rounded-lg gap-3 font-medium" onSelect={() => void navigate({ to: "/profile/me" })}>
+                <DropdownMenuItem class="rounded-lg gap-3 font-medium" onSelect={() => leave(() => void navigate({ to: "/profile/me" }))}>
                   <IconUserCircle class="h-4 w-4 shrink-0 text-muted-foreground dark:text-white/60" />
                   <span>{t("profile.myProfile")}</span>
                 </DropdownMenuItem>
@@ -116,7 +127,7 @@ export function SidebarAccount(props: {
                   <IconSettings class="h-4 w-4 shrink-0 text-muted-foreground dark:text-white/60" />
                   <span>{t("nav.settings")}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem class="rounded-lg gap-3" onSelect={() => void navigate({ to: "/guide" })}>
+                <DropdownMenuItem class="rounded-lg gap-3" onSelect={() => leave(() => void navigate({ to: "/guide" }))}>
                   <IconGuide class="h-4 w-4 shrink-0 text-muted-foreground dark:text-white/60" />
                   <span>{t("nav.guide")}</span>
                 </DropdownMenuItem>
@@ -128,7 +139,7 @@ export function SidebarAccount(props: {
                 </div>
                 <DropdownMenuSeparator class="my-0 dark:bg-white/8" />
                 <div class="p-1.5">
-                <DropdownMenuItem destructive class="rounded-lg gap-3" onSelect={() => void props.onLogout()}>
+                <DropdownMenuItem destructive class="rounded-lg gap-3" onSelect={() => leave(() => void props.onLogout())}>
                   <IconLogout class="h-4 w-4 shrink-0" />
                   <span>{t("nav.logout")}</span>
                 </DropdownMenuItem>

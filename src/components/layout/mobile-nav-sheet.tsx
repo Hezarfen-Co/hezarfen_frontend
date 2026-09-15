@@ -75,6 +75,13 @@ export function MobileNavSheet(props: {
   });
   const startDrag = (event: PointerEvent) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    // Buttons inside a drag surface (the sheet's X) must keep their own
+    // gesture — setPointerCapture on this parent otherwise eats the click on
+    // touch devices, so the sheet looks stuck open.
+    const target = event.target;
+    if (target instanceof Element && target.closest("button, a, input, textarea, select, [role='button']")) {
+      return;
+    }
     startY = event.clientY;
     setDragging(true);
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
@@ -131,8 +138,10 @@ export function MobileNavSheet(props: {
         )}
         style={dragging() ? { transform: `translateY(${dragY()}px)`, transition: "none" } : undefined}
       >
-        {/* The grab area: handle plus title row. touch-none keeps the browser
-            from claiming the vertical gesture for scrolling. */}
+        {/* Drag only on the handle — keeping the title/close row outside this
+            surface so the X receives taps on mobile (pointer capture on a
+            parent eats button clicks). touch-none keeps the browser from
+            claiming the vertical gesture for scrolling. */}
         <div
           class="shrink-0 touch-none"
           onPointerDown={startDrag}
@@ -140,11 +149,12 @@ export function MobileNavSheet(props: {
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
         >
-        <div class="flex justify-center pt-2.5">
-          <span class="h-1 w-9 rounded-full bg-border" />
+          <div class="flex justify-center pt-2.5 pb-1">
+            <span class="h-1 w-9 rounded-full bg-border" />
+          </div>
         </div>
 
-        <div class="flex items-center justify-between px-4 pb-2 pt-2">
+        <div class="flex shrink-0 items-center justify-between px-4 pb-2 pt-1">
           <h2 class="text-base font-semibold">{t("nav.menu")}</h2>
           <button
             type="button"
@@ -157,7 +167,6 @@ export function MobileNavSheet(props: {
           >
             <IconX class="h-4 w-4" />
           </button>
-        </div>
         </div>
 
         <div class="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-1">
@@ -225,6 +234,7 @@ export function MobileNavSheet(props: {
         <SidebarAccount
           menuPlacement="top-start"
           onLogout={props.onLogout}
+          onNavigateAway={props.onClose}
           onOpenSettings={() => {
             props.onClose();
             props.onOpenProfile?.();
