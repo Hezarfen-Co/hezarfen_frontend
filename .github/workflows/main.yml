@@ -1,0 +1,488 @@
+# VPS deploy, compose-style, split so failure recovery is cheap:
+#
+#   Typecheck       —  tsc --noEmit on its own runner. No browser, no build.
+#   Build and test  —  the unit suite (vitest: node + jsdom projects), the
+#                      production build, then packs dist/ + server.ts into the
+#                      runtime image (deploy/Containerfile.runtime) and uploads
+#                      the image tarball + compose files as the run's artifact.
+#   Deploy          —  SSH: podman load the image, point the deploy-owned
+#                      stack.env's HEZARFEN_TAG at it, install compose.yaml +
+#                      the hezarfen_frontend_compose user unit, restart the
+#                      stack, shell-gated rollback to the previous tag,
+#                      independent after-the-fact verify.
+#
+# Typecheck and Build and test run in parallel. Deploy needs both green.
+# A new push cancels in-flight Typecheck/Build on the same ref; it never
+# cancels an in-flight Deploy (two deploys racing would interleave the compose
+# stack).
+#
+# The split is the recovery story, not ceremony:
+#   * "Re-run failed jobs" on a run whose Deploy step failed re-runs ONLY the
+#     ~1-minute deploy job — the built image is still in the run's artifact.
+#   * workflow_dispatch (the manual door: Actions tab → Run workflow on main,
+#     or `gh workflow run main.yml --ref main`) deploys WITHOUT the suite: it
+#     takes the newest artifact a green Build-and-test produced — which can lag
+#     HEAD while a push is mid-CI, and that is the point: redeploy the
+#     known-good image, e.g. after a server-side fix (env file, proxy). For
+#     env-only changes a plain
+#     `ssh <vps> 'systemctl --user restart hezarfen_frontend_compose'` needs no
+#     workflow at all: the stack re-reads its env files on the next
+#     `podman compose up`.
+#
+# One-time prerequisites, outside the workflow's reach:
+#   * the repo secrets SSH_PRIVATE_KEY / SSH_HOST / SSH_USER — the same three
+#     names the backend's deploy uses;
+#   * `loginctl enable-linger <user>` on the server unless the deploy user
+#     already has it — user units need a running user manager;
+#   * podman plus a compose provider on the server (the deploy checks for both
+#     and fails with a one-line install hint);
+#   * the operator's ~/hezarfen_frontend/hezarfen_frontend.env (0600), written
+#     once by hand from deploy/hezarfen_frontend.env.example. The deploy never
+#     creates or overwrites it.
+#
+# Two suites stay out of CI on purpose: Playwright e2e drives a Vite dev server
+# against a LIVE backend and logs in with the E2E_* account, and the vitest
+# contract suite (`bun run test:contract`) skips green without a real
+# CONTRACT_BASE_URL. Both are local/on-demand runs, not merge gates.
+
+name: VPS deploy
+
+on:
+  push:
+    branches:
+      - main
+  # The manual redeploy door — see the header comment for how and why.
+  workflow_dispatch:
+
+# Deploy serialisation lives on the deploy job, not the workflow: a new push
+# must be allowed to cancel stale Typecheck/Build without touching an
+# in-flight VPS swap.
+
+env:
+  # The systemd user unit that wraps `podman compose`. See
+  # deploy/hezarfen_frontend_compose.service.
+  SERVICE: hezarfen_frontend_compose
+  # The deploy lives in this subdirectory of the SSH user's home. The home
+  # itself is resolved on the server ($HOME), so switching the deploy user
+  # moves the path with it — a baked-in absolute path once kept pointing at
+  # the previous user's home and failed the deploy on permissions.
+  DEPLOY_SUBDIR: hezarfen_frontend
+  # Compose interpolates its knobs from this file on the server (passed as
+  # --env-file, and to the frontend container as env_file). The deploy never
+  # writes it, only checks it exists and carries the BACKEND_ORIGIN line prod
+  # must not run without.
+  ENV_FILE_NAME: hezarfen_frontend.env
+
+jobs:
+  typecheck:
+    name: Typecheck
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: ci-${{ github.workflow }}-${{ github.ref }}-typecheck
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          # The 1.3.x line this lockfile was written with (the repo's own bun
+          # is 1.3.14). setup-bun takes a semver range; the runtime image
+          # floats on `oven/bun:1`, so the two can differ by a patch.
+          bun-version: "1.3.x"
+      - name: Cache bun
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          # Keyed on the lockfile: a dependency change is a new cache, and
+          # the restore-key keeps a cold install to the added packages.
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Typecheck
+        run: bun run check
+
+  build:
+    name: Build and test
+    # Pushes only: a manual redeploy reuses the newest green artifact
+    # instead of paying the suite again.
+    if: github.event_name == 'push'
+    concurrency:
+      group: ci-${{ github.workflow }}-${{ github.ref }}-build
+      cancel-in-progress: true
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.x"
+      - name: Cache bun
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      # A broken build must never reach the server: the unit suite and the
+      # typecheck inside `bun run build` both gate the deploy.
+      - name: Test
+        run: bun run test
+
+      - name: Build the SPA
+        run: |
+          set -euo pipefail
+          bun run build          # tsc --noEmit && vite build -> dist/
+          test -f dist/index.html
+          du -sh dist
+
+      - name: Stage the runtime context
+        run: |
+          set -euo pipefail
+          mkdir -p stage
+          # dist/ and server.ts are exactly what deploy/Containerfile.runtime
+          # COPYs; nothing else from the repo goes into the shipped image.
+          cp -r dist stage/dist
+          cp server.ts stage/server.ts
+          ls -l stage
+
+      - name: Build the runtime image
+        run: |
+          set -euo pipefail
+          # Pack the already-built SPA into the slim runtime image. Never
+          # build from source here: the bun/vite build ran above (same
+          # division of labour as the backend's deploy).
+          docker build -f deploy/Containerfile.runtime -t localhost/hezarfen_frontend:$GITHUB_SHA stage/
+          docker save localhost/hezarfen_frontend:$GITHUB_SHA | gzip > stage/hezarfen_frontend.tar.gz
+
+      - name: Stage the compose bundle
+        run: |
+          set -euo pipefail
+          cp compose.yaml deploy/hezarfen_frontend_compose.service stage/
+          echo -n "$GITHUB_SHA" > stage/tag
+          # Everything the deploy installs on the server must be here; a
+          # missing piece fails here, on the runner, not mid-deploy on the
+          # VPS. (stage/ also still holds dist/ and server.ts — docker build
+          # context, not deploy payload.)
+          test -f stage/hezarfen_frontend.tar.gz
+          test -f stage/compose.yaml
+          test -f stage/hezarfen_frontend_compose.service
+          test -f stage/tag
+          ls -l stage
+
+      # The deploy job (and, later, a manual redeploy) consumes this. 30
+      # days is also the dispatch door's reach-back window: an older green
+      # build's artifact is gone, and the redeploy fails loudly instead of
+      # silently shipping something ancient.
+      - name: Upload the release
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: stage
+          retention-days: 30
+
+  deploy:
+    name: Deploy
+    needs: [typecheck, build]
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    # Push: only behind a green typecheck AND a green build — both gate the
+    # server. Dispatch: both CI jobs are skipped on purpose (see their `if`),
+    # and `always()` is what stops that skip from cascading past this gate.
+    if: >-
+      always() &&
+      ((needs.typecheck.result == 'success' && needs.build.result == 'success') ||
+       (github.event_name == 'workflow_dispatch' &&
+        needs.typecheck.result == 'skipped' &&
+        needs.build.result == 'skipped'))
+    runs-on: ubuntu-24.04
+    steps:
+      # A push deploy takes the release this very run built and gated.
+      - name: Fetch this run's release
+        if: github.event_name == 'push'
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: stage
+
+      # A manual redeploy takes the newest release whose BUILD job went
+      # green — not the newest fully-green run: a run can be red because
+      # Deploy failed at the health gate while its build is exactly the
+      # release we want back on the server. `gh run list --status success`
+      # would skip exactly those, hence the per-run job check.
+      - name: Find the newest green build
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_id=""
+          for rid in $(gh run list --workflow main.yml --branch main --event push --limit 15 --json databaseId --jq '.[].databaseId'); do
+            if [ "$(gh run view "$rid" --json jobs --jq '.jobs[] | select(.name=="Build and test") | .conclusion')" = "success" ]; then
+              run_id=$rid
+              break
+            fi
+          done
+          if [ -z "$run_id" ]; then
+            echo 'no run on main has a green Build-and-test job (or its artifact has expired)' >&2
+            exit 1
+          fi
+          echo "redeploying the release from run $run_id"
+          echo "run_id=$run_id" >> "$GITHUB_ENV"
+
+      - name: Fetch the green release
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: stage
+          run-id: ${{ env.run_id }}
+          github-token: ${{ github.token }}
+
+      # The dispatch path downloads a possibly-days-old artifact; re-check
+      # the bundle is whole before pointing any of it at the server.
+      - name: Check the release is complete
+        run: |
+          set -euo pipefail
+          test -f stage/hezarfen_frontend.tar.gz
+          test -f stage/compose.yaml
+          test -f stage/hezarfen_frontend_compose.service
+          test -f stage/tag
+
+      - name: Install SSH keys
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+
+      - name: Upload the release
+        run: |
+          set -euo pipefail
+          ssh_target="${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}"
+
+          # The server's login shell is not bash, and ssh would hand this
+          # script to it; `bash -s` takes it on stdin instead, so the login
+          # shell only ever parses one plain command.
+          #
+          # The deploy path is $DEPLOY_SUBDIR under the SSH user's home,
+          # resolved on the server as $HOME: there is no path secret to go
+          # stale, and switching the deploy user moves the deploy with it.
+          ssh "$ssh_target" "bash -se -- '$DEPLOY_SUBDIR'" <<'REMOTE'
+          set -euo pipefail
+          case "$1" in
+            ''|/*|*..*)
+              echo "Refusing a broad deploy subdirectory: '$1'" >&2
+              exit 1
+              ;;
+          esac
+          deploy_path=$HOME/$1
+          # The deploy path holds the operator's hezarfen_frontend.env, the
+          # compose files and the tag files; nothing in it is deleted
+          # wholesale, ever.
+          mkdir -p -- "$deploy_path"
+          REMOTE
+          # stdin carries the bundle, so the script cannot; the extraction
+          # still goes through bash -c because the login shell is not bash
+          # and would not expand $HOME. Only the four deploy files are
+          # installed on the server: the staged dist/ and server.ts ride
+          # along inside the artifact (they were docker build context), but
+          # nothing ever extracts them there.
+          tar -C stage -czf - hezarfen_frontend.tar.gz compose.yaml hezarfen_frontend_compose.service tag | ssh "$ssh_target" "bash -c 'exec tar -xzf - -C \"\$HOME/\$1\"' -- '$DEPLOY_SUBDIR'"
+
+      - name: Load the image and restart the stack
+        run: |
+          set -euo pipefail
+          ssh_target="${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}"
+
+          # bash -s for the same reason as above: the login shell is not
+          # bash and must never see this script.
+          ssh "$ssh_target" "bash -se -- '$DEPLOY_SUBDIR' '$SERVICE' '$ENV_FILE_NAME'" <<'REMOTE'
+          set -euo pipefail
+          deploy_path=$HOME/$1
+          service=$2
+          env_file=$deploy_path/$3
+          export XDG_RUNTIME_DIR=/run/user/$(id -u)
+          # compose.yaml is resolved from the working directory: the unit's
+          # ExecStart carries WorkingDirectory, but the rollback compose up
+          # and a first-deploy down run from right here.
+          cd -- "$deploy_path"
+
+          # Read before anything moves: the env file is the operator's, on
+          # the server, written once by hand (see
+          # deploy/hezarfen_frontend.env.example for the keys). The deploy
+          # never creates or overwrites it. BACKEND_ORIGIN is load-bearing:
+          # without it compose would silently fall back to its laptop default
+          # and the container would proxy /api somewhere prod did not choose.
+          if [ ! -f "$env_file" ]; then
+            echo "missing $env_file — create it (0600) from deploy/hezarfen_frontend.env.example" >&2
+            exit 1
+          fi
+          chmod 0600 -- "$env_file"
+          for key in BACKEND_ORIGIN; do
+            grep -Eq "^${key}=.+" "$env_file" || {
+              echo "no non-empty ${key}= line in $env_file — prod must not run on the compose default" >&2
+              exit 1
+            }
+          done
+
+          # PORT is optional there (compose falls back to 5173), but the health
+          # gate below has to probe the port the stack actually published, so
+          # read the same value compose will — same file, no second place to
+          # keep in sync. Plain KEY=value, as deploy/hezarfen_frontend.env.example
+          # documents.
+          port=$(sed -n 's/^PORT=\(.*\)$/\1/p' "$env_file" | tail -1)
+          port=${port:-5173}
+
+          # Rootless podman plus a compose provider; fail with the fix, not
+          # a bare command-not-found three steps in.
+          command -v podman >/dev/null || {
+            echo "podman not found — install podman and a compose provider (e.g. dnf install podman podman-compose)" >&2
+            exit 1
+          }
+          podman compose version >/dev/null 2>&1 || {
+            echo "'podman compose' unavailable — install a compose provider (podman-compose or docker-compose)" >&2
+            exit 1
+          }
+
+          # Load THIS build's image and read the tag the build stamped into
+          # it (build time and deploy time must agree on what is shipping).
+          gunzip -c "$deploy_path/hezarfen_frontend.tar.gz" | podman load
+          tag=$(cat -- "$deploy_path/tag")
+
+          # Tag rotation: previous_tag is the rollback target (absent on a
+          # first deploy); current_tag records what should now be running.
+          if [ -f "$deploy_path/current_tag" ]; then
+            cp -- "$deploy_path/current_tag" "$deploy_path/previous_tag"
+          fi
+          printf '%s\n' "$tag" > "$deploy_path/current_tag"
+
+          # stack.env is deploy-owned (unlike the knobs file): it carries
+          # only the image tag, and --env-file order makes it win over the
+          # operator's file for HEZARFEN_TAG.
+          printf 'HEZARFEN_TAG=%s\n' "$tag" > "$deploy_path/stack.env"
+
+          # The freshly extracted bundle: compose file and unit are
+          # world-readable.
+          chmod 0644 -- "$deploy_path/compose.yaml" "$deploy_path/hezarfen_frontend_compose.service"
+          # The image tarball was only a transport; the image is loaded into
+          # podman's storage now.
+          rm -f -- "$deploy_path/hezarfen_frontend.tar.gz"
+
+          compose_up() {
+            podman compose --env-file "$env_file" --env-file "$deploy_path/stack.env" up -d --no-build
+          }
+          rollback() {
+            if [ -f "$deploy_path/previous_tag" ]; then
+              prev=$(cat -- "$deploy_path/previous_tag")
+              printf 'HEZARFEN_TAG=%s\n' "$prev" > "$deploy_path/stack.env"
+              printf '%s\n' "$prev" > "$deploy_path/current_tag"
+              compose_up
+              echo "rolled back to $prev" >&2
+            else
+              # First deploy: nothing to roll back to, so stop the
+              # half-brought-up stack. Plain down — the frontend is
+              # stateless, but the shape stays identical to the backend's.
+              podman compose --env-file "$env_file" --env-file "$deploy_path/stack.env" down
+              echo 'first deploy failed; stack stopped' >&2
+            fi
+          }
+
+          # The unit ships with the release: a freshly provisioned box has
+          # no unit until the first deploy writes it, and a changed unit
+          # lands with the compose file that needs it.
+          mkdir -p -- "$HOME/.config/systemd/user"
+          install -m 0644 -- "$deploy_path/hezarfen_frontend_compose.service" "$HOME/.config/systemd/user/$service.service"
+          systemctl --user daemon-reload
+
+          # The unit is a oneshot with RemainAfterExit, so `start` on the
+          # active (exited) unit would be a no-op — every deploy restarts
+          # to re-run ExecStart. A failed restart (bad interpolation, a
+          # provider hiccup) must still reach the health gate below: it
+          # decides between rollback and success.
+          systemctl --user enable -- "$service"
+          systemctl --user restart "$service" || true
+
+          # The oneshot returns before the container has bound its port. Wait
+          # for the SPA shell rather than a clock: a 200 whose body carries
+          # the index.html title means the new build is really being served.
+          # 45 attempts, not the backend's 90: every image here is already
+          # loaded and there is no database to warm up behind the frontend.
+          health_ok=0
+          for _ in $(seq 1 45); do
+            served=$(curl -fsS "http://127.0.0.1:$port/" 2>/dev/null) || true
+            case "$served" in
+              *'<title>Hezarfen</title>'*) health_ok=1; break ;;
+            esac
+            sleep 1
+          done
+          if [ "$health_ok" -ne 1 ]; then
+            echo 'the SPA shell never served; rolling back' >&2
+            rollback
+            exit 1
+          fi
+
+          # A stale stack from an older deploy can answer too, so the
+          # running container must be THIS build's image, or it rolls back.
+          image=$(podman inspect -f '{{.Config.Image}}' hezarfen_frontend)
+          case "$image" in
+            *"$tag"*) ;;
+            *)
+              echo "the shell served, but the container runs '$image' — not this build ($tag); rolling back" >&2
+              rollback
+              exit 1
+              ;;
+          esac
+          echo 'hezarfen_frontend_compose is up'
+          REMOTE
+
+      # The independent after-the-fact check: the container answering must
+      # still be the current tag's, and the SPA shell must be served.
+      - name: Verify the served app
+        run: |
+          set -euo pipefail
+          ssh_target="${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}"
+          # One remote script, im-style: mixing runner-side and server-side
+          # variables in nested ssh quoting once shipped a check that failed
+          # on a healthy deploy. Everything happens inside the heredoc.
+          ssh "$ssh_target" "bash -se -- '$DEPLOY_SUBDIR'" <<'REMOTE'
+          set -euo pipefail
+          deploy_path=$HOME/$1
+          export XDG_RUNTIME_DIR=/run/user/$(id -u)
+          cd -- "$deploy_path"
+          # Same derivation as the deploy step: the gate must probe the port
+          # the operator's file published, not a remembered default.
+          env_file=$deploy_path/hezarfen_frontend.env
+          port=$(sed -n 's/^PORT=\(.*\)$/\1/p' "$env_file" | tail -1)
+          port=${port:-5173}
+          tag=$(cat -- "$deploy_path/current_tag")
+          image=$(podman inspect -f '{{.Config.Image}}' hezarfen_frontend)
+          case "$image" in
+            *"$tag"*) ;;
+            *)
+              echo "container runs '$image', not the current tag '$tag'" >&2
+              exit 1
+              ;;
+          esac
+          served=$(curl -fsS "http://127.0.0.1:$port/") || { echo 'the SPA shell did not serve' >&2; exit 1; }
+          case "$served" in
+            *'<title>Hezarfen</title>'*) ;;
+            *) echo 'the SPA shell served without its title' >&2; exit 1 ;;
+          esac
+          # NOT a gate: /api is proxied to a different deployment, so a
+          # backend outage must never fail (or roll back) a frontend deploy.
+          # Reported so a broken proxy target is visible in the deploy log.
+          if curl -fsS -o /dev/null "http://127.0.0.1:$port/api/time"; then
+            echo 'shell ok, /api reachable'
+          else
+            echo 'shell ok, but /api/time did not answer — check BACKEND_ORIGIN and the backend'
+          fi
+          REMOTE
+
+      - name: Cleaning
+        run: rm -rf ~/.ssh

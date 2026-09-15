@@ -1,20 +1,53 @@
+# The frontend: one container behind podman compose — Bun serves the built SPA
+# and reverse-proxies /api/* to the backend.
+#
+# Knobs live in two places and are never mixed (see README):
+#   laptop    the ${VAR:-default} interpolations below — `podman compose up`
+#             works with zero extra files
+#   server    ~/hezarfen_frontend/hezarfen_frontend.env (0600, written by hand
+#             from deploy/hezarfen_frontend.env.example)
+#
+# Interpolation reads the --env-file arguments (hezarfen_frontend.env first,
+# deploy-owned stack.env second). The `env_file:` on the service passes the
+# same file into the container, so extra keys reach it without being listed in
+# `environment:`. `environment:` wins over `env_file`, which is why every knob
+# is interpolated here: one operator file then drives compose AND the
+# container. PORT moves the listener, the published port and the healthcheck
+# together; BACKEND_ORIGIN moves the proxy target.
+
 services:
   frontend:
     build:
       context: .
       dockerfile: Containerfile
-    image: localhost/hezarfen-frontend:latest
-    container_name: hezarfen-frontend
+    # HEZARFEN_TAG comes from the deploy-owned stack.env (--env-file), or the
+    # latest local build on a laptop.
+    image: localhost/hezarfen_frontend:${HEZARFEN_TAG:-latest}
+    container_name: hezarfen_frontend
     ports:
-      - "5173:5173"
+      # Loopback only: terminate TLS on a reverse proxy in front of this. Host
+      # and container port both follow PORT, so the publish can never drift
+      # from what the server listens on.
+      - "127.0.0.1:${PORT:-5173}:${PORT:-5173}"
+    env_file:
+      # Written once by the operator on the server (0600); absent on a laptop.
+      - path: hezarfen_frontend.env
+        required: false
     environment:
-      PORT: "5173"
-      # Remote backend origin; server.ts keeps browser traffic same-origin.
-      BACKEND_ORIGIN: "${BACKEND_ORIGIN:-https://hezarfen.dizey.sh}"
+      # Listen port, read from hezarfen_frontend.env (passed as --env-file by
+      # the systemd unit and the deploy; see the header note). server.ts reads
+      # PORT, so this one value moves the container, the publish above and the
+      # healthcheck together.
+      PORT: "${PORT:-5173}"
+      # Remote backend origin; server.ts keeps browser traffic same-origin by
+      # proxying /api/* (HTTP and WebSocket) here. Must be reachable FROM
+      # INSIDE the container.
+      BACKEND_ORIGIN: ${BACKEND_ORIGIN:-https://hezarfen.dizey.sh}
     restart: unless-stopped
     healthcheck:
-      # Bun-based: the slim runtime image ships no curl.
-      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:5173/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      # Bun-based: the slim runtime image ships no curl. Reads the container's
+      # own PORT, so a moved port does not silently wedge the healthcheck.
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:'+(Bun.env.PORT??5173)+'/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3

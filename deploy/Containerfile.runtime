@@ -1,0 +1,21 @@
+# CI-only runtime image: the build CONTEXT is `stage/`, which holds the
+# already-built `dist/` and `server.ts` — never the repo (see
+# .github/workflows/main.yml). The laptop path is the repo-root Containerfile,
+# which installs dependencies and runs `vite build`; this one only packs that
+# build's output, so the shipped image carries no source, no node_modules and
+# no toolchain.
+#
+# Keep the runtime stage in sync with the repo Containerfile's second stage.
+
+FROM docker.io/oven/bun:1-slim
+WORKDIR /app
+COPY dist ./dist
+COPY server.ts ./server.ts
+
+ENV PORT=5173
+EXPOSE 5173
+USER bun
+
+# Healthcheck lives in compose.yaml (podman's OCI image format ignores a
+# Containerfile HEALTHCHECK).
+CMD ["bun", "run", "server.ts"]

@@ -51,7 +51,34 @@ bun run build
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-> **Proxy Note**: Vite server and the production Bun server proxy `/api/*` and WebSocket connections to `BACKEND_ORIGIN` (default: `https://hezarfen.dizey.sh`), preserving HttpOnly session cookies across same-origin calls. Override it when needed (`BACKEND_ORIGIN=http://127.0.0.1:7656 bun run dev` or `BACKEND_ORIGIN=http://host.containers.internal:7656 podman compose up -d --build`).
+> **Proxy Note**: Vite server and the production Bun server proxy `/api/*` and WebSocket connections to `BACKEND_ORIGIN` (default: `https://hezarfen.dizey.sh`), preserving HttpOnly session cookies across same-origin calls. Override it when needed: `BACKEND_ORIGIN=http://127.0.0.1:7656 bun run dev` against a local backend, or `BACKEND_ORIGIN` in `hezarfen_frontend.env` for the compose stack (see "Run in a container" below).
+
+---
+
+## 🐳 Run in a container (podman)
+
+```bash
+podman compose up -d --build   # build + start, http://127.0.0.1:5173
+podman compose logs -f frontend
+podman compose down            # stop
+```
+
+The `Containerfile` is a two-stage build: `bun install --frozen-lockfile` plus `bun run build` produce `dist/`, and `oven/bun:1-slim` serves it with `server.ts` — which also reverse-proxies `/api/*` (plain HTTP and the exam-room WebSocket) to `BACKEND_ORIGIN`. No nginx, no node_modules at runtime, no state: one container and no volumes. The port is published on loopback only — `127.0.0.1:<PORT>:<PORT>`, 5173 by default — so a server deployment terminates TLS in a reverse proxy in front of it.
+
+**Knobs live in two places and are never mixed.** Locally the `${VAR:-default}` interpolations in `compose.yaml` are enough: the `up` above works with zero extra files. On a server the operator copies `deploy/hezarfen_frontend.env.example` to `$HOME/hezarfen_frontend/hezarfen_frontend.env`, `chmod 0600` it and edits it — nothing automated creates, overwrites or uploads that file. That one file drives the whole stack: `BACKEND_ORIGIN` sets the proxy target, `PORT` moves the container's listener, the host-loopback publish and the deploy's health gate together, and any further key is passed into the container untouched (the service also declares the file as its optional `env_file:`). Compose reads it through `--env-file`: plain `podman compose up` uses the defaults in `compose.yaml`, so pass the file when you have one (`podman compose --env-file hezarfen_frontend.env up -d --build`).
+
+`deploy/hezarfen_frontend_compose.service` is a systemd **user** unit that brings the stack up at boot:
+
+```bash
+podman compose --env-file ~/hezarfen_frontend/hezarfen_frontend.env \
+               --env-file ~/hezarfen_frontend/stack.env up -d --no-build
+```
+
+`--env-file` feeds both compose's interpolation and — through `env_file:` — the container; the second file is compose-owned and carries `HEZARFEN_TAG` (a later `--env-file` wins for duplicate keys). Because the unit passes `--no-build`, the image must already exist on the host (`podman compose build`, or `podman load` of a tarball shipped from elsewhere). After an env change: `systemctl --user restart hezarfen_frontend_compose`.
+
+Deploying is GitHub Actions' job, not the server's. `.github/workflows/main.yml` typechecks (`tsc --noEmit`, its own runner, parallel with the rest), runs the vitest suite, builds the SPA, packs `dist/` + `server.ts` into the runtime image (`deploy/Containerfile.runtime`), and ships the image tarball together with `compose.yaml`, the `hezarfen_frontend_compose.service` unit and a `tag` file as the run's artifact. The deploy job loads that image on the server and starts the stack with `podman compose up -d --no-build`; the tag travels in a deploy-owned `stack.env`, so a release never rewrites the operator's knobs file. A health gate protects the swap: the new container must serve the SPA shell and must be *this* build's image, otherwise the deploy rolls back to `previous_tag` (and on a first deploy stops the stack instead). The operator's only manual step is writing the env file once (above).
+
+It needs three repository secrets — `SSH_PRIVATE_KEY`, `SSH_HOST`, `SSH_USER`, the same three names the backend deploy uses — plus `loginctl enable-linger` for the deploy user. `workflow_dispatch` (Actions → Run workflow, or `gh workflow run main.yml --ref main`) redeploys the newest green build without re-running the suite, which is the door to use when only the server side changed.
 
 ---
 

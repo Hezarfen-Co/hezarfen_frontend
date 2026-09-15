@@ -35,3 +35,14 @@ history.txt
 
 # Browser-verification screenshots land in the repo root; never commit them
 /*.png
+
+# Compose stack env files: the operator's knobs (hezarfen_frontend.env) and the
+# deploy-owned HEZARFEN_TAG carrier (stack.env) are machine-local, never secrets
+# in git. See deploy/hezarfen_frontend.env.example for the tracked template.
+hezarfen_frontend.env
+stack.env
+.env
+
+# The CI deploy bundle (image tarball + compose files + tag) is assembled into
+# stage/ by .github/workflows/main.yml; a local rehearsal must not commit it.
+stage/

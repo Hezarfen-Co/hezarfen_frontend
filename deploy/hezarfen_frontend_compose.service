@@ -1,0 +1,43 @@
+# systemd USER unit running the frontend via podman compose. Files expected in
+# %h/hezarfen_frontend:
+#   compose.yaml                     from this repo (or the deploy artifact)
+#   hezarfen_frontend.env            0600, written ONCE BY HAND from
+#                                    deploy/hezarfen_frontend.env.example —
+#                                    nothing automated creates or overwrites it
+#   stack.env                        compose-owned; carries HEZARFEN_TAG
+#
+# The unit starts with --no-build, so the image must already exist on the host:
+#   podman compose build             # build it here
+#   podman load -i image.tar         # or load one shipped from elsewhere
+#
+# Keys read from hezarfen_frontend.env (full docs in
+# deploy/hezarfen_frontend.env.example):
+#   BACKEND_ORIGIN                   the origin /api/* is proxied to; must be
+#                                    reachable from inside the container
+#   PORT                             listen port + published port, default 5173
+#
+# Env-only restart (re-runs `compose up -d`, recreating the container when its
+# environment changed):
+#   systemctl --user restart hezarfen_frontend_compose
+#
+# Reboots heal themselves: the user session lingers (`loginctl enable-linger`)
+# and this unit runs compose again at boot.
+
+[Unit]
+Description=Hezarfen frontend compose stack (Bun static server + /api proxy)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=%h/hezarfen_frontend
+# Later --env-file wins for duplicate keys: the operator's knobs file first,
+# the deploy-owned stack.env (HEZARFEN_TAG) second.
+ExecStart=/usr/bin/podman compose --env-file %h/hezarfen_frontend/hezarfen_frontend.env --env-file %h/hezarfen_frontend/stack.env up -d --no-build
+# No -v: the frontend is stateless, but named volumes must survive a stop.
+ExecStop=/usr/bin/podman compose down
+TimeoutStartSec=180
+
+[Install]
+WantedBy=default.target
