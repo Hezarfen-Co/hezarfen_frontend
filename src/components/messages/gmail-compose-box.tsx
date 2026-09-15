@@ -86,9 +86,9 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
       >
         {/* Gmail Header */}
         <div class="flex h-9 items-center justify-between rounded-t-xl border-b border-border-hairline bg-surface-overlay px-4">
-          <div class="flex items-center gap-2">
+          <div class="flex min-w-0 flex-1 items-center gap-2">
             <span class="h-2.5 w-2.5 rounded-full bg-primary" />
-            <h3 class="text-xs font-bold text-foreground truncate max-w-[340px]">
+            <h3 class="min-w-0 truncate text-xs font-bold text-foreground">
               {subject() ? subject() : t("messages.newMessage")}
             </h3>
           </div>
