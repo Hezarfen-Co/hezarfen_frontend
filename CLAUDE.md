@@ -25,6 +25,9 @@ Bilingual codebase: Turkish UI labels, English code + commits.
 ## Skills
 
 Load on demand by area — `solidjs-pitfalls` | `ui-conventions` | `api-layer` |
-`commit-workflow` | `dashboard-design`. Source of truth: `.claude/skills/<name>/SKILL.md`.
+`commit-workflow` | `dashboard-design` |
+`check-api-contract` (live Swagger/OpenAPI vs `src/api/`; check it before
+saying an endpoint does or does not exist — the backend repo is not local).
+Source of truth: `.claude/skills/<name>/SKILL.md`.
 
 Deeper docs by area: `docs/ui/` · `docs/auth/` · `docs/frontend/` · `docs/backend/`.
