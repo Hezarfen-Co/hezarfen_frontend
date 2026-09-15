@@ -7,8 +7,14 @@ description: "Check Hezarfen's live Swagger/OpenAPI contract against the fronten
 
 Treat the deployed OpenAPI document as the primary contract:
 
-- Swagger UI: `https://hezarfen.dizey.sh/swagger/`
-- OpenAPI JSON: `https://hezarfen.dizey.sh/api-docs/openapi.json`
+- Swagger UI: `https://hezarfen-backend.dizey.sh/swagger/`
+- OpenAPI JSON: `https://hezarfen-backend.dizey.sh/api-docs/openapi.json`
+
+`hezarfen.dizey.sh` is the FRONTEND (it serves the SPA and proxies only
+`/api/*` to the backend), so `/swagger/` and `/api-docs/` there return the SPA
+shell, not the contract. The `hezarfen-backend.dizey.sh` door is a temporary
+development exposure of the backend (Ferron -> 127.0.0.1:7656) and will be
+hidden later; ask Burak for the current door if it stops answering.
 
 Fetch the machine-readable document directly with `curl -fsSL` and use `jq`
 to keep output focused. Do not clone or inspect the private backend repository

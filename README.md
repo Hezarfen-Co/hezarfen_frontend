@@ -31,7 +31,7 @@ A modern, high-performance **SolidJS + TypeScript** web application for the Heza
 ## 📦 Prerequisites & Setup
 
 - **Node.js** 20+ or **bun** (recommended)
-- Access to the Hezarfen backend at `https://hezarfen.dizey.sh`
+- A Hezarfen backend to talk to — the deployed frontend proxies `/api/*` to it, so `https://hezarfen.dizey.sh` is enough in a browser; for a direct backend (dev) door use `https://hezarfen-backend.dizey.sh`, or `BACKEND_ORIGIN=http://127.0.0.1:7656` against a backend on the same machine
 
 ### Installation & Development
 
