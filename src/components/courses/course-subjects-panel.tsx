@@ -160,7 +160,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
       {error() && <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
 
       <Suspense fallback={<DataTableSkeleton />}>
-        <Show when={(subjects() ?? []).length > 0} fallback={<EmptyState title={t("subjects.empty")} />}>
+        <Show when={(subjects() ?? []).length > 0} fallback={<EmptyState kind="courses" title={t("subjects.empty")} />}>
           <DataTable columns={columns()} data={subjects() ?? []} filterColumn="name" enablePagination pageSize={10} />
         </Show>
       </Suspense>

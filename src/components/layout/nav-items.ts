@@ -315,17 +315,25 @@ const GROUPS_BY_ROLE: Record<Role, NavGroup[]> = {
   parent: PARENT_GROUPS,
 };
 
-// The mobile bottom tab bar keeps its own small, role-specific set — Figma's
-// desktop sidebar has no equivalent "primary strip" (only "Ana Sayfa" sits
-// outside the groups there), so this stays a phone-only affordance built
-// from items that also exist in the role's group tree above.
-const PRIMARY_BY_ROLE: Record<Role, NavItem[]> = {
-  student: [HOME_ITEM, { id: "exam-results", to: "/exams", labelKey: "nav.examResults", Icon: IconExam, module: "exams" }, { id: "topic-mastery", to: "/marks", labelKey: "nav.topicMastery", Icon: IconChart, exactRole: "student", module: "marks" }],
-  teacher: [HOME_ITEM, { id: "my-classes", to: "/management/classes", labelKey: "nav.myClasses", Icon: IconSchool }, { id: "my-schedule", to: "/calendar", labelKey: "nav.mySchedule", Icon: IconCalendarDays }],
-  manager: [HOME_ITEM, { id: "class-groups", to: "/management/classes", labelKey: "nav.classGroups", Icon: IconSchool, minRole: "teacher" }, { id: "exams", to: "/exams", labelKey: "nav.exams", Icon: IconExam, minRole: "teacher", module: "exams" }],
-  admin: [HOME_ITEM, { id: "class-groups", to: "/management/classes", labelKey: "nav.classGroups", Icon: IconSchool, minRole: "teacher" }, { id: "exams", to: "/exams", labelKey: "nav.exams", Icon: IconExam, minRole: "teacher", module: "exams" }],
-  parent: [HOME_ITEM, { id: "progress-report", to: "/students", labelKey: "nav.progressReport", Icon: IconReportAnalytics, exactRole: "parent" }, { id: "appointments", to: "/appointments", labelKey: "nav.appointmentsAndCommunication", Icon: IconClock, exactRole: "parent", module: "appointments" }],
+// The mobile bottom tab bar: Home plus two of the role's busiest pages, then
+// the bar's own Search and Menu buttons. Entries are picked by id from the
+// role's sidebar tree, so a tab always carries the same icon and label as its
+// sidebar row.
+const PRIMARY_IDS_BY_ROLE: Record<Role, string[]> = {
+  student: ["my-homework", "exam-results"],
+  teacher: ["my-classes", "student-attendance"],
+  manager: ["students-roster", "class-groups"],
+  admin: ["students-roster", "class-groups"],
+  parent: ["progress-report", "appointments"],
 };
+
+function primaryItemsFor(role: Role): NavItem[] {
+  const all = GROUPS_BY_ROLE[role].flatMap((group) => group.items);
+  const picked = PRIMARY_IDS_BY_ROLE[role]
+    .map((id) => all.find((item) => item.id === id))
+    .filter((item): item is NavItem => item !== undefined);
+  return [HOME_ITEM, ...picked];
+}
 
 function itemVisible(item: NavItem, role: Role | undefined) {
   if (!role) return false;
@@ -347,7 +355,7 @@ export function moduleVisible(item: NavItem, enabled: readonly string[] | null |
 
 export function primaryNavItems(role: Role | undefined, enabled?: readonly string[] | null): NavItem[] {
   if (!role) return [];
-  return PRIMARY_BY_ROLE[role].filter((item) => moduleVisible(item, enabled));
+  return primaryItemsFor(role).filter((item) => itemVisible(item, role) && moduleVisible(item, enabled));
 }
 
 /** The full, role-specific group tree — desktop sidebar and the mobile menu

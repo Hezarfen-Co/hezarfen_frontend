@@ -207,7 +207,7 @@ export function CourseHomeworkPanel(props: {
       </Show>
 
       <Suspense fallback={<DataTableSkeleton />}>
-        <Show when={(homework() ?? []).length > 0} fallback={<EmptyState title={t("homework.empty")} />}>
+        <Show when={(homework() ?? []).length > 0} fallback={<EmptyState kind="homework" title={t("homework.empty")} />}>
           <DataTable columns={columns()} data={homework() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("homework.empty")} onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })} />
         </Show>
       </Suspense>

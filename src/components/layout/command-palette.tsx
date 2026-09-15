@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   IconBook,
@@ -17,6 +17,7 @@ import {
   IconUsers,
   IconX,
 } from "@/components/ui/icons";
+import { getUserSearch } from "@/api/users";
 import { HOME_ITEM, visibleNavGroups } from "@/components/layout/nav-items";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -31,7 +32,7 @@ export type CommandPaletteProps = {
   onOpenProfile?: () => void;
 };
 
-type CommandCategory = "actions" | "pages" | "system";
+type CommandCategory = "people" | "actions" | "pages" | "system";
 
 type CommandItem = {
   id: string;
@@ -59,6 +60,22 @@ export function CommandPalette(props: CommandPaletteProps) {
   let listRef: HTMLDivElement | undefined;
 
   const role = () => auth.user()?.role;
+
+  // Student lookup moved here from the dashboard hero. `/users/search` is the
+  // app's only search endpoint and the user detail page is admin-only, so the
+  // "people" section exists for admins alone.
+  const [peopleQuery, setPeopleQuery] = createSignal("");
+  let peopleDebounce: ReturnType<typeof setTimeout> | undefined;
+  createEffect(() => {
+    const q = query().trim();
+    clearTimeout(peopleDebounce);
+    peopleDebounce = setTimeout(() => setPeopleQuery(q.length >= 2 ? q : ""), 250);
+  });
+  onCleanup(() => clearTimeout(peopleDebounce));
+  const [people] = createResource(
+    () => (props.open && role() === "admin" && peopleQuery() ? peopleQuery() : null),
+    (q) => getUserSearch(q, undefined, "student", { limit: 6 }),
+  );
 
   const items = createMemo<CommandItem[]>(() => {
     const list: CommandItem[] = [];
@@ -269,11 +286,21 @@ export function CommandPalette(props: CommandPaletteProps) {
   const filteredItems = createMemo(() => {
     const q = query().trim().toLocaleLowerCase(prefs.locale());
     if (!q) return items();
-    return items().filter((item) =>
+    const peopleLabel = t("command.group.people");
+    const found: CommandItem[] = (people.latest?.items ?? []).map((person) => ({
+      id: `person-${person.id}`,
+      category: "people",
+      categoryLabel: peopleLabel,
+      title: person.display_name || person.username,
+      description: person.username,
+      icon: IconUsers,
+      onSelect: () => void navigate({ to: "/admin/users/$id", params: { id: person.id } }),
+    }));
+    return [...found, ...items().filter((item) =>
       `${item.title} ${item.description ?? ""} ${item.keywords ?? ""} ${item.categoryLabel}`
         .toLocaleLowerCase(prefs.locale())
         .includes(q),
-    );
+    )];
   });
 
   // Group items by category while preserving single flat index order for keyboard navigation
@@ -290,7 +317,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       map.get(item.category)!.push({ item, globalIndex: idx });
     });
 
-    const order: CommandCategory[] = ["actions", "pages", "system"];
+    const order: CommandCategory[] = ["people", "actions", "pages", "system"];
     for (const cat of order) {
       const itemsInCat = map.get(cat);
       if (itemsInCat && itemsInCat.length > 0) {

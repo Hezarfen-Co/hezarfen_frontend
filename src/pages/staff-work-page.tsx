@@ -308,7 +308,7 @@ function StaffWorkContent() {
       />
 
       <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
-        <Show when={pagedPeople().length > 0} fallback={<EmptyState title={t("work.noTeachers")} />}>
+        <Show when={pagedPeople().length > 0} fallback={<EmptyState kind="people" title={t("work.noTeachers")} />}>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <For each={pagedPeople()}>
               {(person) => (
@@ -348,7 +348,7 @@ function StaffWorkContent() {
         <Show when={!entries.loading} fallback={<DataTableSkeleton columns={4} rows={4} />}>
           <Show
             when={entryRows().length > 0}
-            fallback={<EmptyState title={t("work.empty")} />}
+            fallback={<EmptyState kind="work" title={t("work.empty")} />}
           >
             <div class="space-y-3">
               <DataTable columns={entryColumns()} data={entryRows()} storageKey="staff-work-entries" enablePagination pageSize={WORK_PAGE_SIZE} />

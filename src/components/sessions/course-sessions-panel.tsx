@@ -437,7 +437,7 @@ function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
       {error() && <Alert variant="destructive">{error()}</Alert>}
       <Show
         when={props.roster.length > 0}
-        fallback={<EmptyState title={t("sessions.emptyRoster")} />}
+        fallback={<EmptyState kind="people" title={t("sessions.emptyRoster")} />}
       >
         <For each={visibleRoster()}>
           {(row) => {

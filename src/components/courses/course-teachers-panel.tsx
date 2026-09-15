@@ -114,6 +114,7 @@ export function CourseTeachersPanel(props: {
         when={props.teachers.length > 0}
         fallback={
           <EmptyState
+            kind="people"
             title={t("courses.noTeachers")}
           />
         }

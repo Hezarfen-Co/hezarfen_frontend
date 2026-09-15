@@ -1,4 +1,4 @@
-import { Show, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
   deleteSlotById,
@@ -59,9 +59,6 @@ function AppointmentsContent() {
   const auth = useAuth();
   const t = useT();
   const { locale } = usePreferences();
-  createEffect(() => {
-    document.title = `${t("appointments.title")} · Hezarfen`;
-  });
   const now = createNow();
   const [error, setError] = createSignal("");
   const [, setFlash] = createFlash();

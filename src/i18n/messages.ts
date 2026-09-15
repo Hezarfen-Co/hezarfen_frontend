@@ -617,6 +617,7 @@ export type MessageKey =
   | "dashboard.stats.averageHint"
   | "dashboard.commandCenter"
   | "command.group.actions"
+  | "command.group.people"
   | "command.group.navigation"
   | "command.group.system"
   | "command.action.createHomework"
@@ -764,6 +765,8 @@ export type MessageKey =
   | "dashboard.analytics"
   | "dashboard.hero.heading"
   | "dashboard.hero.searchPlaceholder"
+  | "dashboard.hero.searchPlaceholderAdmin"
+  | "dashboard.hero.searchPlaceholderAll"
   | "dashboard.hero.searchEmpty"
   | "dashboard.teacher.pendingAppointments"
   | "dashboard.teacher.pendingAppointmentsDesc"
@@ -2479,6 +2482,7 @@ const en: Dict = {
   "dashboard.stats.averageHint": "Overall report card",
   "dashboard.commandCenter": "Command center",
   "command.group.actions": "Quick actions",
+  "command.group.people": "Students",
   "command.group.navigation": "Pages & navigation",
   "command.group.system": "System & preferences",
   "command.action.createHomework": "Create homework",
@@ -2626,6 +2630,8 @@ const en: Dict = {
   "dashboard.analytics": "Analytics",
   "dashboard.hero.heading": "What are we doing today?",
   "dashboard.hero.searchPlaceholder": "Search for a student",
+  "dashboard.hero.searchPlaceholderAdmin": "Search students, pages or actions",
+  "dashboard.hero.searchPlaceholderAll": "Search pages or actions",
   "dashboard.hero.searchEmpty": "No matching students.",
   "dashboard.teacher.pendingAppointments": "Pending requests",
   "dashboard.teacher.pendingAppointmentsDesc": "Appointment requests waiting on you.",
@@ -4347,6 +4353,7 @@ const tr: Dict = {
   "dashboard.stats.averageHint": "Genel karne",
   "dashboard.commandCenter": "Komuta merkezi",
   "command.group.actions": "Hızlı işlemler",
+  "command.group.people": "Öğrenciler",
   "command.group.navigation": "Sayfalar & gezinme",
   "command.group.system": "Sistem & tercihler",
   "command.action.createHomework": "Yeni ödev ekle",
@@ -4494,6 +4501,8 @@ const tr: Dict = {
   "dashboard.analytics": "Analitik",
   "dashboard.hero.heading": "Bugün ne yapıyoruz?",
   "dashboard.hero.searchPlaceholder": "Öğrenci ara",
+  "dashboard.hero.searchPlaceholderAdmin": "Öğrenci, sayfa veya işlem ara",
+  "dashboard.hero.searchPlaceholderAll": "Sayfa veya işlem ara",
   "dashboard.hero.searchEmpty": "Eşleşen öğrenci yok.",
   "dashboard.teacher.pendingAppointments": "Bekleyen talepler",
   "dashboard.teacher.pendingAppointmentsDesc": "Senden yanıt bekleyen randevu talepleri.",

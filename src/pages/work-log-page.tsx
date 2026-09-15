@@ -128,7 +128,7 @@ function WorkLogContent() {
           </Show>
           <Show
             when={pageItems().length > 0}
-            fallback={<EmptyState title={t("work.empty")} description={t("work.ready")} />}
+            fallback={<EmptyState kind="work" title={t("work.empty")} description={t("work.ready")} />}
           >
             <DataTable
               title={t("work.entries")}

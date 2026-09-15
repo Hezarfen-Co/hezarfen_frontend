@@ -74,7 +74,7 @@ function MyStudentsContent() {
 
       <Suspense fallback={<PageSpinner />}>
         <Show when={list()}>
-          <Show when={list()!.length > 0} fallback={<EmptyState title={t("common.noResults")} />}>
+          <Show when={list()!.length > 0} fallback={<EmptyState kind="people" title={t("common.noResults")} />}>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <For each={list()}>
                 {(student) => (

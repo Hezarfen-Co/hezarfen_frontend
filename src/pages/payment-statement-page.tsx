@@ -161,7 +161,7 @@ function StatementContent() {
           <Show when={statement.error}>
             <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetch()} />
           </Show>
-          <Show when={entries().length > 0} fallback={<EmptyState title={t("payments.noStatement")} />}>
+          <Show when={entries().length > 0} fallback={<EmptyState kind="payments" title={t("payments.noStatement")} />}>
             <DataTable
               columns={columns()}
               data={sortStatementEntries(entries())}

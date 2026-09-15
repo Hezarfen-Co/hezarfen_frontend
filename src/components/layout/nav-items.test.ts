@@ -1,13 +1,24 @@
 import { moduleVisible, pathActive, primaryNavItems, primaryPathActive, routeLabelKey, routeNavItem, visibleNavGroups, visibleNavItems } from "@/components/layout/nav-items";
 
 test.each([
-  ["student", ["/", "/exams", "/marks"]],
-  ["teacher", ["/", "/management/classes", "/calendar"]],
-  ["manager", ["/", "/management/classes", "/exams"]],
-  ["admin", ["/", "/management/classes", "/exams"]],
+  ["student", ["/", "/homework", "/exams"]],
+  ["teacher", ["/", "/management/classes", "/management/student-attendance"]],
+  ["manager", ["/", "/management/students", "/management/classes"]],
+  ["admin", ["/", "/management/students", "/management/classes"]],
   ["parent", ["/", "/students", "/appointments"]],
 ] as const)("%s gets role-specific primary destinations", (role, expected) => {
   expect(primaryNavItems(role).map((item) => item.to)).toEqual(expected);
+});
+
+test("every mobile tab reuses its sidebar row's icon and label", () => {
+  for (const role of ["student", "parent", "teacher", "manager", "admin"] as const) {
+    const sidebar = visibleNavGroups(role).flatMap((group) => group.items);
+    for (const tab of primaryNavItems(role).slice(1)) {
+      const row = sidebar.find((item) => item.id === tab.id);
+      expect(row?.Icon).toBe(tab.Icon);
+      expect(row?.labelKey).toBe(tab.labelKey);
+    }
+  }
 });
 
 test("invalid role destinations stay hidden", () => {
@@ -152,7 +163,7 @@ test("nested entity routes keep their primary destination active", () => {
   expect(pathActive("/management/classes/class-1", "/management/classes")).toBe(true);
   expect(routeNavItem("/management/classes/class-1", "teacher")?.id).toBe("my-classes");
   expect(routeNavItem("/management/student-attendance", "teacher")?.id).toBe("student-attendance");
-  expect(primaryPathActive("/exams/exam-1", primaryNavItems("student")[1]!)).toBe(true);
+  expect(primaryPathActive("/homework/hw-1", primaryNavItems("student")[1]!)).toBe(true);
 });
 
 test.each([
@@ -161,7 +172,8 @@ test.each([
   ["/management/student-attendance", "teacher", "student-attendance"],
   ["/management/settings", "manager", "settings"],
 ] as const)("sidebar resolves one active item for %s", (pathname, role, expected) => {
-  const items = [...primaryNavItems(role), ...visibleNavGroups(role).flatMap((group) => group.items)];
+  // Mobile tabs reuse the sidebar's own item objects, so dedupe by identity.
+  const items = [...new Set([...primaryNavItems(role), ...visibleNavGroups(role).flatMap((group) => group.items)])];
   const current = routeNavItem(pathname, role);
 
   expect(items.filter((item) => item.id === current?.id).map((item) => item.id)).toEqual([expected]);

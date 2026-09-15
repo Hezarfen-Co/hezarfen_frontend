@@ -1,4 +1,4 @@
-import { Show, createMemo, createSignal, type ParentProps } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, type ParentProps } from "solid-js";
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
 import { LogoMark } from "@/components/brand/logo-mark";
 import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
@@ -13,10 +13,11 @@ import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
-import { IconChevronLeft, IconPanelLeft, IconSearch, IconSparkles } from "@/components/ui/icons";
+import { IconChevronLeft, IconSparkles } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
+import { commandPaletteOpen, openCommandPalette, setCommandPaletteOpen } from "@/stores/command-palette";
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -32,7 +33,6 @@ export function AppShell(props: ParentProps) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = createSignal(false);
   const [celebiOpen, setCelebiOpen] = createSignal(false);
-  const [commandOpen, setCommandOpen] = createSignal(false);
   const [profileOpen, setProfileOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
@@ -41,6 +41,12 @@ export function AppShell(props: ParentProps) {
   const routeLabel = createMemo(() => {
     const key = routeLabelKey(location().pathname, auth.user()?.role);
     return key ? t(key) : "";
+  });
+  // One place names the browser tab for every shell route, from the same
+  // label the header shows.
+  createEffect(() => {
+    const label = routeLabel();
+    document.title = label ? `${label} · ${t("app.name")}` : t("app.name");
   });
   const logout = async () => {
     await auth.logout();
@@ -57,7 +63,7 @@ export function AppShell(props: ParentProps) {
         <Show when={auth.user() && !fullScreen()}>
           <aside
             class={cn(
-              "sticky top-[env(safe-area-inset-top)] z-30 hidden h-[var(--app-viewport)] shrink-0 border-r border-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex lg:flex-col",
+              "sticky top-[env(safe-area-inset-top)] z-40 hidden h-[var(--app-viewport)] shrink-0 border-r border-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out lg:flex lg:flex-col",
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
             )}
           >
@@ -91,26 +97,19 @@ export function AppShell(props: ParentProps) {
 
             <SidebarAccount collapsed={collapsed()} onLogout={logout} />
 
-            {/* Collapse toggle sits under the account chip, pinned to the sidebar
-                foot, so the logo header keeps the same 45px height as the topbar. */}
-            <div class="shrink-0 px-2 pb-2">
-              <button
-                type="button"
-                class={cn(
-                  "flex h-8 w-full items-center rounded-md text-[12px] font-medium text-muted-foreground outline-hidden transition-colors hover:bg-muted/70 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring dark:text-white/60 dark:hover:bg-white/8 dark:hover:text-white",
-                  collapsed() ? "justify-center px-0" : "gap-2.5 px-2.5",
-                )}
-                aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
-                aria-expanded={!collapsed()}
-                title={collapsed() ? t("nav.expand") : t("nav.collapse")}
-                onClick={() => prefs.toggleSidebar()}
-              >
-                <IconPanelLeft class={cn("h-4 w-4 shrink-0 transition-transform duration-200", collapsed() && "scale-x-[-1]")} />
-                <Show when={!collapsed()}>
-                  <span class="truncate">{t("nav.collapse")}</span>
-                </Show>
-              </button>
-            </div>
+            {/* Collapse toggle rides the corner where the sidebar's right edge
+                meets the header's bottom border. */}
+            <button
+              type="button"
+              class="absolute right-0 top-[45px] z-10 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-xs outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
+              aria-expanded={!collapsed()}
+              title={collapsed() ? t("nav.expand") : t("nav.collapse")}
+              onClick={() => prefs.toggleSidebar()}
+            >
+              <IconChevronLeft class={cn("h-3.5 w-3.5 transition-transform duration-200", collapsed() && "rotate-180")} />
+            </button>
+
           </aside>
         </Show>
 
@@ -142,22 +141,7 @@ export function AppShell(props: ParentProps) {
                 <span class="hidden truncate text-sm font-semibold sm:block" title={routeLabel()}>{routeLabel()}</span>
               </div>
 
-              <div class="mx-auto flex min-w-0 max-w-xl flex-1 items-center justify-center">
-                <button
-                  type="button"
-                  onClick={() => setCommandOpen(true)}
-                  class="topbar-control flex h-9 w-full items-center justify-between gap-2.5 rounded-full px-3.5 text-sm"
-                  title={t("dashboard.commandCenter")}
-                >
-                  <div class="flex items-center gap-2 min-w-0">
-                    <IconSearch class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span class="truncate">{t("dashboard.commandCenter")}...</span>
-                  </div>
-                  <kbd class="hidden shrink-0 rounded-md border border-border/80 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline-block">
-                    Ctrl/Cmd K
-                  </kbd>
-                </button>
-              </div>
+              <div class="min-w-0 flex-1" />
 
               <div class="flex shrink-0 items-center justify-end gap-2">
                 <ShellMessagesButton />
@@ -194,14 +178,14 @@ export function AppShell(props: ParentProps) {
       {/* MobileTabBar stays inside the provider — it is a shell surface, so a
           useShellFeed() badge there must not throw. */}
       <Show when={auth.user() && !fullScreen()}>
-        <MobileTabBar onMenu={() => setMobileOpen(true)} />
+        <MobileTabBar onMenu={() => setMobileOpen(true)} onSearch={openCommandPalette} />
       </Show>
       </ShellFeedProvider>
       <Show when={auth.user()}>
         <CelebiPanel open={celebiOpen()} onOpenChange={setCelebiOpen} />
         <CommandPalette
-          open={commandOpen()}
-          onOpenChange={setCommandOpen}
+          open={commandPaletteOpen()}
+          onOpenChange={setCommandPaletteOpen}
           onOpenCelebi={() => setCelebiOpen(true)}
           onOpenProfile={() => setProfileOpen(true)}
         />

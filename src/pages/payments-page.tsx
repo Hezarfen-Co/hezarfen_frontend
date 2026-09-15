@@ -617,7 +617,7 @@ function PaymentsContent() {
                 <Show when={studentsPage.error}>
                   <ErrorAlert message={formatApiError(studentsPage.error)} onRetry={() => void refetchStudents()} />
                 </Show>
-                <Show when={pagedStudents().length > 0} fallback={<EmptyState title={t("payments.selectStudent")} />}>
+                <Show when={pagedStudents().length > 0} fallback={<EmptyState kind="people" title={t("payments.selectStudent")} />}>
                   <DataTable
                     columns={studentColumns()}
                     data={paymentStudentRows() ?? []}
@@ -682,7 +682,7 @@ function PaymentsContent() {
                   when={entries().length > 0}
                   fallback={
                     <div class="space-y-3">
-                      <EmptyState title={t("payments.noDebt")} description={t("payments.noDebtHint")} />
+                      <EmptyState kind="payments" title={t("payments.noDebt")} description={t("payments.noDebtHint")} />
                       <div class="flex justify-center">
                         <Button variant="outline" size="sm" class="rounded-lg" onClick={() => setTab("plans")}>{t("payments.tabPlans")}</Button>
                       </div>
@@ -765,7 +765,7 @@ function PaymentsContent() {
               <Show when={plans.error}>
                 <ErrorAlert message={formatApiError(plans.error)} onRetry={() => void refetchPlans()} />
               </Show>
-              <Show when={planList().length > 0} fallback={<EmptyState title={t("payments.empty")} />}>
+              <Show when={planList().length > 0} fallback={<EmptyState kind="payments" title={t("payments.empty")} />}>
                 <DataTable columns={planColumns()} data={planList()} onRowClick={setViewPlan} storageKey="payment-plans" tableClass="min-w-160" filterColumn="name" enablePagination pageSize={PLAN_PAGE_SIZE} />
               </Show>
             </Suspense>

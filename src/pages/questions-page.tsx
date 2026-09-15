@@ -110,7 +110,7 @@ function QuestionsContent() {
       <div class="data-shell">
         <Suspense fallback={<PageSpinner />}>
           <Show when={list()}>
-            <Show when={list()!.length > 0} fallback={<EmptyState title={t("pool.noQuestions")} />}>
+            <Show when={list()!.length > 0} fallback={<EmptyState kind="search" title={t("pool.noQuestions")} />}>
               <div class="divide-y divide-border">
                 <For each={list()}>
                   {(question) => (

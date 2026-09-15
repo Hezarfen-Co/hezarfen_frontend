@@ -89,7 +89,7 @@ export function HomeworkReportView(props: { userId: string }) {
 
   return (
     <Suspense fallback={<DataTableSkeleton />}>
-      <Show when={(report()?.items ?? []).length > 0} fallback={<EmptyState title={t("homework.empty")} />}>
+      <Show when={(report()?.items ?? []).length > 0} fallback={<EmptyState kind="homework" title={t("homework.empty")} />}>
         <Tabs value={tab()} onChange={(value) => setTab(value as ReportTab)}>
           <TabsList aria-label={t("homework.title")}>
             <TabsTrigger value="all">{t("common.all")}</TabsTrigger>

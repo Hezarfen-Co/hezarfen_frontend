@@ -38,9 +38,6 @@ function QuestionBankContent() {
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
-  createEffect(() => {
-    document.title = `${t("nav.questionBank")} · Hezarfen`;
-  });
   const [bankTab, setBankTab] = createSignal<"all" | "mine" | "school">("all");
   const ownerFilter = () => (bankTab() === "mine" ? "me" : "all") as "all" | "me";
   const visibilityFilter = () => (bankTab() === "school" ? "school" : "all") as "all" | "private" | "school";

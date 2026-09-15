@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup, type Component } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import type { Role } from "@/api/client";
@@ -15,7 +15,7 @@ import { getPaymentStatementByUserId } from "@/api/payments";
 import { getPomodoroMe } from "@/api/pomodoro";
 import { getMyAttendance, getMyCourses, getMyMarks, getUserAttendance } from "@/api/reports";
 import { getTime } from "@/api/time/getTime";
-import { getUsers, getUserSearch } from "@/api/users";
+import { getUsers } from "@/api/users";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
 import { ComingSoonBadge, ComingSoonPanel } from "@/components/ui/coming-soon";
@@ -24,6 +24,7 @@ import { ChartHeatmap, type HeatmapEntry } from "@/components/ui/chart-heatmap";
 import { ChartLine } from "@/components/ui/chart-line";
 import { ChartProgressRing } from "@/components/ui/chart-progress-ring";
 import { DataTable } from "@/components/ui/data-table";
+import { CommandSearchField } from "@/components/dashboard/command-search-field";
 import { QuickLinkColumn, type QuickLinkRow } from "@/components/dashboard/quick-link-column";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import {
@@ -34,7 +35,6 @@ import {
   IconClock,
   IconExam,
   IconHomework,
-  IconSearch,
   IconUsers,
   IconUtensils,
   IconPackage,
@@ -336,23 +336,6 @@ function DashboardContent() {
     });
   });
 
-  // Hero search. `/users/search` is the only search endpoint the app has, so
-  // this box only ever finds students — it never claims to search classes,
-  // exams, or modules the way the Figma copy does.
-  const [searchInput, setSearchInput] = createSignal("");
-  const [searchQuery, setSearchQuery] = createSignal("");
-  let searchDebounce: ReturnType<typeof setTimeout> | undefined;
-  const onSearchInput = (value: string) => {
-    setSearchInput(value);
-    clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(() => setSearchQuery(value.trim()), 250);
-  };
-  onCleanup(() => clearTimeout(searchDebounce));
-  const [searchResults] = createResource(
-    () => (isAdminHome() && searchQuery() ? searchQuery() : null),
-    (q) => getUserSearch(q, undefined, "student", { limit: 6 }),
-  );
-
   const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
   const now = () => clock()?.now ?? Date.now();
 
@@ -647,6 +630,7 @@ function DashboardContent() {
                 <h1 class="text-[28px] font-semibold leading-9 tracking-[-0.02em] text-text-strong">{t("dashboard.welcomeBack", { name: fullName() })}</h1>
                 <p class="text-sm text-text-subtle">{t("dashboard.welcomeHint")}</p>
               </div>
+              <CommandSearchField class="max-w-md" />
               <div class="flex items-center gap-2">
                 <Badge variant="outline" class="bg-surface-overlay">{t(roleKeys[role()])}</Badge>
                 <Show when={myClass()}>
@@ -667,37 +651,7 @@ function DashboardContent() {
               </time>
             </div>
             <h1 class="text-[28px] font-semibold leading-9 tracking-[-0.02em] text-text-strong">{t("dashboard.hero.heading")}</h1>
-            <div class="relative w-full max-w-xl">
-              <IconSearch class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
-              <input
-                type="search"
-                value={searchInput()}
-                onInput={(event) => onSearchInput(event.currentTarget.value)}
-                placeholder={t("dashboard.hero.searchPlaceholder")}
-                class="h-[46px] w-full rounded-lg border border-border-line bg-surface-base pl-11 pr-4 text-sm text-text-default shadow-sm placeholder:text-text-placeholder focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-              />
-              <Show when={searchQuery() && searchResults()}>
-                <div class="absolute left-0 right-0 top-[calc(100%+6px)] z-10 rounded-lg border border-border-line bg-surface-base py-1 text-left shadow-md">
-                  <Show
-                    when={(searchResults()?.items.length ?? 0) > 0}
-                    fallback={<p class="px-4 py-2 text-sm text-text-subtle">{t("dashboard.hero.searchEmpty")}</p>}
-                  >
-                    <For each={searchResults()?.items}>
-                      {(person) => (
-                        <button
-                          type="button"
-                          class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-default hover:bg-surface-tint"
-                          onClick={() => navigate({ to: "/admin/users/$id", params: { id: person.id } })}
-                        >
-                          <IconUsers class="h-4 w-4 shrink-0 text-text-subtle" />
-                          <span class="min-w-0 flex-1 truncate">{person.display_name || person.username}</span>
-                        </button>
-                      )}
-                    </For>
-                  </Show>
-                </div>
-              </Show>
-            </div>
+            <CommandSearchField />
             <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
               <QuickLinkColumn
                 title={t("dashboard.quicklinks.students")}

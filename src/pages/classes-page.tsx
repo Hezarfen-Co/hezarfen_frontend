@@ -193,7 +193,7 @@ function ClassesContent() {
           />
 
           <Suspense fallback={<DataTableSkeleton />}>
-            <Show when={searched().length > 0} fallback={<EmptyState title={t("classGroups.empty")} />}>
+            <Show when={searched().length > 0} fallback={<EmptyState kind="people" title={t("classGroups.empty")} />}>
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <For each={searched()}>
                   {(cls) => (

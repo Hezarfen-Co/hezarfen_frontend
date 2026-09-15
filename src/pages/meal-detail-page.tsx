@@ -227,7 +227,7 @@ function MealDetailContent() {
                     </article>
                   )}</For>
                 </div>
-                <Show when={current().dishes.length === 0}><EmptyState title={t("meals.noDishes")} /></Show>
+                <Show when={current().dishes.length === 0}><EmptyState kind="meals" title={t("meals.noDishes")} /></Show>
                 <Show when={canBook()}>
                   <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-4">
                     <div><p class="font-semibold">{activeBooking() ? t("meals.booked") : t("meals.notBooked")}</p><p class="text-sm text-muted-foreground">{cutoffClosed() ? t("meals.cutoffPassed") : t("meals.bookingHelp")}</p></div>

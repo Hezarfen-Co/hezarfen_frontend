@@ -1,13 +1,13 @@
 import { For } from "solid-js";
 import { Link, useRouterState } from "@tanstack/solid-router";
-import { IconMenu } from "@/components/ui/icons";
+import { IconMenu, IconSearch } from "@/components/ui/icons";
 import { primaryNavItems, primaryPathActive } from "@/components/layout/nav-items";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
 import { useT } from "@/stores/preferences-context";
 
-export function MobileTabBar(props: { onMenu: () => void }) {
+export function MobileTabBar(props: { onMenu: () => void; onSearch: () => void }) {
   const auth = useAuth();
   const t = useT();
   const modules = useModules();
@@ -21,7 +21,7 @@ export function MobileTabBar(props: { onMenu: () => void }) {
     >
       <ul
         class="mx-auto grid h-14 max-w-3xl"
-        style={{ "grid-template-columns": `repeat(${items().length + 1}, minmax(0, 1fr))` }}
+        style={{ "grid-template-columns": `repeat(${items().length + 2}, minmax(0, 1fr))` }}
       >
         <For each={items()}>
           {(item) => {
@@ -45,6 +45,19 @@ export function MobileTabBar(props: { onMenu: () => void }) {
             );
           }}
         </For>
+        <li class="min-w-0">
+          <button
+            type="button"
+            aria-label={t("common.search")}
+            class="flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[10px] font-medium text-muted-foreground"
+            onClick={() => props.onSearch()}
+          >
+            <span class="flex h-7 w-10 items-center justify-center">
+              <IconSearch class="h-[22px] w-[22px]" />
+            </span>
+            <span class="truncate">{t("common.search")}</span>
+          </button>
+        </li>
         <li class="min-w-0">
           <button
             id="mobile-menu-trigger"

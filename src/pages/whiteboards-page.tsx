@@ -75,7 +75,7 @@ function WhiteboardsContent() {
         </Show>
         <Show
           when={(boards()?.items ?? []).length > 0}
-          fallback={<EmptyState title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
+          fallback={<EmptyState kind="whiteboard" title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
         >
           <div class="space-y-4">
             <Input
@@ -84,7 +84,7 @@ function WhiteboardsContent() {
               placeholder={t("whiteboard.searchPlaceholder")}
               class="h-9 max-w-sm rounded-lg"
             />
-            <Show when={visibleBoards().length > 0} fallback={<EmptyState title={t("common.noResults")} />}>
+            <Show when={visibleBoards().length > 0} fallback={<EmptyState kind="search" title={t("common.noResults")} />}>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <For each={visibleBoards()}>
                   {(board) => (

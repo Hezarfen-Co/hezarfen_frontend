@@ -24,6 +24,7 @@ export function NoteList(props: {
         when={props.notes.length > 0}
         fallback={
           <EmptyState
+            kind="notes"
             title={props.emptyTitle}
             description={props.emptyDescription}
           />

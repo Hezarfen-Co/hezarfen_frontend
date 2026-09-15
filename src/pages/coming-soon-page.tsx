@@ -46,7 +46,7 @@ function ComingSoonContent() {
   return (
     <div class="space-y-6">
       <PageHeader title={title()} description={t("comingSoon.description")} />
-      <EmptyState title={t("comingSoon.emptyTitle")} description={t("comingSoon.emptyDescription")} />
+      <EmptyState kind="coming-soon" title={t("comingSoon.emptyTitle")} description={t("comingSoon.emptyDescription")} />
     </div>
   );
 }

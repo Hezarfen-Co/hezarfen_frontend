@@ -14,6 +14,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
 } from "@tanstack/solid-table";
+import { Illustration } from "@/components/ui/illustration";
 import { Button } from "@/components/ui/button";
 import { DataTableSearch } from "@/components/ui/data-table-search";
 import { DataTableViewMenu, type ViewMenuColumn } from "@/components/ui/data-table-view-menu";
@@ -325,7 +326,10 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
               fallback={
                 <TableRow>
                   <TableCell colSpan={colSpan()} class="py-8 text-center text-muted-foreground">
-                    {props.empty ?? t("common.noResults")}
+                    <div class="flex flex-col items-center gap-3">
+                      <Illustration name={searchValue().trim() ? "no-results" : "empty"} class="h-24 w-36" />
+                      <span>{props.empty ?? t("common.noResults")}</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               }

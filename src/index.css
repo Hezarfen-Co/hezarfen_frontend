@@ -398,6 +398,14 @@
     --surface-elevated: 0 0% 100%;
     --sidebar: 0 0% 98%;
     --sidebar-foreground: 0 0% 8%;
+
+    /* unDraw illustration palette (src/lib/illustrations.ts). */
+    --illu-accent: hsl(var(--primary));
+    --illu-accent-2: hsl(349 100% 70%);
+    --illu-ink: hsl(240 12% 22%);
+    --illu-line: hsl(0 0% 82%);
+    --illu-soft: hsl(0 0% 92%);
+    --illu-paper: hsl(0 0% 100%);
   }
 
   [data-kb-theme="dark"] {
@@ -438,6 +446,10 @@
     --success: 137 58% 58%;
     --warning: 38 92% 54%;
     --info: 219 98% 60%;
+    --illu-ink: hsl(240 6% 72%);
+    --illu-line: hsl(0 0% 30%);
+    --illu-soft: hsl(0 0% 19%);
+    --illu-paper: hsl(0 0% 11%);
     --surface-elevated: var(--surface-fill);
     --sidebar: var(--surface-base);
     --sidebar-foreground: 0 0% 98%;

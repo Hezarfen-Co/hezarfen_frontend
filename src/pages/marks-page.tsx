@@ -59,7 +59,7 @@ function MarksContent() {
         <TabsContent value="marks" class="mt-0 border-0 bg-transparent p-0 shadow-none">
           <Suspense fallback={<PageSpinner />}>
             <Show when={!marks.error} fallback={<Alert variant="destructive">{formatApiError(marks.error)}</Alert>}>
-              <Show when={marks()} fallback={<EmptyState title={t("marks.empty")} />}>
+              <Show when={marks()} fallback={<EmptyState kind="exams" title={t("marks.empty")} />}>
                 {(report) => <MarksReportView report={report()} />}
               </Show>
             </Show>

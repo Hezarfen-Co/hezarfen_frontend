@@ -230,6 +230,7 @@ function TermsContent() {
             when={terms().length > 0}
             fallback={
               <EmptyState
+                kind="schedule"
                 title={t("terms.empty")}
               />
             }
