@@ -28,6 +28,7 @@ const LoginPage = lazyRoute(() => import("@/pages/login-page"));
 const RegisterPage = lazyRoute(() => import("@/pages/register-page"));
 const DashboardPage = lazyRoute(() => import("@/pages/dashboard-page"));
 const NotesPage = lazyRoute(() => import("@/pages/notes-page"));
+const NoteEditorPage = lazyRoute(() => import("@/pages/note-editor-page"));
 const EventsPage = lazyRoute(() => import("@/pages/events-page"));
 const EventDetailPage = lazyRoute(() => import("@/pages/event-detail-page"));
 const HomeworkPage = lazyRoute(() => import("@/pages/homework-page"));
@@ -116,6 +117,18 @@ const notesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/notes",
   component: NotesPage,
+});
+
+const noteNewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/notes/new",
+  component: NoteEditorPage,
+});
+
+const noteDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/notes/$id",
+  component: NoteEditorPage,
 });
 
 const eventsRoute = createRoute({
@@ -482,6 +495,8 @@ const routeTree = rootRoute.addChildren([
   loginRoute,
   registerRoute,
   notesRoute,
+  noteNewRoute,
+  noteDetailRoute,
   eventsRoute,
   eventDetailRoute,
   homeworkRoute,

@@ -3,9 +3,11 @@ import { formatApiError } from "@/api/client";
 import type { Note } from "@/api/client";
 import { NoteForm } from "@/components/notes/note-form";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconChevronRight, IconEdit, IconTrash } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { cn } from "@/lib/cn";
+import { richTextExcerpt, toRichTextHtml } from "@/lib/rich-text";
 import { useT } from "@/stores/preferences-context";
 
 export function NoteCard(props: {
@@ -13,6 +15,8 @@ export function NoteCard(props: {
   /** Hides the edit/delete menu when false. Defaults to true. */
   canManage?: boolean;
   onOpen: (note: Note) => void;
+  /** Edits somewhere else (the full-page editor) instead of the side panel. */
+  onEdit?: (note: Note) => void;
   onUpdate: (id: string, values: { title: string; content: string }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
@@ -21,13 +25,14 @@ export function NoteCard(props: {
   const [error, setError] = createSignal("");
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const canManage = () => props.canManage !== false;
+  const excerpt = () => richTextExcerpt(toRichTextHtml(props.note.content), 320);
 
   return (
     <>
       <article
         role="button"
         tabindex="0"
-        class="group flex h-full min-h-72 cursor-pointer flex-col overflow-hidden rounded-lg border border-amber-500/40 bg-card shadow-sm transition-shadow hover:border-amber-400/60 hover:shadow-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring dark:border-amber-500/30 dark:hover:border-amber-400/60"
+        class="group flex h-full min-h-44 cursor-pointer flex-col rounded-xl border border-border bg-card p-4 shadow-xs transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         onClick={() => props.onOpen(props.note)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -36,17 +41,17 @@ export function NoteCard(props: {
           }
         }}
       >
-        <div class="flex items-start justify-between gap-3 border-b border-amber-500/30 bg-muted/40 px-4 py-3 dark:border-amber-500/30 dark:bg-muted/30">
-          <h3 class="line-clamp-2 min-w-0 text-base font-semibold leading-snug">{props.note.title}</h3>
+        <div class="flex items-start justify-between gap-3">
+          <h3 class="line-clamp-2 min-w-0 text-[15px] font-semibold leading-snug text-text-strong">{props.note.title}</h3>
           <Show when={canManage()}>
-            <div class="shrink-0" onClick={(event) => event.stopPropagation()}>
+            <div class="-mr-1.5 -mt-1 shrink-0" onClick={(event) => event.stopPropagation()}>
               <TableRowActions
                 label={t("common.actions")}
                 actions={[
                   {
                     label: t("common.edit"),
                     icon: <IconEdit class="h-4 w-4" />,
-                    onSelect: () => setEditing(true),
+                    onSelect: () => (props.onEdit ? props.onEdit(props.note) : setEditing(true)),
                   },
                   {
                     label: t("common.delete"),
@@ -59,15 +64,15 @@ export function NoteCard(props: {
             </div>
           </Show>
         </div>
-        <div class="flex flex-1 flex-col gap-4 bg-[linear-gradient(90deg,rgba(245,158,11,0.12)_0,rgba(245,158,11,0.12)_2.25rem,transparent_2.25rem),repeating-linear-gradient(0deg,transparent_0,transparent_2.05rem,rgba(120,113,108,0.14)_2.1rem)] px-4 py-4 pl-12 dark:bg-[linear-gradient(90deg,rgba(245,158,11,0.1)_0,rgba(245,158,11,0.1)_2.25rem,transparent_2.25rem),repeating-linear-gradient(0deg,transparent_0,transparent_2.05rem,rgba(214,211,209,0.1)_2.1rem)]">
-          <Show
-            when={props.note.content?.trim()}
-            fallback={<p class="text-[13px] leading-8 text-muted-foreground">{t("notes.noContent")}</p>}
-          >
-            <div class="line-clamp-6 whitespace-pre-wrap text-[13px] leading-8 text-muted-foreground group-hover:text-foreground [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc" innerHTML={props.note.content} />
-          </Show>
-          {error() && <p class="text-sm text-destructive">{error()}</p>}
-        </div>
+        {/* Plain-text excerpt: the card never renders stored HTML. */}
+        <p class={cn("mt-2 line-clamp-5 flex-1 text-[13px] leading-6", excerpt() ? "text-muted-foreground" : "italic text-muted-foreground/70")}>
+          {excerpt() || t("notes.noContent")}
+        </p>
+        <span class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+          {t("notes.open")}
+          <IconChevronRight class="h-3.5 w-3.5" />
+        </span>
+        {error() && <p class="mt-2 text-sm text-destructive">{error()}</p>}
       </article>
 
       <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={props.note.title}>

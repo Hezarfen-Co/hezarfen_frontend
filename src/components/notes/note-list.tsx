@@ -13,6 +13,8 @@ export function NoteList(props: {
   canManage?: boolean;
   emptyTitle: string;
   emptyDescription?: string;
+  /** Opens a note somewhere else (its own page) instead of the reader panel; also used for edit. */
+  onOpen?: (note: Note) => void;
   onUpdate: (id: string, values: { title: string; content: string }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
@@ -30,14 +32,15 @@ export function NoteList(props: {
           />
         }
       >
-        <ul class="grid grid-cols-2 gap-3 xl:grid-cols-3">
+        <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           <For each={props.notes}>
             {(note) => (
               <li class="animate-fade-up">
                 <NoteCard
                   note={note}
                   canManage={props.canManage}
-                  onOpen={setReadingNote}
+                  onOpen={(item) => (props.onOpen ? props.onOpen(item) : setReadingNote(item))}
+                  onEdit={props.onOpen}
                   onUpdate={props.onUpdate}
                   onDelete={props.onDelete}
                 />

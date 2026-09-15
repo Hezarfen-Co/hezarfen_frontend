@@ -49,6 +49,20 @@ import waveformUrl from "@phosphor-icons/core/regular/waveform.svg?url";
 import wifiHighUrl from "@phosphor-icons/core/regular/wifi-high.svg?url";
 import wifiSlashUrl from "@phosphor-icons/core/regular/wifi-slash.svg?url";
 import xUrl from "@phosphor-icons/core/regular/x.svg?url";
+import textBUrl from "@phosphor-icons/core/regular/text-b.svg?url";
+import textItalicUrl from "@phosphor-icons/core/regular/text-italic.svg?url";
+import textUnderlineUrl from "@phosphor-icons/core/regular/text-underline.svg?url";
+import textStrikethroughUrl from "@phosphor-icons/core/regular/text-strikethrough.svg?url";
+import textHTwoUrl from "@phosphor-icons/core/regular/text-h-two.svg?url";
+import textHThreeUrl from "@phosphor-icons/core/regular/text-h-three.svg?url";
+import textTUrl from "@phosphor-icons/core/regular/text-t.svg?url";
+import listBulletsUrl from "@phosphor-icons/core/regular/list-bullets.svg?url";
+import listNumbersUrl from "@phosphor-icons/core/regular/list-numbers.svg?url";
+import quotesUrl from "@phosphor-icons/core/regular/quotes.svg?url";
+import codeBlockUrl from "@phosphor-icons/core/regular/code-block.svg?url";
+import linkSimpleUrl from "@phosphor-icons/core/regular/link-simple.svg?url";
+import arrowUUpLeftUrl from "@phosphor-icons/core/regular/arrow-u-up-left.svg?url";
+import arrowUUpRightUrl from "@phosphor-icons/core/regular/arrow-u-up-right.svg?url";
 
 type IconProps = {
   class?: string;
@@ -645,4 +659,60 @@ export function IconWifi(props: IconProps) {
 
 export function IconWifiOff(props: IconProps) {
   return <PhosphorIcon {...props} src={wifiSlashUrl} />;
+}
+
+export function IconBold(props: IconProps) {
+  return <PhosphorIcon {...props} src={textBUrl} />;
+}
+
+export function IconItalic(props: IconProps) {
+  return <PhosphorIcon {...props} src={textItalicUrl} />;
+}
+
+export function IconUnderline(props: IconProps) {
+  return <PhosphorIcon {...props} src={textUnderlineUrl} />;
+}
+
+export function IconStrikethrough(props: IconProps) {
+  return <PhosphorIcon {...props} src={textStrikethroughUrl} />;
+}
+
+export function IconHeading2(props: IconProps) {
+  return <PhosphorIcon {...props} src={textHTwoUrl} />;
+}
+
+export function IconHeading3(props: IconProps) {
+  return <PhosphorIcon {...props} src={textHThreeUrl} />;
+}
+
+export function IconParagraph(props: IconProps) {
+  return <PhosphorIcon {...props} src={textTUrl} />;
+}
+
+export function IconListBullets(props: IconProps) {
+  return <PhosphorIcon {...props} src={listBulletsUrl} />;
+}
+
+export function IconListNumbers(props: IconProps) {
+  return <PhosphorIcon {...props} src={listNumbersUrl} />;
+}
+
+export function IconQuote(props: IconProps) {
+  return <PhosphorIcon {...props} src={quotesUrl} />;
+}
+
+export function IconCodeBlock(props: IconProps) {
+  return <PhosphorIcon {...props} src={codeBlockUrl} />;
+}
+
+export function IconLink(props: IconProps) {
+  return <PhosphorIcon {...props} src={linkSimpleUrl} />;
+}
+
+export function IconArrowUndo(props: IconProps) {
+  return <PhosphorIcon {...props} src={arrowUUpLeftUrl} />;
+}
+
+export function IconArrowRedo(props: IconProps) {
+  return <PhosphorIcon {...props} src={arrowUUpRightUrl} />;
 }

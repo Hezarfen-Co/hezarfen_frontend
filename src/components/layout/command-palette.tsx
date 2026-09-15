@@ -153,7 +153,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       keywords: "note not ekle ders notu kaydet",
       icon: IconNote,
       shortcut: `${mod}N`,
-      onSelect: () => void navigate({ to: "/notes", search: { action: "new" } as any }),
+      onSelect: () => void navigate({ to: "/notes/new" }),
     });
 
     list.push({

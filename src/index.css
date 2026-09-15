@@ -555,3 +555,53 @@
     linear-gradient(120deg, hsl(var(--primary) / 0.28), transparent 65%);
   background-size: 8px 8px, 8px 8px, 100% 100%;
 }
+
+/* Note bodies: the stored HTML from the note editor, read or edited. One
+   stylesheet for both keeps what you type identical to what you read. */
+@layer components {
+  .note-prose {
+    color: hsl(var(--foreground));
+    font-size: 0.95rem;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+  }
+  .note-prose > * + * { margin-top: 0.75em; }
+  .note-prose h2 { margin-top: 1.4em; font-size: 1.4rem; font-weight: 650; line-height: 1.3; letter-spacing: -0.01em; }
+  .note-prose h3 { margin-top: 1.2em; font-size: 1.12rem; font-weight: 650; line-height: 1.35; }
+  .note-prose > :first-child { margin-top: 0; }
+  .note-prose ul { padding-left: 1.4em; list-style: disc; }
+  .note-prose ol { padding-left: 1.4em; list-style: decimal; }
+  .note-prose li + li { margin-top: 0.25em; }
+  .note-prose li::marker { color: hsl(var(--muted-foreground)); }
+  .note-prose blockquote {
+    border-left: 3px solid hsl(var(--primary) / 0.55);
+    padding-left: 1em;
+    color: hsl(var(--muted-foreground));
+  }
+  .note-prose pre {
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    background: hsl(var(--muted) / 0.6);
+    padding: 0.75em 1em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+  .note-prose code {
+    border-radius: 0.3rem;
+    background: hsl(var(--muted) / 0.8);
+    padding: 0.1em 0.35em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85em;
+  }
+  .note-prose pre code { background: transparent; padding: 0; }
+  .note-prose a { color: hsl(var(--primary)); text-decoration: underline; text-underline-offset: 2px; }
+  /* Placeholder for an empty contentEditable body. */
+  .note-prose[data-empty="true"]::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground) / 0.7);
+    pointer-events: none;
+    position: absolute;
+  }
+}

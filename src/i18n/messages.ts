@@ -152,6 +152,29 @@ export type MessageKey =
   | "editor.numberedListLabel"
   | "editor.clearFormattingLabel"
   | "editor.bodyPlaceholder"
+  | "editor.paragraph"
+  | "editor.heading2"
+  | "editor.heading3"
+  | "editor.quote"
+  | "editor.codeBlock"
+  | "editor.link"
+  | "editor.linkTitle"
+  | "editor.linkHint"
+  | "editor.linkUrl"
+  | "editor.undo"
+  | "editor.redo"
+  | "notes.backToNotebook"
+  | "notes.titlePlaceholder"
+  | "notes.bodyPlaceholder"
+  | "notes.saveShortcut"
+  | "notes.unsaved"
+  | "notes.allSaved"
+  | "notes.saving"
+  | "notes.leaveTitle"
+  | "notes.leaveHint"
+  | "notes.leaveConfirm"
+  | "notes.filesAfterSave"
+  | "notes.open"
   | "messages.refreshList"
   | "messages.deleteDraft"
   | "messages.restoreFromTrash"
@@ -2045,6 +2068,29 @@ const en: Dict = {
   "editor.numberedListLabel": "1. List",
   "editor.clearFormattingLabel": "Clear format",
   "editor.bodyPlaceholder": "Write your message here…",
+  "editor.paragraph": "Paragraph",
+  "editor.heading2": "Heading",
+  "editor.heading3": "Subheading",
+  "editor.quote": "Quote",
+  "editor.codeBlock": "Code block",
+  "editor.link": "Link (Ctrl+K)",
+  "editor.linkTitle": "Add a link",
+  "editor.linkHint": "Leave the address empty to remove the link.",
+  "editor.linkUrl": "Address",
+  "editor.undo": "Undo",
+  "editor.redo": "Redo",
+  "notes.backToNotebook": "Notebook",
+  "notes.titlePlaceholder": "Untitled note",
+  "notes.bodyPlaceholder": "Start writing…",
+  "notes.saveShortcut": "{key}+S to save",
+  "notes.unsaved": "Unsaved changes",
+  "notes.allSaved": "All changes saved",
+  "notes.saving": "Saving…",
+  "notes.leaveTitle": "Leave without saving?",
+  "notes.leaveHint": "Your unsaved changes to this note will be lost.",
+  "notes.leaveConfirm": "Leave",
+  "notes.filesAfterSave": "Save the note first, then attach files and drawings here.",
+  "notes.open": "Open",
   "messages.refreshList": "Refresh messages",
   "messages.deleteDraft": "Delete draft",
   "messages.restoreFromTrash": "Restore from trash",
@@ -3946,6 +3992,29 @@ const tr: Dict = {
   "editor.numberedListLabel": "1. Liste",
   "editor.clearFormattingLabel": "Biçimi temizle",
   "editor.bodyPlaceholder": "Mesajınızı buraya yazın…",
+  "editor.paragraph": "Paragraf",
+  "editor.heading2": "Başlık",
+  "editor.heading3": "Alt başlık",
+  "editor.quote": "Alıntı",
+  "editor.codeBlock": "Kod bloğu",
+  "editor.link": "Bağlantı (Ctrl+K)",
+  "editor.linkTitle": "Bağlantı ekle",
+  "editor.linkHint": "Bağlantıyı kaldırmak için adresi boş bırak.",
+  "editor.linkUrl": "Adres",
+  "editor.undo": "Geri al",
+  "editor.redo": "Yinele",
+  "notes.backToNotebook": "Defter",
+  "notes.titlePlaceholder": "Başlıksız not",
+  "notes.bodyPlaceholder": "Yazmaya başla…",
+  "notes.saveShortcut": "Kaydetmek için {key}+S",
+  "notes.unsaved": "Kaydedilmemiş değişiklikler",
+  "notes.allSaved": "Tüm değişiklikler kaydedildi",
+  "notes.saving": "Kaydediliyor…",
+  "notes.leaveTitle": "Kaydetmeden çıkılsın mı?",
+  "notes.leaveHint": "Bu nottaki kaydedilmemiş değişiklikler kaybolacak.",
+  "notes.leaveConfirm": "Çık",
+  "notes.filesAfterSave": "Önce notu kaydet, sonra buraya dosya ve çizim ekleyebilirsin.",
+  "notes.open": "Aç",
   "messages.refreshList": "Mesajları yenile",
   "messages.deleteDraft": "Taslağı sil",
   "messages.restoreFromTrash": "Çöp kutusundan çıkar",

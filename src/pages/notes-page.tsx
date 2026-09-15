@@ -1,16 +1,14 @@
 import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
-import { useLocation } from "@tanstack/solid-router";
+import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { deleteNoteById } from "@/api/notes";
 import { getNotes } from "@/api/notes";
 import { patchNoteById } from "@/api/notes";
 import { postNote } from "@/api/notes";
-import { postNoteFile } from "@/api/notes";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { DataSection } from "@/components/ui/data-section";
-import { NoteForm } from "@/components/notes/note-form";
 import { NoteImportPanel } from "@/components/notes/note-import-panel";
 import { NoteList } from "@/components/notes/note-list";
 import { Button } from "@/components/ui/button";
@@ -36,12 +34,13 @@ export default function NotesPage() {
 function NotesContent() {
   const t = useT();
   const location = useLocation();
+  const navigate = useNavigate();
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
-  const [createOpen, setCreateOpen] = createSignal(location().searchStr.includes("action=new"));
   const [importOpen, setImportOpen] = createSignal(location().searchStr.includes("action=import"));
   createEffect(() => {
-    if (location().searchStr.includes("action=new")) setCreateOpen(true);
+    // Old deep link: the new-note side panel is now its own page.
+    if (location().searchStr.includes("action=new")) void navigate({ to: "/notes/new", replace: true });
     if (location().searchStr.includes("action=import")) setImportOpen(true);
   });
   const [page, setPage] = createSignal(0);
@@ -91,43 +90,13 @@ function NotesContent() {
         />
       </SidePanel>
 
-      <SidePanel open={createOpen()} onOpenChange={setCreateOpen} title={t("notes.new")}>
-        <NoteForm
-          enableFiles
-          submitLabel={t("common.create")}
-          onCancel={() => setCreateOpen(false)}
-          onSubmit={async (values) => {
-            setError("");
-            const note = await postNote({
-              title: values.title,
-              content: values.content || undefined,
-            });
-            let failedUploads = 0;
-            for (const file of values.files) {
-              try {
-                await postNoteFile(note.id, file);
-              } catch {
-                failedUploads += 1;
-              }
-            }
-            await refetch();
-            setCreateOpen(false);
-            if (failedUploads > 0) {
-              setError(t("notes.fileUploadPartial", { count: failedUploads }));
-              return;
-            }
-            setFlash(t("common.created"));
-          }}
-        />
-      </SidePanel>
-
       <div class="space-y-5">
         <DataSection
           title={t("notes.title")}
           description={t("notes.subtitle")}
           actions={
             <div class="flex items-center gap-2">
-              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => void navigate({ to: "/notes/new" })}>
                 <IconPlus class="h-4 w-4" />
                 {t("notes.new")}
               </Button>
@@ -141,7 +110,7 @@ function NotesContent() {
           <Show when={flash()}>
             <Alert variant="success">{flash()}</Alert>
           </Show>
-          <Show when={error() && !createOpen() && !importOpen()}>
+          <Show when={error() && !importOpen()}>
             <Alert variant="destructive">{error()}</Alert>
           </Show>
           <Suspense fallback={<PageSpinner />}>
@@ -152,6 +121,7 @@ function NotesContent() {
               <NoteList
                 notes={pageItems()}
                 source={personalNoteFiles}
+                onOpen={(note) => void navigate({ to: "/notes/$id", params: { id: note.id } })}
                 emptyTitle={t("dashboard.emptyNotesTitle")}
                 emptyDescription={t("notes.empty")}
                 onUpdate={(id, values) =>
