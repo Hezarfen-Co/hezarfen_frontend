@@ -15,6 +15,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/solid-table";
 import { Illustration } from "@/components/ui/illustration";
+import type { IllustrationName } from "@/lib/illustrations";
 import { Button } from "@/components/ui/button";
 import { DataTableSearch } from "@/components/ui/data-table-search";
 import { DataTableViewMenu, type ViewMenuColumn } from "@/components/ui/data-table-view-menu";
@@ -43,6 +44,8 @@ export type DataTableProps<TData, TValue = unknown> = {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   empty?: JSX.Element;
+  /** Scene shown above `empty`; defaults to a generic empty / no-results one. */
+  emptyIllustration?: IllustrationName;
   class?: string;
   tableClass?: string;
   enableColumnVisibility?: boolean;
@@ -327,7 +330,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                 <TableRow>
                   <TableCell colSpan={colSpan()} class="py-8 text-center text-muted-foreground">
                     <div class="flex flex-col items-center gap-3">
-                      <Illustration name={searchValue().trim() ? "no-results" : "empty"} class="h-24 w-36" />
+                      <Illustration name={searchValue().trim() ? "no-results" : (props.emptyIllustration ?? "empty")} class="h-20 w-32" />
                       <span>{props.empty ?? t("common.noResults")}</span>
                     </div>
                   </TableCell>

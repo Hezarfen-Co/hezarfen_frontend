@@ -10,6 +10,8 @@ Files are kept exactly as downloaded (`https://cdn.undraw.co/illustrations/<slug
 
 | File | unDraw slug |
 | --- | --- |
+| calendar-empty.svg | calendar_8r6s |
+| charts.svg | no-data_ig65 |
 | coming-soon.svg | under-construction_hdrn |
 | courses.svg | online-learning_tgmv |
 | empty.svg | empty_4zx0 |
@@ -17,6 +19,7 @@ Files are kept exactly as downloaded (`https://cdn.undraw.co/illustrations/<slug
 | exams.svg | online-test_cqv0 |
 | homework.svg | studying_n5uj |
 | meals.svg | breakfast_rgx5 |
+| modules.svg | team-goals_0026 |
 | messages.svg | inbox-cleanup_be27 |
 | no-results.svg | not-found_6bgl |
 | notes.svg | personal-notes_xrz8 |

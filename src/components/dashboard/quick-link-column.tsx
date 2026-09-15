@@ -1,5 +1,7 @@
 import { For, Show, type Component } from "solid-js";
+import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconChevronRight } from "@/components/ui/icons";
+import type { IllustrationName } from "@/lib/illustrations";
 
 export type QuickLinkRow = {
   id: string;
@@ -12,6 +14,7 @@ export type QuickLinkColumnProps = {
   title: string;
   rows: QuickLinkRow[];
   empty: string;
+  illustration?: IllustrationName;
   onOpen: (row: QuickLinkRow) => void;
 };
 
@@ -22,7 +25,7 @@ export function QuickLinkColumn(props: QuickLinkColumnProps) {
   return (
     <div class="flex min-w-0 flex-1 flex-col rounded-xl border border-border-line bg-surface-base px-4 py-3">
       <p class="pb-2 text-[13px] font-medium text-text-subtle">{props.title}</p>
-      <Show when={props.rows.length > 0} fallback={<p class="border-t border-border-hairline py-3 text-[13px] text-text-subtle">{props.empty}</p>}>
+      <Show when={props.rows.length > 0} fallback={<EmptyInline class="border-t border-border-hairline" illustration={props.illustration} title={props.empty} />}>
         <For each={props.rows}>
           {(row) => (
             <button

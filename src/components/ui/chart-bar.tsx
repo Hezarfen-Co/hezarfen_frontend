@@ -1,5 +1,6 @@
 import { For, Show, createEffect, createMemo, createSignal, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
+import { EmptyInline } from "@/components/ui/empty-inline";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { useT } from "@/stores/preferences-context";
 
@@ -63,10 +64,7 @@ export const ChartBar: Component<ChartBarProps> = (props) => {
       <Show
         when={props.items.length > 0}
         fallback={
-          <div class="px-4 py-8 text-center">
-            <p class="text-xs font-semibold text-foreground/80">{t("dashboard.chartEmpty")}</p>
-            <p class="text-[11px] text-muted-foreground mt-0.5">{t("dashboard.chartEmptyHint")}</p>
-          </div>
+          <EmptyInline illustration="charts" title={t("dashboard.chartEmpty")} hint={t("dashboard.chartEmptyHint")} />
         }
       >
         <div class="space-y-3 pt-1">

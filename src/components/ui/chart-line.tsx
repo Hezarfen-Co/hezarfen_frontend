@@ -1,6 +1,7 @@
 import { For, Show, createMemo, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
+import { EmptyInline } from "@/components/ui/empty-inline";
 
 export type ChartLineItem = {
   id: string;
@@ -82,10 +83,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
       <Show
         when={summary()}
         fallback={
-          <div class="px-4 py-8 text-center">
-            <p class="text-xs font-semibold text-foreground/80">{t("dashboard.chartEmpty")}</p>
-            <p class="mt-0.5 text-[11px] text-muted-foreground">{t("dashboard.chartEmptyHint")}</p>
-          </div>
+          <EmptyInline illustration="charts" title={t("dashboard.chartEmpty")} hint={t("dashboard.chartEmptyHint")} />
         }
       >
         {(stats) => (

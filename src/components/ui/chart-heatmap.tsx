@@ -1,6 +1,7 @@
 import { For, Show, createMemo, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { EmptyInline } from "@/components/ui/empty-inline";
 
 /** One dated observation. Several entries may share a day — they are summed. */
 export type HeatmapEntry = {
@@ -146,10 +147,7 @@ export const ChartHeatmap: Component<ChartHeatmapProps> = (props) => {
       <Show
         when={hasData()}
         fallback={
-          <div class="px-4 py-8 text-center">
-            <p class="text-xs font-semibold text-foreground/80">{t("dashboard.chartEmpty")}</p>
-            <p class="mt-0.5 text-[11px] text-muted-foreground">{t("dashboard.chartEmptyHint")}</p>
-          </div>
+          <EmptyInline illustration="charts" title={t("dashboard.chartEmpty")} hint={t("dashboard.chartEmptyHint")} />
         }
       >
         {/* One grid for labels and cells together: a weekday gutter column plus

@@ -17,6 +17,7 @@ import { getMyAttendance, getMyCourses, getMyMarks, getUserAttendance } from "@/
 import { getTime } from "@/api/time/getTime";
 import { getUsers } from "@/api/users";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { EmptyInline } from "@/components/ui/empty-inline";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ComingSoonBadge, ComingSoonPanel } from "@/components/ui/coming-soon";
@@ -656,18 +657,21 @@ function DashboardContent() {
             <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
               <QuickLinkColumn
                 title={t("dashboard.quicklinks.students")}
+                illustration="people"
                 rows={studentQuickLinks()}
                 empty={t("dashboard.quicklinks.empty")}
                 onOpen={(row) => navigate({ to: "/admin/users/$id", params: { id: row.id } })}
               />
               <QuickLinkColumn
                 title={t("dashboard.quicklinks.classes")}
+                illustration="courses"
                 rows={classQuickLinks()}
                 empty={t("dashboard.quicklinks.empty")}
                 onOpen={(row) => navigate({ to: "/management/classes/$id", params: { id: row.id } })}
               />
               <QuickLinkColumn
                 title={t("dashboard.quicklinks.modules")}
+                illustration="modules"
                 rows={moduleQuickLinks()}
                 empty={t("dashboard.quicklinks.empty")}
                 onOpen={() => navigate({ to: "/management/modules" })}
@@ -794,7 +798,7 @@ function DashboardContent() {
                 </div>
                 <Show
                   when={pendingAppointments().length > 0}
-                  fallback={<p class="py-3 text-sm text-text-subtle">{t("dashboard.teacher.pendingAppointmentsEmpty")}</p>}
+                  fallback={<EmptyInline illustration="calendar-empty" title={t("dashboard.teacher.pendingAppointmentsEmpty")} />}
                 >
                   <For each={pendingAppointments()}>
                     {(appointment) => (
@@ -869,7 +873,7 @@ function DashboardContent() {
                     {(teacher) => <p class="mt-1 text-xs text-text-subtle">{t("dashboard.parent.homeroom", { name: personLabel(teacher()) })}</p>}
                   </Show>
                 </div>
-                <Show when={childAttendanceBreakdown()} fallback={<p class="text-sm text-text-subtle">{t("dashboard.chartEmpty")}</p>}>
+                <Show when={childAttendanceBreakdown()} fallback={<EmptyInline illustration="charts" title={t("dashboard.chartEmpty")} hint={t("dashboard.chartEmptyHint")} />}>
                   {(breakdown) => (
                     <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                       <div class="rounded-lg bg-surface-tint px-3 py-2">
@@ -900,7 +904,7 @@ function DashboardContent() {
                     const summary = paymentSummary();
                     return summary && summary.total > 0 ? summary : null;
                   })()}
-                  fallback={<p class="pt-2 text-sm text-text-subtle">{t("dashboard.parent.paymentEmpty")}</p>}
+                  fallback={<EmptyInline illustration="payments" title={t("dashboard.parent.paymentEmpty")} />}
                 >
                   {(summary) => (
                     <div class="flex flex-col gap-2 pt-1">
@@ -934,6 +938,7 @@ function DashboardContent() {
               enableColumnVisibility={false}
               searchPredicate={deadlines().length > 0 ? deadlineSearch : undefined}
               empty={t("dashboard.upcomingEmpty")}
+              emptyIllustration="calendar-empty"
               onRowClick={openDeadline}
             />
           </section>

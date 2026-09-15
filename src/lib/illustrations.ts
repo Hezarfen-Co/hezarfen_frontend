@@ -5,6 +5,8 @@
  * here, so they follow the picked brand color and the dark theme.
  */
 export type IllustrationName =
+  | "calendar-empty"
+  | "charts"
   | "coming-soon"
   | "courses"
   | "empty"
@@ -12,6 +14,7 @@ export type IllustrationName =
   | "exams"
   | "homework"
   | "meals"
+  | "modules"
   | "messages"
   | "no-results"
   | "notes"
@@ -37,6 +40,7 @@ const PALETTE: Record<string, string> = {
   "#090814": "var(--illu-ink)",
   "#ccc": "var(--illu-line)",
   "#cacaca": "var(--illu-line)",
+  "#cbcbcb": "var(--illu-line)",
   "#d6d6e3": "var(--illu-line)",
   "#e6e6e6": "var(--illu-soft)",
   "#e4e4e4": "var(--illu-soft)",
