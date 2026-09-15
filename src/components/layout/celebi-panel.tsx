@@ -5,10 +5,10 @@ import { formatApiError } from "@/api/client";
 import { CelebiComposer } from "@/components/layout/celebi-composer";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { CelebiReplyActions } from "@/components/layout/celebi-reply-actions";
-import { CelebiSuggestions } from "@/components/layout/celebi-suggestions";
 import { CelebiThinkingLabel } from "@/components/layout/celebi-thinking-label";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconAlert, IconBotSquare, IconCopy, IconEdit, IconPlus, IconSparkles, IconTrash } from "@/components/ui/icons";
+import { EmptyInline } from "@/components/ui/empty-inline";
+import { IconAlert, IconBotSquare, IconCopy, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -244,16 +244,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           <Show
           when={messages().length > 0}
           fallback={
-            <div class="space-y-3">
-              <div class="relative overflow-hidden rounded-lg border border-border bg-card px-5 py-8 text-center text-sm text-muted-foreground">
-                <div class="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <span class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
-                  <IconSparkles class="h-5 w-5" />
-                </span>
-                {t("ai.empty")}
-              </div>
-              <CelebiSuggestions onPick={(text) => void send(text)} />
-            </div>
+            <EmptyInline class="h-full py-10" size="md" illustration="messages" title={t("ai.title")} hint={t("ai.empty")} />
           }
         >
           <div class="flex flex-col gap-3">

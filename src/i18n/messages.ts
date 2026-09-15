@@ -22,18 +22,6 @@ export type MessageKey =
   | "ai.thinking2"
   | "ai.thinking3"
   | "ai.hint"
-  | "ai.suggest1"
-  | "ai.suggest2"
-  | "ai.suggest3"
-  | "ai.suggest4"
-  | "ai.suggestStaff1"
-  | "ai.suggestStaff2"
-  | "ai.suggestStaff3"
-  | "ai.suggestStaff4"
-  | "ai.suggestParent1"
-  | "ai.suggestParent2"
-  | "ai.suggestParent3"
-  | "ai.suggestParent4"
   | "ai.goTo"
   | "ai.didYouMean"
   | "ai.skipTyping"
@@ -1890,18 +1878,6 @@ const en: Dict = {
   "ai.thinking2": "Looking into it…",
   "ai.thinking3": "Almost there…",
   "ai.hint": "Enter to send · Shift+Enter for a new line · AI-generated",
-  "ai.suggest1": "What are my classes today?",
-  "ai.suggest2": "Which exams are coming up?",
-  "ai.suggest3": "Do I have any missing homework?",
-  "ai.suggest4": "How is my attendance this term?",
-  "ai.suggestStaff1": "What is on the schedule today?",
-  "ai.suggestStaff2": "Which exams are coming up?",
-  "ai.suggestStaff3": "Which students have low attendance?",
-  "ai.suggestStaff4": "Summarize this week's events.",
-  "ai.suggestParent1": "What are my child's classes today?",
-  "ai.suggestParent2": "Which exams does my child have soon?",
-  "ai.suggestParent3": "How is my child's attendance this term?",
-  "ai.suggestParent4": "What is on this week's meal menu?",
   "ai.goTo": "Go to the page",
   "ai.didYouMean": "Did you mean one of these?",
   "ai.skipTyping": "Show the whole answer",
@@ -3769,18 +3745,6 @@ const tr: Dict = {
   "ai.thinking2": "Araştırıyor…",
   "ai.thinking3": "Neredeyse hazır…",
   "ai.hint": "Enter gönder · Shift+Enter alt satır · Yapay zekâ üretimi",
-  "ai.suggest1": "Bugün hangi derslerim var?",
-  "ai.suggest2": "Yaklaşan sınavlarım neler?",
-  "ai.suggest3": "Eksik ödevim var mı?",
-  "ai.suggest4": "Bu dönem devamsızlığım nasıl?",
-  "ai.suggestStaff1": "Bugün programda neler var?",
-  "ai.suggestStaff2": "Yaklaşan sınavlar neler?",
-  "ai.suggestStaff3": "Hangi öğrencilerin devamsızlığı yüksek?",
-  "ai.suggestStaff4": "Bu haftanın etkinliklerini özetle.",
-  "ai.suggestParent1": "Çocuğumun bugün hangi dersleri var?",
-  "ai.suggestParent2": "Çocuğumun yaklaşan sınavları neler?",
-  "ai.suggestParent3": "Çocuğumun bu dönem devamsızlığı nasıl?",
-  "ai.suggestParent4": "Bu haftanın yemek menüsünde ne var?",
   "ai.goTo": "Sayfaya git",
   "ai.didYouMean": "Bunu mu demek istedin?",
   "ai.skipTyping": "Cevabın tamamını göster",

@@ -9,15 +9,17 @@ export function EmptyInline(props: {
   title: string;
   hint?: string;
   illustration?: IllustrationName;
+  /** "md" for roomy containers such as a side panel. */
+  size?: "sm" | "md";
   class?: string;
 }) {
   return (
     <div class={cn("flex flex-col items-center justify-center gap-2 px-4 py-5 text-center", props.class)}>
-      <Illustration name={props.illustration ?? "empty"} class="h-16 w-24" />
+      <Illustration name={props.illustration ?? "empty"} class={props.size === "md" ? "h-32 w-48" : "h-16 w-24"} />
       <div>
-        <p class="text-xs font-semibold text-foreground/80">{props.title}</p>
+        <p class={cn("font-semibold text-foreground/80", props.size === "md" ? "text-sm" : "text-xs")}>{props.title}</p>
         <Show when={props.hint}>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">{props.hint}</p>
+          <p class={cn("mt-0.5 text-muted-foreground", props.size === "md" ? "mx-auto max-w-xs text-xs" : "text-[11px]")}>{props.hint}</p>
         </Show>
       </div>
     </div>
