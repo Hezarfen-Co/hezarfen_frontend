@@ -9,8 +9,8 @@ services:
       - "5173:5173"
     environment:
       PORT: "5173"
-      # Backend on the shared compose network; server.ts proxies /api here.
-      BACKEND_ORIGIN: "http://hezarfen-backend:8080"
+      # Remote backend origin; server.ts keeps browser traffic same-origin.
+      BACKEND_ORIGIN: "${BACKEND_ORIGIN:-https://hezarfen.dizey.sh}"
     restart: unless-stopped
     healthcheck:
       # Bun-based: the slim runtime image ships no curl.
@@ -19,9 +19,3 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    networks:
-      - hezarfen_backend_default
-
-networks:
-  hezarfen_backend_default:
-    external: true

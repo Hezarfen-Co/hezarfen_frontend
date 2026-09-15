@@ -8,7 +8,7 @@
 
 const PORT = Number(Bun.env.PORT ?? 5173);
 // Where the backend lives on the compose network. Override in compose.
-const BACKEND_ORIGIN = Bun.env.BACKEND_ORIGIN ?? "http://127.0.0.1:8080";
+const BACKEND_ORIGIN = Bun.env.BACKEND_ORIGIN ?? "https://hezarfen.dizey.sh";
 const BACKEND_HTTP = BACKEND_ORIGIN.replace(/\/+$/, "");
 const BACKEND_WS = BACKEND_HTTP.replace(/^http/, "ws");
 const BACKEND_HOST = new URL(BACKEND_HTTP).host;

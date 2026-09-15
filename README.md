@@ -31,7 +31,7 @@ A modern, high-performance **SolidJS + TypeScript** web application for the Heza
 ## 📦 Prerequisites & Setup
 
 - **Node.js** 20+ or **bun** (recommended)
-- Hezarfen backend running at `http://127.0.0.1:8080` (or proxied via Vite)
+- Access to the Hezarfen backend at `https://hezarfen.dizey.sh`
 
 ### Installation & Development
 
@@ -51,7 +51,7 @@ bun run build
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-> **Proxy Note**: Vite server automatically proxies `/api/*` and WebSocket connections (`/ws/*`) to `http://127.0.0.1:8080`, preserving HttpOnly session cookies across same-origin calls.
+> **Proxy Note**: Vite server and the production Bun server proxy `/api/*` and WebSocket connections to `BACKEND_ORIGIN` (default: `https://hezarfen.dizey.sh`), preserving HttpOnly session cookies across same-origin calls. Override it when needed (`BACKEND_ORIGIN=http://127.0.0.1:7656 bun run dev` or `BACKEND_ORIGIN=http://host.containers.internal:7656 podman compose up -d --build`).
 
 ---
 
