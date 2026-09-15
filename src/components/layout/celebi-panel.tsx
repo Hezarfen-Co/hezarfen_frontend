@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createSignal, onCleanup } from "solid-js";
+import { For, Match, Show, Switch, createEffect, createSignal, onCleanup, untrack } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import { deleteChatbotThreadById, getChatbotMessageById, getChatbotThreadMessages, getChatbotThreads, patchChatbotThreadById, postChatbotMessage, postChatbotThread, type ChatbotMessage, type ChatbotThread } from "@/api/chatbot";
 import { formatApiError } from "@/api/client";
@@ -36,7 +36,6 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   const [sending, setSending] = createSignal(false);
   const [copiedId, setCopiedId] = createSignal<string>();
   const [searchQuery, setSearchQuery] = createSignal("");
-  const [showScrollToLatest, setShowScrollToLatest] = createSignal(false);
 
   const copyMessage = async (message: PanelMessage) => {
     await navigator.clipboard.writeText(message.content);
@@ -90,20 +89,39 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   const isRevealing = (message: PanelMessage) =>
     message.id === typingId() && (message.status === "pending" || Math.floor(typedCount()) < message.content.length);
 
-  // The transcript follows the newest message, but only while the reader is
-  // already at the bottom: scrolling up to re-read an earlier answer must not
-  // be yanked back down by the next streamed chunk.
+  // The transcript follows the newest message only while the reader is
+  // pinned to the bottom, the way a messenger does. Any upward scroll unpins
+  // at once — a distance threshold alone lost to a streamed answer that grows
+  // every frame and kept dragging the reader back down. New content that
+  // lands while unpinned raises a "new message" control instead.
   let transcript: HTMLDivElement | undefined;
   const NEAR_BOTTOM_PX = 64;
+  const [pinned, setPinned] = createSignal(true);
+  const [unread, setUnread] = createSignal(false);
+  let lastScrollTop = 0;
+  const pinToBottom = () => {
+    if (!transcript) return;
+    transcript.scrollTop = transcript.scrollHeight;
+    lastScrollTop = transcript.scrollTop;
+  };
   const scrollToLatest = () => {
     if (!transcript) return;
+    setPinned(true);
+    setUnread(false);
     transcript.scrollTo({ top: transcript.scrollHeight, behavior: "smooth" });
-    setShowScrollToLatest(false);
   };
   const handleTranscriptScroll = () => {
     if (!transcript) return;
-    const distance = transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight;
-    setShowScrollToLatest(distance > NEAR_BOTTOM_PX);
+    const top = transcript.scrollTop;
+    const distance = transcript.scrollHeight - top - transcript.clientHeight;
+    // A shrinking transcript (search filtering) clamps scrollTop down too, but
+    // leaves it at the very bottom — that is not the reader scrolling up.
+    if (top < lastScrollTop - 1 && distance > 1) setPinned(false);
+    else if (distance <= NEAR_BOTTOM_PX) {
+      setPinned(true);
+      setUnread(false);
+    }
+    lastScrollTop = top;
   };
   const filteredMessages = () => {
     const query = searchQuery().trim().toLocaleLowerCase(locale());
@@ -114,11 +132,10 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     const items = messages();
     typedCount();
     if (!transcript || items.length === 0) return;
-    const distance = transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight;
-    const atBottom = distance <= NEAR_BOTTOM_PX;
+    if (!untrack(pinned)) return void setUnread(true);
     // The DOM node for the message that just arrived is written after this
     // effect reads the store, so the scroll waits for the next frame.
-    if (atBottom) requestAnimationFrame(scrollToLatest);
+    requestAnimationFrame(() => { if (pinned()) pinToBottom(); });
   });
 
   let pollTimer: number | undefined;
@@ -130,7 +147,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   };
   const stopStream = () => { stream?.close(); stream = undefined; };
   const loadThreads = async () => { try { setThreads((await getChatbotThreads({ limit: 100 })).items); } catch { /* history is non-blocking */ } };
-  const openThread = async (id: string) => { stopPolling(); stopStream(); stopReveal(); setThreadId(id); setMessages((await getChatbotThreadMessages(id, { limit: 500 })).items); };
+  const openThread = async (id: string) => { stopPolling(); stopStream(); stopReveal(); setPinned(true); setUnread(false); setThreadId(id); setMessages((await getChatbotThreadMessages(id, { limit: 500 })).items); };
   const createThread = () => { stopPolling(); stopStream(); stopReveal(); setThreadId(undefined); setMessages([]); };
   // Rename and delete go through the shared confirm dialog, never the
   // browser's own prompt()/confirm() boxes.
@@ -189,6 +206,9 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
 
     setSending(true);
     setDraft("");
+    // Sending is a request to see the reply: re-pin even if scrolled up.
+    setPinned(true);
+    setUnread(false);
     const localUserId = `local-${Date.now()}`;
     setMessages((items) => [...items, { id: localUserId, role: "user", status: "complete", content, truncated: false, error_code: null }]);
 
@@ -338,15 +358,17 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           </Show>
           </Show>
         </div>
-        <Show when={showScrollToLatest()}>
+        <Show when={!pinned()}>
           <button
             type="button"
-            class="absolute bottom-3 left-1/2 inline-flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 text-xs font-medium text-foreground shadow-md backdrop-blur transition-colors hover:bg-accent"
+            class={cn(
+              "absolute bottom-3 left-1/2 inline-flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 text-xs font-medium shadow-md backdrop-blur transition-colors",
+              unread() ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90" : "border-border bg-card/95 text-foreground hover:bg-accent",
+            )}
             onClick={scrollToLatest}
-            aria-label={t("ai.scrollToLatest")}
           >
             <IconChevronDown class="h-3.5 w-3.5" />
-            {t("ai.scrollToLatest")}
+            {unread() ? t("ai.newMessages") : t("ai.scrollToLatest")}
           </button>
         </Show>
         </div>

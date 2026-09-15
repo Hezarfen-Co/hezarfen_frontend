@@ -27,6 +27,7 @@ export type MessageKey =
   | "ai.skipTyping"
   | "ai.searchPlaceholder"
   | "ai.scrollToLatest"
+  | "ai.newMessages"
   | "ai.noSearchResults"
   | "nav.today"
   | "nav.classes"
@@ -1913,6 +1914,7 @@ const en: Dict = {
   "ai.skipTyping": "Show the whole answer",
   "ai.searchPlaceholder": "Search this chat...",
   "ai.scrollToLatest": "Latest",
+  "ai.newMessages": "New message",
   "ai.noSearchResults": "No messages match your search.",
   "nav.today": "Today",
   "nav.classes": "Courses",
@@ -3810,6 +3812,7 @@ const tr: Dict = {
   "ai.skipTyping": "Cevabın tamamını göster",
   "ai.searchPlaceholder": "Bu sohbette ara...",
   "ai.scrollToLatest": "En alta git",
+  "ai.newMessages": "Yeni mesaj",
   "ai.noSearchResults": "Aramanla eşleşen mesaj yok.",
   "nav.today": "Bugün",
   "nav.classes": "Dersler",
