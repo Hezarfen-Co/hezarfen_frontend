@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getPomodoroMe } from "@/api/pomodoro";
 import { getLimits } from "@/api/limits";

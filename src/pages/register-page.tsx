@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/solid-router";
-import { createResource, createSignal, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { postRegister } from "@/api/auth";
 import { getLimits } from "@/api/limits";
 import { formatApiError } from "@/api/client";

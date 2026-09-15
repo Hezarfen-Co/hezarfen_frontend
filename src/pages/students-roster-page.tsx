@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getClassMembers, getClasses } from "@/api/classes";
 import { getTerms } from "@/api/terms";
 import { getUserSearch } from "@/api/users";

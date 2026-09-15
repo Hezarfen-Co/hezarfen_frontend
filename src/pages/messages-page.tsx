@@ -2,11 +2,11 @@ import {
   For,
   Show,
   createMemo,
-  createResource,
   createSignal,
   Suspense,
   useTransition,
 } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Button } from "@/components/ui/button";

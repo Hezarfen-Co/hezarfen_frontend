@@ -1,5 +1,6 @@
 import type { ColumnDef } from "@tanstack/solid-table";
-import { For, Show, Suspense, createMemo, createResource } from "solid-js";
+import { For, Show, Suspense, createMemo } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getModules, getModulesCatalog } from "@/api/modules";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";

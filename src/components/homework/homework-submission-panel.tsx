@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { ApiError, formatApiError } from "@/api/client";
 import {
   deleteHomeworkSubmission,

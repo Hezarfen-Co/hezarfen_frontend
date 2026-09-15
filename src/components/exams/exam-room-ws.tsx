@@ -1,4 +1,5 @@
-import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, lazy, onCleanup } from "solid-js";
+import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createSignal, lazy, onCleanup } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getExamAttempt } from "@/api/exams";
 import { getExamAttemptQuestions } from "@/api/exams";
 import { getSettings } from "@/api/settings";

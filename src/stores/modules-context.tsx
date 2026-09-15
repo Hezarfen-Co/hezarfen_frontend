@@ -3,9 +3,9 @@ import {
   type ParentProps,
   createContext,
   createMemo,
-  createResource,
   useContext,
 } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getModules } from "@/api/modules";
 import { useAuth } from "@/stores/auth-context";
 

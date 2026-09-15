@@ -3,10 +3,10 @@ import {
   type ParentProps,
   createContext,
   createMemo,
-  createResource,
   createSignal,
   useContext,
 } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import { getHomework } from "@/api/homework";

@@ -1,4 +1,4 @@
-import { createResource } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { cn } from "@/lib/cn";
 import { loadIllustration, type IllustrationName } from "@/lib/illustrations";
 

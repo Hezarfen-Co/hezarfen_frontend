@@ -1,4 +1,5 @@
-import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { useLocation } from "@tanstack/solid-router";
 import { deleteNoteById } from "@/api/notes";
 import { getNotes } from "@/api/notes";

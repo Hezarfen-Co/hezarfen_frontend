@@ -1,4 +1,5 @@
-import { For, Show, createEffect, createResource, createSignal } from "solid-js";
+import { For, Show, createEffect, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { BankQuestion, BankVisibility, Course } from "@/api/client";
 import {
   patchBankQuestionById,

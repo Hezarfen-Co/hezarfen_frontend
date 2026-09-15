@@ -27,20 +27,20 @@ Solid components run **once**; there is no re-render.
 
 ## Two expensive resource pitfalls
 
-## 1. `resource.latest` for reads outside `<Suspense>`
+## 1. Import `createResource` from `@/lib/create-resource`, never `solid-js`
 
-A bare `resource()` re-suspends on **every** `refetch()` — not just the first load, and `initialValue` does NOT stop it. If that read sits outside a `<Suspense>` (e.g. an always-rendered badge/count in a shell component mounted beside `<Outlet>`), the suspension bubbles up and **blanks the whole page** for the entire fetch duration, once per poll/refetch. Invisible on a fast local backend; a multi-second blank on a real one.
+Solid's bare `resource()` re-suspends on **every** `refetch()` and every source change — `initialValue` does NOT stop it. The nearest `<Suspense>` then swaps its whole subtree for the fallback: a table card (header, search, pager) blanks after one row delete and loses its own page/query state; a read outside any page boundary blanks the whole route.
 
 Rule:
-- Reads under a page's `<Suspense>` → use `resource()`.
-- Always-rendered / shell / badge reads of a periodically-refetched resource → use `resource.latest` (last value, no suspend).
-- Poll-driven revalidation belongs behind `.latest`.
+- Always `import { createResource } from "@/lib/create-resource"`. Its accessor reads `.latest`: suspends only until the first value, then keeps the last value on screen while the next loads. `loading`/`error`/`state`/`latest`/`refetch`/`mutate` are unchanged.
+- Stale data never crosses records: detail routes remount per `$id` (the router keys a match by its params).
+- Show in-flight refresh with `resource.loading` where it matters, not a Suspense fallback.
 
 ## 2. Live save-on-click toggles use a local signal, not `mutate`/`refetch`
 
 For an inline switch that PATCHes one field (e.g. the exam-review toggle in `exam-detail-page.tsx`):
 
-- Do NOT `refetch()` the shared resource → re-suspends → page spinner.
+- Do NOT `refetch()` the shared resource → a needless GET, and any dependent resource refetches too.
 - Do NOT `mutate({...res, field})` either → mutating a shared resource changes its object identity, so every *other* `createResource` whose source reads it (directly or via a memo like `hasCourseManagementRights()`) re-runs and refetches, cascading the same spinner.
 
 Instead keep a local signal, sync from the resource in a `createEffect`, flip optimistically, revert on failure:

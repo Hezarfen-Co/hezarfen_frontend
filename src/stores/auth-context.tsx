@@ -3,11 +3,11 @@ import {
   type ParentProps,
   createContext,
   createEffect,
-  createResource,
   createSignal,
   onCleanup,
   useContext,
 } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getMe } from "@/api/users";
 import { postLogout } from "@/api/auth";
 import type { User } from "@/api/client";

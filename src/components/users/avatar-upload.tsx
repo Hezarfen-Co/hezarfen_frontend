@@ -1,4 +1,5 @@
-import { Show, createResource, createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { formatApiError } from "@/api/client";
 import { getLimits } from "@/api/limits";
 import { deleteMyAvatar, postMyAvatar } from "@/api/users";

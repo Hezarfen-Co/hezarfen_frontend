@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/solid-router";
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { postLogin, postLogout, postSelectSchool } from "@/api/auth";
 import type { SchoolChoiceResponse } from "@/api/auth";
 import { getLimits } from "@/api/limits";

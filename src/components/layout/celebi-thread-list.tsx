@@ -1,4 +1,5 @@
-import { For, Show, createEffect, createResource, createSignal, on } from "solid-js";
+import { For, Show, createEffect, createSignal, on } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getChatbotThreads, type ChatbotThread } from "@/api/chatbot";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconEdit, IconTrash } from "@/components/ui/icons";

@@ -1,4 +1,5 @@
-import { For, Show, createResource, createSignal } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getClasses, getMyClasses } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { getEvents } from "@/api/events";

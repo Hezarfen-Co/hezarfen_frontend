@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getUsers } from "@/api/users";
 import { patchUserRole } from "@/api/users";
 import { formatApiError } from "@/api/client";

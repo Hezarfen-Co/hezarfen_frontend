@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { For, Show, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   IconBook,

@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, lazy } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal, lazy } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
 import type { NoteFile } from "@/api/client";

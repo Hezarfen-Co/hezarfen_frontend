@@ -1,4 +1,5 @@
-import { Show, createMemo, createResource, createSignal } from "solid-js";
+import { Show, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
   deleteSlotById,

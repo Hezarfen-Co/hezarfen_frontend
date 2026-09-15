@@ -1,4 +1,5 @@
-import { For, Index, Show, Suspense, createEffect, createResource, createSignal, lazy, untrack } from "solid-js";
+import { For, Index, Show, Suspense, createEffect, createSignal, lazy, untrack } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { formatApiError } from "@/api/client";
 import type { Choice, ImageMeta, QuestionKind, Subject } from "@/api/client";
 import { BANK_QUESTION_LIMITS, QUESTION_KINDS } from "@/api/client";

@@ -1,4 +1,5 @@
-import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createResource, createSignal, type Component } from "solid-js";
+import { For, Match, Show, Suspense, Switch, createEffect, createMemo, createSignal, type Component } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getClassesByUserId } from "@/api/classes";

@@ -1,4 +1,5 @@
-import { For, Show, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteWorkEntryById } from "@/api/work";
 import { getUserSearch } from "@/api/users";

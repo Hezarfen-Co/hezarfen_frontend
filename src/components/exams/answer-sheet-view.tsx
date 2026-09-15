@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal, useTransition } from "solid-js";
+import { For, Show, Suspense, createMemo, createSignal, useTransition } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { ApiError } from "@/api/client";
 import { getExamQuestions, getExamReviewQuestions } from "@/api/exams";
 import { getStudentAnswers, getStudentAnswerImage } from "@/api/exams";

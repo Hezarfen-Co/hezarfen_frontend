@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createEffect, createResource, createSignal, lazy } from "solid-js";
+import { For, Show, Suspense, createEffect, createSignal, lazy } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { Link, useLocation, useNavigate, useSearch } from "@tanstack/solid-router";
 import { getQuestions, postQuestion, deleteQuestionById } from "@/api/shared";
 import { getSettings } from "@/api/settings";

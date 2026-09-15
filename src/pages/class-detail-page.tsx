@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {

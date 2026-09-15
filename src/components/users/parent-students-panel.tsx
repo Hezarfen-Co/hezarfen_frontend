@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
 import { getParentStudents } from "@/api/parents";
 import { postParentStudent } from "@/api/parents";

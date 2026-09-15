@@ -1,4 +1,5 @@
-import { For, Index, Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
+import { For, Index, Show, Suspense, createEffect, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getSettings } from "@/api/settings";
 import { patchSettings } from "@/api/settings";
 import { getLimits } from "@/api/limits";

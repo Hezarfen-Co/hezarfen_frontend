@@ -1,4 +1,5 @@
-import { For, Show, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { Link } from "@tanstack/solid-router";
 import { getSettings } from "@/api/settings";

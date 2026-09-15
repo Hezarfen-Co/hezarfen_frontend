@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getBoards, postBoard, type Board } from "@/api/boards";
 import { getUserSearch } from "@/api/users";
 import { formatApiError, type PersonRef } from "@/api/client";

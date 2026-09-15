@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { deleteEventRegisterByUserId } from "@/api/events";
 import { deleteEventAttendanceByUserId } from "@/api/events";
 import { deleteEventById } from "@/api/events";

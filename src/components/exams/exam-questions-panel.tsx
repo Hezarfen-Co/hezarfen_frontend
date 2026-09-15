@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { deleteExamChoiceImage } from "@/api/exams";
 import { deleteExamQuestionImage } from "@/api/exams";
 import { deleteExamQuestionById } from "@/api/exams";

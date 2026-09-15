@@ -1,4 +1,5 @@
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getMyWorkLog } from "@/api/work";
 import { postWorkCheckIn } from "@/api/work";

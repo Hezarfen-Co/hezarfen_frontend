@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteBankQuestionById, getBankQuestions } from "@/api/bank-questions";
 import { getCourses } from "@/api/courses";

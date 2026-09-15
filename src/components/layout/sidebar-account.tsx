@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { Show, createResource, createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { User } from "@/api/client";
 import { getMyProfile } from "@/api/users";
 import { avatarRevision } from "@/lib/avatar";

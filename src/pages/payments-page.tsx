@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "@tanstack/solid-router";
-import { For, Index, Show, Suspense, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js";
+import { For, Index, Show, Suspense, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
   deletePaymentPlanById,

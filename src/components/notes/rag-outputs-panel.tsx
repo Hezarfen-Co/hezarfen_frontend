@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { formatApiError } from "@/api/client";
 import type { RagOutput } from "@/api/client";
 import type { NoteFileSource } from "@/lib/note-source";

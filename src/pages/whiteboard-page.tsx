@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "@tanstack/solid-router";
-import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import {
   deleteBoardById,
   getBoardEpochs,

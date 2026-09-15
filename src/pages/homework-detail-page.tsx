@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/solid-router";
-import { Show, Suspense, createMemo, createResource } from "solid-js";
+import { Show, Suspense, createMemo } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getCourseById } from "@/api/courses";
 import { formatApiError } from "@/api/client";
 import { getHomeworkById } from "@/api/homework";

@@ -1,4 +1,5 @@
-import { type Accessor, type ParentProps, createContext, createResource, useContext } from "solid-js";
+import { type Accessor, type ParentProps, createContext, useContext } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getBuilderMe, postBuilderLogout } from "@/api/builder";
 import { ApiError, type Builder } from "@/api/client";
 

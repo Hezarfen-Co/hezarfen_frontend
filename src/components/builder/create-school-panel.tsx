@@ -1,4 +1,5 @@
-import { Show, createResource, createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getModulesCatalog } from "@/api/modules";
 import { getLimits } from "@/api/limits";
 import { postSchool } from "@/api/schools";

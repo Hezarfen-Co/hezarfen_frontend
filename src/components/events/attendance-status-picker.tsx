@@ -1,4 +1,5 @@
-import { For, Show, createMemo, createResource } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getSettings } from "@/api/settings";
 import type { AttendanceStatus } from "@/api/client";
 import { Label } from "@/components/ui/label";

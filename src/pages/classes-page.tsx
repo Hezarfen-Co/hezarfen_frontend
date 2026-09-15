@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
 import { getClasses, getClassMembers, postClass } from "@/api/classes";
 import { getTerms } from "@/api/terms";

@@ -1,4 +1,5 @@
-import { Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { useNavigate, useParams } from "@tanstack/solid-router";
 import { getModulesCatalog } from "@/api/modules";
 import {

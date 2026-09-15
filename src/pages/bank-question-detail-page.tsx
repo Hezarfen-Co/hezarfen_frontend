@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import {
   deleteBankChoiceImage,
   deleteBankQuestionById,

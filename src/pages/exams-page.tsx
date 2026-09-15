@@ -1,4 +1,5 @@
-import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourseById } from "@/api/courses";

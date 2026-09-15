@@ -1,4 +1,5 @@
-import { Show, Suspense, createEffect, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
 import { getMyAttendance, getMyMarks } from "@/api/reports";
 import { formatApiError } from "@/api/client";

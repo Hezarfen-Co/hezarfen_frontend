@@ -1,5 +1,6 @@
 import { Link, useLocation, useParams } from "@tanstack/solid-router";
-import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { getUserById, patchUserProfile, patchUserRole } from "@/api/users";
 import { formatApiError, type Role } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";

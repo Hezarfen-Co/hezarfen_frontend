@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getCourseEnrollments } from "@/api/courses";
 import { deleteHomeworkResultByUserId, getHomeworkRosterSubmissionFileUrl, getHomeworkSubmissions, postHomeworkResult } from "@/api/homework";

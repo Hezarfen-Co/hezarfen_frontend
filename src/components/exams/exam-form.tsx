@@ -1,4 +1,5 @@
-import { createEffect, createMemo, createResource, createSignal, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, Show } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { formatApiError } from "@/api/client";
 import { For } from "solid-js";
 import { getSettings } from "@/api/settings";

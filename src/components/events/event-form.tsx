@@ -1,4 +1,5 @@
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { formatApiError } from "@/api/client";
 import { getCourses } from "@/api/courses";
 import { getTime } from "@/api/time";

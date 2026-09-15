@@ -1,4 +1,5 @@
-import { Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResource } from "@/lib/create-resource";
 import { deleteCourseNoteById, getCourseNotes, patchCourseNoteById, postCourseNote, postCourseNoteFile } from "@/api/course-notes";
 import { formatApiError } from "@/api/client";
 import { NoteForm } from "@/components/notes/note-form";
