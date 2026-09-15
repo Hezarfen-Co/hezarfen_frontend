@@ -25,6 +25,9 @@ export type MessageKey =
   | "ai.goTo"
   | "ai.didYouMean"
   | "ai.skipTyping"
+  | "ai.searchPlaceholder"
+  | "ai.scrollToLatest"
+  | "ai.noSearchResults"
   | "nav.today"
   | "nav.classes"
   | "nav.classGroups"
@@ -1908,6 +1911,9 @@ const en: Dict = {
   "ai.goTo": "Go to the page",
   "ai.didYouMean": "Did you mean one of these?",
   "ai.skipTyping": "Show the whole answer",
+  "ai.searchPlaceholder": "Search this chat...",
+  "ai.scrollToLatest": "Latest",
+  "ai.noSearchResults": "No messages match your search.",
   "nav.today": "Today",
   "nav.classes": "Courses",
   "nav.classGroups": "Classes",
@@ -3802,6 +3808,9 @@ const tr: Dict = {
   "ai.goTo": "Sayfaya git",
   "ai.didYouMean": "Bunu mu demek istedin?",
   "ai.skipTyping": "Cevabın tamamını göster",
+  "ai.searchPlaceholder": "Bu sohbette ara...",
+  "ai.scrollToLatest": "En alta git",
+  "ai.noSearchResults": "Aramanla eşleşen mesaj yok.",
   "nav.today": "Bugün",
   "nav.classes": "Dersler",
   "nav.classGroups": "Şubeler",

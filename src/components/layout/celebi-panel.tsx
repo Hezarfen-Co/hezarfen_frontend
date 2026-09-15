@@ -7,8 +7,9 @@ import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { CelebiReplyActions } from "@/components/layout/celebi-reply-actions";
 import { CelebiThinkingLabel } from "@/components/layout/celebi-thinking-label";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTableSearch } from "@/components/ui/data-table-search";
 import { EmptyInline } from "@/components/ui/empty-inline";
-import { IconAlert, IconBotSquare, IconCopy, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconAlert, IconBotSquare, IconChevronDown, IconCopy, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -34,6 +35,8 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   const [threads, setThreads] = createSignal<ChatbotThread[]>([]);
   const [sending, setSending] = createSignal(false);
   const [copiedId, setCopiedId] = createSignal<string>();
+  const [searchQuery, setSearchQuery] = createSignal("");
+  const [showScrollToLatest, setShowScrollToLatest] = createSignal(false);
 
   const copyMessage = async (message: PanelMessage) => {
     await navigator.clipboard.writeText(message.content);
@@ -94,7 +97,18 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   const NEAR_BOTTOM_PX = 64;
   const scrollToLatest = () => {
     if (!transcript) return;
-    transcript.scrollTop = transcript.scrollHeight;
+    transcript.scrollTo({ top: transcript.scrollHeight, behavior: "smooth" });
+    setShowScrollToLatest(false);
+  };
+  const handleTranscriptScroll = () => {
+    if (!transcript) return;
+    const distance = transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight;
+    setShowScrollToLatest(distance > NEAR_BOTTOM_PX);
+  };
+  const filteredMessages = () => {
+    const query = searchQuery().trim().toLocaleLowerCase(locale());
+    if (!query) return messages();
+    return messages().filter((message) => message.content.toLocaleLowerCase(locale()).includes(query));
   };
   createEffect(() => {
     const items = messages();
@@ -217,7 +231,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   };
 
   return (
-    <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("ai.title")} description={t("ai.description")}>
+    <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("ai.title")} description={t("ai.description")} bodyClass="overflow-hidden">
       <div class="flex h-full min-h-0 flex-col">
         <div class="mb-3 flex shrink-0 gap-2 overflow-x-auto border-b border-border pb-3">
           <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={createThread}>
@@ -240,15 +254,33 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             )}
           </For>
         </div>
-        <div ref={transcript} class="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+        <div class="mb-3 flex shrink-0 items-center gap-2">
+          <DataTableSearch value={searchQuery()} onChange={setSearchQuery} placeholder={t("ai.searchPlaceholder")} class="min-w-0 flex-1" />
+          <Show when={showScrollToLatest()}>
+            <button
+              type="button"
+              class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
+              onClick={scrollToLatest}
+              aria-label={t("ai.scrollToLatest")}
+            >
+              <IconChevronDown class="h-3.5 w-3.5" />
+              <span class="hidden sm:inline">{t("ai.scrollToLatest")}</span>
+            </button>
+          </Show>
+        </div>
+        <div ref={transcript} onScroll={handleTranscriptScroll} class="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
           <Show
           when={messages().length > 0}
           fallback={
             <EmptyInline class="h-full py-10" size="md" illustration="messages" title={t("ai.title")} hint={t("ai.empty")} />
           }
         >
+          <Show
+            when={filteredMessages().length > 0}
+            fallback={<p class="py-10 text-center text-sm text-muted-foreground">{t("ai.noSearchResults")}</p>}
+          >
           <div class="flex flex-col gap-3">
-            <For each={messages()}>
+            <For each={filteredMessages()}>
               {(message) => (
                 <div class={message.role === "user" ? "ml-8 rounded-lg rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground" : "mr-6 rounded-lg rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
                   <Switch>
@@ -311,6 +343,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
               )}
             </For>
           </div>
+          </Show>
           </Show>
         </div>
         <div class="mt-4 shrink-0">

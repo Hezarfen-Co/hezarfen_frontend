@@ -14,6 +14,7 @@ export function SidePanel(
     class?: string;
     /** default ~34rem, wide ~42rem, xl ~48rem — for report tables */
     size?: "default" | "wide" | "xl";
+    bodyClass?: string;
   }>,
 ) {
   // Kobalte's modal Dialog hides the app with aria-hidden before its focus
@@ -74,7 +75,7 @@ export function SidePanel(
               <IconX class="h-4 w-4" />
             </DialogPrimitive.CloseButton>
           </div>
-          <div class="side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5">
+          <div class={cn("side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5", props.bodyClass)}>
             {props.children}
           </div>
         </DialogPrimitive.Content>
