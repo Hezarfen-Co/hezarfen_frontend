@@ -538,8 +538,14 @@ const routeTree = rootRoute.addChildren([
   ...comingSoonRoutes,
 ]);
 
+// Lazy route chunks load here; keep the spinner in the middle of the viewport
+// instead of an empty page.
 function RouterPending() {
-  return <div class="min-h-[var(--app-viewport)] bg-background" />;
+  return (
+    <div class="flex min-h-[calc(var(--app-viewport)-8rem)] items-center justify-center bg-background" role="status" aria-busy="true">
+      <div class="h-9 w-9 animate-spin rounded-sm border-2 border-primary/20 border-t-primary" />
+    </div>
+  );
 }
 
 export const router = createRouter({

@@ -108,7 +108,7 @@ test("student class directory uses only enrolled-course data", async () => {
   expect(screen.queryByRole("link", { name: /Algebra/ })).toBeNull();
 
   fireEvent.input(screen.getByPlaceholderText("Search…"), { target: { value: "" } });
-  fireEvent.change(screen.getByRole("combobox", { name: "Term" }), { target: { value: "unassigned" } });
+  fireEvent.change(screen.getByLabelText("Term", { selector: "select" }), { target: { value: "unassigned" } });
   expect(await screen.findByRole("link", { name: /Study Lab/ })).toBeTruthy();
   expect(screen.queryByRole("link", { name: /Robotics/ })).toBeNull();
 });

@@ -1,4 +1,4 @@
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, createEffect, createSignal, on } from "solid-js";
 import { Link, useNavigate, useRouterState } from "@tanstack/solid-router";
 import { HOME_ITEM, routeNavItem, visibleNavGroups, type NavGroup, type NavItem } from "@/components/layout/nav-items";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -41,7 +41,13 @@ export function SideNav(props: {
 
   const [folded, setFolded] = createSignal<Record<string, boolean>>(readFolded());
   const isFolded = (group: NavGroup) => folded()[group.id] ?? group.defaultFolded ?? false;
-  const toggleGroup = (group: NavGroup) => {
+  const toggleGroup = (group: NavGroup, section?: HTMLElement) => {
+    const opening = isFolded(group);
+    // Opening a section near the bottom would leave its rows below the fold;
+    // bring the section's last row into view once it has rendered.
+    if (opening && section) {
+      requestAnimationFrame(() => section.scrollIntoView({ block: "end", behavior: "smooth" }));
+    }
     const next = { ...folded(), [group.id]: !isFolded(group) };
     setFolded(next);
     try {
@@ -50,6 +56,16 @@ export function SideNav(props: {
       // Private mode / quota: folding still works for this session.
     }
   };
+
+  // Landing on a page inside a folded section unfolds it once, so the active
+  // row is visible; the viewer can still fold it again afterwards.
+  createEffect(
+    on(current, (item) => {
+      if (!item) return;
+      const group = groups().find((candidate) => candidate.items.some((entry) => entry.id === item.id));
+      if (group && isFolded(group)) setFolded({ ...folded(), [group.id]: false });
+    }),
+  );
 
   const runAction = (item: NavItem) => {
     props.onNavigate?.();
@@ -87,14 +103,16 @@ export function SideNav(props: {
       <For each={groups()}>
         {(group) => {
           const active = () => group.items.some((item) => current()?.id === item.id);
-          // The section holding the current page never folds away under the viewer.
-          const open = () => active() || !isFolded(group);
+          const open = () => !isFolded(group);
+          let sectionEl: HTMLElement | undefined;
           const renderLinks = () => (
             <div class="grid gap-px">
               <For each={group.items}>
                 {(item: NavItem) => {
                   const itemActive = () => current()?.id === item.id;
-                  const linkClass = cn(
+                  // A function, not a value: Solid runs this callback once, so a plain
+                  // cn(...) would freeze the active style at first render.
+                  const linkClass = () => cn(
                     "relative flex h-[30px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     itemActive()
                       ? "bg-primary/10 text-primary"
@@ -120,12 +138,12 @@ export function SideNav(props: {
                     <Show
                       when={!item.action}
                       fallback={
-                        <button type="button" onClick={() => runAction(item)} title={t(item.labelKey)} class={cn(linkClass, "w-full text-left")}>
+                        <button type="button" onClick={() => runAction(item)} title={t(item.labelKey)} class={cn(linkClass(), "w-full text-left")}>
                           {content}
                         </button>
                       }
                     >
-                      <Link to={item.to} onClick={() => props.onNavigate?.()} title={t(item.labelKey)} aria-current={itemActive() ? "page" : undefined} class={linkClass}>
+                      <Link to={item.to} onClick={() => props.onNavigate?.()} title={t(item.labelKey)} aria-current={itemActive() ? "page" : undefined} class={linkClass()}>
                         {content}
                       </Link>
                     </Show>
@@ -138,10 +156,10 @@ export function SideNav(props: {
             <Show
               when={props.collapsed}
               fallback={
-                <section class="mt-2 first:mt-0">
+                <section class="mt-2 scroll-mb-2 first:mt-0" ref={sectionEl}>
                   <button
                     type="button"
-                    onClick={() => toggleGroup(group)}
+                    onClick={() => toggleGroup(group, sectionEl)}
                     aria-expanded={open()}
                     class="group/section flex h-7 w-full items-center gap-1.5 rounded-md px-3 text-left text-[11px] font-semibold tracking-wide text-muted-foreground/80 outline-hidden transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                   >

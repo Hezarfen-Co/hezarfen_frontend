@@ -106,7 +106,7 @@ function WorkLogContent() {
         description={openEntry() ? t("work.since", { time: formatDateTime(openEntry()!.check_in, locale()) }) : t("work.subtitle")}
         actions={
           <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" variant={openEntry() ? "destructive" : "default"} disabled={pending()} onClick={() => void toggle()}>
-            {openEntry() ? t("work.checkOut") : t("work.checkIn")}
+            {openEntry() ? t("work.finish") : t("work.start")}
           </Button>
         }
       />

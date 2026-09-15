@@ -17,6 +17,7 @@ import { getMyAttendance, getMyCourses, getMyMarks, getUserAttendance } from "@/
 import { getTime } from "@/api/time/getTime";
 import { getUsers } from "@/api/users";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ComingSoonBadge, ComingSoonPanel } from "@/components/ui/coming-soon";
 import { ChartBar } from "@/components/ui/chart-bar";
@@ -685,9 +686,9 @@ function DashboardContent() {
               <h2 id="highlights-heading" class="text-base font-semibold tracking-tight text-text-strong">{t("dashboard.analytics")}</h2>
               <Show when={isAdminHome()}>
                 <div class="flex items-center gap-2">
-                  <select disabled class="h-8 rounded-lg border border-border-line bg-surface-tint px-2 text-[13px] text-text-subtle disabled:opacity-60">
+                  <Select disabled wrapperClass="w-auto" class="h-8" aria-label={t("dashboard.admin.rangeThisMonth")}>
                     <option>{t("dashboard.admin.rangeThisMonth")}</option>
-                  </select>
+                  </Select>
                   <ComingSoonBadge />
                 </div>
               </Show>
@@ -846,16 +847,17 @@ function DashboardContent() {
             <Show when={(children()?.items.length ?? 0) > 1}>
               <div class="flex items-center gap-2">
                 <label for="dashboard-child" class="text-sm text-text-subtle">{t("dashboard.parent.child")}</label>
-                <select
+                <Select
                   id="dashboard-child"
+                  wrapperClass="w-auto"
+                  class="h-8"
                   value={selectedChildId()}
-                  onInput={(event) => setSelectedChildId(event.currentTarget.value)}
-                  class="h-8 rounded-lg border border-border-line bg-surface-base px-2 text-[13px] text-text-default"
+                  onChange={(event) => setSelectedChildId(event.currentTarget.value)}
                 >
                   <For each={children()?.items}>
                     {(child) => <option value={child.id}>{personLabel(child)}</option>}
                   </For>
-                </select>
+                </Select>
               </div>
             </Show>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">

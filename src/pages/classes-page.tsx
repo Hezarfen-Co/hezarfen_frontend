@@ -5,6 +5,7 @@ import { getTerms } from "@/api/terms";
 import { getLimits } from "@/api/limits";
 import { formatApiError, type ClassGroup } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { DataTableSearch } from "@/components/ui/data-table-search";
 import { DataSection } from "@/components/ui/data-section";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -175,12 +176,7 @@ function ClassesContent() {
             }
           >
             <div class="flex flex-wrap items-center gap-2">
-              <Input
-                value={query()}
-                onInput={(e) => setQuery(e.currentTarget.value)}
-                placeholder={t("classGroups.searchPlaceholder")}
-                class="h-8 w-full max-w-sm rounded-lg text-[13px]"
-              />
+              <DataTableSearch value={query()} onChange={setQuery} placeholder={t("classGroups.searchPlaceholder")} />
               <Show when={grades().length > 0}>
                 <Tabs value={gradeFilter()} onChange={setGradeFilter}>
                   <TabsList>

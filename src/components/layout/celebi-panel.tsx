@@ -7,6 +7,7 @@ import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { CelebiReplyActions } from "@/components/layout/celebi-reply-actions";
 import { CelebiSuggestions } from "@/components/layout/celebi-suggestions";
 import { CelebiThinkingLabel } from "@/components/layout/celebi-thinking-label";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconAlert, IconBotSquare, IconCopy, IconEdit, IconPlus, IconSparkles, IconTrash } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
@@ -117,8 +118,19 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   const loadThreads = async () => { try { setThreads((await getChatbotThreads({ limit: 100 })).items); } catch { /* history is non-blocking */ } };
   const openThread = async (id: string) => { stopPolling(); stopStream(); stopReveal(); setThreadId(id); setMessages((await getChatbotThreadMessages(id, { limit: 500 })).items); };
   const createThread = () => { stopPolling(); stopStream(); stopReveal(); setThreadId(undefined); setMessages([]); };
-  const renameThread = async (thread: ChatbotThread) => { const title = window.prompt(locale() === "tr" ? "Sohbet başlığı" : "Conversation title", thread.title ?? ""); if (title !== null) { await patchChatbotThreadById(thread.id, { title: title.trim() || null }); await loadThreads(); } };
-  const removeThread = async (thread: ChatbotThread) => { if (!window.confirm(locale() === "tr" ? "Bu sohbet silinsin mi?" : "Delete this conversation?")) return; await deleteChatbotThreadById(thread.id); if (threadId() === thread.id) createThread(); await loadThreads(); };
+  // Rename and delete go through the shared confirm dialog, never the
+  // browser's own prompt()/confirm() boxes.
+  const [renaming, setRenaming] = createSignal<ChatbotThread | null>(null);
+  const [removing, setRemoving] = createSignal<ChatbotThread | null>(null);
+  const renameThread = async (thread: ChatbotThread, title: string | undefined) => {
+    await patchChatbotThreadById(thread.id, { title: title?.trim() || null });
+    await loadThreads();
+  };
+  const removeThread = async (thread: ChatbotThread) => {
+    await deleteChatbotThreadById(thread.id);
+    if (threadId() === thread.id) createThread();
+    await loadThreads();
+  };
   createEffect(() => { if (props.open) void loadThreads(); });
 
   const failureMessage = (code: string | null) => {
@@ -218,10 +230,10 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
                 <button type="button" class="max-w-[10rem] truncate px-2.5 text-xs text-foreground" onClick={() => void openThread(thread.id)}>
                   {thread.title || (locale() === "tr" ? "Adsız sohbet" : "Untitled chat")}
                 </button>
-                <button type="button" class="flex h-full w-7 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={locale() === "tr" ? "Sohbeti yeniden adlandır" : "Rename chat"} onClick={() => void renameThread(thread)}>
+                <button type="button" class="flex h-full w-7 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={locale() === "tr" ? "Sohbeti yeniden adlandır" : "Rename chat"} onClick={() => setRenaming(thread)}>
                   <IconEdit class="h-3.5 w-3.5" />
                 </button>
-                <button type="button" class="flex h-full w-7 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" aria-label={locale() === "tr" ? "Sohbeti sil" : "Delete chat"} onClick={() => void removeThread(thread)}>
+                <button type="button" class="flex h-full w-7 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" aria-label={locale() === "tr" ? "Sohbeti sil" : "Delete chat"} onClick={() => setRemoving(thread)}>
                   <IconTrash class="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -319,6 +331,26 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           />
         </div>
       </div>
+      <ConfirmDialog
+        open={renaming() != null}
+        onOpenChange={(open) => !open && setRenaming(null)}
+        title={t("ai.renameChat")}
+        description={t("ai.renameChatHint")}
+        summary={renaming()?.title || t("ai.untitledChat")}
+        confirmLabel={t("common.save")}
+        icon={<IconEdit class="h-4 w-4" />}
+        prompt={{ label: t("ai.chatTitle"), initialValue: renaming()?.title ?? "", maxLength: 120, singleLine: true }}
+        onConfirm={(title) => renameThread(renaming()!, title)}
+      />
+      <ConfirmDialog
+        open={removing() != null}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        variant="destructive"
+        title={t("ai.deleteChat")}
+        description={t("ai.deleteChatHint")}
+        summary={removing()?.title || t("ai.untitledChat")}
+        onConfirm={() => removeThread(removing()!)}
+      />
     </SidePanel>
   );
 }

@@ -4,6 +4,12 @@ export type MessageKey =
   | "app.name"
   | "app.tagline"
   | "ai.askCelebi"
+  | "ai.renameChat"
+  | "ai.renameChatHint"
+  | "ai.chatTitle"
+  | "ai.untitledChat"
+  | "ai.deleteChat"
+  | "ai.deleteChatHint"
   | "ai.title"
   | "ai.description"
   | "ai.empty"
@@ -1711,6 +1717,8 @@ export type MessageKey =
   | "work.subtitle"
   | "work.checkIn"
   | "work.checkOut"
+  | "work.start"
+  | "work.finish"
   | "work.checkedIn"
   | "work.notCheckedIn"
   | "work.ready"
@@ -1864,6 +1872,12 @@ const en: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Your campus workspace — notes, events, exams in one calm place.",
   "ai.askCelebi": "Ask Çelebi",
+  "ai.renameChat": "Rename chat",
+  "ai.renameChatHint": "Change the title shown in the chat list.",
+  "ai.chatTitle": "Chat title",
+  "ai.untitledChat": "Untitled chat",
+  "ai.deleteChat": "Delete this chat?",
+  "ai.deleteChatHint": "The chat and all of its messages are permanently deleted.",
   "ai.title": "Çelebi",
   "ai.description": "Campus assistant",
   "ai.empty": "Ask Çelebi about your school day, courses, exams, or attendance.",
@@ -3663,11 +3677,13 @@ const en: Dict = {
   "attendance.totalAbsence": "Total absence",
   "attendance.overallRate": "Attendance rate",
   "work.title": "Work log",
-  "work.subtitle": "Check in and out to log your working hours.",
-  "work.checkIn": "Check in",
-  "work.checkOut": "Check out",
-  "work.checkedIn": "Checked in",
-  "work.notCheckedIn": "Not checked in",
+  "work.subtitle": "Start and end your work to log your hours.",
+  "work.checkIn": "Started",
+  "work.checkOut": "Ended",
+  "work.start": "Start work",
+  "work.finish": "End work",
+  "work.checkedIn": "At work",
+  "work.notCheckedIn": "Not at work yet",
   "work.ready": "Ready to start a work stint.",
   "work.since": "Since {time}",
   "work.entries": "Recent entries",
@@ -3735,6 +3751,12 @@ const tr: Dict = {
   "app.name": "Hezarfen",
   "app.tagline": "Kampüs çalışma alanın — notlar, etkinlikler ve sınavlar tek yerde.",
   "ai.askCelebi": "Çelebi’ye sor",
+  "ai.renameChat": "Sohbeti yeniden adlandır",
+  "ai.renameChatHint": "Sohbet listesinde görünecek başlığı değiştir.",
+  "ai.chatTitle": "Sohbet başlığı",
+  "ai.untitledChat": "Adsız sohbet",
+  "ai.deleteChat": "Sohbet silinsin mi?",
+  "ai.deleteChatHint": "Sohbet ve içindeki tüm mesajlar kalıcı olarak silinir.",
   "ai.title": "Çelebi",
   "ai.description": "Kampüs asistanı",
   "ai.empty": "Okul günün, derslerin, sınavların veya yoklamaların hakkında Çelebi’ye sor.",
@@ -5534,11 +5556,13 @@ const tr: Dict = {
   "attendance.totalAbsence": "Toplam devamsızlık",
   "attendance.overallRate": "Devam oranı",
   "work.title": "Mesai kaydı",
-  "work.subtitle": "Mesai saatlerinizi kaydetmek için giriş ve çıkış yapın.",
-  "work.checkIn": "Giriş yap",
-  "work.checkOut": "Çıkış yap",
-  "work.checkedIn": "Giriş yapılmış",
-  "work.notCheckedIn": "Giriş yapılmadı",
+  "work.subtitle": "Mesai saatlerini kaydetmek için işe başla, bitince işi bitir.",
+  "work.checkIn": "Başlangıç",
+  "work.checkOut": "Bitiş",
+  "work.start": "İşe başla",
+  "work.finish": "İşi bitir",
+  "work.checkedIn": "Mesaidesin",
+  "work.notCheckedIn": "Henüz işe başlamadın",
   "work.ready": "Mesai kaydı başlatmaya hazır.",
   "work.since": "Başlangıç: {time}",
   "work.entries": "Son kayıtlar",

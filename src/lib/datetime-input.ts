@@ -42,3 +42,15 @@ export function dateInputToEndOfDayMs(date: string): number | null {
   if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
   return d.getTime();
 }
+
+/** yyyy-mm-dd (API calendar date) → dd/mm/yyyy (DatePicker value). */
+export function isoDateToInput(iso: string): string {
+  const match = iso.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : "";
+}
+
+/** dd/mm/yyyy (DatePicker value) → yyyy-mm-dd, or "" when incomplete. */
+export function inputDateToIso(date: string): string {
+  const match = date.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return match ? `${match[3]}-${match[2]}-${match[1]}` : "";
+}

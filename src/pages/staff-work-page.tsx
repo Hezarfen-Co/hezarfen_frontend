@@ -9,6 +9,7 @@ import { ApiError } from "@/api/client";
 import type { Page, PersonRef, WorkEntry } from "@/api/client";
 import type { Locale } from "@/i18n/messages";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { DataTableSearch } from "@/components/ui/data-table-search";
 import { DataSection } from "@/components/ui/data-section";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -300,12 +301,7 @@ function StaffWorkContent() {
           </>
         }
       >
-        <Input
-          value={staffSearch()}
-          onInput={(e) => setStaffSearch(e.currentTarget.value)}
-          placeholder={t("work.searchPlaceholder")}
-          class="h-8 max-w-sm rounded-lg text-[13px]"
-        />
+        <DataTableSearch value={staffSearch()} onChange={setStaffSearch} placeholder={t("work.searchPlaceholder")} />
 
         <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
           <Show when={pagedPeople().length > 0} fallback={<EmptyState kind="people" title={t("work.noTeachers")} />}>

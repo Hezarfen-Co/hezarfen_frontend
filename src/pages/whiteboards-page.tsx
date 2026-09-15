@@ -4,6 +4,7 @@ import { getBoards, postBoard, type Board } from "@/api/boards";
 import { getUserSearch } from "@/api/users";
 import { formatApiError, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { DataTableSearch } from "@/components/ui/data-table-search";
 import { DataSection } from "@/components/ui/data-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -77,12 +78,7 @@ function WhiteboardsContent() {
             fallback={<EmptyState kind="whiteboard" title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
           >
             <div class="space-y-4">
-              <Input
-                value={query()}
-                onInput={(e) => setQuery(e.currentTarget.value)}
-                placeholder={t("whiteboard.searchPlaceholder")}
-                class="h-8 max-w-sm rounded-lg text-[13px]"
-              />
+              <DataTableSearch value={query()} onChange={setQuery} placeholder={t("whiteboard.searchPlaceholder")} />
               <Show when={visibleBoards().length > 0} fallback={<EmptyState kind="search" title={t("common.noResults")} />}>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <For each={visibleBoards()}>

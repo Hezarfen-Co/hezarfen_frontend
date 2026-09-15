@@ -164,7 +164,7 @@ export function MobileNavSheet(props: {
                   <For each={group.items}>
                     {(item) => {
                       const active = () => current()?.id === item.id;
-                      const rowClass = cn(
+                      const rowClass = () => cn(
                         "flex w-full items-center gap-2.5 rounded-md px-3 py-1.5 text-left transition-colors active:bg-muted",
                         active() ? "text-primary" : "text-foreground",
                       );
@@ -197,12 +197,12 @@ export function MobileNavSheet(props: {
                         <Show
                           when={!item.action}
                           fallback={
-                            <button type="button" onClick={() => runAction(item)} class={rowClass}>
+                            <button type="button" onClick={() => runAction(item)} class={rowClass()}>
                               {content}
                             </button>
                           }
                         >
-                          <Link to={item.to} onClick={props.onClose} aria-current={active() ? "page" : undefined} class={rowClass}>
+                          <Link to={item.to} onClick={props.onClose} aria-current={active() ? "page" : undefined} class={rowClass()}>
                             {content}
                           </Link>
                         </Show>

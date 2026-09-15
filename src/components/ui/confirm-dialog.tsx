@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { IconAlert, IconTrash } from "@/components/ui/icons";
@@ -30,7 +31,7 @@ export type ConfirmDialogProps = {
   /** Optional color treatment for a context-specific confirmation icon. */
   iconClass?: string;
   /** When set, renders an optional free-text field; its value is passed to onConfirm. */
-  prompt?: { label: string; placeholder?: string; maxLength?: number };
+  prompt?: { label: string; placeholder?: string; maxLength?: number; initialValue?: string; singleLine?: boolean };
   onConfirm: (prompt?: string) => void | Promise<void>;
 };
 
@@ -42,7 +43,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
 
   // Reset the field each time the dialog opens so a prior entry never leaks over.
   createEffect(() => {
-    if (props.open) setPromptValue("");
+    if (props.open) setPromptValue(props.prompt?.initialValue ?? "");
   });
 
   const run = async () => {
@@ -91,16 +92,36 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
             {(prompt) => (
               <div class="mt-3 space-y-1.5">
                 <Label for="confirm-prompt">{prompt().label}</Label>
-                <Textarea
-                  id="confirm-prompt"
-                  class="min-h-20"
-                  rows={2}
-                  maxlength={prompt().maxLength}
-                  placeholder={prompt().placeholder}
-                  value={promptValue()}
-                  disabled={pending()}
-                  onInput={(e) => setPromptValue(e.currentTarget.value)}
-                />
+                <Show
+                  when={prompt().singleLine}
+                  fallback={
+                    <Textarea
+                      id="confirm-prompt"
+                      class="min-h-20"
+                      rows={2}
+                      maxlength={prompt().maxLength}
+                      placeholder={prompt().placeholder}
+                      value={promptValue()}
+                      disabled={pending()}
+                      onInput={(e) => setPromptValue(e.currentTarget.value)}
+                    />
+                  }
+                >
+                  <Input
+                    id="confirm-prompt"
+                    maxlength={prompt().maxLength}
+                    placeholder={prompt().placeholder}
+                    value={promptValue()}
+                    disabled={pending()}
+                    onInput={(e) => setPromptValue(e.currentTarget.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        void run();
+                      }
+                    }}
+                  />
+                </Show>
               </div>
             )}
           </Show>
