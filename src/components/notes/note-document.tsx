@@ -14,7 +14,6 @@ import { useT } from "@/stores/preferences-context";
 
 const MAX_TITLE = 200;
 const MAX_CONTENT = 10_000;
-const MOD_KEY = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘" : "Ctrl";
 
 /**
  * A personal note as a full-page document: title, editor, attachments. A new
@@ -99,19 +98,21 @@ export function NoteDocument(props: { note?: Note }) {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
+      {/* Title above both columns, so the editor and the attachments start on one line. */}
+      <input
+        class="w-full bg-transparent px-1 text-3xl font-semibold tracking-tight text-text-strong outline-hidden placeholder:text-muted-foreground/50"
+        placeholder={t("notes.titlePlaceholder")}
+        aria-label={t("form.title")}
+        value={title()}
+        maxlength={MAX_TITLE}
+        onInput={(event) => setTitle(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") event.preventDefault();
+        }}
+      />
+
       <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div class="min-w-0 space-y-3">
-          <input
-            class="w-full bg-transparent px-1 text-3xl font-semibold tracking-tight text-text-strong outline-hidden placeholder:text-muted-foreground/50"
-            placeholder={t("notes.titlePlaceholder")}
-            aria-label={t("form.title")}
-            value={title()}
-            maxlength={MAX_TITLE}
-            onInput={(event) => setTitle(event.currentTarget.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") event.preventDefault();
-            }}
-          />
+        <div class="min-w-0">
           <NoteRichEditor
             value={content()}
             onChange={setContent}
@@ -119,7 +120,6 @@ export function NoteDocument(props: { note?: Note }) {
             toolbarClass="top-[45px]"
             actions={
               <>
-                <span class="hidden text-xs text-muted-foreground md:inline">{t("notes.saveShortcut", { key: MOD_KEY })}</span>
                 <Button type="button" size="sm" class="min-w-[6.5rem] rounded-lg" disabled={saving() || (!dirty() && !isNew())} onClick={() => void save()}>
                   {saving() ? t("notes.saving") : t("common.save")}
                 </Button>
