@@ -20,7 +20,7 @@ export function TooltipContent<T extends ValidComponent = "div">(
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         class={cn(
-          "z-50 max-w-64 rounded-md border border-border/80 bg-popover px-3 py-2 text-xs text-popover-foreground shadow-xl shadow-black/10",
+          "z-[70] max-w-64 rounded-md border border-border/80 bg-popover px-3 py-2 text-xs text-popover-foreground shadow-xl shadow-black/10",
           "origin-(--kb-tooltip-content-transform-origin) animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,
         )}

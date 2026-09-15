@@ -488,8 +488,8 @@
      up under the status bar and the camera. This band does not move: it paints
      the theme background over that strip at every scroll position, so the
      cutout area always matches the page instead of showing what is behind it.
-     It sits above every overlay (the highest in the app is z-80) because the
-     strip must stay clean even while a drawer or dialog is open. */
+     It sits above every overlay (modals z-70, toasts/date-picker z-80) because
+     the strip must stay clean even while a drawer or dialog is open. */
   body::before {
     content: '';
     position: fixed;

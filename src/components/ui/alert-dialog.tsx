@@ -16,12 +16,14 @@ export function AlertDialogContent<T extends ValidComponent = "div">(
   ]);
   return (
     <AlertDialogPrimitive.Portal>
-      <AlertDialogPrimitive.Overlay class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm transition-opacity" />
-      {/* Inset by the system bars — see dialog.tsx. */}
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 pb-[calc(1rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] pt-[calc(1rem+env(safe-area-inset-top))]">
+      {/* z-[70]: above the mobile nav sheet (z-60) and tab bar (z-40). */}
+      <AlertDialogPrimitive.Overlay class="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm transition-opacity" />
+      {/* Inset by the system bars — see dialog.tsx. pointer-events-none on the
+          centering shell so outside taps reach the overlay/dismiss layer. */}
+      <div class="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center p-4 pb-[calc(1rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] pt-[calc(1rem+env(safe-area-inset-top))]">
         <AlertDialogPrimitive.Content
           class={cn(
-            "w-full max-w-md overflow-hidden border border-border/80 bg-background text-foreground shadow-2xl shadow-black/20 outline-hidden animate-fade-up sm:rounded-lg",
+            "pointer-events-auto w-full max-w-md overflow-hidden border border-border/80 bg-background text-foreground shadow-2xl shadow-black/20 outline-hidden animate-fade-up sm:rounded-lg",
             local.class,
           )}
           {...rest}

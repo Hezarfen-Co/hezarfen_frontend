@@ -41,10 +41,11 @@ export function SidePanel(
   return (
     <DialogPrimitive open={props.open} onOpenChange={props.onOpenChange} modal={false} preventScroll>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay class="fixed inset-0 z-50 bg-[rgba(13,15,23,0.55)] transition-opacity duration-200 data-closed:opacity-0 data-expanded:opacity-100" />
+        {/* z-[70]: above the mobile nav sheet (z-60) and tab bar (z-40). */}
+        <DialogPrimitive.Overlay class="fixed inset-0 z-[70] bg-[rgba(13,15,23,0.55)] transition-opacity duration-200 data-closed:opacity-0 data-expanded:opacity-100" />
         <DialogPrimitive.Content
           class={cn(
-            "fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l border-border-line bg-surface-base text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.16)] outline-hidden",
+            "fixed inset-y-0 right-0 z-[70] flex h-full w-full flex-col border-l border-border-line bg-surface-base text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.16)] outline-hidden",
             // The panel spans the whole display, so it has to keep its own
             // header out from under the status bar and its footer off the
             // gesture bar. Both insets are 0 in a desktop browser.
@@ -65,7 +66,11 @@ export function SidePanel(
                 </DialogPrimitive.Description>
               )}
             </div>
-            <DialogPrimitive.CloseButton class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            <DialogPrimitive.CloseButton
+              type="button"
+              aria-label="Close"
+              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <IconX class="h-4 w-4" />
             </DialogPrimitive.CloseButton>
           </div>

@@ -21,7 +21,7 @@ export function DropdownMenuContent<T extends ValidComponent = "div">(
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         class={cn(
-          "z-50 min-w-32 overflow-hidden rounded-md border border-border/80 bg-popover p-1 text-popover-foreground shadow-xl shadow-black/10 outline-hidden",
+          "z-[70] min-w-32 overflow-hidden rounded-md border border-border/80 bg-popover p-1 text-popover-foreground shadow-xl shadow-black/10 outline-hidden",
           "origin-(--kb-menu-content-transform-origin)",
           "animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,
@@ -152,7 +152,7 @@ export function DropdownMenuSubContent<T extends ValidComponent = "div">(
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.SubContent
         class={cn(
-          "z-50 min-w-32 overflow-hidden rounded-md border border-border/80 bg-popover p-1 text-popover-foreground shadow-xl shadow-black/10 outline-hidden",
+          "z-[70] min-w-32 overflow-hidden rounded-md border border-border/80 bg-popover p-1 text-popover-foreground shadow-xl shadow-black/10 outline-hidden",
           "origin-(--kb-menu-content-transform-origin)",
           "animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,

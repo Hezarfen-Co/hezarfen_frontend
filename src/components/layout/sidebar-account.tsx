@@ -23,12 +23,29 @@ function displayName(user: User) {
   return user.display_name?.trim() || [user.name, user.surname].filter(Boolean).join(" ").trim() || user.username;
 }
 
-export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => void | Promise<void> }) {
+export function SidebarAccount(props: {
+  collapsed?: boolean;
+  onLogout: () => void | Promise<void>;
+  /** Mobile sheet: open upward so the menu stays on screen. Desktop keeps right-end. */
+  menuPlacement?: "right-end" | "top-start";
+  /** When set (mobile sheet), host closes the sheet and opens the shared profile dialog. */
+  onOpenSettings?: () => void;
+}) {
   const auth = useAuth();
   const prefs = usePreferences();
   const t = useT();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = createSignal(false);
+
+  const openSettings = () => {
+    // Defer so the menu finishes closing/restoring focus before another
+    // overlay mounts — same race TableRowActions guards against.
+    if (props.onOpenSettings) {
+      setTimeout(() => props.onOpenSettings!(), 0);
+      return;
+    }
+    setTimeout(() => setProfileOpen(true), 0);
+  };
 
   // The auth user carries no avatar meta, so without this both chips below
   // attempt the image and 404 when there is no photo. One profile read tells
@@ -49,7 +66,7 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
           const name = () => displayName(u());
           return (
           <div class={cn("shrink-0 border-t border-border/80 p-2 dark:border-white/8", props.collapsed && "px-2 py-2") }>
-            <DropdownMenu placement="right-end" gutter={8}>
+            <DropdownMenu placement={props.menuPlacement ?? "right-end"} gutter={8}>
               <DropdownMenuTrigger
                 class={cn(
                   "flex w-full items-center text-left outline-hidden transition-colors",
@@ -95,7 +112,7 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                   <IconUserCircle class="h-4 w-4 shrink-0 text-muted-foreground dark:text-white/60" />
                   <span>{t("profile.myProfile")}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem class="rounded-lg gap-3" onSelect={() => setProfileOpen(true)}>
+                <DropdownMenuItem class="rounded-lg gap-3" onSelect={openSettings}>
                   <IconSettings class="h-4 w-4 shrink-0 text-muted-foreground dark:text-white/60" />
                   <span>{t("nav.settings")}</span>
                 </DropdownMenuItem>

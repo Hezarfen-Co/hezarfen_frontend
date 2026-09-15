@@ -96,7 +96,14 @@ export function MobileNavSheet(props: {
 
   return (
     <div
-      class={cn("fixed inset-0 z-[60] lg:hidden", props.open ? "visible" : "invisible")}
+      // Closed: invisible + pointer-events-none. visibility:hidden alone still
+      // leaves pointer-events:auto, and on some mobile WebViews that full-screen
+      // z-60 layer swallows taps meant for dialogs/side panels underneath (z-50
+      // historically, now z-70). Open sheet stays above the tab bar (z-40).
+      class={cn(
+        "fixed inset-0 z-[60] lg:hidden",
+        props.open ? "pointer-events-auto visible" : "pointer-events-none invisible",
+      )}
       aria-hidden={props.open ? undefined : "true"}
     >
       <button
@@ -215,7 +222,14 @@ export function MobileNavSheet(props: {
           </For>
         </div>
 
-        <SidebarAccount onLogout={props.onLogout} />
+        <SidebarAccount
+          menuPlacement="top-start"
+          onLogout={props.onLogout}
+          onOpenSettings={() => {
+            props.onClose();
+            props.onOpenProfile?.();
+          }}
+        />
       </div>
     </div>
   );

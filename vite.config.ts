@@ -27,7 +27,18 @@ export default defineConfig({
         target,
         changeOrigin: true,
         ws: true,
-        rewrite: (path) => path.replace(/^\/api(?=\/|$)/, ""),
+        // Local Rust backend (e.g. :7656) speaks unprefixed routes, so strip
+        // /api. The public origin terminates /api itself — stripping there
+        // hits the SPA HTML instead of the API and breaks every local session
+        // against the default BACKEND_ORIGIN.
+        rewrite: (path) => {
+          try {
+            if (/hezarfen\.dizey\.sh$/i.test(new URL(target).host)) return path;
+          } catch {
+            /* keep strip fallback */
+          }
+          return path.replace(/^\/api(?=\/|$)/, "");
+        },
       },
     },
   },
