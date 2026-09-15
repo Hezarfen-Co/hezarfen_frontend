@@ -166,7 +166,6 @@ export type MessageKey =
   | "notes.backToNotebook"
   | "notes.titlePlaceholder"
   | "notes.bodyPlaceholder"
-  | "notes.saveShortcut"
   | "notes.unsaved"
   | "notes.allSaved"
   | "notes.saving"
@@ -566,6 +565,8 @@ export type MessageKey =
   | "common.notFound"
   | "common.accessDenied"
   | "common.goHome"
+  | "modules.offTitle"
+  | "modules.offDescription"
   | "common.learnMore"
   | "common.gotIt"
   | "confirm.review"
@@ -2082,7 +2083,6 @@ const en: Dict = {
   "notes.backToNotebook": "Notebook",
   "notes.titlePlaceholder": "Untitled note",
   "notes.bodyPlaceholder": "Start writing…",
-  "notes.saveShortcut": "{key}+S to save",
   "notes.unsaved": "Unsaved changes",
   "notes.allSaved": "All changes saved",
   "notes.saving": "Saving…",
@@ -2484,6 +2484,8 @@ const en: Dict = {
   "common.notFound": "Page not found",
   "common.accessDenied": "You do not have access to this content.",
   "common.goHome": "Go home",
+  "modules.offTitle": "{module} is switched off",
+  "modules.offDescription": "Your school doesn't have this module turned on right now. Ask your school administrator if you need it.",
   "common.learnMore": "Learn more",
   "common.gotIt": "Got it",
   "confirm.review": "Please review your changes before saving.",
@@ -4006,7 +4008,6 @@ const tr: Dict = {
   "notes.backToNotebook": "Defter",
   "notes.titlePlaceholder": "Başlıksız not",
   "notes.bodyPlaceholder": "Yazmaya başla…",
-  "notes.saveShortcut": "Kaydetmek için {key}+S",
   "notes.unsaved": "Kaydedilmemiş değişiklikler",
   "notes.allSaved": "Tüm değişiklikler kaydedildi",
   "notes.saving": "Kaydediliyor…",
@@ -4408,6 +4409,8 @@ const tr: Dict = {
   "common.notFound": "Sayfa bulunamadı",
   "common.accessDenied": "Bu içeriğe erişimin yok.",
   "common.goHome": "Ana sayfaya dön",
+  "modules.offTitle": "{module} modülü kapalı",
+  "modules.offDescription": "Bu modül okulunuzda şu an kullanıma açık değil. İhtiyacınız varsa okul yöneticinizle iletişime geçin.",
   "common.learnMore": "Daha fazla",
   "common.gotIt": "Anladım",
   "confirm.review": "Lütfen kaydetmeden önce değişiklikleri gözden geçirin.",

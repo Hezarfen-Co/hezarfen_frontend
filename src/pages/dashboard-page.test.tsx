@@ -3,9 +3,13 @@ import type { JSX } from "solid-js";
 import DashboardPage from "@/pages/dashboard-page";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
-const { navigate, authUser } = vi.hoisted(() => ({
+const { navigate, authUser, schoolModules, calls, refuseExams } = vi.hoisted(() => ({
   navigate: vi.fn(),
   authUser: { authenticated: true, role: "student" },
+  // null = module state unknown (fail open, everything shown).
+  schoolModules: { enabled: null as string[] | null },
+  calls: [] as string[],
+  refuseExams: { on: false },
 }));
 
 vi.mock("@tanstack/solid-router", () => ({
@@ -36,7 +40,12 @@ const page = <T,>(items: T[]) => ({ items, total: items.length, limit: 50, offse
 const course = { id: "course-1", title: "Algebra", capacity: 24 };
 
 vi.mock("@/stores/modules-context", () => ({
-  useModules: () => ({ enabled: () => null, isEnabled: () => true, refresh: () => {} }),
+  useModules: () => ({
+    enabled: () => schoolModules.enabled,
+    loading: () => false,
+    isEnabled: (module: string) => schoolModules.enabled === null || schoolModules.enabled.includes(module),
+    refresh: () => {},
+  }),
 }));
 vi.mock("@/api/modules", () => ({ getModulesCatalog: async () => ({ modules: [], packages: [] }) }));
 vi.mock("@/api/time/getTime", () => ({ getTime: async () => ({ now }) }));
@@ -46,7 +55,7 @@ vi.mock("@/api/courses", () => ({
 }));
 vi.mock("@/api/reports", () => ({
   getMyCourses: async () => page([course]),
-  getMyMarks: async () => ({
+  getMyMarks: async () => (calls.push("marks"), {
     overall_average: 82.5,
     courses: [{
       course,
@@ -70,8 +79,13 @@ vi.mock("@/api/payments", () => ({
     balance_minor: 0,
   }),
 }));
-vi.mock("@/api/exams", () => ({
-  getExams: async () => page([
+vi.mock("@/api/exams", async () => {
+  const { ApiError } = await import("@/api/client");
+  return {
+  getExams: async () => {
+    // A builder switched exams off after the modules list was read.
+    if (refuseExams.on) throw new ApiError(403, "forbidden", null, "exams");
+    return page([
     {
       id: "exam-1",
       title: "Exam deadline",
@@ -88,7 +102,8 @@ vi.mock("@/api/exams", () => ({
       starts_at: now - 10 * DAY,
       ends_at: now - 10 * DAY + 3_000,
     },
-  ]),
+  ]);
+  },
   getExamStatistics: async (examId: string) => ({
     exam: examId,
     graded: 12,
@@ -96,7 +111,8 @@ vi.mock("@/api/exams", () => ({
     min: 40,
     max: 96,
   }),
-}));
+  };
+});
 vi.mock("@/api/pomodoro", () => ({
   getPomodoroMe: async () => ({
     items: [
@@ -159,6 +175,9 @@ afterEach(() => {
   cleanup();
   navigate.mockReset();
   authUser.authenticated = true;
+  schoolModules.enabled = null;
+  calls.length = 0;
+  refuseExams.on = false;
 });
 
 function renderDashboard(role: string) {
@@ -248,4 +267,23 @@ test("parent sees family highlights and appointment deadlines without staff char
   expect(screen.queryByText("Teaching resources")).toBeNull();
   expect(await screen.findByRole("button", { name: /Teacher Name/ })).toBeTruthy();
   expect(screen.getByRole("heading", { name: "Upcoming deadlines" }).closest("section")?.className).not.toContain("col-span");
+});
+
+test("switched-off modules leave no tile, panel or request behind", async () => {
+  schoolModules.enabled = ["courses", "exams", "events", "homework", "appointments", "meals", "classes"];
+  renderDashboard("student");
+
+  expect(await screen.findByRole("heading", { name: "Upcoming deadlines" })).toBeTruthy();
+  expect(screen.queryByText("Course averages")).toBeNull();
+  expect(screen.queryByText("Attendance split")).toBeNull();
+  expect(screen.queryByText("Focus activity")).toBeNull();
+  expect(calls).not.toContain("marks");
+});
+
+test("a module refusal mid-session reads as no data instead of breaking the board", async () => {
+  refuseExams.on = true;
+  renderDashboard("manager");
+
+  expect(await screen.findByRole("heading", { name: "Upcoming deadlines" })).toBeTruthy();
+  expect(screen.queryByText(/permission|switched off/i)).toBeNull();
 });

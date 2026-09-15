@@ -3,7 +3,7 @@ import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import type { Role } from "@/api/client";
-import { formatApiError } from "@/api/client";
+import { formatApiError, isModuleDisabledError } from "@/api/client";
 import { getAppointments } from "@/api/appointments";
 import { getClasses, getClassesByUserId, getMyClasses } from "@/api/classes";
 import { getCourseEnrollments, getCourses } from "@/api/courses";
@@ -81,6 +81,8 @@ type DeadlineRow = {
 
 type StatCardData = {
   labelKey: MessageKey;
+  /** The module the number comes from; the tile is left out when it is off. */
+  module?: string;
   value: string;
   Icon: Component<{ class?: string }>;
 };
@@ -120,64 +122,78 @@ function DashboardContent() {
   const { locale } = usePreferences();
   const user = () => auth.user()!;
   const role = () => user().role;
+  // A school can have any module switched off, and every route of an off
+  // module answers 403. The board never asks one (the source goes null), and
+  // a refusal that races a builder's switch reads as "no data" instead of
+  // throwing through the page — it used to blank the whole homepage.
+  const schoolModules = useModules();
+  const on = (module: string) => !schoolModules.loading() && schoolModules.isEnabled(module);
+  const quiet = <T,>(request: Promise<T>): Promise<T | null> =>
+    request.catch((err: unknown) => {
+      if (isModuleDisabledError(err)) return null;
+      throw err;
+    });
   const [clock] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
   // Unpaged: the backend has no `kind` filter, so a "courses" count that
   // excludes studies and clubs has to be counted here over the whole list.
   const [courses] = createResource(
-    () => role() === "parent" ? null : role(),
-    (currentRole) => currentRole === "student" ? getMyCourses() : getCourses(),
+    () => role() === "parent" || !on("courses") ? null : role(),
+    (currentRole) => quiet(currentRole === "student" ? getMyCourses() : getCourses()),
   );
   const courseCount = () => (courses()?.items ?? []).filter((course) => course.kind === "course").length;
   // `/events` has no role gate — a parent-teacher conference is a real PAR-01
   // "Yaklaşan" item, so parent reads this too (unlike `exams`/`homework`
   // below, which really are course-scoped and out of a parent's reach).
   const [events] = createResource(
-    () => clock()?.now,
-    (now) => getEvents({ ends_after: now, limit: 50 }),
+    () => (on("events") ? clock()?.now : null),
+    (now) => quiet(getEvents({ ends_after: now, limit: 50 })),
   );
   const [exams] = createResource(
-    () => role() === "parent" ? null : role(),
-    () => getExams({ limit: 100 }),
+    () => role() === "parent" || !on("exams") ? null : role(),
+    () => quiet(getExams({ limit: 100 })),
   );
   // Unfiltered: `/homework` has no due-date window, so this one read serves both
   // the deadlines table (filtered by `scheduleStatus`) and the backwards-looking
   // heatmap.
   const [homework] = createResource(
-    () => role() === "parent" ? null : role(),
-    () => getHomework({ limit: 100 }),
+    () => role() === "parent" || !on("homework") ? null : role(),
+    () => quiet(getHomework({ limit: 100 })),
   );
   const [children] = createResource(
     () => role() === "parent" ? true : null,
-    () => getMyStudents({ limit: 12 }),
+    () => quiet(getMyStudents({ limit: 12 })),
   );
-  const [appointments] = createResource(() => getAppointments({ limit: 20 }));
+  const [appointments] = createResource(
+    () => (on("appointments") ? true : null),
+    () => quiet(getAppointments({ limit: 20 })),
+  );
   const [menus] = createResource(
-    () => clock()?.now,
-    (now) => getMealMenus({ from: new Date(now).toISOString().slice(0, 10), limit: 1 }),
+    () => (on("meals") ? clock()?.now : null),
+    (now) => quiet(getMealMenus({ from: new Date(now).toISOString().slice(0, 10), limit: 1 })),
   );
   const [marks] = createResource(
-    () => role() === "student" ? true : null,
-    () => getMyMarks(),
+    () => role() === "student" && on("marks") ? true : null,
+    () => quiet(getMyMarks()),
   );
   const [attendance] = createResource(
-    () => role() === "student" ? true : null,
-    () => getMyAttendance(),
+    () => role() === "student" && on("attendance") ? true : null,
+    () => quiet(getMyAttendance()),
   );
   const [myClasses] = createResource(
-    () => role() === "student" ? true : null,
-    () => getMyClasses({ limit: 1 }),
+    () => role() === "student" && on("classes") ? true : null,
+    () => quiet(getMyClasses({ limit: 1 })),
   );
   // Focus heatmap source. Only a student owns pomodoro sessions — reading
   // another user's log is the teacher+ /management/pomodoros page's job.
   const [pomodoro] = createResource(
-    () => role() === "student" ? true : null,
-    () => getPomodoroMe({ limit: 400 }),
+    () => role() === "student" && on("pomodoro") ? true : null,
+    () => quiet(getPomodoroMe({ limit: 400 })),
   );
   // `/events` is the one list here that really is filtered server-side, by the
   // `ends_after` window the deadlines table needs. The heatmap looks backwards
   // and there is no "before" filter, so past events need their own read.
   const [pastEvents] = createResource(
-    () => hasMinRole(role(), "teacher") ? true : null,
+    () => hasMinRole(role(), "teacher") && on("events") ? true : null,
     () => getEvents({ limit: 100 }).catch(() => null),
   );
   // Success trend source for teacher+. Exam statistics are grader-only, so this
@@ -240,12 +256,12 @@ function DashboardContent() {
     if (first && !selectedChildId()) setSelectedChildId(first);
   });
   const [childClasses] = createResource(
-    () => (role() === "parent" && selectedChildId() ? selectedChildId() : null),
+    () => (role() === "parent" && on("classes") && selectedChildId() ? selectedChildId() : null),
     (id) => getClassesByUserId(id, { limit: 1 }).catch(() => null),
   );
   const homeroomTeacher = () => childClasses()?.items[0]?.teacher ?? null;
   const [childAttendance] = createResource(
-    () => (role() === "parent" && selectedChildId() ? selectedChildId() : null),
+    () => (role() === "parent" && on("attendance") && selectedChildId() ? selectedChildId() : null),
     (id) => getUserAttendance(id).catch(() => null),
   );
   const childAttendanceBreakdown = createMemo(() => {
@@ -262,7 +278,7 @@ function DashboardContent() {
     };
   });
   const [childStatement] = createResource(
-    () => (role() === "parent" && selectedChildId() ? selectedChildId() : null),
+    () => (role() === "parent" && on("payments") && selectedChildId() ? selectedChildId() : null),
     (id) => getPaymentStatementByUserId(id, { limit: 100 }).catch(() => null),
   );
   const paymentSummary = createMemo(() => {
@@ -294,8 +310,8 @@ function DashboardContent() {
     () => getUsers({ limit: 30 }),
   );
   const [recentClasses] = createResource(
-    () => (isAdminHome() ? true : null),
-    () => getClasses({ limit: 2 }),
+    () => (isAdminHome() && on("classes") ? true : null),
+    () => quiet(getClasses({ limit: 2 })),
   );
   const studentQuickLinks = createMemo<QuickLinkRow[]>(() =>
     (recentStudents()?.items ?? [])
@@ -319,7 +335,6 @@ function DashboardContent() {
 
   // The school's own entitlements per package: the catalog is deploy-constant,
   // the enabled set is already in the shell's modules context.
-  const schoolModules = useModules();
   const [moduleCatalog] = createResource(
     () => (isAdminHome() ? true : null),
     () => getModulesCatalog().catch(() => null),
@@ -377,39 +392,40 @@ function DashboardContent() {
     return total ? Math.round((present / total) * 100) : null;
   });
 
-  const stats = createMemo<StatCardData[]>(() => {
+  const allStats = createMemo<StatCardData[]>(() => {
     const r = role();
     if (r === "student") {
       return [
-        { labelKey: "dashboard.stats.courses", value: String(courseCount()), Icon: IconBook },
-        { labelKey: "dashboard.stats.exams", value: String(exams()?.total ?? 0), Icon: IconExam },
-        { labelKey: "dashboard.stats.average", value: marks()?.overall_average == null ? "—" : marks()!.overall_average!.toFixed(1), Icon: IconChart },
-        { labelKey: "dashboard.stats.attendance", value: attendanceRate() == null ? "—" : `${attendanceRate()}%`, Icon: IconClipboardCheck },
+        { labelKey: "dashboard.stats.courses", module: "courses", value: String(courseCount()), Icon: IconBook },
+        { labelKey: "dashboard.stats.exams", module: "exams", value: String(exams()?.total ?? 0), Icon: IconExam },
+        { labelKey: "dashboard.stats.average", module: "marks", value: marks()?.overall_average == null ? "—" : marks()!.overall_average!.toFixed(1), Icon: IconChart },
+        { labelKey: "dashboard.stats.attendance", module: "attendance", value: attendanceRate() == null ? "—" : `${attendanceRate()}%`, Icon: IconClipboardCheck },
       ];
     }
     if (r === "teacher") {
       return [
-        { labelKey: "dashboard.stats.courses", value: String(courseCount()), Icon: IconBook },
-        { labelKey: "dashboard.stats.students", value: teacherStudentCount() == null ? "—" : String(teacherStudentCount()), Icon: IconUsers },
-        { labelKey: "dashboard.stats.exams", value: String(exams()?.total ?? 0), Icon: IconExam },
-        { labelKey: "dashboard.stats.homework", value: String(homework()?.total ?? 0), Icon: IconHomework },
+        { labelKey: "dashboard.stats.courses", module: "courses", value: String(courseCount()), Icon: IconBook },
+        { labelKey: "dashboard.stats.students", module: "courses", value: teacherStudentCount() == null ? "—" : String(teacherStudentCount()), Icon: IconUsers },
+        { labelKey: "dashboard.stats.exams", module: "exams", value: String(exams()?.total ?? 0), Icon: IconExam },
+        { labelKey: "dashboard.stats.homework", module: "homework", value: String(homework()?.total ?? 0), Icon: IconHomework },
       ];
     }
     if (r === "parent") {
       return [
         { labelKey: "dashboard.stats.children", value: String(children()?.total ?? 0), Icon: IconUsers },
-        { labelKey: "dashboard.stats.appointments", value: String(appointments()?.total ?? 0), Icon: IconCalendarDays },
-        { labelKey: "dashboard.stats.meals", value: String(menus()?.total ?? 0), Icon: IconUtensils },
-        { labelKey: "dashboard.stats.childAttendance", value: childAttendanceBreakdown()?.rate == null ? "—" : `${childAttendanceBreakdown()!.rate}%`, Icon: IconClipboardCheck },
+        { labelKey: "dashboard.stats.appointments", module: "appointments", value: String(appointments()?.total ?? 0), Icon: IconCalendarDays },
+        { labelKey: "dashboard.stats.meals", module: "meals", value: String(menus()?.total ?? 0), Icon: IconUtensils },
+        { labelKey: "dashboard.stats.childAttendance", module: "attendance", value: childAttendanceBreakdown()?.rate == null ? "—" : `${childAttendanceBreakdown()!.rate}%`, Icon: IconClipboardCheck },
       ];
     }
     return [
-      { labelKey: "dashboard.stats.courses", value: String(courseCount()), Icon: IconBook },
-      { labelKey: "dashboard.stats.exams", value: String(exams()?.total ?? 0), Icon: IconExam },
-      { labelKey: "dashboard.stats.events", value: String(events()?.total ?? 0), Icon: IconCalendarDays },
-      { labelKey: "dashboard.stats.meals", value: String(menus()?.total ?? 0), Icon: IconUtensils },
+      { labelKey: "dashboard.stats.courses", module: "courses", value: String(courseCount()), Icon: IconBook },
+      { labelKey: "dashboard.stats.exams", module: "exams", value: String(exams()?.total ?? 0), Icon: IconExam },
+      { labelKey: "dashboard.stats.events", module: "events", value: String(events()?.total ?? 0), Icon: IconCalendarDays },
+      { labelKey: "dashboard.stats.meals", module: "meals", value: String(menus()?.total ?? 0), Icon: IconUtensils },
     ];
   });
+  const stats = () => allStats().filter((stat) => !stat.module || on(stat.module));
 
   // Student trend — own marks ordered by their exam's date. Marks whose exam
   // falls outside the fetched exam page carry no date and are left out rather
@@ -620,7 +636,7 @@ function DashboardContent() {
 
   const error = createMemo(() => {
     const problem = courses.error || events.error || exams.error || homework.error || children.error || appointments.error || menus.error || marks.error || attendance.error || myClasses.error || pomodoro.error || childAttendance.error || childStatement.error;
-    return problem ? formatApiError(problem, locale()) : "";
+    return problem && !isModuleDisabledError(problem) ? formatApiError(problem, locale()) : "";
   });
 
   return (
@@ -655,7 +671,7 @@ function DashboardContent() {
             </div>
             <h1 class="text-[28px] font-semibold leading-9 tracking-[-0.02em] text-text-strong">{t("dashboard.hero.heading")}</h1>
             <CommandSearchField />
-            <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class={cn("grid w-full grid-cols-1 gap-3", on("classes") ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
               <QuickLinkColumn
                 title={t("dashboard.quicklinks.students")}
                 illustration="people"
@@ -663,13 +679,15 @@ function DashboardContent() {
                 empty={t("dashboard.quicklinks.empty")}
                 onOpen={(row) => navigate({ to: "/admin/users/$id", params: { id: row.id } })}
               />
-              <QuickLinkColumn
-                title={t("dashboard.quicklinks.classes")}
-                illustration="courses"
-                rows={classQuickLinks()}
-                empty={t("dashboard.quicklinks.empty")}
-                onOpen={(row) => navigate({ to: "/management/classes/$id", params: { id: row.id } })}
-              />
+              <Show when={on("classes")}>
+                <QuickLinkColumn
+                  title={t("dashboard.quicklinks.classes")}
+                  illustration="courses"
+                  rows={classQuickLinks()}
+                  empty={t("dashboard.quicklinks.empty")}
+                  onOpen={(row) => navigate({ to: "/management/classes/$id", params: { id: row.id } })}
+                />
+              </Show>
               <QuickLinkColumn
                 title={t("dashboard.quicklinks.modules")}
                 illustration="modules"
@@ -714,26 +732,31 @@ function DashboardContent() {
                 design reserves for that kind of card. */}
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-4">
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-3 lg:grid-cols-3">
-                <ChartBar
-                  title={t("dashboard.progressOverview")}
-                  subtitle={t("dashboard.courseAverages")}
-                  items={courseAverages()}
-                  maxScale={100}
-                  itemsPerPage={5}
-                />
-                <ChartLine
-                  title={t("dashboard.successTrend")}
-                  subtitle={t("dashboard.successTrendMine")}
-                  items={myMarkTrend()}
-                  maxScale={100}
-                />
-                <ChartProgressRing
-                  title={t("dashboard.activitySplit")}
-                  subtitle={t("dashboard.activitySplitDesc")}
-                  segments={attendanceSegments()}
-                  itemsPerPage={3}
-                />
+                <Show when={on("marks")}>
+                  <ChartBar
+                    title={t("dashboard.progressOverview")}
+                    subtitle={t("dashboard.courseAverages")}
+                    items={courseAverages()}
+                    maxScale={100}
+                    itemsPerPage={5}
+                  />
+                  <ChartLine
+                    title={t("dashboard.successTrend")}
+                    subtitle={t("dashboard.successTrendMine")}
+                    items={myMarkTrend()}
+                    maxScale={100}
+                  />
+                </Show>
+                <Show when={on("attendance")}>
+                  <ChartProgressRing
+                    title={t("dashboard.activitySplit")}
+                    subtitle={t("dashboard.activitySplitDesc")}
+                    segments={attendanceSegments()}
+                    itemsPerPage={3}
+                  />
+                </Show>
               </div>
+              <Show when={on("pomodoro")}>
               <div class="flex flex-col gap-2 rounded-xl border border-border-line bg-surface-base p-4 lg:col-span-1">
                 <div class="flex items-center gap-2">
                   <IconClock class="h-4 w-4 shrink-0 text-text-subtle" />
@@ -757,6 +780,7 @@ function DashboardContent() {
                 </div>
                 <p class="mono text-xs tabular-nums text-text-subtle">{t("dashboard.student.thisWeekTotal", { minutes: String(weeklyFocusTotal()) })}</p>
               </div>
+              </Show>
             </div>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
               <ComingSoonPanel title={t("dashboard.student.todayPlan")} />
@@ -774,6 +798,7 @@ function DashboardContent() {
                 item behind that queue — a pending appointment request —
                 gets the rail. */}
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <Show when={on("exams")}>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2">
                 <ChartLine
                   title={t("dashboard.successTrend")}
@@ -789,6 +814,8 @@ function DashboardContent() {
                   itemsPerPage={5}
                 />
               </div>
+              </Show>
+              <Show when={on("appointments")}>
               <div class="flex flex-col rounded-xl border border-border-line bg-surface-base p-4">
                 <div class="flex items-center gap-2 pb-3">
                   <IconCalendarDays class="h-4 w-4 shrink-0 text-text-subtle" />
@@ -816,6 +843,7 @@ function DashboardContent() {
                   </For>
                 </Show>
               </div>
+              </Show>
             </div>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
               <ComingSoonPanel title={t("dashboard.teacher.schedule")} />
@@ -823,7 +851,7 @@ function DashboardContent() {
             </div>
           </Show>
 
-          <Show when={role() === "manager" || role() === "admin"}>
+          <Show when={(role() === "manager" || role() === "admin") && on("exams")}>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
               <ChartLine
                 class="lg:col-span-2"
@@ -866,6 +894,7 @@ function DashboardContent() {
               </div>
             </Show>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <Show when={on("attendance")}>
               <div class="flex flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-4 lg:col-span-2">
                 <div>
                   <p class="text-sm font-semibold text-text-strong">{t("dashboard.parent.attendanceDetail")}</p>
@@ -897,6 +926,8 @@ function DashboardContent() {
                   )}
                 </Show>
               </div>
+              </Show>
+              <Show when={on("payments")}>
               <div class="flex flex-col gap-2 rounded-xl border border-border-line bg-surface-base p-4">
                 <p class="text-sm font-semibold text-text-strong">{t("dashboard.parent.payment")}</p>
                 <p class="text-xs text-text-subtle">{t("dashboard.parent.paymentDesc")}</p>
@@ -924,6 +955,7 @@ function DashboardContent() {
                   )}
                 </Show>
               </div>
+              </Show>
             </div>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
               <ComingSoonPanel class="lg:col-span-2" title={t("dashboard.parent.progress")} />
@@ -944,6 +976,7 @@ function DashboardContent() {
             />
           </section>
 
+          <Show when={!heatmapIsFocus() || on("pomodoro")}>
           <ChartHeatmap
             title={heatmapIsFocus() ? t("dashboard.focusHeatmap") : t("dashboard.activityHeatmap")}
             subtitle={heatmapIsFocus() ? t("dashboard.focusHeatmapDesc") : t("dashboard.activityHeatmapDesc")}
@@ -966,6 +999,7 @@ function DashboardContent() {
                 : t("dashboard.heatmapRecordTotal", { count: String(heatmapTotal()), weeks: String(HEATMAP_WEEKS) })
             }
           />
+          </Show>
         </Suspense>
     </div>
   );

@@ -21,6 +21,7 @@ import { commandPaletteOpen, openCommandPalette, setCommandPaletteOpen } from "@
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
+import { ModuleGate } from "@/components/layout/module-gate";
 
 const SIDEBAR_EXPANDED = "w-[260px]";
 const SIDEBAR_COLLAPSED = "w-24";
@@ -143,7 +144,9 @@ export function AppShell(props: ParentProps) {
               <div class="min-w-0 flex-1" />
 
               <div class="flex shrink-0 items-center justify-end gap-2">
-                <ShellMessagesButton />
+                <Show when={modules.isEnabled("messages")}>
+                  <ShellMessagesButton />
+                </Show>
                 <NotificationCenter />
                 <Show when={modules.isEnabled("chatbot")}>
                   <button
@@ -171,7 +174,9 @@ export function AppShell(props: ParentProps) {
               auth.user() && !fullScreen() && "pb-[calc(3.5rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] lg:pb-6",
             )}
           >
-            {props.children}
+            <Show when={auth.user()} fallback={props.children}>
+              <ModuleGate>{props.children}</ModuleGate>
+            </Show>
           </div>
         </main>
       </div>

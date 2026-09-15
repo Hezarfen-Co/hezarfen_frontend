@@ -15,6 +15,7 @@ import { getMessages } from "@/api/messages";
 import type { Appointment, Event, Exam, Homework, Message, Page } from "@/api/client";
 import { createLivePoll } from "@/lib/create-live-poll";
 import { useAuth } from "@/stores/auth-context";
+import { useModules } from "@/stores/modules-context";
 
 // One shared poller for the always-mounted shell (NotificationCenter header +
 // header message/notification controls). Both used to `createResource` messages/events/exams
@@ -55,15 +56,19 @@ type UserFeed = Omit<ShellFeedContextValue, "nowMs">;
 // can survive into the next session. Solid keeps a resource's last value when
 // its source goes falsy, so gating alone would leak user A's inbox into user
 // B's shell until the refetch resolved.
-function createUserFeed(loggedIn: boolean): UserFeed {
+function createUserFeed(loggedIn: boolean, modulesLoading: () => boolean, isEnabled: (module: string) => boolean): UserFeed {
   // Only fetch for a logged-in user: source is false while logged out, so the
   // resource keeps its seeded empty value and never hits the network.
-  const source = () => loggedIn;
+  // It also waits for the school's module list, so a first paint never asks a
+  // switched-off module (and gets 403) before the list says it is off.
+  const source = () => loggedIn && !modulesLoading();
 
   const [messagesRes, { refetch: refetchInbox }] = createResource(
     source,
     async () => {
       try {
+        // A switched-off module would only answer 403 on every poll.
+        if (!isEnabled("messages")) return emptyPage<Message>();
         return await getMessages("inbox", { limit: 100 });
       } catch {
         return emptyPage<Message>();
@@ -80,6 +85,7 @@ function createUserFeed(loggedIn: boolean): UserFeed {
     source,
     async () => {
       try {
+        if (!isEnabled("messages")) return emptyPage<Message>();
         return await getMessages("inbox", { read: false, limit: 10 });
       } catch {
         return emptyPage<Message>();
@@ -105,6 +111,7 @@ function createUserFeed(loggedIn: boolean): UserFeed {
     source,
     async () => {
       try {
+        if (!isEnabled("events")) return emptyPage<Event>();
         return await getEvents(upcoming());
       } catch {
         return emptyPage<Event>();
@@ -117,6 +124,7 @@ function createUserFeed(loggedIn: boolean): UserFeed {
     source,
     async () => {
       try {
+        if (!isEnabled("exams")) return emptyPage<Exam>();
         return await getExams(upcoming());
       } catch {
         return emptyPage<Exam>();
@@ -129,6 +137,7 @@ function createUserFeed(loggedIn: boolean): UserFeed {
     source,
     async () => {
       try {
+        if (!isEnabled("appointments")) return emptyPage<Appointment>();
         return await getAppointments({ limit: 100 });
       } catch {
         return emptyPage<Appointment>();
@@ -141,6 +150,7 @@ function createUserFeed(loggedIn: boolean): UserFeed {
     source,
     async () => {
       try {
+        if (!isEnabled("homework")) return emptyPage<Homework>();
         return await getHomework();
       } catch {
         return emptyPage<Homework>();
@@ -186,7 +196,8 @@ export function ShellFeedProvider(props: ParentProps) {
   // the whole feed and builds a fresh one. Children never remount, so the
   // router tree below is untouched.
   const userId = createMemo(() => auth.user()?.id ?? null);
-  const feed = createMemo(() => createUserFeed(userId() !== null));
+  const modules = useModules();
+  const feed = createMemo(() => createUserFeed(userId() !== null, modules.loading, modules.isEnabled));
 
   // Reactive clock so passed items drop off without a remount. Visibility-aware:
   // no ticks/GETs while the tab is hidden, refetch on tab-back so nothing is

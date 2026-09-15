@@ -108,7 +108,7 @@ const ADMIN_GROUPS: NavGroup[] = [
     items: [
       { id: "students-roster", to: "/management/students", labelKey: "nav.studentsRoster", Icon: IconUsers, minRole: "manager" },
       { id: "teachers-roster", to: "/management/teachers", labelKey: "nav.teachersRoster", Icon: IconChalkboardTeacher, minRole: "manager" },
-      { id: "class-groups", to: "/management/classes", labelKey: "nav.classGroups", Icon: IconSchool, minRole: "teacher" },
+      { id: "class-groups", to: "/management/classes", labelKey: "nav.classGroups", Icon: IconSchool, minRole: "teacher", module: "classes" },
       { id: "terms", to: "/management/terms", labelKey: "nav.terms", Icon: IconCalendar, minRole: "manager" },
       { id: "schedule", to: "/calendar", labelKey: "nav.schedule", Icon: IconCalendarDays, minRole: "manager" },
     ],
@@ -182,7 +182,7 @@ const TEACHER_GROUPS: NavGroup[] = [
     labelKey: "nav.group.myClassroom",
     Icon: IconSchool,
     items: [
-      { id: "my-classes", to: "/management/classes", labelKey: "nav.myClasses", Icon: IconSchool },
+      { id: "my-classes", to: "/management/classes", labelKey: "nav.myClasses", Icon: IconSchool, module: "classes" },
       { id: "my-schedule", to: "/calendar", labelKey: "nav.mySchedule", Icon: IconCalendarDays },
       { id: "courses", to: "/courses", labelKey: "nav.classes", Icon: IconBook, module: "courses" },
     ],

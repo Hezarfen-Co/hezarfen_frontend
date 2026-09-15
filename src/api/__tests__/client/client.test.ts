@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, blobClient, client, formatApiError, formatApiErrorMessage, formClient } from "../../client";
+import { ApiError, blobClient, client, formatApiError, formatApiErrorMessage, formClient, isModuleDisabledError, onModuleDisabled } from "../../client";
 import { lastFetchCall, mockFetch204, mockFetchBlob, mockFetchError, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("client", () => {
@@ -73,6 +73,30 @@ describe("client", () => {
           expect(err.message).toBe("Error"); // From statusText in mock
         }
       }
+    });
+  });
+
+  describe("switched-off modules", () => {
+    it("tags a 403 carrying `module` and tells listeners", async () => {
+      const heard: string[] = [];
+      const stop = onModuleDisabled((module) => heard.push(module));
+      mockFetchError(403, { error: "forbidden", module: "notes" });
+      const err = await client("/notes").catch((e: unknown) => e);
+      stop();
+      expect(isModuleDisabledError(err)).toBe(true);
+      expect((err as ApiError).module).toBe("notes");
+      expect(heard).toEqual(["notes"]);
+      expect(formatApiError(err, "tr")).toBe("Bu özellik okulunuzda şu an kapalı.");
+    });
+
+    it("leaves an ordinary 403 as a permissions refusal", async () => {
+      const heard: string[] = [];
+      const stop = onModuleDisabled((module) => heard.push(module));
+      mockFetchError(403, { error: "forbidden" });
+      const err = await client("/users").catch((e: unknown) => e);
+      stop();
+      expect(isModuleDisabledError(err)).toBe(false);
+      expect(heard).toEqual([]);
     });
   });
 

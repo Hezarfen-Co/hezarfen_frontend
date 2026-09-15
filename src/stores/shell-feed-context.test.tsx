@@ -6,6 +6,8 @@ import { ShellFeedProvider, useShellFeed } from "@/stores/shell-feed-context";
 // The provider only reads `auth.user()`; drive it from a signal the test owns.
 const [user, setUser] = createSignal<User | null>(null);
 vi.mock("@/stores/auth-context", () => ({ useAuth: () => ({ user }) }));
+// Every module on: the feed skips switched-off modules, which is not what these cases test.
+vi.mock("@/stores/modules-context", () => ({ useModules: () => ({ isEnabled: () => true, enabled: () => null, loading: () => false }) }));
 
 const page = <T,>(items: T[]) => ({ items, total: items.length, limit: null, offset: 0 });
 

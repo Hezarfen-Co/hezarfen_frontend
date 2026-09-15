@@ -25,6 +25,11 @@ Reference: `src/pages/dashboard-page.tsx`. The homepage is a **read-only status 
 - **Grid:** stat row `1 → 2 sm → 4 lg`; charts `lg:grid-cols-3`.
 - **Role scoping:** stat/chart set matches nav/role matrix. Show only panels whose
   data exists for the role, and never call an endpoint the role would 403 on.
+- **Module scoping:** a school can switch any module off, and every route of an
+  off module answers `403 {error, module}`. Gate each resource source on
+  `on(module)` (waits for the module list, then `isEnabled`), wrap fetchers in
+  `quiet()` so a refusal racing a builder's switch reads as no data, and leave out
+  the stat tiles / panels of an off module rather than showing zeros.
 - **Deadlines table:** active / today / soon items only, semantic status badge, rows
   navigate by pointer, Enter, or Space. Empty state is plain text, not a create CTA.
 - **Chart semantics per role:**

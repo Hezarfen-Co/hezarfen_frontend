@@ -3,13 +3,40 @@ import type { Locale } from "@/i18n/messages";
 export class ApiError extends Error {
   readonly status: number;
   readonly retryAfter: number | null;
+  /** Set when the school has this route's module switched off (`403 {error, module}`). */
+  readonly module: string | null;
 
-  constructor(status: number, message: string, retryAfter: number | null = null) {
+  constructor(status: number, message: string, retryAfter: number | null = null, module: string | null = null) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.retryAfter = retryAfter;
+    this.module = module;
   }
+}
+
+/** True for a refusal because the school's module is off, not a role or record problem. */
+export function isModuleDisabledError(err: unknown): err is ApiError & { module: string } {
+  return err instanceof ApiError && err.status === 403 && err.module != null;
+}
+
+// A builder can switch a module off mid-session; the backend then answers
+// `403 {error, module}` on every route of it. Listeners (the modules context)
+// hear about it on the first such refusal and refetch the enabled set, so the
+// nav and route gate catch up without a reload.
+const moduleDisabledListeners = new Set<(module: string) => void>();
+
+export function onModuleDisabled(listener: (module: string) => void): () => void {
+  moduleDisabledListeners.add(listener);
+  return () => moduleDisabledListeners.delete(listener);
+}
+
+function disabledModuleOf(status: number, data: unknown): string | null {
+  if (status !== 403 || !data || typeof data !== "object") return null;
+  const module = (data as { module?: unknown }).module;
+  if (typeof module !== "string" || !module) return null;
+  for (const listener of moduleDisabledListeners) listener(module);
+  return module;
 }
 
 type RequestOptions = {
@@ -442,7 +469,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       }
     }
 
-    throw new ApiError(res.status, message, retryAfter);
+    throw new ApiError(res.status, message, retryAfter, disabledModuleOf(res.status, data));
   }
 
   return data as T;
@@ -486,7 +513,7 @@ export async function formClient<T>(path: string, body: FormData, signal?: Abort
 
   if (!res.ok) {
     const message = errorMessageFromPayload(data, res.statusText || "Request failed");
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, message, null, disabledModuleOf(res.status, data));
   }
 
   return data as T;
@@ -501,14 +528,16 @@ export async function blobClient(path: string, signal?: AbortSignal): Promise<Bl
   if (!res.ok) {
     const text = await res.text();
     let message = res.statusText || "Request failed";
+    let payload: unknown = null;
     if (text) {
       try {
-        message = errorMessageFromPayload(JSON.parse(text), message);
+        payload = JSON.parse(text);
+        message = errorMessageFromPayload(payload, message);
       } catch {
         message = text;
       }
     }
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, message, null, disabledModuleOf(res.status, payload));
   }
 
   return res.blob();
@@ -537,6 +566,11 @@ export function formatApiError(err: unknown, locale: Locale = currentLocale()): 
     }
     // The specific backend message wins over the per-status generic one —
     // otherwise every 401/403/404/413/5xx entry in the table is dead code.
+    // Ahead of the message table: the backend's text for a switched-off
+    // module may be a generic "forbidden", which reads as a permissions fault.
+    if (err.module != null && err.status === 403) {
+      return locale === "tr" ? "Bu özellik okulunuzda şu an kapalı." : "This feature is currently switched off for your school.";
+    }
     const known = API_ERROR_MESSAGES[normalizeApiMessage(err.message)]?.[locale];
     if (known) return known;
     if (err.status === 401) return API_ERROR_MESSAGES.unauthorized[locale];
