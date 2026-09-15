@@ -6,16 +6,26 @@
 // Local dev uses Vite's own proxy (vite.config.ts); this file is only the
 // container's runtime after `vite build`.
 
-const PORT = Number(Bun.env.PORT ?? 5173);
-// Interface to bind. 0.0.0.0 is what a published container port needs; under
-// host networking the process sits directly on the host, so a server sets
-// HOST=127.0.0.1 and only the reverse proxy beside it can reach the app.
-const HOST = Bun.env.HOST ?? "0.0.0.0";
-// Where the backend lives. The default is the co-located backend a server
-// publishes on its own loopback (the compose stack maps 127.0.0.1:7656), which
-// is what the frontend container reaches under host networking. Override with
-// BACKEND_ORIGIN for anything else.
-const BACKEND_ORIGIN = Bun.env.BACKEND_ORIGIN ?? "http://127.0.0.1:7656";
+// Every knob comes from the environment; the values themselves live in exactly
+// one place — the image's ENV block (see Containerfile), overridden per
+// deployment by hezarfen_frontend.env. Boot refuses rather than guessing: a
+// missing value here means the image was stripped or the process was started
+// outside it, and silently binding :5000-style defaults hides that.
+function required(name: string): string {
+  const value = Bun.env[name];
+  if (!value) {
+    console.error(
+      `${name} is not set. The image supplies the defaults (see the ENV block in Containerfile); ` +
+      `set ${name} in hezarfen_frontend.env to override them.`,
+    );
+    process.exit(1);
+  }
+  return value;
+}
+
+const PORT = Number(required("PORT"));
+const HOST = required("HOST");
+const BACKEND_ORIGIN = required("BACKEND_ORIGIN");
 const BACKEND_HTTP = BACKEND_ORIGIN.replace(/\/+$/, "");
 const BACKEND_WS = BACKEND_HTTP.replace(/^http/, "ws");
 const BACKEND_HOST = new URL(BACKEND_HTTP).host;

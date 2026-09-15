@@ -1,23 +1,17 @@
 # The frontend: one container behind podman compose — Bun serves the built SPA
 # and reverse-proxies /api/* to the backend.
 #
-# Knobs live in two places and are never mixed (see README):
-#   laptop    the ${VAR:-default} interpolations below — `podman compose up`
-#             works with zero extra files
-#   server    ~/hezarfen_frontend/hezarfen_frontend.env (0600, written by hand
-#             from deploy/hezarfen_frontend.env.example)
+# Every default (BACKEND_ORIGIN, HOST, PORT) is written once, in the image's
+# ENV block (Containerfile); this file declares no `environment:` at all, so
+# nothing here can shadow a value. A laptop runs it as-is; a server overlays
+# ~/hezarfen_frontend/hezarfen_frontend.env (0600, written by hand from
+# deploy/hezarfen_frontend.env.example) through `env_file:`.
 #
-# Interpolation reads the --env-file arguments (hezarfen_frontend.env first,
-# deploy-owned stack.env second); the service's `env_file:` passes that same
-# file into the container. BACKEND_ORIGIN is deliberately NOT listed under
-# `environment:` — a listed key wins over `env_file:`, which would shadow the
-# file with this file's default whenever compose runs without --env-file.
-# server.ts keeps the same default built in, so nothing is lost on a laptop and
-# the operator's file is authoritative on a server. PORT stays listed: the
-# publish above is interpolated from it, and one source has to move the
-# listener and the publish together.
+# `--env-file` only matters for `HEZARFEN_TAG` (the deploy passes the
+# deploy-owned stack.env second, so it wins for that one key); the container's
+# knobs arrive through `env_file:`, which needs no flag.
 #
-# The value is read when the container STARTS: editing the file needs a
+# Those values are read when the container STARTS: editing the file needs a
 # recreate (`podman compose up -d`, or `systemctl --user restart
 # hezarfen_frontend_compose`), not a `podman restart`.
 
@@ -47,9 +41,10 @@ services:
         required: false
     restart: unless-stopped
     healthcheck:
-      # Bun-based: the slim runtime image ships no curl. Reads the container's
-      # own PORT, so a moved port does not silently wedge the healthcheck.
-      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:'+(Bun.env.PORT??5173)+'/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      # Bun-based: the slim runtime image ships no curl. PORT comes from the
+      # container's own environment — the image ENV block is where the number
+      # lives, so this probe holds no second copy of it.
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:'+Bun.env.PORT+'/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3

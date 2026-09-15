@@ -17,8 +17,16 @@ WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY server.ts ./server.ts
 
-ENV PORT=5173
-EXPOSE 5173
+# THE deployment defaults, and the only place they are written. server.ts reads
+# all three from the environment and refuses to boot without them, compose's
+# healthcheck asks the container for PORT instead of repeating a number, and the
+# deploy pipeline reads the port back out of the running container. Override any
+# of them in hezarfen_frontend.env — env_file wins over these image values.
+# Nothing is EXPOSEd: the service runs with host networking, so it binds the
+# host's interface directly and no port mapping exists.
+ENV PORT=5173 \
+    HOST=0.0.0.0 \
+    BACKEND_ORIGIN=http://127.0.0.1:7656
 USER bun
 
 # Healthcheck lives in compose.yaml (podman's OCI image format ignores a

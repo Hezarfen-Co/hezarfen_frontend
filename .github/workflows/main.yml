@@ -2,9 +2,10 @@
 #
 #   Typecheck       —  tsc --noEmit on its own runner. No browser, no build.
 #   Build and test  —  the unit suite (vitest: node + jsdom projects), the
-#                      production build, then packs dist/ + server.ts into the
-#                      runtime image (deploy/Containerfile.runtime) and uploads
-#                      the image tarball + compose files as the run's artifact.
+#                      production build, then the repo Containerfile's image
+#                      (its ENV block is the single source of the deployment
+#                      defaults) and uploads the image tarball + compose files
+#                      as the run's artifact.
 #   Deploy          —  SSH: podman load the image, point the deploy-owned
 #                      stack.env's HEZARFEN_TAG at it, install compose.yaml +
 #                      the hezarfen_frontend_compose user unit, restart the
@@ -141,34 +142,23 @@ jobs:
           test -f dist/index.html
           du -sh dist
 
-      - name: Stage the runtime context
+      # One Containerfile for laptop and CI, so there is no CI-only twin to
+      # drift: whatever its ENV block says is what ships.
+      - name: Build the image
+        run: |
+          set -euo pipefail
+          docker build -f Containerfile -t localhost/hezarfen_frontend:$GITHUB_SHA .
+
+      - name: Stage the release bundle
         run: |
           set -euo pipefail
           mkdir -p stage
-          # dist/ and server.ts are exactly what deploy/Containerfile.runtime
-          # COPYs; nothing else from the repo goes into the shipped image.
-          cp -r dist stage/dist
-          cp server.ts stage/server.ts
-          ls -l stage
-
-      - name: Build the runtime image
-        run: |
-          set -euo pipefail
-          # Pack the already-built SPA into the slim runtime image. Never
-          # build from source here: the bun/vite build ran above (same
-          # division of labour as the backend's deploy).
-          docker build -f deploy/Containerfile.runtime -t localhost/hezarfen_frontend:$GITHUB_SHA stage/
           docker save localhost/hezarfen_frontend:$GITHUB_SHA | gzip > stage/hezarfen_frontend.tar.gz
-
-      - name: Stage the compose bundle
-        run: |
-          set -euo pipefail
           cp compose.yaml deploy/hezarfen_frontend_compose.service stage/
           echo -n "$GITHUB_SHA" > stage/tag
           # Everything the deploy installs on the server must be here; a
           # missing piece fails here, on the runner, not mid-deploy on the
-          # VPS. (stage/ also still holds dist/ and server.ts — docker build
-          # context, not deploy payload.)
+          # VPS.
           test -f stage/hezarfen_frontend.tar.gz
           test -f stage/compose.yaml
           test -f stage/hezarfen_frontend_compose.service
@@ -331,13 +321,9 @@ jobs:
             }
           done
 
-          # PORT is optional there (compose falls back to 5173), but the health
-          # gate below has to probe the port the stack actually published, so
-          # read the same value compose will — same file, no second place to
-          # keep in sync. Plain KEY=value, as deploy/hezarfen_frontend.env.example
-          # documents.
-          port=$(sed -n 's/^PORT=\(.*\)$/\1/p' "$env_file" | tail -1)
-          port=${port:-5173}
+          # The probe port is not repeated here: ask the container that gets
+          # (re)created below what it carries (image ENV, overridden by the
+          # operator's file), instead of parsing a second copy of the number.
 
           # Rootless podman plus a compose provider; fail with the fix, not
           # a bare command-not-found three steps in.
@@ -408,6 +394,17 @@ jobs:
           systemctl --user enable -- "$service"
           systemctl --user restart "$service" || true
 
+          # Ask the container that was just (re)created which port to probe
+          # (image ENV, overridden by the operator's file) — the number lives in
+          # one place and this reads it, rather than keeping a second copy that
+          # can drift. No container reachable = nothing came up.
+          port=$(podman inspect -f '{{range .Config.Env}}{{println .}}{{end}}' hezarfen_frontend 2>/dev/null | sed -n 's/^PORT=//p') || true
+          if [ -z "$port" ]; then
+            echo 'the frontend container reports no PORT; rolling back' >&2
+            rollback
+            exit 1
+          fi
+
           # The oneshot returns before the container has bound its port. Wait
           # for the SPA shell rather than a clock: a 200 whose body carries
           # the index.html title means the new build is really being served.
@@ -455,11 +452,13 @@ jobs:
           deploy_path=$HOME/$1
           export XDG_RUNTIME_DIR=/run/user/$(id -u)
           cd -- "$deploy_path"
-          # Same derivation as the deploy step: the gate must probe the port
-          # the operator's file published, not a remembered default.
-          env_file=$deploy_path/hezarfen_frontend.env
-          port=$(sed -n 's/^PORT=\(.*\)$/\1/p' "$env_file" | tail -1)
-          port=${port:-5173}
+          # Same source as the deploy step: the container's own PORT, not a
+          # second copy of the number in this script.
+          port=$(podman inspect -f '{{range .Config.Env}}{{println .}}{{end}}' hezarfen_frontend | sed -n 's/^PORT=//p')
+          if [ -z "$port" ]; then
+            echo 'the frontend container reports no PORT' >&2
+            exit 1
+          fi
           tag=$(cat -- "$deploy_path/current_tag")
           image=$(podman inspect -f '{{.Config.Image}}' hezarfen_frontend)
           case "$image" in
