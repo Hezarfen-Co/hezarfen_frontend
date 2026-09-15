@@ -12,11 +12,13 @@
 #
 # Keys read from hezarfen_frontend.env (full docs in
 # deploy/hezarfen_frontend.env.example):
-#   BACKEND_ORIGIN                   the origin /api/* is proxied to; reaches
-#                                    the container through env_file, so it needs
-#                                    no flag — but only on (re)start
-#   PORT                             listen port + published port (interpolated,
-#                                    hence the --env-file below), default 5173
+#   BACKEND_ORIGIN                   the origin /api/* is proxied to; on this
+#                                    host that is http://127.0.0.1:7656, which
+#                                    the service can reach because compose runs
+#                                    it with host networking
+#   HOST                             bind address; 127.0.0.1 keeps the app on
+#                                    loopback behind the reverse proxy
+#   PORT                             listen port, default 5173
 #
 # Env-only restart (re-runs `compose up -d`, recreating the container when its
 # environment changed):

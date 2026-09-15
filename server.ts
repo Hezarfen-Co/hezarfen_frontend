@@ -7,6 +7,10 @@
 // container's runtime after `vite build`.
 
 const PORT = Number(Bun.env.PORT ?? 5173);
+// Interface to bind. 0.0.0.0 is what a published container port needs; under
+// host networking the process sits directly on the host, so a server sets
+// HOST=127.0.0.1 and only the reverse proxy beside it can reach the app.
+const HOST = Bun.env.HOST ?? "0.0.0.0";
 // Where the backend lives on the compose network. Override in compose.
 const BACKEND_ORIGIN = Bun.env.BACKEND_ORIGIN ?? "https://hezarfen.dizey.sh";
 const BACKEND_HTTP = BACKEND_ORIGIN.replace(/\/+$/, "");
@@ -70,7 +74,7 @@ async function proxyHttp(req: Request, url: URL): Promise<Response> {
 
 const server = Bun.serve<Bridge, {}>({
   port: PORT,
-  hostname: "0.0.0.0",
+  hostname: HOST,
   // Long-running exam sockets must not be reaped by an idle timeout; the
   // backend sends its own periodic state ticks but a quiet client can still
   // sit for minutes between frames.
@@ -135,4 +139,4 @@ const server = Bun.serve<Bridge, {}>({
   },
 });
 
-console.log(`serving dist/ on :${server.port}, proxying /api -> ${BACKEND_HTTP}`);
+console.log(`serving dist/ on ${HOST}:${server.port}, proxying /api -> ${BACKEND_HTTP}`);
