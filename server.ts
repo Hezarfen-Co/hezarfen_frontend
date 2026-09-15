@@ -28,7 +28,16 @@ const HOST = required("HOST");
 const BACKEND_ORIGIN = required("BACKEND_ORIGIN");
 const BACKEND_HTTP = BACKEND_ORIGIN.replace(/\/+$/, "");
 const BACKEND_WS = BACKEND_HTTP.replace(/^http/, "ws");
-const BACKEND_HOST = new URL(BACKEND_HTTP).host;
+function backendHost(origin: string): string {
+  try {
+    return new URL(origin).host;
+  } catch {
+    console.error(`BACKEND_ORIGIN is not a valid URL: ${origin}`);
+    process.exit(1);
+  }
+}
+
+const BACKEND_HOST = backendHost(BACKEND_HTTP);
 
 const DIST = `${import.meta.dir}/dist`;
 
@@ -63,7 +72,11 @@ async function serveStatic(pathname: string): Promise<Response> {
     else if (rel === "/index.html") headers["Cache-Control"] = "no-store";
     return new Response(file, { headers });
   }
-  // SPA fallback: unknown paths are client routes, serve the shell.
+  // A missing hashed asset must stay a 404. Returning index.html here makes
+  // browsers report a misleading "failed to fetch dynamically imported
+  // module" because they receive HTML where JavaScript was requested.
+  if (rel.startsWith("/assets/")) return new Response("asset not found", { status: 404 });
+  // SPA fallback: unknown non-asset paths are client routes, serve the shell.
   return new Response(Bun.file(`${DIST}/index.html`), { headers: { "Cache-Control": "no-store" } });
 }
 
@@ -85,7 +98,7 @@ async function proxyHttp(req: Request, url: URL): Promise<Response> {
   return resp;
 }
 
-const server = Bun.serve<Bridge, {}>({
+const server = Bun.serve<Bridge>({
   port: PORT,
   hostname: HOST,
   // Long-running exam sockets must not be reaped by an idle timeout; the
@@ -93,7 +106,12 @@ const server = Bun.serve<Bridge, {}>({
   // sit for minutes between frames.
   idleTimeout: 0,
   async fetch(req, srv) {
-    const url = new URL(req.url);
+    let url: URL;
+    try {
+      url = new URL(req.url);
+    } catch {
+      return new Response("bad request", { status: 400 });
+    }
 
     if (isApi(url.pathname)) {
       // WebSocket upgrade (/api/exams/:id/attempt/ws): open the upstream and
@@ -101,6 +119,8 @@ const server = Bun.serve<Bridge, {}>({
       if (req.headers.get("upgrade")?.toLowerCase() === "websocket") {
         const cookie = req.headers.get("cookie") ?? undefined;
         const proto = req.headers.get("sec-websocket-protocol") ?? undefined;
+        // SAFETY: Bun's WebSocket constructor accepts a protocol string array,
+        // while its DOM declaration selects an incompatible overload here.
         const upstream = new WebSocket(BACKEND_WS + backendPath(url), {
           headers: cookie ? { cookie } : undefined,
           ...(proto ? { protocols: proto.split(",").map((p) => p.trim()) } : {}),
@@ -121,7 +141,11 @@ const server = Bun.serve<Bridge, {}>({
       const b = ws.data;
       b.upstream.onopen = () => {
         b.ready = true;
-        for (const m of b.queue) b.upstream.send(m);
+        for (const m of b.queue) {
+          // SAFETY: Bun accepts Uint8Array websocket frames at runtime; its
+          // current DOM types reject ArrayBufferLike in this overload.
+          b.upstream.send(m as unknown as ArrayBuffer);
+        }
         b.queue.length = 0;
       };
       b.upstream.onmessage = (e) => {

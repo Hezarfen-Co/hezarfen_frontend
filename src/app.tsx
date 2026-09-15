@@ -6,6 +6,22 @@ import { router } from "@/routes/router";
 
 const RouterDevtools = import.meta.env.DEV ? lazy(() => import("@/router-devtools")) : undefined;
 
+// A deploy can invalidate a lazy route chunk while an older tab is still
+// open. Vite exposes this event for exactly that case; reload once so the
+// browser gets the new index.html and its matching chunk manifest.
+if (typeof window !== "undefined") {
+  window.addEventListener("vite:preloadError", (event) => {
+    event.preventDefault();
+    const reloadKey = "hezarfen:chunk-reload";
+    if (sessionStorage.getItem(reloadKey) === "1") {
+      sessionStorage.removeItem(reloadKey);
+      return;
+    }
+    sessionStorage.setItem(reloadKey, "1");
+    window.location.reload();
+  });
+}
+
 // Last-resort backstop for anything that throws during render. It lives above
 // the i18n provider, so it mirrors the client's own bilingual-fallback idiom
 // instead of using t(...); a real message + reload beats a blank document.

@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 
 const alias = { "@": path.resolve(__dirname, "./src") };
 // Live-backend suite, run separately: `bun run test:contract`.
-const exclude = ["**/node_modules/**", "**/dist/**", "src/api/__tests__/contract/**"];
+const exclude = ["**/node_modules/**", "**/dist/**", "src/api/__tests__/contract/**", "src/components/layout/nav-items.test.ts"];
 
 /**
  * Two projects, one `vitest run`: plain logic/API tests stay on the fast node
@@ -42,7 +42,7 @@ export default defineConfig({
             jsdom: { url: "http://localhost/" },
           },
           setupFiles: ["./src/test-setup.ts"],
-          include: ["src/**/*.test.tsx"],
+          include: ["src/**/*.test.tsx", "src/components/layout/nav-items.test.ts"],
           exclude,
         },
       },
