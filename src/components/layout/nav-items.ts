@@ -118,7 +118,7 @@ const ADMIN_GROUPS: NavGroup[] = [
     labelKey: "nav.group.teaching",
     Icon: IconBook,
     items: [
-      { id: "courses", to: "/courses", labelKey: "nav.courses", Icon: IconBook, module: "courses" },
+      { id: "courses", to: "/courses", labelKey: "nav.classes", Icon: IconBook, module: "courses" },
       { id: "homework", to: "/homework", labelKey: "nav.homework", Icon: IconHomework, module: "homework" },
       { id: "exams", to: "/exams", labelKey: "nav.exams", Icon: IconExam, minRole: "teacher", module: "exams" },
       { id: "question-bank", to: "/question-bank", labelKey: "nav.questionBank", Icon: IconArchive, minRole: "teacher", module: "bank_questions" },
@@ -157,7 +157,7 @@ const ADMIN_GROUPS: NavGroup[] = [
       { id: "work", to: "/work", labelKey: "nav.work", Icon: IconClock, minRole: "teacher", module: "work" },
       { id: "users", to: "/admin/users", labelKey: "nav.users", Icon: IconUserCog, minRole: "admin" },
       { id: "license-modules", to: "/management/modules", labelKey: "nav.licenseModules", Icon: IconPackage, minRole: "admin" },
-      { id: "settings", to: "/management/settings", labelKey: "nav.settings", Icon: IconSettings, minRole: "manager" },
+      { id: "settings", to: "/management/settings", labelKey: "settings.title", Icon: IconSettings, minRole: "manager" },
     ],
   },
   {
@@ -184,7 +184,7 @@ const TEACHER_GROUPS: NavGroup[] = [
     items: [
       { id: "my-classes", to: "/management/classes", labelKey: "nav.myClasses", Icon: IconSchool },
       { id: "my-schedule", to: "/calendar", labelKey: "nav.mySchedule", Icon: IconCalendarDays },
-      { id: "courses", to: "/courses", labelKey: "nav.courses", Icon: IconBook, module: "courses" },
+      { id: "courses", to: "/courses", labelKey: "nav.classes", Icon: IconBook, module: "courses" },
     ],
   },
   {
@@ -248,7 +248,7 @@ const STUDENT_GROUPS: NavGroup[] = [
     labelKey: "nav.group.teaching",
     Icon: IconBook,
     items: [
-      { id: "courses", to: "/courses", labelKey: "nav.courses", Icon: IconBook, module: "courses" },
+      { id: "courses", to: "/courses", labelKey: "nav.classes", Icon: IconBook, module: "courses" },
       { id: "notes", to: "/notes", labelKey: "nav.notes", Icon: IconNote, module: "notes" },
       { id: "questions", to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle, module: "questions" },
       { id: "whiteboards", to: "/whiteboards", labelKey: "nav.whiteboards", Icon: IconEdit, module: "boards" },
@@ -404,7 +404,7 @@ const UNLISTED_ROUTE_LABELS: { prefix: string; labelKey: MessageKey }[] = [
   { prefix: "/attendance", labelKey: "nav.attendance" },
   { prefix: "/studies", labelKey: "courses.kind.study" },
   { prefix: "/clubs", labelKey: "courses.kind.club" },
-  { prefix: "/courses", labelKey: "nav.courses" },
+  { prefix: "/courses", labelKey: "nav.classes" },
   { prefix: "/notes", labelKey: "nav.notes" },
   { prefix: "/questions", labelKey: "nav.questions" },
   { prefix: "/events", labelKey: "nav.events" },
