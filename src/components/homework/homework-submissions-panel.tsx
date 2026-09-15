@@ -21,6 +21,7 @@ import { fileTypeMeta } from "@/lib/file-type";
 import { formatDateTime } from "@/lib/format";
 import { formatBytes } from "@/lib/upload-limits";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { sanitizeRichText } from "@/lib/rich-text";
 
 export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: string }) {
   const t = useT();
@@ -185,7 +186,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
                   when={submission().text}
                   fallback={<p class="mt-2 text-sm text-text-subtle">{t("homework.noAnswer")}</p>}
                 >
-                  {(text) => <div class="mt-2 text-sm leading-relaxed" innerHTML={text()} />}
+                  {(text) => <div class="mt-2 text-sm leading-relaxed" innerHTML={sanitizeRichText(text())} />}
                 </Show>
               </div>
               {/* Skipped entirely (not just an empty placeholder) when there are no files — this is a read-only view, so a "no files" row would just be dead weight. */}

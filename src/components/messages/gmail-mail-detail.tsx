@@ -8,6 +8,7 @@ import { postMessage } from "@/api/messages";
 import { formatApiError } from "@/api/client";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
+import { sanitizeRichText } from "@/lib/rich-text";
 
 interface GmailMailDetailProps {
   message: Message;
@@ -276,7 +277,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
 
         {/* Email Body Card */}
         <div class="rounded-xl border border-border-line bg-surface-base p-6 leading-relaxed text-sm text-foreground/90 whitespace-pre-wrap min-h-[140px]">
-          <div innerHTML={props.message.body} />
+          <div innerHTML={sanitizeRichText(props.message.body)} />
         </div>
 
         {/* Gmail Style Inline Reply Area */}
