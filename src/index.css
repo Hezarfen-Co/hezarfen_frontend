@@ -379,7 +379,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 8%;
     --primary: var(--ui-accent);
-    --primary-foreground: var(--accent-light-fg, 0 0% 98%);
+    --primary-foreground: var(--accent-light-fg, 0 0% 4%);
     --secondary: var(--surface-fill);
     --secondary-foreground: 0 0% 16%;
     --muted: var(--surface-tint);
@@ -423,7 +423,7 @@
     --popover: var(--surface-base);
     --popover-foreground: var(--text-strong);
     --primary: var(--ui-accent);
-  --primary-foreground: var(--accent-dark-fg, 0 0% 100%);
+    --primary-foreground: var(--accent-dark-fg, 0 0% 4%);
     --secondary: var(--surface-fill);
     --secondary-foreground: 0 0% 98%;
     --muted: var(--surface-tint);
