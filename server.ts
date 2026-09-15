@@ -11,8 +11,11 @@ const PORT = Number(Bun.env.PORT ?? 5173);
 // host networking the process sits directly on the host, so a server sets
 // HOST=127.0.0.1 and only the reverse proxy beside it can reach the app.
 const HOST = Bun.env.HOST ?? "0.0.0.0";
-// Where the backend lives on the compose network. Override in compose.
-const BACKEND_ORIGIN = Bun.env.BACKEND_ORIGIN ?? "https://hezarfen.dizey.sh";
+// Where the backend lives. The default is the co-located backend a server
+// publishes on its own loopback (the compose stack maps 127.0.0.1:7656), which
+// is what the frontend container reaches under host networking. Override with
+// BACKEND_ORIGIN for anything else.
+const BACKEND_ORIGIN = Bun.env.BACKEND_ORIGIN ?? "http://127.0.0.1:7656";
 const BACKEND_HTTP = BACKEND_ORIGIN.replace(/\/+$/, "");
 const BACKEND_WS = BACKEND_HTTP.replace(/^http/, "ws");
 const BACKEND_HOST = new URL(BACKEND_HTTP).host;

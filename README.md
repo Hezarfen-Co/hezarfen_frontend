@@ -51,7 +51,7 @@ bun run build
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-> **Proxy Note**: Vite server and the production Bun server proxy `/api/*` and WebSocket connections to `BACKEND_ORIGIN` (default: `https://hezarfen.dizey.sh`), preserving HttpOnly session cookies across same-origin calls. Override it when needed: `BACKEND_ORIGIN=http://127.0.0.1:7656 bun run dev` against a local backend, or `BACKEND_ORIGIN` in `hezarfen_frontend.env` for the compose stack (see "Run in a container" below).
+> **Proxy Note**: Vite server and the production Bun server proxy `/api/*` and WebSocket connections to `BACKEND_ORIGIN` (default: `http://127.0.0.1:7656`, the co-located backend's loopback port), preserving HttpOnly session cookies across same-origin calls. Point it elsewhere with `BACKEND_ORIGIN=… bun run dev`, or with `BACKEND_ORIGIN` in `hezarfen_frontend.env` for the compose stack (see "Run in a container" below).
 
 ---
 
@@ -65,7 +65,7 @@ podman compose down            # stop
 
 The `Containerfile` is a two-stage build: `bun install --frozen-lockfile` plus `bun run build` produce `dist/`, and `oven/bun:1-slim` serves it with `server.ts` — which also reverse-proxies `/api/*` (plain HTTP and the exam-room WebSocket) to `BACKEND_ORIGIN`. No nginx, no node_modules at runtime, no state: one container and no volumes. It runs with `network_mode: host`, so it shares the host's loopback and reaches a backend published on `127.0.0.1:7656` exactly as a host process would (a bridge network would resolve `127.0.0.1` to the container itself). Host networking means no port mapping: the app binds the host's interface directly, so set `HOST=127.0.0.1` and let the reverse proxy on the same loopback be the only door.
 
-**Knobs live in two places and are never mixed.** On a laptop nothing is required: with no env file the app falls back to its own defaults (`BACKEND_ORIGIN=https://hezarfen.dizey.sh`, `HOST=0.0.0.0`, `PORT=5173`), so the `up` above works with zero extra files. On a server the operator copies `deploy/hezarfen_frontend.env.example` to `$HOME/hezarfen_frontend/hezarfen_frontend.env`, `chmod 0600` it and edits it — nothing automated creates, overwrites or uploads that file. The service declares it as `env_file:`, so **every key it carries reaches the container with no extra flag**; nothing else is interpolated from it, and the only compose-level variable is `HEZARFEN_TAG`, which the deploy owns in `stack.env`.
+**Knobs live in two places and are never mixed.** On a laptop nothing is required: with no env file the app falls back to its own defaults (`BACKEND_ORIGIN=http://127.0.0.1:7656`, `HOST=0.0.0.0`, `PORT=5173`), so the `up` above works with zero extra files. On a server the operator copies `deploy/hezarfen_frontend.env.example` to `$HOME/hezarfen_frontend/hezarfen_frontend.env`, `chmod 0600` it and edits it — nothing automated creates, overwrites or uploads that file. The service declares it as `env_file:`, so **every key it carries reaches the container with no extra flag**; nothing else is interpolated from it, and the only compose-level variable is `HEZARFEN_TAG`, which the deploy owns in `stack.env`.
 
 Environment values are read when the container **starts**: after editing the file, recreate (`podman compose up -d`, or `systemctl --user restart hezarfen_frontend_compose`). `podman restart` keeps the old environment.
 

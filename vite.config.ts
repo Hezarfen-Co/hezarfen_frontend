@@ -2,7 +2,7 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 
-const target = process.env.BACKEND_ORIGIN ?? "https://hezarfen.dizey.sh";
+const target = process.env.BACKEND_ORIGIN ?? "http://127.0.0.1:7656";
 
 export default defineConfig({
   plugins: [solid()],
