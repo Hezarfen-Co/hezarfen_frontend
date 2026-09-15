@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { postLogin } from "../../auth";
 import { postLogout } from "../../auth";
 import { postRegister } from "../../auth";
+import { postSelectSchool } from "../../auth";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("auth API", () => {
@@ -13,13 +14,26 @@ describe("auth API", () => {
     const mockUser = { id: "u1", username: "test" };
     mockFetchSuccess(mockUser);
 
-    const result = await postLogin({ school: "demo", username: "test", password: "password" });
+    const result = await postLogin({ username: "test", password: "password" });
     expect(result).toEqual(mockUser);
 
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/auth/login");
     expect(init?.method).toBe("POST");
-    expect(init?.body).toBe(JSON.stringify({ school: "demo", username: "test", password: "password" }));
+    expect(init?.body).toBe(JSON.stringify({ username: "test", password: "password" }));
+  });
+
+  it("postSelectSchool binds the person session to a school", async () => {
+    const mockUser = { id: "u1", username: "test" };
+    mockFetchSuccess(mockUser);
+
+    const result = await postSelectSchool({ school: "demo" });
+    expect(result).toEqual(mockUser);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/auth/school");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ school: "demo" }));
   });
 
   it("postLogout calls /auth/logout", async () => {

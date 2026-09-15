@@ -1,6 +1,7 @@
 import { For, Show, Suspense, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getPomodoroMe } from "@/api/pomodoro";
+import { getLimits } from "@/api/limits";
 import { postPomodoroFinish } from "@/api/pomodoro";
 import { postPomodoroStart } from "@/api/pomodoro";
 import { formatApiError } from "@/api/client";
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconCheck, IconClock } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { createFlash } from "@/lib/flash";
 import { createNow } from "@/lib/create-now";
 import { triggerConfetti } from "@/lib/confetti";
@@ -49,6 +51,8 @@ function PomodoroContent() {
   const [flash, setFlash] = createFlash();
   const now = createNow(1000);
   const [log, { refetch }] = createResource(() => getPomodoroMe({ limit: 20 }));
+  const [limits] = createResource(() => getLimits().catch(() => null));
+  const [focusLabel, setFocusLabel] = createSignal("");
   const running = createMemo(() => log()?.items.find((item) => item.finished_at == null) ?? null);
   const runningDuration = createMemo(() => {
     const current = running();
@@ -104,6 +108,11 @@ function PomodoroContent() {
   const lastFinished = createMemo(() => finishedSessions()[0]?.finished_at ?? null);
   const columns = createMemo<ColumnDef<NonNullable<ReturnType<typeof log>>["items"][number]>[]>(() => [
     {
+      accessorKey: "label",
+      header: t("pomodoro.sessionLabel"),
+      cell: (cell) => <span class="font-medium">{cell.row.original.label || "—"}</span>,
+    },
+    {
       accessorKey: "started_at",
       header: t("pomodoro.startedAt"),
       cell: (cell) => <span class="mono whitespace-nowrap">{formatDateTime(cell.row.original.started_at, locale())}</span>,
@@ -118,7 +127,26 @@ function PomodoroContent() {
       header: t("pomodoro.duration"),
       cell: (cell) => <span class="mono tabular-nums">{formatDurationClock(cell.row.original.duration_ms)}</span>,
     },
+    {
+      accessorKey: "counted",
+      header: t("pomodoro.counted"),
+      cell: (cell) => (
+        <Badge variant={cell.row.original.counted ? "default" : "secondary"}>
+          {cell.row.original.counted == null
+            ? "—"
+            : cell.row.original.counted
+              ? t("pomodoro.countedYes")
+              : t("pomodoro.countedNo")}
+        </Badge>
+      ),
+    },
   ]);
+
+  const startFocus = async () => {
+    const label = focusLabel().trim();
+    await postPomodoroStart(label ? { label } : undefined);
+    setFocusLabel("");
+  };
 
   const run = async (action: () => Promise<unknown>, ok: string) => {
     setError("");
@@ -216,10 +244,23 @@ function PomodoroContent() {
             </div>
 
             <div class="flex flex-col items-center gap-3 md:items-end">
+              <Show when={!running()}>
+                <div class="w-full min-w-48 space-y-1.5">
+                  <Label for="pomodoro-label">{t("pomodoro.sessionLabel")}</Label>
+                  <Input
+                    id="pomodoro-label"
+                    class="h-9 rounded-lg"
+                    maxlength={limits()?.pomodoro.max_label_len}
+                    placeholder={t("pomodoro.sessionLabelPlaceholder")}
+                    value={focusLabel()}
+                    onInput={(event) => setFocusLabel(event.currentTarget.value)}
+                  />
+                </div>
+              </Show>
               <Show
                 when={running()}
                 fallback={
-                  <Button type="button" size="sm" class="h-10 min-w-40 rounded-md text-base" disabled={pending()} onClick={() => void run(postPomodoroStart, t("pomodoro.started"))}>
+                  <Button type="button" size="sm" class="h-10 min-w-40 rounded-md text-base" disabled={pending()} onClick={() => void run(startFocus, t("pomodoro.started"))}>
                     <IconClock class="h-4 w-4" />
                     {t("pomodoro.start")}
                   </Button>

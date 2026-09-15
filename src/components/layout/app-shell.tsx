@@ -50,7 +50,7 @@ export function AppShell(props: ParentProps) {
 
   return (
     <div class="min-h-[var(--app-viewport)] bg-background text-foreground">
-      <Show when={!auth.user() && location().pathname !== "/login"}>
+      <Show when={!auth.user()}>
         <NavBar />
       </Show>
       <ShellFeedProvider>

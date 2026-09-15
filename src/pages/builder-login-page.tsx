@@ -2,10 +2,11 @@ import { Link, Navigate, useNavigate } from "@tanstack/solid-router";
 import { Show, createSignal } from "solid-js";
 import { postBuilderLogin } from "@/api/builder";
 import { ApiError, formatApiError, formatApiErrorMessage } from "@/api/client";
-import { LogoMark } from "@/components/brand/logo-mark";
+import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IconEye, IconEyeOff } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { useAuth } from "@/stores/auth-context";
 import { BuilderProvider, useBuilder } from "@/stores/builder-context";
@@ -43,6 +44,7 @@ function BuilderLoginForm() {
   const t = useT();
   const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
+  const [showPassword, setShowPassword] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
 
@@ -68,15 +70,7 @@ function BuilderLoginForm() {
   };
 
   return (
-    <div class="flex min-h-[70vh] items-center justify-center">
-      <div class="w-full max-w-[420px] rounded-xl border border-border-line bg-surface-base px-6 pb-8 pt-9 shadow-[0_10px_24px_-4px_rgba(0,0,0,0.10)] sm:px-10">
-        <div class="mb-8 text-center">
-          <div class="mx-auto mb-5 flex h-12 w-12 items-center justify-center text-text-strong">
-            <LogoMark size={44} />
-          </div>
-          <h1 class="text-2xl font-semibold tracking-[-0.025em] text-text-strong">{t("builder.loginTitle")}</h1>
-          <p class="mt-2 text-sm text-text-subtle">{t("builder.loginSubtitle")}</p>
-        </div>
+    <AuthPageShell title={t("builder.loginTitle")} subtitle={t("builder.loginSubtitle")}>
         <form class="space-y-[18px]" onSubmit={submit}>
           <div class="space-y-2">
             <Label for="builder-username">{t("auth.username")}</Label>
@@ -93,17 +87,29 @@ function BuilderLoginForm() {
           </div>
           <div class="space-y-2">
             <Label for="builder-password">{t("auth.password")}</Label>
-            <Input
-              id="builder-password"
-              class="h-9"
-              type="password"
-              autocomplete="current-password"
-              required
-              minlength={MIN_PASSWORD_LEN}
-              maxlength={MAX_PASSWORD_LEN}
-              value={password()}
-              onInput={(e) => setPassword(e.currentTarget.value)}
-            />
+            <div class="relative">
+              <Input
+                id="builder-password"
+                class="h-9 pr-10"
+                type={showPassword() ? "text" : "password"}
+                autocomplete="current-password"
+                required
+                minlength={MIN_PASSWORD_LEN}
+                maxlength={MAX_PASSWORD_LEN}
+                value={password()}
+                onInput={(e) => setPassword(e.currentTarget.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword())}
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label={showPassword() ? t("auth.hidePassword") : t("auth.showPassword")}
+              >
+                <Show when={showPassword()} fallback={<IconEye class="h-4 w-4" />}>
+                  <IconEyeOff class="h-4 w-4" />
+                </Show>
+              </button>
+            </div>
           </div>
           <Show when={error()}>
             <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
@@ -117,7 +123,6 @@ function BuilderLoginForm() {
             {t("builder.backToSchoolLogin")}
           </Link>
         </p>
-      </div>
-    </div>
+    </AuthPageShell>
   );
 }

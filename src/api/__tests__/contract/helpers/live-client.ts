@@ -77,14 +77,18 @@ export async function json<T>(path: string, init: Init = {}): Promise<T> {
 
 /** Log in as the seeded admin; the session cookie lands in the jar. */
 export async function loginAdmin(): Promise<void> {
-  await json("/auth/login", {
+  const result = await json<{ id: string } | { schools: Array<{ slug: string }> }>("/auth/login", {
     method: "POST",
     body: {
-      school: env.SCHOOL_SLUG ?? "demo",
       username: env.ADMIN_USERNAME ?? "admin",
       password: env.ADMIN_PASSWORD ?? "admin123",
     },
   });
+  if ("schools" in result) {
+    const school = env.SCHOOL_SLUG ?? result.schools[0]?.slug;
+    if (!school) throw new Error("POST /auth/login returned an empty school choice list");
+    await json("/auth/school", { method: "POST", body: { school } });
+  }
 }
 
 /** Exam kinds are school policy, not a globally fixed enum. */

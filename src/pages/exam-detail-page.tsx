@@ -575,9 +575,9 @@ function ExamDetailContent() {
                         <p class="text-xs font-medium text-muted-foreground">{t("exams.markHistory")}</p>
                         <ul class="mt-2 space-y-1">
                           <For each={markHistory()}>
-                            {(row, index) => (
+                            {(row) => (
                               <li class="flex items-center justify-between text-sm">
-                                <span class="text-muted-foreground">{t("exams.attemptN", { n: String(index() + 1) })}</span>
+                                <span class="text-muted-foreground">{t("exams.attemptN", { n: row.seq })}</span>
                                 <span class="tabular-nums font-semibold">{row.mark}/100</span>
                               </li>
                             )}

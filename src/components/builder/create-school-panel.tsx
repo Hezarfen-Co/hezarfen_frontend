@@ -1,5 +1,6 @@
 import { Show, createResource, createSignal } from "solid-js";
 import { getModulesCatalog } from "@/api/modules";
+import { getLimits } from "@/api/limits";
 import { postSchool } from "@/api/schools";
 import type { School } from "@/api/client";
 import { ModuleCatalogGrid } from "@/components/modules/module-catalog-grid";
@@ -11,12 +12,16 @@ import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
 import { useT } from "@/stores/preferences-context";
 
-const SLUG_PATTERN = "[a-z0-9][a-z0-9-]{1,31}";
+const SLUG_PATTERN = "[a-z0-9][a-z0-9-]+";
 
 /** Creates a school with its first admin and, optionally, a hand-picked module set. */
 export function CreateSchoolPanel(props: { open: boolean; onOpenChange: (open: boolean) => void; onCreated: (school: School) => void }) {
   const t = useT();
   const [catalog] = createResource(() => props.open || undefined, () => getModulesCatalog());
+  const [limits] = createResource(
+    () => props.open || undefined,
+    () => getLimits().catch(() => null),
+  );
   const [slug, setSlug] = createSignal("");
   const [name, setName] = createSignal("");
   const [adminUsername, setAdminUsername] = createSignal("");
@@ -79,20 +84,20 @@ export function CreateSchoolPanel(props: { open: boolean; onOpenChange: (open: b
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-1.5">
             <Label for="school-slug">{t("builder.slug")}</Label>
-            <Input id="school-slug" class="rounded-lg" required pattern={SLUG_PATTERN} minlength={2} maxlength={32} value={slug()} onInput={(e) => setSlug(e.currentTarget.value.toLowerCase())} />
+            <Input id="school-slug" class="rounded-lg" required pattern={SLUG_PATTERN} minlength={limits()?.user.min_slug_len ?? 2} maxlength={limits()?.user.max_slug_len ?? 32} value={slug()} onInput={(e) => setSlug(e.currentTarget.value.toLowerCase())} />
             <p class="text-xs text-text-subtle">{t("builder.slugHint")}</p>
           </div>
           <div class="space-y-1.5">
             <Label for="school-name">{t("builder.schoolName")}</Label>
-            <Input id="school-name" class="rounded-lg" required maxlength={120} value={name()} onInput={(e) => setName(e.currentTarget.value)} />
+            <Input id="school-name" class="rounded-lg" required maxlength={limits()?.user.max_school_name_len ?? 120} value={name()} onInput={(e) => setName(e.currentTarget.value)} />
           </div>
           <div class="space-y-1.5">
             <Label for="school-admin-username">{t("builder.adminUsername")}</Label>
-            <Input id="school-admin-username" class="rounded-lg" required minlength={3} maxlength={32} autocomplete="off" value={adminUsername()} onInput={(e) => setAdminUsername(e.currentTarget.value)} />
+            <Input id="school-admin-username" class="rounded-lg" required minlength={limits()?.user.min_username_len ?? 3} maxlength={limits()?.user.max_username_len ?? 32} autocomplete="off" value={adminUsername()} onInput={(e) => setAdminUsername(e.currentTarget.value)} />
           </div>
           <div class="space-y-1.5">
             <Label for="school-admin-password">{t("builder.adminPassword")}</Label>
-            <Input id="school-admin-password" class="rounded-lg" type="password" required minlength={6} maxlength={128} autocomplete="new-password" value={adminPassword()} onInput={(e) => setAdminPassword(e.currentTarget.value)} />
+            <Input id="school-admin-password" class="rounded-lg" type="password" required minlength={limits()?.user.min_password_len ?? 6} maxlength={limits()?.user.max_password_len ?? 128} autocomplete="new-password" value={adminPassword()} onInput={(e) => setAdminPassword(e.currentTarget.value)} />
           </div>
         </div>
         <label class="flex items-center gap-2 text-sm">

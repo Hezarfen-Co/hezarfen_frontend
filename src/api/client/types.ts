@@ -21,6 +21,8 @@ export type User = {
  email: string | null;
  phone: string | null;
  birth_date: string | null;
+ display_name?: string | null;
+ bio?: string | null;
  theme: UserTheme | null;
  language: UserLanguage | null;
  palette_color: string | null;
@@ -50,7 +52,14 @@ export type BadgeStat =
  | "homework_on_time"
  | "exam_sat"
  | "pomodoro_finished"
- | "pomodoro_focus_ms";
+ | "pomodoro_focus_ms"
+ | "marks_given"
+ | "lessons_held"
+ | "pool_approved"
+ | "pool_published"
+ | "lessons_attended"
+ | "high_mark"
+ | "study_streak";
 
 // One entry of the badge catalogue, served by GET /limits. The label and icon
 // behind an id live in the client, exactly as they do for a role.
@@ -78,6 +87,13 @@ export type ProfileStats = {
  exam_sat_total: number;
  pomodoro_finished_total: number;
  pomodoro_focus_ms_total: number;
+ marks_given_total: number;
+ lessons_held_total: number;
+ pool_approved_total: number;
+ pool_published_total: number;
+ lessons_attended_total: number;
+ high_mark_total: number;
+ study_streak_total: number;
 };
 
 // A person's public profile. Readable by any authenticated account except a
@@ -410,6 +426,7 @@ export type ExamResult = {
  id: string;
  exam: string;
  user: PersonRef;
+ seq: number;
  mark: number;
  graded_by: PersonRef;
 };
@@ -507,6 +524,8 @@ export type PomodoroSession = {
  started_at: number;
  finished_at: number | null;
  duration_ms: number | null;
+ counted?: boolean | null;
+ label?: string | null;
 };
 
 export type PomodoroLog = {
@@ -667,8 +686,12 @@ export type Limits = {
   max_username_len: number;
   username_separators: string[];
   reserved_usernames: string[];
+  reserved_slugs: string[];
   min_password_len: number;
   max_password_len: number;
+  min_slug_len: number;
+  max_slug_len: number;
+  max_school_name_len: number;
   max_name_len: number;
   max_display_name_len: number;
   max_bio_len: number;
@@ -679,13 +702,15 @@ export type Limits = {
   max_email_len: number;
   min_phone_digits: number;
   max_phone_digits: number;
+  palette_color_len: number;
+  palette_color_pattern: string;
   roles: Role[];
   themes: UserTheme[];
   languages: UserLanguage[];
   session_duration_days: number;
  };
- badges: { catalog: BadgeCatalogEntry[] };
- note: { max_title_len: number; max_content_len: number; max_files: number };
+ badges: { catalog: BadgeCatalogEntry[]; high_mark_min: number };
+ note: { max_title_len: number; max_content_len: number; max_files: number; max_course_note_files: number };
  file: {
   max_name_len: number;
   max_content_type_len: number;
@@ -754,6 +779,7 @@ export type Limits = {
   max_ledger_note_len: number;
   max_cancel_cutoff_minutes: number;
   max_serving_minute: number;
+  max_booking_attempts: number;
   booking_statuses: string[];
   attendance_statuses: string[];
   ledger_kinds: string[];
@@ -762,8 +788,15 @@ export type Limits = {
   max_plan_name_len: number;
   max_plan_installments: number;
   max_assign_students: number;
+  max_assign_writes: number;
+  max_applied_lines: number;
   max_request_key_len: number;
   ledger_kinds: string[];
+ };
+ pomodoro: {
+  min_counted_ms: number;
+  max_counted_per_day: number;
+  max_label_len: number;
  };
  chatbot: {
   max_message_len: number;
@@ -800,7 +833,7 @@ export type Limits = {
   max_grade_label_len: number;
   required_attendance_statuses: string[];
  };
- request: { max_page_limit: number; schedule_past_grace_ms: number; request_timeout_secs: number };
+ request: { max_page_limit: number; max_request_id_len: number; schedule_past_grace_ms: number; request_timeout_secs: number };
  rate: { window_secs: number; auth_per_minute: number; api_per_minute: number; chatbot_per_minute: number };
 };
 

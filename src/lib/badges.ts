@@ -19,6 +19,27 @@ const KNOWN_BADGE_IDS = new Set([
   "pomodoro_finished_200",
   "pomodoro_focus_ms_36000000",
   "pomodoro_focus_ms_180000000",
+  "marks_given_10",
+  "marks_given_50",
+  "marks_given_250",
+  "lessons_held_10",
+  "lessons_held_50",
+  "lessons_held_200",
+  "pool_approved_5",
+  "pool_approved_25",
+  "pool_approved_100",
+  "pool_published_1",
+  "pool_published_10",
+  "pool_published_50",
+  "lessons_attended_10",
+  "lessons_attended_50",
+  "lessons_attended_200",
+  "high_mark_1",
+  "high_mark_10",
+  "high_mark_25",
+  "study_streak_3",
+  "study_streak_7",
+  "study_streak_30",
 ]);
 
 // Which lifetime counter on the profile's stats block a badge's stat reads.
@@ -28,6 +49,13 @@ const STAT_TOTAL_FIELD: Record<BadgeStat, keyof ProfileStats> = {
   exam_sat: "exam_sat_total",
   pomodoro_finished: "pomodoro_finished_total",
   pomodoro_focus_ms: "pomodoro_focus_ms_total",
+  marks_given: "marks_given_total",
+  lessons_held: "lessons_held_total",
+  pool_approved: "pool_approved_total",
+  pool_published: "pool_published_total",
+  lessons_attended: "lessons_attended_total",
+  high_mark: "high_mark_total",
+  study_streak: "study_streak_total",
 };
 
 export function badgeNameKey(id: string): MessageKey | null {

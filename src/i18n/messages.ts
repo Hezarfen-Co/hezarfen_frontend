@@ -214,6 +214,48 @@ export type MessageKey =
   | "badge.pomodoro_focus_ms_36000000.desc"
   | "badge.pomodoro_focus_ms_180000000.name"
   | "badge.pomodoro_focus_ms_180000000.desc"
+  | "badge.marks_given_10.name"
+  | "badge.marks_given_10.desc"
+  | "badge.marks_given_50.name"
+  | "badge.marks_given_50.desc"
+  | "badge.marks_given_250.name"
+  | "badge.marks_given_250.desc"
+  | "badge.lessons_held_10.name"
+  | "badge.lessons_held_10.desc"
+  | "badge.lessons_held_50.name"
+  | "badge.lessons_held_50.desc"
+  | "badge.lessons_held_200.name"
+  | "badge.lessons_held_200.desc"
+  | "badge.pool_approved_5.name"
+  | "badge.pool_approved_5.desc"
+  | "badge.pool_approved_25.name"
+  | "badge.pool_approved_25.desc"
+  | "badge.pool_approved_100.name"
+  | "badge.pool_approved_100.desc"
+  | "badge.pool_published_1.name"
+  | "badge.pool_published_1.desc"
+  | "badge.pool_published_10.name"
+  | "badge.pool_published_10.desc"
+  | "badge.pool_published_50.name"
+  | "badge.pool_published_50.desc"
+  | "badge.lessons_attended_10.name"
+  | "badge.lessons_attended_10.desc"
+  | "badge.lessons_attended_50.name"
+  | "badge.lessons_attended_50.desc"
+  | "badge.lessons_attended_200.name"
+  | "badge.lessons_attended_200.desc"
+  | "badge.high_mark_1.name"
+  | "badge.high_mark_1.desc"
+  | "badge.high_mark_10.name"
+  | "badge.high_mark_10.desc"
+  | "badge.high_mark_25.name"
+  | "badge.high_mark_25.desc"
+  | "badge.study_streak_3.name"
+  | "badge.study_streak_3.desc"
+  | "badge.study_streak_7.name"
+  | "badge.study_streak_7.desc"
+  | "badge.study_streak_30.name"
+  | "badge.study_streak_30.desc"
   | "whiteboard.bulkInvite"
   | "whiteboard.bulkInviteHint"
   | "whiteboard.inviteSourceClass"
@@ -537,6 +579,9 @@ export type MessageKey =
   | "auth.passwordMismatch"
   | "auth.loginTitle"
   | "auth.loginSubtitle"
+  | "auth.chooseSchoolTitle"
+  | "auth.chooseSchoolSubtitle"
+  | "auth.differentAccount"
   | "auth.registerTitle"
   | "auth.registerSubtitle"
   | "auth.usernameHint"
@@ -1014,6 +1059,11 @@ export type MessageKey =
   | "pomodoro.startedAt"
   | "pomodoro.finishedAt"
   | "pomodoro.duration"
+  | "pomodoro.sessionLabel"
+  | "pomodoro.sessionLabelPlaceholder"
+  | "pomodoro.counted"
+  | "pomodoro.countedYes"
+  | "pomodoro.countedNo"
   | "pomodoro.focusConsole"
   | "pomodoro.current"
   | "pomodoro.today"
@@ -2021,6 +2071,48 @@ const en: Dict = {
   "badge.pomodoro_focus_ms_36000000.desc": "Spend 10 hours in focus sessions.",
   "badge.pomodoro_focus_ms_180000000.name": "Fifty Hours Deep",
   "badge.pomodoro_focus_ms_180000000.desc": "Spend 50 hours in focus sessions.",
+  "badge.marks_given_10.name": "First Marks",
+  "badge.marks_given_10.desc": "Record 10 grades.",
+  "badge.marks_given_50.name": "Seasoned Grader",
+  "badge.marks_given_50.desc": "Record 50 grades.",
+  "badge.marks_given_250.name": "Assessment Ace",
+  "badge.marks_given_250.desc": "Record 250 grades.",
+  "badge.lessons_held_10.name": "Classroom Start",
+  "badge.lessons_held_10.desc": "Hold 10 lessons.",
+  "badge.lessons_held_50.name": "Seasoned Educator",
+  "badge.lessons_held_50.desc": "Hold 50 lessons.",
+  "badge.lessons_held_200.name": "Teaching Pillar",
+  "badge.lessons_held_200.desc": "Hold 200 lessons.",
+  "badge.pool_approved_5.name": "Quality Check",
+  "badge.pool_approved_5.desc": "Approve 5 question-pool entries.",
+  "badge.pool_approved_25.name": "Trusted Reviewer",
+  "badge.pool_approved_25.desc": "Approve 25 question-pool entries.",
+  "badge.pool_approved_100.name": "Pool Curator",
+  "badge.pool_approved_100.desc": "Approve 100 question-pool entries.",
+  "badge.pool_published_1.name": "First Contribution",
+  "badge.pool_published_1.desc": "Publish your first question to the school pool.",
+  "badge.pool_published_10.name": "Question Builder",
+  "badge.pool_published_10.desc": "Publish 10 questions to the school pool.",
+  "badge.pool_published_50.name": "Knowledge Contributor",
+  "badge.pool_published_50.desc": "Publish 50 questions to the school pool.",
+  "badge.lessons_attended_10.name": "Present and Learning",
+  "badge.lessons_attended_10.desc": "Attend 10 lessons.",
+  "badge.lessons_attended_50.name": "Dedicated Student",
+  "badge.lessons_attended_50.desc": "Attend 50 lessons.",
+  "badge.lessons_attended_200.name": "Classroom Regular",
+  "badge.lessons_attended_200.desc": "Attend 200 lessons.",
+  "badge.high_mark_1.name": "High Flyer",
+  "badge.high_mark_1.desc": "Earn your first high mark.",
+  "badge.high_mark_10.name": "Top Form",
+  "badge.high_mark_10.desc": "Earn 10 high marks.",
+  "badge.high_mark_25.name": "Excellence Streak",
+  "badge.high_mark_25.desc": "Earn 25 high marks.",
+  "badge.study_streak_3.name": "Three-Day Spark",
+  "badge.study_streak_3.desc": "Study for 3 consecutive days.",
+  "badge.study_streak_7.name": "Study Week",
+  "badge.study_streak_7.desc": "Study for 7 consecutive days.",
+  "badge.study_streak_30.name": "Monthly Momentum",
+  "badge.study_streak_30.desc": "Study for 30 consecutive days.",
   "whiteboard.bulkInvite": "Invite a group",
   "whiteboard.bulkInviteHint":
     "Adds everyone in the group as a participant. Parents are skipped, and people already on the board keep their place.",
@@ -2338,7 +2430,7 @@ const en: Dict = {
   "auth.register": "Create account",
   "auth.username": "Username",
   "auth.school": "School",
-  "auth.schoolHint": "2–32 characters",
+  "auth.schoolHint": "{min}–{max} characters",
   "auth.password": "Password",
   "auth.noAccount": "New here?",
   "auth.hasAccount": "Already registered?",
@@ -2346,6 +2438,9 @@ const en: Dict = {
   "auth.passwordMismatch": "Passwords do not match",
   "auth.loginTitle": "Sign in to your account",
   "auth.loginSubtitle": "Sign in to continue with your school workspace.",
+  "auth.chooseSchoolTitle": "Choose your school",
+  "auth.chooseSchoolSubtitle": "Select the workspace to open for @{username}.",
+  "auth.differentAccount": "Use a different account",
   "auth.registerTitle": "Join Hezarfen",
   "auth.registerSubtitle": "New accounts start as student. Teachers and admins are assigned later.",
   "auth.usernameHint": "3–32 characters",
@@ -2908,6 +3003,11 @@ const en: Dict = {
   "pomodoro.startedAt": "Started",
   "pomodoro.finishedAt": "Finished",
   "pomodoro.duration": "Duration",
+  "pomodoro.sessionLabel": "Focus label",
+  "pomodoro.sessionLabelPlaceholder": "What are you working on?",
+  "pomodoro.counted": "Counts",
+  "pomodoro.countedYes": "Counted",
+  "pomodoro.countedNo": "Not counted",
   "pomodoro.focusConsole": "Focus console",
   "pomodoro.current": "Current focus",
   "pomodoro.today": "Today",
@@ -3836,6 +3936,48 @@ const tr: Dict = {
   "badge.pomodoro_focus_ms_36000000.desc": "Odak oturumlarında toplam 10 saat geçir.",
   "badge.pomodoro_focus_ms_180000000.name": "50 Saat Odak",
   "badge.pomodoro_focus_ms_180000000.desc": "Odak oturumlarında toplam 50 saat geçir.",
+  "badge.marks_given_10.name": "İlk Notlar",
+  "badge.marks_given_10.desc": "10 not kaydet.",
+  "badge.marks_given_50.name": "Deneyimli Değerlendirici",
+  "badge.marks_given_50.desc": "50 not kaydet.",
+  "badge.marks_given_250.name": "Değerlendirme Ustası",
+  "badge.marks_given_250.desc": "250 not kaydet.",
+  "badge.lessons_held_10.name": "Sınıfa İlk Adım",
+  "badge.lessons_held_10.desc": "10 ders işle.",
+  "badge.lessons_held_50.name": "Deneyimli Eğitimci",
+  "badge.lessons_held_50.desc": "50 ders işle.",
+  "badge.lessons_held_200.name": "Eğitimin Direği",
+  "badge.lessons_held_200.desc": "200 ders işle.",
+  "badge.pool_approved_5.name": "Kalite Kontrolü",
+  "badge.pool_approved_5.desc": "Soru havuzunda 5 soruyu onayla.",
+  "badge.pool_approved_25.name": "Güvenilir İnceleyici",
+  "badge.pool_approved_25.desc": "Soru havuzunda 25 soruyu onayla.",
+  "badge.pool_approved_100.name": "Havuz Küratörü",
+  "badge.pool_approved_100.desc": "Soru havuzunda 100 soruyu onayla.",
+  "badge.pool_published_1.name": "İlk Katkı",
+  "badge.pool_published_1.desc": "İlk sorunu okul havuzunda yayımla.",
+  "badge.pool_published_10.name": "Soru Üreticisi",
+  "badge.pool_published_10.desc": "10 soruyu okul havuzunda yayımla.",
+  "badge.pool_published_50.name": "Bilgi Katkıcısı",
+  "badge.pool_published_50.desc": "50 soruyu okul havuzunda yayımla.",
+  "badge.lessons_attended_10.name": "Derste ve Öğreniyor",
+  "badge.lessons_attended_10.desc": "10 derse katıl.",
+  "badge.lessons_attended_50.name": "Azimli Öğrenci",
+  "badge.lessons_attended_50.desc": "50 derse katıl.",
+  "badge.lessons_attended_200.name": "Sınıf Müdavimi",
+  "badge.lessons_attended_200.desc": "200 derse katıl.",
+  "badge.high_mark_1.name": "Yüksek Başlangıç",
+  "badge.high_mark_1.desc": "İlk yüksek notunu al.",
+  "badge.high_mark_10.name": "Yüksek Form",
+  "badge.high_mark_10.desc": "10 yüksek not al.",
+  "badge.high_mark_25.name": "Başarı Serisi",
+  "badge.high_mark_25.desc": "25 yüksek not al.",
+  "badge.study_streak_3.name": "Üç Günlük Kıvılcım",
+  "badge.study_streak_3.desc": "3 gün üst üste çalış.",
+  "badge.study_streak_7.name": "Çalışma Haftası",
+  "badge.study_streak_7.desc": "7 gün üst üste çalış.",
+  "badge.study_streak_30.name": "Aylık İvme",
+  "badge.study_streak_30.desc": "30 gün üst üste çalış.",
   "whiteboard.bulkInvite": "Toplu davet",
   "whiteboard.bulkInviteHint":
     "Gruptaki herkesi katılımcı olarak ekler. Veliler eklenmez, zaten tahtada olanların yeri korunur.",
@@ -4153,7 +4295,7 @@ const tr: Dict = {
   "auth.register": "Hesap oluştur",
   "auth.username": "Kullanıcı adı",
   "auth.school": "Okul",
-  "auth.schoolHint": "2–32 karakter",
+  "auth.schoolHint": "{min}–{max} karakter",
   "auth.password": "Şifre",
   "auth.noAccount": "Yeni misin?",
   "auth.hasAccount": "Zaten kayıtlı mısın?",
@@ -4161,6 +4303,9 @@ const tr: Dict = {
   "auth.passwordMismatch": "Şifreler eşleşmiyor",
   "auth.loginTitle": "Hesabına giriş yap",
   "auth.loginSubtitle": "Okul çalışma alanına devam etmek için giriş yap.",
+  "auth.chooseSchoolTitle": "Okulunu seç",
+  "auth.chooseSchoolSubtitle": "@{username} için açılacak çalışma alanını seç.",
+  "auth.differentAccount": "Başka bir hesap kullan",
   "auth.registerTitle": "Hezarfen’e katıl",
   "auth.registerSubtitle": "Yeni hesaplar öğrenci olarak başlar. Öğretmen ve admin rolleri sonradan verilir.",
   "auth.usernameHint": "3–32 karakter",
@@ -4723,6 +4868,11 @@ const tr: Dict = {
   "pomodoro.startedAt": "Başlangıç",
   "pomodoro.finishedAt": "Bitiş",
   "pomodoro.duration": "Süre",
+  "pomodoro.sessionLabel": "Odak etiketi",
+  "pomodoro.sessionLabelPlaceholder": "Ne üzerinde çalışıyorsun?",
+  "pomodoro.counted": "Katkı",
+  "pomodoro.countedYes": "Sayıldı",
+  "pomodoro.countedNo": "Sayılmadı",
   "pomodoro.focusConsole": "Odak paneli",
   "pomodoro.current": "Mevcut odak",
   "pomodoro.today": "Bugün",

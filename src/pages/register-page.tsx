@@ -3,6 +3,7 @@ import { createResource, createSignal, Show } from "solid-js";
 import { postRegister } from "@/api/auth";
 import { getLimits } from "@/api/limits";
 import { formatApiError } from "@/api/client";
+import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,9 +22,6 @@ export default function RegisterPage() {
 function RegisterForm() {
   const navigate = useNavigate();
   const t = useT();
-  // Backend slug bounds (hezarfen_backend MIN_SLUG_LEN / MAX_SLUG_LEN).
-  const MIN_SCHOOL_SLUG_LEN = 2;
-  const MAX_SCHOOL_SLUG_LEN = 32;
   const [school, setSchool] = createSignal("");
   const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
@@ -32,6 +30,8 @@ function RegisterForm() {
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [limits] = createResource(() => getLimits().catch(() => null));
+  const minSchoolSlugLength = () => limits()?.user.min_slug_len ?? 2;
+  const maxSchoolSlugLength = () => limits()?.user.max_slug_len ?? 32;
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -39,8 +39,8 @@ function RegisterForm() {
     const u = username().trim();
     const p = password();
     const cp = confirmPassword();
-    if (s.length < MIN_SCHOOL_SLUG_LEN || s.length > MAX_SCHOOL_SLUG_LEN) {
-      setError(t("auth.schoolHint"));
+    if (s.length < minSchoolSlugLength() || s.length > maxSchoolSlugLength()) {
+      setError(t("auth.schoolHint", { min: minSchoolSlugLength(), max: maxSchoolSlugLength() }));
       return;
     }
     const userLimits = limits()?.user;
@@ -69,21 +69,15 @@ function RegisterForm() {
   };
 
   return (
-    <div class="-mx-4 -my-6 flex min-h-[calc(100dvh-3.5rem)] items-center justify-center overflow-hidden px-4 py-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-my-8 lg:px-8">
-      <div class="data-shell w-full max-w-sm p-6 shadow-lg sm:p-8">
-        <div class="mb-8 text-center">
-          <h1 class="text-3xl font-semibold tracking-tight">{t("auth.registerTitle")}</h1>
-          <p class="mt-1.5 text-sm text-muted-foreground">{t("auth.registerSubtitle")}</p>
-        </div>
-
+    <AuthPageShell title={t("auth.registerTitle")} subtitle={t("auth.registerSubtitle")}>
         <form class="space-y-5" onSubmit={handleSubmit}>
           <div class="space-y-2">
             <Label for="register-school">{t("auth.school")}</Label>
             <Input
               id="register-school"
               class="h-9"
-              minlength={MIN_SCHOOL_SLUG_LEN}
-              maxlength={MAX_SCHOOL_SLUG_LEN}
+              minlength={minSchoolSlugLength()}
+              maxlength={maxSchoolSlugLength()}
               required
               value={school()}
               onInput={(e) => setSchool(e.currentTarget.value)}
@@ -150,18 +144,17 @@ function RegisterForm() {
             <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
           )}
 
-          <Button type="submit" class="h-9 w-full text-base" disabled={pending()}>
-            {t("auth.register")}
+          <Button type="submit" class="h-9 w-full text-sm" disabled={pending()}>
+            {pending() ? t("common.loading") : t("auth.register")}
           </Button>
         </form>
 
-        <p class="mt-8 text-center text-sm text-muted-foreground">
+        <p class="mt-8 border-t border-border-hairline pt-6 text-center text-sm text-text-subtle">
           {t("auth.hasAccount")}{" "}
           <Link to="/login" class="font-semibold text-primary underline-offset-4 hover:underline">
             {t("auth.login")}
           </Link>
         </p>
-      </div>
-    </div>
+    </AuthPageShell>
   );
 }

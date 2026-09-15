@@ -6,6 +6,7 @@ import { PreferencesProvider } from "@/stores/preferences-context";
 const catalog: BadgeCatalogEntry[] = [
   { id: "homework_submitted_1", stat: "homework_submitted", threshold: 1 },
   { id: "homework_submitted_10", stat: "homework_submitted", threshold: 10 },
+  { id: "study_streak_7", stat: "study_streak", threshold: 7 },
   // An id this build has no copy for — it must render, not crash.
   { id: "streak_1000", stat: "streak_days", threshold: 1000 },
 ];
@@ -20,6 +21,13 @@ const stats: ProfileStats = {
   exam_sat_total: 0,
   pomodoro_finished_total: 0,
   pomodoro_focus_ms_total: 0,
+  marks_given_total: 0,
+  lessons_held_total: 0,
+  pool_approved_total: 0,
+  pool_published_total: 0,
+  lessons_attended_total: 0,
+  high_mark_total: 0,
+  study_streak_total: 7,
 };
 
 function renderGrid(earned: { id: string; earned_at: number }[]) {
@@ -50,6 +58,7 @@ test("an unearned badge shows its progress inline, an earned one shows its date"
   // The remaining count rides the accessible name, which is what the tooltip
   // repeats — a keyboard or screen-reader user gets it without hovering.
   expect(screen.getByLabelText(/Steady Hand — 3 to go/)).toBeTruthy();
+  expect(screen.getByLabelText(/Study Week — 0 to go/)).toBeTruthy();
 });
 
 test("a badge whose stat this build does not know shows no progress bar", () => {

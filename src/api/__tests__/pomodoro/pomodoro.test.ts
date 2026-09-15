@@ -44,6 +44,18 @@ describe("pomodoro API", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/pomodoro/start");
     expect(init?.method).toBe("POST");
+    expect(init?.body).toBeUndefined();
+  });
+
+  it("postPomodoroStart sends the optional session label", async () => {
+    mockFetchSuccess({ id: "p1", label: "Calculus" });
+
+    await postPomodoroStart({ label: "Calculus" });
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/pomodoro/start");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ label: "Calculus" }));
   });
 
   it("postPomodoroFinish calls /pomodoro/finish", async () => {

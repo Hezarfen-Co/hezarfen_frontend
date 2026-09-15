@@ -19,6 +19,13 @@ const stats: ProfileStats = {
   exam_sat_total: 0,
   pomodoro_finished_total: 12,
   pomodoro_focus_ms_total: 5_400_000, // 1.5 h
+  marks_given_total: 50,
+  lessons_held_total: 11,
+  pool_approved_total: 6,
+  pool_published_total: 2,
+  lessons_attended_total: 25,
+  high_mark_total: 4,
+  study_streak_total: 7,
 };
 
 describe("badge copy lookup", () => {
@@ -37,6 +44,8 @@ describe("badgeProgress", () => {
   it("reads the lifetime counter behind each stat", () => {
     expect(badgeProgress("homework_submitted", stats)).toBe(7);
     expect(badgeProgress("pomodoro_focus_ms", stats)).toBe(5_400_000);
+    expect(badgeProgress("marks_given", stats)).toBe(50);
+    expect(badgeProgress("study_streak", stats)).toBe(7);
   });
 
   it("is null for an unknown stat rather than zero, so the tile shows no bar", () => {

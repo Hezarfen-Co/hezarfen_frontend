@@ -20,7 +20,7 @@ import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 
 function displayName(user: User) {
-  return [user.name, user.surname].filter(Boolean).join(" ").trim() || user.username;
+  return user.display_name?.trim() || [user.name, user.surname].filter(Boolean).join(" ").trim() || user.username;
 }
 
 export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => void | Promise<void> }) {
