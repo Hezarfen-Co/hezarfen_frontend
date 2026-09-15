@@ -99,25 +99,6 @@ function LicenseModulesContent() {
         </TabsList>
       </Tabs>
 
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="space-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("nav.licenseModules")}</h1>
-          <p class="text-sm text-text-subtle">{t("modules.subtitle")}</p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
-            <IconDownload class="h-4 w-4" />
-            {t("modules.downloadInvoices")}
-            <ComingSoonBadge class="ml-1.5" />
-          </Button>
-          <Button size="sm" class="min-w-[7.5rem] rounded-lg" disabled title={t("modules.readOnlyHint")}>
-            <IconPlus class="h-4 w-4" />
-            {t("modules.addLicense")}
-            <ComingSoonBadge class="ml-1.5" />
-          </Button>
-        </div>
-      </div>
-
       <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
         <Show when={data.error}>
           <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
@@ -152,15 +133,27 @@ function LicenseModulesContent() {
                 </div>
               </section>
 
-              <DataTable
-                title={t("builder.modules")}
-                description={t("modules.readOnlyHint")}
-                columns={columns()}
-                data={value().rows}
-                tableClass="min-w-[760px]"
-                enablePagination={false}
-                storageKey="license-modules"
-              />
+              <section class="data-shell space-y-4 p-4">
+                <DataTable
+                  title={t("nav.licenseModules")}
+                  description={t("modules.subtitle")}
+                  actions={<><Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
+            <IconDownload class="h-4 w-4" />
+            {t("modules.downloadInvoices")}
+            <ComingSoonBadge class="ml-1.5" />
+          </Button>
+          <Button size="sm" class="min-w-[7.5rem] rounded-lg" disabled title={t("modules.readOnlyHint")}>
+            <IconPlus class="h-4 w-4" />
+            {t("modules.addLicense")}
+            <ComingSoonBadge class="ml-1.5" />
+          </Button></>}
+                  columns={columns()}
+                  data={value().rows}
+                  tableClass="min-w-[760px]"
+                  enablePagination={false}
+                  storageKey="license-modules"
+                />
+              </section>
 
               <ComingSoonPanel title={t("modules.recentInvoices")} />
             </>

@@ -9,13 +9,11 @@ import { postTermUnarchive } from "@/api/terms";
 import { formatApiError } from "@/api/client";
 import type { Term } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconArchive, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
@@ -201,19 +199,6 @@ function TermsContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader
-          title={t("terms.title")}
-          description={t("terms.subtitle")}
-          actions={
-            <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={openCreate}>
-              <IconPlus class="h-4 w-4" />
-              {t("terms.create")}
-            </Button>
-          }
-        />
-      </div>
-
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -221,22 +206,28 @@ function TermsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+      <section class="data-shell space-y-4 p-4">
         <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
           </Show>
-          <Show
-            when={terms().length > 0}
-            fallback={
-              <EmptyState
-                kind="schedule"
-                title={t("terms.empty")}
-              />
+          <DataTable
+            title={t("terms.title")}
+            description={t("terms.subtitle")}
+            actions={
+              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
+                <IconPlus class="h-4 w-4" />
+                {t("terms.create")}
+              </Button>
             }
-          >
-            <DataTable columns={columns()} data={terms()} tableClass="min-w-160" filterColumn="name" enablePagination pageSize={TERM_PAGE_SIZE} />
-          </Show>
+            columns={columns()}
+            data={terms()}
+            tableClass="min-w-160"
+            filterColumn="name"
+            enablePagination
+            pageSize={TERM_PAGE_SIZE}
+            empty={t("terms.empty")}
+          />
         </Suspense>
       </section>
 

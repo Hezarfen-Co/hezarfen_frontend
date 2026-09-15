@@ -437,19 +437,6 @@ function AppointmentsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <header class="flex items-center gap-3 border-b border-border-hairline pb-5">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-primary">
-          <IconCalendarDays class="h-5 w-5" />
-        </span>
-        <div class="min-w-0">
-          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("appointments.title")}</h1>
-          {/* Staff publish times, everyone else consumes them — one sentence
-              cannot describe both without going vague. */}
-          <p class="mt-0.5 text-sm text-text-subtle">
-            {isStaff() ? t("appointments.subtitleStaff") : t("appointments.subtitle")}
-          </p>
-        </div>
-      </header>
 
       <Tabs
         class="space-y-4"
@@ -478,7 +465,7 @@ function AppointmentsContent() {
 
         <TabsContent value="appointments" class="mt-0 space-y-4 border-0 bg-transparent p-0 shadow-none">
           <Show when={isStaff()} fallback={
-            <section class="data-shell p-4">
+            <section class="data-shell space-y-4 p-4">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
                 <Show when={nextBooking()}>
@@ -495,9 +482,9 @@ function AppointmentsContent() {
                     </div>
                   )}
                 </Show>
-                <p class="mb-3 text-sm text-muted-foreground">{t("appointments.myBookingsHint")}</p>
                 <DataTable
                   title={t("appointments.myBookings")}
+                  description={t("appointments.myBookingsHint")}
                   columns={bookingColumns()}
                   data={myBookings()}
                   tableClass="table-fixed min-w-[46rem]"
@@ -510,12 +497,12 @@ function AppointmentsContent() {
               </Show>
             </section>
           }>
-            <section class="data-shell p-4">
+            <section class="data-shell space-y-4 p-4">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
-                <p class="mb-3 text-sm text-muted-foreground">{t("appointments.requestsHint")}</p>
                 <DataTable
                   title={t("appointments.requests")}
+                  description={t("appointments.requestsHint")}
                   columns={requestColumns()}
                   data={requests()}
                   tableClass="table-fixed min-w-[46rem]"
@@ -532,12 +519,12 @@ function AppointmentsContent() {
 
         <TabsContent value="availability" class="mt-0 border-0 bg-transparent p-0 shadow-none">
           <Show when={isStaff()} fallback={
-            <section class="data-shell p-4">
+            <section class="data-shell space-y-4 p-4">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
-                <p class="mb-3 text-sm text-muted-foreground">{t("appointments.availableSlotsHint")}</p>
                 <DataTable
                   title={t("appointments.availableSlots")}
+                  description={t("appointments.availableSlotsHint")}
                   columns={availableColumns()}
                   data={availableSlots()}
                   tableClass="table-fixed min-w-[46rem]"
@@ -550,14 +537,14 @@ function AppointmentsContent() {
               </Show>
             </section>
           }>
-            <section class="data-shell p-4">
+            <section class="data-shell space-y-4 p-4">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
-                <p class="mb-3 text-sm text-muted-foreground">{t("appointments.mySlotsHint")}</p>
                 <DataTable
                   title={t("appointments.mySlots")}
+                  description={t("appointments.mySlotsHint")}
                   actions={
-                    <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={() => setShowPublish(true)}>
+                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowPublish(true)}>
                       <IconPlus class="h-4 w-4" />
                       {t("appointments.publish")}
                     </Button>

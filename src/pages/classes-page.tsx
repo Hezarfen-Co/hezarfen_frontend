@@ -5,6 +5,7 @@ import { getTerms } from "@/api/terms";
 import { getLimits } from "@/api/limits";
 import { formatApiError, type ClassGroup } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { DataSection } from "@/components/ui/data-section";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -156,58 +157,57 @@ function ClassesContent() {
           </TabsList>
         </Show>
 
-        <TabsContent value="classes" class="space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="space-y-1">
-              <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("classGroups.title")}</h1>
-              <p class="text-sm text-text-subtle">{t("classGroups.subtitle")}</p>
-            </div>
-            <Show when={canManage()}>
-              <div class="flex items-center gap-2">
+        <TabsContent value="classes">
+          <DataSection
+            title={t("classGroups.title")}
+            description={t("classGroups.subtitle")}
+            actions={
+              <Show when={canManage()}>
                 <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
                   {t("classGroups.mergeClasses")}
                   <ComingSoonBadge class="ml-1.5" />
                 </Button>
-                <Button size="sm" class="min-w-30 rounded-lg" onClick={() => setShowForm(true)}>
+                <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowForm(true)}>
                   <IconPlus class="h-4 w-4" />
                   {t("classGroups.newClass")}
                 </Button>
-              </div>
-            </Show>
-          </div>
+              </Show>
+            }
+          >
+            <div class="flex flex-wrap items-center gap-2">
+              <Input
+                value={query()}
+                onInput={(e) => setQuery(e.currentTarget.value)}
+                placeholder={t("classGroups.searchPlaceholder")}
+                class="h-8 w-full max-w-sm rounded-lg text-[13px]"
+              />
+              <Show when={grades().length > 0}>
+                <Tabs value={gradeFilter()} onChange={setGradeFilter}>
+                  <TabsList>
+                    <TabsTrigger value="all">{t("classGroups.allGrades")}</TabsTrigger>
+                    <For each={grades()}>{(g) => <TabsTrigger value={g}>{g}</TabsTrigger>}</For>
+                  </TabsList>
+                </Tabs>
+              </Show>
+            </div>
 
-          <Show when={grades().length > 0}>
-            <Tabs value={gradeFilter()} onChange={setGradeFilter}>
-              <TabsList>
-                <TabsTrigger value="all">{t("classGroups.allGrades")}</TabsTrigger>
-                <For each={grades()}>{(g) => <TabsTrigger value={g}>{g}</TabsTrigger>}</For>
-              </TabsList>
-            </Tabs>
-          </Show>
-
-          <Input
-            value={query()}
-            onInput={(e) => setQuery(e.currentTarget.value)}
-            placeholder={t("classGroups.searchPlaceholder")}
-            class="h-9 max-w-md rounded-lg"
-          />
-
-          <Suspense fallback={<DataTableSkeleton />}>
-            <Show when={searched().length > 0} fallback={<EmptyState kind="people" title={t("classGroups.empty")} />}>
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                <For each={searched()}>
-                  {(cls) => (
-                    <ClassCard
-                      cls={cls}
-                      termName={termName(cls.term)}
-                      memberCount={memberCounts()?.get(cls.id) ?? null}
-                      onClick={() => void navigate({ to: "/management/classes/$id", params: { id: cls.id } })}
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
-          </Suspense>
+            <Suspense fallback={<DataTableSkeleton />}>
+              <Show when={searched().length > 0} fallback={<EmptyState kind="people" title={t("classGroups.empty")} />}>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <For each={searched()}>
+                    {(cls) => (
+                      <ClassCard
+                        cls={cls}
+                        termName={termName(cls.term)}
+                        memberCount={memberCounts()?.get(cls.id) ?? null}
+                        onClick={() => void navigate({ to: "/management/classes/$id", params: { id: cls.id } })}
+                      />
+                    )}
+                  </For>
+                </div>
+              </Show>
+            </Suspense>
+          </DataSection>
         </TabsContent>
 
         <TabsContent value="blueprints">

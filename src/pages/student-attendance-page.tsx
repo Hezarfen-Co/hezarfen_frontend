@@ -60,7 +60,6 @@ function StudentAttendanceContent() {
     },
   );
 
-  const total = () => list().length;
   const rows = () => list();
   const listLoading = () => list.loading;
   const searchPerson = (person: PersonRef, query: string) =>
@@ -111,7 +110,7 @@ function StudentAttendanceContent() {
         <Show when={!listLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
           <DataTable
             title={t("nav.studentAttendance")}
-            description={`${t("attendance.lookup")} · ${rows().length} / ${total()}`}
+            description={t("attendance.lookup")}
             columns={columns()}
             data={rows()}
             tableClass="min-w-xl"

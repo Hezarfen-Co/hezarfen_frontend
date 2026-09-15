@@ -320,7 +320,7 @@ function CalendarContent() {
 
   return (
     <div class="space-y-4">
-      <section class="data-shell flex flex-col space-y-3 border-sky-500/15 bg-sky-500/2.5 p-3 lg:h-[calc(100dvh-7.5rem)]">
+      <section class="data-shell flex flex-col space-y-3 p-3 lg:h-[calc(100dvh-7.5rem)]">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
             <h1 class="truncate text-lg font-semibold tracking-tight text-foreground sm:text-xl">{t("calendar.title")}</h1>

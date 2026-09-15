@@ -9,7 +9,7 @@ import { getUserAttendance } from "@/api/reports";
 import { formatApiError, type MarksReport, type PersonRef } from "@/api/client";
 import { HomeworkReportView } from "@/components/homework/homework-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
+import { DataSection } from "@/components/ui/data-section";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -68,10 +68,7 @@ function MyStudentsContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader title={t("nav.children")} description={t("parents.subtitle")} />
-      </div>
-
+      <DataSection title={t("nav.children")} description={t("parents.subtitle")}>
       <Suspense fallback={<PageSpinner />}>
         <Show when={list()}>
           <Show when={list()!.length > 0} fallback={<EmptyState kind="people" title={t("common.noResults")} />}>
@@ -95,6 +92,7 @@ function MyStudentsContent() {
           </Show>
         </Show>
       </Suspense>
+      </DataSection>
 
       <StudentDetailPanel student={selectedStudent()} initialTab={routeTab()} onClose={() => setSelectedStudent(null)} />
     </div>

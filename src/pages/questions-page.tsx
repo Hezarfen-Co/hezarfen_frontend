@@ -4,7 +4,7 @@ import { getQuestions, postQuestion, deleteQuestionById } from "@/api/shared";
 import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
+import { DataSection } from "@/components/ui/data-section";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -77,7 +77,24 @@ function QuestionsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader
+      <div class="inline-flex max-w-full items-center gap-1 rounded-xl border border-border/70 bg-card/80 p-1 shadow-xs">
+        <Link
+          to="/questions"
+          search={{ status: "approved" }}
+          class={cn("group inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border px-3 text-sm font-medium transition-colors", statusFilter() === "approved" ? "border-border bg-surface-base text-foreground shadow-xs" : "border-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground")}
+        >
+          {t("pool.approved")}
+        </Link>
+        <Link
+          to="/questions"
+          search={{ status: "pending" }}
+          class={cn("group inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-lg border px-3 text-sm font-medium transition-colors", statusFilter() === "pending" ? "border-border bg-surface-base text-foreground shadow-xs" : "border-transparent text-muted-foreground hover:bg-muted/70 hover:text-foreground")}
+        >
+          {t("pool.pending")}
+        </Link>
+      </div>
+
+      <DataSection
         title={t("pool.title")}
         description={t("pool.subtitle")}
         actions={
@@ -88,26 +105,8 @@ function QuestionsContent() {
             </Button>
           </Show>
         }
-      />
-
-      <div class="flex gap-2 border-b">
-        <Link
-          to="/questions"
-          search={{ status: "approved" }}
-          class={cn("pb-2 text-sm font-medium transition-colors hover:text-foreground", statusFilter() === "approved" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground")}
-        >
-          {t("pool.approved")}
-        </Link>
-        <Link
-          to="/questions"
-          search={{ status: "pending" }}
-          class={cn("ml-4 pb-2 text-sm font-medium transition-colors hover:text-foreground", statusFilter() === "pending" ? "border-b-2 border-primary text-foreground" : "text-muted-foreground")}
-        >
-          {t("pool.pending")}
-        </Link>
-      </div>
-
-      <div class="data-shell">
+      >
+        <div class="-mx-4 -mb-4 border-t border-border-hairline">
         <Suspense fallback={<PageSpinner />}>
           <Show when={list()}>
             <Show when={list()!.length > 0} fallback={<EmptyState kind="search" title={t("pool.noQuestions")} />}>
@@ -167,7 +166,8 @@ function QuestionsContent() {
             </Show>
           </Show>
         </Suspense>
-      </div>
+        </div>
+      </DataSection>
 
       <Show when={askOpen()}>
         <AskQuestionDialog

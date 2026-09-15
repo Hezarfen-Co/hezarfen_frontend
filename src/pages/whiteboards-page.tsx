@@ -4,7 +4,7 @@ import { getBoards, postBoard, type Board } from "@/api/boards";
 import { getUserSearch } from "@/api/users";
 import { formatApiError, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
+import { DataSection } from "@/components/ui/data-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -58,7 +58,7 @@ function WhiteboardsContent() {
 
   return (
     <div class="space-y-5">
-      <PageHeader
+      <DataSection
         title={t("whiteboard.title")}
         description={t("whiteboard.subtitle")}
         actions={
@@ -67,49 +67,49 @@ function WhiteboardsContent() {
             {t("whiteboard.create")}
           </Button>
         }
-      />
-
-      <Suspense fallback={<PageSpinner />}>
-        <Show when={boards.error}>
-          <ErrorAlert message={formatApiError(boards.error, locale())} />
-        </Show>
-        <Show
-          when={(boards()?.items ?? []).length > 0}
-          fallback={<EmptyState kind="whiteboard" title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
-        >
-          <div class="space-y-4">
-            <Input
-              value={query()}
-              onInput={(e) => setQuery(e.currentTarget.value)}
-              placeholder={t("whiteboard.searchPlaceholder")}
-              class="h-9 max-w-sm rounded-lg"
-            />
-            <Show when={visibleBoards().length > 0} fallback={<EmptyState kind="search" title={t("common.noResults")} />}>
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <For each={visibleBoards()}>
-                  {(board) => (
-                    <BoardCard
-                      board={board}
-                      isCreator={board.creator === meId()}
-                      onOpen={() => navigate({ to: "/whiteboards/$id", params: { id: board.id } })}
-                      createdLabel={formatDate(board.created_at, locale())}
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
-            <Show when={(boards()?.total ?? 0) > PAGE_SIZE}>
-              <TablePagination
-                pageIndex={page()}
-                pageCount={pageCount()}
-                pageSize={PAGE_SIZE}
-                total={boards()?.total ?? 0}
-                onPageChange={setPage}
+      >
+        <Suspense fallback={<PageSpinner />}>
+          <Show when={boards.error}>
+            <ErrorAlert message={formatApiError(boards.error, locale())} />
+          </Show>
+          <Show
+            when={(boards()?.items ?? []).length > 0}
+            fallback={<EmptyState kind="whiteboard" title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
+          >
+            <div class="space-y-4">
+              <Input
+                value={query()}
+                onInput={(e) => setQuery(e.currentTarget.value)}
+                placeholder={t("whiteboard.searchPlaceholder")}
+                class="h-8 max-w-sm rounded-lg text-[13px]"
               />
-            </Show>
-          </div>
-        </Show>
-      </Suspense>
+              <Show when={visibleBoards().length > 0} fallback={<EmptyState kind="search" title={t("common.noResults")} />}>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <For each={visibleBoards()}>
+                    {(board) => (
+                      <BoardCard
+                        board={board}
+                        isCreator={board.creator === meId()}
+                        onOpen={() => navigate({ to: "/whiteboards/$id", params: { id: board.id } })}
+                        createdLabel={formatDate(board.created_at, locale())}
+                      />
+                    )}
+                  </For>
+                </div>
+              </Show>
+              <Show when={(boards()?.total ?? 0) > PAGE_SIZE}>
+                <TablePagination
+                  pageIndex={page()}
+                  pageCount={pageCount()}
+                  pageSize={PAGE_SIZE}
+                  total={boards()?.total ?? 0}
+                  onPageChange={setPage}
+                />
+              </Show>
+            </div>
+          </Show>
+        </Suspense>
+      </DataSection>
 
       <CreateBoardPanel
         open={createOpen()}

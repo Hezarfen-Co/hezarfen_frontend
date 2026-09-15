@@ -114,13 +114,18 @@ function StudentsRosterContent() {
         </TabsList>
       </Tabs>
 
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="space-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("nav.studentsRoster")}</h1>
-          <p class="text-sm text-text-subtle">{t("roster.studentsSubtitle")}</p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
+
+      <section class="data-shell space-y-4 p-4">
+        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+          <Show when={data.error}>
+            <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
+          </Show>
+          <Show when={!data.error && data()}>
+            {(value) => (
+              <DataTable
+                title={t("nav.studentsRoster")}
+                description={t("roster.studentsSubtitle")}
+                actions={<><Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
             <IconUploadCloud class="h-4 w-4" />
             {t("roster.import")}
             <ComingSoonBadge class="ml-1.5" />
@@ -129,45 +134,36 @@ function StudentsRosterContent() {
             <IconPlus class="h-4 w-4" />
             {t("roster.addStudent")}
             <ComingSoonBadge class="ml-1.5" />
-          </Button>
-        </div>
-      </div>
-
-      <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
-        <Show when={data.error}>
-          <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
-        </Show>
-        <Show when={!data.error && data()}>
-          {(value) => (
-            <DataTable
-              columns={columns()}
-              data={rows()}
-              tableClass="min-w-[940px]"
-              empty={t("form.noStudents")}
-              filterPlaceholder={t("roster.searchStudents")}
-              searchPredicate={(row, query) =>
-                [row.person.username, row.person.display_name ?? ""].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase())
-              }
-              filters={
-                <>
-                  <Select aria-label={t("roster.class")} value={classFilter()} onChange={(e) => setClassFilter(e.currentTarget.value)} wrapperClass="w-auto">
-                    <option value="">{t("roster.classAll")}</option>
-                    <For each={value().classes}>{(cls) => <option value={cls.id}>{cls.name}</option>}</For>
-                  </Select>
-                  <Select aria-label={t("roster.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)} wrapperClass="w-auto">
-                    <option value="">{t("roster.termAll")}</option>
-                    <For each={value().terms}>{(term) => <option value={term.id}>{term.name}</option>}</For>
-                  </Select>
-                </>
-              }
-              enablePagination
-              pageSize={ROSTER_PAGE_SIZE}
-              storageKey="students-roster"
-              onRowClick={open}
-            />
-          )}
-        </Show>
-      </Suspense>
+          </Button></>}
+                columns={columns()}
+                data={rows()}
+                tableClass="min-w-[940px]"
+                empty={t("form.noStudents")}
+                filterPlaceholder={t("roster.searchStudents")}
+                searchPredicate={(row, query) =>
+                  [row.person.username, row.person.display_name ?? ""].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase())
+                }
+                filters={
+                  <>
+                    <Select aria-label={t("roster.class")} value={classFilter()} onChange={(e) => setClassFilter(e.currentTarget.value)} wrapperClass="w-auto">
+                      <option value="">{t("roster.classAll")}</option>
+                      <For each={value().classes}>{(cls) => <option value={cls.id}>{cls.name}</option>}</For>
+                    </Select>
+                    <Select aria-label={t("roster.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)} wrapperClass="w-auto">
+                      <option value="">{t("roster.termAll")}</option>
+                      <For each={value().terms}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+                    </Select>
+                  </>
+                }
+                enablePagination
+                pageSize={ROSTER_PAGE_SIZE}
+                storageKey="students-roster"
+                onRowClick={open}
+              />
+            )}
+          </Show>
+        </Suspense>
+      </section>
     </div>
   );
 }

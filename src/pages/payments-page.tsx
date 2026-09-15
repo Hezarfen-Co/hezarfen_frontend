@@ -22,7 +22,6 @@ import {
 import { getUserSearch } from "@/api/users";
 import { formatApiError, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -576,17 +575,6 @@ function PaymentsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader
-        title={t("payments.title")}
-        description={t("payments.subtitle")}
-        actions={
-          <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-            {t("payments.exportStatement")}
-            <ComingSoonBadge class="ml-1.5" />
-          </Button>
-        }
-      />
-
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -617,8 +605,7 @@ function PaymentsContent() {
                 <Show when={studentsPage.error}>
                   <ErrorAlert message={formatApiError(studentsPage.error)} onRetry={() => void refetchStudents()} />
                 </Show>
-                <Show when={pagedStudents().length > 0} fallback={<EmptyState kind="people" title={t("payments.selectStudent")} />}>
-                  <DataTable
+                <DataTable
                     columns={studentColumns()}
                     data={paymentStudentRows() ?? []}
                     onRowClick={(user) => navigate({ to: "/management/payments/$userId", params: { userId: user.id } })}
@@ -628,7 +615,15 @@ function PaymentsContent() {
                       setStudentPage(0);
                     }}
                     filterPlaceholder={t("payments.selectStudent")}
-                    title={t("payments.selectStudent")}
+                    title={t("payments.title")}
+                    description={t("payments.subtitle")}
+                    empty={t("payments.selectStudent")}
+                    actions={
+                      <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+                        {t("payments.exportStatement")}
+                        <ComingSoonBadge class="ml-1.5" />
+                      </Button>
+                    }
                     filters={
                       <Select value={planFilter()} onChange={(e) => { setPlanFilter(e.currentTarget.value); setStudentPage(0); }} wrapperClass="w-56">
                         <option value="">{t("payments.allPlans")}</option>
@@ -650,7 +645,6 @@ function PaymentsContent() {
                       },
                     }}
                   />
-                </Show>
               </Suspense>
               </section>
               </>
@@ -754,20 +748,30 @@ function PaymentsContent() {
 
         {/* ---------------- Fee plans ---------------- */}
         <TabsContent value="plans" class="space-y-4">
-          <div class="flex justify-end">
-            <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
-              <IconPlus class="h-4 w-4" />
-              {t("payments.createPlan")}
-            </Button>
-          </div>
           <section class="data-shell space-y-4 p-4">
             <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
               <Show when={plans.error}>
                 <ErrorAlert message={formatApiError(plans.error)} onRetry={() => void refetchPlans()} />
               </Show>
-              <Show when={planList().length > 0} fallback={<EmptyState kind="payments" title={t("payments.empty")} />}>
-                <DataTable columns={planColumns()} data={planList()} onRowClick={setViewPlan} storageKey="payment-plans" tableClass="min-w-160" filterColumn="name" enablePagination pageSize={PLAN_PAGE_SIZE} />
-              </Show>
+              <DataTable
+                title={t("payments.tabPlans")}
+                description={t("payments.subtitle")}
+                actions={
+                  <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("payments.createPlan")}
+                  </Button>
+                }
+                empty={t("payments.empty")}
+                columns={planColumns()}
+                data={planList()}
+                onRowClick={setViewPlan}
+                storageKey="payment-plans"
+                tableClass="min-w-160"
+                filterColumn="name"
+                enablePagination
+                pageSize={PLAN_PAGE_SIZE}
+              />
             </Suspense>
           </section>
         </TabsContent>

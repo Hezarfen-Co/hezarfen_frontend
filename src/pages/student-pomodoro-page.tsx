@@ -60,7 +60,6 @@ function StudentPomodoroContent() {
     },
   );
 
-  const total = () => list().length;
   const rows = () => list();
   const listLoading = () => list.loading;
   const searchPerson = (person: PersonRef, query: string) =>
@@ -100,7 +99,7 @@ function StudentPomodoroContent() {
 
   return (
     <div class="space-y-6">
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+      <section class="data-shell space-y-4 p-4">
         <Show when={error() && !viewUser()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
@@ -108,7 +107,7 @@ function StudentPomodoroContent() {
         <Show when={!listLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
           <DataTable
             title={t("nav.studentPomodoro")}
-            description={`${t("pomodoro.lookup")} · ${rows().length} / ${total()}`}
+            description={t("pomodoro.lookup")}
             columns={studentColumns()}
             data={rows()}
             tableClass="min-w-xl"

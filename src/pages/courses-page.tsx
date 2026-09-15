@@ -7,6 +7,7 @@ import { getLimits } from "@/api/limits";
 import { formatApiError, type CourseKind } from "@/api/client";
 import { CourseCard } from "@/components/courses/course-card";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { DataSection } from "@/components/ui/data-section";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataToolbar } from "@/components/ui/data-toolbar";
@@ -143,19 +144,6 @@ function CoursesContent() {
         </form>
       </SidePanel>
 
-      <header class="flex flex-wrap items-end justify-between gap-4 border-b border-border-hairline pb-5">
-        <div class="space-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{pageLabel()}</h1>
-          <p class="text-sm text-text-subtle">{t("courses.pageSubtitle")}</p>
-        </div>
-        <Show when={canCreate()}>
-          <Button size="sm" class="min-w-30 rounded-lg" onClick={() => setShowForm(true)}>
-            <IconPlus class="h-4 w-4" />
-            {t("common.createItem", { item: kindInSentence() })}
-          </Button>
-        </Show>
-      </header>
-
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
 
       <Tabs
@@ -178,7 +166,19 @@ function CoursesContent() {
         </TabsList>
 
         <TabsContent value={pageKind() ?? "all"} class="mt-4 space-y-4 border-0 bg-transparent p-0 shadow-none">
-          <section class="rounded-xl border border-border-line bg-surface-base p-3" aria-label={t("common.search")}>
+          <DataSection
+            title={pageLabel()}
+            description={t("courses.pageSubtitle")}
+            actions={
+              <Show when={canCreate()}>
+                <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowForm(true)}>
+                  <IconPlus class="h-4 w-4" />
+                  {t("common.createItem", { item: kindInSentence() })}
+                </Button>
+              </Show>
+            }
+          >
+          <div aria-label={t("common.search")}>
             <DataToolbar
               inline
               searchValue={search()}
@@ -192,7 +192,7 @@ function CoursesContent() {
                 </Select>
               }
             />
-          </section>
+          </div>
 
           <Suspense fallback={<PageSpinner />}>
             <Show
@@ -231,6 +231,7 @@ function CoursesContent() {
               </Show>
             </Show>
           </Suspense>
+          </DataSection>
         </TabsContent>
       </Tabs>
     </div>

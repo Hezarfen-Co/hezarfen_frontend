@@ -5,12 +5,11 @@ import { postWorkCheckIn } from "@/api/work";
 import { postWorkCheckOut } from "@/api/work";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
+import { DataSection } from "@/components/ui/data-section";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { createFlash } from "@/lib/flash";
@@ -47,7 +46,6 @@ function WorkLogContent() {
     async () => getMyWorkLog(),
   );
 
-  const total = () => list()?.total ?? 0;
   const pageItems = () => list()?.items ?? [];
   const columns = createMemo<ColumnDef<WorkEntry>[]>(() => [
     {
@@ -98,47 +96,35 @@ function WorkLogContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader title={t("work.title")} description={t("work.subtitle")} />
-
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
       {error() && <Alert variant="destructive">{error()}</Alert>}
 
-      <section class="data-shell overflow-hidden p-4">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 class="text-xl font-semibold">{openEntry() ? t("work.checkedIn") : t("work.notCheckedIn")}</h2>
-            <p class="mt-1 text-sm text-muted-foreground">
-              <Show when={openEntry()} fallback={t("work.ready")}>
-                {(entry) => t("work.since", { time: formatDateTime(entry().check_in, locale()) })}
-              </Show>
-            </p>
-          </div>
-          <Button type="button" size="lg" variant={openEntry() ? "destructive" : "default"} disabled={pending()} onClick={() => void toggle()}>
+      <DataSection
+        title={openEntry() ? t("work.checkedIn") : t("work.notCheckedIn")}
+        description={openEntry() ? t("work.since", { time: formatDateTime(openEntry()!.check_in, locale()) }) : t("work.subtitle")}
+        actions={
+          <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" variant={openEntry() ? "destructive" : "default"} disabled={pending()} onClick={() => void toggle()}>
             {openEntry() ? t("work.checkOut") : t("work.checkIn")}
           </Button>
-        </div>
-      </section>
+        }
+      />
 
       <section class="data-shell space-y-4 p-4">
         <Suspense fallback={<PageSpinner />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
           </Show>
-          <Show
-            when={pageItems().length > 0}
-            fallback={<EmptyState kind="work" title={t("work.empty")} description={t("work.ready")} />}
-          >
-            <DataTable
-              title={t("work.entries")}
-              actions={<Badge variant="secondary" class="mono px-3 py-1">{total()}</Badge>}
-              columns={columns()}
-              data={pageItems()}
-              enablePagination
-              pageSize={WORK_PAGE_SIZE}
-            />
-          </Show>
+          <DataTable
+            title={t("work.entries")}
+            description={t("work.ready")}
+            columns={columns()}
+            data={pageItems()}
+            enablePagination
+            pageSize={WORK_PAGE_SIZE}
+            empty={t("work.empty")}
+          />
         </Suspense>
       </section>
     </div>

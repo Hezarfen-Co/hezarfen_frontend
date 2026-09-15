@@ -1,4 +1,4 @@
-import { createMemo, createSignal, Show } from "solid-js";
+import { createMemo, createSignal, Show, type JSX } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import type { Role, User } from "@/api/client";
@@ -70,6 +70,9 @@ export function UserTable(props: {
   onRoleChange: (userId: string, role: Role) => Promise<void>;
   onUserClick?: (user: User) => void;
   onParentClick?: (user: User) => void;
+  title?: string;
+  description?: string;
+  actions?: JSX.Element;
 }) {
   const t = useT();
   const navigate = useNavigate();
@@ -154,8 +157,9 @@ export function UserTable(props: {
 
   return (
     <DataTable
-      title={t("nav.users")}
-      description={String(props.users.length)}
+      title={props.title ?? t("nav.users")}
+      description={props.description}
+      actions={props.actions}
       columns={columns()}
       data={props.users}
       empty={t("admin.noUsers")}

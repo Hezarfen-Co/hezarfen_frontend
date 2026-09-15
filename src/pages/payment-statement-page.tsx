@@ -10,11 +10,9 @@ import {
 import { getMyStudents } from "@/api/parents";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DetailField } from "@/components/ui/detail-field";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
@@ -118,11 +116,6 @@ function StatementContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader
-        title={t("payments.statementTitle")}
-        description={t("payments.statementSubtitle")}
-      />
-
       <Show when={isParent()}>
         <div class="data-shell max-w-md p-4">
           <Label for="statement-child">{t("meals.child")}</Label>
@@ -130,7 +123,7 @@ function StatementContent() {
         </div>
       </Show>
 
-      <section class="rounded-xl border border-border-line bg-surface-base p-4">
+      <section class="data-shell p-4">
         <div class="flex flex-wrap items-baseline justify-between gap-2">
           <p class="text-sm font-medium text-text-subtle">{t("payments.collected")}</p>
           <p class="mono text-lg font-semibold tabular-nums text-text-strong">
@@ -156,13 +149,15 @@ function StatementContent() {
         </div>
       </section>
 
-      <section class="space-y-4">
+      <section class="data-shell space-y-4 p-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={6} />}>
           <Show when={statement.error}>
             <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetch()} />
           </Show>
-          <Show when={entries().length > 0} fallback={<EmptyState kind="payments" title={t("payments.noStatement")} />}>
-            <DataTable
+          <DataTable
+              title={t("payments.statementTitle")}
+              description={t("payments.statementSubtitle")}
+              empty={t("payments.noStatement")}
               columns={columns()}
               data={sortStatementEntries(entries())}
               tableClass="min-w-160"
@@ -171,7 +166,6 @@ function StatementContent() {
               pageSize={STATEMENT_PAGE_SIZE}
               onRowClick={setViewEntry}
             />
-          </Show>
         </Suspense>
       </section>
 

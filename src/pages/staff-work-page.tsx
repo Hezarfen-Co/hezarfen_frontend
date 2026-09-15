@@ -9,6 +9,7 @@ import { ApiError } from "@/api/client";
 import type { Page, PersonRef, WorkEntry } from "@/api/client";
 import type { Locale } from "@/i18n/messages";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { DataSection } from "@/components/ui/data-section";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -279,54 +280,54 @@ function StaffWorkContent() {
         <Alert variant="success">{flash()}</Alert>
       </Show>
 
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="space-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("work.staffTitle")}</h1>
-          <p class="text-sm text-text-subtle">{t("work.staffSubtitle")}</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-            {t("work.addEntry")}
-            <ComingSoonBadge class="ml-1.5" />
-          </Button>
-          <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-            {t("work.planShift")}
-            <ComingSoonBadge class="ml-1.5" />
-          </Button>
-        </div>
-      </div>
-
       <Show when={error() && !viewUser() && !editTarget()}>
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <Input
-        value={staffSearch()}
-        onInput={(e) => setStaffSearch(e.currentTarget.value)}
-        placeholder={t("work.searchPlaceholder")}
-        class="h-9 max-w-md rounded-lg"
-      />
+      <DataSection
+        title={t("work.staffTitle")}
+        description={t("work.staffSubtitle")}
+        actions={
+          <>
+            <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+              {t("work.addEntry")}
+              <ComingSoonBadge class="ml-1.5" />
+            </Button>
+            <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+              {t("work.planShift")}
+              <ComingSoonBadge class="ml-1.5" />
+            </Button>
+          </>
+        }
+      >
+        <Input
+          value={staffSearch()}
+          onInput={(e) => setStaffSearch(e.currentTarget.value)}
+          placeholder={t("work.searchPlaceholder")}
+          class="h-8 max-w-sm rounded-lg text-[13px]"
+        />
 
-      <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
-        <Show when={pagedPeople().length > 0} fallback={<EmptyState kind="people" title={t("work.noTeachers")} />}>
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <For each={pagedPeople()}>
-              {(person) => (
-                <StaffCard
-                  person={person}
-                  stats={cardStats()?.get(person.id) ?? undefined}
-                  locale={locale()}
-                  onClick={() => {
-                    setError("");
-                    setViewUser(person);
-                  }}
-                />
-              )}
-            </For>
-          </div>
-          <PaginationControls page={staffPage()} totalPages={staffPageCount()} onPageChange={setStaffPage} />
+        <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
+          <Show when={pagedPeople().length > 0} fallback={<EmptyState kind="people" title={t("work.noTeachers")} />}>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <For each={pagedPeople()}>
+                {(person) => (
+                  <StaffCard
+                    person={person}
+                    stats={cardStats()?.get(person.id) ?? undefined}
+                    locale={locale()}
+                    onClick={() => {
+                      setError("");
+                      setViewUser(person);
+                    }}
+                  />
+                )}
+              </For>
+            </div>
+            <PaginationControls page={staffPage()} totalPages={staffPageCount()} onPageChange={setStaffPage} />
+          </Show>
         </Show>
-      </Show>
+      </DataSection>
 
       <SidePanel
         size="wide"

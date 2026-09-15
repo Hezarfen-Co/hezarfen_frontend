@@ -87,13 +87,18 @@ function TeachersRosterContent() {
         </TabsList>
       </Tabs>
 
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="space-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("nav.teachersRoster")}</h1>
-          <p class="text-sm text-text-subtle">{t("roster.teachersSubtitle")}</p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
+
+      <section class="data-shell space-y-4 p-4">
+        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+          <Show when={data.error}>
+            <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
+          </Show>
+          <Show when={!data.error && data()}>
+            {(rows) => (
+              <DataTable
+                title={t("nav.teachersRoster")}
+                description={t("roster.teachersSubtitle")}
+                actions={<><Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
             <IconUploadCloud class="h-4 w-4" />
             {t("roster.import")}
             <ComingSoonBadge class="ml-1.5" />
@@ -102,33 +107,24 @@ function TeachersRosterContent() {
             <IconPlus class="h-4 w-4" />
             {t("roster.addTeacher")}
             <ComingSoonBadge class="ml-1.5" />
-          </Button>
-        </div>
-      </div>
-
-      <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
-        <Show when={data.error}>
-          <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
-        </Show>
-        <Show when={!data.error && data()}>
-          {(rows) => (
-            <DataTable
-              columns={columns()}
-              data={rows()}
-              tableClass="min-w-[940px]"
-              empty={t("roster.noTeachers")}
-              filterPlaceholder={t("roster.searchTeachers")}
-              searchPredicate={(row, query) =>
-                [row.person.username, row.person.display_name ?? ""].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase())
-              }
-              enablePagination
-              pageSize={ROSTER_PAGE_SIZE}
-              storageKey="teachers-roster"
-              onRowClick={open}
-            />
-          )}
-        </Show>
-      </Suspense>
+          </Button></>}
+                columns={columns()}
+                data={rows()}
+                tableClass="min-w-[940px]"
+                empty={t("roster.noTeachers")}
+                filterPlaceholder={t("roster.searchTeachers")}
+                searchPredicate={(row, query) =>
+                  [row.person.username, row.person.display_name ?? ""].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase())
+                }
+                enablePagination
+                pageSize={ROSTER_PAGE_SIZE}
+                storageKey="teachers-roster"
+                onRowClick={open}
+              />
+            )}
+          </Show>
+        </Suspense>
+      </section>
     </div>
   );
 }

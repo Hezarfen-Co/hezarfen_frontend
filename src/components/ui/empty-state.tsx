@@ -50,7 +50,7 @@ export function EmptyState(props: {
   return (
     <div
       class={cn(
-        "flex min-h-[289px] flex-col items-center justify-center gap-5 rounded-xl border border-border-hairline bg-surface-base px-10 py-12 text-center",
+        "empty-state flex min-h-[289px] flex-col items-center justify-center gap-5 rounded-xl border border-border-hairline bg-surface-base px-10 py-12 text-center",
         props.class,
       )}
     >

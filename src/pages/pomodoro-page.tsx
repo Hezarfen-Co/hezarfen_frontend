@@ -323,7 +323,7 @@ function PomodoroContent() {
         </div>
       </section>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-4">
+      <section class="data-shell space-y-4 p-4">
         <div class="flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 class="text-lg font-semibold">{t("pomodoro.history")}</h2>

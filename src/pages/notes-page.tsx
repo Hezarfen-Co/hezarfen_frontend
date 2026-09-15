@@ -8,7 +8,7 @@ import { postNoteFile } from "@/api/notes";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
+import { DataSection } from "@/components/ui/data-section";
 import { NoteForm } from "@/components/notes/note-form";
 import { NoteImportPanel } from "@/components/notes/note-import-panel";
 import { NoteList } from "@/components/notes/note-list";
@@ -74,25 +74,6 @@ function NotesContent() {
 
   return (
     <div class="space-y-6">
-      <div class="space-y-2">
-        <PageHeader
-          title={t("notes.title")}
-          description={t("notes.subtitle")}
-          actions={
-            <div class="flex items-center gap-2">
-              <Button type="button" size="sm" class="min-w-30 rounded-lg" onClick={() => setCreateOpen(true)}>
-                <IconPlus class="h-4 w-4" />
-                {t("notes.new")}
-              </Button>
-              <Button type="button" variant="outline" size="sm" class="min-w-30 rounded-lg" onClick={() => setImportOpen(true)}>
-                <IconUploadCloud class="h-4 w-4" />
-                {t("notes.import")}
-              </Button>
-            </div>
-          }
-        />
-      </div>
-
       <SidePanel open={importOpen()} onOpenChange={setImportOpen} title={t("notes.import")}>
         <NoteImportPanel
           onCancel={() => setImportOpen(false)}
@@ -140,7 +121,22 @@ function NotesContent() {
       </SidePanel>
 
       <div class="space-y-5">
-        <section class="min-w-0 space-y-4 rounded-lg border border-border/60 bg-card/60 p-3 sm:p-4 dark:border-white/8 dark:bg-card/40 shadow-xs">
+        <DataSection
+          title={t("notes.title")}
+          description={t("notes.subtitle")}
+          actions={
+            <div class="flex items-center gap-2">
+              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+                <IconPlus class="h-4 w-4" />
+                {t("notes.new")}
+              </Button>
+              <Button type="button" variant="outline" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setImportOpen(true)}>
+                <IconUploadCloud class="h-4 w-4" />
+                {t("notes.import")}
+              </Button>
+            </div>
+          }
+        >
           <Show when={flash()}>
             <Alert variant="success">{flash()}</Alert>
           </Show>
@@ -173,7 +169,7 @@ function NotesContent() {
               </Show>
             </Show>
           </Suspense>
-        </section>
+        </DataSection>
       </div>
     </div>
   );

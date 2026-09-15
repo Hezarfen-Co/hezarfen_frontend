@@ -58,17 +58,6 @@ function AdminUsersContent() {
 
   return (
     <div class="space-y-5">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="space-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("admin.title")}</h1>
-          <p class="text-sm text-text-subtle">{t("admin.subtitle")}</p>
-        </div>
-        <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-          {t("admin.inviteUser")}
-          <ComingSoonBadge class="ml-1.5" />
-        </Button>
-      </div>
-
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -88,17 +77,27 @@ function AdminUsersContent() {
         </TabsList>
       </Tabs>
 
-      <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
-        <Show when={list()}>
-          <UserTable
-            users={visibleUsers() as User[]}
-            currentUserId={auth.user()!.id}
-            onRoleChange={onRoleChange}
-            onUserClick={(user) => navigate({ to: "/admin/users/$id", params: { id: user.id } })}
-            onParentClick={setSelectedParent}
-          />
-        </Show>
-      </Suspense>
+      <section class="data-shell space-y-4 p-4">
+        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+          <Show when={list()}>
+            <UserTable
+              title={t("admin.title")}
+              description={t("admin.subtitle")}
+              actions={
+                <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+                  {t("admin.inviteUser")}
+                  <ComingSoonBadge class="ml-1.5" />
+                </Button>
+              }
+              users={visibleUsers() as User[]}
+              currentUserId={auth.user()!.id}
+              onRoleChange={onRoleChange}
+              onUserClick={(user) => navigate({ to: "/admin/users/$id", params: { id: user.id } })}
+              onParentClick={setSelectedParent}
+            />
+          </Show>
+        </Suspense>
+      </section>
       <Show when={selectedParent()} keyed>
         {(u) => (
           <ParentStudentsPanel

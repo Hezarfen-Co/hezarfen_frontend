@@ -4,7 +4,7 @@ import { getMealMenuBookings, getMealMenus, postMealMenu } from "@/api/meals";
 import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
 import { MealMenuCard } from "@/components/meals/meal-menu-card";
-import { PageHeader } from "@/components/layout/page-header";
+import { DataSection } from "@/components/ui/data-section";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -88,7 +88,6 @@ function MealsContent() {
 
   return (
     <div class="space-y-5">
-      <PageHeader title={t("meals.title")} description={t("meals.subtitle")} actions={<Show when={canManage()}><Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => { setNewSlot(settings()?.meal_slots[0]?.name ?? ""); setShowCreate(true); }}><IconPlus class="h-4 w-4" />{t("meals.publish")}</Button></Show>} />
       <SidePanel open={showCreate()} onOpenChange={setShowCreate} title={t("meals.publish")} description={t("meals.publishHelp")}>
         <form class="space-y-4" onSubmit={publish}>
           <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
@@ -100,10 +99,10 @@ function MealsContent() {
         </form>
       </SidePanel>
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
-      <section class="data-shell space-y-4 p-4">
-        <div class="grid gap-3 sm:grid-cols-2">
-          <div class="space-y-1.5"><Label for="menus-from">{t("meals.from")}</Label><Input id="menus-from" type="date" value={from()} onInput={(e) => { setFrom(e.currentTarget.value); setPage(0); }} /></div>
-          <div class="space-y-1.5"><Label for="menus-slot">{t("meals.slot")}</Label><Select id="menus-slot" value={slot()} onChange={(e) => setSlot(e.currentTarget.value)}><option value="all">{t("common.all")}</option><For each={settings()?.meal_slots ?? []}>{(item) => <option value={item.name}>{item.name}</option>}</For></Select></div>
+      <DataSection title={t("meals.title")} description={t("meals.subtitle")} actions={<Show when={canManage()}><Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => { setNewSlot(settings()?.meal_slots[0]?.name ?? ""); setShowCreate(true); }}><IconPlus class="h-4 w-4" />{t("meals.publish")}</Button></Show>}>
+        <div class="flex flex-wrap items-center gap-2">
+          <Input id="menus-from" type="date" aria-label={t("meals.from")} title={t("meals.from")} class="h-8 w-auto rounded-lg text-[13px]" value={from()} onInput={(e) => { setFrom(e.currentTarget.value); setPage(0); }} />
+          <Select id="menus-slot" aria-label={t("meals.slot")} wrapperClass="w-auto" class="h-8 rounded-lg text-[13px]" value={slot()} onChange={(e) => setSlot(e.currentTarget.value)}><option value="all">{t("meals.slot")}: {t("common.all")}</option><For each={settings()?.meal_slots ?? []}>{(item) => <option value={item.name}>{item.name}</option>}</For></Select>
         </div>
         <Suspense fallback={<PageSpinner />}>
           <Show when={menus.error}><ErrorAlert message={formatApiError(menus.error)} onRetry={() => void refetch()} /></Show>
@@ -112,7 +111,7 @@ function MealsContent() {
             <PaginationControls page={page()} totalPages={totalPages()} onPageChange={setPage} />
           </Show>
         </Suspense>
-      </section>
+      </DataSection>
     </div>
   );
 }

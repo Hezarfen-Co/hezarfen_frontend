@@ -87,7 +87,7 @@ function GuideContent() {
     <div class="space-y-6">
       <PageHeader title={t("guide.title")} description={t("guide.subtitle")} />
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-6">
+      <section class="data-shell space-y-4 p-6">
         <div>
           <h2 class="text-lg font-semibold tracking-tight">{t("guide.roles.title")}</h2>
           <p class="mt-1 text-xs text-muted-foreground">{t("guide.roles.subtitle")}</p>
@@ -129,7 +129,7 @@ function GuideContent() {
         </Tabs>
       </section>
 
-      <section class="data-shell space-y-6 border-sky-500/15 bg-sky-500/2.5 p-6">
+      <section class="data-shell space-y-6 p-6">
         <div>
           <h2 class="text-lg font-semibold tracking-tight">{t("guide.modules.title")}</h2>
           <p class="mt-1 text-xs text-muted-foreground">{t("guide.modules.subtitle")}</p>
@@ -187,7 +187,7 @@ function GuideContent() {
         </div>
       </section>
 
-      <section class="data-shell space-y-4 border-sky-500/15 bg-sky-500/2.5 p-6">
+      <section class="data-shell space-y-4 p-6">
         <div>
           <h2 class="text-lg font-semibold tracking-tight">{t("guide.tips.title")}</h2>
           <p class="mt-1 text-xs text-muted-foreground">{t("guide.tips.subtitle")}</p>

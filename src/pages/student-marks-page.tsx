@@ -89,7 +89,6 @@ function StudentMarksContent() {
     },
   );
 
-  const total = () => list().length;
   // The inline "average" column reads the separate marksMapRes resource, which
   // resolves AFTER this table first renders. TanStack caches cell values by the
   // data-array identity, so without a new reference the averages only appear once
@@ -166,7 +165,7 @@ function StudentMarksContent() {
         <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <DataTable
             title={t("nav.studentMarks")}
-            description={`${t("marks.lookup")} · ${rows().length} / ${total()}`}
+            description={t("marks.lookup")}
             columns={columns()}
             data={rows()}
             tableClass="min-w-xl"
