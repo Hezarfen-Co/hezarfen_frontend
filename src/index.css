@@ -545,3 +545,13 @@
     50% { opacity: 1; transform: scale(1.02); filter: drop-shadow(0 0 20px hsl(var(--primary) / 0.45)); }
   }
 }
+
+/* Profile cover: brand tint under an 8px pixel grid. */
+.profile-cover {
+  background-color: hsl(var(--primary) / 0.12);
+  background-image:
+    linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px),
+    linear-gradient(120deg, hsl(var(--primary) / 0.28), transparent 65%);
+  background-size: 8px 8px, 8px 8px, 100% 100%;
+}

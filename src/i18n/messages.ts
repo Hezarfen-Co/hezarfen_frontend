@@ -175,6 +175,33 @@ export type MessageKey =
   | "avatar.typeInvalid"
   | "avatar.tooLarge"
   | "badges.title"
+  | "badges.group.homework_submitted"
+  | "badges.group.homework_on_time"
+  | "badges.group.exam_sat"
+  | "badges.group.pomodoro_finished"
+  | "badges.group.pomodoro_focus_ms"
+  | "badges.group.marks_given"
+  | "badges.group.lessons_held"
+  | "badges.group.pool_approved"
+  | "badges.group.pool_published"
+  | "badges.group.lessons_attended"
+  | "badges.group.high_mark"
+  | "badges.group.study_streak"
+  | "badges.level.rookie"
+  | "badges.level.explorer"
+  | "badges.level.master"
+  | "badges.level.legend"
+  | "badges.levelLabel"
+  | "badges.next"
+  | "badges.showAll"
+  | "badges.showLess"
+  | "badges.allEarned"
+  | "badges.nextOf"
+  | "profile.statLessonsHeld"
+  | "profile.statMarksGiven"
+  | "profile.statPoolApproved"
+  | "profile.statLessonsAttended"
+  | "profile.statStreak"
   | "badges.subtitle"
   | "badges.earnedOn"
   | "badges.locked"
@@ -2034,6 +2061,33 @@ const en: Dict = {
   "avatar.typeInvalid": "Use a PNG, JPEG, WebP or GIF image.",
   "avatar.tooLarge": "This image is larger than {size}.",
   "badges.title": "Badges",
+  "badges.group.homework_submitted": "Homework",
+  "badges.group.homework_on_time": "On time",
+  "badges.group.exam_sat": "Exams",
+  "badges.group.pomodoro_finished": "Focus sessions",
+  "badges.group.pomodoro_focus_ms": "Focus time",
+  "badges.group.marks_given": "Grading",
+  "badges.group.lessons_held": "Lessons taught",
+  "badges.group.pool_approved": "Answers approved",
+  "badges.group.pool_published": "Questions shared",
+  "badges.group.lessons_attended": "Lessons attended",
+  "badges.group.high_mark": "High marks",
+  "badges.group.study_streak": "Study streak",
+  "badges.level.rookie": "Rookie",
+  "badges.level.explorer": "Explorer",
+  "badges.level.master": "Master",
+  "badges.level.legend": "Legend",
+  "badges.levelLabel": "Badge level",
+  "badges.next": "Next badge",
+  "badges.showAll": "Show all badge groups ({count})",
+  "badges.showLess": "Show less",
+  "badges.allEarned": "Every badge earned",
+  "badges.nextOf": "{current} / {threshold}",
+  "profile.statLessonsHeld": "Lessons taught",
+  "profile.statMarksGiven": "Marks given",
+  "profile.statPoolApproved": "Answers approved",
+  "profile.statLessonsAttended": "Lessons attended",
+  "profile.statStreak": "Study streak",
   "badges.subtitle": "Earned automatically as the work adds up.",
   "badges.earnedOn": "Earned {date}",
   "badges.locked": "Not earned yet",
@@ -3901,6 +3955,33 @@ const tr: Dict = {
   "avatar.typeInvalid": "PNG, JPEG, WebP veya GIF bir görsel kullan.",
   "avatar.tooLarge": "Bu görsel {size} sınırından büyük.",
   "badges.title": "Rozetler",
+  "badges.group.homework_submitted": "Ödev teslimi",
+  "badges.group.homework_on_time": "Zamanında teslim",
+  "badges.group.exam_sat": "Sınavlar",
+  "badges.group.pomodoro_finished": "Odak oturumları",
+  "badges.group.pomodoro_focus_ms": "Odak süresi",
+  "badges.group.marks_given": "Not verme",
+  "badges.group.lessons_held": "Verilen dersler",
+  "badges.group.pool_approved": "Onaylanan cevaplar",
+  "badges.group.pool_published": "Paylaşılan sorular",
+  "badges.group.lessons_attended": "Katıldığı dersler",
+  "badges.group.high_mark": "Yüksek notlar",
+  "badges.group.study_streak": "Çalışma serisi",
+  "badges.level.rookie": "Çaylak",
+  "badges.level.explorer": "Kaşif",
+  "badges.level.master": "Usta",
+  "badges.level.legend": "Efsane",
+  "badges.levelLabel": "Rozet seviyesi",
+  "badges.next": "Sıradaki rozet",
+  "badges.showAll": "Tüm rozet gruplarını göster ({count})",
+  "badges.showLess": "Daha az göster",
+  "badges.allEarned": "Tüm rozetler kazanıldı",
+  "badges.nextOf": "{current} / {threshold}",
+  "profile.statLessonsHeld": "Verilen ders",
+  "profile.statMarksGiven": "Verilen not",
+  "profile.statPoolApproved": "Onaylanan cevap",
+  "profile.statLessonsAttended": "Katıldığı ders",
+  "profile.statStreak": "Çalışma serisi",
   "badges.subtitle": "Çalışma biriktikçe otomatik kazanılır.",
   "badges.earnedOn": "{date} tarihinde kazanıldı",
   "badges.locked": "Henüz kazanılmadı",

@@ -24,6 +24,7 @@ import eyeUrl from "@phosphor-icons/core/regular/eye.svg?url";
 import fileTextUrl from "@phosphor-icons/core/regular/file-text.svg?url";
 import funnelUrl from "@phosphor-icons/core/regular/funnel.svg?url";
 import gearUrl from "@phosphor-icons/core/regular/gear.svg?url";
+import userCircleUrl from "@phosphor-icons/core/regular/user-circle.svg?url";
 import graduationCapUrl from "@phosphor-icons/core/regular/graduation-cap.svg?url";
 import houseUrl from "@phosphor-icons/core/regular/house.svg?url";
 import listUrl from "@phosphor-icons/core/regular/list.svg?url";
@@ -509,6 +510,10 @@ export function IconClipboardCheck(props: IconProps) {
 
 export function IconReportAnalytics(props: IconProps) {
   return <PhosphorIcon {...props} src={chartLineUpUrl} />;
+}
+
+export function IconUserCircle(props: IconProps) {
+  return <PhosphorIcon {...props} src={userCircleUrl} />;
 }
 
 export function IconSettings(props: IconProps) {

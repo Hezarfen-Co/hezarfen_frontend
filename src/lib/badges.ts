@@ -102,3 +102,45 @@ export function badgeRemaining(stat: string, current: number, threshold: number)
   }
   return Math.max(0, threshold - current);
 }
+
+// ---- Grouping for the profile's badge board ----------------------------------
+
+const KNOWN_STATS = new Set<string>(Object.keys(STAT_TOTAL_FIELD));
+
+/** Section title for one counter's badge ladder, or null for a stat this build has no copy for. */
+export function badgeGroupKey(stat: string): MessageKey | null {
+  return KNOWN_STATS.has(stat) ? (`badges.group.${stat}` as MessageKey) : null;
+}
+
+export type BadgeLadder<T extends { stat: string; threshold: number }> = { stat: string; entries: T[] };
+
+/** The catalogue split into one ladder per counter, each ladder in threshold order. */
+export function badgeLadders<T extends { stat: string; threshold: number }>(catalog: T[]): BadgeLadder<T>[] {
+  const byStat = new Map<string, T[]>();
+  for (const entry of catalog) byStat.set(entry.stat, [...(byStat.get(entry.stat) ?? []), entry]);
+  return [...byStat].map(([stat, entries]) => ({
+    stat,
+    entries: [...entries].sort((a, b) => a.threshold - b.threshold),
+  }));
+}
+
+export type BadgeTier = "bronze" | "silver" | "gold";
+
+/** Medal colour for a rung: the last rung of a ladder is gold, the one before silver. */
+export function badgeTier(index: number, count: number): BadgeTier {
+  const fromTop = count - 1 - index;
+  if (fromTop === 0 && count > 1) return "gold";
+  if (fromTop === 1) return "silver";
+  return "bronze";
+}
+
+export type BadgeLevel = "rookie" | "explorer" | "master" | "legend";
+
+/** A title that follows the share of the catalogue already earned — no score of its own. */
+export function badgeLevel(earned: number, total: number): BadgeLevel {
+  const share = total === 0 ? 0 : earned / total;
+  if (share >= 0.75) return "legend";
+  if (share >= 0.4) return "master";
+  if (earned > 0) return "explorer";
+  return "rookie";
+}

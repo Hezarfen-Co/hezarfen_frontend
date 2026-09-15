@@ -1,4 +1,4 @@
-import { Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createResource, createSignal } from "solid-js";
 import { useLocation, useParams } from "@tanstack/solid-router";
 import { getClassesByUserId, getMyClasses } from "@/api/classes";
 import { getLimits } from "@/api/limits";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEdit, IconSchool } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { PixelIcon, type PixelIconName } from "@/components/ui/pixel-icon";
 import { SidePanel } from "@/components/ui/side-panel";
 import { AvatarUpload } from "@/components/users/avatar-upload";
 import { BadgeGrid } from "@/components/users/badge-grid";
@@ -49,6 +50,25 @@ function ProfileContent() {
   );
   const [limits] = createResource(() => getLimits());
   const [editing, setEditing] = createSignal(false);
+
+  // The five counters that fit the profile owner's role: a student's own
+  // work, or a teacher's / manager's teaching work.
+  const profileStats = (p: Profile): { icon: PixelIconName; label: string; value: number }[] =>
+    p.role === "student" || p.role === "parent"
+      ? [
+          { icon: "hourglass", label: t("profile.statFocusHours"), value: Math.floor(p.stats.pomodoro_focus_ms_total / 3_600_000) },
+          { icon: "zap", label: t("profile.statSessions"), value: p.stats.pomodoro_finished_total },
+          { icon: "notes", label: t("profile.statHomework"), value: p.stats.homework_submitted_total },
+          { icon: "check-double", label: t("profile.statOnTime"), value: p.stats.homework_on_time_total },
+          { icon: "pen-square", label: t("profile.statExams"), value: p.stats.exam_sat_total },
+        ]
+      : [
+          { icon: "book-open", label: t("profile.statLessonsHeld"), value: p.stats.lessons_held_total },
+          { icon: "pencil", label: t("profile.statMarksGiven"), value: p.stats.marks_given_total },
+          { icon: "checkbox-on", label: t("profile.statPoolApproved"), value: p.stats.pool_approved_total },
+          { icon: "users", label: t("profile.statClasses"), value: p.stats.classes },
+          { icon: "calendar-weeks", label: t("profile.statCourses"), value: p.stats.courses },
+        ];
 
   const isSelf = (p: Profile) => target() === "me" || p.id === auth.user()?.id;
   const name = (p: Profile) => p.display_name || p.username;
@@ -105,8 +125,16 @@ function ProfileContent() {
         <Show when={!profile.error && profile()}>
           {(p) => (
             <>
-              <section class="flex flex-wrap items-start justify-between gap-4 rounded-xl border bg-card p-4 shadow-xs">
-                <div class="flex min-w-0 flex-wrap items-center gap-4">
+              <section class="overflow-hidden rounded-xl border bg-card shadow-xs">
+                {/* Cover: brand tint under a pixel grid, purely decorative. */}
+                <div class="profile-cover relative h-24 sm:h-28" aria-hidden="true">
+                  <PixelIcon name="sparkles" class="absolute right-6 top-5 h-6 w-6 text-primary/50" />
+                  <PixelIcon name="star" class="absolute right-20 top-12 h-4 w-4 text-primary/35" />
+                  <PixelIcon name="trophy" class="absolute right-36 top-6 h-5 w-5 text-primary/30" />
+                </div>
+                <div class="flex flex-wrap items-start justify-between gap-4 px-4 pb-4">
+                  <div class="flex min-w-0 flex-wrap items-start gap-4">
+                    <div class="-mt-12 shrink-0 rounded-full bg-card p-1">
                   <Show
                     when={isSelf(p())}
                     fallback={
@@ -125,8 +153,9 @@ function ProfileContent() {
                       onChanged={() => void refetch()}
                     />
                   </Show>
-                  <div class="min-w-0 space-y-1">
-                    <h1 class="truncate text-xl font-semibold">{name(p())}</h1>
+                    </div>
+                  <div class="min-w-0 space-y-1 pt-3">
+                    <h1 class="truncate text-2xl font-semibold tracking-tight">{name(p())}</h1>
                     <div class="flex flex-wrap items-center gap-2">
                       <span class="text-sm text-muted-foreground">@{p().username}</span>
                       <RoleBadge role={p().role} />
@@ -154,27 +183,27 @@ function ProfileContent() {
                       )}
                     </Show>
                   </div>
+                  </div>
+                  <Show when={isSelf(p()) && auth.user()}>
+                    <Button type="button" size="sm" variant="outline" class="mt-3 rounded-lg" onClick={() => setEditing(true)}>
+                      <IconEdit class="mr-1.5 h-4 w-4" />
+                      {t("profile.edit")}
+                    </Button>
+                  </Show>
                 </div>
-                <Show when={isSelf(p()) && auth.user()}>
-                  <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setEditing(true)}>
-                    <IconEdit class="mr-1.5 h-4 w-4" />
-                    {t("profile.edit")}
-                  </Button>
-                </Show>
               </section>
 
               <section class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                <StatCard label={t("profile.statFocusHours")} value={Math.floor(p().stats.pomodoro_focus_ms_total / 3_600_000)} />
-                <StatCard label={t("profile.statSessions")} value={p().stats.pomodoro_finished_total} />
-                <StatCard label={t("profile.statHomework")} value={p().stats.homework_submitted_total} />
-                <StatCard label={t("profile.statOnTime")} value={p().stats.homework_on_time_total} />
-                <StatCard label={t("profile.statExams")} value={p().stats.exam_sat_total} />
+                <For each={profileStats(p())}>
+                  {(stat) => <StatCard icon={stat.icon} label={stat.label} value={stat.value} />}
+                </For>
               </section>
 
               <BadgeGrid
                 catalog={limits.latest?.badges?.catalog ?? []}
                 earned={p().badges}
                 stats={p().stats}
+                role={p().role}
               />
 
               <ProfileMemberships
@@ -210,11 +239,16 @@ function ProfileContent() {
   );
 }
 
-function StatCard(props: { label: string; value: number }) {
+function StatCard(props: { icon: PixelIconName; label: string; value: number }) {
   return (
-    <div class="rounded-lg border bg-card p-3 shadow-xs">
-      <p class="text-xs text-muted-foreground">{props.label}</p>
-      <p class="text-xl font-semibold tabular-nums">{props.value}</p>
+    <div class="group flex items-center gap-3 rounded-lg border bg-card p-3 shadow-xs transition-colors hover:border-primary/30">
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary transition-transform duration-200 group-hover:-rotate-6">
+        <PixelIcon name={props.icon} class="h-5 w-5" />
+      </span>
+      <div class="min-w-0">
+        <p class="text-xl font-semibold leading-6 tabular-nums">{props.value}</p>
+        <p class="truncate text-xs text-muted-foreground">{props.label}</p>
+      </div>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconChevronRight, IconGlobe, IconGuide, IconLogout, IconSettings } from "@/components/ui/icons";
+import { IconChevronRight, IconGlobe, IconGuide, IconLogout, IconSettings, IconUserCircle } from "@/components/ui/icons";
 import { ThemeModeControl } from "@/components/layout/theme-mode-control";
 import { UserAvatar } from "@/components/users/user-avatar";
 import { useAuth } from "@/stores/auth-context";
@@ -86,11 +86,15 @@ export function SidebarAccount(props: { collapsed?: boolean; onLogout: () => voi
                   <UserAvatar userId={u().id} name={name()} hasAvatar={hasAvatar()} size="md" class="ring-0" />
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-sm font-semibold">{name()}</span>
-                    <span class="block truncate text-xs text-muted-foreground dark:text-white/60">{t("profile.myProfile")}</span>
+                    <span class="block truncate text-xs text-muted-foreground dark:text-white/60">@{u().username}</span>
                   </span>
                   <IconChevronRight class="h-3.5 w-3.5 shrink-0 text-muted-foreground dark:text-white/50" />
                 </DropdownMenuItem>
                 <div class="px-1.5 pb-1.5">
+                <DropdownMenuItem class="rounded-lg gap-3 font-medium" onSelect={() => void navigate({ to: "/profile/me" })}>
+                  <IconUserCircle class="h-4 w-4 shrink-0 text-muted-foreground dark:text-white/60" />
+                  <span>{t("profile.myProfile")}</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem class="rounded-lg gap-3" onSelect={() => setProfileOpen(true)}>
                   <IconSettings class="h-4 w-4 shrink-0 text-muted-foreground dark:text-white/60" />
                   <span>{t("nav.settings")}</span>
