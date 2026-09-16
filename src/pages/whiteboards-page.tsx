@@ -79,7 +79,7 @@ function WhiteboardsContent() {
             fallback={<EmptyState kind="whiteboard" title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
           >
             <div class="space-y-4">
-              <DataTableSearch value={query()} onChange={setQuery} placeholder={t("whiteboard.searchPlaceholder")} />
+              <DataTableSearch value={query()} onChange={setQuery} placeholder={t("whiteboard.searchPlaceholder")} hint={t("search.hint.whiteboards")} />
               <Show when={visibleBoards().length > 0} fallback={<EmptyState kind="search" title={t("common.noResults")} />}>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <For each={visibleBoards()}>

@@ -55,6 +55,15 @@ Active project reference docs (read the relevant one before changing that area):
 ## Shared pickers & empty states
 
 - Dropdowns: `Select` (drop-in for `<select>` + `<option>`, renders the app menu), `DropdownSelect` (options array), `SearchableSelect` (long lists). Never a raw `<select>`, `type="date"` input (use `DatePicker`) or an ad-hoc search `Input` (use `DataTableSearch`).
+- Every search box says what it matches: pass `hint` (`DataTableSearch`),
+  `filterHint` (`DataTable`) or `searchHint` (`DataToolbar`) — a short line
+  shown under the field while it has focus. The text must name the fields the
+  filter really reads; never promise a field it does not search.
+- `UserSearchSelect` rows are two lines: display name, then `class · username`
+  for a student picker (`role="student"`) and `username` otherwise — never the
+  raw account uuid. Class names come from `src/lib/student-classes.ts`
+  (`GET /classes/user/{id}`, teacher+, cached per tab); only ever call it for a
+  bounded list of students.
 - Confirmations and text prompts go through `ConfirmDialog`; never `window.confirm/prompt/alert`.
 - Empty states: `EmptyState` (full panel, `kind` picks the unDraw scene) or `EmptyInline` (cards/charts). Scenes live in `src/assets/illustrations/` (license + slugs in its README); pixel glyphs come from `PixelIcon` (pixelarticons, MIT).
 

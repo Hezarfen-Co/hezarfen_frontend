@@ -1795,6 +1795,24 @@ export type MessageKey =
   | "work.addEntry"
   | "work.planShift"
   | "lookup.searchHint"
+  | "search.hint.command"
+  | "search.hint.commandAdmin"
+  | "search.hint.studentPicker"
+  | "search.hint.teacherPicker"
+  | "search.hint.personPicker"
+  | "search.hint.students"
+  | "search.hint.teachers"
+  | "search.hint.people"
+  | "search.hint.users"
+  | "search.hint.exams"
+  | "search.hint.events"
+  | "search.hint.courses"
+  | "search.hint.classes"
+  | "search.hint.bank"
+  | "search.hint.whiteboards"
+  | "search.hint.chat"
+  | "search.hint.deadlines"
+  | "search.hint.paymentsStudents"
   | "work.userNotFound"
   | "messages.inbox"
   | "messages.sent"
@@ -3797,6 +3815,24 @@ const en: Dict = {
   "work.addEntry": "Add entry",
   "work.planShift": "Plan shift",
   "lookup.searchHint": "Type at least 2 characters to search.",
+  "search.hint.command": "Type a page or a quick action \u2014 e.g. \"homework\", \"exam\", \"dark theme\".",
+  "search.hint.commandAdmin": "Type a student name, a page or a quick action \u2014 e.g. \"Ay\u015fe\", \"homework\", \"dark theme\".",
+  "search.hint.studentPicker": "Type a student's name, surname or username; the list shows their class too.",
+  "search.hint.teacherPicker": "Type a teacher's name, surname or username.",
+  "search.hint.personPicker": "Type a name, surname or username.",
+  "search.hint.students": "Matches name, surname and username. Use the filter next to it for a class.",
+  "search.hint.teachers": "Matches name, surname and username.",
+  "search.hint.people": "Matches name, surname, username and user id.",
+  "search.hint.users": "Matches username, name, e-mail, user id and role.",
+  "search.hint.exams": "Matches exam title, description, course, exam kind and status.",
+  "search.hint.events": "Matches event title, description, audience and date.",
+  "search.hint.courses": "Matches course title, description, creator, teacher and term.",
+  "search.hint.classes": "Matches class name, grade and homeroom teacher.",
+  "search.hint.bank": "Matches a phrase inside the question text.",
+  "search.hint.whiteboards": "Matches board titles on the page you are viewing.",
+  "search.hint.chat": "Matches the text of the messages in this chat.",
+  "search.hint.deadlines": "Matches the title of the upcoming items.",
+  "search.hint.paymentsStudents": "Matches a student's name, surname or username.",
   "work.userNotFound": "No work log found for this user.",
   "work.show": "Show log",
   "work.forUser": "Log for {user}",
@@ -5722,6 +5758,24 @@ const tr: Dict = {
   "work.addEntry": "Kayıt ekle",
   "work.planShift": "Vardiya planla",
   "lookup.searchHint": "Aramak için en az 2 karakter yaz.",
+  "search.hint.command": "Bir sayfa veya h\u0131zl\u0131 i\u015flem yaz\u0131n \u2014 \u00f6rn. \"\u00f6dev\", \"s\u0131nav\", \"koyu tema\".",
+  "search.hint.commandAdmin": "\u00d6\u011frenci ad\u0131, sayfa veya h\u0131zl\u0131 i\u015flem yaz\u0131n \u2014 \u00f6rn. \"Ay\u015fe\", \"\u00f6dev\", \"koyu tema\".",
+  "search.hint.studentPicker": "\u00d6\u011frencinin ad\u0131n\u0131, soyad\u0131n\u0131 veya kullan\u0131c\u0131 ad\u0131n\u0131 yaz\u0131n; listede s\u0131n\u0131f\u0131 da g\u00f6r\u00fcn\u00fcr.",
+  "search.hint.teacherPicker": "\u00d6\u011fretmenin ad\u0131n\u0131, soyad\u0131n\u0131 veya kullan\u0131c\u0131 ad\u0131n\u0131 yaz\u0131n.",
+  "search.hint.personPicker": "Ad, soyad veya kullan\u0131c\u0131 ad\u0131 yaz\u0131n.",
+  "search.hint.students": "Ad, soyad ve kullan\u0131c\u0131 ad\u0131nda arar. S\u0131n\u0131f i\u00e7in yan\u0131ndaki filtreyi kullan\u0131n.",
+  "search.hint.teachers": "Ad, soyad ve kullan\u0131c\u0131 ad\u0131nda arar.",
+  "search.hint.people": "Ad, soyad, kullan\u0131c\u0131 ad\u0131 ve kullan\u0131c\u0131 ID'sinde arar.",
+  "search.hint.users": "Kullan\u0131c\u0131 ad\u0131, ad, e-posta, kullan\u0131c\u0131 ID'si ve rolde arar.",
+  "search.hint.exams": "S\u0131nav ad\u0131, a\u00e7\u0131klama, ders, s\u0131nav t\u00fcr\u00fc ve durumda arar.",
+  "search.hint.events": "Etkinlik ad\u0131, a\u00e7\u0131klama, kat\u0131l\u0131mc\u0131 kitlesi ve tarihte arar.",
+  "search.hint.courses": "Ders ad\u0131, a\u00e7\u0131klama, olu\u015fturan, \u00f6\u011fretmen ve d\u00f6nemde arar.",
+  "search.hint.classes": "\u015eube ad\u0131, s\u0131n\u0131f d\u00fczeyi ve dan\u0131\u015fman \u00f6\u011fretmende arar.",
+  "search.hint.bank": "Soru metninde ge\u00e7en bir ifadeyi arar.",
+  "search.hint.whiteboards": "A\u00e7\u0131k olan sayfadaki tahta ba\u015fl\u0131klar\u0131nda arar.",
+  "search.hint.chat": "Bu sohbetteki mesajlar\u0131n metninde arar.",
+  "search.hint.deadlines": "Yakla\u015fan kay\u0131tlar\u0131n ba\u015fl\u0131\u011f\u0131nda arar.",
+  "search.hint.paymentsStudents": "\u00d6\u011frencinin ad\u0131nda, soyad\u0131nda veya kullan\u0131c\u0131 ad\u0131nda arar.",
   "work.userNotFound": "Bu kullanıcı için mesai kaydı bulunamadı.",
   "work.show": "Kaydı göster",
   "work.forUser": "{user} için kayıtlar",

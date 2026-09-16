@@ -302,7 +302,7 @@ function StaffWorkContent() {
           </>
         }
       >
-        <DataTableSearch value={staffSearch()} onChange={setStaffSearch} placeholder={t("work.searchPlaceholder")} />
+        <DataTableSearch value={staffSearch()} onChange={setStaffSearch} placeholder={t("work.searchPlaceholder")} hint={t("search.hint.people")} />
 
         <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
           <Show when={pagedPeople().length > 0} fallback={<EmptyState kind="people" title={t("work.noTeachers")} />}>

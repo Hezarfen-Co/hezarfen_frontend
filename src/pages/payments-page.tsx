@@ -616,6 +616,7 @@ function PaymentsContent() {
                       setStudentPage(0);
                     }}
                     filterPlaceholder={t("payments.selectStudent")}
+                    filterHint={t("search.hint.paymentsStudents")}
                     title={t("payments.title")}
                     description={t("payments.subtitle")}
                     empty={t("payments.selectStudent")}

@@ -177,7 +177,7 @@ function ClassesContent() {
             }
           >
             <div class="flex flex-wrap items-center gap-2">
-              <DataTableSearch value={query()} onChange={setQuery} placeholder={t("classGroups.searchPlaceholder")} />
+              <DataTableSearch value={query()} onChange={setQuery} placeholder={t("classGroups.searchPlaceholder")} hint={t("search.hint.classes")} />
               <Show when={grades().length > 0}>
                 <Tabs value={gradeFilter()} onChange={setGradeFilter}>
                   <TabsList>

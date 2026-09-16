@@ -172,6 +172,7 @@ function StudentMarksContent() {
             tableClass="min-w-xl"
             empty={t("form.noStudents")}
             searchPredicate={searchPerson}
+            filterHint={t("search.hint.people")}
             enablePagination
             pageSize={PAGE_SIZE}
             storageKey="student-marks"

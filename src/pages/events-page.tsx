@@ -206,6 +206,7 @@ function EventsContent() {
             data={rows()}
             tableClass="table-fixed min-w-232"
             searchPredicate={searchEvent}
+            filterHint={t("search.hint.events")}
             enablePagination
             pageSize={EVENT_PAGE_SIZE}
             empty={t("events.empty")}

@@ -165,6 +165,7 @@ export function UserTable(props: {
       empty={t("admin.noUsers")}
       storageKey="admin-users"
       searchPredicate={searchUser}
+      filterHint={t("search.hint.users")}
       enablePagination
       pageSize={20}
       onRowClick={props.onUserClick}

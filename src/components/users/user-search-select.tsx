@@ -1,6 +1,7 @@
 import { Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { getUserSearch } from "@/api/users";
 import type { PersonRef, Role } from "@/api/client";
+import type { PersonLike } from "@/lib/person";
 import {
   Combobox,
   ComboboxContent,
@@ -11,7 +12,8 @@ import {
   ComboboxTrigger,
 } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
-import { personLabelWithId } from "@/lib/person";
+import { personLabel } from "@/lib/person";
+import { createStudentClassLabels } from "@/lib/student-classes";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -33,6 +35,8 @@ export function UserSearchSelect(props: {
   placeholder?: string;
   emptyMessage?: string;
   disabled?: boolean;
+  /** Overrides the default "what can I type here" line under the field. */
+  hint?: string;
   role?: Role;
 }) {
   const t = useT();
@@ -53,6 +57,24 @@ export function UserSearchSelect(props: {
     const excluded = new Set(props.excludeIds ?? []);
     return users().filter((user) => !excluded.has(user.id)).slice(0, MAX_VISIBLE_RESULTS);
   });
+
+  // A student picker shows the class next to the name: two students can share
+  // a name, and the account id the row used to carry is a uuid nobody reads.
+  // Only students get the extra lookup — see `student-classes`.
+  const classLabels = createStudentClassLabels(() =>
+    props.role === "student" ? options().map((user) => user.id) : [],
+  );
+  const secondaryLine = (user: PersonRef) => {
+    const cls = classLabels()[user.id];
+    return cls ? `${cls} · ${user.username}` : user.username;
+  };
+  // What the input reads after a pick — the name alone is ambiguous, the
+  // username is the thing that is unique and short.
+  const pickedLabel = (user: PersonLike) => {
+    if (!user || typeof user === "string") return personLabel(user);
+    const name = personLabel(user);
+    return name === user.username ? name : `${name} (${user.username})`;
+  };
 
   // Drop our local selection when the parent clears the bound value.
   createEffect(() => {
@@ -130,14 +152,17 @@ export function UserSearchSelect(props: {
           if (value.trim().length > 0) setOpen(true);
         }}
         optionValue="id"
-        optionLabel={(user) => personLabelWithId(user)}
-        optionTextValue={(user) => personLabelWithId(user)}
+        optionLabel={(user) => pickedLabel(user)}
+        optionTextValue={(user) => pickedLabel(user)}
         defaultFilter={() => true}
         placeholder={props.placeholder ?? t("common.searchPlaceholder")}
         disabled={props.disabled || !canSearch()}
         itemComponent={(itemProps) => (
           <ComboboxItem item={itemProps.item}>
-            <ComboboxItemLabel>{personLabelWithId(itemProps.item.rawValue)}</ComboboxItemLabel>
+            <ComboboxItemLabel class="flex min-w-0 flex-col gap-0.5">
+              <span class="truncate font-medium">{personLabel(itemProps.item.rawValue)}</span>
+              <span class="truncate text-xs text-muted-foreground">{secondaryLine(itemProps.item.rawValue)}</span>
+            </ComboboxItemLabel>
           </ComboboxItem>
         )}
       >
@@ -151,8 +176,12 @@ export function UserSearchSelect(props: {
           </Show>
         </ComboboxContent>
       </Combobox>
-      <Show when={!canSearch()}>
-        <p class="text-xs text-muted-foreground">{t("form.searchNoPermission")}</p>
+      <Show when={canSearch()} fallback={<p class="text-xs text-muted-foreground">{t("form.searchNoPermission")}</p>}>
+        {/* An empty combobox looks like a dropdown that failed to load, so it
+            says outright that it is a type-to-search field and what it matches. */}
+        <p class="text-xs text-muted-foreground">
+          {props.hint ?? (props.role === "student" ? t("search.hint.studentPicker") : props.role === "teacher" ? t("search.hint.teacherPicker") : t("search.hint.personPicker"))}
+        </p>
       </Show>
     </div>
   );

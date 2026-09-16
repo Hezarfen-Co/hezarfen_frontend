@@ -114,6 +114,7 @@ function TeachersRosterContent() {
                 tableClass="min-w-[940px]"
                 empty={t("roster.noTeachers")}
                 filterPlaceholder={t("roster.searchTeachers")}
+                filterHint={t("search.hint.teachers")}
                 searchPredicate={(row, query) =>
                   [row.person.username, row.person.display_name ?? ""].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase())
                 }

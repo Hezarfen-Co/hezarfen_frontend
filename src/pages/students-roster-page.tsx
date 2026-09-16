@@ -141,6 +141,7 @@ function StudentsRosterContent() {
                 tableClass="min-w-[940px]"
                 empty={t("form.noStudents")}
                 filterPlaceholder={t("roster.searchStudents")}
+                filterHint={t("search.hint.students")}
                 searchPredicate={(row, query) =>
                   [row.person.username, row.person.display_name ?? ""].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase())
                 }

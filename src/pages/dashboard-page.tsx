@@ -970,6 +970,7 @@ function DashboardContent() {
               data={deadlines()}
               enableColumnVisibility={false}
               searchPredicate={deadlines().length > 0 ? deadlineSearch : undefined}
+              filterHint={t("search.hint.deadlines")}
               empty={t("dashboard.upcomingEmpty")}
               emptyIllustration="calendar-empty"
               onRowClick={openDeadline}

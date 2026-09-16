@@ -322,7 +322,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             keeps writing. */}
         <div class={cn("flex min-h-0 flex-1 flex-col", view() !== "chat" && "hidden")}>
         <div class="mb-3 shrink-0">
-          <DataTableSearch value={searchQuery()} onChange={setSearchQuery} placeholder={t("ai.searchPlaceholder")} class="w-full" />
+          <DataTableSearch value={searchQuery()} onChange={setSearchQuery} placeholder={t("ai.searchPlaceholder")} hint={t("search.hint.chat")} class="w-full" />
         </div>
         {/* The jump control floats over the bottom of the transcript, next to
             the newest message it leads to, instead of sitting up by search. */}

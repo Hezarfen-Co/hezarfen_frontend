@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/icons";
 import { getUserSearch } from "@/api/users";
 import { HOME_ITEM, visibleNavGroups } from "@/components/layout/nav-items";
+import { createStudentClassLabels } from "@/lib/student-classes";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
@@ -77,6 +78,9 @@ export function CommandPalette(props: CommandPaletteProps) {
     () => (props.open && role() === "admin" && peopleQuery() ? peopleQuery() : null),
     (q) => getUserSearch(q, undefined, "student", { limit: 6 }),
   );
+  // Two students called "Ayşe Yılmaz" are only told apart by their class, so
+  // each visible match is resolved to one (see `student-classes`).
+  const classLabels = createStudentClassLabels(() => (people.latest?.items ?? []).map((person) => person.id));
 
   const items = createMemo<CommandItem[]>(() => {
     const list: CommandItem[] = [];
@@ -293,7 +297,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       category: "people",
       categoryLabel: peopleLabel,
       title: person.display_name || person.username,
-      description: person.username,
+      description: classLabels()[person.id] ? `${classLabels()[person.id]} · ${person.username}` : person.username,
       icon: IconUsers,
       onSelect: () => void navigate({ to: "/admin/users/$id", params: { id: person.id } }),
     }));
@@ -434,6 +438,14 @@ export function CommandPalette(props: CommandPaletteProps) {
             </span>
           </Show>
         </div>
+
+        {/* What the field accepts — the palette takes names, pages and
+            actions, and an empty box says none of that on its own. */}
+        <Show when={!query()}>
+          <p class="border-b border-border/60 bg-muted/10 px-4 py-2 text-[11px] leading-snug text-muted-foreground">
+            {role() === "admin" ? t("search.hint.commandAdmin") : t("search.hint.command")}
+          </p>
+        </Show>
 
         {/* Command Items List */}
         <div ref={listRef} class="max-h-[min(65vh,28rem)] overflow-y-auto p-2 space-y-4">

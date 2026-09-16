@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, createSignal, createUniqueId } from "solid-js";
 import { IconSearch, IconX } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
@@ -8,19 +8,34 @@ export type DataTableSearchProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  /**
+   * What this particular box actually matches on, in the user's words. Shown
+   * under the field while it has focus — a placeholder alone never says
+   * whether a name, a code or a description is the thing to type. Keep it
+   * honest: it must list what the filter really reads, nothing more.
+   */
+  hint?: string;
   class?: string;
 };
 
-/** Rounded search field: leading icon + conditional clear (X) button. */
+/** Rounded search field: leading icon, conditional clear (X) button, and an
+ *  optional on-focus hint naming the fields it searches. */
 export function DataTableSearch(props: DataTableSearchProps) {
   const t = useT();
+  const [focused, setFocused] = createSignal(false);
+  const hintId = createUniqueId();
   return (
-    <div class={cn("relative w-full sm:max-w-xs", props.class)}>
+    <div
+      class={cn("relative w-full sm:max-w-xs", props.class)}
+      onFocusIn={() => setFocused(true)}
+      onFocusOut={() => setFocused(false)}
+    >
       <IconSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         value={props.value}
         onInput={(event) => props.onChange(event.currentTarget.value)}
         placeholder={props.placeholder ?? t("common.search")}
+        aria-describedby={props.hint ? hintId : undefined}
         class={cn("h-8 rounded-lg bg-muted/40 text-[13px] md:text-[13px]", props.value ? "pl-9 pr-8" : "pl-9")}
       />
       <Show when={props.value}>
@@ -32,6 +47,16 @@ export function DataTableSearch(props: DataTableSearchProps) {
         >
           <IconX class="h-4 w-4" />
         </button>
+      </Show>
+      {/* Floated rather than inline: a static line would push every toolbar
+          that carries a search box taller, on every page. */}
+      <Show when={props.hint && focused()}>
+        <p
+          id={hintId}
+          class="absolute left-0 top-full z-30 mt-1 w-full min-w-max max-w-[22rem] rounded-lg border border-border/80 bg-popover px-2.5 py-1.5 text-[11px] leading-snug text-muted-foreground shadow-md"
+        >
+          {props.hint}
+        </p>
       </Show>
     </div>
   );

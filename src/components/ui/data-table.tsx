@@ -54,6 +54,8 @@ export type DataTableProps<TData, TValue = unknown> = {
   filters?: JSX.Element;
   filterColumn?: string;
   filterPlaceholder?: string;
+  /** On-focus hint under the search box naming the fields it matches. */
+  filterHint?: string;
   title?: string;
   description?: string;
   actions?: JSX.Element;
@@ -274,6 +276,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                 value={searchFieldValue()}
                 onChange={handleSearch}
                 placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
+                hint={props.filterHint}
               />
             </Show>
             <Show when={props.filters}>

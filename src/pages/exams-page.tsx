@@ -308,6 +308,7 @@ function ExamsContent() {
                 data={rows()}
                 tableClass="table-fixed min-w-5xl"
                 filterPlaceholder={t("exams.searchPlaceholder")}
+                filterHint={t("search.hint.exams")}
                 searchPredicate={searchExam}
                 enablePagination
                 pageSize={EXAM_PAGE_SIZE}

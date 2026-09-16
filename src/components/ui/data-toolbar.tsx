@@ -6,6 +6,8 @@ import { cn } from "@/lib/cn";
 export function DataToolbar(props: {
   searchValue?: string;
   searchPlaceholder?: string;
+  /** On-focus hint under the search box naming the fields it matches. */
+  searchHint?: string;
   onSearchInput?: (value: string) => void;
   filters?: JSX.Element;
   actions?: JSX.Element;
@@ -21,6 +23,7 @@ export function DataToolbar(props: {
             class={cn("sm:max-w-72", props.inline && "min-w-0 flex-1")}
             value={props.searchValue ?? ""}
             placeholder={props.searchPlaceholder}
+            hint={props.searchHint}
             onChange={(value) => props.onSearchInput?.(value)}
           />
         </Show>

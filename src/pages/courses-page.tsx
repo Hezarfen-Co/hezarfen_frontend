@@ -184,6 +184,7 @@ function CoursesContent() {
               inline
               searchValue={search()}
               searchPlaceholder={t("common.searchPlaceholder")}
+              searchHint={t("search.hint.courses")}
               onSearchInput={setSearch}
               filters={
                 <Select wrapperClass="w-40 shrink-0 sm:w-52" class="h-8 rounded-lg" aria-label={t("terms.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)}>

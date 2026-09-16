@@ -241,6 +241,7 @@ function QuestionBankContent() {
                 data={list()?.items ?? []}
                 tableClass="min-w-[48rem]"
                 filterPlaceholder={t("bank.search")}
+                filterHint={t("search.hint.bank")}
                 searchValue={query()}
                 onSearchInput={(value) => {
                   setQuery(value);
