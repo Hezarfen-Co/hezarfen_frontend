@@ -21,6 +21,7 @@ import { createNow } from "@/lib/create-now";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
+import { matchesSearch } from "@/lib/search-text";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -79,10 +80,14 @@ function EventsContent() {
     return t("events.audience.registration");
   };
   const searchEvent = (event: Event, query: string) =>
-    [event.title, event.description, audienceLabel(event.audience), formatDateTime(event.starts_at, locale()), formatDateTime(event.ends_at, locale())]
-      .join(" ")
-      .toLocaleLowerCase(locale())
-      .includes(query.toLocaleLowerCase(locale()));
+    matchesSearch(
+      query,
+      event.title,
+      event.description,
+      audienceLabel(event.audience),
+      formatDateTime(event.starts_at, locale()),
+      formatDateTime(event.ends_at, locale()),
+    );
   const columns = createMemo<ColumnDef<Event>[]>(() => [
     {
       accessorKey: "title",

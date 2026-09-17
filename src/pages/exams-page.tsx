@@ -29,6 +29,7 @@ import { examDisplayStatus, examStatusMessageKey, examStatusTone, type ExamDispl
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
+import { matchesSearch } from "@/lib/search-text";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
@@ -118,10 +119,14 @@ function ExamsContent() {
     });
   };
   const searchExam = (exam: ExamRow, query: string) =>
-    [exam.title, exam.description, courseTitle(exam.class_course), examKindLabel(String(exam.kind), t), statusLabel(exam.displayStatus)]
-      .join(" ")
-      .toLocaleLowerCase(locale())
-      .includes(query.toLocaleLowerCase(locale()));
+    matchesSearch(
+      query,
+      exam.title,
+      exam.description,
+      courseTitle(exam.class_course),
+      examKindLabel(String(exam.kind), t),
+      statusLabel(exam.displayStatus),
+    );
 
   const [list, { refetch: refetchExams }] = createResource(
     () => {

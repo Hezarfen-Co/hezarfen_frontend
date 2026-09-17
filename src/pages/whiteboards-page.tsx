@@ -19,6 +19,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
+import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -51,9 +52,9 @@ function WhiteboardsContent() {
   // only the current page's real titles — a client-side search over real
   // data, not a promise of searching every board the caller has ever opened.
   const visibleBoards = createMemo(() => {
-    const q = query().trim().toLocaleLowerCase();
+    const q = query().trim();
     const items = boards()?.items ?? [];
-    return q ? items.filter((b) => b.title.toLocaleLowerCase().includes(q)) : items;
+    return q ? items.filter((b) => matchesSearch(q, b.title)) : items;
   });
 
   const meId = () => auth.user()?.id ?? "";

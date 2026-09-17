@@ -28,6 +28,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -149,7 +150,7 @@ function StaffWorkContent() {
   const entryRows = () => entries().items;
   const peopleLoading = () => people.loading;
   const searchPerson = (person: PersonRef, query: string) =>
-    [person.username, person.display_name, person.id].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase());
+    matchesSearch(query, person.username, person.display_name);
 
   const filteredPeople = createMemo(() => {
     const q = staffSearch().trim();

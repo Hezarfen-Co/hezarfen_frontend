@@ -13,6 +13,7 @@ import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
@@ -64,7 +65,7 @@ function StudentPomodoroContent() {
   const rows = () => list();
   const listLoading = () => list.loading;
   const searchPerson = (person: PersonRef, query: string) =>
-    [person.username, person.display_name, person.id].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase());
+    matchesSearch(query, person.username, person.display_name);
   const studentColumns = createMemo<ColumnDef<PersonRef>[]>(() => [
     {
       accessorKey: "username",

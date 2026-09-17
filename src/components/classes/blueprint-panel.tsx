@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
 import { courseKindLabel } from "@/lib/course-kind";
+import { matchesSearch } from "@/lib/search-text";
 import { useT } from "@/stores/preferences-context";
 
 export function BlueprintPanel(props: {
@@ -47,9 +48,9 @@ export function BlueprintPanel(props: {
   });
 
   const visibleCourses = createMemo(() => {
-    const q = filter().trim().toLocaleLowerCase("tr-TR");
+    const q = filter().trim();
     if (!q) return props.courses;
-    return props.courses.filter((c) => c.title.toLocaleLowerCase("tr-TR").includes(q));
+    return props.courses.filter((c) => matchesSearch(q, c.title));
   });
 
   const isSelected = (id: string) => selected().includes(id);

@@ -23,6 +23,7 @@ import { BlueprintsTab } from "@/components/classes/blueprints-tab";
 import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
+import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -79,10 +80,10 @@ function ClassesContent() {
   });
 
   const searched = createMemo(() => {
-    const needle = query().trim().toLocaleLowerCase("tr");
+    const needle = query().trim();
     if (!needle) return gradeFiltered();
     return gradeFiltered().filter((cls) =>
-      [cls.name, cls.grade ?? "", cls.teacher ? personLabel(cls.teacher) : ""].join(" ").toLocaleLowerCase("tr").includes(needle),
+      matchesSearch(needle, cls.name, cls.grade, cls.teacher ? personLabel(cls.teacher) : null),
     );
   });
 

@@ -33,6 +33,7 @@ import type { Message, MessageFolder } from "@/api/client";
 import { formatApiError } from "@/api/client";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { createFlash } from "@/lib/flash";
 import { Badge } from "@/components/ui/badge";
@@ -72,13 +73,13 @@ export default function MessagesPage() {
   );
 
   const filtered = createMemo(() => {
-    const q = query().trim().toLocaleLowerCase();
+    const q = query().trim();
     if (!q) return messages();
     return messages().filter((m) => {
       const isSent = folder() === "sent" || m.sender.id === auth.user()?.id;
       const peer = isSent ? m.recipient : m.sender;
       const other = personLabel(peer);
-      return [other, m.subject, m.body, m.label || ""].join(" ").toLocaleLowerCase().includes(q);
+      return matchesSearch(q, other, m.subject, m.body, m.label);
     });
   });
 

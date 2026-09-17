@@ -46,6 +46,7 @@ import { createFlash } from "@/lib/flash";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { formatTry } from "@/lib/meals";
 import { PAYMENT_METHOD_KEYS, sortStatementEntries, statementStatus } from "@/lib/payments";
+import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -133,14 +134,13 @@ function PaymentsContent() {
   // (already name-resolved) plan roster and filters/pages it client-side —
   // a plan's assignees are a small, bounded list on their own.
   const [studentsPage, { refetch: refetchStudents }] = createResource(
-    () => ({ plan: planFilter(), q: debouncedQuery(), page: studentPage(), size: studentPageSize(), loc: locale() }),
-    async ({ plan, q, page, size, loc }): Promise<{ items: PersonRef[]; total: number }> => {
+    () => ({ plan: planFilter(), q: debouncedQuery(), page: studentPage(), size: studentPageSize() }),
+    async ({ plan, q, page, size }): Promise<{ items: PersonRef[]; total: number }> => {
       if (plan) {
         const assignments = await getPlanAssignments(plan, { limit: 500 });
-        const needle = q.toLocaleLowerCase(loc);
         const all = assignments.items
           .map((row) => row.student)
-          .filter((user) => !needle || [personLabel(user), user.username, user.id].join(" ").toLocaleLowerCase(loc).includes(needle));
+          .filter((user) => matchesSearch(q, personLabel(user), user.username));
         const start = page * size;
         return { items: all.slice(start, start + size), total: all.length };
       }

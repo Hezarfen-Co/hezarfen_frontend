@@ -26,6 +26,7 @@ import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
+import { matchesSearch } from "@/lib/search-text";
 
 export type CommandPaletteProps = {
   open: boolean;
@@ -289,7 +290,7 @@ export function CommandPalette(props: CommandPaletteProps) {
   });
 
   const filteredItems = createMemo(() => {
-    const q = query().trim().toLocaleLowerCase(prefs.locale());
+    const q = query().trim();
     if (!q) return items();
     const peopleLabel = t("command.group.people");
     const found: CommandItem[] = (people.latest?.items ?? []).map((person) => ({
@@ -302,9 +303,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       onSelect: () => void navigate({ to: "/admin/users/$id", params: { id: person.id } }),
     }));
     return [...found, ...items().filter((item) =>
-      `${item.title} ${item.description ?? ""} ${item.keywords ?? ""} ${item.categoryLabel}`
-        .toLocaleLowerCase(prefs.locale())
-        .includes(q),
+      matchesSearch(q, item.title, item.description, item.keywords, item.categoryLabel),
     )];
   });
 

@@ -48,6 +48,7 @@ import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { formatTry } from "@/lib/meals";
+import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { packageLabel } from "@/lib/module-labels";
 import { hasMinRole } from "@/lib/roles";
@@ -632,7 +633,7 @@ function DashboardContent() {
     },
   ]);
 
-  const deadlineSearch = (row: DeadlineRow, q: string) => row.title.toLowerCase().includes(q.toLowerCase());
+  const deadlineSearch = (row: DeadlineRow, q: string) => matchesSearch(q, row.title);
   const openDeadline = (row: DeadlineRow) => {
     switch (row.kind) {
       case "exam":

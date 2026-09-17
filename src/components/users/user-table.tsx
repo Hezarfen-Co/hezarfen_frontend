@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { IconCheck, IconExternalLink, IconEye, IconUsers } from "@/components/ui/icons";
 import { ROLES } from "@/lib/roles";
+import { matchesSearch } from "@/lib/search-text";
 import { useT } from "@/stores/preferences-context";
 
 function displayName(user: User): string {
@@ -77,10 +78,7 @@ export function UserTable(props: {
   const t = useT();
   const navigate = useNavigate();
   const searchUser = (user: User, query: string) =>
-    [user.username, displayName(user), user.email, user.id, t(`role.${user.role}` as MessageKey)]
-      .join(" ")
-      .toLocaleLowerCase()
-      .includes(query.toLocaleLowerCase());
+    matchesSearch(query, user.username, displayName(user), user.email, t(`role.${user.role}` as MessageKey));
   const columns = createMemo<ColumnDef<User>[]>(() => [
     {
       accessorKey: "username",

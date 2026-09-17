@@ -24,6 +24,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { createFlash } from "@/lib/flash";
+import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -79,17 +80,13 @@ function CoursesContent() {
   );
   const listData = () => list.latest ?? list();
   const filteredCourses = createMemo(() => {
-    const query = search().trim().toLocaleLowerCase();
+    const query = search().trim();
     return (listData()?.items ?? []).filter((course) => {
       if (pageKind() && course.kind !== pageKind()) return false;
       if (taughtFilter() === "untaught" && course.class_course_count > 0) return false;
       if (taughtFilter() === "taught" && course.class_course_count === 0) return false;
       if (!query) return true;
-      return [
-        course.title,
-        course.description,
-        personLabel(course.creator),
-      ].join(" ").toLocaleLowerCase().includes(query);
+      return matchesSearch(query, course.title, course.description, personLabel(course.creator));
     });
   });
   const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredCourses().length / PAGE_SIZE)));

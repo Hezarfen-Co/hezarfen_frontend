@@ -171,6 +171,11 @@ export function UserSearchSelect(props: {
           <ComboboxTrigger />
         </ComboboxControl>
         <ComboboxContent>
+          {/* The debounce plus the request leave the panel blank for a moment,
+              which reads as "nothing matches" before the search even ran. */}
+          <Show when={loading() && options().length === 0}>
+            <p class="px-2 py-2 text-xs text-muted-foreground">{t("common.loading")}</p>
+          </Show>
           <Show when={emptyText()}>
             <p class="px-2 py-2 text-xs font-medium text-destructive">{emptyText()}</p>
           </Show>

@@ -18,8 +18,8 @@ export type DataTableSearchProps = {
   class?: string;
 };
 
-/** Rounded search field: leading icon, conditional clear (X) button, and an
- *  optional on-focus hint naming the fields it searches. */
+/** Rounded search field: leading icon, conditional clear (X) button, Escape to
+ *  empty it, and an optional on-focus hint naming the fields it searches. */
 export function DataTableSearch(props: DataTableSearchProps) {
   const t = useT();
   const [focused, setFocused] = createSignal(false);
@@ -34,6 +34,14 @@ export function DataTableSearch(props: DataTableSearchProps) {
       <Input
         value={props.value}
         onInput={(event) => props.onChange(event.currentTarget.value)}
+        // Escape empties the box instead of only blurring it: a filter the
+        // keyboard cannot undo leaves the list silently narrowed.
+        onKeyDown={(event: KeyboardEvent) => {
+          if (event.key !== "Escape" || !props.value) return;
+          event.preventDefault();
+          event.stopPropagation();
+          props.onChange("");
+        }}
         placeholder={props.placeholder ?? t("common.search")}
         aria-describedby={props.hint ? hintId : undefined}
         class={cn("h-8 rounded-lg bg-muted/40 text-[13px] md:text-[13px]", props.value ? "pl-9 pr-8" : "pl-9")}
