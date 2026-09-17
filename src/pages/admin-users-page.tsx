@@ -7,11 +7,13 @@ import { formatApiError } from "@/api/client";
 import type { Role, User } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { UserTable } from "@/components/users/user-table";
+import { CreateUserPanel } from "@/components/users/create-user-panel";
 import { ParentStudentsPanel } from "@/components/users/parent-students-panel";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { DataTableSkeleton } from "@/components/ui/data-table";
+import { IconPlus } from "@/components/ui/icons";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createFlash } from "@/lib/flash";
 import { useAuth } from "@/stores/auth-context";
@@ -34,6 +36,7 @@ function AdminUsersContent() {
   const [error, setError] = createSignal("");
   const [selectedParent, setSelectedParent] = createSignal<User | null>(null);
   const [roleTab, setRoleTab] = createSignal<RoleTab>("all");
+  const [creating, setCreating] = createSignal(false);
 
   const [list, { refetch }] = createResource(async () => (await getUsers({ limit: 200 })).items);
   const allUsers = () => list() ?? [];
@@ -85,10 +88,16 @@ function AdminUsersContent() {
               title={t("admin.title")}
               description={t("admin.subtitle")}
               actions={
-                <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-                  {t("admin.inviteUser")}
-                  <ComingSoonBadge class="ml-1.5" />
-                </Button>
+                <>
+                  <Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
+                    {t("admin.inviteUser")}
+                    <ComingSoonBadge class="ml-1.5" />
+                  </Button>
+                  <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreating(true)}>
+                    <IconPlus class="mr-1.5 h-4 w-4" />
+                    {t("admin.createUser")}
+                  </Button>
+                </>
               }
               users={visibleUsers() as User[]}
               currentUserId={auth.user()!.id}
@@ -99,6 +108,15 @@ function AdminUsersContent() {
           </Show>
         </Suspense>
       </section>
+      <CreateUserPanel
+        open={creating()}
+        onOpenChange={setCreating}
+        onCreated={(user) => {
+          setCreating(false);
+          setFlash(t("admin.createUserDone", { username: user.username }));
+          void refetch();
+        }}
+      />
       <Show when={selectedParent()} keyed>
         {(u) => (
           <ParentStudentsPanel

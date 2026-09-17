@@ -1185,6 +1185,12 @@ export type MessageKey =
   | "admin.tabStudents"
   | "admin.tabInvites"
   | "admin.inviteUser"
+  | "admin.createUser"
+  | "admin.createUserHint"
+  | "admin.createUserPassword"
+  | "admin.createUserPasswordHint"
+  | "admin.createUserReserved"
+  | "admin.createUserDone"
   | "admin.username"
   | "admin.id"
   | "admin.role"
@@ -3270,6 +3276,12 @@ const en: Dict = {
   "admin.tabStudents": "Students",
   "admin.tabInvites": "Invites",
   "admin.inviteUser": "Invite user",
+  "admin.createUser": "Add user",
+  "admin.createUserHint": "Open an account directly — no invite or self-registration.",
+  "admin.createUserPassword": "Password",
+  "admin.createUserPasswordHint": "If this username already exists at another school, enter that account's current password to add it here.",
+  "admin.createUserReserved": "This username is reserved. Pick another one.",
+  "admin.createUserDone": "Account {username} created.",
   "admin.username": "Username",
   "admin.id": "Id",
   "admin.role": "Role",
@@ -5275,6 +5287,12 @@ const tr: Dict = {
   "admin.tabStudents": "Öğrenciler",
   "admin.tabInvites": "Davetler",
   "admin.inviteUser": "Kullanıcı davet et",
+  "admin.createUser": "Kullanıcı ekle",
+  "admin.createUserHint": "Davet veya kendi kaydı olmadan doğrudan hesap açın.",
+  "admin.createUserPassword": "Şifre",
+  "admin.createUserPasswordHint": "Bu kullanıcı adı başka bir okulda zaten varsa, o hesabın mevcut şifresini girin; hesap bu okula da eklenir.",
+  "admin.createUserReserved": "Bu kullanıcı adı ayrılmış. Başka bir ad seçin.",
+  "admin.createUserDone": "{username} hesabı oluşturuldu.",
   "admin.username": "Kullanıcı adı",
   "admin.id": "Id",
   "admin.role": "Rol",
