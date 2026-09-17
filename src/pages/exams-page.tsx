@@ -3,13 +3,12 @@ import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourseById } from "@/api/courses";
-import { getCourses } from "@/api/courses";
 import { getExams } from "@/api/exams";
-import { getMyCourses } from "@/api/reports";
 import { patchExamById } from "@/api/exams";
-import { postCourseExam } from "@/api/courses";
+import { getInstanceById, postInstanceExam } from "@/api/instances";
+import { loadInstanceOptions } from "@/lib/instance-options";
 import { formatApiError } from "@/api/client";
-import type { Course, Exam } from "@/api/client";
+import type { Exam } from "@/api/client";
 import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -79,62 +78,71 @@ function ExamsContent() {
   const [createdExam, setCreatedExam] = createSignal<Exam | null>(null);
   const [editTab, setEditTab] = createSignal<"details" | "questions">("details");
 
-  const [courses] = createResource(
-    () => (auth.user()?.role && auth.user()?.role !== "student" ? true : null),
-    async (enabled) => (enabled ? (await getCourses({ limit: 100 })).items : []),
-  );
-  const [mine] = createResource(
-    () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? (await getMyCourses({ limit: 100 })).items : []),
+  // An exam is set inside an instance (şube × ders), so everything on this page
+  // — the filter, the picker, the section column — keys on the instance and
+  // resolves the catalog title through it.
+  const [sections] = createResource(
+    () => auth.user()?.role ?? null,
+    (role) => loadInstanceOptions(role ?? undefined),
   );
 
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const isStudent = () => auth.user()?.role === "student";
   const canEditExam = (exam: Exam) => exam.creator === auth.user()?.id || hasMinRole(auth.user()?.role, "manager");
-  const visibleCourses = createMemo(() => (isStudent() ? mine() : courses()) ?? []);
-  const manageableCourses = createMemo(() =>
-    visibleCourses().filter((course) => course.creator.id === auth.user()?.id || hasMinRole(auth.user()?.role, "manager")),
-  );
+  const visibleCourses = createMemo(() => sections() ?? []);
+  // Teacher+ may set an exam in any section the picker offers them; the backend
+  // is the real gate and answers 403 for anything else.
+  const manageableCourses = createMemo(() => (hasMinRole(auth.user()?.role, "teacher") ? visibleCourses() : []));
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher") && manageableCourses().length > 0;
+  /** Instance id → label, filled for rows the picker did not already name. */
   const [courseMap, setCourseMap] = createSignal<Record<string, string>>({});
-  const courseTitle = (courseId: string) => {
-    const cached = visibleCourses().find((c) => c.id === courseId);
-    if (cached) return cached.title;
-    return courseMap()[courseId] ?? courseId;
+  const courseTitle = (instanceId: string) => {
+    const cached = visibleCourses().find((row) => row.id === instanceId);
+    if (cached) return cached.label;
+    return courseMap()[instanceId] ?? instanceId;
   };
 
   const examStatus = (exam: Exam) => examDisplayStatus(exam, now());
+  // The question bank keys on the catalog course, which an exam only names
+  // through its instance.
+  const examCourseId = (exam: Exam) => visibleCourses().find((row) => row.id === exam.class_course)?.course ?? null;
 
   const filterExams = (items: Exam[]) => {
-    const allowed = isStudent() ? new Set(visibleCourses().map((course) => course.id)) : null;
+    const allowed = isStudent() ? new Set(visibleCourses().map((row) => row.id)) : null;
     return items.filter((exam) => {
-      if (allowed && !allowed.has(exam.course)) return false;
+      if (allowed && !allowed.has(exam.class_course)) return false;
       if (tab() !== "all" && examTabGroup(examStatus(exam)) !== tab()) return false;
-      if (courseFilter() !== "all" && exam.course !== courseFilter()) return false;
+      if (courseFilter() !== "all" && exam.class_course !== courseFilter()) return false;
       if (kindFilter() !== "all" && String(exam.kind) !== kindFilter()) return false;
       return true;
     });
   };
   const searchExam = (exam: ExamRow, query: string) =>
-    [exam.title, exam.description, courseTitle(exam.course), examKindLabel(String(exam.kind), t), statusLabel(exam.displayStatus)]
+    [exam.title, exam.description, courseTitle(exam.class_course), examKindLabel(String(exam.kind), t), statusLabel(exam.displayStatus)]
       .join(" ")
       .toLocaleLowerCase(locale())
       .includes(query.toLocaleLowerCase(locale()));
 
   const [list, { refetch: refetchExams }] = createResource(
     () => {
-      if (isStudent() && mine() === undefined) return null;
-      if (!isStudent() && courses() === undefined) return null;
-      return [isStudent() ? "s" : "t", (mine() ?? []).map((c) => c.id).join(",")].join("|");
+      if (sections() === undefined) return null;
+      return visibleCourses().map((row) => row.id).join(",");
     },
     async () => {
       const items = (await getExams({ limit: 100 })).items;
-      const known = new Map(visibleCourses().map((c) => [c.id, c.title]));
-      const missing = [...new Set(items.map((e) => e.course))].filter((id) => !known.has(id));
+      const known = new Map(visibleCourses().map((row) => [row.id, row.label]));
+      const missing = [...new Set(items.map((exam) => exam.class_course))].filter((instanceId) => !known.has(instanceId));
       if (missing.length > 0) {
-        await Promise.all(missing.map((id) =>
-          getCourseById(id).then((c) => known.set(id, c.title)).catch(() => {}),
-        ));
+        await Promise.all(
+          missing.map(async (instanceId) => {
+            try {
+              const instance = await getInstanceById(instanceId);
+              known.set(instanceId, (await getCourseById(instance.course)).title);
+            } catch {
+              // The id stays as the label.
+            }
+          }),
+        );
       }
       setCourseMap(Object.fromEntries(known));
       return items;
@@ -169,10 +177,10 @@ function ExamsContent() {
     },
     {
       id: "course",
-      accessorFn: (exam) => courseTitle(exam.course),
-      header: t("nav.courses"),
+      accessorFn: (exam) => courseTitle(exam.class_course),
+      header: t("instances.title"),
       meta: { cellClass: "truncate text-muted-foreground" },
-      cell: (cell) => courseTitle(cell.row.original.course),
+      cell: (cell) => courseTitle(cell.row.original.class_course),
     },
     {
       accessorKey: "starts_at",
@@ -228,15 +236,17 @@ function ExamsContent() {
   const saveOrCreateExam = async (values: ExamFormValues) => {
     const existing = createdExam();
     if (existing) {
-      const updated = await patchExamById(existing.id, values);
+      // `term` is create-only — the backend cannot move a filed exam.
+      const { term: _term, ...patch } = values;
+      const updated = await patchExamById(existing.id, patch);
       setCreatedExam(updated);
       await refetchExams();
       setCreateStep("questions");
       setFlash(t("common.saved"));
     } else {
-      const courseId = selectedCourseId();
-      if (!courseId) throw new Error(t("exams.selectCourse"));
-      const newExam = await postCourseExam(courseId, {
+      const instanceId = selectedCourseId();
+      if (!instanceId) throw new Error(t("instances.selectSection"));
+      const newExam = await postInstanceExam(instanceId, {
         ...values,
         description: values.description.trim() || undefined,
       });
@@ -250,7 +260,8 @@ function ExamsContent() {
   const updateExam = async (values: ExamFormValues) => {
     const exam = editingExam();
     if (!exam) return;
-    const updated = await patchExamById(exam.id, values);
+    const { term: _term, ...patch } = values;
+    const updated = await patchExamById(exam.id, patch);
     setEditingExam(updated);
     await refetchExams();
     setFlash(t("common.saved"));
@@ -323,7 +334,7 @@ function ExamsContent() {
                       onChange={(val) => setCourseFilter(val)}
                       options={[
                         { value: "all", label: t("common.all") },
-                        ...visibleCourses().map((course) => ({ value: course.id, label: course.title })),
+                        ...visibleCourses().map((row) => ({ value: row.id, label: row.label })),
                       ]}
                     />
 
@@ -407,9 +418,9 @@ function ExamsContent() {
           <Show when={!createdExam()}>
             <div class="mb-4 space-y-1.5 rounded-xl border border-border-line bg-surface-overlay p-4">
               <label class="text-sm font-medium" for="exam-course">
-                {t("exams.selectCourse")}
+                {t("instances.selectSection")}
               </label>
-              <SearchableSelect id="exam-course" value={selectedCourseId()} required onChange={setSelectedCourseId} placeholder={t("exams.selectCourse")} options={manageableCourses().map((course: Course) => ({ value: course.id, label: course.title }))} />
+              <SearchableSelect id="exam-course" value={selectedCourseId()} required onChange={setSelectedCourseId} placeholder={t("instances.selectSection")} options={manageableCourses().map((row) => ({ value: row.id, label: row.label }))} />
             </div>
           </Show>
           <ExamForm
@@ -424,7 +435,7 @@ function ExamsContent() {
           <div class="space-y-4">
             <ExamQuestionsPanel
               examId={createdExam()!.id}
-              courseId={createdExam()!.course}
+              courseId={examCourseId(createdExam()!) ?? ""}
               embedded
             />
             <div class="flex justify-end border-t pt-3">
@@ -490,7 +501,7 @@ function ExamsContent() {
               <Show when={editTab() === "questions"}>
                 <ExamQuestionsPanel
                   examId={exam().id}
-                  courseId={exam().course}
+                  courseId={examCourseId(exam()) ?? ""}
                   embedded
                 />
               </Show>

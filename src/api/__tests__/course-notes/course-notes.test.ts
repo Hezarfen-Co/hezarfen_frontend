@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getCourseNotes } from "../../course-notes";
+import { postCourseNoteRagReindex } from "../../course-notes";
 import { getCourseNoteById } from "../../course-notes";
 import { postCourseNote } from "../../course-notes";
 import { patchCourseNoteById } from "../../course-notes";
@@ -164,4 +165,14 @@ describe("course notes API", () => {
     expect(url).toBe("/api/course-notes/cn1/rag/r1");
     expect(init?.method).toBe("DELETE");
   });
+  it("postCourseNoteRagReindex POSTs /course-notes/:id/rag/reindex", async () => {
+    mockFetch204();
+
+    await postCourseNoteRagReindex("n1");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/course-notes/n1/rag/reindex");
+    expect(init?.method).toBe("POST");
+  });
+
 });

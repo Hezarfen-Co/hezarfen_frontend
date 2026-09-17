@@ -2,7 +2,7 @@ import { Link, useLocation } from "@tanstack/solid-router";
 import { Show, Suspense, createMemo } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getExamById } from "@/api/exams";
-import { getMyCourses } from "@/api/reports";
+import { getMyInstances } from "@/api/instances";
 import { formatApiError } from "@/api/client";
 import { ExamRoomWS } from "@/components/exams/exam-room-ws";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -35,14 +35,14 @@ function ExamRoomContent() {
   const [exam] = createResource(id, (examId) => getExamById(examId));
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? (await getMyCourses()).items : []),
+    async (enabled) => (enabled ? (await getMyInstances({ limit: 200 })).items : []),
   );
   const canViewExam = () => {
     const e = exam();
     const u = auth.user();
     if (!e || !u) return false;
     if (u.role !== "student") return false;
-    return (mine() ?? []).some((course) => course.id === e.course);
+    return (mine() ?? []).some((row) => row.id === e.class_course);
   };
   const accessReady = () => auth.user()?.role !== "student" || mine() !== undefined;
 

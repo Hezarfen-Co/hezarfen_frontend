@@ -3,28 +3,18 @@ import { createResource } from "@/lib/create-resource";
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteCourseById } from "@/api/courses";
-import { deleteCourseEnrollmentByUserId } from "@/api/courses";
+import { deleteCourseMemberByUserId } from "@/api/courses";
 import { getCourseById } from "@/api/courses";
-import { getCourseEnrollments } from "@/api/courses";
-import { getCourseExams } from "@/api/courses";
-import { getClasses } from "@/api/classes";
+import { getCourseMembers } from "@/api/courses";
+import { postCourseMember } from "@/api/courses";
+import { getClasses, getClassInstances, getMyClasses } from "@/api/classes";
+import { getMyInstances } from "@/api/instances";
 import { getMyCourses } from "@/api/reports";
-import { getSettings } from "@/api/settings";
-import { getTerms } from "@/api/terms";
 import { patchCourseById } from "@/api/courses";
-import { postCourseEnrollment } from "@/api/courses";
-import { postCourseExam } from "@/api/courses";
 import { formatApiError } from "@/api/client";
-import type { CourseKind, Enrollment, Exam } from "@/api/client";
-import { patchExamById } from "@/api/exams";
-import { ExamLink } from "@/components/exams/exam-link";
-import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
-import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
+import type { ClassCourse, ClassGroup, CourseKind, CourseMembership, Instance } from "@/api/client";
 import { CourseNotesPanel } from "@/components/courses/course-notes-panel";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
-import { CourseTeachersPanel } from "@/components/courses/course-teachers-panel";
-import { CourseHomeworkPanel } from "@/components/homework/course-homework-panel";
-import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -33,9 +23,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconBook, IconCalendarDays, IconEdit, IconExam, IconHomework, IconNote, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
+import { IconBook, IconEdit, IconNote, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
 import { createFlash } from "@/lib/flash";
-import { cn } from "@/lib/cn";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -47,11 +36,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
-import { examKindLabel } from "@/lib/exam-labels";
-import { examWeight } from "@/lib/exam-weight";
 import { hasMinRole } from "@/lib/roles";
 
 const COURSE_KINDS: CourseKind[] = ["course", "study", "club"];
+
+/** One row of the "taught in" list: an instance plus the şube's name. */
+type SectionRow = { instance: Instance | ClassCourse; className: string };
 
 export default function CourseDetailPage() {
   return (
@@ -74,67 +64,75 @@ function CourseDetailContent() {
 
   const [courseTab, setCourseTab] = createSignal("subjects");
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
-  const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
-  const [settings] = createResource(() => getSettings());
-  const [exams, { refetch: refetchExams }] = createResource(
-    () => id(),
-    async (courseId) => (courseId ? (await getCourseExams(courseId)).items : []),
+  const [mine] = createResource(
+    () => (auth.user()?.role === "student" ? true : null),
+    async (enabled) => (enabled ? (await getMyCourses()).items : []),
   );
-  const hasCourseManagementRights = () => {
-    const c = course();
-    const u = auth.user();
-    if (!c || !u) return false;
-    const isAssigned = (c.teachers ?? []).some((t) => t.id === u.id);
-    return c.creator.id === u.id || isAssigned || hasMinRole(u.role, "manager");
-  };
-  const canDeleteCourse = () => {
+
+  // Catalog rights: the creator or a manager+. Teaching rights now live on the
+  // instance, so this page only governs the catalog row itself.
+  const canManageCatalog = () => {
     const c = course();
     const u = auth.user();
     if (!c || !u) return false;
     return c.creator.id === u.id || hasMinRole(u.role, "manager");
   };
-  const canStaffCourse = () => {
-    const u = auth.user();
-    if (!u) return false;
-    return hasMinRole(u.role, "manager");
-  };
-  const [roster, { refetch: refetchRoster }] = createResource(
-    () => (hasCourseManagementRights() ? id() : null),
-    async (courseId) => (courseId ? (await getCourseEnrollments(courseId)).items : []),
+  const isOffice = () => hasMinRole(auth.user()?.role ?? "student", "manager");
+  // A club/etüt keeps its own school-wide member list; a regular ders does not
+  // — its students come from the şube that attached it.
+  const hasMembers = () => course()?.kind === "club" || course()?.kind === "study";
+
+  // The şubeler teaching this course. A student or teacher reads their own set
+  // in one call; the office has no course-scoped instance route, so it walks
+  // the class list instead (one call per class, capped by the page limit).
+  const [sections] = createResource(
+    () => (course() ? { courseId: id(), office: isOffice() } : null),
+    async (args): Promise<SectionRow[]> => {
+      if (!args) return [];
+      if (!args.office) {
+        // `/instances/me` is the one instance list a student or teacher can
+        // read; `/classes/me` names the şubeler behind it (one call each).
+        const [instances, classes] = await Promise.all([
+          getMyInstances({ limit: 200 }),
+          getMyClasses({ limit: 200 }).catch(() => ({ items: [] as ClassGroup[] })),
+        ]);
+        const names = new Map(classes.items.map((klass) => [klass.id, klass.name]));
+        return instances.items
+          .filter((instance) => instance.course === args.courseId)
+          .map((instance) => ({ instance, className: names.get(instance.class) ?? "—" }));
+      }
+      const classes = (await getClasses({ limit: 200 })).items;
+      const perClass = await Promise.all(
+        classes.map(async (klass) => {
+          const instances = (await getClassInstances(klass.id, { limit: 200 })).items;
+          return instances
+            .filter((instance) => instance.course === args.courseId)
+            .map((instance) => ({ instance, className: klass.name }));
+        }),
+      );
+      return perClass.flat();
+    },
   );
-  const [mine] = createResource(
-    () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? (await getMyCourses()).items : []),
+
+  const [members, { refetch: refetchMembers }] = createResource(
+    () => (hasMembers() && canManageCatalog() ? id() : null),
+    async (courseId) => (courseId ? (await getCourseMembers(courseId)).items : []),
   );
 
   const [editing, setEditing] = createSignal(false);
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
   const [kind, setKind] = createSignal<CourseKind>("course");
-  const [termId, setTermId] = createSignal("");
-  const [capacity, setCapacity] = createSignal("");
-  const [showExamForm, setShowExamForm] = createSignal(false);
-  const [examCreateStep, setExamCreateStep] = createSignal<"details" | "questions">("details");
-  const [createdCourseExam, setCreatedCourseExam] = createSignal<Exam | null>(null);
   const [showSubjectForm, setShowSubjectForm] = createSignal(false);
-  const [showSessionForm, setShowSessionForm] = createSignal(false);
-  const [showHomeworkForm, setShowHomeworkForm] = createSignal(false);
-  const [showTeacherForm, setShowTeacherForm] = createSignal(false);
   const [showNoteForm, setShowNoteForm] = createSignal(false);
-  const [showEnrollPanel, setShowEnrollPanel] = createSignal(false);
+  const [showMemberForm, setShowMemberForm] = createSignal(false);
   const [subjectCount, setSubjectCount] = createSignal(0);
-  const [sessionCount, setSessionCount] = createSignal(0);
-  const [homeworkCount, setHomeworkCount] = createSignal(0);
   const [noteCount, setNoteCount] = createSignal(0);
-  const [enrollUserId, setEnrollUserId] = createSignal("");
+  const [memberUserId, setMemberUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [removeTarget, setRemoveTarget] = createSignal<{ userId: string; userName: string } | null>(null);
-
-  const canManage = () => {
-    return hasCourseManagementRights();
-  };
 
   const canViewCourse = () => {
     const u = auth.user();
@@ -144,61 +142,70 @@ function CourseDetailContent() {
   };
   const accessReady = () => auth.user()?.role !== "student" || mine() !== undefined;
 
-  const examModeLabel = (mode: string | null) => {
-    if (mode === "sync") return t("exams.mode.sync");
-    if (mode === "async") return t("exams.mode.async");
-    if (mode === "open") return t("exams.mode.open");
-    return t("exams.unscheduled");
-  };
   const courseKindLabel = (value: CourseKind | undefined) =>
     value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
-  const courseListSearch = (value: CourseKind | undefined) => value ? { kind: value } as never : {} as never;
-
-  const examCount = createMemo(() => exams()?.length ?? 0);
-  const nextExam = createMemo(() =>
-    (exams() ?? [])
-      .filter((exam) => (exam.ends_at ?? exam.starts_at ?? 0) > Date.now())
-      .sort((a, b) => (a.starts_at ?? a.ends_at ?? 0) - (b.starts_at ?? b.ends_at ?? 0))[0],
-  );
-  const rosterCount = createMemo(() => roster()?.length ?? 0);
-  // `teachers` is the backend's assigned-teacher list. The course creator is
-  // rendered separately below, so adding one here made an admin-created course
-  // look as though it had a teacher who was never assigned to it.
-  const assignedTeacherCount = createMemo(() => course()?.teachers?.length ?? 0);
+  const courseListSearch = (value: CourseKind | undefined) => (value ? ({ kind: value } as never) : ({} as never));
   const countDescription = (count: number, item: string) => t("common.countItem", { count, item });
 
-  const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
-  // Resolve a pumped enrollment's `source` (class id) to a class name so a
-  // manager can see which rows a class change will sweep. One list call,
-  // teacher+ only (matches roster visibility); null-source rows show nothing.
-  const [classList] = createResource(() => hasCourseManagementRights() ? getClasses().then((page) => page.items) : null);
-  const className = (source: string | null) => source ? (classList.latest?.find((c) => c.id === source)?.name ?? null) : null;
-  const rosterColumns = createMemo<ColumnDef<Enrollment>[]>(() => [
+  const sectionCount = createMemo(() => sections()?.length ?? 0);
+  const memberCount = createMemo(() => members()?.length ?? 0);
+  const memberUserIds = () => (members() ?? []).map((row) => row.user.id);
+
+  const sectionColumns = createMemo<ColumnDef<SectionRow>[]>(() => [
+    {
+      id: "class",
+      accessorFn: (row) => row.className,
+      header: t("classGroups.className"),
+      meta: { cellClass: "font-medium" },
+      cell: (cell) => (
+        <Link to="/instances/$id" params={{ id: cell.row.original.instance.id }} class="hover:text-primary hover:underline">
+          {cell.row.original.className}
+        </Link>
+      ),
+    },
+    {
+      id: "dersSaati",
+      accessorFn: (row) => row.instance.ders_saati,
+      header: t("instances.dersSaati"),
+      meta: { cellClass: "mono" },
+    },
+    {
+      id: "roster",
+      accessorFn: (row) => row.instance.enrollment_count,
+      header: t("courses.roster"),
+      meta: { cellClass: "mono" },
+    },
+    {
+      id: "karne",
+      accessorFn: (row) => (row.instance.counts_toward_karne ? t("common.yes") : t("common.no")),
+      header: t("instances.countsTowardKarne"),
+      cell: (cell) => (
+        <Badge variant={cell.row.original.instance.counts_toward_karne ? "secondary" : "outline"} class="rounded-full">
+          {cell.row.original.instance.counts_toward_karne ? t("common.yes") : t("common.no")}
+        </Badge>
+      ),
+    },
+  ]);
+
+  const memberColumns = createMemo<ColumnDef<CourseMembership>[]>(() => [
     {
       id: "username",
       accessorFn: (row) => row.user.display_name || row.user.username,
       header: t("admin.username"),
       meta: { cellClass: "font-medium" },
-      cell: (cell) => (
-        <span class="flex items-center gap-2">
-          {cell.row.original.user.display_name || cell.row.original.user.username}
-          <Show when={className(cell.row.original.source)}>
-            {(name) => <Badge variant="secondary" class="rounded-full text-xs font-normal">{t("course.fromClass", { name: name() })}</Badge>}
-          </Show>
-        </span>
-      ),
+      cell: (cell) => cell.row.original.user.display_name || cell.row.original.user.username,
     },
     {
       id: "actions",
       header: t("common.actions"),
       meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
       cell: (cell) => (
-        <Show when={canManage()}>
+        <Show when={canManageCatalog()}>
           <TableRowActions
             label={t("common.actions")}
             actions={[
               {
-                label: t("common.remove"),
+                label: t("courses.removeMember"),
                 icon: <IconTrash class="h-4 w-4" />,
                 destructive: true,
                 onSelect: () =>
@@ -213,47 +220,7 @@ function CourseDetailContent() {
       ),
     },
   ]);
-  const examColumns = createMemo<ColumnDef<Exam>[]>(() => [
-    {
-      accessorKey: "title",
-      header: t("form.title"),
-      meta: { cellClass: "font-medium" },
-      cell: (cell) => (
-        <ExamLink examId={cell.row.original.id} class="hover:text-primary hover:underline">
-          {cell.row.original.title}
-        </ExamLink>
-      ),
-    },
-    {
-      id: "kind",
-      accessorFn: (row) => examKindLabel(String(row.kind), t),
-      header: t("exams.kind"),
-      cell: (cell) => (
-        <Badge variant="outline" class="rounded-full capitalize">
-          {examKindLabel(String(cell.row.original.kind), t)}
-          <Show when={examWeight(cell.row.original, settings()?.exam_kinds)}>
-            {(weight) => <span class="ml-1 text-text-subtle">({t("courses.weight")}: {weight()})</span>}
-          </Show>
-        </Badge>
-      ),
-    },
-    {
-      id: "mode",
-      accessorFn: (row) => examModeLabel(row.mode),
-      header: t("exams.mode"),
-      cell: (cell) => <Badge variant="secondary" class="rounded-full">{examModeLabel(cell.row.original.mode)}</Badge>,
-    },
-    {
-      id: "status",
-      accessorFn: (row) => (row.draft ? t("exams.draft") : ""),
-      header: t("events.status"),
-      cell: (cell) => (
-        <Show when={cell.row.original.draft} fallback="—">
-          <Badge variant="secondary" class="rounded-full">{t("exams.draft")}</Badge>
-        </Show>
-      ),
-    },
-  ]);
+
   const [flash, setFlash] = createFlash();
 
   const wrap = async (fn: () => Promise<void>, ok?: string) => {
@@ -275,8 +242,6 @@ function CourseDetailContent() {
     setTitle(c.title);
     setDescription(c.description);
     setKind(c.kind ?? "course");
-    setTermId(c.term ?? "");
-    setCapacity(c.capacity == null ? "" : String(c.capacity));
     setEditing(true);
   };
 
@@ -293,397 +258,289 @@ function CourseDetailContent() {
         {(c) => (
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
-          <div class="mx-auto w-full max-w-[1440px] space-y-4">
-            <div class="space-y-1.5">
-              <nav class="detail-breadcrumb">
-                <Link to="/courses" search={courseListSearch(c().kind)}>{courseKindLabel(c().kind)}</Link>
-                <span aria-hidden>›</span>
-                <span class="text-foreground">{c().title}</span>
-              </nav>
-              <PageHeader
-                title={c().title}
-                description={c().description || "—"}
-                class="border-border-line"
-                actions={
-                  <Show when={canManage()}>
-                    <TableRowActions
-                      label={t("common.actions")}
-                      actions={[
-                        {
-                          label: t("common.edit"),
-                          icon: <IconEdit class="h-4 w-4" />,
-                          onSelect: startEdit,
-                        },
-                        ...(canDeleteCourse()
-                          ? [{
+              <div class="mx-auto w-full max-w-[1440px] space-y-4">
+                <div class="space-y-1.5">
+                  <nav class="detail-breadcrumb">
+                    <Link to="/courses" search={courseListSearch(c().kind)}>{courseKindLabel(c().kind)}</Link>
+                    <span aria-hidden>›</span>
+                    <span class="text-foreground">{c().title}</span>
+                  </nav>
+                  <PageHeader
+                    title={c().title}
+                    description={c().description || "—"}
+                    class="border-border-line"
+                    actions={
+                      <Show when={canManageCatalog()}>
+                        <TableRowActions
+                          label={t("common.actions")}
+                          actions={[
+                            { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: startEdit },
+                            {
                               label: t("courses.delete"),
                               icon: <IconTrash class="h-4 w-4" />,
                               destructive: true,
                               onSelect: () => setDeleteOpen(true),
-                            }]
-                          : []),
-                      ]}
-                    />
-                  </Show>
-                }
-              />
-              <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
-                    <IconBook class="h-4 w-4" />
-                  </span>
-                  <div class="min-w-0">
-                    <p class="text-xs font-medium text-text-subtle">{t("courses.kind")}</p>
-                    <p class="truncate text-sm font-semibold text-text-default">{courseKindLabel(c().kind)}</p>
+                            },
+                          ]}
+                        />
+                      </Show>
+                    }
+                  />
+                  <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
+                        <IconBook class="h-4 w-4" />
+                      </span>
+                      <div class="min-w-0">
+                        <p class="text-xs font-medium text-text-subtle">{t("courses.kind")}</p>
+                        <p class="truncate text-sm font-semibold text-text-default">{courseKindLabel(c().kind)}</p>
+                      </div>
+                    </div>
+                    <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
+                        <IconSchool class="h-4 w-4" />
+                      </span>
+                      <div class="min-w-0">
+                        <p class="text-xs font-medium text-text-subtle">{t("instances.taughtIn")}</p>
+                        <p class="mono truncate text-sm font-semibold text-text-default">{c().class_course_count}</p>
+                      </div>
+                    </div>
+                    <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
+                        <IconUsers class="h-4 w-4" />
+                      </span>
+                      <div class="min-w-0">
+                        <p class="text-xs font-medium text-text-subtle">{t("courses.members")}</p>
+                        <p class="mono truncate text-sm font-semibold text-text-default">{c().course_membership_count}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
-                    <IconCalendarDays class="h-4 w-4" />
-                  </span>
-                  <div class="min-w-0">
-                    <p class="text-xs font-medium text-text-subtle">{t("terms.term")}</p>
-                    <p class="truncate text-sm font-semibold text-text-default">{terms()?.find((term) => term.id === c().term)?.name ?? t("terms.unassigned")}</p>
-                  </div>
-                </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
-                    <IconUsers class="h-4 w-4" />
-                  </span>
-                  <div class="min-w-0">
-                    <p class="text-xs font-medium text-text-subtle">{t("courses.capacity")}</p>
-                    <p class="mono truncate text-sm font-semibold text-text-default">{c().capacity == null ? "—" : hasCourseManagementRights() ? `${rosterCount()} / ${c().capacity}` : c().capacity}</p>
-                  </div>
-                </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
-                    <IconExam class="h-4 w-4" />
-                  </span>
-                  <div class="min-w-0">
-                    <p class="text-xs font-medium text-text-subtle">{t("courses.nextExam")}</p>
-                    <Show when={nextExam()} fallback={<p class="truncate text-sm font-semibold text-text-default">{t("courses.noUpcoming")}</p>}>
-                      {(exam) => <ExamLink examId={exam().id} class="block truncate text-sm font-semibold text-text-default hover:text-primary hover:underline">{exam().title}</ExamLink>}
-                    </Show>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <ConfirmDialog
-              open={deleteOpen()}
-              onOpenChange={setDeleteOpen}
-              title={t("confirm.deleteTitle")}
-              variant="destructive"
-              summary={t("courses.delete") + `: “${c().title}”`}
-              onConfirm={async () => {
-                await wrap(async () => {
-                  await deleteCourseById(id());
-                  void navigate({ to: "/courses", search: courseListSearch(c().kind) });
-                });
-              }}
-            />
-
-            <ConfirmDialog
-              open={removeTarget() !== null}
-              onOpenChange={() => setRemoveTarget(null)}
-              title={t("course.removeStudent")}
-              variant="destructive"
-              summary={`${t("course.removeStudentConfirm")} "${removeTarget()?.userName}"?`}
-              onConfirm={async () => {
-                const target = removeTarget();
-                if (!target) return;
-                try {
-                  await deleteCourseEnrollmentByUserId(id(), target.userId);
-                  await refetchRoster();
-                  setFlash(t("common.deleted"));
-                } catch (err) {
-                  setError(formatApiError(err));
-                } finally {
-                  setRemoveTarget(null);
-                }
-              }}
-            />
-
-            <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().title}>
-              <form
-                class="space-y-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void wrap(async () => {
-                    const cap = capacity().trim();
-                    await patchCourseById(id(), {
-                      title: title().trim(),
-                      description: description(),
-                      kind: kind(),
-                      term_id: termId() || null,
-                      capacity: cap ? Number(cap) : null,
+                <ConfirmDialog
+                  open={deleteOpen()}
+                  onOpenChange={setDeleteOpen}
+                  title={t("confirm.deleteTitle")}
+                  variant="destructive"
+                  summary={t("courses.delete") + `: “${c().title}”`}
+                  onConfirm={async () => {
+                    await wrap(async () => {
+                      await deleteCourseById(id());
+                      void navigate({ to: "/courses", search: courseListSearch(c().kind) });
                     });
-                    setEditing(false);
-                    await refetchCourse();
-                  }, t("common.saved"));
-                }}
-              >
-                <div class="space-y-3 rounded-xl border border-border-line bg-surface-tint p-4">
-                  <div class="space-y-1.5">
-                    <Label for="edit-course-title">{t("form.title")}</Label>
-                    <Input
-                      id="edit-course-title"
-                      value={title()}
-                      required
-                      maxlength={200}
-                      onInput={(e) => setTitle(e.currentTarget.value)}
-                    />
-                  </div>
-                  <div class="space-y-1.5">
-                    <Label for="edit-course-desc">{t("form.description")}</Label>
-                    <Textarea
-                      id="edit-course-desc"
-                      value={description()}
-                      rows={3}
-                      maxlength={2000}
-                      onInput={(e) => setDescription(e.currentTarget.value)}
-                    />
-                  </div>
-                </div>
-                <div class="space-y-3 rounded-xl border border-border-line bg-surface-tint p-4">
-                  <div class="space-y-1.5">
-                    <Label for="edit-course-kind">{t("courses.kind")}</Label>
-                    <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
-                      <For each={COURSE_KINDS}>{(item) => <option value={item}>{courseKindLabel(item)}</option>}</For>
-                    </Select>
-                  </div>
-                  <div class="space-y-1.5">
-                    <Label for="edit-course-term">{t("terms.term")}</Label>
-                    <Select id="edit-course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}>
-                      <option value="">{t("terms.unassigned")}</option>
-                      <For each={terms() ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
-                    </Select>
-                  </div>
-                  <div class="space-y-1.5">
-                    <Label for="edit-course-capacity">{t("courses.capacity")}</Label>
-                    <Input id="edit-course-capacity" type="number" min={1} value={capacity()} placeholder={t("courses.capacityOptional")} onInput={(e) => setCapacity(e.currentTarget.value)} />
-                  </div>
-                </div>
-                <div class="sticky bottom-0 -mx-5 flex flex-wrap gap-2 border-t border-border-line bg-surface-base px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
-                  <Button type="submit" class="flex-1 rounded-xl sm:flex-none" disabled={pending()}>
-                    {t("common.update")}
-                  </Button>
-                  <Button type="button" variant="outline" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(false)}>
-                    {t("common.cancel")}
-                  </Button>
-                </div>
-              </form>
-            </SidePanel>
+                  }}
+                />
 
-            <SidePanel
-              open={showExamForm()}
-              onOpenChange={(open) => {
-                setShowExamForm(open);
-                if (!open) {
-                  setCreatedCourseExam(null);
-                  setExamCreateStep("details");
-                }
-              }}
-              title={createdCourseExam() ? createdCourseExam()!.title : t("courses.addExam")}
-              description={createdCourseExam() ? t("exams.step2Questions") : c().title}
-              size={examCreateStep() === "questions" ? "wide" : "default"}
-            >
-              <div class="mb-4 flex rounded-xl border border-border-line bg-surface-tint p-1">
-                <button
-                  type="button"
-                  class={cn(
-                    "rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
-                    examCreateStep() === "details"
-                      ? "bg-primary text-primary-foreground shadow-2xs"
-                      : "text-text-subtle hover:bg-surface-fill",
-                  )}
-                  onClick={() => setExamCreateStep("details")}
-                >
-                  {t("exams.step1Details")}
-                </button>
-                <button
-                  type="button"
-                  disabled={!createdCourseExam()}
-                  class={cn(
-                    "rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
-                    examCreateStep() === "questions"
-                      ? "bg-primary text-primary-foreground shadow-2xs"
-                      : createdCourseExam()
-                      ? "text-text-subtle hover:bg-surface-fill"
-                      : "opacity-40 cursor-not-allowed text-text-subtle",
-                  )}
-                  onClick={() => createdCourseExam() && setExamCreateStep("questions")}
-                >
-                  {t("exams.step2Questions")}
-                </button>
-              </div>
-
-              <Show when={examCreateStep() === "details"}>
-                <ExamForm
-                  initial={createdCourseExam() ?? undefined}
-                  submitLabel={createdCourseExam() ? t("common.update") : t("exams.nextQuestions")}
-                  onCancel={() => setShowExamForm(false)}
-                  onSubmit={async (values: ExamFormValues) => {
-                    const existing = createdCourseExam();
-                    if (existing) {
-                      const updated = await patchExamById(existing.id, values);
-                      setCreatedCourseExam(updated);
-                      await refetchExams();
-                      setExamCreateStep("questions");
-                      setFlash(t("common.saved"));
-                    } else {
-                      const newExam = await postCourseExam(id(), {
-                        ...values,
-                        description: values.description.trim() || undefined,
-                      });
-                      setCreatedCourseExam(newExam);
-                      await refetchExams();
-                      setExamCreateStep("questions");
-                      setFlash(t("common.created"));
+                <ConfirmDialog
+                  open={removeTarget() !== null}
+                  onOpenChange={() => setRemoveTarget(null)}
+                  title={t("courses.removeMember")}
+                  variant="destructive"
+                  summary={`${t("courses.removeMemberConfirm")} "${removeTarget()?.userName}"`}
+                  onConfirm={async () => {
+                    const target = removeTarget();
+                    if (!target) return;
+                    try {
+                      await deleteCourseMemberByUserId(id(), target.userId);
+                      await refetchMembers();
+                      await refetchCourse();
+                      setFlash(t("common.deleted"));
+                    } catch (err) {
+                      setError(formatApiError(err));
+                    } finally {
+                      setRemoveTarget(null);
                     }
                   }}
                 />
-              </Show>
 
-              <Show when={examCreateStep() === "questions" && createdCourseExam()}>
-                <div class="space-y-4">
-                  <ExamQuestionsPanel
-                    examId={createdCourseExam()!.id}
-                    courseId={c().id}
-                    embedded
-                  />
-                  <div class="flex justify-end border-t pt-3">
-                    <Button type="button" variant="default" onClick={() => setShowExamForm(false)}>
-                      {t("exams.finishAndClose")}
-                    </Button>
-                  </div>
-                </div>
-              </Show>
-            </SidePanel>
+                <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().title}>
+                  <form
+                    class="space-y-4"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void wrap(async () => {
+                        await patchCourseById(id(), {
+                          title: title().trim(),
+                          description: description(),
+                          kind: kind(),
+                        });
+                        setEditing(false);
+                        await refetchCourse();
+                      }, t("common.saved"));
+                    }}
+                  >
+                    <div class="space-y-3 rounded-xl border border-border-line bg-surface-tint p-4">
+                      <div class="space-y-1.5">
+                        <Label for="edit-course-title">{t("form.title")}</Label>
+                        <Input
+                          id="edit-course-title"
+                          value={title()}
+                          required
+                          maxlength={200}
+                          onInput={(e) => setTitle(e.currentTarget.value)}
+                        />
+                      </div>
+                      <div class="space-y-1.5">
+                        <Label for="edit-course-desc">{t("form.description")}</Label>
+                        <Textarea
+                          id="edit-course-desc"
+                          value={description()}
+                          rows={3}
+                          maxlength={2000}
+                          onInput={(e) => setDescription(e.currentTarget.value)}
+                        />
+                      </div>
+                      <div class="space-y-1.5">
+                        <Label for="edit-course-kind">{t("courses.kind")}</Label>
+                        <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
+                          <For each={COURSE_KINDS}>{(item) => <option value={item}>{courseKindLabel(item)}</option>}</For>
+                        </Select>
+                      </div>
+                    </div>
+                    <div class="sticky bottom-0 -mx-5 flex flex-wrap gap-2 border-t border-border-line bg-surface-base px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
+                      <Button type="submit" class="flex-1 rounded-xl sm:flex-none" disabled={pending()}>
+                        {t("common.update")}
+                      </Button>
+                      <Button type="button" variant="outline" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(false)}>
+                        {t("common.cancel")}
+                      </Button>
+                    </div>
+                  </form>
+                </SidePanel>
 
-            <SidePanel open={showEnrollPanel()} onOpenChange={setShowEnrollPanel} title={t("courses.enroll")} description={c().title}>
-              <form
-                class="space-y-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void wrap(async () => {
-                    const uid = enrollUserId().trim();
-                    if (!uid) throw new Error(t("events.userId"));
-                    await postCourseEnrollment(id(), uid);
-                    setEnrollUserId("");
-                    setShowEnrollPanel(false);
-                    await refetchRoster();
-                  }, t("common.saved"));
-                }}
-              >
-                <UserSearchSelect
-                  id="course-enroll-user"
-                  value={enrollUserId()}
-                  excludeIds={enrolledUserIds()}
-                  placeholder={t("form.selectStudent")}
-                  onChange={setEnrollUserId}
-                  role="student"
-                />
-                <div class="flex flex-wrap gap-2">
-                  <Button type="submit" class="rounded-xl" disabled={pending()}>
-                    {t("courses.enroll")}
-                  </Button>
-                  <Button type="button" variant="outline" class="rounded-xl" onClick={() => setShowEnrollPanel(false)}>
-                    {t("common.cancel")}
-                  </Button>
-                </div>
-              </form>
-            </SidePanel>
+                <SidePanel open={showMemberForm()} onOpenChange={setShowMemberForm} title={t("courses.addMember")} description={c().title}>
+                  <form
+                    class="space-y-3"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void wrap(async () => {
+                        const uid = memberUserId().trim();
+                        if (!uid) throw new Error(t("events.userId"));
+                        await postCourseMember(id(), uid);
+                        setMemberUserId("");
+                        setShowMemberForm(false);
+                        await refetchMembers();
+                        await refetchCourse();
+                      }, t("common.saved"));
+                    }}
+                  >
+                    <UserSearchSelect
+                      id="course-member-user"
+                      value={memberUserId()}
+                      excludeIds={memberUserIds()}
+                      placeholder={t("form.selectStudent")}
+                      onChange={setMemberUserId}
+                      role="student"
+                    />
+                    <div class="flex flex-wrap gap-2">
+                      <Button type="submit" class="rounded-xl" disabled={pending()}>
+                        {t("courses.addMember")}
+                      </Button>
+                      <Button type="button" variant="outline" class="rounded-xl" onClick={() => setShowMemberForm(false)}>
+                        {t("common.cancel")}
+                      </Button>
+                    </div>
+                  </form>
+                </SidePanel>
 
-            <Show when={flash()}>
-              <Alert variant="success">{flash()}</Alert>
-            </Show>
-            {error() && (
-              <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
-            )}
-
-            <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-4">
-              <TabsList class="flex w-full justify-start overflow-x-auto sm:grid sm:grid-cols-3 xl:grid-cols-7" aria-label={c().title}>
-                <TabsTrigger value="subjects" class="min-w-0"><IconBook class="h-4 w-4" />{t("subjects.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{subjectCount()}</Badge></TabsTrigger>
-                <TabsTrigger value="exams" class="min-w-0"><IconExam class="h-4 w-4" />{t("courses.exams")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{examCount()}</Badge></TabsTrigger>
-                <TabsTrigger value="homework" class="min-w-0"><IconHomework class="h-4 w-4" />{t("homework.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{homeworkCount()}</Badge></TabsTrigger>
-                <TabsTrigger value="sessions" class="min-w-0"><IconCalendarDays class="h-4 w-4" />{t("sessions.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{sessionCount()}</Badge></TabsTrigger>
-                <TabsTrigger value="notes" class="min-w-0"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{noteCount()}</Badge></TabsTrigger>
-                <TabsTrigger value="teachers" class="min-w-0"><IconSchool class="h-4 w-4" />{t("courses.teachers")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{assignedTeacherCount()}</Badge></TabsTrigger>
-                <Show when={hasCourseManagementRights()}>
-                  <TabsTrigger value="students" class="min-w-0"><IconUsers class="h-4 w-4" />{t("courses.roster")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{rosterCount()}</Badge></TabsTrigger>
+                <Show when={flash()}>
+                  <Alert variant="success">{flash()}</Alert>
                 </Show>
-              </TabsList>
+                <Show when={error()}>
+                  <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+                </Show>
 
-              <TabsContent value="subjects" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(subjectCount(), t("subjects.item"))}</Badge>
-                  <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowSubjectForm(true)}><IconPlus class="h-4 w-4" />{t("subjects.add")}</Button></Show>
-                </div>
-                <CourseSubjectsPanel courseId={id()} canManage={canManage()} active={courseTab() === "subjects"} createOpen={showSubjectForm()} onCreateOpenChange={setShowSubjectForm} onCountChange={setSubjectCount} />
-              </TabsContent>
+                <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-4">
+                  <TabsList class="flex w-full justify-start overflow-x-auto sm:grid sm:grid-cols-4" aria-label={c().title}>
+                    <TabsTrigger value="subjects" class="min-w-0"><IconBook class="h-4 w-4" />{t("subjects.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{subjectCount()}</Badge></TabsTrigger>
+                    <TabsTrigger value="sections" class="min-w-0"><IconSchool class="h-4 w-4" />{t("instances.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{sectionCount()}</Badge></TabsTrigger>
+                    <TabsTrigger value="notes" class="min-w-0"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{noteCount()}</Badge></TabsTrigger>
+                    <Show when={hasMembers()}>
+                      <TabsTrigger value="members" class="min-w-0"><IconUsers class="h-4 w-4" />{t("courses.members")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{c().course_membership_count}</Badge></TabsTrigger>
+                    </Show>
+                  </TabsList>
 
-              <TabsContent value="exams" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(examCount(), t("courses.examItem"))}</Badge>
-                  <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowExamForm(true)}><IconPlus class="h-4 w-4" />{t("courses.addExam")}</Button></Show>
-                </div>
-                <Suspense fallback={<DataTableSkeleton />}><DataTable columns={examColumns()} data={exams() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("exams.empty")} onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })} /></Suspense>
-              </TabsContent>
+                  <TabsContent value="subjects" class="space-y-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" class="rounded-full">{countDescription(subjectCount(), t("subjects.item"))}</Badge>
+                      <Show when={canManageCatalog()}>
+                        <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowSubjectForm(true)}>
+                          <IconPlus class="h-4 w-4" />{t("subjects.add")}
+                        </Button>
+                      </Show>
+                    </div>
+                    <CourseSubjectsPanel
+                      courseId={id()}
+                      canManage={canManageCatalog()}
+                      active={courseTab() === "subjects"}
+                      createOpen={showSubjectForm()}
+                      onCreateOpenChange={setShowSubjectForm}
+                      onCountChange={setSubjectCount}
+                    />
+                  </TabsContent>
 
-              <TabsContent value="homework" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(homeworkCount(), t("homework.item"))}</Badge>
-                  <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowHomeworkForm(true)}><IconPlus class="h-4 w-4" />{t("homework.add")}</Button></Show>
-                </div>
-                <CourseHomeworkPanel courseId={id()} canManage={canManage()} active={courseTab() === "homework"} createOpen={showHomeworkForm()} onCreateOpenChange={setShowHomeworkForm} onCountChange={setHomeworkCount} />
-              </TabsContent>
+                  <TabsContent value="sections" class="space-y-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" class="rounded-full">{countDescription(sectionCount(), t("instances.item"))}</Badge>
+                      <span class="text-xs text-text-subtle">{t("instances.selectSectionHelp")}</span>
+                    </div>
+                    <Suspense fallback={<DataTableSkeleton />}>
+                      <Show
+                        when={sectionCount() > 0}
+                        fallback={<EmptyState kind="people" title={t("instances.empty")} description={t("instances.emptyHelp")} />}
+                      >
+                        <DataTable
+                          columns={sectionColumns()}
+                          data={sections() ?? []}
+                          filterColumn="class"
+                          enablePagination
+                          pageSize={10}
+                          onRowClick={(row) => void navigate({ to: "/instances/$id", params: { id: row.instance.id } })}
+                        />
+                      </Show>
+                    </Suspense>
+                  </TabsContent>
 
-              <TabsContent value="sessions" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(sessionCount(), t("sessions.item"))}</Badge>
-                  <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowSessionForm(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("sessions.add")}
-                    </Button>
+                  <TabsContent value="notes" class="space-y-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" class="rounded-full">{countDescription(noteCount(), t("courseNotes.item"))}</Badge>
+                      <Show when={canManageCatalog()}>
+                        <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowNoteForm(true)}>
+                          <IconPlus class="h-4 w-4" />{t("courseNotes.add")}
+                        </Button>
+                      </Show>
+                    </div>
+                    <CourseNotesPanel
+                      courseId={id()}
+                      canManage={canManageCatalog()}
+                      active={courseTab() === "notes"}
+                      createOpen={showNoteForm()}
+                      onCreateOpenChange={setShowNoteForm}
+                      onCountChange={setNoteCount}
+                    />
+                  </TabsContent>
+
+                  <Show when={hasMembers()}>
+                    <TabsContent value="members" class="space-y-3">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary" class="rounded-full">{countDescription(memberCount(), t("courses.memberItem"))}</Badge>
+                        <Show when={canManageCatalog()}>
+                          <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowMemberForm(true)}>
+                            <IconPlus class="h-4 w-4" />{t("courses.addMember")}
+                          </Button>
+                        </Show>
+                      </div>
+                      <Show when={canManageCatalog()} fallback={<EmptyState kind="people" title={t("common.accessDenied")} />}>
+                        <Suspense fallback={<DataTableSkeleton />}>
+                          <Show when={memberCount() > 0} fallback={<EmptyState kind="people" title={t("exams.emptyRoster")} />}>
+                            <DataTable columns={memberColumns()} data={members() ?? []} filterColumn="username" enablePagination pageSize={10} />
+                          </Show>
+                        </Suspense>
+                      </Show>
+                    </TabsContent>
                   </Show>
-                </div>
-                <CourseSessionsPanel courseId={id()} roster={roster() ?? []} canManage={canManage()} active={courseTab() === "sessions"} createOpen={showSessionForm()} onCreateOpenChange={setShowSessionForm} onCountChange={setSessionCount} />
-              </TabsContent>
-
-              <TabsContent value="notes" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(noteCount(), t("courseNotes.item"))}</Badge>
-                  <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowNoteForm(true)}><IconPlus class="h-4 w-4" />{t("courseNotes.add")}</Button></Show>
-                </div>
-                <CourseNotesPanel courseId={id()} canManage={canManage()} active={courseTab() === "notes"} createOpen={showNoteForm()} onCreateOpenChange={setShowNoteForm} onCountChange={setNoteCount} />
-              </TabsContent>
-
-              <TabsContent value="teachers" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2 text-sm">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(assignedTeacherCount(), t("courses.teachers"))}</Badge>
-                  <span class="inline-flex min-w-0 items-center gap-1.5 text-text-subtle">
-                    <IconSchool class="h-4 w-4 shrink-0" />
-                    <span>{t("common.creator")}:</span>
-                    <span class="truncate font-medium text-foreground">{c().creator.display_name || c().creator.username}</span>
-                  </span>
-                  <Show when={canStaffCourse()}><Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowTeacherForm(true)}><IconPlus class="h-4 w-4" />{t("courses.assignTeacher")}</Button></Show>
-                </div>
-                <CourseTeachersPanel courseId={id()} teachers={c().teachers ?? []} canStaff={canStaffCourse()} assignOpen={showTeacherForm()} onAssignOpenChange={setShowTeacherForm} onCourseUpdated={refetchCourse} />
-              </TabsContent>
-
-              <Show when={hasCourseManagementRights()}>
-                <TabsContent value="students" class="space-y-3">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" class="rounded-full">{countDescription(rosterCount(), t("courses.rosterItem"))}</Badge>
-                    <Show when={canManage()}><Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowEnrollPanel(true)}><IconPlus class="h-4 w-4" />{t("courses.enroll")}</Button></Show>
-                  </div>
-                  <Suspense fallback={<DataTableSkeleton />}><Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="people" title={t("exams.emptyRoster")} />}><DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} /></Show></Suspense>
-                </TabsContent>
-              </Show>
-            </Tabs>
-          </div>
+                </Tabs>
+              </div>
             </Show>
           </Show>
         )}

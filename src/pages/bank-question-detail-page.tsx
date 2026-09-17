@@ -52,7 +52,6 @@ function BankQuestionDetailContent() {
       const current = auth.user();
       return !!current && (
         course.creator.id === current.id ||
-        (course.teachers ?? []).some((teacher) => teacher.id === current.id) ||
         hasMinRole(current.role, "manager")
       );
     }),

@@ -40,6 +40,8 @@ const QuestionBankPage = lazyRoute(() => import("@/pages/question-bank-page"));
 const BankQuestionDetailPage = lazyRoute(() => import("@/pages/bank-question-detail-page"));
 const CoursesPage = lazyRoute(() => import("@/pages/courses-page"));
 const CourseDetailPage = lazyRoute(() => import("@/pages/course-detail-page"));
+const InstanceDetailPage = lazyRoute(() => import("@/pages/instance-detail-page"));
+const AcademicYearsPage = lazyRoute(() => import("@/pages/academic-years-page"));
 const ClassesPage = lazyRoute(() => import("@/pages/classes-page"));
 const ClassDetailPage = lazyRoute(() => import("@/pages/class-detail-page"));
 const MarksPage = lazyRoute(() => import("@/pages/marks-page"));
@@ -217,11 +219,23 @@ const courseDetailRoute = createRoute({
   component: CourseDetailPage,
 });
 
+// A şube×ders instance: where exams, homework, lessons and the roster live.
+const instanceDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/instances/$id",
+  component: InstanceDetailPage,
+});
+
 const marksRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/marks",
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: search.tab === "attendance" ? "attendance" as const : "marks" as const,
+    tab:
+      search.tab === "attendance"
+        ? ("attendance" as const)
+        : search.tab === "karne"
+        ? ("karne" as const)
+        : ("marks" as const),
   }),
   component: MarksPage,
 });
@@ -298,6 +312,12 @@ const termsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/management/terms",
   component: TermsPage,
+});
+
+const academicYearsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/academic-years",
+  component: AcademicYearsPage,
 });
 
 const liveMonitorRoute = createRoute({
@@ -511,6 +531,7 @@ const routeTree = rootRoute.addChildren([
   studiesRoute,
   clubsRoute,
   courseDetailRoute,
+  instanceDetailRoute,
   marksRoute,
   messagesRoute,
   pomodoroRoute,
@@ -524,6 +545,7 @@ const routeTree = rootRoute.addChildren([
   classesRoute,
   classDetailRoute,
   termsRoute,
+  academicYearsRoute,
   adminUsersRoute,
   adminUserDetailRoute,
   guideRoute,

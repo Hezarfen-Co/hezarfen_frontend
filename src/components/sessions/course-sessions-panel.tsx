@@ -3,11 +3,10 @@ import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteSessionById } from "@/api/sessions";
 import { deleteSessionAttendanceByUserId } from "@/api/sessions";
-import { getCourseSessions } from "@/api/courses";
 import { getSessionAttendance } from "@/api/sessions";
+import { getInstanceSessions, postInstanceSession } from "@/api/instances";
 import { getTime } from "@/api/time";
 import { patchSessionById } from "@/api/sessions";
-import { postCourseSession } from "@/api/courses";
 import { postSessionAttendance } from "@/api/sessions";
 import { formatApiError } from "@/api/client";
 import type { AttendanceStatus, CourseSession, Enrollment, SessionAttendance } from "@/api/client";
@@ -62,7 +61,8 @@ function msToTimeInput(ms: number): string {
 const ROLL_CALL_PAGE_SIZE = 8;
 
 export function CourseSessionsPanel(props: {
-  courseId: string;
+  /** The instance (class x course) these lessons belong to. */
+  instanceId: string;
   roster: Enrollment[];
   canManage: boolean;
   active: boolean;
@@ -73,8 +73,8 @@ export function CourseSessionsPanel(props: {
   const t = useT();
   const { locale } = usePreferences();
   const [sessions, { refetch }] = createResource(
-    () => (props.active ? props.courseId : null),
-    async (courseId) => (courseId ? (await getCourseSessions(courseId)).items : []),
+    () => (props.active ? props.instanceId : null),
+    async (instanceId) => (instanceId ? (await getInstanceSessions(instanceId)).items : []),
   );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
   const [detailSession, setDetailSession] = createSignal<CourseSession | null>(null);
@@ -162,7 +162,7 @@ export function CourseSessionsPanel(props: {
         });
         setFlash(t("common.saved"));
       } else {
-        await postCourseSession(props.courseId, {
+        await postInstanceSession(props.instanceId, {
           starts_at,
           ...(topic().trim() ? { topic: topic().trim() } : {}),
           ...(ends_at != null ? { ends_at } : {}),
@@ -245,7 +245,7 @@ export function CourseSessionsPanel(props: {
           columns={columns()}
           data={sessions() ?? []}
           filterColumn="topic"
-          storageKey={`course-sessions-${props.courseId}`}
+          storageKey={`instance-sessions-${props.instanceId}`}
           enablePagination
           pageSize={10}
           empty={t("sessions.empty")}

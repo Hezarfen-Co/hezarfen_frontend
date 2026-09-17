@@ -1,6 +1,6 @@
 import { Show, createMemo, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { deleteCourseTeacherByUserId, postCourseTeacher } from "@/api/courses";
+import { deleteInstanceTeacherByUserId, postInstanceTeacher } from "@/api/instances";
 import { formatApiError } from "@/api/client";
 import type { PersonRef } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
@@ -14,13 +14,15 @@ import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
 import { useT } from "@/stores/preferences-context";
 
+// Staffing is per instance now: a teacher runs this course *in this şube*, and
+// the assignment carries no rights over the catalog course itself.
 export function CourseTeachersPanel(props: {
-  courseId: string;
+  instanceId: string;
   teachers: PersonRef[];
   canStaff: boolean;
   assignOpen: boolean;
   onAssignOpenChange: (open: boolean) => void;
-  onCourseUpdated: () => void;
+  onInstanceUpdated: () => void;
 }) {
   const t = useT();
   const [selectedTeacherId, setSelectedTeacherId] = createSignal("");
@@ -70,11 +72,11 @@ export function CourseTeachersPanel(props: {
     setError("");
 
     try {
-      await postCourseTeacher(props.courseId, teacherId);
+      await postInstanceTeacher(props.instanceId, teacherId);
       setFlash(t("courses.teacherAssigned"));
       setSelectedTeacherId("");
       props.onAssignOpenChange(false);
-      props.onCourseUpdated();
+      props.onInstanceUpdated();
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -90,10 +92,10 @@ export function CourseTeachersPanel(props: {
     setError("");
 
     try {
-      await deleteCourseTeacherByUserId(props.courseId, target.id);
+      await deleteInstanceTeacherByUserId(props.instanceId, target.id);
       setFlash(t("courses.teacherUnassigned"));
       setRemoveTarget(null);
-      props.onCourseUpdated();
+      props.onInstanceUpdated();
     } catch (err) {
       setError(formatApiError(err));
     } finally {

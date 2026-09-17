@@ -4,7 +4,8 @@ import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import { getHomework } from "@/api/homework";
 import { getAppointments } from "@/api/appointments";
-import { getCourseSessions, getCourses } from "@/api/courses";
+import { getCourses } from "@/api/courses";
+import { getInstanceSessions, getMyInstances } from "@/api/instances";
 import { getMyCourses } from "@/api/reports";
 import type { Appointment, AppointmentStatus, Course } from "@/api/client";
 import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
@@ -158,16 +159,22 @@ function CalendarContent() {
   const [sessions] = createResource(
     () => auth.user()?.role ?? null,
     async (role) => {
-      const courses: Course[] = role === "student"
-        ? (await getMyCourses()).items
-        : (await getCourses()).items;
+      // Sessions hang off the instance (şube × ders) now; the catalog course is
+      // still what says whether a meeting is a ders, an etüt or a kulüp.
+      const [instances, courses] = await Promise.all([
+        getMyInstances({ limit: 200 }),
+        role === "student" ? getMyCourses() : getCourses(),
+      ]);
+      const byId = new Map<string, Course>(courses.items.map((course) => [course.id, course]));
       const pages = await Promise.all(
-        courses.slice(0, SESSION_COURSE_CAP).map(async (course) => {
+        instances.items.slice(0, SESSION_COURSE_CAP).map(async (instance) => {
+          const course = byId.get(instance.course);
+          if (!course) return [];
           try {
-            const page = await getCourseSessions(course.id, { limit: 100 });
+            const page = await getInstanceSessions(instance.id, { limit: 100 });
             return page.items.map((session) => ({ session, course }));
           } catch {
-            // One unreadable course must not empty the whole calendar.
+            // One unreadable section must not empty the whole calendar.
             return [];
           }
         }),

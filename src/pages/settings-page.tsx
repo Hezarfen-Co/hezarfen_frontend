@@ -67,6 +67,12 @@ function SettingsContent() {
   const [mealSlots, setMealSlots] = createSignal<MealSlot[]>([]);
   const [dietaryTags, setDietaryTags] = createSignal<string[]>([]);
   const [mealCutoff, setMealCutoff] = createSignal("");
+  // Devamsızlık policy and the branş vocabulary, both school-varying.
+  const [excuseKinds, setExcuseKinds] = createSignal<string[]>([]);
+  const [branches, setBranches] = createSignal<string[]>([]);
+  const [maxExcusedDays, setMaxExcusedDays] = createSignal("");
+  const [maxUnexcusedDays, setMaxUnexcusedDays] = createSignal("");
+  const [timezone, setTimezone] = createSignal("");
   const [error, setError] = createSignal("");
   const [saved, setSaved] = createSignal(false);
   const [pending, setPending] = createSignal(false);
@@ -86,6 +92,11 @@ function SettingsContent() {
       meal_slots: mealSlots(),
       dietary_tags: dietaryTags(),
       meal_cancel_cutoff_minutes: mealCutoff() === "" ? null : Number(mealCutoff()),
+      excuse_kinds: excuseKinds(),
+      branches: branches(),
+      max_excused_absent_days: maxExcusedDays() === "" ? null : Number(maxExcusedDays()),
+      max_unexcused_absent_days: maxUnexcusedDays() === "" ? null : Number(maxUnexcusedDays()),
+      timezone: timezone().trim() === "" ? null : timezone().trim(),
     });
 
   createEffect(() => {
@@ -102,6 +113,11 @@ function SettingsContent() {
     setMealSlots(next.meal_slots.map((slot) => ({ ...slot })));
     setDietaryTags([...next.dietary_tags]);
     setMealCutoff(next.meal_cancel_cutoff_minutes == null ? "" : String(next.meal_cancel_cutoff_minutes));
+    setExcuseKinds([...(next.excuse_kinds ?? [])]);
+    setBranches([...(next.branches ?? [])]);
+    setMaxExcusedDays(next.max_excused_absent_days == null ? "" : String(next.max_excused_absent_days));
+    setMaxUnexcusedDays(next.max_unexcused_absent_days == null ? "" : String(next.max_unexcused_absent_days));
+    setTimezone(next.timezone ?? "");
     setBaseline({ ...next, max_file_bytes: fileBytes });
   });
 
@@ -143,6 +159,8 @@ function SettingsContent() {
         max_file_bytes: maxFileBytes,
         meal_slots: mealSlots().map((slot) => ({ ...slot, name: slot.name.trim() })),
         dietary_tags: dietaryTags().map((tag) => tag.trim()),
+        excuse_kinds: excuseKinds().map((kind) => kind.trim()).filter(Boolean),
+        branches: branches().map((branch) => branch.trim()).filter(Boolean),
       };
       const next = await patchSettings(dirtySettingsPatch(before, current));
       mutate(next);
@@ -583,6 +601,49 @@ function SettingsContent() {
                     value={maxFileMiB()}
                     onInput={(event) => setMaxFileMiB(event.currentTarget.value)}
                   />
+                </div>
+              </section>
+
+              <section class="data-shell space-y-4 p-4">
+                <div>
+                  <h2 class="text-base font-semibold">{t("attendance.devamsizlik")}</h2>
+                  <p class="mt-1 text-sm text-muted-foreground">{t("settings.attendanceHelp")}</p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-3">
+                  <div class="space-y-1.5">
+                    <Label for="max-excused-days">{t("settings.maxExcusedDays")}</Label>
+                    <Input id="max-excused-days" type="number" min={0} value={maxExcusedDays()} onInput={(e) => setMaxExcusedDays(e.currentTarget.value)} />
+                  </div>
+                  <div class="space-y-1.5">
+                    <Label for="max-unexcused-days">{t("settings.maxUnexcusedDays")}</Label>
+                    <Input id="max-unexcused-days" type="number" min={0} value={maxUnexcusedDays()} onInput={(e) => setMaxUnexcusedDays(e.currentTarget.value)} />
+                  </div>
+                  <div class="space-y-1.5">
+                    <Label for="school-timezone">{t("settings.timezone")}</Label>
+                    <Input id="school-timezone" value={timezone()} placeholder="Europe/Istanbul" onInput={(e) => setTimezone(e.currentTarget.value)} />
+                  </div>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  {/* Both are short comma-separated vocabularies; a full row
+                      editor would be more chrome than the two lists deserve. */}
+                  <div class="space-y-1.5">
+                    <Label for="excuse-kinds">{t("settings.excuseKinds")}</Label>
+                    <Input
+                      id="excuse-kinds"
+                      value={excuseKinds().join(", ")}
+                      placeholder="raporlu, izinli"
+                      onInput={(e) => setExcuseKinds(e.currentTarget.value.split(",").map((part) => part.trim()).filter(Boolean))}
+                    />
+                  </div>
+                  <div class="space-y-1.5">
+                    <Label for="branches">{t("settings.branches")}</Label>
+                    <Input
+                      id="branches"
+                      value={branches().join(", ")}
+                      placeholder="Matematik, Fizik"
+                      onInput={(e) => setBranches(e.currentTarget.value.split(",").map((part) => part.trim()).filter(Boolean))}
+                    />
+                  </div>
                 </div>
               </section>
 

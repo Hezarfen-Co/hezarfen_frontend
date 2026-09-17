@@ -1,7 +1,7 @@
 import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getCourseEnrollments } from "@/api/courses";
+import { getInstanceEnrollments } from "@/api/instances";
 import { deleteHomeworkResultByUserId, getHomeworkRosterSubmissionFileUrl, getHomeworkSubmissions, postHomeworkResult } from "@/api/homework";
 import { formatApiError } from "@/api/client";
 import type { HomeworkRosterEntry } from "@/api/client";
@@ -23,7 +23,7 @@ import { formatBytes } from "@/lib/upload-limits";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { sanitizeRichText } from "@/lib/rich-text";
 
-export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: string }) {
+export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId: string }) {
   const t = useT();
   const { locale } = usePreferences();
   const [gradeTarget, setGradeTarget] = createSignal<HomeworkRosterEntry | null>(null);
@@ -39,8 +39,8 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; courseId: 
     async (id) => getHomeworkSubmissions(id, { limit: 200 }),
   );
   const [enrollments] = createResource(
-    () => props.courseId,
-    async (courseId) => (await getCourseEnrollments(courseId)).items,
+    () => props.instanceId,
+    async (instanceId) => (await getInstanceEnrollments(instanceId)).items,
   );
   const studentLabel = (userId: string) => {
     const user = (enrollments() ?? []).find((row) => row.user.id === userId)?.user;

@@ -1,12 +1,14 @@
 import { client } from "../client";
 import type { Course, CourseKind } from "../client";
 
+/**
+ * A catalog row teaches nobody by itself — a şube attaches it
+ * (`postClassInstance`), which is what mints the instance students sit in.
+ */
 export type PostCourseBody = {
   title: string;
   description?: string | null;
   kind?: CourseKind | null;
-  term_id?: string | null;
-  capacity?: number | null;
 };
 
 export function postCourse(body: PostCourseBody): Promise<Course> {

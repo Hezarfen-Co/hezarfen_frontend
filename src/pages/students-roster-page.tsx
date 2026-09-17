@@ -3,7 +3,7 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getClassMembers, getClasses } from "@/api/classes";
-import { getTerms } from "@/api/terms";
+import { getAcademicYears } from "@/api/academic-years";
 import { getUserSearch } from "@/api/users";
 import { formatApiError, type ClassGroup, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -37,13 +37,13 @@ function StudentsRosterContent() {
   const t = useT();
   const navigate = useNavigate();
   const [classFilter, setClassFilter] = createSignal("");
-  const [termFilter, setTermFilter] = createSignal("");
+  const [yearFilter, setYearFilter] = createSignal("");
 
   const [data, { refetch }] = createResource(async () => {
-    const [students, classes, terms] = await Promise.all([
+    const [students, classes, years] = await Promise.all([
       getUserSearch("", undefined, "student"),
       getClasses(),
-      getTerms().catch(() => ({ items: [] })),
+      getAcademicYears().catch(() => ({ items: [] })),
     ]);
     // No endpoint maps students to classes in bulk; one members read per class
     // is bounded by the class count, not the student count.
@@ -55,13 +55,13 @@ function StudentsRosterContent() {
       for (const member of members) byStudent.set(member.user.id, [...(byStudent.get(member.user.id) ?? []), cls]);
     }
     const rows: StudentRow[] = students.items.map((person) => ({ person, classes: byStudent.get(person.id) ?? [] }));
-    return { rows, classes: classes.items, terms: terms.items };
+    return { rows, classes: classes.items, years: years.items };
   });
 
   const rows = createMemo(() =>
     (data()?.rows ?? []).filter((row) => {
       if (classFilter() && !row.classes.some((cls) => cls.id === classFilter())) return false;
-      if (termFilter() && !row.classes.some((cls) => cls.term === termFilter())) return false;
+      if (yearFilter() && !row.classes.some((cls) => cls.year === yearFilter())) return false;
       return true;
     }),
   );
@@ -151,9 +151,9 @@ function StudentsRosterContent() {
                       <option value="">{t("roster.classAll")}</option>
                       <For each={value().classes}>{(cls) => <option value={cls.id}>{cls.name}</option>}</For>
                     </Select>
-                    <Select aria-label={t("roster.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)} wrapperClass="w-auto">
-                      <option value="">{t("roster.termAll")}</option>
-                      <For each={value().terms}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+                    <Select aria-label={t("academicYears.year")} value={yearFilter()} onChange={(e) => setYearFilter(e.currentTarget.value)} wrapperClass="w-auto">
+                      <option value="">{t("common.all")}</option>
+                      <For each={value().years}>{(year) => <option value={year.id}>{year.name}</option>}</For>
                     </Select>
                   </>
                 }

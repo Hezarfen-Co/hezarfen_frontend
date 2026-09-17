@@ -4,15 +4,39 @@ import type { BankQuestion, Course, ExamQuestion, Subject } from "@/api/client";
 if (!isLive) console.warn(SKIP_MESSAGE);
 
 describe.skipIf(!isLive)(`bank-questions contract @ ${contractBaseUrl}`, () => {
+  let yearId = "";
+  let termId = "";
+  let classId = "";
   let courseId = "";
+  let instanceId = "";
   let subjectId = "";
   let questionId = "";
 
+  // Bank templates hang off a catalog subject, but the exam that copies one
+  // has to live in an instance — so the fixture builds the whole şube chain.
   beforeAll(async () => {
     await loginAdmin();
+    const tag = `contract-${Date.now()}`;
+
+    const year = await json<{ id: string }>("/academic-years", {
+      method: "POST",
+      body: { name: tag, starts_at: Date.now(), ends_at: Date.now() + 300 * 24 * 60 * 60 * 1000 },
+    });
+    yearId = year.id;
+    const term = await json<{ id: string }>("/terms", {
+      method: "POST",
+      body: { name: tag, year: yearId, starts_at: Date.now(), ends_at: Date.now() + 120 * 24 * 60 * 60 * 1000 },
+    });
+    termId = term.id;
+    const klass = await json<{ id: string }>("/classes", {
+      method: "POST",
+      body: { name: tag, grade: "9", year: yearId },
+    });
+    classId = klass.id;
+
     const course = await json<Course>("/courses", {
       method: "POST",
-      body: { title: `contract-${Date.now()}` },
+      body: { title: tag },
     });
     courseId = course.id;
     const subject = await json<Subject>(`/courses/${courseId}/subjects`, {
@@ -20,6 +44,12 @@ describe.skipIf(!isLive)(`bank-questions contract @ ${contractBaseUrl}`, () => {
       body: { name: "contract subject" },
     });
     subjectId = subject.id;
+
+    const instance = await json<{ id: string }>(`/classes/${classId}/instances`, {
+      method: "POST",
+      body: { course_id: courseId },
+    });
+    instanceId = instance.id;
   });
 
   /** Templates created by the paging/search tests, torn down with the course. */
@@ -28,7 +58,11 @@ describe.skipIf(!isLive)(`bank-questions contract @ ${contractBaseUrl}`, () => {
   afterAll(async () => {
     for (const id of scratchIds) await api(`/bank-questions/${id}`, { method: "DELETE" });
     if (questionId) await api(`/bank-questions/${questionId}`, { method: "DELETE" });
+    if (instanceId) await api(`/classes/${classId}/instances/${instanceId}`, { method: "DELETE" });
     if (courseId) await api(`/courses/${courseId}`, { method: "DELETE" });
+    if (classId) await api(`/classes/${classId}`, { method: "DELETE" });
+    if (termId) await api(`/terms/${termId}`, { method: "DELETE" });
+    if (yearId) await api(`/academic-years/${yearId}`, { method: "DELETE" });
   });
 
   const createTemplate = async (text: string) => {
@@ -226,9 +260,9 @@ describe.skipIf(!isLive)(`bank-questions contract @ ${contractBaseUrl}`, () => {
   it("reports used_count on the list and refreshes a copy from its template", async () => {
     const tag = `use${Date.now()}`;
     const template = await createTemplate(`${tag} original text`);
-    const exam = await json<{ id: string }>(`/courses/${courseId}/exams`, {
+    const exam = await json<{ id: string }>(`/instances/${instanceId}/exams`, {
       method: "POST",
-      body: { title: tag, kind: await configuredExamKind() },
+      body: { title: tag, kind: await configuredExamKind(), term: termId },
     });
 
     const copy = await json<ExamQuestion>(

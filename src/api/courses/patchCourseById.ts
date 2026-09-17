@@ -1,13 +1,11 @@
 import { client } from "../client";
 import type { Course, CourseKind } from "../client";
 
-/** Omitted fields keep their value. Only `term_id`/`capacity` clear on explicit null. */
+/** Omitted fields keep their value. Requires catalog rights: creator or manager+. */
 export type PatchCourseBody = {
   title?: string;
   description?: string;
   kind?: CourseKind;
-  term_id?: string | null;
-  capacity?: number | null;
 };
 
 export function patchCourseById(id: string, body: PatchCourseBody): Promise<Course> {

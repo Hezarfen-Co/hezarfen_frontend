@@ -96,7 +96,6 @@ function QuestionBankContent() {
       if (!user) return false;
       return (
         course.creator.id === user.id ||
-        (course.teachers ?? []).some((teacher) => teacher.id === user.id) ||
         hasMinRole(user.role, "manager")
       );
     }),

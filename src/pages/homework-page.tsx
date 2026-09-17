@@ -2,11 +2,13 @@ import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js
 import { createResource } from "@/lib/create-resource";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getCourseById, getCourseSubjects, getCourses, postCourseHomework } from "@/api/courses";
+import { getCourseById, getCourseSubjects } from "@/api/courses";
+import { getInstanceById, postInstanceHomework } from "@/api/instances";
+import { loadInstanceOptions } from "@/lib/instance-options";
 import { getHomework } from "@/api/homework";
 import { getTime } from "@/api/time";
 import { formatApiError } from "@/api/client";
-import type { Course, Homework } from "@/api/client";
+import type { Homework } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -69,24 +71,34 @@ function HomeworkContent() {
   const [dueTime, setDueTime] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  // Homework is filed against an instance (şube × ders), so a row's label is
+  // the catalog course's title, resolved one hop through the instance.
   const [courseNames, setCourseNames] = createSignal<Record<string, string>>({});
   const [list, { refetch }] = createResource(async () => {
     const items = (await getHomework({ limit: 100 })).items;
-    const courses = [...new Set(items.map((item) => item.course))];
-    await Promise.all(courses.map((id) => getCourseById(id).then((course) => setCourseNames((current) => ({ ...current, [id]: course.title }))).catch(() => {})));
+    const instanceIds = [...new Set(items.map((item) => item.class_course))];
+    await Promise.all(
+      instanceIds.map(async (instanceId) => {
+        try {
+          const instance = await getInstanceById(instanceId);
+          const course = await getCourseById(instance.course);
+          setCourseNames((current) => ({ ...current, [instanceId]: course.title }));
+        } catch {
+          // An unreadable section just keeps its id as the label.
+        }
+      }),
+    );
     return items;
   });
-  const [courses] = createResource(
-    () => (hasMinRole(auth.user()?.role, "teacher") ? true : null),
-    async (enabled) => (enabled ? (await getCourses({ limit: 100 })).items : []),
+  // The sections a teacher may assign work in, labelled "<ders> — <şube>".
+  const [instances] = createResource(
+    () => (hasMinRole(auth.user()?.role, "teacher") ? auth.user()?.role : null),
+    (role) => loadInstanceOptions(role ?? undefined),
   );
-  const manageableCourses = createMemo(() => (courses() ?? []).filter((course: Course) => {
-    const user = auth.user();
-    if (!user) return false;
-    return course.creator.id === user.id || (course.teachers ?? []).some((teacher) => teacher.id === user.id) || hasMinRole(user.role, "manager");
-  }));
+  const manageableCourses = createMemo(() => instances() ?? []);
+  const selectedCourse = createMemo(() => manageableCourses().find((row) => row.id === selectedCourseId())?.course ?? null);
   const [subjects] = createResource(
-    () => selectedCourseId() || null,
+    () => selectedCourse(),
     async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
   );
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
@@ -132,7 +144,7 @@ function HomeworkContent() {
     if (due_at < (serverTime()?.now ?? Date.now())) return setError(t("form.timePast"));
     setPending(true);
     try {
-      await postCourseHomework(selectedCourseId(), {
+      await postInstanceHomework(selectedCourseId(), {
         title: title().trim(),
         description: description().trim() || null,
         subject_id: subjectId(),
@@ -161,10 +173,10 @@ function HomeworkContent() {
     },
     {
       id: "course",
-      accessorFn: (row) => courseName(row.course),
+      accessorFn: (row) => courseName(row.class_course),
       header: t("nav.courses"),
       meta: { cellClass: "max-w-0 truncate text-text-subtle" },
-      cell: (cell) => <span class="block truncate">{courseName(cell.row.original.course)}</span>,
+      cell: (cell) => <span class="block truncate">{courseName(cell.row.original.class_course)}</span>,
     },
     {
       id: "due_at",
@@ -204,8 +216,8 @@ function HomeworkContent() {
             <Alert variant="destructive">{error()}</Alert>
           </Show>
           <div class="space-y-1.5">
-            <Label for="homework-course">{t("nav.courses")}</Label>
-            <SearchableSelect id="homework-course" required value={selectedCourseId()} onChange={setSelectedCourseId} placeholder={t("exams.selectCourse")} options={manageableCourses().map((course) => ({ value: course.id, label: course.title }))} />
+            <Label for="homework-course">{t("instances.selectSection")}</Label>
+            <SearchableSelect id="homework-course" required value={selectedCourseId()} onChange={setSelectedCourseId} placeholder={t("exams.selectCourse")} options={manageableCourses().map((row) => ({ value: row.id, label: row.label }))} />
           </div>
           <div class="space-y-1.5">
             <Label for="homework-subject-global">{t("subjects.subject")}</Label>

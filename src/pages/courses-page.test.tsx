@@ -25,12 +25,8 @@ vi.mock("@/stores/auth-context", () => ({
 vi.mock("@/api/courses", () => ({
   getCourses,
   postCourse: vi.fn(),
-  postCourseTeacher: vi.fn(),
 }));
 vi.mock("@/api/reports", () => ({ getMyCourses }));
-vi.mock("@/api/terms", () => ({
-  getTerms: async () => ({ items: [{ id: "term-1", name: "Fall" }], total: 1, limit: 100, offset: 0 }),
-}));
 vi.mock("@/api/limits", () => ({ getLimits: vi.fn() }));
 
 afterEach(() => {
@@ -46,30 +42,27 @@ test("student class directory uses only enrolled-course data", async () => {
         title: "Algebra",
         description: "Core mathematics",
         kind: "course",
-        term: "term-1",
-        capacity: 24,
+        class_course_count: 2,
+        course_membership_count: 0,
         creator: { id: "teacher-1", username: "teacher", display_name: "Ada Teacher" },
-        teachers: [],
       },
       {
         id: "study-1",
         title: "Study Lab",
         description: "Weekly review",
         kind: "study",
-        term: null,
-        capacity: 12,
+        class_course_count: 0,
+        course_membership_count: 5,
         creator: { id: "teacher-1", username: "teacher", display_name: "Ada Teacher" },
-        teachers: [],
       },
       {
         id: "club-1",
         title: "Robotics",
         description: "Build robots",
         kind: "club",
-        term: "term-1",
-        capacity: 18,
+        class_course_count: 1,
+        course_membership_count: 9,
         creator: { id: "teacher-2", username: "mentor", display_name: "Club Mentor" },
-        teachers: [],
       },
     ],
     total: 3,
@@ -108,7 +101,7 @@ test("student class directory uses only enrolled-course data", async () => {
   expect(screen.queryByRole("link", { name: /Algebra/ })).toBeNull();
 
   fireEvent.input(screen.getByPlaceholderText("Search…"), { target: { value: "" } });
-  fireEvent.change(screen.getByLabelText("Term", { selector: "select" }), { target: { value: "unassigned" } });
+  fireEvent.change(screen.getByLabelText("Taught in", { selector: "select" }), { target: { value: "untaught" } });
   expect(await screen.findByRole("link", { name: /Study Lab/ })).toBeTruthy();
   expect(screen.queryByRole("link", { name: /Robotics/ })).toBeNull();
 });

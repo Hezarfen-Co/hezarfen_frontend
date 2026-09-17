@@ -11,7 +11,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
-import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
 const round = (n: number) => (Math.round(n * 100) / 100).toString();
@@ -32,11 +31,11 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
   const compact = () => props.compact === true;
   const resultCount = createMemo(() => props.report.courses.reduce((total, course) => total + course.results.length, 0));
   const [tab, setTab] = createSignal<"general" | "byCourse">("general");
-  const [activeCourseId, setActiveCourseId] = createSignal<string | null>(null);
+  const [activeInstanceId, setActiveInstanceId] = createSignal<string | null>(null);
   const activeCourse = createMemo(() => {
-    const id = activeCourseId();
+    const id = activeInstanceId();
     const courses = props.report.courses;
-    return (id ? courses.find((c) => c.course.id === id) : undefined) ?? courses[0];
+    return (id ? courses.find((c) => c.instance === id) : undefined) ?? courses[0];
   });
   const columns = createMemo<ColumnDef<MarkRow>[]>(() => [
     {
@@ -136,9 +135,9 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
                         </Link>
                       </td>
                       <td class="min-w-0 p-3 text-muted-foreground">
-                        <span class="block truncate">
-                          {block.course.teachers && block.course.teachers.length > 0 ? block.course.teachers.map((tr) => personLabel(tr)).join(", ") : "—"}
-                        </span>
+                        <Link to="/instances/$id" params={{ id: block.instance }} class="block truncate hover:text-primary hover:underline">
+                          {t("instances.open")}
+                        </Link>
                       </td>
                       <td class="min-w-0 p-3">
                         <div class="flex items-center gap-2">
@@ -165,11 +164,11 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
                     type="button"
                     class={cn(
                       "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
-                      activeCourse()?.course.id === block.course.id
+                      activeCourse()?.instance === block.instance
                         ? "border-border bg-surface-base text-foreground shadow-xs"
                         : "border-transparent text-muted-foreground hover:bg-muted/60",
                     )}
-                    onClick={() => setActiveCourseId(block.course.id)}
+                    onClick={() => setActiveInstanceId(block.instance)}
                   >
                     {block.course.title}
                   </button>
@@ -185,9 +184,9 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
                       <Link to="/courses/$id" params={{ id: block.course.id }} class="inline-flex truncate text-sm font-semibold text-primary hover:underline">
                         {block.course.title}
                       </Link>
-                      <p class="mt-0.5 truncate text-xs text-muted-foreground">
-                        {block.course.teachers && block.course.teachers.length > 0 ? block.course.teachers.map((tr) => personLabel(tr)).join(", ") : "—"}
-                      </p>
+                      <Link to="/instances/$id" params={{ id: block.instance }} class="mt-0.5 block truncate text-xs text-muted-foreground hover:text-primary hover:underline">
+                        {t("instances.open")}
+                      </Link>
                     </div>
                     <div class="text-right">
                       <p class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t("marks.courseAvg")}</p>

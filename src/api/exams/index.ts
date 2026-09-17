@@ -39,3 +39,6 @@ export * from "./getStudentMarksHistory";
 export * from "./postExamQuestionFromBank";
 export * from "./postExamQuestionRefreshFromBank";
 export * from "./postExamQuestionToBank";
+export * from "./getExamAudience";
+export * from "./postExamAudience";
+export * from "./deleteExamAudienceByInstanceId";

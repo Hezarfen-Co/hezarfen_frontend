@@ -8,6 +8,9 @@ import { getExamChoiceImageBlob } from "../../exams";
 import { postExamAttemptAnswerImage } from "../../exams";
 import { deleteExamAttemptAnswerImage } from "../../exams";
 import { getExamAnswerImageBlob } from "../../exams";
+import { getExamAudience } from "../../exams";
+import { postExamAudience } from "../../exams";
+import { deleteExamAudienceByInstanceId } from "../../exams";
 import { lastFetchCall, mockFetch204, mockFetchBlob, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("exams API - core", () => {
@@ -143,4 +146,34 @@ describe("exams API - core", () => {
     expect(init?.method ?? "GET").toBe("GET");
     expect(init?.credentials).toBe("same-origin");
   });
+  it("getExamAudience calls /exams/:id/audience", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+
+    await getExamAudience("x1", { limit: 10 });
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/exams/x1/audience?limit=10");
+  });
+
+  it("postExamAudience announces the exam to another instance", async () => {
+    mockFetchSuccess({ instance: "i2", class: "c2", course: "co1" });
+
+    await postExamAudience("x1", "i2");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/exams/x1/audience");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ instance: "i2" }));
+  });
+
+  it("deleteExamAudienceByInstanceId calls /exams/:id/audience/:instance", async () => {
+    mockFetch204();
+
+    await deleteExamAudienceByInstanceId("x1", "i2");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/exams/x1/audience/i2");
+    expect(init?.method).toBe("DELETE");
+  });
+
 });

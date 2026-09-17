@@ -133,6 +133,48 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
         </For>
       </div>
 
+      {/* Devamsızlık is counted in *days*, not marks: two absences in one
+          calendar day count once, which is what the regulation counts. */}
+      <Show when={(props.report.devamsizlik ?? []).length > 0}>
+        <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
+          <h3 class="text-base font-semibold">{t("attendance.devamsizlik")}</h3>
+          <div class="mt-3 grid gap-2 sm:grid-cols-2">
+            <For each={props.report.devamsizlik ?? []}>
+              {(term) => (
+                <article class="rounded-xl border border-border-line p-3">
+                  <header class="flex flex-wrap items-center justify-between gap-2">
+                    <p class="min-w-0 truncate text-sm font-medium">{term.name}</p>
+                    <Show when={term.over_limit}>
+                      <Badge variant="destructive" class="rounded-full text-[11px]">{t("attendance.overLimit")}</Badge>
+                    </Show>
+                  </header>
+                  <dl class="mt-2 grid grid-cols-2 gap-2">
+                    <div class="rounded-lg border border-border-line p-2">
+                      <dt class="text-[11px] text-muted-foreground">{t("attendance.unexcusedDays")}</dt>
+                      <dd class="mt-0.5 text-lg font-semibold tabular-nums">
+                        {term.unexcused_days}
+                        <Show when={term.limits.max_unexcused_days != null}>
+                          <span class="ml-1 text-xs font-normal text-muted-foreground">/ {term.limits.max_unexcused_days}</span>
+                        </Show>
+                      </dd>
+                    </div>
+                    <div class="rounded-lg border border-border-line p-2">
+                      <dt class="text-[11px] text-muted-foreground">{t("attendance.excusedDays")}</dt>
+                      <dd class="mt-0.5 text-lg font-semibold tabular-nums">
+                        {term.excused_days}
+                        <Show when={term.limits.max_excused_days != null}>
+                          <span class="ml-1 text-xs font-normal text-muted-foreground">/ {term.limits.max_excused_days}</span>
+                        </Show>
+                      </dd>
+                    </div>
+                  </dl>
+                </article>
+              )}
+            </For>
+          </div>
+        </section>
+      </Show>
+
       <section class="rounded-lg border border-border bg-card p-4 shadow-xs">
         <h3 class="text-base font-semibold">{t("attendance.courseBreakdown")}</h3>
         <div class="mt-3">

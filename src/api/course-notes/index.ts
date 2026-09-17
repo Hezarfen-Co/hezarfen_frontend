@@ -10,3 +10,4 @@ export * from "./getCourseNoteFileUrl";
 export * from "./getCourseNoteFileBlob";
 export * from "./getCourseNoteRag";
 export * from "./deleteCourseNoteRagOutput";
+export * from "./postCourseNoteRagReindex";

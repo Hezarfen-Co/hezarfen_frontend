@@ -1,9 +1,8 @@
 import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
-import { getCourses, postCourse, postCourseTeacher } from "@/api/courses";
+import { getCourses, postCourse } from "@/api/courses";
 import { getMyCourses } from "@/api/reports";
-import { getTerms } from "@/api/terms";
 import { getLimits } from "@/api/limits";
 import { formatApiError, type CourseKind } from "@/api/client";
 import { CourseCard } from "@/components/courses/course-card";
@@ -24,7 +23,6 @@ import { courseKindLabel } from "@/lib/course-kind";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
@@ -54,10 +52,10 @@ function CoursesContent() {
   const [showForm, setShowForm] = createSignal(routeSearch().action === "new");
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
-  const [termId, setTermId] = createSignal("");
-  const [capacity, setCapacity] = createSignal("");
-  const [teacherId, setTeacherId] = createSignal("");
-  const [termFilter, setTermFilter] = createSignal("all");
+  // Catalog rows carry no term, capacity or staff any more — a şube decides
+  // all three when it attaches the course. `taughtFilter` narrows by whether
+  // any şube has.
+  const [taughtFilter, setTaughtFilter] = createSignal("all");
   const [page, setPage] = createSignal(0);
   const [search, setSearch] = createSignal("");
   const [error, setError] = createSignal("");
@@ -71,30 +69,26 @@ function CoursesContent() {
     setPageKind(routeSearch().kind);
   });
   createEffect(() => {
-    pageKind(); termFilter(); search(); setPage(0);
+    pageKind(); taughtFilter(); search(); setPage(0);
   });
 
-  const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
   const [limits, { refetch: refetchLimits }] = createResource(() => canCreate() ? getLimits() : null);
   const [list, { refetch }] = createResource(
     () => auth.user()?.role ?? null,
     async (role) => role === "student" ? getMyCourses() : getCourses(),
   );
   const listData = () => list.latest ?? list();
-  const termName = (id: string | null) => terms.latest?.find((term) => term.id === id)?.name ?? (id || t("terms.unassigned"));
   const filteredCourses = createMemo(() => {
     const query = search().trim().toLocaleLowerCase();
     return (listData()?.items ?? []).filter((course) => {
       if (pageKind() && course.kind !== pageKind()) return false;
-      if (termFilter() === "unassigned" && course.term) return false;
-      if (termFilter() !== "all" && termFilter() !== "unassigned" && course.term !== termFilter()) return false;
+      if (taughtFilter() === "untaught" && course.class_course_count > 0) return false;
+      if (taughtFilter() === "taught" && course.class_course_count === 0) return false;
       if (!query) return true;
       return [
         course.title,
         course.description,
         personLabel(course.creator),
-        ...(course.teachers ?? []).map(personLabel),
-        termName(course.term),
       ].join(" ").toLocaleLowerCase().includes(query);
     });
   });
@@ -106,15 +100,12 @@ function CoursesContent() {
     setError("");
     setPending(true);
     try {
-      const course = await postCourse({
+      await postCourse({
         title: title().trim(),
         description: description().trim() || undefined,
         kind: createKind(),
-        term_id: termId() || null,
-        capacity: capacity().trim() ? Number(capacity()) : null,
       });
-      if (teacherId() && hasMinRole(auth.user()?.role, "manager")) await postCourseTeacher(course.id, teacherId());
-      setTitle(""); setDescription(""); setTermId(""); setCapacity(""); setTeacherId(""); setShowForm(false);
+      setTitle(""); setDescription(""); setShowForm(false);
       await refetch();
       setFlash(t("common.created"));
     } catch (err) {
@@ -136,9 +127,7 @@ function CoursesContent() {
           <div class="space-y-3">
             <div class="space-y-1.5"><Label for="course-title">{t("form.title")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="course-title" required maxlength={limits.latest?.course.max_title_len} value={title()} onInput={(e) => setTitle(e.currentTarget.value)} /></div>
             <div class="space-y-1.5"><Label for="course-description">{t("form.description")}</Label><Textarea id="course-description" maxlength={limits.latest?.course.max_description_len} rows={3} value={description()} onInput={(e) => setDescription(e.currentTarget.value)} /></div>
-            <div class="space-y-1.5"><Label for="course-term">{t("terms.term")}</Label><Select id="course-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}><option value="">{t("terms.unassigned")}</option><For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For></Select></div>
-            <div class="space-y-1.5"><Label for="course-capacity">{t("courses.capacity")}</Label><Input id="course-capacity" type="number" min={1} value={capacity()} onInput={(e) => setCapacity(e.currentTarget.value)} /></div>
-            <Show when={hasMinRole(auth.user()?.role, "manager")}><UserSearchSelect id="course-teacher" role="teacher" value={teacherId()} onChange={setTeacherId} placeholder={t("courses.assignTeacher")} label={t("courses.teachers")} /></Show>
+            <p class="rounded-xl border border-border-line bg-surface-tint px-3 py-2 text-xs text-text-subtle">{t("instances.emptyHelp")}</p>
           </div>
           <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
           <div class="flex gap-2 border-t pt-4"><Button type="submit" disabled={pending()}>{t("common.create")}</Button><Button type="button" variant="outline" onClick={() => setShowForm(false)}>{t("common.cancel")}</Button></div>
@@ -187,10 +176,10 @@ function CoursesContent() {
               searchHint={t("search.hint.courses")}
               onSearchInput={setSearch}
               filters={
-                <Select wrapperClass="w-40 shrink-0 sm:w-52" class="h-8 rounded-lg" aria-label={t("terms.term")} value={termFilter()} onChange={(e) => setTermFilter(e.currentTarget.value)}>
+                <Select wrapperClass="w-40 shrink-0 sm:w-52" class="h-8 rounded-lg" aria-label={t("instances.taughtIn")} value={taughtFilter()} onChange={(e) => setTaughtFilter(e.currentTarget.value)}>
                   <option value="all">{t("common.all")}</option>
-                  <option value="unassigned">{t("terms.unassigned")}</option>
-                  <For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For>
+                  <option value="taught">{t("instances.taughtIn")}</option>
+                  <option value="untaught">{t("instances.empty")}</option>
                 </Select>
               }
             />
@@ -210,12 +199,11 @@ function CoursesContent() {
                     {(course) => (
                       <CourseCard
                         course={course}
-                        term={termName(course.term)}
+                        sections={t("common.countItem", { count: course.class_course_count, item: t("instances.item") })}
                         enrolled={auth.user()?.role === "student"}
                         showTeacherActions={hasMinRole(auth.user()?.role, "teacher")}
                         labels={{
-                          capacity: t("courses.capacity"),
-                          unlimited: t("courses.unlimited"),
+                          taughtIn: t("instances.taughtIn"),
                           enrolled: t("courses.enrolled"),
                           kind: courseKindLabel(course.kind, t),
                           weeklyHours: t("courses.weeklyHours"),

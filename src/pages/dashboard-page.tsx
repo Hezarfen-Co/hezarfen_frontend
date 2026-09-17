@@ -6,7 +6,8 @@ import type { Role } from "@/api/client";
 import { formatApiError, isModuleDisabledError } from "@/api/client";
 import { getAppointments } from "@/api/appointments";
 import { getClasses, getClassesByUserId, getMyClasses } from "@/api/classes";
-import { getCourseEnrollments, getCourses } from "@/api/courses";
+import { getCourses } from "@/api/courses";
+import { getInstanceEnrollments, getMyInstances } from "@/api/instances";
 import { getEvents } from "@/api/events";
 import { getExams, getExamStatistics } from "@/api/exams";
 import { getHomework } from "@/api/homework";
@@ -227,10 +228,13 @@ function DashboardContent() {
   // user ids. Bounded to a handful of courses, the same cost shape as the
   // admin quick-link class-member lookups.
   const [teacherStudentCount] = createResource(
-    () => (role() === "teacher" ? courses.latest?.items ?? null : null),
-    async (items) => {
+    () => (role() === "teacher" ? true : null),
+    async () => {
+      // Rosters hang off the instance now, so the count walks the teacher's
+      // own sections instead of the catalog rows they own.
+      const items = (await getMyInstances({ limit: 200 })).items;
       const settled = await Promise.all(
-        items.slice(0, 20).map((course) => getCourseEnrollments(course.id, { limit: 200 }).catch(() => null)),
+        items.slice(0, 20).map((instance) => getInstanceEnrollments(instance.id, { limit: 200 }).catch(() => null)),
       );
       const ids = new Set<string>();
       for (const page of settled) for (const enrollment of page?.items ?? []) ids.add(enrollment.user.id);
@@ -455,12 +459,21 @@ function DashboardContent() {
       }));
   });
 
+  // Exams name an instance; the catalog course behind it is what a chart label
+  // should read, and `/instances/me` already covers the teacher's own sections.
+  const [myInstances] = createResource(
+    () => (role() && role() !== "parent" ? true : null),
+    async () => (await getMyInstances({ limit: 200 })).items,
+  );
+  const instanceCourse = (instanceId: string) =>
+    (myInstances.latest ?? []).find((instance) => instance.id === instanceId)?.course ?? null;
+
   // Teacher+ trend — the backend's own per-exam average, oldest exam first.
   const examAverageTrend = createMemo(() => {
     const titles = new Map((courses()?.items ?? []).map((course) => [course.id, course.title]));
     return (examStats() ?? []).map((row) => ({
       id: row.exam.id,
-      label: `${titles.get(row.exam.course) ?? row.exam.course}: ${row.exam.title}`,
+      label: `${titles.get(instanceCourse(row.exam.class_course) ?? "") ?? row.exam.class_course}: ${row.exam.title}`,
       value: row.stats!.average!,
       formattedValue: row.stats!.average!.toFixed(1),
       caption: formatTrendDate(row.exam.starts_at!),
@@ -473,9 +486,10 @@ function DashboardContent() {
     const titles = new Map((courses()?.items ?? []).map((course) => [course.id, course.title]));
     const buckets = new Map<string, number[]>();
     for (const row of examStats() ?? []) {
-      const list = buckets.get(row.exam.course) ?? [];
+      const courseId = instanceCourse(row.exam.class_course) ?? row.exam.class_course;
+      const list = buckets.get(courseId) ?? [];
       list.push(row.stats!.average!);
-      buckets.set(row.exam.course, list);
+      buckets.set(courseId, list);
     }
     return [...buckets.entries()]
       .map(([courseId, averages]) => {

@@ -13,6 +13,15 @@ export type PatchSettingsBody = {
   meal_slots?: MealSlot[];
   dietary_tags?: string[];
   meal_cancel_cutoff_minutes?: number | null;
+  /** What an absence may be excused as (raporlu/izinli/…). */
+  excuse_kinds?: string[];
+  /** The branş vocabulary a profile's `branch` may name. */
+  branches?: string[];
+  /** Per-dönem day limits; null clears the limit. */
+  max_excused_absent_days?: number | null;
+  max_unexcused_absent_days?: number | null;
+  /** IANA timezone the devamsızlık days are bucketed in; null = deployment default. */
+  timezone?: string | null;
 };
 
 export function patchSettings(body: PatchSettingsBody): Promise<SchoolSettings> {

@@ -11,6 +11,14 @@ Bilingual codebase: Turkish UI labels, English code + commits.
 
 - **SolidJS, not React.** Components run once. No re-render. Signals = functions.
   Load `solidjs-pitfalls` skill before writing components.
+- **A ders is a catalog row; a şube×ders `instance` is where teaching happens.**
+  `/courses/{id}` is the catalog (title, kind, subjects, notes, club/etüt
+  members). Attaching it to a class (`postClassInstance`) mints the instance,
+  and that is what carries enrollments, exams, homework, sessions, roll call,
+  `ders_saati` and the karne flag — see `src/api/instances/` and
+  `/instances/$id`. Exam/homework/session rows name `class_course`, never
+  `course`; a class links an academic year (`/academic-years`), and a dönem
+  lives inside one.
 - **Podman, not Docker.** Never suggest docker. `podman build`, `podman compose`.
 - **Bun only, never npm/npx/yarn/pnpm.** Install/run/exec with `bun add`,
   `bun run`, `bunx` — this repo has no `package-lock.json`/`yarn.lock`/

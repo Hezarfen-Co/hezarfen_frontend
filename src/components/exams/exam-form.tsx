@@ -4,6 +4,7 @@ import { formatApiError } from "@/api/client";
 import { For } from "solid-js";
 import { getSettings } from "@/api/settings";
 import { getTime } from "@/api/time";
+import { getTerms } from "@/api/terms";
 import type { Exam } from "@/api/client";
 import { EXAM_KINDS, EXAM_MODES } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,8 @@ function scheduleInputToMs(date: string, time: string): number | null {
 
 export type ExamFormValues = {
   title: string;
+  /** The dönem the exam is filed in. Create-only — the backend cannot move it. */
+  term: string;
   description: string;
   kind: string;
   mode: string | null;
@@ -102,6 +105,16 @@ export function ExamForm(props: {
   const isEdit = () => !!props.initial?.id;
   const [settings] = createResource(() => getSettings());
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
+  // Terms are only asked for while creating: the backend has no way to move a
+  // filed exam to another dönem, so an edit never shows the field.
+  const [terms] = createResource(() => (isEdit() ? null : true), async () => (await getTerms({ limit: 100 })).items);
+  const [term, setTerm] = createSignal("");
+  createEffect(() => {
+    const list = terms();
+    if (!list || list.length === 0 || term()) return;
+    // Newest first from the backend — the open dönem is what a teacher means.
+    setTerm((list.find((item) => item.archived_at == null) ?? list[0]).id);
+  });
   const examKinds = createMemo(() => {
     const names = settings()?.exam_kinds.map((item) => item.name) ?? EXAM_KINDS;
     return names.includes(kind()) ? names : [kind(), ...names];
@@ -125,6 +138,7 @@ export function ExamForm(props: {
       if (ends <= starts) return t("form.timeOrder");
       if (!isEdit() && (starts < (serverTime()?.now ?? Date.now()) || ends < (serverTime()?.now ?? Date.now()))) return t("form.timePast");
     }
+    if (!isEdit() && !term()) return t("terms.term");
     if (hasDuration() || mode() === "async") {
       if (duration == null) return t("exams.durationRequired");
       if (duration < 60000 || duration > 86400000) return t("exams.durationRange");
@@ -182,6 +196,7 @@ export function ExamForm(props: {
       return;
     }
     const values = {
+      term: term(),
       title: title().trim(),
       description: description(),
       kind: kind(),
@@ -229,6 +244,16 @@ export function ExamForm(props: {
               onInput={(e) => setDescription(e.currentTarget.value)}
             />
           </div>
+          <Show when={!isEdit()}>
+            <div class="space-y-1.5">
+              <Label for="exam-term">{t("terms.term")}</Label>
+              <Select id="exam-term" value={term()} onChange={(e) => setTerm(e.currentTarget.value)}>
+                <For each={terms() ?? []}>
+                  {(item) => <option value={item.id}>{item.name}</option>}
+                </For>
+              </Select>
+            </div>
+          </Show>
           <div class="space-y-1.5">
             <Label for="exam-kind">{t("exams.kind")}</Label>
             <Select

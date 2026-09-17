@@ -21,10 +21,10 @@ export function mealCutoffAt(date: string, slot: MealSlot | undefined, minutes: 
   return Date.parse(`${date}T00:00:00Z`) + servingMinute * 60_000 - minutes * 60_000;
 }
 
-export function nextCourseWork(courseId: string, exams: Exam[], homework: Homework[]) {
+export function nextCourseWork(instanceId: string, exams: Exam[], homework: Homework[]) {
   return [
-    ...exams.filter((item) => item.course === courseId).map((item) => ({ kind: "exam" as const, title: item.title, at: item.starts_at ?? item.ends_at })),
-    ...homework.filter((item) => item.course === courseId).map((item) => ({ kind: "homework" as const, title: item.title, at: item.due_at })),
+    ...exams.filter((item) => item.class_course === instanceId).map((item) => ({ kind: "exam" as const, title: item.title, at: item.starts_at ?? item.ends_at })),
+    ...homework.filter((item) => item.class_course === instanceId).map((item) => ({ kind: "homework" as const, title: item.title, at: item.due_at })),
   ]
     .filter((item): item is { kind: "exam" | "homework"; title: string; at: number } => item.at != null)
     .sort((a, b) => a.at - b.at)[0] ?? null;
@@ -43,6 +43,11 @@ export function dirtySettingsPatch(before: SchoolSettings, after: SchoolSettings
     "meal_slots",
     "dietary_tags",
     "meal_cancel_cutoff_minutes",
+    "excuse_kinds",
+    "branches",
+    "max_excused_absent_days",
+    "max_unexcused_absent_days",
+    "timezone",
   ] as const) {
     if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) patch[key] = after[key] as never;
   }

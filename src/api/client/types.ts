@@ -281,20 +281,79 @@ export const BANK_QUESTION_LIMITS = {
  maxChoices: 10, // MAX_QUESTION_CHOICES
 } as const;
 
+// A catalog course: the school's course row, taught by nobody on its own. A
+// sube attaches it (POST /classes/{id}/instances), which mints the Instance
+// every exam, session, homework and enrollment keys on.
 export type Course = {
  id: string;
  creator: PersonRef;
- teachers?: PersonRef[];
  title: string;
  description: string;
  kind: CourseKind;
- term: string | null;
- capacity: number | null;
+ // How many instances teach it (how many sections took it).
+ class_course_count: number;
+ // Individual club/etut memberships on the catalog row itself.
+ course_membership_count: number;
+};
+
+// One catalog course as one sube teaches it. This is what carries the roster,
+// the exams, the sessions and the karne weight.
+export type Instance = {
+ id: string;
+ class: string;
+ course: string;
+ // Weekly lesson hours; the instance's weight in the year's karne average.
+ ders_saati: number;
+ counts_toward_karne: boolean;
+ enrollment_count: number;
+ teachers: PersonRef[];
+};
+
+// A club/etut membership on the catalog course itself — the school-scoped
+// tier, distinct from an instance's roster. A regular `course` has none.
+export type CourseMembership = {
+ id: string;
+ course: string;
+ user: PersonRef;
+ added_by: PersonRef;
+ created_at: number;
+};
+
+/** One sınıf-geçme pair: the grade label students move to at rollover. */
+export type GradePromotion = {
+ from_grade: string;
+ to_grade: string;
+};
+
+// An academic year: the calendar structure dönemler and şubeler hang off.
+// Archiving freezes it — no new şube, dönem or exam inside it, and no edit.
+export type AcademicYear = {
+ id: string;
+ name: string;
+ starts_at: number;
+ ends_at: number;
+ creator: string;
+ grade_promotions: GradePromotion[];
+ class_count: number;
+ term_count: number;
+ /** Archived at, UTC unix-millis; null while the year is open. */
+ archived_at: number | null;
+};
+
+/** What one rollover carried into the target year. */
+export type RolloverResult = {
+ year: string;
+ classes: number;
+ students: number;
+ /** Grade labels left behind because the year promotes them nowhere. */
+ graduated: string[];
 };
 
 export type Term = {
  id: string;
  name: string;
+ /** The academic year the dönem sits in. */
+ year: string;
  starts_at: number;
  ends_at: number;
  /** Archived at, UTC unix-millis; null while the term is open. */
@@ -303,7 +362,8 @@ export type Term = {
 
 export type Enrollment = {
  id: string;
- course: string;
+ /** The instance (class x course) the student is enrolled in. */
+ class_course: string;
  user: PersonRef;
  enrolled_by: PersonRef;
  // The class (ClassGroup id) that pumped this enrollment, or null for a
@@ -323,7 +383,9 @@ export type ClassGroup = {
  creator: PersonRef | null;
  name: string;
  grade: string | null;
- term: string | null;
+ // The academic year (AcademicYear id) the sube sits in; what binds it to a
+ // karne and to the rollover. Null when none is set.
+ year: string | null;
  // The class's homeroom teacher (sınıf öğretmeni); null when none is assigned.
  teacher: PersonRef | null;
 };
@@ -335,10 +397,9 @@ export type ClassMember = {
  added_by: PersonRef;
 };
 
-export type ClassCourse = {
- id: string;
- class: string;
- course: string;
+// The instance as the class routes return it: an Instance plus who attached
+// the course to the sube.
+export type ClassCourse = Instance & {
  attached_by: PersonRef;
 };
 
@@ -384,7 +445,8 @@ export type BlueprintStatus = {
 
 export type CourseSession = {
  id: string;
- course: string;
+ /** The instance this lesson belongs to. */
+ class_course: string;
  teacher: PersonRef;
  topic: string;
  starts_at: number;
@@ -394,7 +456,7 @@ export type CourseSession = {
 export type SessionAttendance = {
  id: string;
  session: string;
- course: string;
+ class_course: string;
  user: PersonRef;
  status: AttendanceStatus;
  marked_by: PersonRef;
@@ -403,7 +465,10 @@ export type SessionAttendance = {
 export type Exam = {
  id: string;
  creator: string;
- course: string;
+ /** The instance the exam is set in. */
+ class_course: string;
+ /** The dönem the exam is sat in; its marks count into that term's karne. */
+ term: string;
  title: string;
  description: string;
  kind: ExamKind | string;
@@ -554,6 +619,8 @@ export type MarkEntry = {
 };
 
 export type CourseMarks = {
+ /** The instance these marks belong to; two sections are two blocks. */
+ instance: string;
  course: Course;
  results: MarkEntry[];
  average: number | null;
@@ -571,8 +638,28 @@ export type AttendanceCounts = {
 };
 
 export type CourseAttendance = {
+ /** The instance these tallies belong to. */
+ instance: string;
  course: Course;
  counts: AttendanceCounts;
+};
+
+/** The configured per-dönem absence limits; null per limit when unset. */
+export type AbsenceLimits = {
+ max_excused_days: number | null;
+ max_unexcused_days: number | null;
+};
+
+// One dönem's devamsızlık. A *day* is a calendar day with at least one missed
+// lesson — two absences in one day count once, the way the regulation counts.
+export type TermAbsence = {
+ term: string;
+ name: string;
+ absent_days: number;
+ excused_days: number;
+ unexcused_days: number;
+ limits: AbsenceLimits;
+ over_limit: boolean;
 };
 
 export type AttendanceReport = {
@@ -580,6 +667,7 @@ export type AttendanceReport = {
  events: AttendanceCounts;
  sessions: AttendanceCounts;
  courses: CourseAttendance[];
+ devamsizlik: TermAbsence[];
 };
 
 export type WorkEntry = {
@@ -678,6 +766,18 @@ export type SchoolSettings = {
  meal_slots: MealSlot[];
  dietary_tags: string[];
  meal_cancel_cutoff_minutes: number | null;
+ // The branş (teaching subject) vocabulary a profile's `branch` may name.
+ // Empty = the school keeps no list, and no profile may carry one.
+ branches: string[];
+ /** What an absence may be excused as (raporlu/izinli/…). Empty = none named. */
+ excuse_kinds: string[];
+ /** Per-dönem excused-absence day limit; null = no limit configured. */
+ max_excused_absent_days: number | null;
+ /** Per-dönem unexcused-absence day limit; null = no limit configured. */
+ max_unexcused_absent_days: number | null;
+ // The school's IANA timezone; null = the deployment default
+ // (Europe/Istanbul). It is the zone devamsızlık days are bucketed in.
+ timezone: string | null;
 };
 
 export type Limits = {
@@ -835,6 +935,25 @@ export type Limits = {
  };
  request: { max_page_limit: number; max_request_id_len: number; schedule_past_grace_ms: number; request_timeout_secs: number };
  rate: { window_secs: number; auth_per_minute: number; api_per_minute: number; chatbot_per_minute: number };
+ // The RAG nest. Message length, thread titles, history depth and the thread
+ // cap are the chatbot's own knobs, republished so a RAG client need not read
+ // the chatbot group to bound its input.
+ rag: {
+  max_scope_pairs: number;
+  max_citations: number;
+  max_citation_pages: number;
+  max_message_len: number;
+  max_thread_title_len: number;
+  min_max_message_len: number;
+  max_max_message_len: number;
+  default_max_message_len: number;
+  min_history_turns: number;
+  max_history_turns: number;
+  default_history_turns: number;
+  min_max_threads: number;
+  max_max_threads: number;
+  default_max_threads: number;
+ };
 };
 
 // Fallbacks keep forms usable when the unauthenticated metadata request fails.
@@ -861,7 +980,7 @@ export type Message = {
 
 export type Homework = {
  id: string;
- course: string;
+ class_course: string;
  subject: string;
  title: string;
  description: string | null;
@@ -909,7 +1028,7 @@ export type HomeworkRosterEntry = {
 };
 
 export type HomeworkReportEntry = {
- course: string;
+ class_course: string;
  homework: string;
  title: string;
  subject: string;
@@ -982,4 +1101,87 @@ export type MealLedgerEntry = {
  note: string | null;
  recorded_by: PersonRef;
  created_at: number;
+};
+
+// One instance's line on a karne: the dönem average, its band label, and the
+// ders_saati it weighs into the year average with.
+export type KarneInstance = {
+ class_course: string;
+ /** The catalog course's title — what a family reads. */
+ course: string;
+ ders_saati: number;
+ average: number | null;
+ band: string | null;
+};
+
+// A student's karne for one dönem. An archived dönem serves the snapshot the
+// school froze when it closed; an open one computes live.
+export type KarneReport = {
+ user: string;
+ term: string;
+ instances: KarneInstance[];
+ /** The ders_saati-weighted average; null while nothing is graded. */
+ year_average: number | null;
+ /** `gecti` / `kaldi`, or null with no average or no passing floor. */
+ verdict: string | null;
+};
+
+/** One instance an exam is announced to beyond the one that owns it. */
+export type ExamAudience = {
+ instance: string;
+ class: string;
+ course: string;
+};
+
+export type RagThread = {
+ id: string;
+ title: string | null;
+ created_at: number;
+ updated_at: number;
+};
+
+export type RagMessageStatus = "pending" | "complete" | "failed";
+
+// One citation behind a RAG answer. `[N]` in the answer's content resolves to
+// the citation whose `n` is N. `file` is null when no file the asker may view
+// claims the document — citable, just not openable.
+export type RagCitation = {
+ n: number;
+ pages: number[];
+ span_ids: string[];
+ ders?: string | null;
+ file?: string | null;
+};
+
+export type RagMessage = {
+ id: string;
+ thread_id: string;
+ role: "user" | "assistant" | string;
+ status: RagMessageStatus | string;
+ /** Empty while `status` is `pending`. */
+ content: string;
+ /** True when the service declined to answer — a complete turn, not a failure. */
+ abstained: boolean;
+ /** The abstention's short machine code; "" on an ordinary answer. */
+ reason: string;
+ citations: RagCitation[];
+ created_at: number;
+ completed_at?: number | null;
+ /** Set only when `status` is `failed`. Backend English — localize it. */
+ error_code?: string | null;
+};
+
+/** One capability's live fleet on the AI bridge. */
+export type AiCapabilityWorkers = {
+ capability: string;
+ workers: number;
+ inflight: number;
+};
+
+// What the AI bridge can currently do. `enabled: false` is a discovery
+// answer, not an error: the deployment simply runs no AI.
+export type AiCapabilities = {
+ enabled: boolean;
+ protocol: string;
+ capabilities: AiCapabilityWorkers[];
 };

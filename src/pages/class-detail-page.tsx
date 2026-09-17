@@ -9,13 +9,13 @@ import {
   getClassMembers,
   postClassMember,
   deleteClassMember,
-  getClassCourses,
-  postClassCourse,
-  deleteClassCourse,
+  getClassInstances,
+  postClassInstance,
+  deleteClassInstance,
   postClassBlueprintApply,
 } from "@/api/classes";
 import { getCourses } from "@/api/courses";
-import { getTerms } from "@/api/terms";
+import { getAcademicYears } from "@/api/academic-years";
 import { getLimits } from "@/api/limits";
 import { ApiError, formatApiError, type BlueprintSkip, type ClassCourse, type ClassGroup, type ClassMember } from "@/api/client";
 import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-report";
@@ -61,7 +61,7 @@ function ClassDetailContent() {
   const [editing, setEditing] = createSignal(false);
   const [name, setName] = createSignal("");
   const [grade, setGrade] = createSignal("");
-  const [termId, setTermId] = createSignal("");
+  const [yearId, setYearId] = createSignal("");
   const [teacherId, setTeacherId] = createSignal("");
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [showAddMember, setShowAddMember] = createSignal(false);
@@ -74,11 +74,11 @@ function ClassDetailContent() {
   const [reportOpen, setReportOpen] = createSignal(false);
 
   const [cls, { refetch: refetchClass }] = createResource(id, (classId) => getClassById(classId));
-  const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
+  const [years] = createResource(async () => (await getAcademicYears({ limit: 100 })).items);
   const [limits] = createResource(() => canManage() ? getLimits() : null);
   const [courses] = createResource(() => canManage() ? getCourses().then((page) => page.items) : null);
   const [members, { refetch: refetchMembers }] = createResource(id, async (classId) => (await getClassMembers(classId, { limit: 200 })).items);
-  const [classCourses, { refetch: refetchCourses }] = createResource(id, async (classId) => (await getClassCourses(classId, { limit: 50 })).items);
+  const [classCourses, { refetch: refetchCourses }] = createResource(id, async (classId) => (await getClassInstances(classId, { limit: 50 })).items);
 
   // The last class the page actually loaded. A refetch that fails leaves the
   // resource in an error state, and reading it there throws; holding the last
@@ -89,7 +89,7 @@ function ClassDetailContent() {
     if (cls.state === "ready") setLoadedClass(cls());
   });
 
-  const termName = (tid: string | null) => terms.latest?.find((term) => term.id === tid)?.name ?? (tid || t("terms.unassigned"));
+  const yearName = (yid: string | null) => years.latest?.find((year) => year.id === yid)?.name ?? (yid || t("academicYears.unassigned"));
   const courseTitle = (courseId: string) => courses.latest?.find((course) => course.id === courseId)?.title ?? courseId;
   const memberUserIds = () => (members.latest ?? []).map((row) => row.user.id);
   const attachedCourseIds = () => (classCourses.latest ?? []).map((row) => row.course);
@@ -185,6 +185,18 @@ function ClassDetailContent() {
       meta: { cellClass: "font-medium" },
     },
     {
+      id: "dersSaati",
+      accessorFn: (row) => row.ders_saati,
+      header: t("instances.dersSaati"),
+      meta: { cellClass: "mono" },
+    },
+    {
+      id: "roster",
+      accessorFn: (row) => row.enrollment_count,
+      header: t("courses.roster"),
+      meta: { cellClass: "mono" },
+    },
+    {
       id: "attachedBy",
       accessorFn: (row) => personLabel(row.attached_by),
       header: t("classGroups.attachedBy"),
@@ -198,7 +210,10 @@ function ClassDetailContent() {
         <Show when={canManage()}>
           <TableRowActions
             label={t("common.actions")}
-            actions={[{ label: t("classGroups.detachCourse"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDetachCourse(cell.row.original) }]}
+            actions={[
+              { label: t("instances.open"), icon: <IconExternalLink class="h-4 w-4" />, onSelect: () => void navigate({ to: "/instances/$id", params: { id: cell.row.original.id } }) },
+              { label: t("classGroups.detachCourse"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDetachCourse(cell.row.original) },
+            ]}
           />
         </Show>
       ),
@@ -228,7 +243,7 @@ function ClassDetailContent() {
                   <h1 class="text-2xl font-semibold tracking-tight">{c().name}</h1>
                   <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                     <Show when={c().grade}><Badge variant="secondary" class="rounded-full">{c().grade}</Badge></Show>
-                    <span>{termName(c().term)}</span>
+                    <span>{yearName(c().year)}</span>
                     <span>·</span>
                     <span>{t("classGroups.homeroomTeacher")}: {c().teacher ? personLabel(c().teacher!) : t("classGroups.noTeacher")}</span>
                   </div>
@@ -245,7 +260,7 @@ function ClassDetailContent() {
                     >
                       {t("classBlueprints.apply")}
                     </Button>
-                    <Button size="sm" variant="outline" class="rounded-lg" onClick={() => { setName(c().name); setGrade(c().grade ?? ""); setTermId(c().term ?? ""); setTeacherId(c().teacher?.id ?? ""); setEditing(true); }}>{t("common.edit")}</Button>
+                    <Button size="sm" variant="outline" class="rounded-lg" onClick={() => { setName(c().name); setGrade(c().grade ?? ""); setYearId(c().year ?? ""); setTeacherId(c().teacher?.id ?? ""); setEditing(true); }}>{t("common.edit")}</Button>
                     <Button size="sm" variant="outline" class="rounded-lg text-destructive" onClick={() => setDeleteOpen(true)}>{t("classGroups.deleteClass")}</Button>
                   </div>
                 </Show>
@@ -299,11 +314,11 @@ function ClassDetailContent() {
 
               {/* Edit class */}
               <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().name}>
-                <form class="space-y-4" onSubmit={(e) => { e.preventDefault(); void wrap(async () => { await patchClassById(id(), { name: name().trim(), grade: grade().trim() || null, term_id: termId() || null, teacher_id: teacherId() || null }); setEditing(false); await refresh(refetchClass); }, "common.saved"); }}>
+                <form class="space-y-4" onSubmit={(e) => { e.preventDefault(); void wrap(async () => { await patchClassById(id(), { name: name().trim(), grade: grade().trim() || null, year: yearId() || null, teacher_id: teacherId() || null }); setEditing(false); await refresh(refetchClass); }, "common.saved"); }}>
                   <div class="space-y-3">
                     <div class="space-y-1.5"><Label for="edit-class-name">{t("classGroups.className")}</Label><Input id="edit-class-name" maxlength={limits.latest?.course.max_class_name_len} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
                     <div class="space-y-1.5"><Label for="edit-class-grade">{t("classGroups.grade")}</Label><Input id="edit-class-grade" maxlength={limits.latest?.course.max_class_grade_len} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
-                    <div class="space-y-1.5"><Label for="edit-class-term">{t("terms.term")}</Label><Select id="edit-class-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}><option value="">{t("terms.unassigned")}</option><For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For></Select></div>
+                    <div class="space-y-1.5"><Label for="edit-class-year">{t("academicYears.year")}</Label><Select id="edit-class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={years.latest ?? []}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
                     <UserSearchSelect id="edit-class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
                   </div>
                   <div class="flex gap-2 border-t pt-4"><Button type="submit" disabled={pending()}>{t("common.save")}</Button><Button type="button" variant="outline" onClick={() => setEditing(false)}>{t("common.cancel")}</Button></div>
@@ -320,7 +335,7 @@ function ClassDetailContent() {
 
               {/* Attach course */}
               <SidePanel open={showAttachCourse()} onOpenChange={setShowAttachCourse} title={t("classGroups.attachCourse")} description={t("classGroups.attachCourseHelp")}>
-                <form class="space-y-3" onSubmit={(e) => { e.preventDefault(); const cid = attachCourseId(); if (!cid) return; void wrap(async () => { await postClassCourse(id(), { course_id: cid }); setAttachCourseId(""); setShowAttachCourse(false); await refresh(refetchCourses); }, "common.saved"); }}>
+                <form class="space-y-3" onSubmit={(e) => { e.preventDefault(); const cid = attachCourseId(); if (!cid) return; void wrap(async () => { await postClassInstance(id(), { course_id: cid }); setAttachCourseId(""); setShowAttachCourse(false); await refresh(refetchCourses); }, "common.saved"); }}>
                   <div class="space-y-1.5">
                     <Label for="class-attach-course">{t("classGroups.selectCourse")}</Label>
                     <Select id="class-attach-course" value={attachCourseId()} onChange={(e) => setAttachCourseId(e.currentTarget.value)}>
@@ -359,7 +374,7 @@ function ClassDetailContent() {
                 title={t("classGroups.detachCourse")}
                 variant="destructive"
                 summary={t("classGroups.detachCourseConfirm", { course: detachCourse() ? courseTitle(detachCourse()!.course) : "" })}
-                onConfirm={async () => { const target = detachCourse(); if (!target) return; await wrap(async () => { await deleteClassCourse(id(), target.course); await refresh(refetchCourses); setDetachCourse(null); }, "common.deleted"); }}
+                onConfirm={async () => { const target = detachCourse(); if (!target) return; await wrap(async () => { await deleteClassInstance(id(), target.id); await refresh(refetchCourses); setDetachCourse(null); }, "common.deleted"); }}
               />
             </div>
       )}

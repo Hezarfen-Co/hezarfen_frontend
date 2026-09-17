@@ -4,6 +4,8 @@ import { getMyAttendance } from "../../reports";
 import { getMyMarks } from "../../reports";
 import { getUserAttendance } from "../../reports";
 import { getUserMarks } from "../../reports";
+import { getMyKarne } from "../../reports";
+import { getUserKarne } from "../../reports";
 import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("reports API", () => {
@@ -76,4 +78,32 @@ describe("reports API", () => {
     expect(url).toBe("/api/marks/u1");
     expect(init?.method).toBe("GET");
   });
+  it("getMyKarne calls /marks/karne without a term", async () => {
+    mockFetchSuccess({ user: "u1", term: "t1", instances: [] });
+
+    await getMyKarne();
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/marks/karne");
+    expect(init?.method).toBe("GET");
+  });
+
+  it("getMyKarne passes the term through as a query", async () => {
+    mockFetchSuccess({ user: "u1", term: "t 1", instances: [] });
+
+    await getMyKarne("t 1");
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/marks/karne?term=t%201");
+  });
+
+  it("getUserKarne calls /marks/karne/:user with the term", async () => {
+    mockFetchSuccess({ user: "u2", term: "t1", instances: [] });
+
+    await getUserKarne("u2", "t1");
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/marks/karne/u2?term=t1");
+  });
+
 });

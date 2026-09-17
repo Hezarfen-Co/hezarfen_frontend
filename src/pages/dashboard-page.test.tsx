@@ -37,7 +37,18 @@ vi.mock("@/stores/auth-context", () => ({
 const now = Date.UTC(2026, 6, 28, 9);
 const DAY = 24 * 60 * 60 * 1000;
 const page = <T,>(items: T[]) => ({ items, total: items.length, limit: 50, offset: 0 });
-const course = { id: "course-1", title: "Algebra", capacity: 24 };
+const course = { id: "course-1", title: "Algebra", class_course_count: 1, course_membership_count: 0 };
+// Exams, homework and rosters hang off the instance (şube × ders); the catalog
+// course is one hop away, which is what the dashboard resolves for its labels.
+const instance = {
+  id: "instance-1",
+  class: "class-1",
+  course: "course-1",
+  ders_saati: 4,
+  counts_toward_karne: true,
+  enrollment_count: 0,
+  teachers: [],
+};
 
 vi.mock("@/stores/modules-context", () => ({
   useModules: () => ({
@@ -51,13 +62,17 @@ vi.mock("@/api/modules", () => ({ getModulesCatalog: async () => ({ modules: [],
 vi.mock("@/api/time/getTime", () => ({ getTime: async () => ({ now }) }));
 vi.mock("@/api/courses", () => ({
   getCourses: async () => page([course]),
-  getCourseEnrollments: async () => page([]),
+}));
+vi.mock("@/api/instances", () => ({
+  getMyInstances: async () => page([instance]),
+  getInstanceEnrollments: async () => page([]),
 }));
 vi.mock("@/api/reports", () => ({
   getMyCourses: async () => page([course]),
   getMyMarks: async () => (calls.push("marks"), {
     overall_average: 82.5,
     courses: [{
+      instance: instance.id,
       course,
       average: 82.5,
       results: [{ exam: "exam-past", title: "Midterm", kind: "exam", weight: 1, mark: 78, graded_by: "t-1" }],
@@ -89,7 +104,7 @@ vi.mock("@/api/exams", async () => {
     {
       id: "exam-1",
       title: "Exam deadline",
-      course: "course-1",
+      class_course: "instance-1",
       draft: false,
       starts_at: now + 1_000,
       ends_at: now + 3_000,
@@ -97,7 +112,7 @@ vi.mock("@/api/exams", async () => {
     {
       id: "exam-past",
       title: "Midterm",
-      course: "course-1",
+      class_course: "instance-1",
       draft: false,
       starts_at: now - 10 * DAY,
       ends_at: now - 10 * DAY + 3_000,

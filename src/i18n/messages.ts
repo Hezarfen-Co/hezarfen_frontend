@@ -1928,7 +1928,67 @@ export type MessageKey =
   | "appointments.rejectReasonPlaceholder"
   | "appointments.rejectReason"
   | "appointments.rejectedBy"
-  | "appointments.reasonRequired";
+  | "appointments.reasonRequired"
+  | "nav.academicYears"
+  | "instances.title"
+  | "instances.item"
+  | "instances.taughtIn"
+  | "instances.empty"
+  | "instances.emptyHelp"
+  | "instances.dersSaati"
+  | "instances.countsTowardKarne"
+  | "instances.policy"
+  | "instances.notFound"
+  | "instances.open"
+  | "instances.mine"
+  | "instances.selectSection"
+  | "instances.selectSectionHelp"
+  | "academicYears.title"
+  | "academicYears.subtitle"
+  | "academicYears.new"
+  | "academicYears.year"
+  | "academicYears.empty"
+  | "academicYears.unassigned"
+  | "academicYears.classCount"
+  | "academicYears.termCount"
+  | "academicYears.archive"
+  | "academicYears.archiveConfirm"
+  | "academicYears.archived"
+  | "academicYears.deleteConfirm"
+  | "academicYears.promotions"
+  | "academicYears.promotionsHelp"
+  | "academicYears.fromGrade"
+  | "academicYears.toGrade"
+  | "academicYears.addPromotion"
+  | "academicYears.rollover"
+  | "academicYears.rolloverFrom"
+  | "academicYears.rolloverHelp"
+  | "academicYears.rolloverDone"
+  | "academicYears.graduated"
+  | "karne.title"
+  | "karne.average"
+  | "karne.verdict"
+  | "karne.passed"
+  | "karne.failed"
+  | "karne.empty"
+  | "karne.band"
+  | "courses.members"
+  | "courses.memberItem"
+  | "courses.addMember"
+  | "courses.removeMember"
+  | "courses.removeMemberConfirm"
+  | "courses.membersClubOnly"
+  | "settings.branches"
+  | "settings.excuseKinds"
+  | "settings.maxExcusedDays"
+  | "settings.maxUnexcusedDays"
+  | "settings.timezone"
+  | "attendance.devamsizlik"
+  | "attendance.excusedDays"
+  | "attendance.unexcusedDays"
+  | "attendance.overLimit"
+  | "common.yes"
+  | "common.no";
 
 type Dict = Record<MessageKey, string>;
 
@@ -3873,6 +3933,66 @@ const en: Dict = {
   "messages.deleteForeverOnlyTrash": "Permanent delete only applies to messages in the trash.",
   "messages.readOnlyReceived": "Only received messages can be marked read or unread.",
   "messages.trashEmptiedToast": "Trash emptied.",
+  "nav.academicYears": "Academic years",
+  "instances.title": "Sections",
+  "instances.item": "section",
+  "instances.taughtIn": "Taught in",
+  "instances.empty": "No section teaches this course yet.",
+  "instances.emptyHelp": "A course starts teaching when a class attaches it.",
+  "instances.dersSaati": "Weekly hours",
+  "instances.countsTowardKarne": "Counts toward karne",
+  "instances.policy": "Section policy",
+  "instances.notFound": "Section not found.",
+  "instances.open": "Open section",
+  "instances.mine": "My sections",
+  "instances.selectSection": "Select a section",
+  "instances.selectSectionHelp": "Exams, homework and lessons belong to a section, not to the catalog course.",
+  "academicYears.title": "Academic years",
+  "academicYears.subtitle": "The calendar structure terms and classes hang off.",
+  "academicYears.new": "New academic year",
+  "academicYears.year": "Academic year",
+  "academicYears.empty": "No academic year yet.",
+  "academicYears.unassigned": "Unassigned",
+  "academicYears.classCount": "Classes",
+  "academicYears.termCount": "Terms",
+  "academicYears.archive": "Archive year",
+  "academicYears.archiveConfirm": "An archived year takes no new class, term or exam, and cannot be edited. There is no undo.",
+  "academicYears.archived": "Archived",
+  "academicYears.deleteConfirm": "Delete this academic year?",
+  "academicYears.promotions": "Grade promotions",
+  "academicYears.promotionsHelp": "Each pair maps a grade to the one its students move to at rollover. A grade left out graduates.",
+  "academicYears.fromGrade": "From grade",
+  "academicYears.toGrade": "To grade",
+  "academicYears.addPromotion": "Add pair",
+  "academicYears.rollover": "Carry classes over",
+  "academicYears.rolloverFrom": "Carry from",
+  "academicYears.rolloverHelp": "Plants the source year's classes here with promoted grades, their sections and their students. The target must still be empty.",
+  "academicYears.rolloverDone": "{classes} classes and {students} students carried over.",
+  "academicYears.graduated": "Graduated grades",
+  "karne.title": "Karne",
+  "karne.average": "Year average",
+  "karne.verdict": "Verdict",
+  "karne.passed": "Passed",
+  "karne.failed": "Failed",
+  "karne.empty": "No karne line for this term yet.",
+  "karne.band": "Band",
+  "courses.members": "Members",
+  "courses.memberItem": "member",
+  "courses.addMember": "Add member",
+  "courses.removeMember": "Remove member",
+  "courses.removeMemberConfirm": "Remove this member?",
+  "courses.membersClubOnly": "Only a club or study group keeps its own member list.",
+  "settings.branches": "Teaching subjects (branş)",
+  "settings.excuseKinds": "Excuse kinds",
+  "settings.maxExcusedDays": "Excused absence day limit",
+  "settings.maxUnexcusedDays": "Unexcused absence day limit",
+  "settings.timezone": "Timezone",
+  "attendance.devamsizlik": "Absence by term",
+  "attendance.excusedDays": "Excused days",
+  "attendance.unexcusedDays": "Unexcused days",
+  "attendance.overLimit": "Over the limit",
+  "common.yes": "Yes",
+  "common.no": "No",
 };
 
 const tr: Dict = {
@@ -5816,6 +5936,66 @@ const tr: Dict = {
   "messages.deleteForeverOnlyTrash": "Kalıcı silme yalnızca çöp kutusundaki mesajlar için geçerli.",
   "messages.readOnlyReceived": "Yalnızca gelen mesajların okundu durumu değiştirilebilir.",
   "messages.trashEmptiedToast": "Çöp kutusu boşaltıldı.",
+  "nav.academicYears": "Eğitim yılları",
+  "instances.title": "Şubeler",
+  "instances.item": "şube",
+  "instances.taughtIn": "İşlendiği şubeler",
+  "instances.empty": "Bu dersi işleyen şube yok.",
+  "instances.emptyHelp": "Ders, bir şube onu eklediğinde işlenmeye başlar.",
+  "instances.dersSaati": "Ders saati",
+  "instances.countsTowardKarne": "Karneye işler",
+  "instances.policy": "Şube ayarı",
+  "instances.notFound": "Şube bulunamadı.",
+  "instances.open": "Şubeyi aç",
+  "instances.mine": "Şubelerim",
+  "instances.selectSection": "Şube seç",
+  "instances.selectSectionHelp": "Sınav, ödev ve dersler katalog dersine değil şubeye bağlıdır.",
+  "academicYears.title": "Eğitim yılları",
+  "academicYears.subtitle": "Dönemlerin ve şubelerin bağlı olduğu takvim yapısı.",
+  "academicYears.new": "Yeni eğitim yılı",
+  "academicYears.year": "Eğitim yılı",
+  "academicYears.empty": "Henüz eğitim yılı yok.",
+  "academicYears.unassigned": "Atanmamış",
+  "academicYears.classCount": "Şube",
+  "academicYears.termCount": "Dönem",
+  "academicYears.archive": "Yılı arşivle",
+  "academicYears.archiveConfirm": "Arşivlenen yıl yeni şube, dönem veya sınav almaz ve düzenlenemez. Geri alınamaz.",
+  "academicYears.archived": "Arşivlendi",
+  "academicYears.deleteConfirm": "Bu eğitim yılı silinsin mi?",
+  "academicYears.promotions": "Sınıf geçme",
+  "academicYears.promotionsHelp": "Her satır bir sınıfın, devir sırasında geçeceği sınıfı belirler. Listede olmayan sınıf mezun olur.",
+  "academicYears.fromGrade": "Sınıftan",
+  "academicYears.toGrade": "Sınıfa",
+  "academicYears.addPromotion": "Satır ekle",
+  "academicYears.rollover": "Şubeleri devret",
+  "academicYears.rolloverFrom": "Kaynak yıl",
+  "academicYears.rolloverHelp": "Kaynak yılın şubelerini, sınıfları yükseltilmiş hâlde, şubeleri ve öğrencileriyle buraya taşır. Hedef yıl boş olmalı.",
+  "academicYears.rolloverDone": "{classes} şube ve {students} öğrenci devredildi.",
+  "academicYears.graduated": "Mezun olan sınıflar",
+  "karne.title": "Karne",
+  "karne.average": "Yıl ortalaması",
+  "karne.verdict": "Sonuç",
+  "karne.passed": "Geçti",
+  "karne.failed": "Kaldı",
+  "karne.empty": "Bu döneme ait karne satırı yok.",
+  "karne.band": "Not aralığı",
+  "courses.members": "Üyeler",
+  "courses.memberItem": "üye",
+  "courses.addMember": "Üye ekle",
+  "courses.removeMember": "Üyeyi çıkar",
+  "courses.removeMemberConfirm": "Bu üye çıkarılsın mı?",
+  "courses.membersClubOnly": "Yalnızca kulüp ve etütlerin kendi üye listesi olur.",
+  "settings.branches": "Branşlar",
+  "settings.excuseKinds": "Mazeret türleri",
+  "settings.maxExcusedDays": "Mazeretli devamsızlık gün sınırı",
+  "settings.maxUnexcusedDays": "Mazeretsiz devamsızlık gün sınırı",
+  "settings.timezone": "Saat dilimi",
+  "attendance.devamsizlik": "Dönemlik devamsızlık",
+  "attendance.excusedDays": "Mazeretli gün",
+  "attendance.unexcusedDays": "Mazeretsiz gün",
+  "attendance.overLimit": "Sınır aşıldı",
+  "common.yes": "Evet",
+  "common.no": "Hayır",
 };
 
 export const messages: Record<Locale, Dict> = { en, tr };

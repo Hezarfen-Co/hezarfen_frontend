@@ -3,7 +3,8 @@ import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteHomeworkById, patchHomeworkById } from "@/api/homework";
-import { getCourseHomework, getCourseSubjects, postCourseHomework } from "@/api/courses";
+import { getCourseSubjects } from "@/api/courses";
+import { getInstanceHomework, postInstanceHomework } from "@/api/instances";
 import { getTime } from "@/api/time";
 import { formatApiError } from "@/api/client";
 import type { Homework, Subject } from "@/api/client";
@@ -54,6 +55,9 @@ function msToTimeInput(ms: number): string {
 }
 
 export function CourseHomeworkPanel(props: {
+  /** The instance (class x course) the homework is assigned in. */
+  instanceId: string;
+  /** The catalog course behind it — where the subjects live. */
   courseId: string;
   canManage: boolean;
   active: boolean;
@@ -65,8 +69,8 @@ export function CourseHomeworkPanel(props: {
   const { locale } = usePreferences();
   const navigate = useNavigate();
   const [homework, { refetch }] = createResource(
-    () => (props.active ? props.courseId : null),
-    async (courseId) => (courseId ? (await getCourseHomework(courseId)).items : []),
+    () => (props.active ? props.instanceId : null),
+    async (instanceId) => (instanceId ? (await getInstanceHomework(instanceId)).items : []),
   );
   const [subjects] = createResource(
     () => (props.active ? props.courseId : null),
@@ -138,7 +142,7 @@ export function CourseHomeworkPanel(props: {
         });
         setFlash(t("common.saved"));
       } else {
-        await postCourseHomework(props.courseId, {
+        await postInstanceHomework(props.instanceId, {
           title: title().trim(),
           description: description().trim() || null,
           subject_id: subjectId(),

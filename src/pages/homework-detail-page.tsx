@@ -2,6 +2,7 @@ import { Link, useLocation } from "@tanstack/solid-router";
 import { Show, Suspense, createMemo } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getCourseById } from "@/api/courses";
+import { getInstanceById } from "@/api/instances";
 import { formatApiError } from "@/api/client";
 import { getHomeworkById } from "@/api/homework";
 import { getSubjectById } from "@/api/subjects";
@@ -29,14 +30,17 @@ export default function HomeworkDetailPage() {
     return match ? decodeURIComponent(match[1]) : prev;
   }, "");
   const [homework] = createResource(id, (homeworkId) => getHomeworkById(homeworkId));
-  const [course] = createResource(() => homework()?.course ?? null, async (courseId) => courseId ? getCourseById(courseId) : null);
+  // Homework hangs off the instance; the catalog course behind it is one hop
+  // further, and it is what names the work on screen.
+  const [instance] = createResource(() => homework()?.class_course ?? null, (instanceId) => getInstanceById(instanceId));
+  const [course] = createResource(() => instance()?.course ?? null, (courseId) => getCourseById(courseId));
   const [subject] = createResource(() => homework()?.subject ?? null, async (subjectId) => subjectId ? getSubjectById(subjectId) : null);
   const canManage = () => {
     const user = auth.user();
     const item = homework();
     const currentCourse = course();
     if (!user || !item) return false;
-    return item.created_by === user.id || currentCourse?.creator.id === user.id || (currentCourse?.teachers ?? []).some((teacher) => teacher.id === user.id) || hasMinRole(user.role, "manager");
+    return item.created_by === user.id || currentCourse?.creator.id === user.id || (instance()?.teachers ?? []).some((teacher) => teacher.id === user.id) || hasMinRole(user.role, "manager");
   };
 
   return (
@@ -64,7 +68,7 @@ export default function HomeworkDetailPage() {
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("nav.courses")}</p>
-                  <p class="mt-1 font-medium text-text-default">{course()?.title ?? item().course}</p>
+                  <p class="mt-1 font-medium text-text-default">{course()?.title ?? item().class_course}</p>
                 </div>
                 <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("subjects.subject")}</p>
@@ -85,7 +89,7 @@ export default function HomeworkDetailPage() {
                 <HomeworkSubmissionPanel homeworkId={id()} />
               </Show>
               <Show when={canManage()}>
-                <HomeworkSubmissionsPanel homeworkId={id()} courseId={item().course} />
+                <HomeworkSubmissionsPanel homeworkId={id()} instanceId={item().class_course} />
               </Show>
             </div>
           )}

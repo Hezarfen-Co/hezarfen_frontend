@@ -1,8 +1,9 @@
-import { Show, Suspense, createMemo, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteTermById } from "@/api/terms";
 import { getTerms } from "@/api/terms";
+import { getAcademicYears } from "@/api/academic-years";
 import { patchTermById } from "@/api/terms";
 import { postTerm } from "@/api/terms";
 import { postTermArchive } from "@/api/terms";
@@ -20,6 +21,7 @@ import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconArchive, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
@@ -58,9 +60,15 @@ function TermsContent() {
   const t = useT();
   const { locale } = usePreferences();
   const [list, { refetch }] = createResource(async () => (await getTerms({ limit: 100 })).items);
+  // A dönem now sits inside an academic year, and an archived year refuses new
+  // ones — so the create form cannot be filled without this list.
+  const [years] = createResource(async () => (await getAcademicYears({ limit: 100 })).items);
+  const openYears = createMemo(() => (years.latest ?? []).filter((year) => year.archived_at == null));
+  const yearName = (id: string) => years.latest?.find((year) => year.id === id)?.name ?? id;
   const terms = () => list() ?? [];
   const [panelOpen, setPanelOpen] = createSignal(false);
   const [name, setName] = createSignal("");
+  const [yearId, setYearId] = createSignal("");
   const [starts, setStarts] = createSignal("");
   const [ends, setEnds] = createSignal("");
   const [editing, setEditing] = createSignal<Term | null>(null);
@@ -73,6 +81,12 @@ function TermsContent() {
       accessorKey: "name",
       header: t("settings.name"),
       cell: (cell) => <span class="font-medium">{cell.row.original.name}</span>,
+    },
+    {
+      id: "year",
+      accessorFn: (row) => yearName(row.year),
+      header: t("academicYears.year"),
+      cell: (cell) => <span class="text-sm text-muted-foreground">{yearName(cell.row.original.year)}</span>,
     },
     {
       accessorKey: "starts_at",
@@ -131,6 +145,7 @@ function TermsContent() {
 
   const resetForm = () => {
     setName("");
+    setYearId("");
     setStarts("");
     setEnds("");
     setEditing(null);
@@ -178,6 +193,10 @@ function TermsContent() {
       setError(t("form.timeOrder"));
       return;
     }
+    if (!editing() && !yearId()) {
+      setError(t("academicYears.year"));
+      return;
+    }
     setPending(true);
     try {
       const current = editing();
@@ -185,7 +204,7 @@ function TermsContent() {
         await patchTermById(current.id, { name: name().trim(), starts_at, ends_at });
         setFlash(t("common.saved"));
       } else {
-        await postTerm({ name: name().trim(), starts_at, ends_at });
+        await postTerm({ name: name().trim(), year: yearId(), starts_at, ends_at });
         setFlash(t("common.created"));
       }
       resetForm();
@@ -249,6 +268,15 @@ function TermsContent() {
             <Label for="term-name">{t("settings.name")}</Label>
             <Input id="term-name" class="rounded-lg" required maxlength={100} value={name()} onInput={(e) => setName(e.currentTarget.value)} />
           </div>
+          <Show when={!editing()}>
+            <div class="space-y-1.5">
+              <Label for="term-year">{t("academicYears.year")}</Label>
+              <Select id="term-year" class="rounded-lg" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}>
+                <option value="">{t("academicYears.unassigned")}</option>
+                <For each={openYears()}>{(year) => <option value={year.id}>{year.name}</option>}</For>
+              </Select>
+            </div>
+          </Show>
           <div class="space-y-1.5">
             <Label for="term-starts">{t("events.starts")}</Label>
             <DatePicker id="term-starts" placeholder={t("form.datePlaceholder")} required value={starts()} onChange={setStarts} />

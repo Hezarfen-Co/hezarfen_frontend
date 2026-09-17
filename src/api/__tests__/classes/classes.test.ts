@@ -10,9 +10,9 @@ import {
   postClassMember,
   getClassMembers,
   deleteClassMember,
-  postClassCourse,
-  getClassCourses,
-  deleteClassCourse,
+  postClassInstance,
+  getClassInstances,
+  deleteClassInstance,
   postClassBlueprint,
   getClassBlueprints,
   getClassBlueprintByGrade,
@@ -111,28 +111,30 @@ describe("classes API", () => {
     expect(init?.method).toBe("DELETE");
   });
 
-  it("postClassCourse POSTs /classes/:id/courses with the body", async () => {
+  it("postClassInstance POSTs /classes/:id/instances with the body", async () => {
     mockFetchSuccess({ id: "cc1" });
     const body = { course_id: "co1" };
-    await postClassCourse("c1", body);
+    await postClassInstance("c1", body);
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/classes/c1/courses");
+    expect(url).toBe("/api/classes/c1/instances");
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe(JSON.stringify(body));
   });
 
-  it("getClassCourses GETs /classes/:id/courses with pagination", async () => {
+  it("getClassInstances GETs /classes/:id/instances with pagination", async () => {
     mockFetchSuccess({ items: [], total: 0 });
-    await getClassCourses("c1", { limit: 5, offset: 10 });
+    await getClassInstances("c1", { limit: 5, offset: 10 });
     const [url] = lastFetchCall();
-    expect(url).toBe("/api/classes/c1/courses?limit=5&offset=10");
+    expect(url).toBe("/api/classes/c1/instances?limit=5&offset=10");
   });
 
-  it("deleteClassCourse DELETEs /classes/:id/courses/:course", async () => {
+  // The second segment is the instance id, not the course id — two şubeler
+  // teaching the same course hold two instances.
+  it("deleteClassInstance DELETEs /classes/:id/instances/:instance", async () => {
     mockFetch204();
-    await deleteClassCourse("c1", "co1");
+    await deleteClassInstance("c1", "i1");
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/classes/c1/courses/co1");
+    expect(url).toBe("/api/classes/c1/instances/i1");
     expect(init?.method).toBe("DELETE");
   });
 

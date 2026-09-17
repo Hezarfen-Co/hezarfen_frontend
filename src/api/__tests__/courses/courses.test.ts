@@ -4,49 +4,17 @@ import { getCourseById } from "../../courses";
 import { postCourse } from "../../courses";
 import { patchCourseById } from "../../courses";
 import { deleteCourseById } from "../../courses";
-import { getCourseEnrollments } from "../../courses";
-import { postCourseEnrollment } from "../../courses";
-import { deleteCourseEnrollmentByUserId } from "../../courses";
-import { getCourseSessions } from "../../courses";
-import { postCourseSession } from "../../courses";
+import { getCourseMembers } from "../../courses";
+import { postCourseMember } from "../../courses";
+import { deleteCourseMemberByUserId } from "../../courses";
 import { getCourseSubjects } from "../../courses";
 import { postCourseSubject } from "../../courses";
-import { getCourseExams } from "../../courses";
-import { postCourseExam } from "../../courses";
-import { postCourseTeacher } from "../../courses";
-import { deleteCourseTeacherByUserId } from "../../courses";
-import { getCourseHomework } from "../../courses";
-import { postCourseHomework } from "../../courses";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("courses API", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
-
-  it("postCourseTeacher calls /courses/:id/teachers", async () => {
-    const mockCourse = { id: "c1", title: "Course", teachers: [{ id: "t1", username: "teacher1", display_name: "Teacher 1" }] };
-    mockFetchSuccess(mockCourse);
-
-    const result = await postCourseTeacher("c1", "t1");
-    expect(result).toEqual(mockCourse);
-
-    const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/teachers");
-    expect(init?.method).toBe("POST");
-    expect(init?.body).toBe(JSON.stringify({ user_id: "t1" }));
-  });
-
-  it("deleteCourseTeacherByUserId calls /courses/:id/teachers/:userId", async () => {
-    mockFetch204();
-
-    await deleteCourseTeacherByUserId("c1", "t1");
-
-    const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/teachers/t1");
-    expect(init?.method).toBe("DELETE");
-  });
-
 
   it("getCourses calls /courses with pagination", async () => {
     const mockPage = { items: [{ id: "c1" }], total: 1 };
@@ -116,67 +84,6 @@ describe("courses API", () => {
     expect(init?.method).toBe("DELETE");
   });
 
-  it("getCourseEnrollments calls /courses/:id/enrollments", async () => {
-    const mockPage = { items: [{ id: "en1" }], total: 1 };
-    mockFetchSuccess(mockPage);
-
-    const result = await getCourseEnrollments("c1");
-    expect(result).toEqual({ ...mockPage, limit: null, offset: 0 });
-
-    const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/enrollments");
-    expect(init?.method).toBe("GET");
-  });
-
-  it("postCourseEnrollment calls /courses/:id/enrollments", async () => {
-    const mockEnr = { id: "en1", course: "c1" };
-    mockFetchSuccess(mockEnr);
-
-    const result = await postCourseEnrollment("c1", "u1");
-    expect(result).toEqual(mockEnr);
-
-    const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/enrollments");
-    expect(init?.method).toBe("POST");
-    expect(init?.body).toBe(JSON.stringify({ user_id: "u1" }));
-  });
-
-  it("deleteCourseEnrollmentByUserId calls /courses/:id/enrollments/:userId", async () => {
-    mockFetch204();
-
-    await deleteCourseEnrollmentByUserId("c1", "u1");
-
-    const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/enrollments/u1");
-    expect(init?.method).toBe("DELETE");
-  });
-
-  it("getCourseSessions calls /courses/:id/sessions", async () => {
-    const mockPage = { items: [{ id: "s1" }], total: 1 };
-    mockFetchSuccess(mockPage);
-
-    const result = await getCourseSessions("c1");
-    expect(result).toEqual({ ...mockPage, limit: null, offset: 0 });
-
-    const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/sessions");
-    expect(init?.method).toBe("GET");
-  });
-
-  it("postCourseSession calls /courses/:id/sessions", async () => {
-    const mockSession = { id: "s1", course: "c1" };
-    mockFetchSuccess(mockSession);
-
-    const data = { topic: "Topic", starts_at: 1000 };
-    const result = await postCourseSession("c1", data);
-    expect(result).toEqual(mockSession);
-
-    const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/sessions");
-    expect(init?.method).toBe("POST");
-    expect(init?.body).toBe(JSON.stringify(data));
-  });
-
   it("getCourseSubjects calls /courses/:id/subjects", async () => {
     const mockPage = { items: [{ id: "sub1" }], total: 1 };
     mockFetchSuccess(mockPage);
@@ -203,55 +110,36 @@ describe("courses API", () => {
     expect(init?.body).toBe(JSON.stringify(data));
   });
 
-  it("getCourseExams calls /courses/:id/exams", async () => {
-    const mockPage = { items: [{ id: "ex1" }], total: 1 };
-    mockFetchSuccess(mockPage);
+  it("getCourseMembers calls /courses/:id/members with pagination", async () => {
+    mockFetchSuccess({ items: [{ id: "m1" }], total: 1 });
 
-    const result = await getCourseExams("c1");
-    expect(result).toEqual({ ...mockPage, limit: null, offset: 0 });
+    const result = await getCourseMembers("c1", { limit: 10 });
+    expect(result.items).toEqual([{ id: "m1" }]);
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/exams");
+    expect(url).toBe("/api/courses/c1/members?limit=10");
     expect(init?.method).toBe("GET");
   });
 
-  it("postCourseExam calls /courses/:id/exams", async () => {
-    const mockExam = { id: "ex1", course: "c1" };
-    mockFetchSuccess(mockExam);
+  it("postCourseMember calls /courses/:id/members with the user id", async () => {
+    mockFetchSuccess({ id: "m1" });
 
-    const data = { title: "Exam", kind: "quiz" };
-    const result = await postCourseExam("c1", data);
-    expect(result).toEqual(mockExam);
+    await postCourseMember("c1", "u1");
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/exams");
+    expect(url).toBe("/api/courses/c1/members");
     expect(init?.method).toBe("POST");
-    expect(init?.body).toBe(JSON.stringify(data));
+    expect(init?.body).toBe(JSON.stringify({ user_id: "u1" }));
   });
 
-  it("getCourseHomework calls /courses/:id/homework", async () => {
-    const mockPage = { items: [{ id: "hw1" }], total: 1 };
-    mockFetchSuccess(mockPage);
+  it("deleteCourseMemberByUserId calls /courses/:id/members/:userId", async () => {
+    mockFetch204();
 
-    const result = await getCourseHomework("c1", { limit: 5 });
-    expect(result).toEqual({ ...mockPage, limit: null, offset: 0 });
+    await deleteCourseMemberByUserId("c1", "u1");
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/homework?limit=5");
-    expect(init?.method).toBe("GET");
+    expect(url).toBe("/api/courses/c1/members/u1");
+    expect(init?.method).toBe("DELETE");
   });
 
-  it("postCourseHomework calls /courses/:id/homework", async () => {
-    const mockHomework = { id: "hw1", course: "c1" };
-    mockFetchSuccess(mockHomework);
-
-    const data = { title: "HW", subject_id: "sub1", due_at: 1900000000000, assigned: ["u1"] };
-    const result = await postCourseHomework("c1", data);
-    expect(result).toEqual(mockHomework);
-
-    const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/courses/c1/homework");
-    expect(init?.method).toBe("POST");
-    expect(init?.body).toBe(JSON.stringify(data));
-  });
 });

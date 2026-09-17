@@ -2,7 +2,7 @@ import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
 import { getClasses, getClassMembers, postClass } from "@/api/classes";
-import { getTerms } from "@/api/terms";
+import { getAcademicYears } from "@/api/academic-years";
 import { getLimits } from "@/api/limits";
 import { formatApiError, type ClassGroup } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -51,17 +51,17 @@ function ClassesContent() {
   const [showForm, setShowForm] = createSignal(false);
   const [name, setName] = createSignal("");
   const [grade, setGrade] = createSignal("");
-  const [termId, setTermId] = createSignal("");
+  const [yearId, setYearId] = createSignal("");
   const [teacherId, setTeacherId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [flash, setFlash] = createFlash();
 
-  const [terms] = createResource(async () => (await getTerms({ limit: 100 })).items);
+  const [years] = createResource(async () => (await getAcademicYears({ limit: 100 })).items);
   const [limits] = createResource(() => canManage() ? getLimits() : null);
   const [list, { refetch }] = createResource(async () => (await getClasses()).items);
   const listData = () => list.latest ?? list() ?? [];
-  const termName = (id: string | null) => terms.latest?.find((term) => term.id === id)?.name ?? (id || t("terms.unassigned"));
+  const yearName = (id: string | null) => years.latest?.find((year) => year.id === id)?.name ?? (id || t("academicYears.unassigned"));
 
   // Grade tabs mirror Figma's Tümü/Lise/Ortaokul row structurally, but the
   // labels are read from whatever `grade` values this school actually uses
@@ -111,10 +111,10 @@ function ClassesContent() {
       const created = await postClass({
         name: name().trim(),
         grade: grade().trim() || undefined,
-        term_id: termId() || undefined,
+        year: yearId() || undefined,
         teacher_id: teacherId() || undefined,
       });
-      setName(""); setGrade(""); setTermId(""); setTeacherId(""); setShowForm(false);
+      setName(""); setGrade(""); setYearId(""); setTeacherId(""); setShowForm(false);
       // Reloading the list is housekeeping for a page we are leaving anyway: a
       // failure here used to be reported as if the class had not been created,
       // and it swallowed the navigation to the class that plainly existed.
@@ -139,7 +139,7 @@ function ClassesContent() {
           <div class="space-y-3">
             <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="class-name" required maxlength={limits.latest?.course.max_class_name_len} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
             <div class="space-y-1.5"><Label for="class-grade">{t("classGroups.grade")}</Label><Input id="class-grade" maxlength={limits.latest?.course.max_class_grade_len} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
-            <div class="space-y-1.5"><Label for="class-term">{t("terms.term")}</Label><Select id="class-term" value={termId()} onChange={(e) => setTermId(e.currentTarget.value)}><option value="">{t("terms.unassigned")}</option><For each={terms.latest ?? []}>{(term) => <option value={term.id}>{term.name}</option>}</For></Select></div>
+            <div class="space-y-1.5"><Label for="class-year">{t("academicYears.year")}</Label><Select id="class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={years.latest ?? []}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
             <UserSearchSelect id="class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
           </div>
           <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
@@ -195,7 +195,7 @@ function ClassesContent() {
                     {(cls) => (
                       <ClassCard
                         cls={cls}
-                        termName={termName(cls.term)}
+                        yearName={yearName(cls.year)}
                         memberCount={memberCounts()?.get(cls.id) ?? null}
                         onClick={() => void navigate({ to: "/management/classes/$id", params: { id: cls.id } })}
                       />
@@ -215,7 +215,7 @@ function ClassesContent() {
   );
 }
 
-function ClassCard(props: { cls: ClassGroup; termName: string; memberCount: number | null; onClick: () => void }) {
+function ClassCard(props: { cls: ClassGroup; yearName: string; memberCount: number | null; onClick: () => void }) {
   const t = useT();
   return (
     <button
@@ -247,7 +247,7 @@ function ClassCard(props: { cls: ClassGroup; termName: string; memberCount: numb
         </div>
       </div>
       <div class="flex items-center justify-between gap-2 border-t border-border-hairline pt-3 text-sm">
-        <Badge variant="outline" class="min-w-0 max-w-[60%] rounded-full"><span class="truncate">{props.termName}</span></Badge>
+        <Badge variant="outline" class="min-w-0 max-w-[60%] rounded-full"><span class="truncate">{props.yearName}</span></Badge>
         <Show when={props.memberCount != null} fallback={<span class="shrink-0 text-xs text-text-subtle">—</span>}>
           <span class="shrink-0 font-medium text-text-default">{t("classGroups.studentsCount", { count: String(props.memberCount) })}</span>
         </Show>

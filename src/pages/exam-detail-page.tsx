@@ -11,8 +11,7 @@ import { getExamResult } from "@/api/exams";
 import { getExamResults } from "@/api/exams";
 import { getStudentMarksHistory } from "@/api/exams";
 import { getExamStatistics } from "@/api/exams";
-import { getCourseEnrollments } from "@/api/courses";
-import { getMyCourses } from "@/api/reports";
+import { getInstanceById, getInstanceEnrollments, getMyInstances } from "@/api/instances";
 import { patchExamById } from "@/api/exams";
 import { postExamResult } from "@/api/exams";
 import { ApiError, formatApiError } from "@/api/client";
@@ -186,12 +185,15 @@ function ExamDetailContent() {
     },
   );
   const [roster] = createResource(
-    () => (hasCourseManagementRights() && gradeOpen() ? exam()?.course ?? null : null),
-    async (courseId) => (courseId ? (await getCourseEnrollments(courseId)).items : []),
+    () => (hasCourseManagementRights() && gradeOpen() ? exam()?.class_course ?? null : null),
+    async (instanceId) => (instanceId ? (await getInstanceEnrollments(instanceId)).items : []),
   );
+  // The exam sits in an instance; its catalog course — which the question bank
+  // keys on — is one hop away.
+  const [instance] = createResource(() => exam()?.class_course ?? null, (instanceId) => getInstanceById(instanceId));
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? (await getMyCourses()).items : []),
+    async (enabled) => (enabled ? (await getMyInstances({ limit: 200 })).items : []),
   );
 
   const examStatus = () => {
@@ -238,7 +240,7 @@ function ExamDetailContent() {
     const u = auth.user();
     if (!e || !u) return false;
     if (u.role !== "student") return true;
-    return (mine() ?? []).some((course) => course.id === e.course);
+    return (mine() ?? []).some((row) => row.id === e.class_course);
   };
   const accessReady = () => auth.user()?.role !== "student" || mine() !== undefined;
 
@@ -694,7 +696,7 @@ function ExamDetailContent() {
                 </TabsContent>
 
                 <TabsContent value="questions" forceMount class="data-shell p-4">
-                  <ExamQuestionsPanel examId={id()} courseId={ex().course} readOnly={isFinished()} embedded />
+                  <ExamQuestionsPanel examId={id()} courseId={instance()?.course ?? ""} readOnly={isFinished()} embedded />
                 </TabsContent>
 
                 <TabsContent value="results" forceMount class="data-shell space-y-4 p-4">

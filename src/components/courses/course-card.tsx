@@ -12,12 +12,12 @@ const courseInitials = (title: string) =>
 
 export function CourseCard(props: {
   course: Course;
-  term: string;
+  /** The şubeler line under the title: "3 sections", or a dash. */
+  sections: string;
   enrolled?: boolean;
   showTeacherActions?: boolean;
   labels: {
-    capacity: string;
-    unlimited: string;
+    taughtIn: string;
     enrolled: string;
     kind: string;
     weeklyHours: string;
@@ -28,8 +28,9 @@ export function CourseCard(props: {
     analysis: string;
   };
 }) {
-  const teachers = () => [props.course.creator, ...(props.course.teachers ?? [])]
-    .filter((person, index, all) => all.findIndex((row) => row.id === person.id) === index);
+  // Teaching staff is per instance now, so a catalog card can only name the
+  // course's owner — the şube pages name who actually teaches it.
+  const teachers = () => [props.course.creator];
 
   return (
     <Link
@@ -56,7 +57,7 @@ export function CourseCard(props: {
       <p class="line-clamp-2 min-h-8 text-sm text-text-subtle">{props.course.description || "—"}</p>
 
       <div class="mt-auto flex items-center justify-between gap-3 border-t border-border-hairline pt-3 text-xs text-text-subtle">
-        <span class="min-w-0 flex-1 truncate">{props.term}</span>
+        <span class="min-w-0 flex-1 truncate">{props.sections}</span>
         <span class="flex min-w-0 items-center gap-1.5">
           <IconUsers class="h-3.5 w-3.5 shrink-0" />
           <span class="max-w-32 truncate">{teachers().map(personLabel).join(", ")}</span>
@@ -65,8 +66,8 @@ export function CourseCard(props: {
 
       <div class="flex items-center gap-2 rounded-lg bg-surface-tint px-3 py-2 text-xs text-text-subtle">
         <IconBook class="h-3.5 w-3.5 shrink-0" />
-        <span class="font-medium text-text-default">{props.labels.capacity}:</span>
-        <span class="tabular-nums">{props.course.capacity ?? props.labels.unlimited}</span>
+        <span class="font-medium text-text-default">{props.labels.taughtIn}:</span>
+        <span class="tabular-nums">{props.course.class_course_count}</span>
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border-hairline px-3 py-2">
