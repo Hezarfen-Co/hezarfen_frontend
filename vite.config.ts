@@ -2,7 +2,11 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 
-const target = process.env.BACKEND_ORIGIN ?? "http://127.0.0.1:7656";
+// Keep zero-config local development usable even when the Rust backend is not
+// running on this machine. Deployments use server.ts and the image-level
+// BACKEND_ORIGIN instead; developers can still opt into a local backend with
+// BACKEND_ORIGIN=http://127.0.0.1:7656 bun run dev.
+const target = process.env.BACKEND_ORIGIN ?? "https://hezarfen-backend.dizey.sh";
 
 export default defineConfig({
   plugins: [solid()],
@@ -27,10 +31,9 @@ export default defineConfig({
         target,
         changeOrigin: true,
         ws: true,
-        // Local Rust backend (e.g. :7656) speaks unprefixed routes, so strip
-        // /api. The public origin terminates /api itself — stripping there
-        // hits the SPA HTML instead of the API and breaks every local session
-        // against the default BACKEND_ORIGIN.
+        // Direct backends (local or public) speak unprefixed routes, so strip
+        // /api. The public frontend origin terminates /api itself — stripping
+        // there hits the SPA HTML instead of the API.
         rewrite: (path) => {
           try {
             if (/hezarfen\.dizey\.sh$/i.test(new URL(target).host)) return path;
