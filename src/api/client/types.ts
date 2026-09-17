@@ -1207,3 +1207,180 @@ export type AiCapabilities = {
  protocol: string;
  capabilities: AiCapabilityWorkers[];
 };
+
+// ---------------------------------------------------------------------------
+// insights — ZEKA's nightly read of a student
+// ---------------------------------------------------------------------------
+
+/** The weakest input's tier behind a computed row. Treat as an open set. */
+export type InsightConfidence = "none" | "exploratory" | "stable" | string;
+
+// One student's nightly summary. The four module members are ZEKA's own
+// shapes, stored and served unread — read a member by name, never by
+// position. `null` for a module the run could not compute: an empty object
+// and a missing module are different claims, and only one of them is true.
+export type InsightSummary = {
+ attendance?: unknown | null;
+ marks?: unknown | null;
+ study?: unknown | null;
+ submission?: unknown | null;
+ confidence: InsightConfidence;
+ /** Epoch milliseconds. The stamp to poll after asking for a recompute. */
+ computed_at: number;
+ /** Epoch milliseconds after which the sweep deletes the row. */
+ retain_until: number;
+};
+
+// One entry of the attention list — a statement of fact about a window, not a
+// judgement. Teacher-facing: the backend never returns it to the student it is
+// about, nor to their parent, so it must never be rendered in a student view.
+export type AttentionItem = {
+ /** Which trigger fired: `attendance` | `homework` | `mark_trend` today. */
+ trigger: string;
+ /** The sentence written once at compute time — render it, do not rewrite it. */
+ fact: string;
+ /** The course the fact is about; `null` = school-wide. */
+ course?: string | null;
+ /** The window the fact covers, epoch milliseconds. */
+ window_from: number;
+ window_to: number;
+ /** The numbers behind the fact, for the "neden?" panel. Never empty. */
+ evidence: unknown;
+};
+
+// One recommendation card addressed to the caller. It carries no dismissal
+// field by design: a dismissed card is filtered out of both card reads.
+export type Recommendation = {
+ id: string;
+ /** The product family: `O1`…`O4` for students, `T3`/`T4` for teachers. */
+ product: string;
+ /** Which rule produced it, and which version of that rule. */
+ rule_id: string;
+ rule_version: number;
+ /** The rule's optional scope segment; `null` when the rule has none. */
+ scope?: string | null;
+ /** The role gate the card was written for. */
+ audience_role: Role | string;
+ /** Who the card is about; `null` on a card addressed to its own subject. */
+ about?: string | null;
+ course?: string | null;
+ /** The numbers behind the card, including the mandatory `limitation` line. */
+ evidence: unknown;
+ confidence: InsightConfidence;
+ created_at: number;
+ /** After this instant the card is past; expired rows are filtered out. */
+ expires_at: number;
+};
+
+// One student × dimension × label row. `accuracy` is never shown alone: raw
+// accuracy carries general ability, and `contrast` is the part specific to
+// this segment.
+export type SegmentProfile = {
+ /** `bilissel_talep` | `dikkat_tuzagi` | `okuma_yuku`. Open set. */
+ dimension: string;
+ label: string;
+ n_answers: number;
+ n_correct: number;
+ /** The segment's hit rate, `n_correct / n_answers`. */
+ accuracy: number;
+ /** The student's hit rate across all labelled items — the subtrahend. */
+ overall_n_answers: number;
+ overall_accuracy: number;
+ /** `accuracy − overall_accuracy`. Negative = behind their own general level. */
+ contrast: number;
+ confidence: InsightConfidence;
+ computed_at: number;
+};
+
+// One student's whole readable insight. Who sees what is decided by the
+// backend, not the client: `attention` arrives empty for the subject's own
+// view and for a linked parent, and `summary`/`segments` arrive empty when a
+// teacher reads their own cards through /insights/me.
+export type StudentInsight = {
+ user_id: string;
+ /** `null` until ZEKA has computed this student at least once. */
+ summary?: InsightSummary | null;
+ attention: AttentionItem[];
+ cards: Recommendation[];
+ segments: SegmentProfile[];
+};
+
+/** `running` | `ok` | `partial` | `failed` | `skipped`. Open set. */
+export type InsightRunStatus = "running" | "ok" | "partial" | "failed" | "skipped" | string;
+
+// One compute run, as the ledger keeps it. A `partial` run must be shown as
+// such: some students were not processed.
+export type InsightRun = {
+ /** The run's key, `YYYY-MM-DD` — a re-run of the same night overwrites. */
+ run_day: string;
+ started_at: number;
+ finished_at?: number | null;
+ duration_ms?: number | null;
+ status: InsightRunStatus;
+ students_total: number;
+ students_ok: number;
+ students_failed: number;
+ students_skipped: number;
+ rows_written: number;
+ /** Whether the run hit its time budget before finishing. */
+ budget_exceeded: boolean;
+ budget_ms: number;
+ /** The students the budget ran out on; the next run starts here. */
+ pending_students: string[];
+ /** Modules that failed — so a section can be marked missing, not shown as a hole. */
+ failed_modules: string[];
+};
+
+// ---------------------------------------------------------------------------
+// podcast — narrating a course note
+// ---------------------------------------------------------------------------
+
+// Which narration to produce. `duz_okuma` is the service's default; the other
+// two need the service's LLM key and are refused with 409 `llm_unavailable`
+// without it.
+export type PodcastFormat = "duz_okuma" | "tek_ogretici" | "ogrenci_hoca" | string;
+
+/** The service's receipt for an accepted job. 202 — nothing is produced yet. */
+export type PodcastJobReceipt = {
+ /** The job id the service minted — every other door names it. */
+ job_id: string;
+ /** `queued` on a fresh job. */
+ state: string;
+ /** The service's own estimate of the job's duration, in seconds. */
+ eta_secs: number;
+};
+
+/** One job's state, passed through verbatim. Poll it. */
+export type PodcastJobStatus = {
+ job_id: string;
+ /** `queued` | `running` | `done` | `failed` | `cancelled`. */
+ state: string;
+ /** The pipeline stage the job is in. */
+ stage: string;
+ /** Fraction complete, `0.0..=1.0`. */
+ progress: number;
+ /** Set only once the job failed. Backend English — localize it. */
+ error_code?: string | null;
+};
+
+/** A finished job's artifacts, passed through verbatim. */
+export type PodcastJobArtifacts = {
+ job_id: string;
+ /** The produced audio, relative to the school's output root — feed it to
+  * `podcastAudioUrl`, never to a fetch of your own. */
+ audio_id: string;
+ /** One entry per produced chapter; usually `[audio_id]`. */
+ audio_ids: string[];
+ duration_secs: number;
+ script_id: string;
+ /** One entry per script the audio was aligned to. */
+ script_ids: string[];
+ format: PodcastFormat;
+};
+
+/** The verdict on a cancel. `false` is not an error — see `postPodcastJobCancel`. */
+export type PodcastCancelVerdict = {
+ job_id: string;
+ /** Whether *this call* cancelled something. */
+ cancelled: boolean;
+};

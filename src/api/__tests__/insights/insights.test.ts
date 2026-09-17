@@ -1,0 +1,106 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  getInsightByUserId,
+  getInsightRuns,
+  getMyInsight,
+  postInsightComputeByUserId,
+  postInsightsRefresh,
+} from "../../insights";
+import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
+
+describe("insights API", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("getMyInsight GETs /insights/me", async () => {
+    mockFetchSuccess({ user_id: "u1", attention: [], cards: [], segments: [] });
+
+    const result = await getMyInsight();
+    expect(result.user_id).toBe("u1");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/insights/me");
+    expect(init?.method).toBe("GET");
+  });
+
+  it("getInsightByUserId GETs /insights/students/{user}", async () => {
+    mockFetchSuccess({ user_id: "u2", attention: [], cards: [], segments: [] });
+
+    await getInsightByUserId("u2");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/insights/students/u2");
+    expect(init?.method).toBe("GET");
+  });
+
+  it("getInsightByUserId encodes the user id", async () => {
+    mockFetchSuccess({ user_id: "a/b", attention: [], cards: [], segments: [] });
+
+    await getInsightByUserId("a/b");
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/insights/students/a%2Fb");
+  });
+
+  it("postInsightComputeByUserId POSTs the sections and since window", async () => {
+    mockFetchSuccess({ message_id: "m1", status: "pending" }, 202);
+
+    const result = await postInsightComputeByUserId("u2", { sections: ["marks"], since: "2026-09-01" });
+    expect(result.status).toBe("pending");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/insights/students/u2");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ sections: ["marks"], since: "2026-09-01" }));
+  });
+
+  it("postInsightComputeByUserId sends an empty body when no window is given", async () => {
+    mockFetchSuccess({ message_id: "m1", status: "pending" }, 202);
+
+    await postInsightComputeByUserId("u2");
+
+    const [, init] = lastFetchCall();
+    expect(init?.body).toBe(JSON.stringify({}));
+  });
+
+  it("getInsightRuns GETs /insights/runs with pagination", async () => {
+    mockFetchSuccess({ items: [{ run_day: "2026-09-17" }], total: 1 });
+
+    const result = await getInsightRuns({ limit: 50, offset: 100 });
+    expect(result.items).toEqual([{ run_day: "2026-09-17" }]);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/insights/runs?limit=50&offset=100");
+    expect(init?.method).toBe("GET");
+  });
+
+  it("getInsightRuns omits the query when no page is asked for", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+
+    await getInsightRuns();
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/insights/runs");
+  });
+
+  it("postInsightsRefresh POSTs /insights/refresh with the named students", async () => {
+    mockFetchSuccess({ message_id: "m1", status: "pending" }, 202);
+
+    await postInsightsRefresh({ user_ids: ["u1", "u2"], force: true });
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/insights/refresh");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ user_ids: ["u1", "u2"], force: true }));
+  });
+
+  it("postInsightsRefresh sends an empty body to fall back on the service's own list", async () => {
+    mockFetchSuccess({ message_id: "m1", status: "pending" }, 202);
+
+    await postInsightsRefresh();
+
+    const [, init] = lastFetchCall();
+    expect(init?.body).toBe(JSON.stringify({}));
+  });
+});
