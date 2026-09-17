@@ -403,6 +403,13 @@ export type ClassGroup = {
  teacher: PersonRef | null;
 };
 
+// What POST /classes answers with: the created class, the (class, course)
+// pairs its grade's blueprint could not attach, and the grade of the blueprint
+// that stocked it. `skipped` is empty when the template took every course, and
+// always empty when no template covered the grade; `stocked_from` is null in
+// that second case.
+export type CreateClassResponse = { class: ClassGroup; skipped: BlueprintSkip[]; stocked_from: string | null };
+
 export type ClassMember = {
  id: string;
  class: string;

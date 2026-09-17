@@ -28,11 +28,14 @@ describe.skipIf(!isLive)(`bank-questions contract @ ${contractBaseUrl}`, () => {
       body: { name: tag, year: yearId, starts_at: Date.now(), ends_at: Date.now() + 120 * 24 * 60 * 60 * 1000 },
     });
     termId = term.id;
-    const klass = await json<{ id: string }>("/classes", {
+    // POST /classes answers with a create envelope, not the bare şube: its
+    // `class` is the row, and `skipped` is the pair report (empty here).
+    const created = await json<{ class: { id: string }; skipped: unknown[] }>("/classes", {
       method: "POST",
       body: { name: tag, grade: "9", year: yearId },
     });
-    classId = klass.id;
+    classId = created.class.id;
+    expect(Array.isArray(created.skipped)).toBe(true);
 
     const course = await json<Course>("/courses", {
       method: "POST",

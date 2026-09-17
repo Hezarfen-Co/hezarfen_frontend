@@ -28,10 +28,15 @@ describe("classes API", () => {
     vi.restoreAllMocks();
   });
 
-  it("postClass POSTs /classes with the body", async () => {
-    mockFetchSuccess({ id: "c1" });
-    const body = { name: "9-A", grade: "9", term_id: "t1" };
-    await postClass(body);
+  // POST /classes answers with an envelope, not the bare class: the created
+  // row plus the pairs its grade's blueprint could not attach.
+  it("postClass POSTs /classes and returns the create envelope", async () => {
+    const envelope = { class: { id: "c1" }, skipped: [], stocked_from: null };
+    mockFetchSuccess(envelope);
+    const body = { name: "9-A", grade: "9", year: "y1" };
+    const created = await postClass(body);
+    expect(created).toEqual(envelope);
+    expect(created.class.id).toBe("c1");
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/classes");
     expect(init?.method).toBe("POST");

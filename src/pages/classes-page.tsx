@@ -3,8 +3,10 @@ import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
 import { getClasses, getClassMembers, postClass } from "@/api/classes";
 import { getAcademicYears } from "@/api/academic-years";
+import { getCourses } from "@/api/courses";
 import { getLimits } from "@/api/limits";
-import { formatApiError, type ClassGroup } from "@/api/client";
+import { formatApiError, type BlueprintSkip, type ClassGroup } from "@/api/client";
+import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-report";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { DataTableSearch } from "@/components/ui/data-table-search";
 import { DataSection } from "@/components/ui/data-section";
@@ -56,11 +58,18 @@ function ClassesContent() {
   const [teacherId, setTeacherId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  // A create whose grade's blueprint left pairs behind reports them here before
+  // it opens the class: the response is the only place those rows ever appear.
+  const [createdClass, setCreatedClass] = createSignal<ClassGroup | null>(null);
+  const [skipped, setSkipped] = createSignal<BlueprintSkip[]>([]);
+  const [skippedCourseTitles, setSkippedCourseTitles] = createSignal<Record<string, string>>({});
+  const [reportOpen, setReportOpen] = createSignal(false);
   const [flash, setFlash] = createFlash();
 
   const [years] = createResource(async () => (await getAcademicYears({ limit: 100 })).items);
   const [limits] = createResource(() => canManage() ? getLimits() : null);
   const [list, { refetch }] = createResource(async () => (await getClasses()).items);
+  const courseTitle = (id: string) => skippedCourseTitles()[id] ?? id;
   const listData = () => list.latest ?? list() ?? [];
   const yearName = (id: string | null) => years.latest?.find((year) => year.id === id)?.name ?? (id || t("academicYears.unassigned"));
 
@@ -125,12 +134,41 @@ function ClassesContent() {
         // The list reloads on the next visit; the class was created.
       }
       setFlash(t("common.created"));
-      void navigate({ to: "/management/classes/$id", params: { id: created.id } });
+      if (created.skipped.length > 0) {
+        // The class exists either way; its grade's template just could not
+        // take every course. The report names each skipped course, so the one
+        // catalog read happens before the panel can open; a failed read leaves
+        // the ids in place rather than holding the report back.
+        try {
+          const courses = (await getCourses({ limit: 200 })).items;
+          setSkippedCourseTitles(Object.fromEntries(courses.map((course) => [course.id, course.title])));
+        } catch {
+          // The report still opens; the rows fall back to course ids.
+        }
+        setCreatedClass(created.class);
+        setSkipped(created.skipped);
+        setReportOpen(true);
+        return;
+      }
+      void navigate({ to: "/management/classes/$id", params: { id: created.class.id } });
     } catch (err) {
       setError(formatApiError(err));
     } finally {
       setPending(false);
     }
+  };
+
+  // Closing the report is what opens the class, however it closes (button,
+  // Escape, backdrop): the create already happened, so there is nowhere else
+  // to go back to.
+  const closeSkippedReport = (open: boolean) => {
+    setReportOpen(open);
+    if (open) return;
+    const created = createdClass();
+    setCreatedClass(null);
+    setSkipped([]);
+    setSkippedCourseTitles({});
+    if (created) void navigate({ to: "/management/classes/$id", params: { id: created.id } });
   };
 
   return (
@@ -149,6 +187,22 @@ function ClassesContent() {
       </SidePanel>
 
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
+
+      <Show when={skipped().length > 0}>
+        <Alert class="flex flex-wrap items-center justify-between gap-3 border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+          <span class="min-w-0 flex-1">{t("classBlueprints.skippedSummary", { count: skipped().length })}</span>
+          <Button type="button" size="sm" variant="outline" class="shrink-0 rounded-lg" onClick={() => setReportOpen(true)}>
+            {t("classBlueprints.skippedDetails")}
+          </Button>
+        </Alert>
+      </Show>
+
+      <BlueprintSkippedReport
+        open={reportOpen()}
+        onOpenChange={closeSkippedReport}
+        skipped={skipped()}
+        courseTitle={courseTitle}
+      />
 
       <Tabs value={tab()} onChange={setTab}>
         {/* Every blueprint endpoint is manager+, so a teacher must not be shown
