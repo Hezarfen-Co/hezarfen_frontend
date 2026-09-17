@@ -140,7 +140,9 @@ false actions:
 
 - AI recommendation approval queue, evidence history, and rule management.
 - AI question generation and institution-level competency analytics.
-- Ses Atölyesi audio generation, player, quality gate, and listening analytics.
+- Ses Atölyesi quality gate and listening analytics. Course-note audio generation,
+  job progress/cancellation, and the player are implemented on the `/ai` hub's
+  note-studio tab (the old `/sound-studio` route redirects there).
 - Student/parent teacher-approved study plans and mastery time series.
 - Institution selection and multi-institution session context.
 - Password reset, remember-me session policy, and SSO.

@@ -3,6 +3,7 @@ import type { Note } from "@/api/client";
 import type { NoteFileSource } from "@/lib/note-source";
 import { NoteFilesPanel } from "@/components/notes/note-files-panel";
 import { RagOutputsPanel } from "@/components/notes/rag-outputs-panel";
+import { PodcastPanel } from "@/components/notes/podcast-panel";
 import { SidePanel } from "@/components/ui/side-panel";
 import { toRichTextHtml } from "@/lib/rich-text";
 import { useT } from "@/stores/preferences-context";
@@ -39,6 +40,7 @@ export function NoteReaderPanel(props: {
             <NoteFilesPanel noteId={n().id} source={props.source} canManage={props.canManage} active={props.open} />
             <Show when={props.source.listRagOutputs}>
               <RagOutputsPanel noteId={n().id} source={props.source} canManage={props.canManage} active={props.open} />
+              <PodcastPanel noteId={n().id} active={props.open} />
             </Show>
           </div>
         )}

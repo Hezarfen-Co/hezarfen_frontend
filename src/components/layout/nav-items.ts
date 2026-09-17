@@ -30,7 +30,6 @@ import {
   IconUserCog,
   IconUsers,
   IconUtensils,
-  IconWaveform,
 } from "@/components/ui/icons";
 import type { MessageKey } from "@/i18n/messages";
 import { hasExactRole, roleInRange } from "@/lib/roles";
@@ -78,12 +77,14 @@ const CELEBI_ITEM: NavItem = {
   action: "celebi",
 };
 
-const SOUND_STUDIO_ITEM: NavItem = {
-  id: "sound-studio",
-  to: "/coming-soon/ses-atolyesi",
-  labelKey: "nav.soundStudio",
-  Icon: IconWaveform,
-  soon: true,
+// The hub gathers the note studio, the insight board and the Çelebi entry —
+// what used to be a sound-studio row, an unreachable insights page and a
+// "yakında" placeholder.
+const AI_HUB_ITEM: NavItem = {
+  id: "ai-hub",
+  to: "/ai",
+  labelKey: "nav.hezarfenZeka",
+  Icon: IconBotSquare,
 };
 
 function settingsAction(id: string): NavItem {
@@ -165,15 +166,13 @@ const ADMIN_GROUPS: NavGroup[] = [
     id: "ai",
     labelKey: "nav.group.ai",
     Icon: IconSparkles,
-    items: [CELEBI_ITEM],
+    items: [CELEBI_ITEM, AI_HUB_ITEM],
   },
   soonGroup([
     { id: "mock-exams", to: "/coming-soon/deneme-sinavlari", labelKey: "nav.mockExams", Icon: IconTarget, soon: true, minRole: "manager" },
     { id: "optical-reading", to: "/coming-soon/optik-okuma", labelKey: "nav.opticalReading", Icon: IconScan, soon: true, minRole: "manager" },
     { id: "reports", to: "/coming-soon/raporlar", labelKey: "nav.reports", Icon: IconChartPie, soon: true, minRole: "manager" },
     { id: "data-protection", to: "/coming-soon/kvkk-denetim", labelKey: "nav.dataProtection", Icon: IconShieldCheck, soon: true, minRole: "admin" },
-    { id: "hezarfen-zeka", to: "/coming-soon/hezarfen-zeka", labelKey: "nav.hezarfenZeka", Icon: IconBotSquare, soon: true, minRole: "manager" },
-    SOUND_STUDIO_ITEM,
   ]),
 ];
 
@@ -224,11 +223,16 @@ const TEACHER_GROUPS: NavGroup[] = [
       settingsAction("settings-teacher"),
     ],
   },
+  {
+    id: "ai",
+    labelKey: "nav.group.ai",
+    Icon: IconSparkles,
+    items: [CELEBI_ITEM, AI_HUB_ITEM],
+  },
   soonGroup([
     { id: "student-analysis", to: "/coming-soon/ogrenci-analizi", labelKey: "nav.studentAnalysis", Icon: IconChart, soon: true },
     { id: "pending-approvals", to: "/coming-soon/bekleyen-onaylar", labelKey: "nav.pendingApprovals", Icon: IconHelpCircle, soon: true },
     { id: "question-generation", to: "/coming-soon/soru-uretimi", labelKey: "nav.questionGeneration", Icon: IconEdit, soon: true },
-    SOUND_STUDIO_ITEM,
   ]),
 ];
 
@@ -259,7 +263,7 @@ const STUDENT_GROUPS: NavGroup[] = [
     id: "ai",
     labelKey: "nav.group.ai",
     Icon: IconSparkles,
-    items: [CELEBI_ITEM],
+    items: [CELEBI_ITEM, AI_HUB_ITEM],
   },
   {
     id: "other",
@@ -276,7 +280,6 @@ const STUDENT_GROUPS: NavGroup[] = [
   },
   soonGroup([
     { id: "study-plan", to: "/coming-soon/calisma-programim", labelKey: "nav.studyPlan", Icon: IconClock, soon: true },
-    SOUND_STUDIO_ITEM,
   ]),
 ];
 
@@ -305,6 +308,12 @@ const PARENT_GROUPS: NavGroup[] = [
       { id: "meals", to: "/meals", labelKey: "nav.meals", Icon: IconUtensils, module: "meals" },
       settingsAction("settings-parent"),
     ],
+  },
+  {
+    id: "ai",
+    labelKey: "nav.group.ai",
+    Icon: IconSparkles,
+    items: [AI_HUB_ITEM],
   },
 ];
 

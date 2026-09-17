@@ -4,7 +4,10 @@ import { defineConfig } from "vitest/config";
 
 const alias = { "@": path.resolve(__dirname, "./src") };
 // Live-backend suite, run separately: `bun run test:contract`.
-const exclude = ["**/node_modules/**", "**/dist/**", "src/api/__tests__/contract/**", "src/components/layout/nav-items.test.ts"];
+// nav-items.test.ts is a plain .ts file but asserts on nav entries that carry
+// Solid components, so it runs in the dom project (see its include) — the node
+// project excludes it instead.
+const exclude = ["**/node_modules/**", "**/dist/**", "src/api/__tests__/contract/**"];
 
 /**
  * Two projects, one `vitest run`: plain logic/API tests stay on the fast node
@@ -22,7 +25,7 @@ export default defineConfig({
           globals: true,
           environment: "node",
           include: ["src/**/*.test.ts"],
-          exclude,
+          exclude: [...exclude, "src/components/layout/nav-items.test.ts"],
         },
       },
       {

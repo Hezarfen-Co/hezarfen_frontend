@@ -1,5 +1,5 @@
 import type { NoteFile, Page, PageParams, RagOutput } from "@/api/client";
-import { deleteCourseNoteFileById, deleteCourseNoteRagOutput, getCourseNoteFileBlob, getCourseNoteFileUrl, getCourseNoteFiles, getCourseNoteRag, postCourseNoteFile } from "@/api/course-notes";
+import { deleteCourseNoteFileById, deleteCourseNoteRagOutput, getCourseNoteFileBlob, getCourseNoteFileUrl, getCourseNoteFiles, getCourseNoteRag, postCourseNoteFile, postCourseNoteRagReindex } from "@/api/course-notes";
 import { deleteNoteFileById, getNoteFileBlob, getNoteFileUrl, getNoteFiles, postNoteFile } from "@/api/notes";
 
 /**
@@ -19,6 +19,7 @@ export type NoteFileSource = {
   /** AI outputs hanging off the note — only course notes have them. */
   listRagOutputs?: (noteId: string, params?: PageParams, signal?: AbortSignal) => Promise<Page<RagOutput>>;
   deleteRagOutput?: (noteId: string, outputId: string) => Promise<void>;
+  reindexRag?: (noteId: string) => Promise<void>;
 };
 
 export const personalNoteFiles: NoteFileSource = {
@@ -39,4 +40,5 @@ export const courseNoteFiles: NoteFileSource = {
   fileBlob: getCourseNoteFileBlob,
   listRagOutputs: getCourseNoteRag,
   deleteRagOutput: deleteCourseNoteRagOutput,
+  reindexRag: postCourseNoteRagReindex,
 };

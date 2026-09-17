@@ -51,7 +51,7 @@ bun run build
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-> **Proxy Note**: Vite server and the production Bun server proxy `/api/*` and WebSocket connections to `BACKEND_ORIGIN` (default: `http://127.0.0.1:7656`, the co-located backend's loopback port), preserving HttpOnly session cookies across same-origin calls. Point it elsewhere with `BACKEND_ORIGIN=… bun run dev`, or with `BACKEND_ORIGIN` in `hezarfen_frontend.env` for the compose stack (see "Run in a container" below).
+> **Proxy Note**: Vite proxies `/api/*` and WebSocket connections to `BACKEND_ORIGIN`, preserving HttpOnly session cookies across same-origin calls. Local development defaults to `https://hezarfen-backend.dizey.sh`, so `bun run dev` works without a backend process on the laptop; use `BACKEND_ORIGIN=http://127.0.0.1:7656 bun run dev` to target one locally. The production Bun server gets its co-located loopback default from the image and can be overridden through `hezarfen_frontend.env` (see "Run in a container" below).
 
 ---
 
@@ -106,6 +106,7 @@ It needs three repository secrets — `SSH_PRIVATE_KEY`, `SSH_HOST`, `SSH_USER`,
 | `/guide` | Authenticated | Redesigned product guide featuring role scope matrix, 6 core feature cards, and pro tips. |
 | `/profile` | Authenticated | User profile management (display name, email, phone, birth date). |
 | `/notes` | Student+ | Personal notebook with paper-style cards, Note Import Assistant (PDF/TXT), reader drawer, file attachments, and `.hzdraw` live canvas. |
+| `/ai` | Authenticated | AI hub: the note studio (course-note AI outputs plus narrated podcast audio with live job progress, cancellation and playback), the ZEKA analysis board, and the Çelebi entry point. `/sound-studio` redirects to its note-studio tab. |
 | `/questions`, `/questions/:id` | Student+ | Community Question Bank with solution authoring and teacher verification. |
 | `/courses`, `/courses/:id` | Student+ | Course catalog, student enrollment, curriculum subjects, homework assignments, and lesson session roll call. |
 | `/exams`, `/exams/:id` | Student+ | Exam list and details, subject-tagged questions, draft/publish controls, and grading statistics. |

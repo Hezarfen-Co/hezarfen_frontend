@@ -17,6 +17,7 @@ import { IconChevronLeft, IconSparkles } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
+import { celebiPanelOpen, openCelebiPanel, setCelebiPanelOpen } from "@/stores/celebi-panel";
 import { commandPaletteOpen, openCommandPalette, setCommandPaletteOpen } from "@/stores/command-palette";
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -33,7 +34,6 @@ export function AppShell(props: ParentProps) {
   const modules = useModules();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = createSignal(false);
-  const [celebiOpen, setCelebiOpen] = createSignal(false);
   const [profileOpen, setProfileOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
@@ -90,7 +90,7 @@ export function AppShell(props: ParentProps) {
             <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-2.5">
               <SideNav
                 collapsed={collapsed()}
-                onOpenCelebi={() => setCelebiOpen(true)}
+                onOpenCelebi={() => openCelebiPanel()}
                 onOpenProfile={() => setProfileOpen(true)}
               />
             </div>
@@ -118,7 +118,7 @@ export function AppShell(props: ParentProps) {
             open={mobileOpen()}
             onClose={() => setMobileOpen(false)}
             onLogout={logout}
-            onOpenCelebi={() => setCelebiOpen(true)}
+            onOpenCelebi={() => openCelebiPanel()}
             onOpenProfile={() => setProfileOpen(true)}
           />
         </Show>
@@ -154,7 +154,7 @@ export function AppShell(props: ParentProps) {
                     class="topbar-ai-control hidden h-9 shrink-0 items-center justify-center gap-2 rounded-md px-3 text-xs font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] sm:flex"
                     aria-label={t("ai.askCelebi")}
                     title={t("ai.askCelebi")}
-                    onClick={() => setCelebiOpen(true)}
+                    onClick={() => openCelebiPanel()}
                   >
                     <IconSparkles class="h-4 w-4" />
                     <span>{t("ai.askCelebi")}</span>
@@ -187,11 +187,11 @@ export function AppShell(props: ParentProps) {
       </Show>
       </ShellFeedProvider>
       <Show when={auth.user()}>
-        <CelebiPanel open={celebiOpen()} onOpenChange={setCelebiOpen} />
+        <CelebiPanel open={celebiPanelOpen()} onOpenChange={setCelebiPanelOpen} />
         <CommandPalette
           open={commandPaletteOpen()}
           onOpenChange={setCommandPaletteOpen}
-          onOpenCelebi={() => setCelebiOpen(true)}
+          onOpenCelebi={() => openCelebiPanel()}
           onOpenProfile={() => setProfileOpen(true)}
         />
         <AccountProfileDialog open={profileOpen()} onOpenChange={setProfileOpen} />

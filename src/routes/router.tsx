@@ -70,6 +70,7 @@ const ProfilePage = lazyRoute(() => import("@/pages/profile-page"));
 const PaymentStatementPage = lazyRoute(() => import("@/pages/payment-statement-page"));
 const WhiteboardsPage = lazyRoute(() => import("@/pages/whiteboards-page"));
 const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
+const AiHubPage = lazyRoute(() => import("@/pages/ai-hub-page"));
 const ComingSoonPage = lazyRoute(() => import("@/pages/coming-soon-page"));
 const StudentsRosterPage = lazyRoute(() => import("@/pages/students-roster-page"));
 const TeachersRosterPage = lazyRoute(() => import("@/pages/teachers-roster-page"));
@@ -448,6 +449,33 @@ const whiteboardRoute = createRoute({
   component: WhiteboardPage,
 });
 
+// One AI surface: the note studio (AI outputs + podcast), the insight board
+// and the Çelebi entry point, which used to sit on three unrelated routes.
+const aiHubRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/ai",
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab:
+      search.tab === "insights"
+        ? ("insights" as const)
+        : search.tab === "celebi"
+        ? ("celebi" as const)
+        : search.tab === "studio"
+        ? ("studio" as const)
+        : undefined,
+  }),
+  component: AiHubPage,
+});
+
+// The audio workshop had its own route before the hub gathered it.
+const soundStudioRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/sound-studio",
+  beforeLoad: () => {
+    throw redirect({ to: "/ai", search: { tab: "studio" } as never });
+  },
+});
+
 const studentsRosterRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/management/students",
@@ -490,8 +518,6 @@ const builderSchoolDetailRoute = createRoute({
 // (so breadcrumbs, back and direct links behave normally) but all render the
 // same "not ready" page. Slugs are read back by coming-soon-page.tsx.
 const COMING_SOON_SLUGS = [
-  "hezarfen-zeka",
-  "ses-atolyesi",
   "deneme-sinavlari",
   "optik-okuma",
   "raporlar",
@@ -564,6 +590,8 @@ const routeTree = rootRoute.addChildren([
   paymentStatementRoute,
   whiteboardsRoute,
   whiteboardRoute,
+  aiHubRoute,
+  soundStudioRoute,
   studentsRosterRoute,
   teachersRosterRoute,
   licenseModulesRoute,

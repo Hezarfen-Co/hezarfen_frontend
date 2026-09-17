@@ -32,6 +32,13 @@ export type MessageKey =
   | "ai.chats"
   | "ai.noChats"
   | "ai.noSearchResults"
+  | "aiHub.description"
+  | "aiHub.tab.studio"
+  | "aiHub.tab.insights"
+  | "aiHub.celebiExample1"
+  | "aiHub.celebiExample2"
+  | "aiHub.celebiExample3"
+  | "aiHub.celebiHint"
   | "nav.today"
   | "nav.classes"
   | "nav.classGroups"
@@ -377,7 +384,6 @@ export type MessageKey =
   | "nav.opticalReading"
   | "nav.hezarfenZeka"
   | "nav.celebi"
-  | "nav.soundStudio"
   | "nav.reports"
   | "nav.licenseModules"
   | "nav.dataProtection"
@@ -859,6 +865,93 @@ export type MessageKey =
   | "courseNotes.emptyManageHint"
   | "courseNotes.ragTitle"
   | "courseNotes.ragEmpty"
+  | "courseNotes.ragHint"
+  | "courseNotes.ragGenerate"
+  | "courseNotes.ragGenerating"
+  | "courseNotes.ragReady"
+  | "courseNotes.ragQueued"
+  | "courseNotes.ragUnavailable"
+  | "podcast.title"
+  | "podcast.description"
+  | "podcast.pageDescription"
+  | "podcast.source"
+  | "podcast.selectNote"
+  | "podcast.selectPrompt"
+  | "podcast.selectPromptHint"
+  | "podcast.noNotes"
+  | "podcast.noNotesHint"
+  | "podcast.format"
+  | "podcast.format.duz_okuma"
+  | "podcast.format.tek_ogretici"
+  | "podcast.format.ogrenci_hoca"
+  | "podcast.create"
+  | "podcast.submitting"
+  | "podcast.cancel"
+  | "podcast.ready"
+  | "podcast.failed"
+  | "podcast.audioUnsupported"
+  | "podcast.unavailable"
+  | "podcast.state.queued"
+  | "podcast.state.running"
+  | "podcast.state.done"
+  | "podcast.state.failed"
+  | "podcast.state.cancelled"
+  | "insights.title"
+  | "insights.subtitle"
+  | "insights.student"
+  | "insights.studentAnalysis"
+  | "insights.searchStudents"
+  | "insights.emptyStudents"
+  | "insights.viewAnalysis"
+  | "insights.refreshAll"
+  | "insights.refreshingAll"
+  | "insights.refreshQueued"
+  | "insights.recompute"
+  | "insights.recomputing"
+  | "insights.recomputeQueued"
+  | "insights.summary"
+  | "insights.noSummary"
+  | "insights.noSummaryHint"
+  | "insights.computedAt"
+  | "insights.retainUntil"
+  | "insights.sectionNotComputed"
+  | "insights.noEvidence"
+  | "insights.modules.attendance"
+  | "insights.modules.marks"
+  | "insights.modules.study"
+  | "insights.modules.submission"
+  | "insights.attention"
+  | "insights.noAttention"
+  | "insights.schoolWide"
+  | "insights.recommendations"
+  | "insights.noRecommendations"
+  | "insights.expiresAt"
+  | "insights.segments"
+  | "insights.noSegments"
+  | "insights.accuracy"
+  | "insights.answers"
+  | "insights.overall"
+  | "insights.contrast"
+  | "insights.confidence.none"
+  | "insights.confidence.exploratory"
+  | "insights.confidence.stable"
+  | "insights.runs"
+  | "insights.runsSubtitle"
+  | "insights.runDay"
+  | "insights.result"
+  | "insights.processed"
+  | "insights.written"
+  | "insights.duration"
+  | "insights.issues"
+  | "insights.issueCount"
+  | "insights.noIssues"
+  | "insights.budgetExceeded"
+  | "insights.emptyRuns"
+  | "insights.status.running"
+  | "insights.status.ok"
+  | "insights.status.partial"
+  | "insights.status.failed"
+  | "insights.status.skipped"
   | "notes.title"
   | "notes.subtitle"
   | "notes.new"
@@ -1751,6 +1844,7 @@ export type MessageKey =
   | "sessions.empty"
   | "sessions.untitled"
   | "sessions.teacher"
+  | "sessions.defaultTeacher"
   | "sessions.rollCall"
   | "sessions.emptyRoster"
   | "sessions.startRequired"
@@ -2032,6 +2126,13 @@ const en: Dict = {
   "ai.chats": "Chats",
   "ai.noChats": "No chats yet. Start one and it will appear here.",
   "ai.noSearchResults": "No messages match your search.",
+  "aiHub.description": "Every AI surface in one place: note outputs and podcasts, student analysis, and Çelebi.",
+  "aiHub.tab.studio": "Note studio",
+  "aiHub.tab.insights": "Analysis",
+  "aiHub.celebiExample1": "Which homework is due this week?",
+  "aiHub.celebiExample2": "How many days has my class missed?",
+  "aiHub.celebiExample3": "Summarise the topics of my next exam.",
+  "aiHub.celebiHint": "Çelebi opens as a side panel and stays with you on every page.",
   "nav.today": "Today",
   "nav.classes": "Courses",
   "nav.classGroups": "Classes",
@@ -2400,7 +2501,6 @@ const en: Dict = {
   "nav.opticalReading": "Optical reading",
   "nav.hezarfenZeka": "Hezarfen AI",
   "nav.celebi": "Çelebi",
-  "nav.soundStudio": "Sound studio",
   "nav.reports": "Reports",
   "nav.licenseModules": "License & modules",
   "nav.dataProtection": "Data protection & audit",
@@ -2864,6 +2964,93 @@ const en: Dict = {
   "courseNotes.emptyManageHint": "Write a note the whole class can read, and attach files to it.",
   "courseNotes.ragTitle": "AI outputs",
   "courseNotes.ragEmpty": "No AI outputs on this note yet.",
+  "courseNotes.ragHint": "Create a fresh summary from this note and its attachments.",
+  "courseNotes.ragGenerate": "Create summary",
+  "courseNotes.ragGenerating": "Creating summary…",
+  "courseNotes.ragReady": "The new summary is ready.",
+  "courseNotes.ragQueued": "Summary generation continues in the background.",
+  "courseNotes.ragUnavailable": "The AI summary service is not connected right now. Try again when a worker is available.",
+  "podcast.title": "Audio workshop",
+  "podcast.description": "Turn a lesson note into a listenable episode.",
+  "podcast.pageDescription": "Choose a lesson note, pick a narration style, and create its audio.",
+  "podcast.source": "Lesson note",
+  "podcast.selectNote": "Choose a lesson note…",
+  "podcast.selectPrompt": "Please choose a lesson note",
+  "podcast.selectPromptHint": "The narration options will appear here after you select a note above.",
+  "podcast.noNotes": "No lesson notes are available.",
+  "podcast.noNotesHint": "Add a note to one of your courses before creating audio.",
+  "podcast.format": "Narration style",
+  "podcast.format.duz_okuma": "Straight reading",
+  "podcast.format.tek_ogretici": "Single instructor",
+  "podcast.format.ogrenci_hoca": "Student and teacher",
+  "podcast.create": "Create podcast",
+  "podcast.submitting": "Starting…",
+  "podcast.cancel": "Cancel production",
+  "podcast.ready": "Your episode is ready.",
+  "podcast.failed": "The podcast could not be created. Try again.",
+  "podcast.audioUnsupported": "Your browser cannot play this audio.",
+  "podcast.unavailable": "Podcast production is not connected right now. Try again when a podcast worker is available.",
+  "podcast.state.queued": "Waiting in queue",
+  "podcast.state.running": "Creating audio",
+  "podcast.state.done": "Ready",
+  "podcast.state.failed": "Failed",
+  "podcast.state.cancelled": "Cancelled",
+  "insights.title": "Hezarfen Intelligence",
+  "insights.subtitle": "Review student signals, recommendations, and nightly analysis runs.",
+  "insights.student": "Student",
+  "insights.studentAnalysis": "Student analysis",
+  "insights.searchStudents": "Search students…",
+  "insights.emptyStudents": "No students found.",
+  "insights.viewAnalysis": "View analysis",
+  "insights.refreshAll": "Queue school analysis",
+  "insights.refreshingAll": "Queuing…",
+  "insights.refreshQueued": "School analysis was queued.",
+  "insights.recompute": "Recompute",
+  "insights.recomputing": "Queuing…",
+  "insights.recomputeQueued": "Analysis for {student} was queued.",
+  "insights.summary": "Summary",
+  "insights.noSummary": "No analysis yet",
+  "insights.noSummaryHint": "Queue a computation to create the first analysis.",
+  "insights.computedAt": "Computed at",
+  "insights.retainUntil": "Retained until",
+  "insights.sectionNotComputed": "This section was not computed.",
+  "insights.noEvidence": "No supporting data.",
+  "insights.modules.attendance": "Attendance",
+  "insights.modules.marks": "Marks",
+  "insights.modules.study": "Study",
+  "insights.modules.submission": "Submissions",
+  "insights.attention": "Attention signals",
+  "insights.noAttention": "No attention signal.",
+  "insights.schoolWide": "School-wide",
+  "insights.recommendations": "Recommendations",
+  "insights.noRecommendations": "No recommendation.",
+  "insights.expiresAt": "Expires",
+  "insights.segments": "Segment profile",
+  "insights.noSegments": "No segment profile.",
+  "insights.accuracy": "Accuracy",
+  "insights.answers": "Answers",
+  "insights.overall": "Overall",
+  "insights.contrast": "Difference",
+  "insights.confidence.none": "Insufficient data",
+  "insights.confidence.exploratory": "Exploratory",
+  "insights.confidence.stable": "Stable",
+  "insights.runs": "Analysis runs",
+  "insights.runsSubtitle": "Nightly and manually queued school analyses.",
+  "insights.runDay": "Run day",
+  "insights.result": "Result",
+  "insights.processed": "Successful",
+  "insights.written": "Rows written",
+  "insights.duration": "Duration",
+  "insights.issues": "Issues",
+  "insights.issueCount": "{count} issue(s)",
+  "insights.noIssues": "No issue",
+  "insights.budgetExceeded": "Time budget exceeded",
+  "insights.emptyRuns": "No analysis run yet.",
+  "insights.status.running": "Running",
+  "insights.status.ok": "Completed",
+  "insights.status.partial": "Partial",
+  "insights.status.failed": "Failed",
+  "insights.status.skipped": "Skipped",
   "notes.title": "Notebook",
   "notes.subtitle": "Your private notebook for class ideas and reminders.",
   "notes.new": "New note",
@@ -3846,6 +4033,7 @@ const en: Dict = {
   "sessions.empty": "No lesson sessions yet.",
   "sessions.untitled": "Untitled lesson",
   "sessions.teacher": "Teacher",
+  "sessions.defaultTeacher": "Current user",
   "sessions.rollCall": "Roll call",
   "sessions.emptyRoster": "No enrolled students yet.",
   "sessions.startRequired": "Session start date and time are required.",
@@ -4043,6 +4231,13 @@ const tr: Dict = {
   "ai.chats": "Sohbetler",
   "ai.noChats": "Henüz sohbet yok. Başlattığın sohbetler burada görünür.",
   "ai.noSearchResults": "Aramanla eşleşen mesaj yok.",
+  "aiHub.description": "Tüm yapay zekâ araçları tek yerde: not çıktıları ve podcast, öğrenci analizi ve Çelebi.",
+  "aiHub.tab.studio": "Not stüdyosu",
+  "aiHub.tab.insights": "Analiz",
+  "aiHub.celebiExample1": "Bu hafta hangi ödevlerin teslimi var?",
+  "aiHub.celebiExample2": "Sınıfım kaç gün devamsızlık yaptı?",
+  "aiHub.celebiExample3": "Yaklaşan sınavımın konularını özetle.",
+  "aiHub.celebiHint": "Çelebi yan panel olarak açılır ve her sayfada seninle kalır.",
   "nav.today": "Bugün",
   "nav.classes": "Dersler",
   "nav.classGroups": "Şubeler",
@@ -4411,7 +4606,6 @@ const tr: Dict = {
   "nav.opticalReading": "Optik okuma",
   "nav.hezarfenZeka": "Hezarfen Zekâ",
   "nav.celebi": "Çelebi",
-  "nav.soundStudio": "Ses Atölyesi",
   "nav.reports": "Raporlar",
   "nav.licenseModules": "Lisans ve modüller",
   "nav.dataProtection": "KVKK ve denetim",
@@ -4875,6 +5069,93 @@ const tr: Dict = {
   "courseNotes.emptyManageHint": "Tüm sınıfın okuyabileceği bir not yazın, dosya da ekleyebilirsiniz.",
   "courseNotes.ragTitle": "YZ çıktıları",
   "courseNotes.ragEmpty": "Bu notta henüz YZ çıktısı yok.",
+  "courseNotes.ragHint": "Bu not ve eklerinden güncel bir özet oluşturun.",
+  "courseNotes.ragGenerate": "Özet oluştur",
+  "courseNotes.ragGenerating": "Özet oluşturuluyor…",
+  "courseNotes.ragReady": "Yeni özet hazır.",
+  "courseNotes.ragQueued": "Özet oluşturma arka planda devam ediyor.",
+  "courseNotes.ragUnavailable": "YZ özet servisi şu anda bağlı değil. Bir worker hazır olduğunda tekrar deneyin.",
+  "podcast.title": "Ses Atölyesi",
+  "podcast.description": "Bir ders notunu dinlenebilir bir bölüme dönüştürün.",
+  "podcast.pageDescription": "Ders notunu seçin, anlatım biçimini belirleyin ve ses kaydını oluşturun.",
+  "podcast.source": "Ders notu",
+  "podcast.selectNote": "Bir ders notu seçin…",
+  "podcast.selectPrompt": "Lütfen bir ders notu seçin",
+  "podcast.selectPromptHint": "Yukarıdan bir not seçtiğinizde anlatım seçenekleri burada açılacak.",
+  "podcast.noNotes": "Kullanılabilir ders notu yok.",
+  "podcast.noNotesHint": "Ses oluşturmadan önce derslerinizden birine not ekleyin.",
+  "podcast.format": "Anlatım biçimi",
+  "podcast.format.duz_okuma": "Düz okuma",
+  "podcast.format.tek_ogretici": "Tek öğretici",
+  "podcast.format.ogrenci_hoca": "Öğrenci ve öğretmen",
+  "podcast.create": "Podcast oluştur",
+  "podcast.submitting": "Başlatılıyor…",
+  "podcast.cancel": "Üretimi iptal et",
+  "podcast.ready": "Bölümünüz hazır.",
+  "podcast.failed": "Podcast oluşturulamadı. Tekrar deneyin.",
+  "podcast.audioUnsupported": "Tarayıcınız bu sesi oynatamıyor.",
+  "podcast.unavailable": "Podcast üretim servisi şu anda bağlı değil. Podcast worker hazır olduğunda tekrar deneyin.",
+  "podcast.state.queued": "Sırada bekliyor",
+  "podcast.state.running": "Ses oluşturuluyor",
+  "podcast.state.done": "Hazır",
+  "podcast.state.failed": "Başarısız",
+  "podcast.state.cancelled": "İptal edildi",
+  "insights.title": "Hezarfen Zeka",
+  "insights.subtitle": "Öğrenci sinyallerini, önerileri ve gece analizlerini inceleyin.",
+  "insights.student": "Öğrenci",
+  "insights.studentAnalysis": "Öğrenci analizi",
+  "insights.searchStudents": "Öğrenci ara…",
+  "insights.emptyStudents": "Öğrenci bulunamadı.",
+  "insights.viewAnalysis": "Analizi görüntüle",
+  "insights.refreshAll": "Okul analizini sıraya al",
+  "insights.refreshingAll": "Sıraya alınıyor…",
+  "insights.refreshQueued": "Okul analizi sıraya alındı.",
+  "insights.recompute": "Yeniden hesapla",
+  "insights.recomputing": "Sıraya alınıyor…",
+  "insights.recomputeQueued": "{student} için analiz sıraya alındı.",
+  "insights.summary": "Özet",
+  "insights.noSummary": "Henüz analiz yok",
+  "insights.noSummaryHint": "İlk analizi oluşturmak için hesaplamayı sıraya alın.",
+  "insights.computedAt": "Hesaplanma",
+  "insights.retainUntil": "Saklanma sonu",
+  "insights.sectionNotComputed": "Bu bölüm hesaplanmadı.",
+  "insights.noEvidence": "Destekleyici veri yok.",
+  "insights.modules.attendance": "Yoklama",
+  "insights.modules.marks": "Notlar",
+  "insights.modules.study": "Çalışma",
+  "insights.modules.submission": "Teslimler",
+  "insights.attention": "Dikkat sinyalleri",
+  "insights.noAttention": "Dikkat sinyali yok.",
+  "insights.schoolWide": "Okul geneli",
+  "insights.recommendations": "Öneriler",
+  "insights.noRecommendations": "Öneri yok.",
+  "insights.expiresAt": "Geçerlilik sonu",
+  "insights.segments": "Segment profili",
+  "insights.noSegments": "Segment profili yok.",
+  "insights.accuracy": "Doğruluk",
+  "insights.answers": "Yanıtlar",
+  "insights.overall": "Genel",
+  "insights.contrast": "Fark",
+  "insights.confidence.none": "Yetersiz veri",
+  "insights.confidence.exploratory": "Keşifsel",
+  "insights.confidence.stable": "Kararlı",
+  "insights.runs": "Analiz çalıştırmaları",
+  "insights.runsSubtitle": "Gece çalışan ve elle sıraya alınan okul analizleri.",
+  "insights.runDay": "Çalışma günü",
+  "insights.result": "Sonuç",
+  "insights.processed": "Başarılı",
+  "insights.written": "Yazılan satır",
+  "insights.duration": "Süre",
+  "insights.issues": "Sorunlar",
+  "insights.issueCount": "{count} sorun",
+  "insights.noIssues": "Sorun yok",
+  "insights.budgetExceeded": "Süre bütçesi aşıldı",
+  "insights.emptyRuns": "Henüz analiz çalıştırması yok.",
+  "insights.status.running": "Çalışıyor",
+  "insights.status.ok": "Tamamlandı",
+  "insights.status.partial": "Kısmi",
+  "insights.status.failed": "Başarısız",
+  "insights.status.skipped": "Atlandı",
   "notes.title": "Defter",
   "notes.subtitle": "Ders fikirleriniz ve hatırlatmalarınız için özel defteriniz.",
   "notes.new": "Yeni not",
@@ -5857,6 +6138,7 @@ const tr: Dict = {
   "sessions.empty": "Henüz ders oturumu yok.",
   "sessions.untitled": "Konu girilmemiş ders",
   "sessions.teacher": "Öğretmen",
+  "sessions.defaultTeacher": "Mevcut kullanıcı",
   "sessions.rollCall": "Yoklama",
   "sessions.emptyRoster": "Henüz kayıtlı öğrenci yok.",
   "sessions.startRequired": "Oturum başlangıç tarihi ve saati gerekli.",

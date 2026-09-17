@@ -13,6 +13,7 @@ import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconAlert, IconBotSquare, IconChevronDown, IconChevronLeft, IconCopy, IconEdit, IconMessage, IconPlus } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
+import { matchesSearch } from "@/lib/search-text";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 type PanelMessage = Pick<ChatbotMessage, "id" | "role" | "status" | "content" | "truncated" | "error_code" | "navigation" | "suggestions">;
@@ -129,9 +130,9 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     lastScrollTop = top;
   };
   const filteredMessages = () => {
-    const query = searchQuery().trim().toLocaleLowerCase(locale());
+    const query = searchQuery().trim();
     if (!query) return messages();
-    return messages().filter((message) => message.content.toLocaleLowerCase(locale()).includes(query));
+    return messages().filter((message) => matchesSearch(query, message.content));
   };
   createEffect(() => {
     const items = messages();
@@ -279,7 +280,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   };
 
   return (
-    <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("ai.title")} description={t("ai.description")} bodyClass="overflow-hidden">
+    <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("ai.title")} description={t("ai.description")} bodyClass="overflow-hidden pb-0">
       <div class="flex h-full min-h-0 flex-col">
         <div class="mb-3 flex shrink-0 items-center gap-2 border-b border-border pb-3">
           <Show

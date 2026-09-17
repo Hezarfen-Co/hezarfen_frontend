@@ -34,13 +34,13 @@ test("admin's sidebar splits into short labelled sections with the soon shelf la
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
-    { id: "school", items: ["students-roster", "teachers-roster", "class-groups", "terms", "schedule"] },
+    { id: "school", items: ["students-roster", "teachers-roster", "class-groups", "academic-years", "terms", "schedule"] },
     { id: "teaching", items: ["courses", "homework", "exams", "question-bank", "questions", "notes", "whiteboards"] },
     { id: "tracking", items: ["student-attendance", "student-marks", "student-pomodoros"] },
     { id: "services", items: ["events", "appointments", "school-meals"] },
     { id: "institution", items: ["payments-collection", "staff-work", "work", "users", "license-modules", "settings"] },
-    { id: "ai", items: ["celebi"] },
-    { id: "soon", items: ["mock-exams", "optical-reading", "reports", "data-protection", "hezarfen-zeka", "sound-studio"] },
+    { id: "ai", items: ["celebi", "ai-hub"] },
+    { id: "soon", items: ["mock-exams", "optical-reading", "reports", "data-protection"] },
   ]);
 });
 
@@ -65,7 +65,8 @@ test("teacher's sidebar splits into short labelled sections with the soon shelf 
     { id: "tracking", items: ["student-attendance", "student-marks", "student-pomodoros"] },
     { id: "teaching", items: ["homework", "exams", "question-bank", "questions", "notes", "whiteboards"] },
     { id: "other", items: ["parent-communication", "appointments", "events", "meals", "work", "settings-teacher"] },
-    { id: "soon", items: ["student-analysis", "pending-approvals", "question-generation", "sound-studio"] },
+    { id: "ai", items: ["celebi", "ai-hub"] },
+    { id: "soon", items: ["student-analysis", "pending-approvals", "question-generation"] },
   ]);
 });
 
@@ -78,9 +79,9 @@ test("student's sidebar splits into short labelled sections with the soon shelf 
   ).toEqual([
     { id: "study", items: ["topic-mastery", "exam-results", "my-homework", "pomodoro"] },
     { id: "teaching", items: ["courses", "notes", "questions", "whiteboards"] },
-    { id: "ai", items: ["celebi"] },
+    { id: "ai", items: ["celebi", "ai-hub"] },
     { id: "other", items: ["calendar", "events", "messages", "appointments", "meals", "settings-student"] },
-    { id: "soon", items: ["study-plan", "sound-studio"] },
+    { id: "soon", items: ["study-plan"] },
   ]);
 });
 
@@ -107,6 +108,8 @@ test("parent's sidebar keeps the Figma Öğrencim / Kurum tree plus every backed
   ).toEqual([
     { id: "my-student", items: ["progress-report", "absence", "child-exam-results", "child-study-plan"] },
     { id: "institution", items: ["payment-statement", "appointments", "messages", "calendar", "events", "meals", "settings-parent"] },
+    // A parent's only AI surface: their children's analysis on the hub.
+    { id: "ai", items: ["ai-hub"] },
   ]);
 });
 
@@ -141,11 +144,25 @@ test("license modules is a real admin page and the work log includes admin", () 
 });
 
 test("entries with no backend yet are flagged soon and route to the shared placeholder", () => {
-  const hezarfenZeka = visibleNavGroups("admin")
+  const opticalReading = visibleNavGroups("admin")
     .flatMap((g) => g.items)
-    .find((i) => i.id === "hezarfen-zeka");
-  expect(hezarfenZeka?.soon).toBe(true);
-  expect(hezarfenZeka?.to).toBe("/coming-soon/hezarfen-zeka");
+    .find((i) => i.id === "optical-reading");
+  expect(opticalReading?.soon).toBe(true);
+  expect(opticalReading?.to).toBe("/coming-soon/optik-okuma");
+});
+
+// Every AI feature the backend answers for sits on one hub route; Çelebi keeps
+// its own row because it opens the shell panel instead of navigating.
+test("the AI group is the hub plus the Çelebi panel, and nothing is a placeholder", () => {
+  for (const role of ["student", "teacher", "manager", "admin", "parent"] as const) {
+    const ai = visibleNavGroups(role).find((group) => group.id === "ai");
+    expect(ai).toBeDefined();
+    const hub = ai?.items.find((item) => item.id === "ai-hub");
+    expect(hub?.to).toBe("/ai");
+    expect(hub?.soon).toBeFalsy();
+  }
+  expect(routeNavItem("/ai", "student")?.id).toBe("ai-hub");
+  expect(routeLabelKey("/ai", "student")).toBe("nav.hezarfenZeka");
 });
 
 test("Çelebi and account settings open an existing shell surface instead of navigating", () => {
@@ -224,7 +241,11 @@ test("module gate hides nests the school did not buy", () => {
   expect(teacherPaths).not.toContain("/homework");
   expect(teacherPaths).not.toContain("/exams");
   expect(teacherPaths).not.toContain("/whiteboards");
-  expect(teacherPaths).toContain("/management/classes");
+  // Classes is a module too, so an unbought "classes" nest hides it; the
+  // schedule carries no module and stays.
+  expect(teacherPaths).not.toContain("/management/classes");
+  expect(visibleNavGroups("teacher", ["courses", "classes"]).flatMap((group) => group.items.map((item) => item.to)))
+    .toContain("/management/classes");
   expect(teacherPaths).toContain("/calendar");
 });
 

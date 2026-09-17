@@ -1,16 +1,19 @@
-import { For, Show, Suspense, createSignal } from "solid-js";
+import { For, Show, Suspense, createSignal, onCleanup } from "solid-js";
 import { createResource } from "@/lib/create-resource";
+import { getAiCapabilities } from "@/api/ai";
 import { formatApiError } from "@/api/client";
 import type { RagOutput } from "@/api/client";
 import type { NoteFileSource } from "@/lib/note-source";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
-import { IconTrash } from "@/components/ui/icons";
+import { IconSparkles, IconTrash } from "@/components/ui/icons";
+import { RagOutputContent } from "@/components/notes/rag-output-content";
 
 const RAG_PAGE_SIZE = 10;
 
@@ -26,13 +29,56 @@ export function RagOutputsPanel(props: {
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [deleteTarget, setDeleteTarget] = createSignal<RagOutput | null>(null);
+  const [generating, setGenerating] = createSignal(false);
+  let pollTimer: ReturnType<typeof setTimeout> | undefined;
+
+  onCleanup(() => pollTimer && clearTimeout(pollTimer));
 
   const [list, { refetch }] = createResource(
     () => (props.active && props.source.listRagOutputs ? props.noteId : null),
     async (noteId) => props.source.listRagOutputs!(noteId, { limit: RAG_PAGE_SIZE }),
   );
+  const [capabilities] = createResource(
+    () => (props.active && props.source.reindexRag ? true : null),
+    () => getAiCapabilities(),
+  );
 
   const outputs = () => list()?.items ?? [];
+  const available = () => capabilities.error || capabilities()?.enabled !== false;
+
+  const generate = async () => {
+    if (!props.source.reindexRag || generating()) return;
+    setError("");
+    setGenerating(true);
+    const previousId = outputs()[0]?.id;
+    try {
+      await props.source.reindexRag(props.noteId);
+      let attempts = 0;
+      const poll = async () => {
+        if (!props.active) {
+          setGenerating(false);
+          return;
+        }
+        attempts += 1;
+        const next = await refetch();
+        const firstId = next?.items?.[0]?.id;
+        if ((firstId && firstId !== previousId) || attempts >= 24) {
+          setGenerating(false);
+          setFlash(firstId && firstId !== previousId ? t("courseNotes.ragReady") : t("courseNotes.ragQueued"));
+          return;
+        }
+        pollTimer = setTimeout(() => void poll().catch(fail), 2500);
+      };
+      const fail = (err: unknown) => {
+        setGenerating(false);
+        setError(formatApiError(err));
+      };
+      pollTimer = setTimeout(() => void poll().catch(fail), 1500);
+    } catch (err) {
+      setGenerating(false);
+      setError(formatApiError(err));
+    }
+  };
 
   const remove = async () => {
     const target = deleteTarget();
@@ -51,12 +97,26 @@ export function RagOutputsPanel(props: {
 
   return (
     <section class="space-y-3 rounded-lg border border-border/80 bg-card p-4 shadow-xs dark:border-white/8">
-      <h3 class="text-sm font-semibold">{t("courseNotes.ragTitle")}</h3>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 class="text-sm font-semibold">{t("courseNotes.ragTitle")}</h3>
+          <p class="mt-0.5 text-xs text-muted-foreground">{t("courseNotes.ragHint")}</p>
+        </div>
+        <Show when={props.canManage !== false && props.source.reindexRag}>
+          <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled={!available() || generating()} onClick={() => void generate()}>
+            <IconSparkles class="h-4 w-4" />
+            {generating() ? t("courseNotes.ragGenerating") : t("courseNotes.ragGenerate")}
+          </Button>
+        </Show>
+      </div>
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
       <Show when={error()}>
         <Alert variant="destructive">{error()}</Alert>
+      </Show>
+      <Show when={!available()}>
+        <Alert variant="warning">{t("courseNotes.ragUnavailable")}</Alert>
       </Show>
       <Suspense fallback={<PageSpinner />}>
         <Show when={list.error}>
@@ -87,7 +147,7 @@ export function RagOutputsPanel(props: {
                       </Show>
                     </span>
                   </div>
-                  <pre class="overflow-x-auto whitespace-pre-wrap text-xs leading-5">{JSON.stringify(output.payload, null, 2)}</pre>
+                  <RagOutputContent payload={output.payload} />
                 </li>
               )}
             </For>

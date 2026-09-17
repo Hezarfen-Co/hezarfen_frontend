@@ -42,9 +42,13 @@ export function CelebiComposer(props: {
   // The field itself is transparent over the card, so it names its text and
   // caret colors: a control that drops its background inherits neither, and
   // the draft came out unreadable once focused.
+  //
+  // The strip also sits on the panel's bottom edge rather than floating above
+  // a band of background, so its own padding stays small and the panel body
+  // drops its bottom padding (see the SidePanel's bodyClass in celebi-panel).
   return (
     <form
-      class="sticky bottom-0 -mx-5 border-t border-border/60 bg-background px-5 pb-1 pt-3 sm:-mx-6 sm:px-6"
+      class="sticky bottom-0 -mx-5 border-t border-border/60 bg-background px-5 pb-2 pt-3 sm:-mx-6 sm:px-6"
       onSubmit={(event) => {
         event.preventDefault();
         submit();

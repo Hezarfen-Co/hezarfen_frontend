@@ -13,8 +13,6 @@ import { useT } from "@/stores/preferences-context";
  * sidebar entry's own labelKey in nav-items.ts.
  */
 const COMING_SOON_LABELS: Record<string, MessageKey> = {
-  "hezarfen-zeka": "nav.hezarfenZeka",
-  "ses-atolyesi": "nav.soundStudio",
   "deneme-sinavlari": "nav.mockExams",
   "optik-okuma": "nav.opticalReading",
   raporlar: "nav.reports",
