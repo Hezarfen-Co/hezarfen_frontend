@@ -14,6 +14,7 @@ import { postMyAvatar } from "../../users";
 import { deleteMyAvatar } from "../../users";
 import { deleteUserAvatar } from "../../users";
 import { getUserAvatarUrl } from "../../users";
+import { postUser } from "../../users";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("users API", () => {
@@ -213,5 +214,18 @@ describe("users API", () => {
     expect(getUserAvatarUrl("u1")).toBe("/api/users/u1/avatar");
     expect(getUserAvatarUrl("u1", 3)).toBe("/api/users/u1/avatar?v=3");
     expect(getUserAvatarUrl("u/1")).toBe("/api/users/u%2F1/avatar");
+  });
+  it("postUser posts the new account to /users", async () => {
+    const mockUser = { id: "u9", username: "ayse", role: "teacher" };
+    mockFetchSuccess(mockUser);
+
+    const body = { username: "ayse", password: "secret123", role: "teacher" as const };
+    const result = await postUser(body);
+    expect(result).toEqual(mockUser);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/users");
+    expect(init?.method).toBe("POST");
+    expect(JSON.parse(init?.body as string)).toEqual(body);
   });
 });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteChatbotThreadById, getChatbotMessageById, getChatbotThreadMessages, getChatbotThreads, patchChatbotThreadById, postChatbotMessage, postChatbotThread } from "../../chatbot";
+import { chatbotStreamUrl, deleteChatbotThreadById, getChatbotMessageById, getChatbotThreadMessages, getChatbotThreads, patchChatbotThreadById, postChatbotMessage, postChatbotThread } from "../../chatbot";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("chatbot API", () => {
@@ -37,5 +37,8 @@ describe("chatbot API", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/chatbot/threads/thread-1/messages/answer-1");
     expect(init?.method).toBe("GET");
+  });
+  it("chatbotStreamUrl builds the SSE path for an EventSource", () => {
+    expect(chatbotStreamUrl("t 1", "m1")).toBe("/api/chatbot/threads/t%201/messages/m1/stream");
   });
 });

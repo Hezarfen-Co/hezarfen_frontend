@@ -3,6 +3,7 @@ import { createResource } from "@/lib/create-resource";
 import { useLocation, useParams } from "@tanstack/solid-router";
 import { getClassesByUserId, getMyClasses } from "@/api/classes";
 import { getLimits } from "@/api/limits";
+import { getSettings } from "@/api/settings";
 import { getMyProfile, getUserProfile } from "@/api/users";
 import { ApiError, formatApiError, type Profile } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -50,6 +51,7 @@ function ProfileContent() {
     id === "me" ? getMyProfile() : getUserProfile(id),
   );
   const [limits] = createResource(() => getLimits());
+  const [settings] = createResource(() => getSettings().catch(() => null));
   const [editing, setEditing] = createSignal(false);
 
   // The five counters that fit the profile owner's role: a student's own
@@ -160,6 +162,9 @@ function ProfileContent() {
                     <div class="flex flex-wrap items-center gap-2">
                       <span class="text-sm text-muted-foreground">@{p().username}</span>
                       <RoleBadge role={p().role} />
+                      <Show when={p().branch}>
+                        {(b) => <Badge variant="secondary" class="rounded-md">{b()}</Badge>}
+                      </Show>
                     </div>
                     <p class="max-w-prose whitespace-pre-wrap text-sm text-muted-foreground">
                       {p().bio || t("profile.bioEmpty")}
@@ -220,7 +225,8 @@ function ProfileContent() {
                   {(u) => (
                     <ProfileForm
                       user={u()}
-                      profile={{ display_name: p().display_name, bio: p().bio }}
+                      profile={{ display_name: p().display_name, bio: p().bio, branch: p().branch }}
+                      branches={settings.latest?.branches}
                       maxDisplayNameLen={limits.latest?.user.max_display_name_len}
                       maxBioLen={limits.latest?.user.max_bio_len}
                       onSaved={() => {

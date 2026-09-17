@@ -1,6 +1,6 @@
 import { For, Match, Show, Switch, createEffect, createSignal, on, onCleanup, untrack } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
-import { deleteChatbotThreadById, getChatbotMessageById, getChatbotThreadMessages, getChatbotThreads, patchChatbotThreadById, postChatbotMessage, postChatbotThread, type ChatbotMessage, type ChatbotThread } from "@/api/chatbot";
+import { chatbotStreamUrl, deleteChatbotThreadById, getChatbotMessageById, getChatbotThreadMessages, getChatbotThreads, patchChatbotThreadById, postChatbotMessage, postChatbotThread, type ChatbotMessage, type ChatbotThread } from "@/api/chatbot";
 import { formatApiError } from "@/api/client";
 import { CelebiComposer } from "@/components/layout/celebi-composer";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
@@ -217,7 +217,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
 
   const streamAnswer = (activeThreadId: string, messageId: string) => {
     stopStream();
-    const source = new EventSource(`/api/chatbot/threads/${encodeURIComponent(activeThreadId)}/messages/${encodeURIComponent(messageId)}/stream`, { withCredentials: true });
+    const source = new EventSource(chatbotStreamUrl(activeThreadId, messageId), { withCredentials: true });
     stream = source;
     source.addEventListener("delta", (event) => { try { const data = JSON.parse((event as MessageEvent).data) as { text?: unknown }; if (typeof data.text === "string") setMessages((items) => items.map((item) => item.id === messageId ? { ...item, content: item.content + data.text } : item)); } catch { /* ignore malformed chunk */ } });
     source.addEventListener("done", (event) => { try { updateAssistant((JSON.parse((event as MessageEvent).data) as { message: ChatbotMessage }).message); } catch { poll(activeThreadId, messageId); } finally { stopStream(); void loadThreads(); } });

@@ -13,3 +13,4 @@ export * from "./postMyAvatar";
 export * from "./deleteMyAvatar";
 export * from "./deleteUserAvatar";
 export * from "./getUserAvatarUrl";
+export * from "./postUser";

@@ -126,6 +126,8 @@ export type MessageKey =
   | "profile.displayNameHint"
   | "profile.bio"
   | "profile.bioHint"
+  | "profile.branch"
+  | "profile.branchNone"
   | "profile.bioEmpty"
   | "profile.classes"
   | "profile.noClasses"
@@ -2121,6 +2123,8 @@ const en: Dict = {
   "profile.displayNameHint": "Shown to other people instead of your username.",
   "profile.bio": "About",
   "profile.bioHint": "A short line about yourself.",
+  "profile.branch": "Teaching subject (branş)",
+  "profile.branchNone": "Not set",
   "profile.bioEmpty": "No bio yet.",
   "profile.classes": "Classes",
   "profile.noClasses": "Not in any class.",
@@ -4124,6 +4128,8 @@ const tr: Dict = {
   "profile.displayNameHint": "Diğer kişilere kullanıcı adın yerine bu gösterilir.",
   "profile.bio": "Hakkında",
   "profile.bioHint": "Kendinle ilgili kısa bir not.",
+  "profile.branch": "Branş",
+  "profile.branchNone": "Belirtilmedi",
   "profile.bioEmpty": "Henüz bir not yok.",
   "profile.classes": "Şubeler",
   "profile.noClasses": "Hiçbir şubede değil.",

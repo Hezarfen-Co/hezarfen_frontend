@@ -1,4 +1,4 @@
-import { Show, createSignal } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import { patchMe } from "@/api/users";
 import type { ProfileUpdate, User } from "@/api/client";
 import { formatApiError } from "@/api/client";
@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createFlash } from "@/lib/flash";
+import { hasMinRole } from "@/lib/roles";
 import { useT } from "@/stores/preferences-context";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,7 +49,9 @@ export function ProfileForm(props: {
    * them where a profile is in hand; omit them and the fields stay hidden
    * rather than silently offering to clear values they cannot see.
    */
-  profile?: { display_name: string | null; bio: string | null };
+  profile?: { display_name: string | null; bio: string | null; branch?: string | null };
+  /** The school's branş vocabulary (settings.branches); the picker hides when empty. */
+  branches?: string[];
   maxDisplayNameLen?: number;
   maxBioLen?: number;
   onSaved: () => void;
@@ -61,6 +65,15 @@ export function ProfileForm(props: {
   const [birthDate, setBirthDate] = createSignal(dateInputFromIso(props.user.birth_date));
   const [displayName, setDisplayName] = createSignal(props.profile?.display_name ?? "");
   const [bio, setBio] = createSignal(props.profile?.bio ?? "");
+  const [branch, setBranch] = createSignal(props.profile?.branch ?? "");
+  // Branş is a teacher's field; a stored value outside the list still shows so
+  // saving the form never silently drops it.
+  const branchOptions = () => {
+    const list = props.branches ?? [];
+    const stored = props.profile?.branch;
+    return stored && !list.includes(stored) ? [stored, ...list] : list;
+  };
+  const showBranch = () => !!props.profile && hasMinRole(props.user.role, "teacher") && branchOptions().length > 0;
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
@@ -93,6 +106,7 @@ export function ProfileForm(props: {
       const bi = bio().trim();
       if (dn !== (props.profile.display_name ?? "")) b.display_name = dn;
       if (bi !== (props.profile.bio ?? "")) b.bio = bi;
+      if (showBranch() && branch() !== (props.profile.branch ?? "")) b.branch = branch();
     }
     return b;
   };
@@ -158,6 +172,15 @@ export function ProfileForm(props: {
               {(max) => <span class="ml-1 tabular-nums">{bio().length} / {max()}</span>}
             </Show>
           </p>
+        </div>
+      </Show>
+      <Show when={showBranch()}>
+        <div class="space-y-1.5">
+          <Label for="pf-branch">{t("profile.branch")}</Label>
+          <Select id="pf-branch" class="h-10" value={branch()} onChange={(e) => setBranch(e.currentTarget.value)}>
+            <option value="">{t("profile.branchNone")}</option>
+            <For each={branchOptions()}>{(name) => <option value={name}>{name}</option>}</For>
+          </Select>
         </div>
       </Show>
       <div class="space-y-1.5">

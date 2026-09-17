@@ -38,6 +38,17 @@ export type ProfileUpdate = {
  birth_date?: string | null;
  display_name?: string | null;
  bio?: string | null;
+ // The teacher's branş, by name from settings.branches.
+ branch?: string | null;
+};
+
+// POST /users (admin): the school office opens an account directly. `role`
+// defaults to student on the server; an existing person joins this school only
+// when the password matches their credential (409 otherwise).
+export type CreateUserInput = {
+ username: string;
+ password: string;
+ role?: Role;
 };
 
 export type PersonRef = {
@@ -105,6 +116,8 @@ export type Profile = {
  display_name: string | null;
  role: Role;
  bio: string | null;
+ // The teacher's branş, one of settings.branches; null when unset.
+ branch: string | null;
  avatar: AvatarMeta | null;
  // Capped at limits.user.max_profile_classes; stats.classes holds the true total.
  classes: ProfileClassRef[];
@@ -395,6 +408,12 @@ export type ClassMember = {
  class: string;
  user: PersonRef;
  added_by: PersonRef;
+ // One stint: a leave-and-rejoin is a fresh row with a fresh id.
+ joined_at: number;
+ // Null while the stint is live; the roster routes only list live rows.
+ left_at: number | null;
+ // The şube a year rollover copied this member out of; null when placed by hand.
+ source_class_group: string | null;
 };
 
 // The instance as the class routes return it: an Instance plus who attached
@@ -833,6 +852,9 @@ export type Limits = {
   max_class_grade_len: number;
   max_class_members: number;
   max_class_courses: number;
+  max_academic_year_name_len: number;
+  min_ders_saati: number;
+  max_ders_saati: number;
  };
  exam: {
   max_title_len: number;
@@ -934,7 +956,7 @@ export type Limits = {
   required_attendance_statuses: string[];
  };
  request: { max_page_limit: number; max_request_id_len: number; schedule_past_grace_ms: number; request_timeout_secs: number };
- rate: { window_secs: number; auth_per_minute: number; api_per_minute: number; chatbot_per_minute: number };
+ rate: { window_secs: number; auth_per_minute: number; api_per_minute: number; chatbot_per_minute: number; rag_per_minute: number };
  // The RAG nest. Message length, thread titles, history depth and the thread
  // cap are the chatbot's own knobs, republished so a RAG client need not read
  // the chatbot group to bound its input.

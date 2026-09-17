@@ -5,4 +5,5 @@ export * from "./patchChatbotThreadById";
 export * from "./deleteChatbotThreadById";
 export * from "./postChatbotMessage";
 export * from "./postChatbotThread";
+export * from "./chatbotStreamUrl";
 export * from "./types";
