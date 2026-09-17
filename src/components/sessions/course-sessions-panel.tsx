@@ -2,27 +2,24 @@ import { For, Show, Suspense, createEffect, createMemo, createSignal } from "sol
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteSessionById } from "@/api/sessions";
-import { deleteSessionAttendanceByUserId } from "@/api/sessions";
 import { getSessionAttendance } from "@/api/sessions";
 import { getInstanceSessions, postInstanceSession } from "@/api/instances";
 import { getTime } from "@/api/time";
 import { patchSessionById } from "@/api/sessions";
-import { postSessionAttendance } from "@/api/sessions";
 import { formatApiError } from "@/api/client";
-import type { AttendanceStatus, CourseSession, Enrollment, SessionAttendance } from "@/api/client";
-import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
+import type { CourseSession, Enrollment, PersonRef } from "@/api/client";
+import { SessionRollCall } from "@/components/sessions/session-roll-call";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DetailField } from "@/components/ui/detail-field";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconClipboardCheck, IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
@@ -58,13 +55,13 @@ function msToTimeInput(ms: number): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const ROLL_CALL_PAGE_SIZE = 8;
-
 export function CourseSessionsPanel(props: {
   /** The instance (class x course) these lessons belong to. */
   instanceId: string;
   roster: Enrollment[];
+  teachers: PersonRef[];
   canManage: boolean;
+  canManageStaff: boolean;
   active: boolean;
   createOpen: boolean;
   onCreateOpenChange: (open: boolean) => void;
@@ -85,14 +82,25 @@ export function CourseSessionsPanel(props: {
   const [startsTime, setStartsTime] = createSignal("");
   const [endsDate, setEndsDate] = createSignal("");
   const [endsTime, setEndsTime] = createSignal("");
+  const [teacherId, setTeacherId] = createSignal("");
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
   const [detailAttendance] = createResource(
-    () => detailSession()?.id ?? null,
+    () => (props.canManage ? detailSession()?.id ?? null : null),
     async (sessionId) => (await getSessionAttendance(sessionId)).items,
   );
+  const teacherOptions = createMemo(() => {
+    const current = editingSession()?.teacher;
+    if (!current || props.teachers.some((teacher) => teacher.id === current.id)) return props.teachers;
+    return [current, ...props.teachers];
+  });
+  const attendanceTargetCount = (session: CourseSession) => {
+    const teacherIsStudent = props.roster.some((row) => row.user.id === session.teacher.id);
+    const teacherHasRow = detailAttendance()?.some((row) => row.user.id === session.teacher.id) ?? false;
+    return props.roster.length + (!teacherIsStudent && (props.canManageStaff || teacherHasRow) ? 1 : 0);
+  };
 
   const resetForm = () => {
     setTopic("");
@@ -100,6 +108,7 @@ export function CourseSessionsPanel(props: {
     setStartsTime("");
     setEndsDate("");
     setEndsTime("");
+    setTeacherId("");
     setError("");
     setEditingSession(null);
   };
@@ -111,6 +120,7 @@ export function CourseSessionsPanel(props: {
     setStartsTime(msToTimeInput(session.starts_at));
     setEndsDate(session.ends_at != null ? msToDateInput(session.ends_at) : "");
     setEndsTime(session.ends_at != null ? msToTimeInput(session.ends_at) : "");
+    setTeacherId(session.teacher.id);
     setError("");
     props.onCreateOpenChange(false);
   };
@@ -157,6 +167,7 @@ export function CourseSessionsPanel(props: {
       if (current) {
         await patchSessionById(current.id, {
           topic: topic().trim() || "",
+          teacher_id: teacherId(),
           starts_at,
           ends_at,
         });
@@ -165,6 +176,7 @@ export function CourseSessionsPanel(props: {
         await postInstanceSession(props.instanceId, {
           starts_at,
           ...(topic().trim() ? { topic: topic().trim() } : {}),
+          ...(teacherId() ? { teacher_id: teacherId() } : {}),
           ...(ends_at != null ? { ends_at } : {}),
         });
         setFlash(t("common.created"));
@@ -274,6 +286,21 @@ export function CourseSessionsPanel(props: {
             <Label for="session-topic">{t("sessions.topic")}</Label>
             <Input id="session-topic" value={topic()} maxlength={200} onInput={(e) => setTopic(e.currentTarget.value)} />
           </div>
+          <div class="space-y-1.5">
+            <Label for="session-teacher">{t("sessions.teacher")}</Label>
+            <Select
+              id="session-teacher"
+              value={teacherId()}
+              onChange={(e) => setTeacherId(e.currentTarget.value)}
+            >
+              <Show when={!editingSession()}>
+                <option value="">{t("sessions.defaultTeacher")}</option>
+              </Show>
+              <For each={teacherOptions()}>
+                {(teacher) => <option value={teacher.id}>{personLabel(teacher)}</option>}
+              </For>
+            </Select>
+          </div>
           <div class="grid gap-3">
             <div class="space-y-1.5">
               <Label for="session-starts">{t("events.starts")}</Label>
@@ -322,7 +349,9 @@ export function CourseSessionsPanel(props: {
                 <DetailField label={t("sessions.teacher")} value={personLabel(session.teacher)} />
                 <DetailField label={t("events.starts")} value={formatDateTime(session.starts_at, locale())} />
                 <DetailField label={t("events.ends")} value={formatDateTime(session.ends_at, locale())} />
-                <DetailField label={t("attendance.title")} value={`${detailAttendance()?.length ?? 0} / ${props.roster.length}`} mono />
+                <Show when={props.canManage}>
+                  <DetailField label={t("attendance.title")} value={`${detailAttendance()?.length ?? 0} / ${attendanceTargetCount(session)}`} mono />
+                </Show>
               </div>
               <Show when={props.canManage}>
                 <div class="flex gap-2">
@@ -350,7 +379,14 @@ export function CourseSessionsPanel(props: {
         description={selectedSession() ? `${selectedSession()!.topic || t("sessions.untitled")} · ${formatDateTime(selectedSession()!.starts_at, locale())}` : undefined}
       >
         <Show when={selectedSession()}>
-          {(session) => <RollCall sessionId={session().id} roster={props.roster} />}
+          {(session) => (
+            <SessionRollCall
+              sessionId={session().id}
+              roster={props.roster}
+              teacher={session().teacher}
+              canMarkTeacher={props.canManageStaff}
+            />
+          )}
         </Show>
       </SidePanel>
 
@@ -375,108 +411,6 @@ export function CourseSessionsPanel(props: {
           }
         }}
       />
-    </div>
-  );
-}
-
-function RollCall(props: { sessionId: string; roster: Enrollment[] }) {
-  const t = useT();
-  const [attendance, { refetch }] = createResource(
-    () => props.sessionId,
-    async (sessionId) => (await getSessionAttendance(sessionId)).items,
-  );
-  const rows = createMemo(() => new Map((attendance() ?? []).map((row) => [row.user.id, row])));
-  const [local, setLocal] = createSignal<Record<string, AttendanceStatus>>({});
-  const [error, setError] = createSignal("");
-  const [flash, setFlash] = createFlash();
-  const [page, setPage] = createSignal(0);
-  const totalPages = createMemo(() => Math.max(1, Math.ceil(props.roster.length / ROLL_CALL_PAGE_SIZE)));
-  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
-  const visibleRoster = createMemo(() => {
-    const start = safePage() * ROLL_CALL_PAGE_SIZE;
-    return props.roster.slice(start, start + ROLL_CALL_PAGE_SIZE);
-  });
-
-  createEffect(() => {
-    if (page() >= totalPages()) setPage(totalPages() - 1);
-  });
-
-  const statusFor = (userId: string) => local()[userId] ?? rows().get(userId)?.status ?? "present";
-  const save = async (userId: string) => {
-    setError("");
-    try {
-      await postSessionAttendance(props.sessionId, { user_id: userId, status: statusFor(userId) });
-      await refetch();
-      setFlash(t("common.saved"));
-    } catch (err) {
-      setError(formatApiError(err));
-    }
-  };
-  // Marking cannot undo itself — a wrong mark stays until the row is removed.
-  // Roster rows are students, so the session's teacher may clear them.
-  const clear = async (userId: string) => {
-    setError("");
-    try {
-      await deleteSessionAttendanceByUserId(props.sessionId, userId);
-      setLocal((current) => {
-        const next = { ...current };
-        delete next[userId];
-        return next;
-      });
-      await refetch();
-      setFlash(t("common.deleted"));
-    } catch (err) {
-      setError(formatApiError(err));
-    }
-  };
-
-  return (
-    <div class="space-y-3">
-      <Show when={flash()}>
-        <Alert variant="success">{flash()}</Alert>
-      </Show>
-      {error() && <Alert variant="destructive">{error()}</Alert>}
-      <Show
-        when={props.roster.length > 0}
-        fallback={<EmptyState kind="people" title={t("sessions.emptyRoster")} />}
-      >
-        <For each={visibleRoster()}>
-          {(row) => {
-            const saved = () => rows().get(row.user.id) as SessionAttendance | undefined;
-            return (
-              <div class="space-y-2 rounded-lg border border-border/50 bg-card px-4 py-3">
-                <div class="min-w-0">
-                  <p class="truncate font-medium">{personLabel(row.user)}</p>
-                  <p class="mono truncate text-xs text-muted-foreground">{row.user.id}</p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <div class="min-w-0 flex-1">
-                    <AttendanceStatusPicker hideLabel hideDetail id={`session-${props.sessionId}-${row.user.id}`} value={statusFor(row.user.id)} onChange={(status) => setLocal((current) => ({ ...current, [row.user.id]: status }))} />
-                  </div>
-                  <Button type="button" class="h-10 w-24 shrink-0 rounded-lg" variant={saved() ? "outline" : "default"} onClick={() => void save(row.user.id)}>
-                    {saved() ? t("common.update") : t("common.save")}
-                  </Button>
-                  <Show when={saved()}>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      class="h-10 w-10 shrink-0 text-destructive hover:bg-destructive/10"
-                      aria-label={t("common.remove")}
-                      onClick={() => void clear(row.user.id)}
-                    >
-                      <IconTrash class="h-4 w-4" />
-                    </Button>
-                  </Show>
-                </div>
-              </div>
-            );
-          }}
-        </For>
-      </Show>
-      <Show when={totalPages() > 1}>
-        <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
-      </Show>
     </div>
   );
 }

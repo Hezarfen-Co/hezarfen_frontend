@@ -568,7 +568,9 @@ function InstanceDetailContent() {
                 <CourseSessionsPanel
                   instanceId={id()}
                   roster={roster() ?? []}
+                  teachers={inst().teachers}
                   canManage={canManage()}
+                  canManageStaff={canStaff()}
                   active={tab() === "sessions"}
                   createOpen={showSessionForm()}
                   onCreateOpenChange={setShowSessionForm}
