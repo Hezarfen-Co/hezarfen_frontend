@@ -1,7 +1,8 @@
 import { Link, useLocation, useParams } from "@tanstack/solid-router";
 import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
-import { getUserById, patchUserProfile, patchUserRole } from "@/api/users";
+import { getSettings } from "@/api/settings";
+import { getUserById, getUserProfile, patchUserProfile, patchUserRole } from "@/api/users";
 import { formatApiError, type Role } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { PageHeader } from "@/components/layout/page-header";
@@ -16,7 +17,7 @@ import { IconChevronLeft, IconEdit, IconExternalLink, IconUsers } from "@/compon
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
-import { ROLES } from "@/lib/roles";
+import { ROLES, hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
@@ -38,6 +39,9 @@ function AdminUserDetailContent() {
     return params().id;
   });
   const [user, { refetch }] = createResource(id, (userId) => getUserById(userId));
+  // Branş (and display name/bio) live only on the profile read, not on User.
+  const [profile, { refetch: refetchProfile }] = createResource(id, (userId) => getUserProfile(userId).catch(() => null));
+  const [settings] = createResource(() => getSettings().catch(() => null));
   const [editing, setEditing] = createSignal(false);
   const [studentsOpen, setStudentsOpen] = createSignal(false);
   const [pendingRole, setPendingRole] = createSignal<Role>("student");
@@ -101,6 +105,9 @@ function AdminUserDetailContent() {
               <DetailField label={t("profile.email")} value={current().email || "—"} />
               <DetailField label={t("profile.phone")} value={current().phone || "—"} />
               <DetailField label={t("profile.birthDate")} value={current().birth_date || "—"} />
+              <Show when={hasMinRole(current().role, "teacher")}>
+                <DetailField label={t("profile.branch")} value={profile.latest?.branch || "—"} />
+              </Show>
               <DetailField label={t("admin.id")} value={current().id} mono />
               <div class="space-y-1.5">
                 <p class="text-xs font-medium text-text-subtle">{t("admin.role")}</p>
@@ -132,9 +139,12 @@ function AdminUserDetailContent() {
             >
               <ProfileForm
                 user={current()}
+                profile={profile.latest ? { display_name: profile.latest.display_name, bio: profile.latest.bio, branch: profile.latest.branch } : undefined}
+                branches={settings.latest?.branches}
                 onSave={(body) => patchUserProfile(current().id, body)}
                 onSaved={async () => {
                   setEditing(false);
+                  void refetchProfile();
                   await refetch();
                 }}
               />
