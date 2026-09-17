@@ -24,12 +24,14 @@ export function CreateUserPanel(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (user: User) => void;
+  /** Fix the new account to one role when opened from a role-specific roster. */
+  fixedRole?: Role;
 }) {
   const t = useT();
   const [limits] = createResource(() => getLimits());
   const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
-  const [role, setRole] = createSignal<Role>("student");
+  const [role, setRole] = createSignal<Role>(props.fixedRole ?? "student");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
 
@@ -38,7 +40,7 @@ export function CreateUserPanel(props: {
   const reset = () => {
     setUsername("");
     setPassword("");
-    setRole("student");
+    setRole(props.fixedRole ?? "student");
     setError("");
   };
 
@@ -61,7 +63,7 @@ export function CreateUserPanel(props: {
     if (msg) { setError(msg); return; }
     setPending(true);
     try {
-      const created = await postUser({ username: username().trim(), password: password(), role: role() });
+      const created = await postUser({ username: username().trim(), password: password(), role: props.fixedRole ?? role() });
       reset();
       props.onCreated(created);
     } catch (err) {
@@ -110,12 +112,14 @@ export function CreateUserPanel(props: {
           />
           <p class="text-xs text-muted-foreground">{t("admin.createUserPasswordHint")}</p>
         </div>
-        <div class="space-y-1.5">
-          <Label for="create-user-role">{t("admin.role")}</Label>
-          <Select id="create-user-role" class="h-10" value={role()} onChange={(e) => setRole(e.currentTarget.value as Role)}>
-            <For each={ROLES}>{(r) => <option value={r}>{t(`role.${r}` as MessageKey)}</option>}</For>
-          </Select>
-        </div>
+        <Show when={!props.fixedRole}>
+          <div class="space-y-1.5">
+            <Label for="create-user-role">{t("admin.role")}</Label>
+            <Select id="create-user-role" class="h-10" value={role()} onChange={(e) => setRole(e.currentTarget.value as Role)}>
+              <For each={ROLES}>{(r) => <option value={r}>{t(`role.${r}` as MessageKey)}</option>}</For>
+            </Select>
+          </div>
+        </Show>
         <div class="flex flex-wrap items-center justify-end gap-2">
           <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={close}>
             {t("common.cancel")}

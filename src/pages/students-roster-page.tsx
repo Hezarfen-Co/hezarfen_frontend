@@ -2,11 +2,13 @@ import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
+import { matchesSearch } from "@/lib/search-text";
 import { getClassMembers, getClasses } from "@/api/classes";
 import { getAcademicYears } from "@/api/academic-years";
 import { getUserSearch } from "@/api/users";
 import { formatApiError, type ClassGroup, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { CreateUserPanel } from "@/components/users/create-user-panel";
 import { RosterPersonCell } from "@/components/users/roster-person-cell";
 import { Button } from "@/components/ui/button";
 import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
@@ -17,6 +19,7 @@ import { Select } from "@/components/ui/select";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useT } from "@/stores/preferences-context";
+import { useAuth } from "@/stores/auth-context";
 
 const ROSTER_PAGE_SIZE = 10;
 
@@ -35,9 +38,11 @@ export default function StudentsRosterPage() {
 // columns keep the design's slot and say "yakında" instead of a number.
 function StudentsRosterContent() {
   const t = useT();
+  const auth = useAuth();
   const navigate = useNavigate();
   const [classFilter, setClassFilter] = createSignal("");
   const [yearFilter, setYearFilter] = createSignal("");
+  const [creating, setCreating] = createSignal(false);
 
   const [data, { refetch }] = createResource(async () => {
     const [students, classes, years] = await Promise.all([
@@ -131,11 +136,12 @@ function StudentsRosterContent() {
             {t("roster.import")}
             <ComingSoonBadge class="ml-1.5" />
           </Button>
-          <Button size="sm" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
-            <IconPlus class="h-4 w-4" />
-            {t("roster.addStudent")}
-            <ComingSoonBadge class="ml-1.5" />
-          </Button></>}
+          <Show when={auth.user()?.role === "admin"}>
+            <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreating(true)}>
+              <IconPlus class="h-4 w-4" />
+              {t("roster.addStudent")}
+            </Button>
+          </Show></>}
                 columns={columns()}
                 data={rows()}
                 tableClass="min-w-[940px]"
@@ -143,7 +149,7 @@ function StudentsRosterContent() {
                 filterPlaceholder={t("roster.searchStudents")}
                 filterHint={t("search.hint.students")}
                 searchPredicate={(row, query) =>
-                  [row.person.username, row.person.display_name ?? ""].join(" ").toLocaleLowerCase().includes(query.toLocaleLowerCase())
+                  matchesSearch(query, row.person.username, row.person.display_name)
                 }
                 filters={
                   <>
@@ -166,6 +172,15 @@ function StudentsRosterContent() {
           </Show>
         </Suspense>
       </section>
+      <CreateUserPanel
+        open={creating()}
+        onOpenChange={setCreating}
+        fixedRole="student"
+        onCreated={() => {
+          setCreating(false);
+          void refetch();
+        }}
+      />
     </div>
   );
 }
