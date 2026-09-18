@@ -52,7 +52,9 @@ const RUN_B: InsightRun = {
   students_failed: 1,
   students_skipped: 6,
   rows_written: 9,
-  pending_students: ["s2"],
+  // One pending student the roster can name, one it cannot: the second pins the
+  // `—` fallback (the id itself stays in the technical disclosure).
+  pending_students: ["s2", "ghost-id"],
   // Real stage vocabulary (discover_students / fetch / compute / store), plus one
   // unknown stage so the fallback is pinned too.
   failed_modules: ["fetch", "mystery_stage"],
@@ -165,8 +167,8 @@ describe("InsightRunReport", () => {
     await openReport(DAY_B);
 
     expect(screen.getByText(`Çalıştırma günü ${DAY_B}`)).toBeTruthy();
-    // RUN_B's own ledger row, not RUN_A's: its pending student is named in the report.
-    await waitFor(() => expect(panel().getByText(/1 öğrenci sıradaki çalıştırmaya kaldı: Ayça Şahin/)).toBeTruthy());
+    // RUN_B's own ledger row, not RUN_A's: its pending students are named in the report.
+    await waitFor(() => expect(panel().getByText(/2 öğrenci sıradaki çalıştırmaya kaldı: Ayça Şahin, —/)).toBeTruthy());
   });
 
   it("renders the run's counters from the ledger row", async () => {
@@ -292,7 +294,7 @@ describe("InsightRunReport", () => {
 
   it("names the pending students in the export exactly as the panel does", async () => {
     await openReport(DAY_B);
-    await waitFor(() => expect(panel().getByText(/1 öğrenci sıradaki çalıştırmaya kaldı/)).toBeTruthy());
+    await waitFor(() => expect(panel().getByText(/2 öğrenci sıradaki çalıştırmaya kaldı/)).toBeTruthy());
 
     const markdown = buildRunReportMarkdown(
       buildRunReportModel({
@@ -305,7 +307,8 @@ describe("InsightRunReport", () => {
       }),
       "tr",
     );
-    expect(markdown).toContain("1 öğrenci sıradaki çalıştırmaya kaldı: Ayça Şahin");
+    // Same line, same order, same em-dash as the panel (one helper builds both).
+    expect(markdown).toContain("2 öğrenci sıradaki çalıştırmaya kaldı: Ayça Şahin, —");
     expect(markdown).toContain("Veri üretmeyen modüller: Veri toplama, mystery_stage");
     expect(markdown).toContain("Keşifsel");
     expect(markdown).not.toContain("exploratory");
