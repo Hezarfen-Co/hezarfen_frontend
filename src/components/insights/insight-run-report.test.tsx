@@ -1,15 +1,30 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@solidjs/testing-library";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { InsightRun, PersonRef, StudentInsight } from "@/api/client";
+import { ApiError, type InsightRun, type PersonRef, type StudentInsight } from "@/api/client";
+import type * as insightsApiModule from "@/api/insights";
 import { InsightRunsTable } from "@/components/insights/insight-runs-table";
 import { buildRunReportMarkdown, buildRunReportModel } from "@/lib/insight-run-report";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
-const insightsApi = vi.hoisted(() => ({ getInsightByUserId: vi.fn() }));
+const insightsApi = vi.hoisted(() => ({
+  getInsightByUserId: vi.fn(),
+  postInsightRunReport: vi.fn(),
+  getInsightRunReport: vi.fn(),
+}));
 const usersApi = vi.hoisted(() => ({ getUserSearch: vi.fn() }));
+/** Who the drawer thinks is reading: generation is offered to manager+ only. */
+const viewer = vi.hoisted(() => ({ role: "manager" as "manager" | "teacher" }));
 
-vi.mock("@/api/insights", () => insightsApi);
+// The URL builder stays real (the drawer and the download use it); only the
+// two doors and the per-student read are stood in for.
+vi.mock("@/api/insights", async () => ({
+  ...(await vi.importActual<typeof insightsApiModule>("@/api/insights")),
+  ...insightsApi,
+}));
 vi.mock("@/api/users", () => usersApi);
+vi.mock("@/stores/auth-context", () => ({
+  useAuth: () => ({ user: () => ({ id: "m-1", role: viewer.role }), loading: () => false }),
+}));
 // Kobalte's dropdown chrome is not what this test is about: flatten it to one
 // plain button per action so the report path can be driven in jsdom.
 vi.mock("@/components/ui/table-row-actions", () => ({
@@ -147,6 +162,7 @@ async function openReport(runDay: string) {
 
 describe("InsightRunReport", () => {
   beforeEach(() => {
+    viewer.role = "manager";
     localStorage.setItem("hezarfen.locale", "tr");
     usersApi.getUserSearch.mockResolvedValue({ items: ROSTER, total: ROSTER.length, limit: 200, offset: 0 });
     insightsApi.getInsightByUserId.mockImplementation((userId: string) => {
@@ -334,5 +350,153 @@ describe("InsightRunReport", () => {
     expect(markdown).toContain("Çalışma: 0/3 öğrencide veri var → veri yok");
     expect(markdown).toContain("Keşifsel");
     expect(markdown).toContain("```json");
+  });
+
+  it("asks the service for the rendered run day's report and reads it back before offering it", async () => {
+    const receipt = {
+      run_day: DAY_B,
+      byte_size: 4096,
+      truncated: false,
+      notes: [],
+      generated_at: COMPUTED_AT,
+    };
+    const pending = Promise.withResolvers<typeof receipt>();
+    insightsApi.postInsightRunReport.mockImplementation(() => pending.promise);
+    insightsApi.getInsightRunReport.mockResolvedValue(new Blob(["<html/>"], { type: "text/html" }));
+    // The hand-over itself is the other test's subject; here it must not navigate.
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    await openReport(DAY_B);
+    await waitFor(() => expect(panel().getByText("71,0 (1/2)")).toBeTruthy());
+
+    fireEvent.click(panel().getByRole("button", { name: "Okul raporu (HTML)" }));
+
+    // The door is this run row's own day, and it is asked before the read.
+    expect(insightsApi.postInsightRunReport).toHaveBeenCalledWith(DAY_B);
+    expect(insightsApi.getInsightRunReport).not.toHaveBeenCalled();
+    const busy = panel().getByRole("button", { name: "Rapor oluşturuluyor…" }) as HTMLButtonElement;
+    expect(busy.disabled).toBe(true);
+
+    pending.resolve(receipt);
+
+    // Read-back first: the bytes are what prove there is a document to hand over.
+    await waitFor(() => expect(insightsApi.getInsightRunReport).toHaveBeenCalledWith(DAY_B));
+    await waitFor(() =>
+      expect(panel().getByRole("button", { name: "Okul raporu (HTML)" })).toBeTruthy(),
+    );
+    expect((panel().getByRole("button", { name: "Okul raporu (HTML)" }) as HTMLButtonElement).disabled).toBe(
+      false,
+    );
+  });
+
+  it("hands the stored document over as an anchor on its own door, under its own file name", async () => {
+    const clicked: { href: string | null; download: string | null }[] = [];
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        clicked.push({ href: this.getAttribute("href"), download: this.getAttribute("download") });
+      });
+    insightsApi.postInsightRunReport.mockResolvedValue({
+      run_day: DAY_B,
+      byte_size: 4096,
+      truncated: false,
+      notes: [],
+      generated_at: COMPUTED_AT,
+    });
+    insightsApi.getInsightRunReport.mockResolvedValue(new Blob(["<html/>"], { type: "text/html" }));
+    await openReport(DAY_B);
+    await waitFor(() => expect(panel().getByText("71,0 (1/2)")).toBeTruthy());
+
+    fireEvent.click(panel().getByRole("button", { name: "Okul raporu (HTML)" }));
+
+    await waitFor(() => expect(click).toHaveBeenCalledTimes(1));
+    expect(clicked[0]).toEqual({
+      href: `/api/insights/runs/${DAY_B}/report`,
+      download: `okul-analiz-raporu-${DAY_B}.html`,
+    });
+  });
+
+  it("says the report service is unavailable on a 503 and puts the control back", async () => {
+    insightsApi.postInsightRunReport.mockRejectedValue(
+      new ApiError(503, "no AI service is connected right now"),
+    );
+    await openReport(DAY_B);
+    await waitFor(() => expect(panel().getByText("71,0 (1/2)")).toBeTruthy());
+
+    fireEvent.click(panel().getByRole("button", { name: "Okul raporu (HTML)" }));
+
+    await waitFor(() =>
+      expect(
+        panel().getByText("Okul raporu servisi şu an kullanılamıyor. Sonra tekrar dene."),
+      ).toBeTruthy(),
+    );
+    expect((panel().getByRole("button", { name: "Okul raporu (HTML)" }) as HTMLButtonElement).disabled).toBe(
+      false,
+    );
+    expect(insightsApi.getInsightRunReport).not.toHaveBeenCalled();
+  });
+
+  it("says the document is too large without telling the reader to pick a smaller file", async () => {
+    insightsApi.postInsightRunReport.mockRejectedValue(new ApiError(413, "document_too_large"));
+    await openReport(DAY_B);
+    await waitFor(() => expect(panel().getByText("71,0 (1/2)")).toBeTruthy());
+
+    fireEvent.click(panel().getByRole("button", { name: "Okul raporu (HTML)" }));
+
+    await waitFor(() =>
+      expect(panel().getByText("Rapor belgesi sunucunun boyut sınırını aştı.")).toBeTruthy(),
+    );
+    expect(panel().queryByText(/Daha küçük bir dosya seç/)).toBeNull();
+  });
+
+  it("shows the server's own sentence when the service refuses the generation", async () => {
+    insightsApi.postInsightRunReport.mockRejectedValue(
+      new ApiError(409, "the school report was refused: no marks were stored for this run day"),
+    );
+    await openReport(DAY_B);
+    await waitFor(() => expect(panel().getByText("71,0 (1/2)")).toBeTruthy());
+
+    fireEvent.click(panel().getByRole("button", { name: "Okul raporu (HTML)" }));
+
+    await waitFor(() =>
+      expect(
+        panel().getByText("the school report was refused: no marks were stored for this run day"),
+      ).toBeTruthy(),
+    );
+  });
+
+  it("says the document could not be read back when the generation answered but stored nothing", async () => {
+    insightsApi.postInsightRunReport.mockResolvedValue({
+      run_day: DAY_B,
+      byte_size: 0,
+      truncated: false,
+      notes: [],
+      generated_at: COMPUTED_AT,
+    });
+    insightsApi.getInsightRunReport.mockRejectedValue(
+      new ApiError(409, "no school report is stored for this run day"),
+    );
+    await openReport(DAY_B);
+    await waitFor(() => expect(panel().getByText("71,0 (1/2)")).toBeTruthy());
+
+    fireEvent.click(panel().getByRole("button", { name: "Okul raporu (HTML)" }));
+
+    await waitFor(() =>
+      expect(panel().getByText("Rapor oluşturuldu ama belge okunamadı. Tekrar dene.")).toBeTruthy(),
+    );
+    // The server's own 409 text is not what the reader gets: nothing was refused.
+    expect(panel().queryByText("no school report is stored for this run day")).toBeNull();
+  });
+
+  it("offers no generation control to a reader the door would refuse", async () => {
+    viewer.role = "teacher";
+    await openReport(DAY_B);
+    await waitFor(() => expect(panel().getByText("71,0 (1/2)")).toBeTruthy());
+
+    expect(panel().queryByRole("button", { name: "Okul raporu (HTML)" })).toBeNull();
+    // The three controls that only read what is already on screen stay.
+    expect(panel().getByRole("button", { name: "Kopyala" })).toBeTruthy();
+    expect(panel().getByRole("button", { name: "İndir (.md)" })).toBeTruthy();
+    expect(panel().getByRole("button", { name: "Yazdır / PDF" })).toBeTruthy();
+    expect(insightsApi.postInsightRunReport).not.toHaveBeenCalled();
   });
 });

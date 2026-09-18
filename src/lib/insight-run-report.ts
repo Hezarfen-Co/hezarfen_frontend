@@ -328,6 +328,11 @@ export function runReportFileName(runDay: string): string {
   return `okul-analiz-raporu-${runDay}.md`;
 }
 
+/** The AI service's own document, under the same base name as the .md export. */
+export function runReportHtmlFileName(runDay: string): string {
+  return `okul-analiz-raporu-${runDay}.html`;
+}
+
 /**
  * The run's pending students, by name, in the ledger's own order — the panel
  * and the export both render this one line, so the count, the names and the

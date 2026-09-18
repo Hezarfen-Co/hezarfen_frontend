@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getInsightByUserId,
+  getInsightRunReport,
   getInsightRuns,
   getInsightsPending,
   getMyInsight,
+  insightRunReportUrl,
   postInsightComputeByUserId,
+  postInsightRunReport,
   postInsightsRefresh,
 } from "../../insights";
-import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
+import { lastFetchCall, mockFetchBlob, mockFetchError, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("insights API", () => {
   afterEach(() => {
@@ -114,5 +117,45 @@ describe("insights API", () => {
 
     const [, init] = lastFetchCall();
     expect(init?.body).toBe(JSON.stringify({}));
+  });
+
+  it("postInsightRunReport POSTs the run day's own /report door", async () => {
+    mockFetchSuccess({
+      run_day: "2026-09-18",
+      byte_size: 4096,
+      truncated: false,
+      notes: [],
+      generated_at: 1_758_000_000_000,
+    });
+
+    const receipt = await postInsightRunReport("2026-09-18");
+    expect(receipt.byte_size).toBe(4096);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/insights/runs/2026-09-18/report");
+    expect(init?.method).toBe("POST");
+  });
+
+  it("insightRunReportUrl encodes the run day and getInsightRunReport reads those bytes back", async () => {
+    expect(insightRunReportUrl("a/b")).toBe("/api/insights/runs/a%2Fb/report");
+    const blob = new Blob(["<html>okul</html>"], { type: "text/html;charset=utf-8" });
+    mockFetchBlob(blob);
+
+    const bytes = await getInsightRunReport("2026-09-18");
+
+    expect(await bytes.text()).toBe("<html>okul</html>");
+    const [url, init] = lastFetchCall();
+    // `blobClient` adds the `/api` the URL builder already carries for hrefs.
+    expect(url).toBe("/api/insights/runs/2026-09-18/report");
+    expect(init?.method ?? "GET").toBe("GET");
+  });
+
+  it("getInsightRunReport surfaces a 409 report_missing as an ApiError", async () => {
+    mockFetchError(409, { error: "no school report is stored for this run day", code: "report_missing" });
+
+    await expect(getInsightRunReport("2026-09-18")).rejects.toMatchObject({
+      status: 409,
+      message: "no school report is stored for this run day",
+    });
   });
 });

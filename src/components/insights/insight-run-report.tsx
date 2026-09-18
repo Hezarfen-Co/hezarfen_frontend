@@ -1,12 +1,13 @@
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { Portal } from "solid-js/web";
-import { getInsightByUserId } from "@/api/insights";
+import { getInsightByUserId, getInsightRunReport, insightRunReportUrl, postInsightRunReport } from "@/api/insights";
 import { getUserSearch } from "@/api/users";
-import { formatApiError, type InsightRun, type PersonRef, type StudentInsight } from "@/api/client";
+import { ApiError, formatApiError, type InsightRun, type PersonRef, type StudentInsight } from "@/api/client";
 import { InsightDetail } from "@/components/insights/insight-detail";
 import { Button } from "@/components/ui/button";
 import { EmptyInline } from "@/components/ui/empty-inline";
-import { IconCopy, IconDownload, IconFileText } from "@/components/ui/icons";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { IconCopy, IconDownload, IconFileText, IconReportAnalytics } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { runReportText, type RunReportKey } from "@/i18n/insights-run-report";
 import { formatDateTime } from "@/lib/format";
@@ -19,6 +20,7 @@ import {
   moduleLabel,
   pendingStudentsLine,
   runReportFileName,
+  runReportHtmlFileName,
   runReportStatusLabel,
   studentAttendanceText,
   studentMarksText,
@@ -27,6 +29,8 @@ import {
 } from "@/lib/insight-run-report";
 import { personLabel } from "@/lib/person";
 import { createFlash } from "@/lib/flash";
+import { hasMinRole } from "@/lib/roles";
+import { useAuth } from "@/stores/auth-context";
 import { usePreferences } from "@/stores/preferences-context";
 
 /** The roster door pages at 200; `loadMoreRoster` walks the pages on request. */
@@ -278,7 +282,12 @@ export function InsightRunReport(props: { run: InsightRun }) {
   const prefs = usePreferences();
   const tx = (key: RunReportKey, vars?: Record<string, string | number>) =>
     runReportText(prefs.locale(), key, vars);
+  const auth = useAuth();
+  /** Generation is manager+ — the door refuses anyone below it, so the control is not offered. */
+  const canGenerateReport = () => hasMinRole(auth.user()?.role, "manager");
   const [, flash] = createFlash();
+  const [generatingReport, setGeneratingReport] = createSignal(false);
+  const [reportError, setReportError] = createSignal<string | null>(null);
   const [roster, setRoster] = createSignal<PersonRef[]>([]);
   const [rosterTotal, setRosterTotal] = createSignal(0);
   const [rosterError, setRosterError] = createSignal<string | null>(null);
@@ -384,6 +393,54 @@ export function InsightRunReport(props: { run: InsightRun }) {
     flash(tx("downloaded"));
   };
 
+  /**
+   * The sentence a failed generation shows. A coded refusal (`409`) carries
+   * the server's own sentence about why it refused, so that one is shown
+   * as-is; everything else goes through the house renderer. The single `409`
+   * this control can meet *after* its own `200` — `report_missing` — says the
+   * document could not be read back instead: the service did not refuse
+   * anything, its document is simply not there.
+   */
+  const reportFailureText = (err: unknown, readingBack: boolean): string => {
+    if (err instanceof ApiError && err.status === 409) {
+      return readingBack ? tx("schoolReportUnreadable") : err.message;
+    }
+    if (err instanceof ApiError && err.status === 503) return tx("schoolReportUnavailable");
+    // The house 413 copy is about uploads ("choose a smaller file") — wrong
+    // instruction here: nothing was chosen, the service's own document is big.
+    if (err instanceof ApiError && err.status === 413) return tx("schoolReportTooLarge");
+    return formatApiError(err);
+  };
+
+  /**
+   * Ask the service for this run day's school-level document, then hand it
+   * over. The read-back in between is what keeps a `200` honest: without it a
+   * generation that stored nothing would still open a download that answers
+   * `409`. The anchor points at the door itself — same-origin, so the session
+   * cookie rides along — rather than at bytes this tab fetched.
+   */
+  const generateSchoolReport = async () => {
+    const runDay = props.run.run_day;
+    setGeneratingReport(true);
+    setReportError(null);
+    let readingBack = false;
+    try {
+      await postInsightRunReport(runDay);
+      readingBack = true;
+      await getInsightRunReport(runDay);
+      const anchor = document.createElement("a");
+      anchor.href = insightRunReportUrl(runDay);
+      anchor.download = runReportHtmlFileName(runDay);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+    } catch (err) {
+      setReportError(reportFailureText(err, readingBack));
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   return (
     <div class="space-y-5">
       <div class="flex flex-wrap items-center justify-end gap-2">
@@ -399,7 +456,24 @@ export function InsightRunReport(props: { run: InsightRun }) {
           <IconFileText class="h-4 w-4" />
           {tx("print")}
         </Button>
+        <Show when={canGenerateReport()}>
+          <Button
+            variant="outline"
+            size="sm"
+            class="rounded-lg"
+            disabled={generatingReport()}
+            aria-busy={generatingReport()}
+            onClick={() => void generateSchoolReport()}
+          >
+            <IconReportAnalytics class="h-4 w-4" />
+            {generatingReport() ? tx("schoolReportGenerating") : tx("schoolReport")}
+          </Button>
+        </Show>
       </div>
+
+      <Show when={reportError()}>
+        {(message) => <ErrorAlert message={message()} />}
+      </Show>
 
       <Show when={unloaded().length > 0}>
         <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border-line px-3 py-2">
