@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import { useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
@@ -19,13 +19,14 @@ import { AttendanceTable } from "@/components/events/attendance-table";
 import { EventForm } from "@/components/events/event-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -167,31 +168,23 @@ function EventDetailContent() {
         {(ev) => (
           <div class="space-y-6">
             <div class="space-y-2">
+              <Breadcrumbs items={[{ label: t("events.title"), to: "/events" }, { label: ev().title }]} />
               <PageHeader
-                eyebrow={t("events.title")}
                 title={ev().title}
                 description={ev().description || "—"}
                 actions={
-                  <div class="detail-action-group">
-                    <Link to="/events">
-                      <Button variant="ghost" size="sm" class="w-full rounded-xl sm:w-auto">
-                        <IconChevronLeft class="h-4 w-4" />
-                        {t("common.back")}
+                  canManage() ? (
+                    <div class="detail-action-group">
+                      <Button type="button" variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(true)}>
+                        <IconEdit class="h-4 w-4" />
+                        {t("common.edit")}
                       </Button>
-                    </Link>
-                    <Show when={canManage()}>
-                      <div class="detail-action-divider">
-                        <Button type="button" variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(true)}>
-                          <IconEdit class="h-4 w-4" />
-                          {t("common.edit")}
-                        </Button>
-                        <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-xl sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
-                          <IconTrash class="h-4 w-4" />
-                          {t("common.delete")}
-                        </Button>
-                      </div>
-                    </Show>
-                  </div>
+                      <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-xl sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
+                        <IconTrash class="h-4 w-4" />
+                        {t("common.delete")}
+                      </Button>
+                    </div>
+                  ) : undefined
                 }
               />
               <div class="grid gap-3 text-sm sm:grid-cols-3">

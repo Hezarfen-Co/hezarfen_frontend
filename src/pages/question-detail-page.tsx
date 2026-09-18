@@ -1,6 +1,7 @@
 import { For, Show, Suspense, createSignal, lazy } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { useParams, useRouter } from "@tanstack/solid-router";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { getQuestionById, deleteQuestionById, postQuestionApprove, getQuestionImageUrl, getQuestionImageBlob, postQuestionImage, deleteQuestionImage } from "@/api/shared";
 import { getSolutions, postSolution, patchSolutionById, deleteSolutionById, getSolutionImageUrl, getSolutionImageBlob, postSolutionImage, deleteSolutionImage } from "@/api/shared";
 import { getSettings } from "@/api/settings";
@@ -119,7 +120,9 @@ function QuestionDetailContent() {
             <>
               <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <Button variant="link" class="px-0 h-auto text-muted-foreground mb-2" onClick={() => router.history.back()}>&larr; {t("common.back")}</Button>
+                  <div class="mb-2">
+                    <Breadcrumbs items={[{ label: t("questions.title"), to: "/questions" }, { label: q().title }]} />
+                  </div>
                   <h1 class="text-2xl font-semibold ">{q().title}</h1>
                   <div class="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                     <span>{personLabel(q().asker)}</span>

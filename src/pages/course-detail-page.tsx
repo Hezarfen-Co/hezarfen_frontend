@@ -17,6 +17,7 @@ import { CourseNotesPanel } from "@/components/courses/course-notes-panel";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -260,11 +261,12 @@ function CourseDetailContent() {
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
               <div class="mx-auto w-full max-w-[1440px] space-y-4">
                 <div class="space-y-1.5">
-                  <nav class="detail-breadcrumb">
-                    <Link to="/courses" search={courseListSearch(c().kind)}>{courseKindLabel(c().kind)}</Link>
-                    <span aria-hidden>›</span>
-                    <span class="text-foreground">{c().title}</span>
-                  </nav>
+                  <Breadcrumbs
+                    items={[
+                      { label: courseKindLabel(c().kind), to: "/courses", search: courseListSearch(c().kind) },
+                      { label: c().title },
+                    ]}
+                  />
                   <PageHeader
                     title={c().title}
                     description={c().description || "—"}

@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import { useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import {
@@ -11,6 +11,7 @@ import { getCourses } from "@/api/courses";
 import { formatApiError } from "@/api/client";
 import { BankQuestionForm } from "@/components/exams/bank-question-form";
 import { PageHeader } from "@/components/layout/page-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { ComingSoonValue } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DetailField } from "@/components/ui/detail-field";
-import { IconChevronLeft, IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { formatDate } from "@/lib/format";
@@ -93,18 +94,13 @@ function BankQuestionDetailContent() {
             <Show when={error()}>
               <Alert variant="destructive">{error()}</Alert>
             </Show>
+            <div class="space-y-2">
+            <Breadcrumbs items={[{ label: t("bank.title"), to: "/question-bank" }, { label: current().text }]} />
             <PageHeader
-              eyebrow={t("bank.title")}
               title={current().text}
               description={current().subject_name || t("bank.subtitle")}
               actions={
                 <>
-                  <Link to="/question-bank">
-                    <Button variant="ghost" size="sm">
-                      <IconChevronLeft class="h-4 w-4" />
-                      {t("common.back")}
-                    </Button>
-                  </Link>
                   <Show when={canEdit()}>
                     <Button variant="outline" size="sm" class="rounded-lg" onClick={() => setEditing(true)}>
                       <IconEdit class="h-4 w-4" />
@@ -118,6 +114,7 @@ function BankQuestionDetailContent() {
                 </>
               }
             />
+            </div>
 
             <section class="data-shell space-y-5 p-5">
               <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

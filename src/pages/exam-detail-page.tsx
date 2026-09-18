@@ -23,6 +23,7 @@ import { ExamResultBadge } from "@/components/exams/exam-result-badge";
 import { GradeForm } from "@/components/exams/grade-form";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -392,11 +393,7 @@ function ExamDetailContent() {
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
           <div class="mx-auto w-full max-w-[1100px] space-y-6">
             <div class="sticky top-14 z-10 -mx-4 space-y-2 bg-surface-overlay px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-              <nav class="detail-breadcrumb">
-                <Link to="/exams">{t("exams.title")}</Link>
-                <span aria-hidden>›</span>
-                <span class="text-foreground">{ex().title}</span>
-              </nav>
+              <Breadcrumbs items={[{ label: t("exams.title"), to: "/exams" }, { label: ex().title }]} />
               <PageHeader
                 title={ex().title}
                 description={ex().description || "—"}

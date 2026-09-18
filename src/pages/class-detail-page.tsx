@@ -1,6 +1,7 @@
 import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
-import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import { useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
   getClassById,
@@ -25,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconChevronLeft, IconExternalLink, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconExternalLink, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -234,9 +235,7 @@ function ClassDetailContent() {
     >
       {(c) => (
             <div class="space-y-5">
-              <Link to="/management/classes" class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-                <IconChevronLeft class="h-4 w-4" />{t("classGroups.title")}
-              </Link>
+              <Breadcrumbs items={[{ label: t("classGroups.title"), to: "/management/classes" }, { label: c().name }]} />
 
               <header class="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
                 <div class="space-y-1">

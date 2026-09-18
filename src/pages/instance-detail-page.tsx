@@ -1,6 +1,6 @@
 import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
-import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import { useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getClassById } from "@/api/classes";
 import { getCourseById } from "@/api/courses";
@@ -25,6 +25,7 @@ import { CourseHomeworkPanel } from "@/components/homework/course-homework-panel
 import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -260,13 +261,13 @@ function InstanceDetailContent() {
         {(inst) => (
           <div class="mx-auto w-full max-w-[1440px] space-y-4">
             <div class="space-y-1.5">
-              <nav class="detail-breadcrumb">
-                <Link to="/courses" search={{} as never}>{t("courses.title")}</Link>
-                <span aria-hidden>›</span>
-                <Link to="/courses/$id" params={{ id: inst().course }}>{course.latest?.title ?? "…"}</Link>
-                <span aria-hidden>›</span>
-                <span class="text-foreground">{klass.latest?.name ?? t("instances.title")}</span>
-              </nav>
+              <Breadcrumbs
+                items={[
+                  { label: t("courses.title"), to: "/courses" },
+                  { label: course.latest?.title ?? "…", to: "/courses/$id", params: { id: inst().course } },
+                  { label: klass.latest?.name ?? t("instances.title") },
+                ]}
+              />
               <PageHeader
                 title={`${course.latest?.title ?? ""} — ${klass.latest?.name ?? ""}`.replace(/^ — | — $/, "")}
                 description={t("instances.selectSectionHelp")}

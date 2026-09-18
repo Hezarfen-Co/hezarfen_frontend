@@ -615,6 +615,7 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "common.breadcrumb"
   | "common.truncatedNotice"
   | "common.createItem"
   | "common.countItem"
@@ -2746,6 +2747,7 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "common.breadcrumb": "Breadcrumb",
   "common.truncatedNotice": "Showing the first {shown} of {total} records.",
   "common.createItem": "Create new {item}",
   "common.countItem": "{count} {item}",
@@ -4879,6 +4881,7 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "common.breadcrumb": "Sayfa konumu",
   "common.truncatedNotice": "{total} kayıttan ilk {shown} tanesi gösteriliyor.",
   "common.createItem": "Yeni {item} oluştur",
   "common.countItem": "{count} {item}",

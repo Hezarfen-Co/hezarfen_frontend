@@ -17,13 +17,14 @@ import { WhiteboardRoom, type BoardLiveState } from "@/components/whiteboard/whi
 import { BoardSettingsPanel } from "@/components/whiteboard/board-settings-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DrawingPlayback } from "@/components/ui/drawing-playback";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { IconChevronLeft, IconDotsVertical, IconEraser, IconLock, IconTrash, IconX } from "@/components/ui/icons";
+import { IconDotsVertical, IconEraser, IconLock, IconTrash, IconX } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { reassembleStrokes } from "@/lib/board-stroke-codec";
@@ -218,15 +219,12 @@ function WhiteboardContent() {
       >
         {(b) => (
           <div class="space-y-4">
+            <Breadcrumbs items={[{ label: t("whiteboard.title"), to: "/whiteboards" }, { label: boardTitle() }]} />
             <PageHeader
               compact
               title={boardTitle()}
               actions={
                 <div class="flex flex-wrap items-center gap-2">
-                  <Button type="button" variant="ghost" size="sm" onClick={() => navigate({ to: "/whiteboards" })}>
-                    <IconChevronLeft class="h-4 w-4" />
-                    {t("common.back")}
-                  </Button>
                   <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setHistoryOpen(true)}>
                     {t("whiteboard.history")}
                   </Button>

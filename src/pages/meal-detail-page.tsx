@@ -1,6 +1,6 @@
 import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
-import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
+import { useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import { getLimits } from "@/api/limits";
 import {
   deleteMealBookingById,
@@ -29,6 +29,7 @@ import { getSettings } from "@/api/settings";
 import { getTime } from "@/api/time";
 import { formatApiError, type MealAttendance, type MealBooking, type MealDish, type PersonRef } from "@/api/client";
 import { PageHeader } from "@/components/layout/page-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconAlert, IconChevronLeft, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconAlert, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -184,12 +185,14 @@ function MealDetailContent() {
       <Show when={menu()?.id === id() ? menu() : undefined} fallback={<Show when={menu.error} fallback={<PageSpinner />}><ErrorAlert message={formatApiError(menu.error)} onRetry={() => void refetchMenu()} /></Show>}>
         {(current) => (
           <div class="space-y-5">
-            <PageHeader
-              eyebrow={`${current().date} · ${current().slot}`}
-              title={t("meals.menu")}
-              description={t("meals.detailHelp")}
-              actions={<div class="detail-action-group"><Link to="/meals"><Button variant="ghost" size="sm"><IconChevronLeft class="h-4 w-4" />{t("common.back")}</Button></Link><Show when={canManage()}><Button variant="outline" size="sm" onClick={() => { setCapacity(current().capacity == null ? "" : String(current().capacity)); setShowMenuEdit(true); }}><IconEdit class="h-4 w-4" />{t("common.edit")}</Button><Button variant="destructive" size="sm" onClick={() => setDeleteMenuOpen(true)}><IconTrash class="h-4 w-4" />{t("common.delete")}</Button></Show></div>}
-            />
+            <div class="space-y-2">
+              <Breadcrumbs items={[{ label: t("meals.title"), to: "/meals" }, { label: `${current().date} · ${current().slot}` }]} />
+              <PageHeader
+                title={t("meals.menu")}
+                description={t("meals.detailHelp")}
+                actions={canManage() ? <div class="detail-action-group"><Button variant="outline" size="sm" onClick={() => { setCapacity(current().capacity == null ? "" : String(current().capacity)); setShowMenuEdit(true); }}><IconEdit class="h-4 w-4" />{t("common.edit")}</Button><Button variant="destructive" size="sm" onClick={() => setDeleteMenuOpen(true)}><IconTrash class="h-4 w-4" />{t("common.delete")}</Button></div> : undefined}
+              />
+            </div>
             <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
             <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
             <Show when={success()}><Alert variant="success">{success()}</Alert></Show>

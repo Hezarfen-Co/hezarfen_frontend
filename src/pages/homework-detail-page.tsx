@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/solid-router";
+import { useLocation } from "@tanstack/solid-router";
 import { Show, Suspense, createMemo } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getCourseById } from "@/api/courses";
@@ -9,11 +9,10 @@ import { getSubjectById } from "@/api/subjects";
 import { HomeworkSubmissionPanel } from "@/components/homework/homework-submission-panel";
 import { HomeworkSubmissionsPanel } from "@/components/homework/homework-submissions-panel";
 import { PageHeader } from "@/components/layout/page-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { IconChevronLeft } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -52,19 +51,10 @@ export default function HomeworkDetailPage() {
         >
           {(item) => (
             <div class="space-y-6">
-              <PageHeader
-                eyebrow={t("homework.item")}
-                title={item().title}
-                description={item().description || undefined}
-                actions={
-                  <Link to="/homework">
-                    <Button type="button" variant="ghost" size="sm" class="rounded-lg">
-                      <IconChevronLeft class="h-4 w-4" />
-                      {t("common.back")}
-                    </Button>
-                  </Link>
-                }
-              />
+              <div class="space-y-2">
+                <Breadcrumbs items={[{ label: t("homework.title"), to: "/homework" }, { label: item().title }]} />
+                <PageHeader title={item().title} description={item().description || undefined} />
+              </div>
               <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("nav.courses")}</p>

@@ -6,6 +6,7 @@ import { getUserById, getUserProfile, patchUserProfile, patchUserRole } from "@/
 import { formatApiError, type Role } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { PageHeader } from "@/components/layout/page-header";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { ParentStudentsPanel } from "@/components/users/parent-students-panel";
 import { ProfileForm } from "@/components/users/profile-form";
@@ -13,7 +14,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DetailField } from "@/components/ui/detail-field";
-import { IconChevronLeft, IconEdit, IconExternalLink, IconUsers } from "@/components/ui/icons";
+import { IconEdit, IconExternalLink, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -68,18 +69,18 @@ function AdminUserDetailContent() {
             <Show when={error()}>
               <Alert variant="destructive">{error()}</Alert>
             </Show>
+            <div class="space-y-2">
+            <Breadcrumbs
+              items={[
+                { label: t("nav.users"), to: "/admin/users" },
+                { label: [current().name, current().surname].filter(Boolean).join(" ") || current().username },
+              ]}
+            />
             <PageHeader
-              eyebrow={t("nav.users")}
               title={[current().name, current().surname].filter(Boolean).join(" ") || current().username}
               description={`@${current().username}`}
               actions={
                 <>
-                  <Link to="/admin/users">
-                    <Button variant="ghost" size="sm">
-                      <IconChevronLeft class="h-4 w-4" />
-                      {t("common.back")}
-                    </Button>
-                  </Link>
                   <Link to="/profile/$userId" params={{ userId: current().id }}>
                     <Button variant="outline" size="sm">
                       <IconExternalLink class="h-4 w-4" />
@@ -99,6 +100,7 @@ function AdminUserDetailContent() {
                 </>
               }
             />
+            </div>
 
             <section class="data-shell grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
               <DetailField label={t("admin.username")} value={current().username} />
