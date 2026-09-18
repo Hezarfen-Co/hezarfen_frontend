@@ -31,6 +31,7 @@ import { ChartProgressRing } from "@/components/ui/chart-progress-ring";
 import { DataTable } from "@/components/ui/data-table";
 import { CommandSearchField } from "@/components/dashboard/command-search-field";
 import { QuickLinkColumn, type QuickLinkRow } from "@/components/dashboard/quick-link-column";
+import { TodayLessonsPanel } from "@/components/dashboard/today-lessons-panel";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import {
   IconBook,
@@ -161,6 +162,7 @@ function DashboardContent() {
     () => role() === "parent" || !on("courses") ? null : role(),
     (currentRole) => quiet(currentRole === "student" ? getMyCourses() : getCourses()),
   );
+  const courseTitleOf = (courseId: string) => courses()?.items.find((course) => course.id === courseId)?.title ?? "…";
   const courseCount = () => (courses.error ? "—" : String((courses()?.items ?? []).filter((course) => course.kind === "course").length));
   // `/events` has no role gate — a parent-teacher conference is a real PAR-01
   // "Yaklaşan" item, so parent reads this too (unlike `exams`/`homework`
@@ -837,13 +839,17 @@ function DashboardContent() {
 
           <Suspense fallback={<PanelSkeleton />}>
           <Show when={role() === "teacher"}>
-            {/* TCH-01's "Bugünün Programı" needs a bulk sessions/timetable
-                endpoint this app doesn't have, and "Sınıf Performansı" needs
-                per-class topic mastery, which is out too — both keep their
-                design slot as a ComingSoonPanel rather than disappearing. The
-                AI suggestion queue has no backend at all. The one real rail
-                item behind that queue — a pending appointment request —
-                gets the rail. */}
+            {/* TCH-01's "Bugünün Programı" is built from real reads: the
+                teacher's sections, each one's sessions filtered to today, and
+                each started lesson's roll-call count — it leads the board
+                because an untaken roll call is the one thing that cannot wait.
+                "Sınıf Performansı" needs per-class topic mastery, which is
+                out, so it keeps its ComingSoonPanel slot. The AI suggestion
+                queue has no backend at all. The one real rail item behind that
+                queue — a pending appointment request — gets the rail. */}
+            <Show when={on("classes") && clock()}>
+              {(ready) => <TodayLessonsPanel now={ready().now} courseTitle={courseTitleOf} />}
+            </Show>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
               <Show when={on("exams")}>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2">
@@ -892,10 +898,7 @@ function DashboardContent() {
               </div>
               </Show>
             </div>
-            <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <ComingSoonPanel title={t("dashboard.teacher.schedule")} />
-              <ComingSoonPanel title={t("dashboard.teacher.classPerformance")} />
-            </div>
+            <ComingSoonPanel title={t("dashboard.teacher.classPerformance")} />
           </Show>
           </Suspense>
 

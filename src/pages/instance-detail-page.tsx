@@ -66,7 +66,12 @@ function InstanceDetailContent() {
     return params().id;
   });
 
-  const [tab, setTab] = createSignal("exams");
+  // `?tab=sessions&rollCall=<session id>` opens straight on a lesson's roll
+  // call — the dashboard's "today's lessons" panel links here.
+  const linkedSearch = () => location().search as { tab?: unknown; rollCall?: unknown };
+  const linkedTab = () => (typeof linkedSearch().tab === "string" ? (linkedSearch().tab as string) : null);
+  const linkedRollCall = () => (typeof linkedSearch().rollCall === "string" ? (linkedSearch().rollCall as string) : undefined);
+  const [tab, setTab] = createSignal(linkedTab() ?? "exams");
   const [instance, { refetch: refetchInstance }] = createResource(id, (instanceId) => getInstanceById(instanceId));
   const [course] = createResource(() => instance()?.course ?? null, (courseId) => getCourseById(courseId));
   const [klass] = createResource(() => instance()?.class ?? null, (classId) => getClassById(classId).catch(() => null));
@@ -576,6 +581,7 @@ function InstanceDetailContent() {
                   createOpen={showSessionForm()}
                   onCreateOpenChange={setShowSessionForm}
                   onCountChange={setSessionCount}
+                  openRollCallFor={linkedRollCall()}
                 />
               </TabsContent>
 

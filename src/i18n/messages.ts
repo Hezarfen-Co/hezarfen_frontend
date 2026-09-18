@@ -616,6 +616,13 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "today.title"
+  | "today.owed"
+  | "today.empty"
+  | "today.rollCallNotTaken"
+  | "today.rollCallPartial"
+  | "today.rollCallDone"
+  | "today.upcoming"
   | "rollCall.progress"
   | "rollCall.markRestPresent"
   | "rollCall.marking"
@@ -2767,6 +2774,13 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "today.title": "Today's lessons",
+  "today.owed": "{count} roll calls waiting",
+  "today.empty": "No lessons today.",
+  "today.rollCallNotTaken": "Roll call not taken",
+  "today.rollCallPartial": "{marked}/{total} marked",
+  "today.rollCallDone": "Roll call done",
+  "today.upcoming": "Not started",
   "rollCall.progress": "{marked} of {total} marked",
   "rollCall.markRestPresent": "Mark the rest present",
   "rollCall.marking": "Saving {done} of {total}…",
@@ -4920,6 +4934,13 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "today.title": "Bugünkü derslerim",
+  "today.owed": "{count} yoklama bekliyor",
+  "today.empty": "Bugün dersin yok.",
+  "today.rollCallNotTaken": "Yoklama alınmadı",
+  "today.rollCallPartial": "{marked}/{total} işaretli",
+  "today.rollCallDone": "Yoklama tamam",
+  "today.upcoming": "Başlamadı",
   "rollCall.progress": "{total} kişiden {marked} işaretlendi",
   "rollCall.markRestPresent": "Kalanları Var işaretle",
   "rollCall.marking": "{total} kişiden {done} kaydedildi…",

@@ -66,6 +66,8 @@ export function CourseSessionsPanel(props: {
   createOpen: boolean;
   onCreateOpenChange: (open: boolean) => void;
   onCountChange: (count: number) => void;
+  /** Open this session's roll call once the list has it (a deep link). */
+  openRollCallFor?: string;
 }) {
   const t = useT();
   const { locale } = usePreferences();
@@ -74,6 +76,17 @@ export function CourseSessionsPanel(props: {
     async (instanceId) => (instanceId ? (await getInstanceSessions(instanceId)).items : []),
   );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
+  let linkedRollCallOpened = false;
+  createEffect(() => {
+    const target = props.openRollCallFor;
+    const list = sessions.latest;
+    if (!target || !list || linkedRollCallOpened) return;
+    const session = list.find((row) => row.id === target);
+    if (session && props.canManage) {
+      linkedRollCallOpened = true;
+      setSelectedSession(session);
+    }
+  });
   const [detailSession, setDetailSession] = createSignal<CourseSession | null>(null);
   const [editingSession, setEditingSession] = createSignal<CourseSession | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<CourseSession | null>(null);

@@ -67,6 +67,13 @@ vi.mock("@/api/courses", () => ({
 vi.mock("@/api/instances", () => ({
   getMyInstances: async () => page([instance]),
   getInstanceEnrollments: async () => page([]),
+  getInstanceSessions: async () => page([
+    { id: "session-today", class_course: "instance-1", teacher: { id: "u-1", username: "demo", display_name: null }, topic: "Fractions", starts_at: now, ends_at: now + 40 * 60 * 1000 },
+    { id: "session-old", class_course: "instance-1", teacher: { id: "u-1", username: "demo", display_name: null }, topic: "Old", starts_at: now - 3 * DAY, ends_at: null },
+  ]),
+}));
+vi.mock("@/api/sessions", () => ({
+  getSessionAttendance: async () => ({ items: [], total: 0, limit: 1, offset: 0 }),
 }));
 vi.mock("@/api/reports", () => ({
   getMyCourses: async () => page([course]),
@@ -322,4 +329,14 @@ test("a failed source leaves the other panels up and can be retried", async () =
   fireEvent.click(within(notice).getByRole("button"));
   expect(await screen.findByText("Exam deadline")).toBeTruthy();
   await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+});
+
+test("a teacher's board leads with today's lessons and what their roll call needs", async () => {
+  renderDashboard("teacher");
+
+  const panel = await screen.findByRole("region", { name: /Today's lessons|Bugünkü derslerim/ });
+  expect(within(panel).getByText("Fractions")).toBeTruthy();
+  expect(within(panel).queryByText("Old")).toBeNull();
+  expect(within(panel).getByText(/Roll call not taken|Yoklama alınmadı/)).toBeTruthy();
+  expect(within(panel).getByRole("link").getAttribute("href")).toBe("/instances/$id");
 });
