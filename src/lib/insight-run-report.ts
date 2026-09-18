@@ -1,6 +1,6 @@
 import type { InsightRun, PersonRef, StudentInsight } from "@/api/client";
 import { runReportText } from "@/i18n/insights-run-report";
-import type { Locale } from "@/i18n/messages";
+import { messages, type Locale, type MessageKey } from "@/i18n/messages";
 import { formatDateTime } from "@/lib/format";
 
 /**
@@ -281,6 +281,38 @@ export function runReportStatusLabel(locale: Locale, status: string): string {
   return STATUS_LABELS[locale][status] ?? status;
 }
 
+const CONFIDENCE_KEYS: Record<string, MessageKey> = {
+  none: "insights.confidence.none",
+  exploratory: "insights.confidence.exploratory",
+  stable: "insights.confidence.stable",
+};
+
+/**
+ * ZEKA's confidence tiers, in the reader's language. They come from the app's
+ * own dictionary so the drawer and the report cannot disagree; a tier the
+ * dictionary does not know stays raw rather than being guessed at.
+ */
+export function confidenceText(locale: Locale, confidence: string): string {
+  const key = CONFIDENCE_KEYS[confidence];
+  if (!key) return confidence;
+  return messages[locale][key] ?? messages.en[key] ?? confidence;
+}
+
+/**
+ * A failed pipeline stage. The values are zeka's own stage names
+ * (`discover_students` / `fetch` / `compute` / `store`); an unrecognised one is
+ * shown as the technical stage it is, and the raw list stays in the report's
+ * technical disclosure.
+ */
+const FAILED_STAGE_LABELS: Record<string, Record<string, string>> = {
+  tr: { discover_students: "Öğrenci listesi", fetch: "Veri toplama", compute: "Hesaplama", store: "Kayıt" },
+  en: { discover_students: "Student list", fetch: "Data fetch", compute: "Computation", store: "Storage" },
+};
+
+export function failedStageText(locale: Locale, stage: string): string {
+  return FAILED_STAGE_LABELS[locale][stage] ?? stage;
+}
+
 export function runReportFileName(runDay: string): string {
   return `okul-analiz-raporu-${runDay}.md`;
 }
@@ -349,10 +381,16 @@ export function buildRunReportMarkdown(model: RunReportModel, locale: Locale): s
   const issueCount = run.pending_students.length + run.failed_modules.length + (run.budget_exceeded ? 1 : 0);
   lines.push(`- ${t("issues")}: ${issueCount === 0 ? t("noIssues") : String(issueCount)}`);
   if (run.pending_students.length > 0) {
-    lines.push(`- ${t("pendingStudents", { count: run.pending_students.length })}`);
+    // Same list, same order as the panel: the export names them, not just counts them.
+    const named = model.pending.length > 0
+      ? `: ${model.pending.map((row) => row.name ?? "—").join(", ")}`
+      : "";
+    lines.push(`- ${t("pendingStudents", { count: run.pending_students.length })}${named}`);
   }
   if (run.failed_modules.length > 0) {
-    lines.push(`- ${t("failedModules", { modules: run.failed_modules.join(", ") })}`);
+    lines.push(
+      `- ${t("failedModules", { modules: run.failed_modules.map((stage) => failedStageText(locale, stage)).join(", ") })}`,
+    );
   }
   lines.push("");
   lines.push(`## ${t("schoolSection")}`);
@@ -390,7 +428,7 @@ export function buildRunReportMarkdown(model: RunReportModel, locale: Locale): s
     const cells = [
       student.name,
       studentStatusText(locale, student),
-      student.confidence ?? t("noData"),
+      student.confidence == null ? t("noData") : confidenceText(locale, student.confidence),
       String(student.attention),
       String(student.cards),
       studentMarksText(locale, student),

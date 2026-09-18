@@ -10,6 +10,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { runReportText, type RunReportKey } from "@/i18n/insights-run-report";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
+import { failedStageText } from "@/lib/insight-run-report";
 import { usePreferences } from "@/stores/preferences-context";
 
 function statusVariant(status: string) {
@@ -96,7 +97,9 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
             )}
             {run.failed_modules.length > 0 && (
               <p class="max-w-56 truncate text-[11px] text-muted-foreground" title={run.failed_modules.join(", ")}>
-                {tx("insights.failedModules", { modules: run.failed_modules.join(", ") })}
+                {tx("insights.failedModules", {
+                  modules: run.failed_modules.map((stage) => failedStageText(prefs.locale(), stage)).join(", "),
+                })}
               </p>
             )}
           </div>

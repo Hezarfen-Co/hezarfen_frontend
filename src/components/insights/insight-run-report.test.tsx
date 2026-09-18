@@ -53,7 +53,9 @@ const RUN_B: InsightRun = {
   students_skipped: 6,
   rows_written: 9,
   pending_students: ["s2"],
-  failed_modules: ["attendance"],
+  // Real stage vocabulary (discover_students / fetch / compute / store), plus one
+  // unknown stage so the fallback is pinned too.
+  failed_modules: ["fetch", "mystery_stage"],
 };
 
 const ROSTER: PersonRef[] = [
@@ -272,6 +274,43 @@ describe("InsightRunReport", () => {
     expect(print).toHaveBeenCalledTimes(1);
   });
 
+  it("labels the confidence tier and the failed stage instead of printing the raw vocabulary", async () => {
+    await openReport(DAY_B);
+    await waitFor(() => expect(panel().getByText("Keşifsel")).toBeTruthy());
+
+    // The tier comes from the app's own dictionary (insights.confidence.*).
+    expect(panel().queryByText("exploratory")).toBeNull();
+    // The failed stage is a zeka pipeline stage name, labelled; the unknown one
+    // keeps its technical name rather than getting a guessed label.
+    const issues = panel().getByText(/Veri üretmeyen modüller:/).textContent ?? "";
+    expect(issues).toContain("Veri toplama");
+    expect(issues).toContain("mystery_stage");
+    expect(issues).not.toContain("fetch");
+    // The raw stage list survives in the technical disclosure.
+    expect(panel().getByText(/"failed_modules"/)).toBeTruthy();
+  });
+
+  it("names the pending students in the export exactly as the panel does", async () => {
+    await openReport(DAY_B);
+    await waitFor(() => expect(panel().getByText(/1 öğrenci sıradaki çalıştırmaya kaldı/)).toBeTruthy());
+
+    const markdown = buildRunReportMarkdown(
+      buildRunReportModel({
+        run: RUN_B,
+        roster: ROSTER,
+        insights: { s1: INSIGHT_S1, s2: INSIGHT_S2, s3: INSIGHT_S3 },
+        errors: {},
+        coverageTotal: ROSTER.length,
+        rosterError: null,
+      }),
+      "tr",
+    );
+    expect(markdown).toContain("1 öğrenci sıradaki çalıştırmaya kaldı: Ayça Şahin");
+    expect(markdown).toContain("Veri üretmeyen modüller: Veri toplama, mystery_stage");
+    expect(markdown).toContain("Keşifsel");
+    expect(markdown).not.toContain("exploratory");
+  });
+
   it("builds the same Markdown without a DOM", () => {
     const model = buildRunReportModel({
       run: RUN_A,
@@ -290,6 +329,7 @@ describe("InsightRunReport", () => {
     expect(markdown).toContain("71,0 (1/2)");
     expect(markdown).toContain("75%");
     expect(markdown).toContain("Çalışma: 0/3 öğrencide veri var → veri yok");
+    expect(markdown).toContain("Keşifsel");
     expect(markdown).toContain("```json");
   });
 });
