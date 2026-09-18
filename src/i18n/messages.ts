@@ -965,6 +965,8 @@ export type MessageKey =
   | "insights.duration"
   | "insights.issues"
   | "insights.issueCount"
+  | "insights.pendingStudents"
+  | "insights.failedModules"
   | "insights.noIssues"
   | "insights.budgetExceeded"
   | "insights.emptyRuns"
@@ -3089,6 +3091,8 @@ const en: Dict = {
   "insights.duration": "Duration",
   "insights.issues": "Issues",
   "insights.issueCount": "{count} issue(s)",
+  "insights.pendingStudents": "{count} student(s) pending",
+  "insights.failedModules": "Modules that failed: {modules}",
   "insights.noIssues": "No issue",
   "insights.budgetExceeded": "Time budget exceeded",
   "insights.emptyRuns": "No analysis run yet.",
@@ -5215,6 +5219,8 @@ const tr: Dict = {
   "insights.duration": "Süre",
   "insights.issues": "Sorunlar",
   "insights.issueCount": "{count} sorun",
+  "insights.pendingStudents": "{count} öğrenci sırada",
+  "insights.failedModules": "Veri üretmeyen modüller: {modules}",
   "insights.noIssues": "Sorun yok",
   "insights.budgetExceeded": "Süre bütçesi aşıldı",
   "insights.emptyRuns": "Henüz analiz çalıştırması yok.",
