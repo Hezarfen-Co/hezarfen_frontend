@@ -10,12 +10,13 @@ import {
 } from "@/api/podcast";
 import { formatApiError, type PodcastFormat, type PodcastJobArtifacts, type PodcastJobStatus } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { IconDownload, IconWaveform, IconX } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { PodcastHistory } from "@/components/notes/podcast-history";
 import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
+import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
 
 const POLL_MS = 2_000;
@@ -216,12 +217,10 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
               href={podcastAudioUrl(result().job_id)}
               download={podcastDownloadFilename(props.noteTitle, downloadT("podcast.download.fallback"))}
               aria-label={downloadT("podcast.download.aria")}
-              class="inline-flex"
+              class={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-lg")}
             >
-              <Button type="button" size="sm" variant="outline" class="rounded-lg">
-                <IconDownload class="h-4 w-4" />
-                {downloadT("podcast.download.label")}
-              </Button>
+              <IconDownload class="h-4 w-4" />
+              {downloadT("podcast.download.label")}
             </a>
           </div>
         )}

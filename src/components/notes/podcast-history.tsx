@@ -4,7 +4,7 @@ import { formatApiError } from "@/api/client";
 import { listPodcastJobs, podcastAudioUrl } from "@/api/podcast";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { IconDownload, IconWaveform } from "@/components/ui/icons";
@@ -168,12 +168,10 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
                             downloadT("podcast.download.fallback"),
                           )}
                           aria-label={downloadT("podcast.download.aria")}
-                          class="inline-flex"
+                          class={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0 rounded-lg")}
                         >
-                          <Button type="button" size="sm" variant="outline" class="shrink-0 rounded-lg">
-                            <IconDownload class="h-4 w-4" />
-                            {downloadT("podcast.download.label")}
-                          </Button>
+                          <IconDownload class="h-4 w-4" />
+                          {downloadT("podcast.download.label")}
                         </a>
                       </div>
                     </Show>
