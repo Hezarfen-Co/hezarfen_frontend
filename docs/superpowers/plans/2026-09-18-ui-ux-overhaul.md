@@ -134,12 +134,27 @@ Every task: load `solidjs-pitfalls` + `ui-conventions` first; `bun run build`
 - **Verify:** DataTable test — manual mode does not reorder rows locally.
 - **Done when:** no table claims a sort it cannot perform.
 
-## Layer B — outline (detailed plan after A)
-Token vocabulary decision + codemod · `Card`/error/StatCard consolidation ·
-raw palette classes → tokens · 12px minimum text · radius/action-column doc
-fix · karne/marks tables → `DataTable` · DataTable mobile card mode + scroll
-affordance · dashboard per-section Suspense · unique nav icons ·
-`navigation-patterns.md` refresh · lint check.
+## Status (2026-09-18)
+
+Layer A: tasks 1–11 done (15be768 … 0ce9d6b). Deviations: no separate
+`DataState` component (ErrorAlert/EmptyState/skeletons already cover it);
+field errors are client-side only because the API error body carries no
+field name.
+
+Layer B: done.
+- phone card layout in DataTable (90f1d65)
+- dashboard per-panel Suspense (364395f)
+- one icon per nav meaning (e81f14e) — Figma sidebar components still need
+  the same icons
+- 11px text floor (41a3aba); 12px needs a visual pass on chips/calendar
+- karne + marks tables on DataTable (50506d2)
+- nav/token docs refreshed (1747ea7)
+- unsaved-input guard on 37 form panels (b507ba2)
+- convention guard test (5a6a011)
+- deliberately skipped: token-name codemod (the two vocabularies are
+  aliases, zero visual change), `Card` consolidation and the three error
+  styles (internal only), categorical palette classes in calendar and
+  role badges (one map per feature, both themes handled)
 
 ## Layer C — outline (contract check first)
 Run `check-api-contract` for each item; then a separate brainstorm/spec per
