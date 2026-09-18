@@ -1,6 +1,6 @@
 import { For, Show, type JSX } from "solid-js";
 import { Badge } from "@/components/ui/badge";
-import { detailText, type InsightDetailKey } from "@/i18n/insights-detail";
+import { detailText, dimensionLabel, type InsightDetailKey } from "@/i18n/insights-detail";
 import type { Locale } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
@@ -622,7 +622,7 @@ export function InsightModuleView(props: { module: string; value: unknown; cours
 // evidence (attention items, recommendation cards)
 // ---------------------------------------------------------------------------
 
-type EvidenceKind = "rate" | "ratePoints" | "points" | "number" | "z" | "ms" | "minutes" | "hours" | "date" | "text" | "band" | "skip";
+type EvidenceKind = "rate" | "ratePoints" | "points" | "number" | "z" | "ms" | "minutes" | "hours" | "date" | "text" | "dimension" | "band" | "skip";
 
 /** Evidence is ZEKA's loose "neden?" object, one shape per rule. A field with
  *  no entry here has no honest label yet, so it stays in the technical
@@ -672,7 +672,7 @@ const EVIDENCE_FIELDS: Record<string, { key: InsightDetailKey; kind: EvidenceKin
   reference_mean_contrast: { key: "evidence.referenceMeanContrast", kind: "rate" },
   reference_n_students: { key: "evidence.referenceNStudents", kind: "number" },
   relative_contrast: { key: "evidence.relativeContrast", kind: "rate" },
-  dimension: { key: "evidence.dimension", kind: "text" },
+  dimension: { key: "evidence.dimension", kind: "dimension" },
   label: { key: "evidence.label", kind: "text" },
   fact: { key: "evidence.fact", kind: "text" },
   window_from: { key: "evidence.windowFrom", kind: "date" },
@@ -701,6 +701,11 @@ function evidenceValue(kind: EvidenceKind, value: unknown, locale: Locale): { te
       return { text: num(value) === null ? null : formatDateTime(num(value)!, locale), sentence: false };
     case "band":
       return { text: bandLabel(value), sentence: false };
+    case "dimension":
+      // Same vocabulary as the segments section: an unmapped dimension reads as
+      // `null` here, which sends it to the technical-disclosure count instead of
+      // printing the snake_case machine value next to a mapped one.
+      return { text: dimensionLabel(str(value)), sentence: false };
     case "text": {
       const text = str(value);
       return { text, sentence: text !== null && /\s/.test(text) };
