@@ -23,6 +23,12 @@ export type RagOutputMessageKey =
   | "failedLine"
   | "otherFields"
   | "chunks"
+  | "passages"
+  | "passagePagesSingle"
+  | "passagePagesRange"
+  | "passagesTruncated"
+  | "passagesTruncatedNoTotal"
+  | "noteText"
   | "technical"
   | "copy"
   | "copied"
@@ -43,6 +49,12 @@ const en: Record<RagOutputMessageKey, string> = {
   "failedLine": "Not processed: {names}",
   "otherFields": "Other fields",
   "chunks": "Text chunks",
+  "passages": "Extracted text",
+  "passagePagesSingle": "p. {page}",
+  "passagePagesRange": "pp. {start}-{end}",
+  "passagesTruncated": "{total} passages were extracted in total; the first {shown} are listed here.",
+  "passagesTruncatedNoTotal": "Only the first {shown} extracted passages are listed here.",
+  "noteText": "Note text",
   "technical": "Technical details",
   "copy": "Copy",
   "copied": "Copied to the clipboard",
@@ -64,6 +76,12 @@ const tr: Record<RagOutputMessageKey, string> = {
   "failedLine": "İşlenemeyenler: {names}",
   "otherFields": "Diğer alanlar",
   "chunks": "Metin parçaları",
+  "passages": "Çıkarılan metin",
+  "passagePagesSingle": "s. {page}",
+  "passagePagesRange": "s. {start}-{end}",
+  "passagesTruncated": "Toplam {total} metin parçası çıkarıldı; burada ilk {shown} tanesi gösteriliyor.",
+  "passagesTruncatedNoTotal": "Çıkarılan parçaların yalnızca ilk {shown} tanesi gösteriliyor.",
+  "noteText": "Not metni",
   "technical": "Teknik ayrıntı",
   "copy": "Kopyala",
   "copied": "Panoya kopyalandı",
@@ -78,4 +96,20 @@ export function ragOutputMessage(
   vars?: Record<string, string | number>,
 ): string {
   return formatMessage((locale === "tr" ? tr : en)[key], vars);
+}
+
+/**
+ * One passage's page range (`s. 3-4`), or an empty string when the service
+ * recorded no page — the label is then left off entirely.
+ */
+export function ragOutputPassagePages(
+  locale: Locale,
+  pageStart: number | null,
+  pageEnd: number | null,
+): string {
+  if (pageStart == null) return "";
+  if (pageEnd == null || pageEnd <= pageStart) {
+    return ragOutputMessage(locale, "passagePagesSingle", { page: pageStart });
+  }
+  return ragOutputMessage(locale, "passagePagesRange", { start: pageStart, end: pageEnd });
 }
