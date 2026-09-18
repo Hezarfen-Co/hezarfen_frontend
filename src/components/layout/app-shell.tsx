@@ -1,5 +1,5 @@
 import { Show, createEffect, createMemo, createSignal, type ParentProps } from "solid-js";
-import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
+import { Link, useCanGoBack, useLocation, useNavigate, useRouter } from "@tanstack/solid-router";
 import { LogoMark } from "@/components/brand/logo-mark";
 import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
 import { CelebiPanel } from "@/components/layout/celebi-panel";
@@ -21,6 +21,7 @@ import { celebiPanelOpen, openCelebiPanel, setCelebiPanelOpen } from "@/stores/c
 import { commandPaletteOpen, openCommandPalette, setCommandPaletteOpen } from "@/stores/command-palette";
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { backTarget } from "@/lib/back-target";
 import { cn } from "@/lib/cn";
 import { ModuleGate } from "@/components/layout/module-gate";
 
@@ -37,6 +38,14 @@ export function AppShell(props: ParentProps) {
   const [profileOpen, setProfileOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
+  // A deep link or a fresh tab has no in-app entry behind it, and
+  // history.back() there would leave the app: go to the parent route instead.
+  const goBack = () => {
+    if (canGoBack()) return router.history.back();
+    void navigate({ to: backTarget(location().pathname, Object.keys(router.routesByPath)) });
+  };
   const fullScreen = () => location().pathname.startsWith("/exam-room/");
   const routeLabel = createMemo(() => {
     const key = routeLabelKey(location().pathname, auth.user()?.role);
@@ -130,7 +139,7 @@ export function AppShell(props: ParentProps) {
                 <Show when={location().pathname !== "/"}>
                   <button
                     type="button"
-                    onClick={() => window.history.back()}
+                    onClick={goBack}
                     class="topbar-control flex h-9 w-9 shrink-0 items-center justify-center rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label={t("common.back")}
                     title={t("common.back")}
