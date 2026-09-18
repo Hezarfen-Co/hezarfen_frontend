@@ -616,6 +616,14 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "rollCall.progress"
+  | "rollCall.markRestPresent"
+  | "rollCall.marking"
+  | "rollCall.onlyUnmarked"
+  | "rollCall.allMarked"
+  | "rollCall.unmarked"
+  | "rollCall.clear"
+  | "rollCall.bulkFailed"
   | "common.skipToContent"
   | "form.fieldRequired"
   | "common.close"
@@ -2759,6 +2767,14 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "rollCall.progress": "{marked} of {total} marked",
+  "rollCall.markRestPresent": "Mark the rest present",
+  "rollCall.marking": "Saving {done} of {total}…",
+  "rollCall.onlyUnmarked": "Only unmarked",
+  "rollCall.allMarked": "Everyone is marked.",
+  "rollCall.unmarked": "Not marked yet",
+  "rollCall.clear": "Clear mark",
+  "rollCall.bulkFailed": "{count} rows could not be saved: {reason}",
   "common.skipToContent": "Skip to content",
   "form.fieldRequired": "This field is required.",
   "common.close": "Close",
@@ -4904,6 +4920,14 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "rollCall.progress": "{total} kişiden {marked} işaretlendi",
+  "rollCall.markRestPresent": "Kalanları Var işaretle",
+  "rollCall.marking": "{total} kişiden {done} kaydedildi…",
+  "rollCall.onlyUnmarked": "Yalnızca işaretlenmemişler",
+  "rollCall.allMarked": "Herkes işaretlendi.",
+  "rollCall.unmarked": "Henüz işaretlenmedi",
+  "rollCall.clear": "İşareti kaldır",
+  "rollCall.bulkFailed": "{count} satır kaydedilemedi: {reason}",
   "common.skipToContent": "İçeriğe geç",
   "form.fieldRequired": "Bu alan zorunlu.",
   "common.close": "Kapat",

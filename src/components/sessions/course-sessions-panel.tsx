@@ -376,6 +376,7 @@ export function CourseSessionsPanel(props: {
           if (!open) setSelectedSession(null);
         }}
         title={t("sessions.rollCall")}
+        size="wide"
         description={selectedSession() ? `${selectedSession()!.topic || t("sessions.untitled")} · ${formatDateTime(selectedSession()!.starts_at, locale())}` : undefined}
       >
         <Show when={selectedSession()}>
