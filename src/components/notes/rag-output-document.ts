@@ -18,6 +18,8 @@ const RENDERED_KEYS: Record<string, true> = {
   files: true,
   failed: true,
   course_note: true,
+  passages: true,
+  passages_truncated: true,
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -78,10 +80,60 @@ export type RagOutputDocument = {
   /** Stored attachment ids whose name the payload does not carry. */
   unnamedSources: number;
   failed: string[];
+  /** The indexed chunks the service handed back, in the order it wrote them. */
+  passages: RagOutputPassage[];
+  /** The service dropped passages above its response budget. */
+  passagesTruncated: boolean;
+  /** The payload's own `chunks` — the total it indexed — when it recorded one. */
+  chunksTotal: number | null;
   /** Payload entries with no dedicated rendering, in payload order. */
   fields: Array<{ key: string; value: unknown }>;
   raw: unknown;
 };
+
+/** One indexed chunk as the service returned it — the extraction, readable. */
+export type RagOutputPassage = {
+  /** The attachment the passage came from, by name; null when unresolvable. */
+  sourceName: string | null;
+  /** The passage came from the note's own text, not from an attachment. */
+  fromNote: boolean;
+  /** The chunk's own text, verbatim. */
+  text: string;
+  pageStart: number | null;
+  pageEnd: number | null;
+};
+
+/** The note key the answer stamps its own body chunks with — the payload's own
+ * `course_note` first, the stored row's link as the fallback. */
+function payloadNoteKey(record: Record<string, unknown> | null, output: RagOutput): string {
+  if (typeof record?.course_note === "string" && record.course_note) return record.course_note;
+  return typeof output.course_note === "string" ? output.course_note : "";
+}
+
+/** The passages the service recorded, dropping entries with no readable text. */
+function payloadPassages(
+  record: Record<string, unknown> | null,
+  names: Map<string, string>,
+  noteId: string,
+): RagOutputPassage[] {
+  if (!Array.isArray(record?.passages)) return [];
+  const pages = (value: unknown) => (typeof value === "number" && Number.isInteger(value) ? value : null);
+  const passages: RagOutputPassage[] = [];
+  for (const entry of record.passages) {
+    const passage = asRecord(entry);
+    if (typeof passage?.text !== "string" || !passage.text.trim()) continue;
+    const docId = typeof passage.doc_id === "string" ? passage.doc_id : "";
+    passages.push({
+      sourceName: (docId ? names.get(docId) : undefined) ?? null,
+      // The service stamps the note's own chunks with the note key, not a file id.
+      fromNote: docId !== "" && docId === noteId,
+      text: passage.text,
+      pageStart: pages(passage.page_start),
+      pageEnd: pages(passage.page_end),
+    });
+  }
+  return passages;
+}
 
 /**
  * Read one stored AI output into everything the drawer shows. The payload is
@@ -120,6 +172,9 @@ export function readRagOutputDocument(output: RagOutput): RagOutputDocument {
     sourceNames,
     unnamedSources,
     failed,
+    passages: payloadPassages(record, names, payloadNoteKey(record, output)),
+    passagesTruncated: record?.passages_truncated === true,
+    chunksTotal: typeof record?.chunks === "number" && Number.isFinite(record.chunks) ? record.chunks : null,
     fields: record
       ? Object.entries(record)
         .filter(([key]) => !RENDERED_KEYS[key])
@@ -135,6 +190,12 @@ export type RagOutputMarkdownLabels = {
   sources: string;
   failed: string;
   otherFields: string;
+  /** Heading of the extracted-text section. */
+  passages: string;
+  /** One passage's heading: source name and page range, never a raw id. */
+  passageHeader: (passage: RagOutputPassage) => string;
+  /** Honest note when the service dropped passages; "" when it did not. */
+  passagesTruncated: string;
 };
 
 /**
@@ -169,6 +230,13 @@ export function buildRagOutputMarkdown(input: {
     lines.push(`## ${labels.failed}`, "");
     for (const name of doc.failed) lines.push(`- ${name}`);
     lines.push("");
+  }
+  if (doc.passages.length > 0) {
+    lines.push(`## ${labels.passages}`, "");
+    for (const passage of doc.passages) {
+      lines.push(`**${labels.passageHeader(passage)}**`, "", passage.text, "");
+    }
+    if (doc.passagesTruncated && labels.passagesTruncated) lines.push(labels.passagesTruncated, "");
   }
   if (doc.fields.length > 0) {
     lines.push(`## ${labels.otherFields}`, "");
