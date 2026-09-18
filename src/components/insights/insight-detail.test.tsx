@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@solidjs/testing-library";
 import { afterEach, describe, expect, it } from "vitest";
 import type { StudentInsight } from "@/api/client";
 import { InsightDetail } from "@/components/insights/insight-detail";
+import { isRecord, type UnknownRecord } from "@/lib/is-record";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
 /**
@@ -270,6 +271,25 @@ const renderDrawer = (props: { mode?: "full" | "cards" } = {}) =>
     </PreferencesProvider>
   ));
 
+const renderInsight = (value: StudentInsight) =>
+  render(() => (
+    <PreferencesProvider>
+      <InsightDetail insight={value} />
+    </PreferencesProvider>
+  ));
+
+/** The fixture's single course with its `trend` member swapped. */
+const marksWith = (trend: UnknownRecord): StudentInsight => {
+  const summary = insight.summary ?? { confidence: "none", computed_at: NOW, retain_until: NOW + WEEK };
+  const marks = isRecord(summary.marks) ? summary.marks : {};
+  const courses = isRecord(marks.courses) ? marks.courses : {};
+  const course = isRecord(courses[COURSE_ID]) ? courses[COURSE_ID] : {};
+  return {
+    ...insight,
+    summary: { ...summary, marks: { ...marks, courses: { ...courses, [COURSE_ID]: { ...course, trend } } } },
+  };
+};
+
 describe("InsightDetail", () => {
   afterEach(cleanup);
 
@@ -391,6 +411,47 @@ describe("InsightDetail", () => {
     expect(human).not.toContain("bilissel_talep");
 
     expect(screen.getByTestId("insight-technical").textContent).toContain("dikkat_tuzagi");
+  });
+
+  it("explains a withheld slope instead of dropping its row silently", () => {
+    const reason = "not dizisi 7 günden kısa olduğu için eğim hesaplanmadı";
+    renderInsight(
+      marksWith({
+        available: true,
+        reason,
+        n: 8,
+        slope_per_30d: null,
+        recent_mean: 70,
+        previous_mean: 66,
+        delta: 4,
+        dropped: false,
+        rising: false,
+      }),
+    );
+    const human = screen.getByTestId("insight-human").textContent ?? "";
+
+    expect(human).toContain(reason);
+    expect(human).not.toContain("/ 30 gün");
+  });
+
+  it("shows the slope row when the trend computed one", () => {
+    renderInsight(
+      marksWith({
+        available: true,
+        reason: null,
+        n: 8,
+        slope_per_30d: 3.4,
+        recent_mean: 70,
+        previous_mean: 66,
+        delta: 4,
+        dropped: false,
+        rising: false,
+      }),
+    );
+    const human = screen.getByTestId("insight-human").textContent ?? "";
+
+    expect(human).toContain("+3,4 puan / 30 gün");
+    expect(human).not.toContain("eğim hesaplanmadı");
   });
 
   it("keeps the cards-only mode free of the drawer's full-view sections", () => {
