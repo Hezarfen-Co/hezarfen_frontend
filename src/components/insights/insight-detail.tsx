@@ -8,7 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconAlert, IconChart, IconSparkles } from "@/components/ui/icons";
-import { detailText, type InsightDetailKey } from "@/i18n/insights-detail";
+import { detailText, dimensionLabel, type InsightDetailKey } from "@/i18n/insights-detail";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { isRecord } from "@/lib/is-record";
@@ -29,11 +29,6 @@ const TRIGGER_KEYS: Record<string, InsightDetailKey> = {
   attendance: "trigger.attendance",
   homework: "trigger.homework",
   mark_trend: "trigger.mark_trend",
-};
-const DIMENSION_KEYS: Record<string, InsightDetailKey> = {
-  bilissel_talep: "segments.dimension.bilissel_talep",
-  dikkat_tuzagi: "segments.dimension.dikkat_tuzagi",
-  okuma_yuku: "segments.dimension.okuma_yuku",
 };
 const PRODUCT_KEYS: Record<string, InsightDetailKey> = {
   O1: "product.O1",
@@ -66,10 +61,16 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
     const title = isRecord(entry) ? entry.course_title : undefined;
     return typeof title === "string" && title.length > 0 ? title : null;
   };
-  const courseLine = (id?: string | null) => courseTitle(id) ?? (id ? tx("insights.schoolWide") : null);
-  const dimensionLabel = (dimension: string | null | undefined) => {
-    const key = dimension ? DIMENSION_KEYS[dimension] : undefined;
-    return key ? detailText(key) : null;
+  /**
+   * The attention list's own contract: a null `course` means the fact is
+   * school-wide, so that is the only case that may say so. A course id whose
+   * title never made it into the payload is NOT school-wide — saying it were
+   * invents a fact on a student's report, so it is labelled as unresolved
+   * (the id itself stays in the technical disclosure).
+   */
+  const courseLine = (id?: string | null) => {
+    if (!id) return tx("insights.schoolWide");
+    return courseTitle(id) ?? detailText("detail.unresolvedCourse");
   };
   /** A card scope is `<dimension>=<label>`; the label half is already Turkish. */
   const scopeText = (scope?: string | null) => {

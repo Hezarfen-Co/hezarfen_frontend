@@ -218,6 +218,34 @@ const insight: StudentInsight = {
       created_at: NOW,
       expires_at: NOW + WEEK,
     },
+    {
+      id: "card-2",
+      product: "O2",
+      rule_id: "O2.segment_cognitive_gap",
+      rule_version: 1,
+      scope: "bilissel_talep=var",
+      audience_role: "student",
+      course: null,
+      evidence: {
+        dimension: "dikkat_tuzagi",
+        label: "var",
+        fact: "Dikkat tuzağı sorularında doğruluk, öğrencinin genel düzeyinin altında.",
+        n_answers: 20,
+        n_correct: 9,
+        accuracy: 0.45,
+        overall_accuracy: 0.6,
+        overall_n_answers: 100,
+        contrast: -0.15,
+        reference_mean_contrast: -0.02,
+        reference_n_students: 180,
+        relative_contrast: -0.13,
+        gate_n_answers: 12,
+        rule: "relative_contrast <= -0.08 ve n_answers >= 12",
+      },
+      confidence: "exploratory",
+      created_at: NOW,
+      expires_at: NOW + WEEK,
+    },
   ],
   segments: [
     {
@@ -325,6 +353,44 @@ describe("InsightDetail", () => {
 
     fireEvent.click(disclosure.querySelector("summary")!);
     expect(disclosure.open).toBe(true);
+  });
+
+  it("claims school-wide only when the payload has no course at all", () => {
+    const base = insight.attention[0];
+    render(() => (
+      <PreferencesProvider>
+        <InsightDetail
+          insight={{
+            ...insight,
+            attention: [
+              { ...base, course: null, fact: "Okul geneli devamsızlık artışı." },
+              { ...base, course: "01a0b1b0-9d58-77f7-966f-5bfa87cb7e11", fact: "Dersi çözülemeyen madde." },
+            ],
+          }}
+        />
+      </PreferencesProvider>
+    ));
+    const human = screen.getByTestId("insight-human").textContent ?? "";
+
+    expect(human).toContain("Okul geneli devamsızlık artışı.");
+    expect(human).toContain("Ders adı çözümlenemedi");
+    // Exactly one item may read as school-wide: a course id whose title did not
+    // resolve is not evidence of a school-wide fact.
+    expect((human.match(/Okul geneli/g) ?? []).length).toBe(1);
+    expect(human).not.toContain("01a0b1b0-9d58-77f7-966f-5bfa87cb7e11");
+  });
+
+  it("maps the segment vocabulary everywhere, never the machine name", () => {
+    renderDrawer();
+    const human = screen.getByTestId("insight-human").textContent ?? "";
+
+    // Segments section and the O2 card's evidence must agree on the label.
+    expect(human).toContain("Dikkat tuzağı");
+    expect(human).toContain("Bilişsel talep: var");
+    expect(human).not.toContain("dikkat_tuzagi");
+    expect(human).not.toContain("bilissel_talep");
+
+    expect(screen.getByTestId("insight-technical").textContent).toContain("dikkat_tuzagi");
   });
 
   it("keeps the cards-only mode free of the drawer's full-view sections", () => {

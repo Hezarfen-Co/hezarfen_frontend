@@ -19,6 +19,7 @@ export const insightsDetailTr = {
   "detail.technicalHint": "Etiketlenmemiş ham veri; kayıt anahtarları burada görünür.",
   "detail.hiddenFields": "{count} alan bu bölümde etiketsiz; teknik ayrıntıda.",
   "detail.elsewhere": "Bu bölümün ham verisi Teknik ayrıntı bölümünde.",
+  "detail.unresolvedCourse": "Ders adı çözümlenemedi",
   "detail.notComputed": "Bu sürümde üretilemiyor",
   "detail.reason": "Neden",
   "detail.value.missing": "—",
@@ -178,7 +179,6 @@ export const insightsDetailTr = {
   "segments.dimension.bilissel_talep": "Bilişsel talep",
   "segments.dimension.dikkat_tuzagi": "Dikkat tuzağı",
   "segments.dimension.okuma_yuku": "Okuma yükü",
-  "segments.dimension.unknown": "Boyut",
   "product.O1": "Ders konumu",
   "product.O2": "Beceri boşluğu",
   "product.O3": "Çalışma düzeni",
@@ -192,6 +192,20 @@ export const insightsDetailTr = {
 } as const;
 
 export type InsightDetailKey = keyof typeof insightsDetailTr;
+
+/** The segment vocabulary, shared by the segments section and the evidence
+ *  rows: an unmapped dimension yields `null` so callers omit it (or count it
+ *  into the technical-disclosure note) instead of printing the machine name. */
+const DIMENSION_KEYS: Record<string, InsightDetailKey> = {
+  bilissel_talep: "segments.dimension.bilissel_talep",
+  dikkat_tuzagi: "segments.dimension.dikkat_tuzagi",
+  okuma_yuku: "segments.dimension.okuma_yuku",
+};
+
+export function dimensionLabel(dimension: string | null | undefined): string | null {
+  const key = dimension ? DIMENSION_KEYS[dimension] : undefined;
+  return key ? insightsDetailTr[key] : null;
+}
 
 /** One label from the drawer's own dictionary, with `{name}` interpolation. */
 export function detailText(key: InsightDetailKey, vars?: Record<string, string | number>): string {
