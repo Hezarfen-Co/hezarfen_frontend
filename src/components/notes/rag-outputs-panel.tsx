@@ -17,6 +17,13 @@ import { RagOutputContent } from "@/components/notes/rag-output-content";
 
 const RAG_PAGE_SIZE = 10;
 
+/**
+ * The capability a worker must have declared for a reindex call to have any
+ * chance of being answered. `/ai/capabilities` lists what connected services
+ * actually serve, so the button stays disabled until some worker serves this.
+ */
+const RAG_INDEX_CAPABILITY = "rag.index";
+
 export function RagOutputsPanel(props: {
   noteId: string;
   active: boolean;
@@ -30,6 +37,8 @@ export function RagOutputsPanel(props: {
   const [flash, setFlash] = createFlash();
   const [deleteTarget, setDeleteTarget] = createSignal<RagOutput | null>(null);
   const [generating, setGenerating] = createSignal(false);
+  /** Set when a reindex attempt ended without a new output — the truthful state. */
+  const [missed, setMissed] = createSignal("");
   let pollTimer: ReturnType<typeof setTimeout> | undefined;
 
   onCleanup(() => pollTimer && clearTimeout(pollTimer));
@@ -44,11 +53,20 @@ export function RagOutputsPanel(props: {
   );
 
   const outputs = () => list()?.items ?? [];
-  const available = () => capabilities.error || capabilities()?.enabled !== false;
+  // The button is live only when a worker actually serves `rag.index`. A
+  // discovery failure is not evidence of absence, so leave it live and let the
+  // call itself report; while the list is still loading we do not know either.
+  const available = () => {
+    if (capabilities.error || capabilities.loading) return true;
+    const caps = capabilities();
+    if (!caps || caps.enabled === false) return false;
+    return caps.capabilities.some((c) => c.capability === RAG_INDEX_CAPABILITY);
+  };
 
   const generate = async () => {
     if (!props.source.reindexRag || generating()) return;
     setError("");
+    setMissed("");
     setGenerating(true);
     const previousId = outputs()[0]?.id;
     try {
@@ -62,9 +80,16 @@ export function RagOutputsPanel(props: {
         attempts += 1;
         const next = await refetch();
         const firstId = next?.items?.[0]?.id;
-        if ((firstId && firstId !== previousId) || attempts >= 24) {
+        if (firstId && firstId !== previousId) {
           setGenerating(false);
-          setFlash(firstId && firstId !== previousId ? t("courseNotes.ragReady") : t("courseNotes.ragQueued"));
+          setFlash(t("courseNotes.ragReady"));
+          return;
+        }
+        if (attempts >= 24) {
+          // Nothing was produced. Say that plainly: no worker indexed this
+          // note, and the button runs the whole call again.
+          setGenerating(false);
+          setMissed(t("courseNotes.ragNotIndexed"));
           return;
         }
         pollTimer = setTimeout(() => void poll().catch(fail), 2500);
@@ -115,6 +140,9 @@ export function RagOutputsPanel(props: {
       <Show when={error()}>
         <Alert variant="destructive">{error()}</Alert>
       </Show>
+      <Show when={missed()}>
+        <Alert variant="warning">{missed()}</Alert>
+      </Show>
       <Show when={!available()}>
         <Alert variant="warning">{t("courseNotes.ragUnavailable")}</Alert>
       </Show>
@@ -122,7 +150,7 @@ export function RagOutputsPanel(props: {
         <Show when={list.error}>
           <Alert variant="destructive">{formatApiError(list.error)}</Alert>
         </Show>
-        <Show when={outputs().length > 0} fallback={<p class="text-sm text-muted-foreground">{t("courseNotes.ragEmpty")}</p>}>
+        <Show when={outputs().length > 0} fallback={<p class="text-sm text-muted-foreground">{missed() ? t("courseNotes.ragEmptyFailed") : t("courseNotes.ragEmpty")}</p>}>
           <ul class="space-y-3">
             <For each={outputs()}>
               {(output) => (
