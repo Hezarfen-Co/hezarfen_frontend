@@ -91,7 +91,7 @@ function MealsContent() {
 
   return (
     <div class="space-y-5">
-      <SidePanel open={showCreate()} onOpenChange={setShowCreate} title={t("meals.publish")} description={t("meals.publishHelp")}>
+      <SidePanel open={showCreate()} onOpenChange={setShowCreate} guardUnsaved title={t("meals.publish")} description={t("meals.publishHelp")}>
         <form class="space-y-4" onSubmit={publish}>
           <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
           <div class="space-y-1.5"><Label for="meal-date">{t("meals.date")}</Label><DatePicker id="meal-date" required placeholder={t("form.datePlaceholder")} value={isoDateToInput(date())} onChange={(value) => setDate(inputDateToIso(value))} /></div>

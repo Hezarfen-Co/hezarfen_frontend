@@ -1,7 +1,9 @@
 import { Dialog as DialogPrimitive } from "@kobalte/core/dialog";
-import { createEffect, onCleanup, type ParentProps } from "solid-js";
+import { createEffect, createSignal, onCleanup, type ParentProps } from "solid-js";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { useT } from "@/stores/preferences-context";
 
 let openPanelCount = 0;
 
@@ -15,8 +17,38 @@ export function SidePanel(
     /** default ~34rem, wide ~42rem, xl ~48rem — for report tables */
     size?: "default" | "wide" | "xl";
     bodyClass?: string;
+    /**
+     * The form inside holds unsaved input. Escape, an outside click or the
+     * close button then ask before discarding it; a submit or an explicit
+     * Cancel that sets `open` directly is not asked.
+     */
+    dirty?: boolean;
+    /**
+     * Treat any input or change inside the panel as unsaved work, for forms
+     * that keep their state to themselves. Ignored when `dirty` is given.
+     * Leave it off for panels whose controls save as you go.
+     */
+    guardUnsaved?: boolean;
   }>,
 ) {
+  const t = useT();
+  const [confirmDiscard, setConfirmDiscard] = createSignal(false);
+  const [touched, setTouched] = createSignal(false);
+  createEffect(() => {
+    if (props.open) setTouched(false);
+  });
+  const isDirty = () => props.dirty ?? (!!props.guardUnsaved && touched());
+  const markTouched = () => {
+    if (props.guardUnsaved) setTouched(true);
+  };
+  const requestOpenChange = (open: boolean) => {
+    // A press inside the confirm dialog reads as an outside interaction to
+    // this non-modal panel; while the dialog is up it owns the decision.
+    if (!open && confirmDiscard()) return;
+    if (!open && isDirty()) return setConfirmDiscard(true);
+    props.onOpenChange(open);
+  };
+
   // Kobalte's modal Dialog hides the app with aria-hidden before its focus
   // scope can move focus into this portalled panel. Chromium correctly blocks
   // that transition when the opener still owns focus. `inert` makes the app
@@ -40,11 +72,15 @@ export function SidePanel(
   };
 
   return (
-    <DialogPrimitive open={props.open} onOpenChange={props.onOpenChange} modal={false} preventScroll>
+    <>
+    <DialogPrimitive open={props.open} onOpenChange={requestOpenChange} modal={false} preventScroll>
       <DialogPrimitive.Portal>
         {/* z-[70]: above the mobile nav sheet (z-60) and tab bar (z-40). */}
         <DialogPrimitive.Overlay class="fixed inset-0 z-[70] bg-[rgba(13,15,23,0.55)] transition-opacity duration-200 data-closed:opacity-0 data-expanded:opacity-100" />
         <DialogPrimitive.Content
+          // Explicit: with any AlertDialog in the tree (the discard confirm
+          // below), Kobalte hands plain dialogs its "alertdialog" role too.
+          role="dialog"
           class={cn(
             "fixed inset-y-0 right-0 z-[70] flex h-full w-full flex-col border-l border-border-line bg-surface-base text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.16)] outline-hidden",
             // The panel spans the whole display, so it has to keep its own
@@ -69,17 +105,32 @@ export function SidePanel(
             </div>
             <DialogPrimitive.CloseButton
               type="button"
-              aria-label="Close"
+              aria-label={t("common.close")}
               class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
               <IconX class="h-4 w-4" />
             </DialogPrimitive.CloseButton>
           </div>
-          <div class={cn("side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5", props.bodyClass)}>
+          <div
+            class={cn("side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5", props.bodyClass)}
+            onInput={markTouched}
+            onChange={markTouched}
+          >
             {props.children}
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive>
+    <ConfirmDialog
+      open={confirmDiscard()}
+      onOpenChange={setConfirmDiscard}
+      title={t("sidePanel.discardTitle")}
+      summary={t("sidePanel.discardSummary")}
+      confirmLabel={t("sidePanel.discard")}
+      cancelLabel={t("sidePanel.keepEditing")}
+      variant="destructive"
+      onConfirm={() => props.onOpenChange(false)}
+    />
+    </>
   );
 }

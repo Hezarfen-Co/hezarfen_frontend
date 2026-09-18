@@ -388,6 +388,9 @@ function ExamsContent() {
 
       <SidePanel
         open={createOpen()}
+        // Only the details step holds unsaved input; once the exam exists the
+        // questions step saves each question itself.
+        guardUnsaved={createStep() === "details"}
         onOpenChange={(open) => {
           setCreateOpen(open);
           if (!open) {

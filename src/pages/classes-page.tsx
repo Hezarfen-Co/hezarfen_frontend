@@ -173,7 +173,7 @@ function ClassesContent() {
 
   return (
     <div class="space-y-5">
-      <SidePanel open={canManage() && showForm()} onOpenChange={setShowForm} title={t("classGroups.newClass")} description={t("classGroups.subtitle")}>
+      <SidePanel open={canManage() && showForm()} onOpenChange={setShowForm} guardUnsaved title={t("classGroups.newClass")} description={t("classGroups.subtitle")}>
         <form class="space-y-4" onSubmit={createClass}>
           <div class="space-y-3">
             <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="class-name" required maxlength={limits.latest?.course.max_class_name_len} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>

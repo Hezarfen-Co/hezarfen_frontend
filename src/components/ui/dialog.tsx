@@ -25,6 +25,9 @@ export function DialogContent<T extends ValidComponent = "div">(
           never clipped by the status bar or the gesture bar. */}
       <div class="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center p-3 pb-[calc(0.75rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] pt-[calc(0.75rem+env(safe-area-inset-top))] sm:p-4">
         <DialogPrimitive.Content
+          // Explicit: with any AlertDialog in the tree, Kobalte hands plain
+          // dialogs its "alertdialog" role too.
+          role="dialog"
           class={cn(
             "pointer-events-auto relative flex max-h-[min(100%,48rem)] w-full max-w-[480px] flex-col overflow-hidden border border-border-line bg-surface-base text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.16)] outline-hidden animate-fade-up sm:rounded-2xl",
             local.class,

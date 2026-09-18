@@ -134,6 +134,9 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
               "hover:bg-accent hover:text-accent-foreground disabled:opacity-50",
             )}
             disabled={pending()}
+            // Kobalte's close button defaults its accessible name to an English
+            // "Dismiss", which overrides the visible text.
+            aria-label={props.cancelLabel ?? t("common.cancel")}
           >
             {props.cancelLabel ?? t("common.cancel")}
           </AlertDialogCancel>

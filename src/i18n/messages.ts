@@ -616,6 +616,12 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "common.close"
+  | "common.dismiss"
+  | "sidePanel.discardTitle"
+  | "sidePanel.discardSummary"
+  | "sidePanel.discard"
+  | "sidePanel.keepEditing"
   | "dashboard.partialError"
   | "common.breadcrumb"
   | "common.truncatedNotice"
@@ -2751,6 +2757,12 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "common.close": "Close",
+  "common.dismiss": "Dismiss",
+  "sidePanel.discardTitle": "Discard your changes?",
+  "sidePanel.discardSummary": "What you entered in this form has not been saved and will be lost.",
+  "sidePanel.discard": "Discard",
+  "sidePanel.keepEditing": "Keep editing",
   "dashboard.partialError": "Some panels could not load and show no data.",
   "common.breadcrumb": "Breadcrumb",
   "common.truncatedNotice": "Showing the first {shown} of {total} records.",
@@ -4888,6 +4900,12 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "common.close": "Kapat",
+  "common.dismiss": "Gizle",
+  "sidePanel.discardTitle": "Değişiklikler silinsin mi?",
+  "sidePanel.discardSummary": "Bu forma girdikleriniz kaydedilmedi ve kaybolacak.",
+  "sidePanel.discard": "Sil ve kapat",
+  "sidePanel.keepEditing": "Düzenlemeye devam et",
   "dashboard.partialError": "Bazı bölümler yüklenemedi ve veri göstermiyor.",
   "common.breadcrumb": "Sayfa konumu",
   "common.truncatedNotice": "{total} kayıttan ilk {shown} tanesi gösteriliyor.",
