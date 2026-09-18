@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/solid-router";
 import { Button } from "@/components/ui/button";
 import { IconChevronLeft, IconHome, IconSearch } from "@/components/ui/icons";
+import { useGoBack } from "@/lib/use-go-back";
 import { useT } from "@/stores/preferences-context";
 
 export function NotFoundPage() {
   const t = useT();
+  const goBack = useGoBack();
   return (
     <div class="flex min-h-[60vh] items-center justify-center px-4 py-16">
       <div class="w-full max-w-[420px] space-y-5 rounded-xl border border-border-line bg-surface-base p-8 text-center shadow-[0_10px_24px_-4px_rgba(0,0,0,0.10)]">
@@ -17,7 +19,7 @@ export function NotFoundPage() {
           <p class="text-sm leading-[21px] text-text-subtle">{t("errors.notFoundDescription")}</p>
         </div>
         <div class="flex items-center justify-center gap-2 pt-1">
-          <Button type="button" variant="outline" onClick={() => window.history.back()}>
+          <Button type="button" variant="outline" onClick={goBack}>
             <IconChevronLeft class="mr-1 h-4 w-4" />
             {t("common.back")}
           </Button>
