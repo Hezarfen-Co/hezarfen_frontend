@@ -211,7 +211,7 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
                       </Badge>
                     </Show>
                     <Show when={row.answer?.is_correct == null && row.question.kind === "text"}>
-                      <Badge variant="outline" class="text-[10px]">{t("questions.kind.text")}</Badge>
+                      <Badge variant="outline" class="text-[11px]">{t("questions.kind.text")}</Badge>
                     </Show>
                     <Show when={row.answer?.is_correct == null && row.question.kind !== "text"}>
                       <span class="text-xs text-muted-foreground">—</span>
@@ -263,10 +263,10 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
                             </span>
                             <span>{choice.text}</span>
                             <Show when={choice.id === row.answer?.selected && choice.id !== row.question.correct}>
-                              <Badge variant="destructive" class="ml-auto text-[10px]">✗</Badge>
+                              <Badge variant="destructive" class="ml-auto text-[11px]">✗</Badge>
                             </Show>
                             {choice.id === row.question.correct && (
-                              <Badge variant="outline" class="ml-auto border-success/50 bg-success/10 text-success-text text-[10px]">
+                              <Badge variant="outline" class="ml-auto border-success/50 bg-success/10 text-success-text text-[11px]">
                                 <IconCheck class="h-3 w-3" />
                               </Badge>
                             )}

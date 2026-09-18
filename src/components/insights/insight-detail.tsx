@@ -267,17 +267,17 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
                       <div class="grid grid-cols-3 gap-2 text-center">
                         <div class="rounded-lg bg-surface-overlay px-2 py-2">
                           <p class="font-mono text-sm font-semibold">{segment.n_correct}/{segment.n_answers}</p>
-                          <p class="text-[10px] text-muted-foreground">{tx("insights.answers")}</p>
+                          <p class="text-[11px] text-muted-foreground">{tx("insights.answers")}</p>
                         </div>
                         <div class="rounded-lg bg-surface-overlay px-2 py-2">
                           <p class="font-mono text-sm font-semibold">{percent(segment.overall_accuracy)}</p>
-                          <p class="text-[10px] text-muted-foreground">{tx("insights.overall")}</p>
+                          <p class="text-[11px] text-muted-foreground">{tx("insights.overall")}</p>
                         </div>
                         <div class="rounded-lg bg-surface-overlay px-2 py-2">
                           <p class={cn("font-mono text-sm font-semibold", segment.contrast < 0 ? "text-destructive-text" : "text-success-text")}>
                             {segment.contrast > 0 ? "+" : ""}{percent(segment.contrast)}
                           </p>
-                          <p class="text-[10px] text-muted-foreground">{tx("insights.contrast")}</p>
+                          <p class="text-[11px] text-muted-foreground">{tx("insights.contrast")}</p>
                         </div>
                       </div>
                     </article>

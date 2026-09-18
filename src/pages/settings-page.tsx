@@ -369,7 +369,7 @@ function SettingsContent() {
                                   >
                                     {t(CORE_ATTENDANCE_LABELS[status() as keyof typeof CORE_ATTENDANCE_LABELS])}
                                   </span>
-                                  <span class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                  <span class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                                     {t("settings.locked")}
                                   </span>
                                 </div>

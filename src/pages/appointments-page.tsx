@@ -451,14 +451,14 @@ function AppointmentsContent() {
           <TabsTrigger value="appointments" class="min-w-0">
             <IconCalendarDays class="h-4 w-4" />
             {isStaff() ? t("appointments.requests") : t("appointments.myBookings")}
-            <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">
+            <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">
               {isStaff() ? requests().length : myBookings().length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="availability" class="min-w-0">
             <IconClock class="h-4 w-4" />
             {isStaff() ? t("appointments.mySlots") : t("appointments.availableSlots")}
-            <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">
+            <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">
               {isStaff() ? mySlots().length : availableSlots().length}
             </Badge>
           </TabsTrigger>

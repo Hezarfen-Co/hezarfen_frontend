@@ -203,7 +203,7 @@ export function NoteFilesPanel(props: {
                           {meta.icon}
                         </span>
                       </button>
-                      <span class={cn("absolute left-2 top-2 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide", meta.class)}>
+                      <span class={cn("absolute left-2 top-2 rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide", meta.class)}>
                         {meta.label}
                       </span>
                       <div class="absolute right-2 top-2 z-10 rounded-xl border border-border/80 bg-card/90 shadow-md dark:border-white/15 dark:bg-card/95">

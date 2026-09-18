@@ -95,10 +95,10 @@ export function BankQuestionPicker(props: {
               >
                 <p class="line-clamp-2 text-sm font-medium">{template.text}</p>
                 <div class="mt-1 flex flex-wrap items-center gap-1.5">
-                  <Badge variant="outline" class="text-[10px]">
+                  <Badge variant="outline" class="text-[11px]">
                     {template.kind === "choice" ? t("questions.kind.choice") : t("questions.kind.text")}
                   </Badge>
-                  <Badge variant="secondary" class="font-mono text-[10px]">
+                  <Badge variant="secondary" class="font-mono text-[11px]">
                     {template.points} {t("questions.points")}
                   </Badge>
                 </div>

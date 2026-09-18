@@ -646,7 +646,7 @@ function DashboardContent() {
       cell: (info) => {
         const s = info.row.original.status;
         return (
-          <Badge variant="outline" class="rounded-full text-[10px]">
+          <Badge variant="outline" class="rounded-full text-[11px]">
             <span class={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full", s === "active" ? "bg-emerald-500" : s === "today" ? "bg-amber-500" : "bg-muted-foreground/50")} />
             {s === "active" ? t("dashboard.activeNow") : s === "today" ? t("dashboard.today") : t("dashboard.soon")}
           </Badge>
@@ -818,7 +818,7 @@ function DashboardContent() {
                           class="w-full rounded-sm bg-primary/70"
                           style={{ height: `${Math.max(4, Math.round((day.minutes / weeklyFocusMax()) * 100))}%` }}
                         />
-                        <span class="text-[10px] text-text-subtle">{day.label}</span>
+                        <span class="text-[11px] text-text-subtle">{day.label}</span>
                       </div>
                     )}
                   </For>

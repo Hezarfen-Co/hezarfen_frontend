@@ -47,8 +47,8 @@ export function CourseCard(props: {
             <h2 class="truncate text-base font-semibold tracking-tight">{props.course.title}</h2>
           </div>
           <div class="mt-1 flex flex-wrap items-center gap-1.5">
-            <Badge variant="outline" class="rounded-md text-[10px] font-medium">{props.labels.kind}</Badge>
-            <Show when={props.enrolled}><Badge variant="secondary" class="rounded-md text-[10px]">{props.labels.enrolled}</Badge></Show>
+            <Badge variant="outline" class="rounded-md text-[11px] font-medium">{props.labels.kind}</Badge>
+            <Show when={props.enrolled}><Badge variant="secondary" class="rounded-md text-[11px]">{props.labels.enrolled}</Badge></Show>
           </div>
         </div>
         <IconChevronRight class="mt-1 h-4 w-4 shrink-0 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-text-default" />

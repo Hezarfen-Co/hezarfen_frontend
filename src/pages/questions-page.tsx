@@ -125,7 +125,7 @@ function QuestionsContent() {
                         <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">{question.body}</p>
                         <div class="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                           <span class="flex items-center gap-1">
-                            <div class="flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[8px] font-bold text-primary-text">
+                            <div class="flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary-text">
                               {question.asker.display_name?.[0] || question.asker.username[0].toUpperCase()}
                             </div>
                             {personLabel(question.asker)}

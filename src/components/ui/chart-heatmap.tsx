@@ -164,14 +164,14 @@ export const ChartHeatmap: Component<ChartHeatmapProps> = (props) => {
             <span aria-hidden="true" />
             <For each={monthLabels()}>
               {(label) => (
-                <span class="text-[9px] leading-none text-muted-foreground">{label}</span>
+                <span class="text-[11px] leading-none text-muted-foreground">{label}</span>
               )}
             </For>
 
             <For each={weekdayLabels()}>
               {(weekdayLabel, dayIndex) => (
                 <>
-                  <span class="pr-1 text-right text-[9px] leading-none text-muted-foreground">
+                  <span class="pr-1 text-right text-[11px] leading-none text-muted-foreground">
                     {weekdayLabel}
                   </span>
                   <For each={columns()}>
@@ -218,11 +218,11 @@ export const ChartHeatmap: Component<ChartHeatmapProps> = (props) => {
             <p class="text-[11px] text-muted-foreground">{props.footer}</p>
           </Show>
           <div class="ml-auto flex items-center gap-1.5">
-            <span class="text-[10px] text-muted-foreground">{t("dashboard.heatmapLess")}</span>
+            <span class="text-[11px] text-muted-foreground">{t("dashboard.heatmapLess")}</span>
             <For each={levelClasses}>
               {(levelClass) => <span class={cn("h-3 w-3 rounded-[3px]", levelClass)} />}
             </For>
-            <span class="text-[10px] text-muted-foreground">{t("dashboard.heatmapMore")}</span>
+            <span class="text-[11px] text-muted-foreground">{t("dashboard.heatmapMore")}</span>
           </div>
         </div>
       </Show>

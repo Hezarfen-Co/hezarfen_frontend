@@ -198,12 +198,12 @@ export function MobileNavSheet(props: {
                             {t(item.labelKey)}
                           </span>
                           <Show when={item.soon}>
-                            <span class="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            <span class="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                               {t("nav.soon")}
                             </span>
                           </Show>
                           <Show when={badgeFor(item) > 0}>
-                            <span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
+                            <span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-bold text-white">
                               {badgeFor(item) > 99 ? "99+" : badgeFor(item)}
                             </span>
                           </Show>

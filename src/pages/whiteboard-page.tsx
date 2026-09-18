@@ -307,7 +307,7 @@ function WhiteboardContent() {
                           <span class="flex min-w-0 items-center gap-1.5">
                             <span class="truncate text-sm font-medium">{nameOf(userId)}</span>
                             <Show when={userId === live().creator}>
-                              <Badge variant="outline" class="shrink-0 text-[10px]">{t("whiteboard.creator")}</Badge>
+                              <Badge variant="outline" class="shrink-0 text-[11px]">{t("whiteboard.creator")}</Badge>
                             </Show>
                           </span>
                           <span class="block truncate text-xs text-muted-foreground">{roleOf(userId) || userId}</span>

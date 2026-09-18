@@ -32,7 +32,7 @@ export function MobileTabBar(props: { onMenu: () => void; onSearch: () => void }
                   to={item.to}
                   aria-current={active() ? "page" : undefined}
                   class={cn(
-                    "flex h-full flex-col items-center justify-center gap-1 px-1 text-[10px] font-medium",
+                    "flex h-full flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium",
                     active() ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
@@ -49,7 +49,7 @@ export function MobileTabBar(props: { onMenu: () => void; onSearch: () => void }
           <button
             type="button"
             aria-label={t("common.search")}
-            class="flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[10px] font-medium text-muted-foreground"
+            class="flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium text-muted-foreground"
             onClick={() => props.onSearch()}
           >
             <span class="flex h-7 w-10 items-center justify-center">
@@ -63,7 +63,7 @@ export function MobileTabBar(props: { onMenu: () => void; onSearch: () => void }
             id="mobile-menu-trigger"
             type="button"
             aria-label={t("nav.menu")}
-            class="flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[10px] font-medium text-muted-foreground"
+            class="flex h-full w-full flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium text-muted-foreground"
             onClick={() => props.onMenu()}
           >
             <span class="flex h-7 w-10 items-center justify-center">

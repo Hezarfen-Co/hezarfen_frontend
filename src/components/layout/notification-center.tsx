@@ -211,7 +211,7 @@ export function NotificationCenter() {
       >
         <IconBell class="h-4 w-4" />
         <Show when={unreadCount() > 0}>
-          <span class="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-background">
+          <span class="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-destructive-foreground ring-2 ring-background">
             {unreadCount() > 9 ? "9+" : unreadCount()}
           </span>
         </Show>
@@ -222,7 +222,7 @@ export function NotificationCenter() {
           <div class="flex items-center gap-2">
             <h3 class="text-sm font-semibold text-text-strong">{t("notifications.title")}</h3>
             <Show when={unreadCount() > 0}>
-              <span class="rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[10px] font-bold text-primary-text">
+              <span class="rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[11px] font-bold text-primary-text">
                 {unreadCount()}
               </span>
             </Show>

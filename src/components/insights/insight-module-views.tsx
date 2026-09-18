@@ -112,7 +112,7 @@ function StatCell(props: { label: string; value: string | null }) {
       <p class="font-mono text-sm font-semibold text-foreground">
         {props.value ?? detailText("detail.value.missing")}
       </p>
-      <p class="mt-0.5 text-[10px] text-muted-foreground">{props.label}</p>
+      <p class="mt-0.5 text-[11px] text-muted-foreground">{props.label}</p>
     </div>
   );
 }

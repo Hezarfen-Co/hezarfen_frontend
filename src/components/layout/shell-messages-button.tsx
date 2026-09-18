@@ -19,7 +19,7 @@ export function ShellMessagesButton() {
       <IconMessage class="h-4 w-4" />
       <Show when={unread() > 0}>
         <span
-          class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground ring-2 ring-background"
+          class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-destructive-foreground ring-2 ring-background"
           aria-hidden="true"
         >
           {unread() > 9 ? "9+" : unread()}

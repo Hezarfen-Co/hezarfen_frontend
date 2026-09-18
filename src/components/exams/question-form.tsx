@@ -430,7 +430,7 @@ export function QuestionForm(props: {
                           class="sr-only"
                           onChange={(event) => setChoiceImage(row().id, event.currentTarget.files?.[0] ?? null)}
                         />
-                        <label for={`choice-image-${index}`} class="flex cursor-pointer items-center gap-1 rounded-md border border-dashed bg-muted/20 px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
+                        <label for={`choice-image-${index}`} class="flex cursor-pointer items-center gap-1 rounded-md border border-dashed bg-muted/20 px-2 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground">
                           <IconFileImage class="h-3 w-3" />
                           {row().image?.name ?? t("questions.choiceImage")}
                         </label>

@@ -218,7 +218,7 @@ function QuestionDetailContent() {
                           <div class="rounded-xl border bg-card/50 p-5">
                             <div class="flex items-center justify-between">
                               <div class="flex items-center gap-2 text-sm font-medium">
-                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] text-primary-text">
+                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[11px] text-primary-text">
                                   {sol.author.display_name?.[0] || sol.author.username[0].toUpperCase()}
                                 </div>
                                 {personLabel(sol.author)}

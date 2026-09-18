@@ -423,7 +423,7 @@ function CalendarContent() {
                         )}
                       >
                         <button type="button" class="flex shrink-0 flex-col items-center gap-1 rounded-md py-1 hover:bg-muted/40" onClick={() => setSelected(key)}>
-                          <span class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          <span class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                             {dayNames()[(day.getDay() + 6) % 7]}
                           </span>
                           <span
@@ -440,7 +440,7 @@ function CalendarContent() {
                             {(item) => (
                               <a
                                 href={item.href}
-                                class={cn("block min-w-0 rounded px-1.5 py-1 text-[10px] leading-tight font-medium", KIND_STYLES[item.kind].chip)}
+                                class={cn("block min-w-0 rounded px-1.5 py-1 text-[11px] leading-tight font-medium", KIND_STYLES[item.kind].chip)}
                               >
                                 <span class="block truncate">{clock(item.at)}</span>
                                 <span class="block truncate">{item.title}</span>
@@ -460,7 +460,7 @@ function CalendarContent() {
               <div class="grid shrink-0 grid-cols-7 border-b">
                 <For each={dayNames()}>
                   {(name) => (
-                    <div class="border-r border-border/40 px-2 py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground last:border-r-0">
+                    <div class="border-r border-border/40 px-2 py-1.5 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground last:border-r-0">
                       {name}
                     </div>
                   )}
@@ -505,14 +505,14 @@ function CalendarContent() {
                           <div class="mt-1 hidden min-h-0 flex-1 flex-col justify-end gap-0.5 overflow-hidden sm:flex">
                             <For each={dayItems().slice(0, CHIPS_PER_CELL)}>
                               {(item) => (
-                                <span class={cn("inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-[9px] font-medium leading-none", KIND_STYLES[item.kind].chip)}>
+                                <span class={cn("inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-[11px] font-medium leading-none", KIND_STYLES[item.kind].chip)}>
                                   <span class={cn("h-1.5 w-1.5 shrink-0 rounded-full", KIND_STYLES[item.kind].dot)} />
                                   <span class="truncate">{item.title}</span>
                                 </span>
                               )}
                             </For>
                             <Show when={dayItems().length > CHIPS_PER_CELL}>
-                              <span class="pl-1 text-[9px] font-medium leading-none text-muted-foreground">
+                              <span class="pl-1 text-[11px] font-medium leading-none text-muted-foreground">
                                 +{dayItems().length - CHIPS_PER_CELL}
                               </span>
                             </Show>
@@ -540,7 +540,7 @@ function CalendarContent() {
                   <For each={selectedGroups()}>
                     {(group) => (
                       <div class="space-y-2">
-                        <p class={cn("text-[10px] font-semibold uppercase tracking-wider", KIND_STYLES[group.kind].heading)}>
+                        <p class={cn("text-[11px] font-semibold uppercase tracking-wider", KIND_STYLES[group.kind].heading)}>
                           {t(KIND_STYLES[group.kind].labelKey)}
                         </p>
                         <For each={group.rows}>
@@ -559,10 +559,10 @@ function CalendarContent() {
                               </div>
                               <Show
                                 when={item.status}
-                                fallback={<Badge variant="outline" class="shrink-0 text-[10px]">{t(KIND_STYLES[item.kind].labelKey)}</Badge>}
+                                fallback={<Badge variant="outline" class="shrink-0 text-[11px]">{t(KIND_STYLES[item.kind].labelKey)}</Badge>}
                               >
                                 {(status) => (
-                                  <Badge variant="outline" class={cn("shrink-0 gap-1 text-[10px]", appointmentStatusClass(status()))}>
+                                  <Badge variant="outline" class={cn("shrink-0 gap-1 text-[11px]", appointmentStatusClass(status()))}>
                                     <span class={cn("h-1.5 w-1.5 rounded-full", appointmentStatusDotClass(status()))} />
                                     {t(appointmentStatusLabelKey(status()))}
                                   </Badge>

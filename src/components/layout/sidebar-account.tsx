@@ -99,7 +99,7 @@ export function SidebarAccount(props: {
                 <Show when={!props.collapsed}>
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-[13px] font-semibold leading-4 2xl:text-sm">{name()}</span>
-                    <span class="block truncate text-[10px] font-medium text-muted-foreground dark:text-white/55 2xl:text-[11px]">
+                    <span class="block truncate text-[11px] font-medium text-muted-foreground dark:text-white/55 2xl:text-[11px]">
                       {t(`role.${u().role}` as MessageKey)}
                     </span>
                   </span>

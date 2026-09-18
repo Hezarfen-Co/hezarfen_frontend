@@ -509,7 +509,7 @@ export function CommandPalette(props: CommandPaletteProps) {
                             <div class="flex items-center gap-2">
                               <span class="truncate text-sm font-medium">{item.title}</span>
                               <Show when={item.roleBadge}>
-                                <span class="rounded-full bg-secondary border border-border px-2 py-0.2 text-[10px] font-semibold text-muted-foreground">
+                                <span class="rounded-full bg-secondary border border-border px-2 py-0.2 text-[11px] font-semibold text-muted-foreground">
                                   {item.roleBadge}
                                 </span>
                               </Show>
@@ -520,7 +520,7 @@ export function CommandPalette(props: CommandPaletteProps) {
                           </div>
 
                           <Show when={item.shortcut}>
-                            <kbd class="hidden shrink-0 rounded-md border border-border/80 bg-muted/60 px-2 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline-block">
+                            <kbd class="hidden shrink-0 rounded-md border border-border/80 bg-muted/60 px-2 py-0.5 font-mono text-[11px] font-semibold text-muted-foreground sm:inline-block">
                               {item.shortcut}
                             </kbd>
                           </Show>
@@ -539,11 +539,11 @@ export function CommandPalette(props: CommandPaletteProps) {
         <div class="hidden items-center justify-between border-t border-border/60 bg-muted/30 px-4 py-2 text-xs text-muted-foreground sm:flex">
           <span class="truncate">{t("command.shortcutHint")}</span>
           <div class="flex items-center gap-2 font-mono shrink-0">
-            <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold">↑↓</kbd>
+            <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] font-semibold">↑↓</kbd>
             <span>{t("command.key.navigate")}</span>
-            <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold">↵</kbd>
+            <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] font-semibold">↵</kbd>
             <span>{t("command.key.select")}</span>
-            <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-semibold">Esc</kbd>
+            <kbd class="rounded border border-border bg-background px-1.5 py-0.5 text-[11px] font-semibold">Esc</kbd>
             <span>{t("command.key.close")}</span>
           </div>
         </div>

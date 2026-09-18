@@ -90,19 +90,19 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
           <div class="space-y-3">
             <dl class="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
-                <dt class="text-[10px] text-muted-foreground">{t("dashboard.chartExamCount")}</dt>
+                <dt class="text-[11px] text-muted-foreground">{t("dashboard.chartExamCount")}</dt>
                 <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{props.items.length}</dd>
               </div>
               <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
-                <dt class="text-[10px] text-muted-foreground">{t("dashboard.chartLatest")}</dt>
+                <dt class="text-[11px] text-muted-foreground">{t("dashboard.chartLatest")}</dt>
                 <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{stats().latest.formattedValue ?? stats().latest.value}</dd>
               </div>
               <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
-                <dt class="text-[10px] text-muted-foreground">{t("dashboard.chartAverage")}</dt>
+                <dt class="text-[11px] text-muted-foreground">{t("dashboard.chartAverage")}</dt>
                 <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{stats().average.toFixed(1)}</dd>
               </div>
               <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
-                <dt class="text-[10px] text-muted-foreground">{t("dashboard.chartRange")}</dt>
+                <dt class="text-[11px] text-muted-foreground">{t("dashboard.chartRange")}</dt>
                 <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{stats().minimum.toFixed(1)}–{stats().maximum.toFixed(1)}</dd>
               </div>
             </dl>
@@ -120,7 +120,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
                     return (
                       <g>
                         <line x1={PADDING.left} x2={PADDING.left + plotWidth} y1={y()} y2={y()} class="stroke-border/70" stroke-width="1" />
-                        <text x={PADDING.left - 8} y={y() + 3} text-anchor="end" class="fill-muted-foreground text-[9px]">{tick}</text>
+                        <text x={PADDING.left - 8} y={y() + 3} text-anchor="end" class="fill-muted-foreground text-[11px]">{tick}</text>
                       </g>
                     );
                   }}
@@ -137,7 +137,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
                     stroke-width="1"
                     stroke-dasharray="4 4"
                   />
-                  <text x={PADDING.left + 5} y={averageY() - 5} class="fill-muted-foreground text-[9px]">
+                  <text x={PADDING.left + 5} y={averageY() - 5} class="fill-muted-foreground text-[11px]">
                     {t("dashboard.chartAverage")}: {stats().average.toFixed(1)}
                   </text>
                   <polyline points={points()} fill="none" class="stroke-primary" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
@@ -178,7 +178,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
                           <div class="h-full rounded-md border border-border bg-popover px-3 py-2 text-popover-foreground shadow-lg">
                             <p class="truncate text-[11px] font-semibold" title={item.label}>{item.label}</p>
                             <div class="mt-1 flex items-end justify-between gap-3">
-                              <span class="truncate text-[10px] text-muted-foreground">{item.caption}</span>
+                              <span class="truncate text-[11px] text-muted-foreground">{item.caption}</span>
                               <span class="font-mono text-base font-bold leading-none tabular-nums">{item.formattedValue ?? item.value}</span>
                             </div>
                           </div>
@@ -196,7 +196,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
                         x={point().x}
                         y={VIEW_HEIGHT - 10}
                         text-anchor={index === 0 ? "start" : index === props.items.length - 1 ? "end" : "middle"}
-                        class="fill-muted-foreground text-[9px]"
+                        class="fill-muted-foreground text-[11px]"
                       >
                         {props.items[index].caption ?? props.items[index].label}
                       </text>

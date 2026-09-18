@@ -250,7 +250,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                   {peerName()}
                 </span>
                 <Show when={role()}>
-                  <Badge variant="outline" class="text-[9px] font-mono uppercase">
+                  <Badge variant="outline" class="text-[11px] font-mono uppercase">
                     {t(`role.${role()}` as any)}
                   </Badge>
                 </Show>

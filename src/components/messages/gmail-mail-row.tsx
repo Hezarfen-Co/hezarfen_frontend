@@ -66,7 +66,7 @@ export function GmailMailRow(props: GmailMailRowProps) {
           {isSent() ? `${t("messages.to")}${peerName()}` : peerName()}
         </span>
         <Show when={role()}>
-          <span class="shrink-0 text-[9px] uppercase font-mono px-1 py-0.2 rounded bg-muted text-muted-foreground border border-border-hairline">
+          <span class="shrink-0 text-[11px] uppercase font-mono px-1 py-0.2 rounded bg-muted text-muted-foreground border border-border-hairline">
             {t(`role.${role()}` as any)}
           </span>
         </Show>
@@ -94,7 +94,7 @@ export function GmailMailRow(props: GmailMailRowProps) {
 
       {/* Optional Tag Label */}
       <Show when={props.message.label}>
-        <Badge variant="outline" class="hidden h-4 shrink-0 px-1.5 py-0 text-[9px] font-medium sm:inline-flex">
+        <Badge variant="outline" class="hidden h-4 shrink-0 px-1.5 py-0 text-[11px] font-medium sm:inline-flex">
           {props.message.label}
         </Badge>
       </Show>

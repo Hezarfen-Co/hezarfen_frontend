@@ -454,11 +454,11 @@ function CourseDetailContent() {
 
                 <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-4">
                   <TabsList class="flex w-full justify-start overflow-x-auto sm:grid sm:grid-cols-4" aria-label={c().title}>
-                    <TabsTrigger value="subjects" class="min-w-0"><IconBook class="h-4 w-4" />{t("subjects.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{subjectCount()}</Badge></TabsTrigger>
-                    <TabsTrigger value="sections" class="min-w-0"><IconSchool class="h-4 w-4" />{t("instances.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{sectionCount()}</Badge></TabsTrigger>
-                    <TabsTrigger value="notes" class="min-w-0"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{noteCount()}</Badge></TabsTrigger>
+                    <TabsTrigger value="subjects" class="min-w-0"><IconBook class="h-4 w-4" />{t("subjects.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{subjectCount()}</Badge></TabsTrigger>
+                    <TabsTrigger value="sections" class="min-w-0"><IconSchool class="h-4 w-4" />{t("instances.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{sectionCount()}</Badge></TabsTrigger>
+                    <TabsTrigger value="notes" class="min-w-0"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{noteCount()}</Badge></TabsTrigger>
                     <Show when={hasMembers()}>
-                      <TabsTrigger value="members" class="min-w-0"><IconUsers class="h-4 w-4" />{t("courses.members")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[10px] group-data-selected:bg-background group-data-selected:text-foreground">{c().course_membership_count}</Badge></TabsTrigger>
+                      <TabsTrigger value="members" class="min-w-0"><IconUsers class="h-4 w-4" />{t("courses.members")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{c().course_membership_count}</Badge></TabsTrigger>
                     </Show>
                   </TabsList>
 

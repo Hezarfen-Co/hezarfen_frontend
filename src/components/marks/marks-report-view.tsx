@@ -189,7 +189,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
                       </Link>
                     </div>
                     <div class="text-right">
-                      <p class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t("marks.courseAvg")}</p>
+                      <p class="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("marks.courseAvg")}</p>
                       <p class="mt-0.5 text-xl font-semibold tabular-nums">{markWithGrade(block.average, block.average_grade)}</p>
                     </div>
                   </div>

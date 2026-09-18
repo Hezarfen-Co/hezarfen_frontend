@@ -239,7 +239,7 @@ export default function MessagesPage() {
                     <span>{t("messages.inbox")}</span>
                   </div>
                   <Show when={unreadCount() ? unreadCount()! > 0 : false}>
-                    <span class="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+                    <span class="rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
                       {unreadCount()}
                     </span>
                   </Show>
