@@ -847,7 +847,7 @@ function DashboardContent() {
                 out, so it keeps its ComingSoonPanel slot. The AI suggestion
                 queue has no backend at all. The one real rail item behind that
                 queue — a pending appointment request — gets the rail. */}
-            <Show when={on("classes") && clock()}>
+            <Show when={on("sessions") && clock()}>
               {(ready) => <TodayLessonsPanel now={ready().now} courseTitle={courseTitleOf} />}
             </Show>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
