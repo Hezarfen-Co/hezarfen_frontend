@@ -614,6 +614,8 @@ export type MessageKey =
   | "common.created"
   | "common.deleted"
   | "common.saved"
+  | "common.loadAll"
+  | "common.truncatedNotice"
   | "common.createItem"
   | "common.countItem"
   | "pool.title"
@@ -2740,6 +2742,8 @@ const en: Dict = {
   "common.created": "Created.",
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
+  "common.loadAll": "Load all",
+  "common.truncatedNotice": "Showing the first {shown} of {total} records.",
   "common.createItem": "Create new {item}",
   "common.countItem": "{count} {item}",
   "pool.title": "Question pool",
@@ -4868,6 +4872,8 @@ const tr: Dict = {
   "common.created": "Oluşturuldu.",
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
+  "common.loadAll": "Tümünü yükle",
+  "common.truncatedNotice": "{total} kayıttan ilk {shown} tanesi gösteriliyor.",
   "common.createItem": "Yeni {item} oluştur",
   "common.countItem": "{count} {item}",
   "pool.title": "Soru havuzu",

@@ -15,6 +15,8 @@ import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { IconPlus } from "@/components/ui/icons";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TruncationNotice } from "@/components/ui/truncation-notice";
+import { loadCappedList } from "@/lib/capped-list";
 import { createFlash } from "@/lib/flash";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -29,6 +31,9 @@ export default function AdminUsersPage() {
   );
 }
 
+/** Staff rosters run longer than other lists, so the first load holds more. */
+const USER_LIST_CAP = 200;
+
 function AdminUsersContent() {
   const auth = useAuth();
   const navigate = useNavigate();
@@ -38,8 +43,12 @@ function AdminUsersContent() {
   const [roleTab, setRoleTab] = createSignal<RoleTab>("all");
   const [creating, setCreating] = createSignal(false);
 
-  const [list, { refetch }] = createResource(async () => (await getUsers({ limit: 200 })).items);
-  const allUsers = () => list() ?? [];
+  const [loadAll, setLoadAll] = createSignal(false);
+  const [list, { refetch }] = createResource(
+    () => (loadAll() ? "all" : "capped"),
+    (scope) => loadCappedList(getUsers, USER_LIST_CAP, scope === "all"),
+  );
+  const allUsers = () => list()?.items ?? [];
   const visibleUsers = createMemo(() => {
     const tab = roleTab();
     if (tab === "all") return allUsers();
@@ -83,6 +92,12 @@ function AdminUsersContent() {
 
       <section class="data-shell space-y-4 p-4">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+          <TruncationNotice
+            shown={list()?.items.length ?? 0}
+            total={list()?.total ?? 0}
+            loading={list.loading}
+            onLoadAll={() => setLoadAll(true)}
+          />
           <Show when={list()}>
             <UserTable
               title={t("admin.title")}

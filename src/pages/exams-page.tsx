@@ -21,11 +21,13 @@ import { DropdownSelect } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { TruncationNotice } from "@/components/ui/truncation-notice";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createNow } from "@/lib/create-now";
 import { EXAM_KINDS } from "@/api/client";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDisplayStatus, examStatusMessageKey, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
+import { LIST_CAP, loadCappedList } from "@/lib/capped-list";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -128,13 +130,15 @@ function ExamsContent() {
       statusLabel(exam.displayStatus),
     );
 
+  const [loadAll, setLoadAll] = createSignal(false);
   const [list, { refetch: refetchExams }] = createResource(
     () => {
       if (sections() === undefined) return null;
-      return visibleCourses().map((row) => row.id).join(",");
+      return `${loadAll() ? "all" : "capped"}|${visibleCourses().map((row) => row.id).join(",")}`;
     },
     async () => {
-      const items = (await getExams({ limit: 100 })).items;
+      const page = await loadCappedList(getExams, LIST_CAP, loadAll());
+      const items = page.items;
       const known = new Map(visibleCourses().map((row) => [row.id, row.label]));
       const missing = [...new Set(items.map((exam) => exam.class_course))].filter((instanceId) => !known.has(instanceId));
       if (missing.length > 0) {
@@ -150,7 +154,7 @@ function ExamsContent() {
         );
       }
       setCourseMap(Object.fromEntries(known));
-      return items;
+      return page;
     },
   );
 
@@ -168,7 +172,7 @@ function ExamsContent() {
   const statusLabel = (status: ExamDisplayStatus) => {
     return t(examStatusMessageKey(status));
   };
-  const rows = (): ExamRow[] => filterExams(list() ?? []).map((exam) => ({ ...exam, displayStatus: examStatus(exam) }));
+  const rows = (): ExamRow[] => filterExams(list()?.items ?? []).map((exam) => ({ ...exam, displayStatus: examStatus(exam) }));
   const columns = createMemo<ColumnDef<ExamRow>[]>(() => [
     {
       accessorKey: "title",
@@ -309,6 +313,12 @@ function ExamsContent() {
               <Show when={list.error}>
                 <Alert variant="destructive">{formatApiError(list.error)}</Alert>
               </Show>
+              <TruncationNotice
+                shown={list()?.items.length ?? 0}
+                total={list()?.total ?? 0}
+                loading={list.loading}
+                onLoadAll={() => setLoadAll(true)}
+              />
               <DataTable
                 title={t("exams.title")}
                 description={t("exams.subtitle")}

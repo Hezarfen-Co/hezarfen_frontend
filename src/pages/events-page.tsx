@@ -16,8 +16,10 @@ import { IconEye, IconPlus } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { TruncationNotice } from "@/components/ui/truncation-notice";
 import { cn } from "@/lib/cn";
 import { createNow } from "@/lib/create-now";
+import { LIST_CAP, loadCappedList } from "@/lib/capped-list";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -64,8 +66,12 @@ function EventsContent() {
     });
   };
 
-  const [list, { refetch }] = createResource(async () => (await getEvents({ limit: 100 })).items);
-  const rows = () => filterEvents(list() ?? []);
+  const [loadAll, setLoadAll] = createSignal(false);
+  const [list, { refetch }] = createResource(
+    () => (loadAll() ? "all" : "capped"),
+    (scope) => loadCappedList(getEvents, LIST_CAP, scope === "all"),
+  );
+  const rows = () => filterEvents(list()?.items ?? []);
   const eventStatus = (event: Event) => {
     const nowMs = now();
     if (event.ends_at != null && event.ends_at < nowMs) return "past";
@@ -196,6 +202,12 @@ function EventsContent() {
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
+          <TruncationNotice
+            shown={list()?.items.length ?? 0}
+            total={list()?.total ?? 0}
+            loading={list.loading}
+            onLoadAll={() => setLoadAll(true)}
+          />
           <DataTable
             title={t("events.title")}
             description={t("events.subtitle")}
