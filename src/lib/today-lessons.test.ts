@@ -1,4 +1,4 @@
-import { dayBounds, rollCallState, sessionsToday } from "./today-lessons";
+import { dayBounds, lessonNow, rollCallState, sessionsToday } from "./today-lessons";
 
 const at = (h: number, m = 0) => new Date(2026, 8, 18, h, m).getTime();
 
@@ -20,4 +20,10 @@ it("names what a lesson still needs", () => {
   expect(rollCallState(at(9), at(12), 30, 30)).toBe("done");
   expect(rollCallState(at(9), at(12), 31, 30)).toBe("done");
   expect(rollCallState(at(9), at(12), null, 30)).toBeNull();
+});
+
+it("tells a student which lesson is on now", () => {
+  expect(lessonNow(at(9), at(9, 40), at(9, 10))).toBe("in-progress");
+  expect(lessonNow(at(9), at(9, 40), at(10))).toBeNull();
+  expect(lessonNow(at(9), null, at(9, 10))).toBeNull();
 });

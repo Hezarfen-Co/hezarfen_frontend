@@ -356,3 +356,12 @@ test("a parent sees the child's overdue and due-this-week homework in plain sent
   expect(within(panel).getByText("Worksheet 4")).toBeTruthy();
   expect(within(panel).queryByText("Handed in")).toBeNull();
 });
+
+test("a student's board shows the day's lessons with no roll-call reads", async () => {
+  renderDashboard("student");
+
+  const panel = await screen.findByRole("region", { name: /Today's lessons|Bugünkü derslerin/ });
+  expect(within(panel).getByText("Fractions")).toBeTruthy();
+  expect(within(panel).getByText(/On now|Şimdi/)).toBeTruthy();
+  expect(within(panel).queryByText(/Roll call|Yoklama/)).toBeNull();
+});

@@ -616,6 +616,8 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "today.titleStudent"
+  | "today.inProgress"
   | "childHomework.title"
   | "childHomework.missing"
   | "childHomework.noneMissing"
@@ -2780,6 +2782,8 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "today.titleStudent": "Today's lessons",
+  "today.inProgress": "On now",
   "childHomework.title": "Homework",
   "childHomework.missing": "{count} homework not handed in",
   "childHomework.noneMissing": "Nothing overdue",
@@ -4946,6 +4950,8 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "today.titleStudent": "Bugünkü derslerin",
+  "today.inProgress": "Şimdi",
   "childHomework.title": "Ödevler",
   "childHomework.missing": "{count} ödev teslim edilmedi",
   "childHomework.noneMissing": "Geciken ödev yok",

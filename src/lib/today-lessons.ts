@@ -1,6 +1,6 @@
 import type { CourseSession, Instance } from "@/api/client";
 
-export type RollCallState = "not-taken" | "partial" | "done" | "upcoming";
+export type RollCallState = "not-taken" | "partial" | "done" | "upcoming" | "in-progress";
 
 export type TodayLesson = {
   session: CourseSession;
@@ -36,4 +36,9 @@ export function rollCallState(startsAt: number, now: number, marked: number | nu
   if (marked == null) return null;
   if (marked === 0) return "not-taken";
   return marked >= enrolled ? "done" : "partial";
+}
+
+/** A student's view of a lesson: only whether it is on right now. */
+export function lessonNow(startsAt: number, endsAt: number | null, now: number): "in-progress" | null {
+  return startsAt <= now && endsAt != null && now < endsAt ? "in-progress" : null;
 }

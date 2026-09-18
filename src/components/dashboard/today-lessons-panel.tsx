@@ -7,7 +7,7 @@ import { getSessionAttendance } from "@/api/sessions";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import { rollCallState, sessionsToday, type RollCallState, type TodayLesson } from "@/lib/today-lessons";
+import { lessonNow, rollCallState, sessionsToday, type RollCallState, type TodayLesson } from "@/lib/today-lessons";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import type { MessageKey } from "@/i18n/messages";
 
@@ -19,6 +19,7 @@ const STATE_STYLE: Record<RollCallState, { key: MessageKey; class: string }> = {
   partial: { key: "today.rollCallPartial", class: "border-warning/30 bg-warning/10 text-warning-text" },
   done: { key: "today.rollCallDone", class: "border-success/30 bg-success/10 text-success-text" },
   upcoming: { key: "today.upcoming", class: "border-border-line bg-surface-tint text-muted-foreground" },
+  "in-progress": { key: "today.inProgress", class: "border-primary/30 bg-primary/10 text-primary-text" },
 };
 
 /**
@@ -28,7 +29,17 @@ const STATE_STYLE: Record<RollCallState, { key: MessageKey; class: string }> = {
  * read: sessions from the teacher's sections, marks from the session's roll
  * call, the roster size from the section's enrollment count.
  */
-export function TodayLessonsPanel(props: { now: number; courseTitle: (courseId: string) => string }) {
+export function TodayLessonsPanel(props: {
+  now: number;
+  courseTitle: (courseId: string) => string;
+  /**
+   * "student": the same day plan without roll-call reads (the route is the
+   * teacher's), marking only the lesson that is on now.
+   */
+  audience?: "teacher" | "student";
+  class?: string;
+}) {
+  const forStudent = () => props.audience === "student";
   const t = useT();
   const { locale } = usePreferences();
   const [lessons] = createResource(
@@ -47,6 +58,9 @@ export function TodayLessonsPanel(props: { now: number; courseTitle: (courseId: 
         const today = perInstance.flat().sort((a, b) => a.session.starts_at - b.session.starts_at);
         const items = await Promise.all(
           today.map(async ({ session, instance }) => {
+            if (forStudent()) {
+              return { session, instance, marked: null, state: lessonNow(session.starts_at, session.ends_at ?? null, now) };
+            }
             const marked = session.starts_at > now
               ? 0
               : await getSessionAttendance(session.id, { limit: 1 }).then((page) => page.total).catch(() => null);
@@ -64,9 +78,9 @@ export function TodayLessonsPanel(props: { now: number; courseTitle: (courseId: 
   const owed = () => (lessons()?.items ?? []).filter((lesson) => lesson.state === "not-taken" || lesson.state === "partial").length;
 
   return (
-    <section class="flex flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-4" aria-labelledby="today-lessons-heading">
+    <section class={cn("flex flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-4", props.class)} aria-labelledby="today-lessons-heading">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="today-lessons-heading" class="text-base font-semibold tracking-tight text-text-strong">{t("today.title")}</h2>
+        <h2 id="today-lessons-heading" class="text-base font-semibold tracking-tight text-text-strong">{forStudent() ? t("today.titleStudent") : t("today.title")}</h2>
         <Show when={owed() > 0}>
           <span class="text-xs font-medium text-destructive-text">{t("today.owed", { count: owed() })}</span>
         </Show>
@@ -88,7 +102,7 @@ export function TodayLessonsPanel(props: { now: number; courseTitle: (courseId: 
                   <Link
                     to="/instances/$id"
                     params={{ id: lesson.instance.id }}
-                    search={{ tab: "sessions", rollCall: lesson.session.id } as never}
+                    search={(forStudent() ? { tab: "sessions" } : { tab: "sessions", rollCall: lesson.session.id }) as never}
                     class="flex items-center gap-3 py-2.5 outline-hidden hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span class="mono w-24 shrink-0 text-xs tabular-nums text-muted-foreground">

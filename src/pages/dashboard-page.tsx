@@ -831,7 +831,9 @@ function DashboardContent() {
               </Show>
             </div>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
-              <ComingSoonPanel title={t("dashboard.student.todayPlan")} />
+              <Show when={on("sessions") && clock()} fallback={<ComingSoonPanel title={t("dashboard.student.todayPlan")} />}>
+                {(ready) => <TodayLessonsPanel audience="student" now={ready().now} courseTitle={courseTitleOf} />}
+              </Show>
               <ComingSoonPanel title={t("dashboard.student.mastery")} />
               <ComingSoonPanel title={t("dashboard.student.audioWorkshop")} />
             </div>
