@@ -22,6 +22,7 @@ import { DataTableViewMenu, type ViewMenuColumn } from "@/components/ui/data-tab
 import { TablePagination } from "@/components/ui/table-pagination";
 import { IconArrowDown, IconArrowUp, IconChevronsUpDown } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { createMediaQuery } from "@/lib/create-media-query";
 import { createTablePreferences } from "@/lib/table-preferences";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useT } from "@/stores/preferences-context";
@@ -66,6 +67,12 @@ export type DataTableProps<TData, TValue = unknown> = {
     onPageChange: (pageIndex: number) => void;
     onPageSizeChange?: (pageSize: number) => void;
   };
+  /**
+   * Below the `sm` breakpoint rows render as cards (first column as the
+   * title, actions top-right, the rest as label/value pairs) instead of a
+   * table that scrolls sideways. "scroll" keeps the table on phones too.
+   */
+  mobileLayout?: "cards" | "scroll";
   onRowClick?: (row: TData) => void;
   onSearchInput?: (value: string) => void;
   pageSize?: number;
@@ -219,6 +226,32 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     const interactive = target.closest("button,a,input,select,textarea,[role='button']");
     return interactive != null && interactive !== row;
   };
+  // A search that matches nothing is not an empty list: say so and offer the way back.
+  const emptyContent = () => (
+    <Show
+      when={searchFieldValue().trim()}
+      fallback={
+        <div class="flex flex-col items-center gap-3">
+          <Illustration name={props.emptyIllustration ?? "empty"} class="h-20 w-32" />
+          <span>{props.empty ?? t("common.noResults")}</span>
+        </div>
+      }
+    >
+      <div class="flex flex-col items-center gap-3">
+        <Illustration name="no-results" class="h-20 w-32" />
+        <span>{t("common.noMatches")}</span>
+        <Button type="button" size="sm" variant="outline" onClick={() => handleSearch("")}>
+          {t("common.clearSearch")}
+        </Button>
+      </div>
+    </Show>
+  );
+  const compactScreen = createMediaQuery("(max-width: 639px)");
+  const useCards = () => (props.mobileLayout ?? "cards") === "cards" && compactScreen();
+  const headerLabel = (columnId: string) => {
+    const header = table.getFlatHeaders().find((candidate) => candidate.column.id === columnId);
+    return header ? flexRender(header.column.columnDef.header, header.getContext()) : columnId;
+  };
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
     const align = alignOf(header.column);
@@ -294,6 +327,70 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </Show>
         </div>
       </Show>
+      <Show when={useCards()}>
+        <ul class="space-y-2" aria-label={props.title}>
+          <Show
+            when={table.getRowModel().rows.length > 0}
+            fallback={<li class="rounded-lg border border-border-line bg-surface-base px-4 py-8 text-center text-sm text-muted-foreground">{emptyContent()}</li>}
+          >
+            <For each={table.getRowModel().rows}>
+              {(row) => {
+                const cells = () => row.getVisibleCells().filter((cell) => cell.column.id !== "select");
+                const action = () => cells().find((cell) => cell.column.id === "actions");
+                const body = () => cells().filter((cell) => cell.column.id !== "actions");
+                return (
+                  <li>
+                  <div
+                    role={props.onRowClick ? "button" : undefined}
+                    tabIndex={props.onRowClick ? 0 : undefined}
+                    class={cn(
+                      "rounded-lg border border-border-line bg-surface-base p-3 text-sm",
+                      props.onRowClick && "cursor-pointer outline-hidden focus-visible:ring-2 focus-visible:ring-ring active:bg-primary/6",
+                    )}
+                    onClick={(event) => {
+                      if (!props.onRowClick || isInteractiveTarget(event.target, event.currentTarget)) return;
+                      props.onRowClick(row.original);
+                    }}
+                    onKeyDown={(event) => {
+                      if (!props.onRowClick || isInteractiveTarget(event.target, event.currentTarget) || (event.key !== "Enter" && event.key !== " ")) return;
+                      event.preventDefault();
+                      props.onRowClick(row.original);
+                    }}
+                  >
+                    <div class="flex items-start gap-2">
+                      <div class="min-w-0 flex-1 font-medium">
+                        <Show when={body()[0]}>{(first) => flexRender(first().column.columnDef.cell, first().getContext())}</Show>
+                      </div>
+                      <Show when={action()}>{(cell) => <div class="-my-1 shrink-0">{flexRender(cell().column.columnDef.cell, cell().getContext())}</div>}</Show>
+                    </div>
+                    <Show when={body().length > 1}>
+                      <dl class="mt-2 grid grid-cols-[minmax(6rem,auto)_minmax(0,1fr)] gap-x-3 gap-y-1.5">
+                        <For each={body().slice(1)}>
+                          {(cell) => (
+                            <>
+                              <dt class="truncate text-xs text-muted-foreground">{headerLabel(cell.column.id)}</dt>
+                              <dd class="min-w-0 break-words text-foreground">
+                                <Show
+                                  when={cell.column.accessorFn == null || (cell.getValue() != null && cell.getValue() !== "")}
+                                  fallback={<span class="text-muted-foreground/60">-</span>}
+                                >
+                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </Show>
+                              </dd>
+                            </>
+                          )}
+                        </For>
+                      </dl>
+                    </Show>
+                  </div>
+                  </li>
+                );
+              }}
+            </For>
+          </Show>
+        </ul>
+      </Show>
+      <Show when={!useCards()}>
       <DataTableFrame>
         <Table
           class={cn("data-table table-fixed", props.tableClass)}
@@ -336,24 +433,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
               fallback={
                 <TableRow>
                   <TableCell colSpan={colSpan()} class="py-8 text-center text-muted-foreground">
-                    {/* A search that matches nothing is not an empty list: say so and offer the way back. */}
-                    <Show
-                      when={searchFieldValue().trim()}
-                      fallback={
-                        <div class="flex flex-col items-center gap-3">
-                          <Illustration name={props.emptyIllustration ?? "empty"} class="h-20 w-32" />
-                          <span>{props.empty ?? t("common.noResults")}</span>
-                        </div>
-                      }
-                    >
-                      <div class="flex flex-col items-center gap-3">
-                        <Illustration name="no-results" class="h-20 w-32" />
-                        <span>{t("common.noMatches")}</span>
-                        <Button type="button" size="sm" variant="outline" onClick={() => handleSearch("")}>
-                          {t("common.clearSearch")}
-                        </Button>
-                      </div>
-                    </Show>
+                    {emptyContent()}
                   </TableCell>
                 </TableRow>
               }
@@ -417,6 +497,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </TableBody>
         </Table>
       </DataTableFrame>
+      </Show>
       <Show when={paginationEnabled && totalRows() > 0}>
         <TablePagination
           pageIndex={pageIndex()}

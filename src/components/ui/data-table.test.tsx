@@ -193,3 +193,34 @@ test("a server-paged table offers no header sort, since it could only sort one p
   ));
   expect(screen.queryByRole("button", { name: /^Name/ })).toBeNull();
 });
+
+test("on a phone-width screen rows render as labelled cards instead of a sideways table", () => {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("max-width"),
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }));
+  const cardColumns: ColumnDef<Row>[] = [
+    { accessorKey: "name", header: "Name" },
+    { accessorKey: "role", header: "Role" },
+    { id: "actions", header: "Actions", cell: () => <button type="button">Menu</button> },
+  ];
+  const onRowClick = vi.fn();
+  render(() => (
+    <PreferencesProvider>
+      <DataTable columns={cardColumns} data={[{ name: "Ada", role: "teacher" }]} enableColumnVisibility={false} onRowClick={onRowClick} />
+    </PreferencesProvider>
+  ));
+
+  expect(screen.queryByRole("table")).toBeNull();
+  const card = screen.getByRole("listitem");
+  expect(within(card).getByText("Ada")).toBeTruthy();
+  expect(within(card).getByText("Role")).toBeTruthy();
+  expect(within(card).getByText("teacher")).toBeTruthy();
+
+  fireEvent.click(within(card).getByRole("button", { name: "Menu" }));
+  expect(onRowClick).not.toHaveBeenCalled();
+  fireEvent.click(within(card).getByText("teacher"));
+  expect(onRowClick).toHaveBeenCalledOnce();
+  vi.unstubAllGlobals();
+});
