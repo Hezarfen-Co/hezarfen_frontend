@@ -875,7 +875,8 @@ export type MessageKey =
   | "courseNotes.ragGenerate"
   | "courseNotes.ragGenerating"
   | "courseNotes.ragReady"
-  | "courseNotes.ragQueued"
+  | "courseNotes.ragNotIndexed"
+  | "courseNotes.ragEmptyFailed"
   | "courseNotes.ragUnavailable"
   | "podcast.title"
   | "podcast.description"
@@ -2984,7 +2985,8 @@ const en: Dict = {
   "courseNotes.ragGenerate": "Create summary",
   "courseNotes.ragGenerating": "Creating summary…",
   "courseNotes.ragReady": "The new summary is ready.",
-  "courseNotes.ragQueued": "Summary generation continues in the background.",
+  "courseNotes.ragNotIndexed": "The summary was not created. Nothing is indexed for this note yet — press Create summary to try again.",
+  "courseNotes.ragEmptyFailed": "Nothing is indexed for this note yet. Press Create summary to try again.",
   "courseNotes.ragUnavailable": "The AI summary service is not connected right now. Try again when a worker is available.",
   "podcast.title": "Audio workshop",
   "podcast.description": "Turn a lesson note into a listenable episode.",
@@ -5095,7 +5097,8 @@ const tr: Dict = {
   "courseNotes.ragGenerate": "Özet oluştur",
   "courseNotes.ragGenerating": "Özet oluşturuluyor…",
   "courseNotes.ragReady": "Yeni özet hazır.",
-  "courseNotes.ragQueued": "Özet oluşturma arka planda devam ediyor.",
+  "courseNotes.ragNotIndexed": "Özet oluşmadı. Bu not için henüz bir dizin oluşturulmadı — yeniden denemek için Özet oluştur'a basın.",
+  "courseNotes.ragEmptyFailed": "Bu not için henüz bir dizin oluşturulmadı. Yeniden denemek için Özet oluştur'a basın.",
   "courseNotes.ragUnavailable": "YZ özet servisi şu anda bağlı değil. Bir worker hazır olduğunda tekrar deneyin.",
   "podcast.title": "Ses Atölyesi",
   "podcast.description": "Bir ders notunu dinlenebilir bir bölüme dönüştürün.",
