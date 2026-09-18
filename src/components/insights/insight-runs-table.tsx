@@ -82,10 +82,10 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
         const issueCount = run.pending_students.length + run.failed_modules.length;
         return (
           <div class="space-y-1">
-            <p class={cn("text-xs", issueCount > 0 || run.budget_exceeded ? "text-warning" : "text-muted-foreground")}>
+            <p class={cn("text-xs", issueCount > 0 || run.budget_exceeded ? "text-warning-text" : "text-muted-foreground")}>
               {issueCount > 0 ? tx("insights.issueCount", { count: issueCount }) : tx("insights.noIssues")}
             </p>
-            {run.budget_exceeded && <p class="text-[11px] text-warning">{tx("insights.budgetExceeded")}</p>}
+            {run.budget_exceeded && <p class="text-[11px] text-warning-text">{tx("insights.budgetExceeded")}</p>}
             {run.pending_students.length > 0 && (
               <p class="max-w-56 truncate text-[11px] text-muted-foreground" title={run.pending_students.join(", ")}>
                 {tx("insights.pendingStudents", { count: run.pending_students.length })}

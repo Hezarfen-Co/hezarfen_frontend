@@ -127,7 +127,7 @@ export function GmailMailRow(props: GmailMailRowProps) {
           <Show when={props.onTrash}>
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text transition-colors"
               title={props.folder === "trash" ? t("messages.restoreFromTrash") : t("messages.moveToTrash")}
               onClick={(e) => {
                 e.stopPropagation();
@@ -141,14 +141,14 @@ export function GmailMailRow(props: GmailMailRowProps) {
           <Show when={props.onDeleteForever}>
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text transition-colors"
               title={t("messages.deleteForever")}
               onClick={(e) => {
                 e.stopPropagation();
                 props.onDeleteForever?.();
               }}
             >
-              <IconTrash class="h-3.5 w-3.5 text-destructive" />
+              <IconTrash class="h-3.5 w-3.5 text-destructive-text" />
             </button>
           </Show>
 

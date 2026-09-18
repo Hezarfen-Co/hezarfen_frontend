@@ -212,7 +212,7 @@ function InstanceDetailContent() {
       header: t("form.title"),
       meta: { cellClass: "font-medium" },
       cell: (cell) => (
-        <ExamLink examId={cell.row.original.id} class="hover:text-primary hover:underline">
+        <ExamLink examId={cell.row.original.id} class="hover:text-primary-text hover:underline">
           {cell.row.original.title}
         </ExamLink>
       ),
@@ -501,7 +501,7 @@ function InstanceDetailContent() {
               <Alert variant="success">{flash()}</Alert>
             </Show>
             <Show when={error()}>
-              <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+              <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
             </Show>
 
             <Tabs value={tab()} onChange={setTab} class="space-y-4">

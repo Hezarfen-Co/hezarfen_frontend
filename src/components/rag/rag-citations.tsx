@@ -17,7 +17,7 @@ export function RagCitations(props: {
             {(citation) => (
               <li class="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-xs">
                 <div class="flex items-start gap-2">
-                  <span class="mt-0.5 flex h-5 min-w-5 items-center justify-center rounded-md bg-primary/10 px-1 font-mono font-semibold text-primary">
+                  <span class="mt-0.5 flex h-5 min-w-5 items-center justify-center rounded-md bg-primary/10 px-1 font-mono font-semibold text-primary-text">
                     {citation.n}
                   </span>
                   <div class="min-w-0 space-y-1">

@@ -150,7 +150,7 @@ function QuestionBankContent() {
             </Badge>
           }
         >
-          <Badge variant="outline" class="gap-1 whitespace-nowrap border-success/50 bg-success/10 text-success">
+          <Badge variant="outline" class="gap-1 whitespace-nowrap border-success/50 bg-success/10 text-success-text">
             <IconUsers class="h-3 w-3" />
             {t("bank.sharedWithSchool")}
           </Badge>

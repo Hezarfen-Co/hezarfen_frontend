@@ -193,7 +193,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
             <Button
               variant="ghost"
               size="sm"
-              class="h-8 rounded-lg text-xs text-destructive hover:bg-destructive/10"
+              class="h-8 rounded-lg text-xs text-destructive-text hover:bg-destructive/10"
               onClick={() => props.onAction({ folder: "trash" })}
               title={t("messages.moveToTrash")}
             >
@@ -207,7 +207,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
             <Button
               variant="ghost"
               size="sm"
-              class="h-8 rounded-lg text-xs text-destructive hover:bg-destructive/10"
+              class="h-8 rounded-lg text-xs text-destructive-text hover:bg-destructive/10"
               onClick={() => props.onAction({ delete: true })}
               title={t("messages.deleteForever")}
             >
@@ -328,7 +328,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
                 />
 
                 <Show when={error()}>
-                  <p class="text-xs font-medium text-destructive">{error()}</p>
+                  <p class="text-xs font-medium text-destructive-text">{error()}</p>
                 </Show>
 
                 <div class="flex items-center justify-between pt-1">
@@ -344,7 +344,7 @@ export function GmailMailDetail(props: GmailMailDetailProps) {
 
                   <button
                     type="button"
-                    class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text"
                     onClick={() => setIsReplying(false)}
                     title={t("common.cancel")}
                   >

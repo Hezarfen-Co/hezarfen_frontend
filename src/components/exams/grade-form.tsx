@@ -96,7 +96,7 @@ export function GradeForm(props: {
             {t("exams.gradeStudent")}
           </Button>
         </div>
-        {error() && <p class="text-sm text-destructive">{error()}</p>}
+        {error() && <p class="text-sm text-destructive-text">{error()}</p>}
       </form>
 
       <ConfirmDialog

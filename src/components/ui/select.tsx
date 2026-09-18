@@ -63,7 +63,7 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
               <DropdownMenuItem
                 class={cn(
                   "flex items-center justify-between gap-2.5 text-sm",
-                  isSelected() && "bg-primary/10 text-primary font-semibold",
+                  isSelected() && "bg-primary/10 text-primary-text font-semibold",
                 )}
                 onSelect={() => props.onChange(option.value)}
               >
@@ -74,7 +74,7 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
                   <span class="truncate">{option.label}</span>
                 </div>
                 <Show when={isSelected()}>
-                  <IconCheck class="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <IconCheck class="h-3.5 w-3.5 shrink-0 text-primary-text" />
                 </Show>
               </DropdownMenuItem>
             );
@@ -168,13 +168,13 @@ export function Select(props: SelectProps) {
                 disabled={option.disabled}
                 class={cn(
                   "flex items-center justify-between gap-2.5 text-sm",
-                  option.value === current() && "bg-primary/10 font-semibold text-primary",
+                  option.value === current() && "bg-primary/10 font-semibold text-primary-text",
                 )}
                 onSelect={() => pick(option.value)}
               >
                 <span class="truncate">{option.label}</span>
                 <Show when={option.value === current()}>
-                  <IconCheck class="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <IconCheck class="h-3.5 w-3.5 shrink-0 text-primary-text" />
                 </Show>
               </DropdownMenuItem>
             )}

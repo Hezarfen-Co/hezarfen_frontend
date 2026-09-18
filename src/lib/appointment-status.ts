@@ -3,9 +3,9 @@ import type { AppointmentStatus } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 
 export function appointmentStatusClass(status: AppointmentStatus | string): string {
-  if (status === "pending") return "border-warning/30 bg-warning/10 text-warning";
-  if (status === "approved") return "border-success/30 bg-success/10 text-success";
-  if (status === "rejected") return "border-destructive/30 bg-destructive/10 text-destructive";
+  if (status === "pending") return "border-warning/30 bg-warning/10 text-warning-text";
+  if (status === "approved") return "border-success/30 bg-success/10 text-success-text";
+  if (status === "rejected") return "border-destructive/30 bg-destructive/10 text-destructive-text";
   return "border-muted bg-muted/50 text-muted-foreground";
 }
 

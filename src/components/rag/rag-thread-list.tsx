@@ -63,7 +63,7 @@ export function RagThreadList(props: {
                       </button>
                       <button
                         type="button"
-                        class="flex w-9 shrink-0 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        class="flex w-9 shrink-0 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive-text"
                         aria-label={props.labels.delete}
                         onClick={() => props.onRemove(thread)}
                       >

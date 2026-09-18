@@ -67,7 +67,7 @@ export function ProfileMemberships(props: {
             <For each={classRows()}>
               {(c) => (
                 <li class="flex items-center gap-3 rounded-lg border border-border/60 px-3 py-2.5">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text">
                     <IconSchool class="h-4 w-4" />
                   </span>
                   <span class="min-w-0 flex-1">
@@ -118,7 +118,7 @@ export function ProfileMemberships(props: {
                     <span
                       class={cn(
                         "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-                        c.kind === "club" ? "bg-violet-500/10 text-violet-600 dark:text-violet-300" : "bg-primary/10 text-primary",
+                        c.kind === "club" ? "bg-violet-500/10 text-violet-600 dark:text-violet-300" : "bg-primary/10 text-primary-text",
                       )}
                     >
                       <IconBook class="h-4 w-4" />

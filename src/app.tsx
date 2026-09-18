@@ -34,7 +34,7 @@ function RootErrorFallback(props: { error: unknown; reset: () => void }) {
   return (
     <div class="flex min-h-[var(--app-viewport)] items-center justify-center bg-background px-4">
       <div class="w-full max-w-[420px] space-y-5 rounded-xl border border-border-line bg-surface-base p-8 text-center shadow-[0_10px_24px_-4px_rgba(0,0,0,0.10)]">
-        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive-text">
           <IconAlert class="h-6 w-6" />
         </div>
         <div class="space-y-2">

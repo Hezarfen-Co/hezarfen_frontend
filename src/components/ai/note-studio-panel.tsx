@@ -79,7 +79,7 @@ export function NoteStudioPanel() {
               when={selected()}
               fallback={
                 <section class="flex min-h-44 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-primary/25 bg-primary/[0.03] px-6 py-8 text-center">
-                  <div class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <div class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary-text">
                     <IconWaveform class="h-5 w-5" />
                   </div>
                   <div>

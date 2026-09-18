@@ -144,7 +144,7 @@ export function SessionRollCall(props: {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      class="h-10 w-10 shrink-0 text-destructive hover:bg-destructive/10"
+                      class="h-10 w-10 shrink-0 text-destructive-text hover:bg-destructive/10"
                       aria-label={t("common.remove")}
                       disabled={pendingUserId() != null}
                       onClick={() => void clear(target.user.id)}

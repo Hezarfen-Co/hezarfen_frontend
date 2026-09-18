@@ -151,11 +151,11 @@ export function BankQuestionPicker(props: {
 
       <div class="space-y-1.5">
         <Label for="bank-target-subject" class="text-xs font-semibold text-muted-foreground">
-          {t("bank.targetSubject")} <span class="text-destructive">*</span>
+          {t("bank.targetSubject")} <span class="text-destructive-text">*</span>
         </Label>
         <Show
           when={props.subjects.length > 0}
-          fallback={<p class="text-xs text-destructive">{t("bank.noSubjects")}</p>}
+          fallback={<p class="text-xs text-destructive-text">{t("bank.noSubjects")}</p>}
         >
           <Select
             id="bank-target-subject"
@@ -173,7 +173,7 @@ export function BankQuestionPicker(props: {
         </Show>
       </div>
 
-      {error() && <p class="rounded-sm bg-destructive/10 px-3 py-1.5 text-sm text-destructive">{error()}</p>}
+      {error() && <p class="rounded-sm bg-destructive/10 px-3 py-1.5 text-sm text-destructive-text">{error()}</p>}
 
       <div class="flex flex-wrap items-center gap-2 pt-1">
         <Button

@@ -18,7 +18,7 @@ export function RouteErrorFallback(props: ErrorComponentProps) {
   console.error("Route render error:", props.error);
   return (
     <div role="alert" class="mx-auto flex w-full max-w-[520px] flex-col items-center gap-4 rounded-xl border border-border-line bg-surface-base px-6 py-10 text-center">
-      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive-text">
         <IconAlert class="h-5 w-5" />
       </span>
       <div class="space-y-1.5">

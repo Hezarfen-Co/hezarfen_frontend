@@ -260,7 +260,7 @@ function ClassDetailContent() {
                       {t("classBlueprints.apply")}
                     </Button>
                     <Button size="sm" variant="outline" class="rounded-lg" onClick={() => { setName(c().name); setGrade(c().grade ?? ""); setYearId(c().year ?? ""); setTeacherId(c().teacher?.id ?? ""); setEditing(true); }}>{t("common.edit")}</Button>
-                    <Button size="sm" variant="outline" class="rounded-lg text-destructive" onClick={() => setDeleteOpen(true)}>{t("classGroups.deleteClass")}</Button>
+                    <Button size="sm" variant="outline" class="rounded-lg text-destructive-text" onClick={() => setDeleteOpen(true)}>{t("classGroups.deleteClass")}</Button>
                   </div>
                 </Show>
               </header>

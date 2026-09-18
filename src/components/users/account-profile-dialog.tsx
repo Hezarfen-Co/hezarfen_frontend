@@ -28,7 +28,7 @@ export function AccountProfileDialog(props: { open: boolean; onOpenChange: (open
       aria-current={section() === id ? "page" : undefined}
       class={cn(
         "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-        section() === id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+        section() === id ? "bg-primary/10 text-primary-text" : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
       )}
     >
       {icon}

@@ -115,14 +115,14 @@ function BuilderLoginForm() {
             </div>
           </div>
           <Show when={error()}>
-            <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+            <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
           </Show>
           <Button type="submit" class="h-9 w-full text-sm" disabled={pending()}>
             {t("auth.login")}
           </Button>
         </form>
         <p class="mt-8 border-t border-border-hairline pt-6 text-center text-sm text-text-subtle">
-          <Link to="/login" class="font-semibold text-primary underline-offset-4 hover:underline">
+          <Link to="/login" class="font-semibold text-primary-text underline-offset-4 hover:underline">
             {t("builder.backToSchoolLogin")}
           </Link>
         </p>

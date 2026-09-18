@@ -84,7 +84,7 @@ export function RescheduleForm(props: {
         </div>
       </div>
 
-      {error() && <p class="text-sm text-destructive">{error()}</p>}
+      {error() && <p class="text-sm text-destructive-text">{error()}</p>}
       <div class="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2 border-t border-border bg-background px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
         <Button type="submit" class="h-10 flex-1 sm:flex-none" disabled={pending()}>
           {t("appointments.reschedule")}

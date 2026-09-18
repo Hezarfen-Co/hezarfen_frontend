@@ -80,7 +80,7 @@ function StatementContent() {
     {
       accessorKey: "due_at",
       header: t("payments.due"),
-      cell: (cell) => <span class="mono block whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
+      cell: (cell) => <span class="mono block whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive-text": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
     },
     {
       accessorKey: "outstanding_minor",
@@ -145,7 +145,7 @@ function StatementContent() {
           </div>
           <div>
             <p class="text-xs font-medium text-text-subtle">{t("payments.balance")}</p>
-            <p class="mt-1 text-2xl font-semibold tabular-nums" classList={{ "text-destructive": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums" classList={{ "text-destructive-text": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p>
           </div>
         </div>
       </section>

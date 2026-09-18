@@ -47,7 +47,7 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
       header: t("nav.courses"),
       meta: { stickyLeft: true },
       cell: (cell) => (
-        <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} class="block truncate font-medium hover:text-primary hover:underline">
+        <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} class="block truncate font-medium hover:text-primary-text hover:underline">
           {cell.row.original.course.title}
         </Link>
       ),

@@ -99,7 +99,7 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
           <section class="space-y-3">
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-2">
-                <IconSparkles class="h-4 w-4 text-primary" />
+                <IconSparkles class="h-4 w-4 text-primary-text" />
                 <h3 class="text-sm font-semibold text-text-strong">{tx("insights.summary")}</h3>
               </div>
               <Show when={props.insight.summary}>
@@ -158,7 +158,7 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
         <Show when={props.mode !== "cards"}>
           <section class="space-y-3 border-t border-border-hairline pt-5">
             <div class="flex items-center gap-2">
-              <IconAlert class="h-4 w-4 text-warning" />
+              <IconAlert class="h-4 w-4 text-warning-text" />
               <h3 class="text-sm font-semibold text-text-strong">{tx("insights.attention")}</h3>
               <Badge variant="warning" class="rounded-full">{props.insight.attention.length}</Badge>
             </div>
@@ -192,7 +192,7 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
 
         <section class={cn("space-y-3", props.mode !== "cards" && "border-t border-border-hairline pt-5")}>
           <div class="flex items-center gap-2">
-            <IconSparkles class="h-4 w-4 text-primary" />
+            <IconSparkles class="h-4 w-4 text-primary-text" />
             <h3 class="text-sm font-semibold text-text-strong">{tx("insights.recommendations")}</h3>
             <Badge variant="secondary" class="rounded-full">{props.insight.cards.length}</Badge>
           </div>
@@ -232,7 +232,7 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
         <Show when={props.mode !== "cards"}>
           <section class="space-y-3 border-t border-border-hairline pt-5">
             <div class="flex items-center gap-2">
-              <IconChart class="h-4 w-4 text-info" />
+              <IconChart class="h-4 w-4 text-info-text" />
               <h3 class="text-sm font-semibold text-text-strong">{tx("insights.segments")}</h3>
               <Badge variant="info" class="rounded-full">{props.insight.segments.length}</Badge>
             </div>
@@ -274,7 +274,7 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
                           <p class="text-[10px] text-muted-foreground">{tx("insights.overall")}</p>
                         </div>
                         <div class="rounded-lg bg-surface-overlay px-2 py-2">
-                          <p class={cn("font-mono text-sm font-semibold", segment.contrast < 0 ? "text-destructive" : "text-success")}>
+                          <p class={cn("font-mono text-sm font-semibold", segment.contrast < 0 ? "text-destructive-text" : "text-success-text")}>
                             {segment.contrast > 0 ? "+" : ""}{percent(segment.contrast)}
                           </p>
                           <p class="text-[10px] text-muted-foreground">{tx("insights.contrast")}</p>

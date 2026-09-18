@@ -338,7 +338,7 @@ export function QuestionForm(props: {
             <For each={props.subjects}>{(subject) => <option value={subject.id}>{subject.name}</option>}</For>
           </Select>
           <Show when={subjectUnavailable()}>
-            <p class="mt-1 text-[11px] text-destructive">{t("questions.subjectUnavailableHelp")}</p>
+            <p class="mt-1 text-[11px] text-destructive-text">{t("questions.subjectUnavailableHelp")}</p>
           </Show>
         </div>
         <div>
@@ -448,7 +448,7 @@ export function QuestionForm(props: {
                       variant="ghost"
                       size="sm"
                       disabled={rows().length <= BANK_QUESTION_LIMITS.minChoices}
-                      class="mt-0.5 h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                      class="mt-0.5 h-6 w-6 p-0 text-muted-foreground hover:text-destructive-text"
                       onClick={() => removeChoice(row().id)}
                       aria-label={t("common.delete")}
                     >
@@ -462,7 +462,7 @@ export function QuestionForm(props: {
         </div>
       </Show>
 
-      {error() && <p class="rounded-sm bg-destructive/10 px-3 py-1.5 text-sm text-destructive">{error()}</p>}
+      {error() && <p class="rounded-sm bg-destructive/10 px-3 py-1.5 text-sm text-destructive-text">{error()}</p>}
 
       <div class="flex flex-wrap items-center gap-2 pt-1">
         <Button type="submit" class="h-8 text-xs font-semibold" disabled={pending()}>

@@ -21,7 +21,7 @@ import { useT } from "@/stores/preferences-context";
 const PAGE_SIZE = 10;
 const round = (n: number) => (Math.round(n * 100) / 100).toString();
 // ponytail: display-only color tiers (70/40 on a 0-100 scale), not a pass/fail rule
-const avgTone = (v: number) => (v >= 70 ? "text-success" : v >= 40 ? "text-warning" : "text-destructive");
+const avgTone = (v: number) => (v >= 70 ? "text-success-text" : v >= 40 ? "text-warning-text" : "text-destructive-text");
 
 export default function StudentMarksPage() {
   return (

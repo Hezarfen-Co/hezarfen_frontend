@@ -342,7 +342,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           <div class="flex flex-col gap-3">
             <For each={filteredMessages()}>
               {(message) => (
-                <div class={message.role === "user" ? "ml-8 rounded-lg rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground selection:bg-primary-foreground selection:text-primary" : "mr-6 rounded-lg rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
+                <div class={message.role === "user" ? "ml-8 rounded-lg rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground selection:bg-primary-foreground selection:text-primary-text" : "mr-6 rounded-lg rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
                   <Switch>
                     <Match when={message.role === "user"}>
                       <p class="whitespace-pre-wrap leading-6">{message.content}</p>
@@ -353,7 +353,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
                     {/* The label stands in only until the first characters land;
                         an answer that is still being written keeps typing. */}
                     <Match when={message.status === "pending" && !visibleContent(message)}>
-                      <span class="flex items-center gap-2 text-muted-foreground"><IconBotSquare class="h-4 w-4 text-primary" /><span class="animate-pulse"><CelebiThinkingLabel /></span></span>
+                      <span class="flex items-center gap-2 text-muted-foreground"><IconBotSquare class="h-4 w-4 text-primary-text" /><span class="animate-pulse"><CelebiThinkingLabel /></span></span>
                     </Match>
                     <Match when={true}>
                       <CelebiMarkdown text={visibleContent(message)} />
@@ -370,7 +370,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
                     </Match>
                   </Switch>
                   <Show when={message.role === "assistant" && message.status === "failed"}>
-                    <span class="mt-2 flex items-center gap-1.5 text-xs text-destructive"><IconAlert class="h-3.5 w-3.5" />{failureMessage(message.error_code)}</span>
+                    <span class="mt-2 flex items-center gap-1.5 text-xs text-destructive-text"><IconAlert class="h-3.5 w-3.5" />{failureMessage(message.error_code)}</span>
                   </Show>
                   <Show when={message.role === "assistant" && message.truncated}>
                     <p class="mt-2 text-xs text-muted-foreground">{locale() === "tr" ? "Yanıt uzunluk sınırında kısaltıldı." : "Response was shortened at the configured limit."}</p>

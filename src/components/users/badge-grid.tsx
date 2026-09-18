@@ -117,7 +117,7 @@ export function BadgeGrid(props: {
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0">
           <h2 class="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
-            <PixelIcon name="trophy" class="h-5 w-5 text-primary" />
+            <PixelIcon name="trophy" class="h-5 w-5 text-primary-text" />
             {t("badges.title")}
           </h2>
           <p class="mt-1 text-sm text-muted-foreground">{t("badges.subtitle")}</p>
@@ -156,11 +156,11 @@ export function BadgeGrid(props: {
         >
           {(n) => (
             <div class="flex flex-wrap items-center gap-3 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3">
-              <span class="flex h-9 w-9 items-center justify-center rounded-md bg-primary/15 text-primary">
+              <span class="flex h-9 w-9 items-center justify-center rounded-md bg-primary/15 text-primary-text">
                 <PixelIcon name={statIcon(n().entry.stat)} class="h-5 w-5" />
               </span>
               <div class="min-w-0 flex-1">
-                <p class="text-[11px] font-medium uppercase tracking-wide text-primary">{t("badges.next")}</p>
+                <p class="text-[11px] font-medium uppercase tracking-wide text-primary-text">{t("badges.next")}</p>
                 <p class="truncate text-sm text-muted-foreground">{description(n().entry.id) || label(n().entry.id)}</p>
               </div>
               <div class="w-40">
@@ -188,7 +188,7 @@ export function BadgeGrid(props: {
                     <span
                       class={cn(
                         "flex h-8 w-8 items-center justify-center rounded-md",
-                        earnedInLadder() > 0 ? "bg-primary/12 text-primary" : "bg-muted text-muted-foreground",
+                        earnedInLadder() > 0 ? "bg-primary/12 text-primary-text" : "bg-muted text-muted-foreground",
                       )}
                     >
                       <PixelIcon name={statIcon(ladder.stat)} class="h-[18px] w-[18px]" />

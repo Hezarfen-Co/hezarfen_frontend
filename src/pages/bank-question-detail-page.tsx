@@ -151,7 +151,7 @@ function BankQuestionDetailContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      class="text-destructive hover:text-destructive"
+                      class="text-destructive-text hover:text-destructive-text"
                       disabled={imagePending() === "question"}
                       onClick={() => void removeImage("question", () => deleteBankQuestionImage(current().id))}
                     >
@@ -180,7 +180,7 @@ function BankQuestionDetailContent() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              class="h-8 w-8 text-destructive hover:bg-destructive/10"
+                              class="h-8 w-8 text-destructive-text hover:bg-destructive/10"
                               aria-label={t("common.remove")}
                               disabled={imagePending() === choice.id}
                               onClick={() => void removeImage(choice.id, () => deleteBankChoiceImage(current().id, choice.id))}

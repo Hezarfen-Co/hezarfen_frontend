@@ -103,7 +103,7 @@ export function BoardBulkInvite(props: {
               class={cn(
                 "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
                 kind() === k
-                  ? "border-primary bg-primary/10 text-primary"
+                  ? "border-primary bg-primary/10 text-primary-text"
                   : "border-border/70 text-muted-foreground hover:bg-muted/60",
               )}
               aria-pressed={kind() === k}
@@ -151,7 +151,7 @@ export function BoardBulkInvite(props: {
         <p class="text-xs text-muted-foreground">{notice()}</p>
       </Show>
       <Show when={error()}>
-        <p class="text-xs text-destructive">{error()}</p>
+        <p class="text-xs text-destructive-text">{error()}</p>
       </Show>
     </section>
   );

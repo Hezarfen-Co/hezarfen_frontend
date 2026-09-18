@@ -50,6 +50,14 @@
   --color-success: hsl(var(--success));
   --color-warning: hsl(var(--warning));
   --color-info: hsl(var(--info));
+  /* Text-on-surface variants: the fills above are for buttons, dots and
+     tints; small colored text uses these, which reach WCAG AA (4.5:1) on the
+     page and card backgrounds in both themes. */
+  --color-primary-text: hsl(var(--primary-text));
+  --color-success-text: hsl(var(--success-text));
+  --color-warning-text: hsl(var(--warning-text));
+  --color-info-text: hsl(var(--info-text));
+  --color-destructive-text: hsl(var(--destructive-text));
 
   --color-sidebar: hsl(var(--sidebar));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
@@ -395,6 +403,11 @@
     --success: 137 63% 39%;
     --warning: 38 92% 50%;
     --info: 219 98% 53%;
+    --primary-text: var(--accent-light-text, var(--brand-ink));
+    --success-text: 137 63% 30%;
+    --warning-text: 38 92% 31%;
+    --info-text: 219 98% 50%;
+    --destructive-text: 356 82% 46%;
     --surface-elevated: 0 0% 100%;
     --sidebar: 0 0% 98%;
     --sidebar-foreground: 0 0% 8%;
@@ -446,6 +459,11 @@
     --success: 137 58% 58%;
     --warning: 38 92% 54%;
     --info: 219 98% 60%;
+    --primary-text: var(--primary);
+    --success-text: var(--success);
+    --warning-text: var(--warning);
+    --info-text: var(--info);
+    --destructive-text: var(--destructive);
     --illu-ink: hsl(240 6% 72%);
     --illu-line: hsl(0 0% 30%);
     --illu-soft: hsl(0 0% 19%);
@@ -474,7 +492,7 @@
   }
 
   body {
-    @apply min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    @apply min-h-screen bg-background font-sans text-foreground antialiased selection:bg-primary/20 selection:text-primary-text;
     /* The mobile shells (Tauri on Android/iOS) draw the page edge to edge, so
        the status bar and the camera cutout sit on top of it. This padding is
        what starts the page below them; border-box keeps the min-height from

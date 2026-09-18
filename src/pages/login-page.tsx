@@ -155,7 +155,7 @@ function LoginForm() {
               </div>
 
               {error() && (
-                <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+                <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
               )}
 
               <Button type="submit" class="h-9 w-full text-sm" disabled={pending()}>
@@ -165,7 +165,7 @@ function LoginForm() {
 
             <p class="mt-8 border-t border-border-hairline pt-6 text-center text-sm text-text-subtle">
               {t("auth.noAccount")}{" "}
-              <Link to="/register" class="font-semibold text-primary underline-offset-4 hover:underline">
+              <Link to="/register" class="font-semibold text-primary-text underline-offset-4 hover:underline">
                 {t("auth.register")}
               </Link>
             </p>
@@ -189,7 +189,7 @@ function LoginForm() {
                     disabled={pending()}
                     onClick={() => void handleSchoolSelect(school.slug)}
                   >
-                    <IconSchool class="h-5 w-5 shrink-0 text-primary" />
+                    <IconSchool class="h-5 w-5 shrink-0 text-primary-text" />
                     <span class="min-w-0 flex-1">
                       <span class="block truncate font-semibold text-text-strong">{school.name}</span>
                       <span class="block truncate text-xs font-normal text-text-subtle">{school.slug}</span>
@@ -202,7 +202,7 @@ function LoginForm() {
               </For>
 
               {error() && (
-                <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+                <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
               )}
 
               <Button

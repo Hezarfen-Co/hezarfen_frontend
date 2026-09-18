@@ -173,10 +173,10 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
               <p class="text-sm font-medium">{personLabelWithId(d().sheet.user)}</p>
               <Show when={d().sheet.answers.length > 0} fallback={<Badge variant="outline">{t("exams.notStarted")}</Badge>}>
                 <div class="flex flex-wrap items-center gap-1.5">
-                  <Badge variant="outline" class="border-success/50 bg-success/10 text-success">
+                  <Badge variant="outline" class="border-success/50 bg-success/10 text-success-text">
                     {t("exams.answersRight")}: {sheetStats().right}
                   </Badge>
-                  <Badge variant="outline" class="border-destructive/50 bg-destructive/10 text-destructive">
+                  <Badge variant="outline" class="border-destructive/50 bg-destructive/10 text-destructive-text">
                     {t("exams.answersWrong")}: {sheetStats().wrong}
                   </Badge>
                   <Badge variant="outline" class="text-muted-foreground">
@@ -203,7 +203,7 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
                     <Show when={row.answer?.is_correct != null}>
                       <Badge variant="outline" class={cn(
                         "size-[22px] p-0 flex items-center justify-center",
-                        row.answer?.is_correct ? "border-success/50 bg-success/10 text-success" : "border-destructive/50 bg-destructive/10 text-destructive",
+                        row.answer?.is_correct ? "border-success/50 bg-success/10 text-success-text" : "border-destructive/50 bg-destructive/10 text-destructive-text",
                       )}>
                         <Show when={row.answer?.is_correct} fallback={<IconX class="h-3 w-3" />}>
                           <IconCheck class="h-3 w-3" />
@@ -266,7 +266,7 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
                               <Badge variant="destructive" class="ml-auto text-[10px]">✗</Badge>
                             </Show>
                             {choice.id === row.question.correct && (
-                              <Badge variant="outline" class="ml-auto border-success/50 bg-success/10 text-success text-[10px]">
+                              <Badge variant="outline" class="ml-auto border-success/50 bg-success/10 text-success-text text-[10px]">
                                 <IconCheck class="h-3 w-3" />
                               </Badge>
                             )}

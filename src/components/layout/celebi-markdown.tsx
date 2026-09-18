@@ -116,7 +116,7 @@ function InlineSegments(props: { segments: Segment[] }) {
               href={(segment as { href: string }).href}
               target="_blank"
               rel="noreferrer"
-              class="underline underline-offset-2 hover:text-primary"
+              class="underline underline-offset-2 hover:text-primary-text"
             >
               {(segment as { label: string }).label}
             </a>

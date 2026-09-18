@@ -171,7 +171,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
               <Button
                 type="button"
                 variant="ghost"
-                class="rounded-lg text-destructive hover:bg-destructive/10"
+                class="rounded-lg text-destructive-text hover:bg-destructive/10"
                 disabled={pending()}
                 onClick={() => setWithdrawOpen(true)}
               >
@@ -213,7 +213,7 @@ export function HomeworkSubmissionPanel(props: { homeworkId: string }) {
                           <IconDownload class="h-3.5 w-3.5" />
                         </Button>
                       </a>
-                      <Button type="button" size="icon" variant="ghost" class="h-7 w-7 rounded-lg text-destructive hover:text-destructive" disabled={pending()} title={t("common.delete")} onClick={() => void removeFile(file.id)}>
+                      <Button type="button" size="icon" variant="ghost" class="h-7 w-7 rounded-lg text-destructive-text hover:text-destructive-text" disabled={pending()} title={t("common.delete")} onClick={() => void removeFile(file.id)}>
                         <IconTrash class="h-3.5 w-3.5" />
                       </Button>
                     </li>

@@ -130,12 +130,12 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
                   {(block) => (
                     <tr class="border-b border-border/60 last:border-0">
                       <td class="min-w-0 p-3">
-                        <Link to="/courses/$id" params={{ id: block.course.id }} class="block truncate font-medium hover:text-primary hover:underline">
+                        <Link to="/courses/$id" params={{ id: block.course.id }} class="block truncate font-medium hover:text-primary-text hover:underline">
                           {block.course.title}
                         </Link>
                       </td>
                       <td class="min-w-0 p-3 text-muted-foreground">
-                        <Link to="/instances/$id" params={{ id: block.instance }} class="block truncate hover:text-primary hover:underline">
+                        <Link to="/instances/$id" params={{ id: block.instance }} class="block truncate hover:text-primary-text hover:underline">
                           {t("instances.open")}
                         </Link>
                       </td>
@@ -181,10 +181,10 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
                 <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
                   <div class="flex flex-wrap items-center justify-between gap-3">
                     <div class="min-w-0">
-                      <Link to="/courses/$id" params={{ id: block.course.id }} class="inline-flex truncate text-sm font-semibold text-primary hover:underline">
+                      <Link to="/courses/$id" params={{ id: block.course.id }} class="inline-flex truncate text-sm font-semibold text-primary-text hover:underline">
                         {block.course.title}
                       </Link>
-                      <Link to="/instances/$id" params={{ id: block.instance }} class="mt-0.5 block truncate text-xs text-muted-foreground hover:text-primary hover:underline">
+                      <Link to="/instances/$id" params={{ id: block.instance }} class="mt-0.5 block truncate text-xs text-muted-foreground hover:text-primary-text hover:underline">
                         {t("instances.open")}
                       </Link>
                     </div>

@@ -84,7 +84,7 @@ export function ParentStudentsPanel(props: {
         <Show when={flash()}>
           <Alert variant="success">{flash()}</Alert>
         </Show>
-        {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+        {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
 
         <div class="flex items-end gap-2">
           <div class="flex-1">
@@ -137,7 +137,7 @@ export function ParentStudentsPanel(props: {
                         <Button
                           variant="ghost"
                           size="icon"
-                          class="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          class="shrink-0 text-destructive-text hover:bg-destructive/10 hover:text-destructive-text"
                           aria-label={t("parentLink.remove")}
                           onClick={() => setRemoving(student)}
                         >

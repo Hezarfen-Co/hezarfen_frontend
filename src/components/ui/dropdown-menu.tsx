@@ -47,7 +47,7 @@ export function DropdownMenuItem<T extends ValidComponent = "div">(
         "data-disabled:pointer-events-none data-disabled:opacity-40",
         local.inset && "pl-9",
         local.destructive &&
-          "text-destructive focus:bg-destructive/10 focus:text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive",
+          "text-destructive-text focus:bg-destructive/10 focus:text-destructive-text data-highlighted:bg-destructive/10 data-highlighted:text-destructive-text",
         local.class,
       )}
       {...rest}

@@ -184,7 +184,7 @@ function ClassesContent() {
       <SidePanel open={canManage() && showForm()} onOpenChange={setShowForm} guardUnsaved title={t("classGroups.newClass")} description={t("classGroups.subtitle")}>
         <form class="space-y-4" noValidate onSubmit={createClass}>
           <div class="space-y-3">
-            <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="class-name" required aria-required="true" maxlength={limits.latest?.course.max_class_name_len} value={name()} error={nameError()} onInput={(e) => { setName(e.currentTarget.value); setNameError(""); }} /></div>
+            <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive-text">*</span></Label><Input id="class-name" required aria-required="true" maxlength={limits.latest?.course.max_class_name_len} value={name()} error={nameError()} onInput={(e) => { setName(e.currentTarget.value); setNameError(""); }} /></div>
             <div class="space-y-1.5"><Label for="class-grade">{t("classGroups.grade")}</Label><Input id="class-grade" maxlength={limits.latest?.course.max_class_grade_len} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
             <div class="space-y-1.5"><Label for="class-year">{t("academicYears.year")}</Label><Select id="class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={years.latest ?? []}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
             <UserSearchSelect id="class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
@@ -287,7 +287,7 @@ function ClassCard(props: { cls: ClassGroup; yearName: string; memberCount: numb
       class="flex flex-col gap-3 rounded-lg border border-border-line bg-surface-base p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div class="flex items-center gap-2.5">
-        <span class="flex h-9 w-10 shrink-0 items-center justify-center rounded-md bg-info/10 text-[13px] font-semibold text-info">
+        <span class="flex h-9 w-10 shrink-0 items-center justify-center rounded-md bg-info/10 text-[13px] font-semibold text-info-text">
           {props.cls.grade || "—"}
         </span>
         <div class="min-w-0 flex-1">

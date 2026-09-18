@@ -291,16 +291,16 @@ function LiveMonitorContent() {
                     <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5" />{t("exams.notStarted")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().not_started}</p>
                   </div>
                   <div class="data-shell bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconExam class="h-3.5 w-3.5 text-info" />{t("attempt.inProgress")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().in_progress}</p>
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconExam class="h-3.5 w-3.5 text-info-text" />{t("attempt.inProgress")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().in_progress}</p>
                   </div>
                   <div class="data-shell bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconCheck class="h-3.5 w-3.5 text-success" />{t("attempt.submitted")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().submitted}</p>
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconCheck class="h-3.5 w-3.5 text-success-text" />{t("attempt.submitted")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().submitted}</p>
                   </div>
                   <div class="data-shell bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5 text-destructive" />{t("attempt.expired")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().expired}</p>
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconClock class="h-3.5 w-3.5 text-destructive-text" />{t("attempt.expired")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().expired}</p>
                   </div>
                   <div class="data-shell bg-card/80 p-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconAlert class="h-3.5 w-3.5 text-destructive" />{t("attempt.noAttemptsLeft")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().no_attempts_left}</p>
+                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconAlert class="h-3.5 w-3.5 text-destructive-text" />{t("attempt.noAttemptsLeft")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().no_attempts_left}</p>
                   </div>
                   <div class="data-shell bg-card/80 p-3">
                     <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconUsers class="h-3.5 w-3.5" />{t("attempt.absent")}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{counts().absent}</p>

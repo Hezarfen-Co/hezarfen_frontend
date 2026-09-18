@@ -177,13 +177,13 @@ export function NoteFilesPanel(props: {
         </Show>
       </div>
 
-      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
       <Show when={canManage() && atLimit()}>
         <p class="text-xs text-muted-foreground">{t("notes.fileLimit")}</p>
       </Show>
 
       <Show when={files.error}>
-        <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{formatApiError(files.error)}</p>
+        <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{formatApiError(files.error)}</p>
       </Show>
 
       <Suspense fallback={<PageSpinner />}>
@@ -272,7 +272,7 @@ export function NoteFilesPanel(props: {
         class="sm:max-w-3xl"
       >
         <Show when={error()}>
-          <p class="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+          <p class="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
         </Show>
         <Suspense fallback={<PageSpinner />}>
           <DrawCanvas

@@ -195,7 +195,7 @@ export function NoteRichEditor(props: {
                       type="button"
                       class={cn(
                         "flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                        tool.active?.() && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+                        tool.active?.() && "bg-primary/10 text-primary-text hover:bg-primary/15 hover:text-primary-text",
                       )}
                       title={tool.label()}
                       aria-label={tool.label()}

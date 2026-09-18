@@ -100,7 +100,7 @@ function EventsContent() {
       header: t("events.title"),
       cell: (cell) => (
         <div class="min-w-0">
-          <Link to="/events/$id" params={{ id: cell.row.original.id }} class="truncate font-medium hover:text-primary hover:underline">
+          <Link to="/events/$id" params={{ id: cell.row.original.id }} class="truncate font-medium hover:text-primary-text hover:underline">
             {cell.row.original.title}
           </Link>
           <p class="truncate text-xs text-muted-foreground">{cell.row.original.description || "—"}</p>

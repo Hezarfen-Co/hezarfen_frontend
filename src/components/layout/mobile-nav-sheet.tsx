@@ -182,14 +182,14 @@ export function MobileNavSheet(props: {
                       const active = () => current()?.id === item.id;
                       const rowClass = () => cn(
                         "flex w-full items-center gap-2.5 rounded-md px-3 py-1.5 text-left transition-colors active:bg-muted",
-                        active() ? "text-primary" : "text-foreground",
+                        active() ? "text-primary-text" : "text-foreground",
                       );
                       const content = (
                         <>
                           <span
                             class={cn(
                               "inline-flex size-7 shrink-0 items-center justify-center rounded-md",
-                              active() ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
+                              active() ? "bg-primary/10 text-primary-text" : "bg-muted text-muted-foreground",
                             )}
                           >
                             <item.Icon class="h-4 w-4" />

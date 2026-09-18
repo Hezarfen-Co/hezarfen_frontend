@@ -28,7 +28,7 @@ export function RagMessageRow(props: {
   return (
     <article class={cn("flex gap-3", assistant() ? "justify-start" : "justify-end")}>
       <Show when={assistant()}>
-        <span class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+        <span class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary-text">
           <IconBotSquare class="h-4 w-4" />
         </span>
       </Show>
@@ -43,7 +43,7 @@ export function RagMessageRow(props: {
             <p class="animate-pulse text-muted-foreground" role="status">{props.labels.thinking}</p>
           </Match>
           <Match when={props.message.status === "failed"}>
-            <div class="flex items-start gap-2 text-destructive">
+            <div class="flex items-start gap-2 text-destructive-text">
               <IconAlert class="mt-0.5 h-4 w-4 shrink-0" />
               <p>{failure()}</p>
             </div>

@@ -187,7 +187,7 @@ function SettingsContent() {
               <span class="text-xs text-muted-foreground">{t("settings.unsaved")}</span>
             </Show>
             <Show when={saved() && !dirty()}>
-              <span class="text-xs text-success">{t("settings.saved")}</span>
+              <span class="text-xs text-success-text">{t("settings.saved")}</span>
             </Show>
             <Button
               type="button"
@@ -291,7 +291,7 @@ function SettingsContent() {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive"
+                              class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive-text"
                               aria-label={t("common.delete")}
                               onClick={() => setExamKinds((rows) => rows.filter((_, i) => i !== index))}
                             >
@@ -378,7 +378,7 @@ function SettingsContent() {
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive disabled:opacity-30"
+                                class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive-text disabled:opacity-30"
                                 aria-label={t("common.delete")}
                                 disabled={CORE_ATTENDANCE.has(status())}
                                 onClick={() => setAttendanceStatuses((rows) => rows.filter((_, i) => i !== index))}
@@ -461,7 +461,7 @@ function SettingsContent() {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive"
+                              class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive-text"
                               aria-label={t("common.delete")}
                               onClick={() => setGradeBands((rows) => rows.filter((_, i) => i !== index))}
                             >
@@ -538,7 +538,7 @@ function SettingsContent() {
                               value={minuteToUtcTime(slot().serving_minute)}
                               onInput={(e) => setMealSlots((rows) => rows.map((row, i) => i === index ? { ...row, serving_minute: utcTimeToMinute(e.currentTarget.value) } : row))}
                             />
-                            <Button type="button" variant="ghost" size="icon" class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive" aria-label={t("common.delete")} onClick={() => setMealSlots((rows) => rows.filter((_, i) => i !== index))}><IconTrash class="h-4 w-4" /></Button>
+                            <Button type="button" variant="ghost" size="icon" class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive-text" aria-label={t("common.delete")} onClick={() => setMealSlots((rows) => rows.filter((_, i) => i !== index))}><IconTrash class="h-4 w-4" /></Button>
                           </div>
                         )}
                       </Index>
@@ -569,7 +569,7 @@ function SettingsContent() {
                               placeholder={t("settings.dietaryTags")}
                               onInput={(e) => setDietaryTags((rows) => rows.map((row, i) => i === index ? e.currentTarget.value : row))}
                             />
-                            <Button type="button" variant="ghost" size="icon" class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive" aria-label={t("common.delete")} onClick={() => setDietaryTags((rows) => rows.filter((_, i) => i !== index))}><IconTrash class="h-4 w-4" /></Button>
+                            <Button type="button" variant="ghost" size="icon" class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive-text" aria-label={t("common.delete")} onClick={() => setDietaryTags((rows) => rows.filter((_, i) => i !== index))}><IconTrash class="h-4 w-4" /></Button>
                           </div>
                         )}
                       </Index>

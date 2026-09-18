@@ -392,7 +392,7 @@ function CalendarContent() {
         </div>
 
         <Show when={failedFeeds().length > 0}>
-          <div role="alert" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <div role="alert" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive-text">
             <span class="min-w-0 flex-1">{t("calendar.feedsFailed", { feeds: failedFeeds().join(", ") })}</span>
             <Button type="button" size="sm" variant="outline" class="shrink-0 border-destructive/40" onClick={() => board.retryFailed()}>
               {t("common.tryAgain")}

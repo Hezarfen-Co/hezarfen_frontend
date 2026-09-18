@@ -13,9 +13,9 @@ export type StatementStatus = {
 // receivables-aging colors: green current/paid, amber partial, red overdue.
 export function statementStatus(entry: StatementEntry): StatementStatus {
   if (entry.reversed) return { key: "payments.statusCancelled", class: "border-border bg-muted/40 text-muted-foreground", dot: "bg-muted-foreground/50" };
-  if (entry.outstanding_minor <= 0) return { key: "payments.paid", class: "border-success/50 bg-success/10 text-success", dot: "bg-success" };
-  if (entry.overdue) return { key: "payments.overdue", class: "border-destructive/50 bg-destructive/10 text-destructive", dot: "bg-destructive" };
-  if (entry.credited_minor > 0) return { key: "payments.statusPartial", class: "border-warning/50 bg-warning/10 text-warning", dot: "bg-warning" };
+  if (entry.outstanding_minor <= 0) return { key: "payments.paid", class: "border-success/50 bg-success/10 text-success-text", dot: "bg-success" };
+  if (entry.overdue) return { key: "payments.overdue", class: "border-destructive/50 bg-destructive/10 text-destructive-text", dot: "bg-destructive" };
+  if (entry.credited_minor > 0) return { key: "payments.statusPartial", class: "border-warning/50 bg-warning/10 text-warning-text", dot: "bg-warning" };
   return { key: "payments.statusPending", class: "border-border bg-background/50 text-muted-foreground", dot: "bg-muted-foreground/40" };
 }
 

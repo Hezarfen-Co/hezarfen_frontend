@@ -29,7 +29,7 @@ export function NetworkStatusBanner() {
     <Show when={!online()}>
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-warning/30 bg-warning/10 px-4 py-2.5 text-sm sm:px-6 lg:px-4">
         <span class="flex min-w-0 items-center gap-2 text-text-strong">
-          <IconWifiOff class="h-4 w-4 shrink-0 text-warning" />
+          <IconWifiOff class="h-4 w-4 shrink-0 text-warning-text" />
           <span class="min-w-0">
             <span class="font-semibold">{t("network.offlineTitle")}</span>
             <span class="hidden text-text-subtle sm:inline"> — {t("network.offlineDescription")}</span>

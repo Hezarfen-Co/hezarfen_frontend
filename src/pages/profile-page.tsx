@@ -249,7 +249,7 @@ function ProfileContent() {
 function StatCard(props: { icon: PixelIconName; label: string; value: number }) {
   return (
     <div class="group flex items-center gap-3 rounded-lg border bg-card p-3 shadow-xs transition-colors hover:border-primary/30">
-      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary transition-transform duration-200 group-hover:-rotate-6">
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary-text transition-transform duration-200 group-hover:-rotate-6">
         <PixelIcon name={props.icon} class="h-5 w-5" />
       </span>
       <div class="min-w-0">

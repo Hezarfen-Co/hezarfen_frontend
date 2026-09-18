@@ -222,7 +222,7 @@ export function NotificationCenter() {
           <div class="flex items-center gap-2">
             <h3 class="text-sm font-semibold text-text-strong">{t("notifications.title")}</h3>
             <Show when={unreadCount() > 0}>
-              <span class="rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[10px] font-bold text-primary">
+              <span class="rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[10px] font-bold text-primary-text">
                 {unreadCount()}
               </span>
             </Show>
@@ -233,7 +233,7 @@ export function NotificationCenter() {
               type="button"
               variant="ghost"
               size="sm"
-              class="h-7 rounded-lg px-2 text-[11px] font-semibold text-text-subtle hover:bg-destructive/10 hover:text-destructive"
+              class="h-7 rounded-lg px-2 text-[11px] font-semibold text-text-subtle hover:bg-destructive/10 hover:text-destructive-text"
               onClick={handleDismissAll}
               title={t("notifications.clearAll")}
             >
@@ -302,7 +302,7 @@ export function NotificationCenter() {
 
                       <button
                         type="button"
-                        class="absolute right-2 top-2.5 flex h-6 w-6 items-center justify-center rounded-md text-text-subtle/70 opacity-80 transition-all hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+                        class="absolute right-2 top-2.5 flex h-6 w-6 items-center justify-center rounded-md text-text-subtle/70 opacity-80 transition-all hover:bg-destructive/10 hover:text-destructive-text sm:opacity-0 sm:group-hover:opacity-100"
                         title={t("notifications.dismiss")}
                         onClick={(e) => handleDismissSingle(e, item.id)}
                       >

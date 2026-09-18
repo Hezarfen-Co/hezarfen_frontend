@@ -325,7 +325,7 @@ function AcademicYearsContent() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive"
+                    class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive-text"
                     aria-label={t("common.delete")}
                     onClick={() => setPromotions((rows) => rows.filter((_, i) => i !== index()))}
                   >

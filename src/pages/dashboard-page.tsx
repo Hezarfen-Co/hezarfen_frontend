@@ -724,7 +724,7 @@ function DashboardContent() {
 
         <Suspense fallback={<PageSpinner />}>
           <Show when={error()}>
-            <div role="alert" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            <div role="alert" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive-text">
               <span class="min-w-0 flex-1">{t("dashboard.partialError")} {error()}</span>
               <Button type="button" size="sm" variant="outline" class="shrink-0 border-destructive/40" onClick={() => board.retryFailed()}>
                 {t("common.tryAgain")}

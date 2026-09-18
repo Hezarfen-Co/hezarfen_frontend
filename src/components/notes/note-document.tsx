@@ -87,7 +87,7 @@ export function NoteDocument(props: { note?: Note }) {
           {status()}
         </span>
         <Show when={props.note}>
-          <Button type="button" variant="outline" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>
+          <Button type="button" variant="outline" size="sm" class="rounded-lg text-destructive-text hover:text-destructive-text" onClick={() => setDeleteOpen(true)}>
             <IconTrash class="h-4 w-4" />
             {t("common.delete")}
           </Button>

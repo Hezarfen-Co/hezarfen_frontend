@@ -166,7 +166,7 @@ export function DatePicker(props: {
                         type="button"
                         class={cn(
                           "inline-flex h-9 items-center justify-center rounded-md border border-transparent p-0 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                          isSameDay(today, day()) && "border-primary/50 text-primary",
+                          isSameDay(today, day()) && "border-primary/50 text-primary-text",
                           sameDay(selected(), day()) && "border-primary bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 hover:text-primary-foreground",
                         )}
                         onClick={(event) => {

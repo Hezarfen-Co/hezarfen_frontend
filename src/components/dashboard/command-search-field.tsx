@@ -22,7 +22,7 @@ export function CommandSearchField(props: { class?: string }) {
       )}
       aria-label={t("dashboard.commandCenter")}
     >
-      <IconSearch class="h-4 w-4 shrink-0 text-text-subtle group-hover:text-primary" />
+      <IconSearch class="h-4 w-4 shrink-0 text-text-subtle group-hover:text-primary-text" />
       <span class="min-w-0 flex-1 truncate text-text-placeholder">{placeholder()}</span>
       <kbd class="hidden shrink-0 rounded-md border border-border/80 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline-block">
         Ctrl/Cmd K

@@ -31,6 +31,17 @@ Dark:
 Success, warning, destructive, and info remain semantic. Custom palette choice
 continues to override `--ui-accent`, which feeds `--primary`.
 
+Colored text uses the `*-text` tokens, never the fills: `text-primary-text`,
+`text-success-text`, `text-warning-text`, `text-info-text`,
+`text-destructive-text`. The fills (`bg-primary`, `bg-warning/10`, dots,
+rings) keep their bright values; the text tokens are darker in light mode so
+small text reaches WCAG AA (4.5:1) on the `#F7F7F7` page and white cards —
+the brand fill as text measured 2.5:1 and warning 2.0:1. Light-mode primary
+text is `--brand-ink`, or for a custom palette color the darkest-needed step
+of that hue (`accentTextLightness` in `preferences-context.tsx`). In dark mode
+the text tokens equal the fills. Opacity variants like `text-primary/30` stay
+on the fill for decoration only.
+
 ## Typography
 
 - UI: native system sans (`ui-sans-serif`, `system-ui`, `-apple-system`,

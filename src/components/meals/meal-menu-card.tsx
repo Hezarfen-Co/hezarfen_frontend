@@ -38,7 +38,7 @@ export function MealMenuCard(props: {
       <div class="mt-2 flex justify-end"><ComingSoonBadge /></div>
       <div class="mt-4 flex flex-wrap gap-1.5"><For each={props.menu.dishes}>{(dish) => <Badge variant="outline">{dish.name}</Badge>}</For></div>
       <Show when={conflicts().length > 0}>
-        <div class="mt-3 flex items-start gap-2 rounded-xl border border-warning/50 bg-warning/10 p-2 text-xs text-warning">
+        <div class="mt-3 flex items-start gap-2 rounded-xl border border-warning/50 bg-warning/10 p-2 text-xs text-warning-text">
           <IconAlert class="mt-0.5 h-4 w-4" /><span>{props.labels.conflict}: {conflicts().join(", ")}</span>
         </div>
       </Show>

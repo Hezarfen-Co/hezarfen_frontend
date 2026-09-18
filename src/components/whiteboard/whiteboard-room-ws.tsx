@@ -239,8 +239,8 @@ export function WhiteboardRoom(props: {
       <Show when={notice()}>
         {(msg) => (
           <div class="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
-            <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-            <p class="min-w-0 text-sm text-destructive">{msg()}</p>
+            <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-destructive-text" />
+            <p class="min-w-0 text-sm text-destructive-text">{msg()}</p>
           </div>
         )}
       </Show>

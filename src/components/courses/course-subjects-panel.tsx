@@ -122,7 +122,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
             <Label for="subject-description">{t("form.description")}</Label>
             <Textarea id="subject-description" maxlength={2000} rows={3} value={description()} onInput={(event) => setDescription(event.currentTarget.value)} />
           </div>
-          {error() && <p class="text-sm text-destructive">{error()}</p>}
+          {error() && <p class="text-sm text-destructive-text">{error()}</p>}
           <div class="flex flex-wrap gap-2">
             <Button type="submit" class="rounded-lg" disabled={pending()}>
               {editing() ? t("common.update") : t("common.create")}
@@ -158,7 +158,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
         }}
       />
 
-      {error() && <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      {error() && <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
 
       <Suspense fallback={<DataTableSkeleton />}>
         <Show when={(subjects() ?? []).length > 0} fallback={<EmptyState kind="courses" title={t("subjects.empty")} />}>

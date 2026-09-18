@@ -166,7 +166,7 @@ export function BlueprintPanel(props: {
         </div>
 
         <Show when={error()}>
-          <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+          <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
         </Show>
 
         <div class="flex justify-end">

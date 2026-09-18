@@ -307,7 +307,7 @@ export function ExamQuestionsPanel(props: {
         />
       </FormDialog>
 
-      {error() && <p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      {error() && <p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
 
       <Suspense fallback={<PageSpinner />}>
         <Show
@@ -360,7 +360,7 @@ export function ExamQuestionsPanel(props: {
                             </Badge>
                           </Show>
                           <Show when={isSavedToBank(q)}>
-                            <Badge variant="outline" class="gap-1 border-warning/50 bg-warning/10 text-warning">
+                            <Badge variant="outline" class="gap-1 border-warning/50 bg-warning/10 text-warning-text">
                               <IconArchive class="h-3 w-3" />
                               {t("bank.savedToBankBadge")}
                             </Badge>
@@ -378,7 +378,7 @@ export function ExamQuestionsPanel(props: {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            class="h-7 w-fit text-xs text-destructive"
+                            class="h-7 w-fit text-xs text-destructive-text"
                             disabled={imagePending() === `${q.id}:question`}
                             onClick={() => void removeQuestionImage(q)}
                           >
@@ -414,7 +414,7 @@ export function ExamQuestionsPanel(props: {
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        class="h-7 px-2 text-xs text-destructive"
+                                        class="h-7 px-2 text-xs text-destructive-text"
                                         disabled={imagePending() === `${q.id}:choice:${choice.id}`}
                                         onClick={() => void removeChoiceImage(q, choice.id)}
                                       >
@@ -476,7 +476,7 @@ export function ExamQuestionsPanel(props: {
                               type="button"
                               variant="ghost"
                               size="sm"
-                              class="h-8 w-8 p-0 text-destructive"
+                              class="h-8 w-8 p-0 text-destructive-text"
                               onClick={() => setRemoveQuestion(q)}
                               aria-label={t("common.delete")}
                             >

@@ -43,7 +43,7 @@ export function UserAvatar(props: {
   return (
     <span
       class={cn(
-        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 font-bold text-primary shadow-xs ring-1 ring-border/70 dark:bg-emerald-100 dark:text-emerald-950 dark:ring-white/20",
+        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 font-bold text-primary-text shadow-xs ring-1 ring-border/70 dark:bg-emerald-100 dark:text-emerald-950 dark:ring-white/20",
         SIZES[props.size ?? "sm"],
         props.class,
       )}

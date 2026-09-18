@@ -64,7 +64,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
           <span
             class={cn(
               "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border",
-              props.iconClass ?? (destructive() ? "border-destructive/20 bg-destructive/10 text-destructive" : "border-primary/20 bg-primary/10 text-primary"),
+              props.iconClass ?? (destructive() ? "border-destructive/20 bg-destructive/10 text-destructive-text" : "border-primary/20 bg-primary/10 text-primary-text"),
             )}
           >
             <Show when={props.icon} fallback={

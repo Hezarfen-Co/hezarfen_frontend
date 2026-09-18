@@ -25,7 +25,7 @@ export function Input(props: InputProps) {
       {...rest}
     />
     <Show when={local.error}>
-      <p id={errorId()} class="text-xs font-medium text-destructive">{local.error}</p>
+      <p id={errorId()} class="text-xs font-medium text-destructive-text">{local.error}</p>
     </Show>
     </>
   );

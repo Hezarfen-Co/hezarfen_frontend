@@ -234,7 +234,7 @@ function WhiteboardContent() {
                   <Show when={isCreator()}>
                     <DropdownMenu placement="bottom-end" gutter={8}>
                       <DropdownMenuTrigger
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-line bg-surface-tint text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-line bg-surface-tint text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary-text"
                         aria-label={t("common.actions")}
                         title={t("common.actions")}
                       >
@@ -251,7 +251,7 @@ function WhiteboardContent() {
                             {t("whiteboard.clear")}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem class="text-warning focus:bg-warning/10 focus:text-warning data-highlighted:bg-warning/10 data-highlighted:text-warning" disabled={busy()} onSelect={() => setTimeout(() => setCloseOpen(true), 0)}>
+                          <DropdownMenuItem class="text-warning-text focus:bg-warning/10 focus:text-warning-text data-highlighted:bg-warning/10 data-highlighted:text-warning-text" disabled={busy()} onSelect={() => setTimeout(() => setCloseOpen(true), 0)}>
                             <IconLock class="h-4 w-4" />
                             {t("whiteboard.close")}
                           </DropdownMenuItem>
@@ -300,7 +300,7 @@ function WhiteboardContent() {
                   <For each={roster()}>
                     {(userId) => (
                       <li class="group flex items-center gap-2 rounded-xl px-2 py-2 transition-colors hover:bg-muted/60">
-                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary-text">
                           {nameOf(userId).slice(0, 1).toLocaleUpperCase(locale())}
                         </span>
                         <span class="min-w-0 flex-1">
@@ -317,7 +317,7 @@ function WhiteboardContent() {
                             type="button"
                             variant="ghost"
                             size="icon"
-                            class="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            class="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text"
                             disabled={busy()}
                             title={t("whiteboard.removeParticipant")}
                             aria-label={t("whiteboard.removeParticipant")}
@@ -372,7 +372,7 @@ function WhiteboardContent() {
               summary={b().title}
               confirmLabel={t("whiteboard.close")}
               icon={<IconLock class="h-4 w-4" />}
-              iconClass="border-warning/40 bg-warning/10 text-warning"
+              iconClass="border-warning/40 bg-warning/10 text-warning-text"
               onConfirm={doClose}
             />
             <ConfirmDialog

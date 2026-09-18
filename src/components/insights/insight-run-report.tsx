@@ -125,7 +125,7 @@ function ReportDocument(props: {
           </For>
         </dl>
         <Show when={props.model.run.pending_students.length + props.model.run.failed_modules.length > 0}>
-          <ul class="space-y-1 text-xs text-warning">
+          <ul class="space-y-1 text-xs text-warning-text">
             <Show when={pendingStudentsLine(prefs.locale(), props.model)}>
               {(line) => <li>{line()}</li>}
             </Show>
@@ -159,7 +159,7 @@ function ReportDocument(props: {
                 <For each={props.model.modules}>
                   {(module) => (
                     <li>
-                      <span class={module.with_data === 0 ? "text-warning" : undefined}>
+                      <span class={module.with_data === 0 ? "text-warning-text" : undefined}>
                         {tx("moduleCovered", {
                           label: moduleLabel(prefs.locale(), module.id),
                           withData: module.with_data,
@@ -183,7 +183,7 @@ function ReportDocument(props: {
                 <span class="mono tabular-nums">{props.model.totals.segments}</span>
               </p>
               <Show when={props.model.roster_error}>
-                {(message) => <p class="text-xs text-destructive">{tx("rosterFailed", { message: message() })}</p>}
+                {(message) => <p class="text-xs text-destructive-text">{tx("rosterFailed", { message: message() })}</p>}
               </Show>
               <Show when={props.model.coverage.loaded === 0 && !props.model.roster_error}>
                 <p class="text-xs text-muted-foreground">{tx("rosterEmpty")}</p>

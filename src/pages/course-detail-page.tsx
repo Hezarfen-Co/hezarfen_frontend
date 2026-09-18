@@ -159,7 +159,7 @@ function CourseDetailContent() {
       header: t("classGroups.className"),
       meta: { cellClass: "font-medium" },
       cell: (cell) => (
-        <Link to="/instances/$id" params={{ id: cell.row.original.instance.id }} class="hover:text-primary hover:underline">
+        <Link to="/instances/$id" params={{ id: cell.row.original.instance.id }} class="hover:text-primary-text hover:underline">
           {cell.row.original.className}
         </Link>
       ),
@@ -449,7 +449,7 @@ function CourseDetailContent() {
                   <Alert variant="success">{flash()}</Alert>
                 </Show>
                 <Show when={error()}>
-                  <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+                  <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
                 </Show>
 
                 <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-4">

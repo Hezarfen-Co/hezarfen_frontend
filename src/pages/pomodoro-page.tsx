@@ -228,15 +228,15 @@ function PomodoroContent() {
                   />
                 </svg>
                 <span class="absolute text-center">
-                  <IconClock class={cn("h-7 w-7 mx-auto text-primary", running() && "animate-pulse")} />
+                  <IconClock class={cn("h-7 w-7 mx-auto text-primary-text", running() && "animate-pulse")} />
                 </span>
               </div>
 
               <div>
-                <p class={cn("text-xs font-medium uppercase tracking-[0.08em]", running() && isOvertime() ? "text-destructive" : "text-muted-foreground")}>
+                <p class={cn("text-xs font-medium uppercase tracking-[0.08em]", running() && isOvertime() ? "text-destructive-text" : "text-muted-foreground")}>
                   {running() ? (isOvertime() ? t("pomodoro.overtime") : t("pomodoro.remaining")) : t("pomodoro.total")}
                 </p>
-                <p class={cn("mono mt-2 text-5xl font-semibold leading-none tracking-tight tabular-nums sm:text-6xl", running() && isOvertime() && "text-destructive")}>
+                <p class={cn("mono mt-2 text-5xl font-semibold leading-none tracking-tight tabular-nums sm:text-6xl", running() && isOvertime() && "text-destructive-text")}>
                   {running() && isOvertime() && "+"}
                   {formatDurationClock(running() ? (isOvertime() ? overtimeMs() : remainingMs()) : log()?.total_focus_ms)}
                 </p>

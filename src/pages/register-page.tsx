@@ -142,7 +142,7 @@ function RegisterForm() {
           </div>
 
           {error() && (
-            <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+            <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
           )}
 
           <Button type="submit" class="h-9 w-full text-sm" disabled={pending()}>
@@ -152,7 +152,7 @@ function RegisterForm() {
 
         <p class="mt-8 border-t border-border-hairline pt-6 text-center text-sm text-text-subtle">
           {t("auth.hasAccount")}{" "}
-          <Link to="/login" class="font-semibold text-primary underline-offset-4 hover:underline">
+          <Link to="/login" class="font-semibold text-primary-text underline-offset-4 hover:underline">
             {t("auth.login")}
           </Link>
         </p>

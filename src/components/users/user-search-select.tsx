@@ -177,7 +177,7 @@ export function UserSearchSelect(props: {
             <p class="px-2 py-2 text-xs text-muted-foreground">{t("common.loading")}</p>
           </Show>
           <Show when={emptyText()}>
-            <p class="px-2 py-2 text-xs font-medium text-destructive">{emptyText()}</p>
+            <p class="px-2 py-2 text-xs font-medium text-destructive-text">{emptyText()}</p>
           </Show>
         </ComboboxContent>
       </Combobox>

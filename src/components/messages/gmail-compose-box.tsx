@@ -103,7 +103,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
             </button>
             <button
               type="button"
-              class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text"
               onClick={handleClose}
               title={t("common.cancel")}
             >
@@ -171,7 +171,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
             </div>
 
             <Show when={error()}>
-              <p class="px-3 text-xs font-medium text-destructive">{error()}</p>
+              <p class="px-3 text-xs font-medium text-destructive-text">{error()}</p>
             </Show>
 
             {/* Gmail Bottom Action Toolbar */}
@@ -188,7 +188,7 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
 
               <button
                 type="button"
-                class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text transition-colors"
                 onClick={handleClose}
                 title={t("messages.deleteDraft")}
               >

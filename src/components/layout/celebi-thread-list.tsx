@@ -58,7 +58,7 @@ export function CelebiThreadList(props: {
                       <button type="button" class="flex h-full min-h-12 w-9 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={t("ai.renameChat")} onClick={() => props.onRename(thread)}>
                         <IconEdit class="h-3.5 w-3.5" />
                       </button>
-                      <button type="button" class="flex h-full min-h-12 w-9 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" aria-label={t("ai.deleteChat")} onClick={() => props.onRemove(thread)}>
+                      <button type="button" class="flex h-full min-h-12 w-9 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive-text" aria-label={t("ai.deleteChat")} onClick={() => props.onRemove(thread)}>
                         <IconTrash class="h-3.5 w-3.5" />
                       </button>
                     </li>

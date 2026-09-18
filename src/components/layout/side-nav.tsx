@@ -89,7 +89,7 @@ export function SideNav(props: {
                   "relative flex h-[34px] items-center rounded-lg text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                   props.collapsed ? "mx-auto h-10 w-12 justify-center px-0" : "gap-3 px-3",
                   active()
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-primary/10 text-primary-text"
                     : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                 )}
               >
@@ -115,7 +115,7 @@ export function SideNav(props: {
                   const linkClass = () => cn(
                     "relative flex h-[30px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     itemActive()
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary-text"
                       : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                   );
                   const content = (
@@ -180,7 +180,7 @@ export function SideNav(props: {
                   class={cn(
                     "relative mx-auto flex h-10 w-12 items-center justify-center rounded-md outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     active()
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary-text"
                       : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                   )}
                   aria-label={t(group.labelKey)}

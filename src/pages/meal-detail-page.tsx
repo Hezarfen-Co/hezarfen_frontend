@@ -205,7 +205,7 @@ function MealDetailContent() {
             </div>
 
             <Show when={conflicts().length > 0}>
-              <Alert class="border-warning/50 bg-warning/10 text-warning"><span class="flex gap-2"><IconAlert class="mt-0.5 h-4 w-4 shrink-0" /><span>{t("meals.conflict")}: {conflicts().join(", ")}</span></span></Alert>
+              <Alert class="border-warning/50 bg-warning/10 text-warning-text"><span class="flex gap-2"><IconAlert class="mt-0.5 h-4 w-4 shrink-0" /><span>{t("meals.conflict")}: {conflicts().join(", ")}</span></span></Alert>
             </Show>
 
             <Show when={isParent()}>
@@ -226,8 +226,8 @@ function MealDetailContent() {
                     <article class="rounded-xl border border-border-line bg-surface-base p-4">
                       <div class="flex justify-between gap-3"><h2 class="font-semibold text-text-strong">{dish.name}</h2><span class="font-semibold">{formatTry(dish.price_minor, moneyLocale())}</span></div>
                       <p class="mt-2 text-sm text-text-subtle">{dish.description || "—"}</p>
-                      <div class="mt-3 flex flex-wrap gap-1"><For each={dish.tags}>{(tag) => <Badge variant="outline" class={dish.conflicts.includes(tag) ? "border-warning/50 bg-warning/10 text-warning" : ""}>{dish.conflicts.includes(tag) ? `⚠ ${tag}` : tag}</Badge>}</For></div>
-                      <Show when={canManage()}><div class="mt-3 flex gap-2 border-t border-border-hairline pt-3"><Button variant="outline" size="sm" onClick={() => openDish(dish)}>{t("common.edit")}</Button><Button variant="ghost" size="sm" class="text-destructive" onClick={() => setDeleteDish(dish)}>{t("common.delete")}</Button></div></Show>
+                      <div class="mt-3 flex flex-wrap gap-1"><For each={dish.tags}>{(tag) => <Badge variant="outline" class={dish.conflicts.includes(tag) ? "border-warning/50 bg-warning/10 text-warning-text" : ""}>{dish.conflicts.includes(tag) ? `⚠ ${tag}` : tag}</Badge>}</For></div>
+                      <Show when={canManage()}><div class="mt-3 flex gap-2 border-t border-border-hairline pt-3"><Button variant="outline" size="sm" onClick={() => openDish(dish)}>{t("common.edit")}</Button><Button variant="ghost" size="sm" class="text-destructive-text" onClick={() => setDeleteDish(dish)}>{t("common.delete")}</Button></div></Show>
                     </article>
                   )}</For>
                 </div>
@@ -242,7 +242,7 @@ function MealDetailContent() {
 
               <TabsContent value="account" class="space-y-4">
                 <div class="grid gap-4 lg:grid-cols-2">
-                  <section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.dietaryProfile")}</h2><div class="mt-3 flex flex-wrap gap-1.5"><For each={profile()?.tags ?? []}>{(tag) => <Badge variant="outline" class="border-warning/50 bg-warning/10 text-warning">⚠ {tag}</Badge>}</For></div><p class="mt-3 text-sm text-text-subtle">{profile()?.note || t("meals.noDietaryNotes")}</p></section>
+                  <section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.dietaryProfile")}</h2><div class="mt-3 flex flex-wrap gap-1.5"><For each={profile()?.tags ?? []}>{(tag) => <Badge variant="outline" class="border-warning/50 bg-warning/10 text-warning-text">⚠ {tag}</Badge>}</For></div><p class="mt-3 text-sm text-text-subtle">{profile()?.note || t("meals.noDietaryNotes")}</p></section>
                   <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.balance")}</h2><p class="mt-3 text-2xl font-semibold tabular-nums">{formatTry(balance()?.balance_minor ?? 0, moneyLocale())}</p></section></Show>
                 </div>
                 <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.ledger")}</h2><div class="mt-3 divide-y divide-border-hairline"><For each={ledger()?.items ?? []}>{(line) => <div class="flex justify-between gap-3 py-3 text-sm"><div><p class="font-medium">{t(`meals.ledger.${line.kind}` as never)}</p><p class="text-xs text-text-subtle">{line.note || line.method || "—"} · {formatDateTime(line.created_at, locale())}</p></div><span class="font-semibold tabular-nums">{line.kind === "charge" ? "−" : "+"}{formatTry(line.amount_minor, moneyLocale())}</span></div>}</For></div><Show when={(ledger()?.items.length ?? 0) === 0}><p class="mt-3 text-sm text-text-subtle">{t("meals.noLedger")}</p></Show></section></Show>
@@ -256,7 +256,7 @@ function MealDetailContent() {
                 </div>
                 <Show when={serviceAttendance.error || serviceBookings.error}><ErrorAlert message={formatApiError(serviceAttendance.error || serviceBookings.error)} onRetry={() => void refetchService()} /></Show>
                 <div class="space-y-2">
-                  <For each={serviceEntries()}>{(entry) => <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-3"><div><p class="font-medium">{personLabel(entry.student)}</p><p class="text-xs text-text-subtle">{entry.booking ? t("meals.booked") : t("meals.walkIn")} · {entry.attendance?.status ?? t("meals.notMarked")}</p></div><div class="flex gap-2"><Button size="sm" variant={entry.attendance?.status === "served" ? "default" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "served"); await refetchService(); })}>{t("meals.served")}</Button><Button size="sm" variant={entry.attendance?.status === "missed" ? "destructive" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "missed"); await refetchService(); })}>{t("meals.missed")}</Button><Show when={canManage() && entry.booking?.status === "booked"}><Button size="sm" variant="ghost" class="text-destructive" onClick={() => setCancelBooking(entry.booking)}>{t("meals.cancelBooking")}</Button></Show></div></div>}</For>
+                  <For each={serviceEntries()}>{(entry) => <div class="data-shell flex flex-wrap items-center justify-between gap-3 p-3"><div><p class="font-medium">{personLabel(entry.student)}</p><p class="text-xs text-text-subtle">{entry.booking ? t("meals.booked") : t("meals.walkIn")} · {entry.attendance?.status ?? t("meals.notMarked")}</p></div><div class="flex gap-2"><Button size="sm" variant={entry.attendance?.status === "served" ? "default" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "served"); await refetchService(); })}>{t("meals.served")}</Button><Button size="sm" variant={entry.attendance?.status === "missed" ? "destructive" : "outline"} onClick={() => void run(async () => { await postMealAttendance(id(), entry.student.id, "missed"); await refetchService(); })}>{t("meals.missed")}</Button><Show when={canManage() && entry.booking?.status === "booked"}><Button size="sm" variant="ghost" class="text-destructive-text" onClick={() => setCancelBooking(entry.booking)}>{t("meals.cancelBooking")}</Button></Show></div></div>}</For>
                 </div>
               </TabsContent>
 

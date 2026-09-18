@@ -150,6 +150,26 @@ function foregroundFor(h: number, s: number, l: number): string {
  * `#fefae0`) would be nearly invisible as a light-mode button, and a near-black
  * pick (e.g. `#023047`) would vanish against the near-black dark background.
  */
+/** WCAG contrast ratio between two relative luminances. */
+function contrastRatio(a: number, b: number): number {
+  const [hi, lo] = a > b ? [a, b] : [b, a];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/**
+ * The darkest-needed step of the light-mode accent that still reads as the
+ * accent but reaches 4.5:1 as small text on white and on the 97% page
+ * background. A yellow or cyan pick at the button lightness does not.
+ */
+export function accentTextLightness(h: number, s: number, from: number): number {
+  const page = relativeLuminance(...hslToRgb(0, 0, 97));
+  for (let l = from; l > 10; l -= 1) {
+    const text = relativeLuminance(...hslToRgb(h, s, l));
+    if (contrastRatio(text, page) >= 4.5) return l;
+  }
+  return 10;
+}
+
 function themedAccent(hex: string, mode: ThemeMode): { hsl: string; fg: string } {
   const { h, s } = hexToHslParts(hex);
   const sat = Math.min(88, Math.max(30, s));
@@ -209,6 +229,7 @@ export function PreferencesProvider(props: ParentProps) {
       removeStorage(PALETTE_COLOR_KEY);
       root.removeProperty("--accent-light");
       root.removeProperty("--accent-light-fg");
+      root.removeProperty("--accent-light-text");
       root.removeProperty("--accent-dark");
       root.removeProperty("--accent-dark-fg");
       return;
@@ -221,6 +242,11 @@ export function PreferencesProvider(props: ParentProps) {
     const dark = themedAccent(color, "dark");
     root.setProperty("--accent-light", light.hsl);
     root.setProperty("--accent-light-fg", light.fg);
+    {
+      const { h, s } = hexToHslParts(color);
+      const sat = Math.min(88, Math.max(30, s));
+      root.setProperty("--accent-light-text", `${Math.round(h)} ${Math.round(sat)}% ${accentTextLightness(h, sat, 40)}%`);
+    }
     root.setProperty("--accent-dark", dark.hsl);
     root.setProperty("--accent-dark-fg", dark.fg);
   });

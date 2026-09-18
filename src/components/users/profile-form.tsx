@@ -195,7 +195,7 @@ export function ProfileForm(props: {
         <Label for="pf-birth">{t("profile.birthDate")}</Label>
         <DatePicker id="pf-birth" class="h-10" placeholder={t("form.datePlaceholder")} value={birthDate()} onChange={setBirthDate} />
       </div>
-      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+      {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
       <div class="flex justify-end">
         <Button type="submit" class="w-full sm:w-auto" disabled={pending()}>{t("common.save")}</Button>
       </div>

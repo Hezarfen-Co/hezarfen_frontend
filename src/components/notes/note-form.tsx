@@ -194,7 +194,7 @@ export function NoteForm(props: {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        class="h-8 w-8 rounded-md text-destructive hover:text-destructive"
+                        class="h-8 w-8 rounded-md text-destructive-text hover:text-destructive-text"
                         onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index()))}
                         aria-label={t("common.delete")}
                       >
@@ -209,7 +209,7 @@ export function NoteForm(props: {
         </Show>
 
         {error() && (
-          <p class="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p class="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive-text">
             {error()}
           </p>
         )}

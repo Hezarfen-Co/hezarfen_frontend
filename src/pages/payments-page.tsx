@@ -208,7 +208,7 @@ function PaymentsContent() {
         if (bal == null) return <span class="text-sm text-muted-foreground">—</span>;
         const inDebt = bal < 0;
         return (
-          <Badge variant="outline" class={inDebt ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-success/50 bg-success/10 text-success"}>
+          <Badge variant="outline" class={inDebt ? "border-destructive/50 bg-destructive/10 text-destructive-text" : "border-success/50 bg-success/10 text-success-text"}>
             <span class={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${inDebt ? "bg-destructive" : "bg-success"}`} />
             {inDebt ? t("payments.inDebt") : t("payments.settled")}
           </Badge>
@@ -221,7 +221,7 @@ function PaymentsContent() {
       accessorFn: (user) => user.balance_minor ?? 0,
       cell: (cell) => {
         const bal = cell.row.original.balance_minor;
-        return <span class="font-medium tabular-nums" classList={{ "text-destructive": (bal ?? 0) < 0 }}>{bal == null ? "—" : formatTry(bal, moneyLocale())}</span>;
+        return <span class="font-medium tabular-nums" classList={{ "text-destructive-text": (bal ?? 0) < 0 }}>{bal == null ? "—" : formatTry(bal, moneyLocale())}</span>;
       },
     },
     {
@@ -352,7 +352,7 @@ function PaymentsContent() {
       accessorKey: "due_at",
       header: t("payments.due"),
       size: 120,
-      cell: (cell) => <span class="mono whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
+      cell: (cell) => <span class="mono whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive-text": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
     },
     {
       accessorKey: "outstanding_minor",
@@ -665,8 +665,8 @@ function PaymentsContent() {
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.totalDebt")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().billed, moneyLocale())}</p></div>
               <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.collected")}</p><p class="mt-1 font-semibold tabular-nums">{formatTry(summary().collected, moneyLocale())}</p></div>
-              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.balance")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p></div>
-              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.overdueCount")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive": summary().overdue > 0 }}>{summary().overdue}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.balance")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive-text": summary().balance < 0 }}>{formatTry(summary().balance, moneyLocale())}</p></div>
+              <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.overdueCount")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive-text": summary().overdue > 0 }}>{summary().overdue}</p></div>
             </div>
 
             <section class="data-shell space-y-4 p-4">
@@ -731,7 +731,7 @@ function PaymentsContent() {
                               <Button size="sm" variant="outline" onClick={() => openLineAction(line, "refund")}>{t("payments.recordRefund")}</Button>
                             </Show>
                             <Show when={line.kind === "charge" || line.kind === "refund"}>
-                              <Button size="sm" variant="ghost" class="text-destructive" onClick={() => openLineAction(line, "reverse")}>{t("payments.reverse")}</Button>
+                              <Button size="sm" variant="ghost" class="text-destructive-text" onClick={() => openLineAction(line, "reverse")}>{t("payments.reverse")}</Button>
                             </Show>
                           </div>
                         </div>
@@ -946,7 +946,7 @@ function PaymentsContent() {
                     <DatePicker id={`inst-due-${idx}`} placeholder={t("form.datePlaceholder")} required value={row().due} onChange={(value) => setRowDue(idx, value)} />
                   </div>
                   <Show when={rows().length > 1}>
-                    <Button type="button" variant="ghost" size="sm" class="text-destructive" onClick={() => removeRow(idx)} aria-label={t("common.delete")}>
+                    <Button type="button" variant="ghost" size="sm" class="text-destructive-text" onClick={() => removeRow(idx)} aria-label={t("common.delete")}>
                       <IconTrash class="h-4 w-4" />
                     </Button>
                   </Show>

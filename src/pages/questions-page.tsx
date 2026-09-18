@@ -117,7 +117,7 @@ function QuestionsContent() {
                     <div class="group flex flex-col gap-2 p-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between">
                       <Link to="/questions/$id" params={{ id: question.id }} class="min-w-0 flex-1">
                         <div class="flex items-center gap-2">
-                          <h3 class="truncate text-base font-semibold text-foreground group-hover:text-primary transition-colors">{question.title}</h3>
+                          <h3 class="truncate text-base font-semibold text-foreground group-hover:text-primary-text transition-colors">{question.title}</h3>
                           <Show when={question.image}>
                             <IconPhoto class="h-4 w-4 text-muted-foreground" />
                           </Show>
@@ -125,7 +125,7 @@ function QuestionsContent() {
                         <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">{question.body}</p>
                         <div class="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                           <span class="flex items-center gap-1">
-                            <div class="flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[8px] font-bold text-primary">
+                            <div class="flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[8px] font-bold text-primary-text">
                               {question.asker.display_name?.[0] || question.asker.username[0].toUpperCase()}
                             </div>
                             {personLabel(question.asker)}
@@ -148,7 +148,7 @@ function QuestionsContent() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            class="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                            class="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text rounded-lg"
                             title={t("common.delete")}
                             onClick={(e) => {
                               e.preventDefault();
@@ -254,7 +254,7 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
               fallback={
                 <div class="flex flex-col items-center gap-2">
                   <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <IconPhoto class="h-6 w-6 text-primary" />
+                    <IconPhoto class="h-6 w-6 text-primary-text" />
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="text-sm font-medium text-foreground">{file()?.name}</span>
@@ -262,7 +262,7 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
                       type="button"
                       variant="ghost"
                       size="icon"
-                      class="h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive z-10"
+                      class="h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive-text z-10"
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();

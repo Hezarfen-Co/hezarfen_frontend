@@ -94,7 +94,7 @@ export function ComboboxItem<T extends ValidComponent = "li">(
     >
       {local.children}
       <ComboboxPrimitive.ItemIndicator>
-        <IconCheck class="h-3.5 w-3.5 shrink-0 text-primary" />
+        <IconCheck class="h-3.5 w-3.5 shrink-0 text-primary-text" />
       </ComboboxPrimitive.ItemIndicator>
     </ComboboxPrimitive.Item>
   );

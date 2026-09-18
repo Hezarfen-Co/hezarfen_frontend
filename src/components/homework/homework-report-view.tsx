@@ -60,7 +60,7 @@ export function HomeworkReportView(props: { userId: string }) {
         <div class="space-y-1">
           <Badge variant="outline" class="rounded-full">{statusLabel(cell.row.original)}</Badge>
           <Show when={cell.row.original.late}>
-            <p class="text-[11px] text-destructive">{t("homework.late")}</p>
+            <p class="text-[11px] text-destructive-text">{t("homework.late")}</p>
           </Show>
         </div>
       ),

@@ -451,7 +451,7 @@ export function ExamForm(props: {
           </label>
         </div>
 
-        {error() && <p class="text-sm text-destructive">{error()}</p>}
+        {error() && <p class="text-sm text-destructive-text">{error()}</p>}
 
         <div class="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2 border-t border-border-hairline bg-surface-base px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
           <Button type="submit" class="flex-1 rounded-lg sm:flex-none" disabled={pending()}>

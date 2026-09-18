@@ -566,7 +566,7 @@ function ExamDetailContent() {
                           </Button>
                         </div>
                         <Show when={answerError()}>
-                          {(msg) => <p class="text-sm text-destructive">{msg()}</p>}
+                          {(msg) => <p class="text-sm text-destructive-text">{msg()}</p>}
                         </Show>
                       </form>
                     </Show>
@@ -704,7 +704,7 @@ function ExamDetailContent() {
                         <label
                           class={cn(
                             "inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-muted/50",
-                            reviewOn() && "text-primary",
+                            reviewOn() && "text-primary-text",
                           )}
                           title={t("exams.allowReviewHelp")}
                         >
@@ -767,7 +767,7 @@ function ExamDetailContent() {
               <Alert variant="success">{flash()}</Alert>
             </Show>
             {error() && (
-              <p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+              <p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
             )}
 
             <ConfirmDialog

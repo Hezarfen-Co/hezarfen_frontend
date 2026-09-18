@@ -448,7 +448,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
               <Match when={att().status === "submitted"}>
                 <div class="rounded-lg border border-info/30 bg-info/10 px-4 py-3">
                   <div class="flex items-start gap-3">
-                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-info" />
+                    <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-info-text" />
                     <div class="min-w-0 space-y-1">
                       <p class="text-sm font-semibold text-foreground">{t("attempt.submitted")}</p>
                       <p class="text-sm text-muted-foreground">{t("attempt.closed")}</p>
@@ -487,8 +487,8 @@ export function ExamRoomWS(props: { exam: Exam }) {
         {(msg) => (
           <div class="overflow-hidden rounded-lg border border-destructive/30 bg-destructive/10">
             <div class="flex items-start gap-3 px-4 py-3">
-              <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-              <p class="min-w-0 text-sm text-destructive">{msg()}</p>
+              <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-destructive-text" />
+              <p class="min-w-0 text-sm text-destructive-text">{msg()}</p>
             </div>
           </div>
         )}
@@ -563,7 +563,7 @@ export function ExamRoomWS(props: { exam: Exam }) {
                       type="button"
                       class={cn(
                         "inline-flex h-8 items-center justify-center rounded-md border text-xs font-medium transition-colors hover:bg-accent",
-                        question.answer ? "border-primary/35 bg-primary/10 text-primary hover:bg-primary/15" : "bg-background",
+                        question.answer ? "border-primary/35 bg-primary/10 text-primary-text hover:bg-primary/15" : "bg-background",
                         activeQuestionIndex() === index() && "ring-2 ring-primary/60",
                       )}
                       onClick={() => setActiveQuestionIndex(index())}
@@ -876,7 +876,7 @@ function QuestionAnswerCardWS(props: {
                     <IconUploadCloud class="h-4 w-4" />
                     {t("exams.uploadAnswerImage")}
                   </Button>
-                  <Button type="button" variant="outline" size="sm" class="rounded-lg text-destructive hover:text-destructive" onClick={() => void props.onRemoveImage()}>
+                  <Button type="button" variant="outline" size="sm" class="rounded-lg text-destructive-text hover:text-destructive-text" onClick={() => void props.onRemoveImage()}>
                     <IconTrash class="h-4 w-4" />
                     {t("exams.removeDrawing")}
                   </Button>
@@ -917,7 +917,7 @@ function QuestionAnswerCardWS(props: {
         </div>
       </Show>
       <Show when={saveState() === "failed"}>
-        <p class="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <p class="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive-text">
           {t("attempt.notSavedHint")}
         </p>
       </Show>

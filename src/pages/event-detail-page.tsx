@@ -363,7 +363,7 @@ function EventDetailContent() {
               <Alert variant="success">{flash()}</Alert>
             </Show>
             {error() && (
-              <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>
+              <p class="rounded-sm bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
             )}
           </div>
         )}

@@ -223,7 +223,7 @@ export default function MessagesPage() {
                   class={cn(
                     "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
                     folder() === "inbox"
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary-text"
                       : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                   onClick={() =>
@@ -250,7 +250,7 @@ export default function MessagesPage() {
                   class={cn(
                     "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
                     folder() === "sent"
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary-text"
                       : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                   onClick={() =>
@@ -272,7 +272,7 @@ export default function MessagesPage() {
                   class={cn(
                     "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
                     folder() === "archive"
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary-text"
                       : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                   onClick={() =>
@@ -294,7 +294,7 @@ export default function MessagesPage() {
                   class={cn(
                     "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
                     folder() === "trash"
-                      ? "bg-destructive/10 text-destructive"
+                      ? "bg-destructive/10 text-destructive-text"
                       : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                   )}
                   onClick={() =>
@@ -331,7 +331,7 @@ export default function MessagesPage() {
                       <IconRefresh
                         class={cn(
                           "h-3.5 w-3.5 mr-1.5 transition-transform duration-500",
-                          isRefreshing() && "animate-spin text-primary"
+                          isRefreshing() && "animate-spin text-primary-text"
                         )}
                       />
                       {t("common.refresh")}
@@ -353,7 +353,7 @@ export default function MessagesPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        class="h-8 rounded-lg text-[13px] text-destructive hover:bg-destructive/10"
+                        class="h-8 rounded-lg text-[13px] text-destructive-text hover:bg-destructive/10"
                         onClick={() => setConfirmEmptyTrash(true)}
                       >
                         <IconTrash class="mr-1.5 h-3.5 w-3.5" />

@@ -39,7 +39,7 @@ export function ModuleCatalogGrid(props: {
                     <div class="flex shrink-0 gap-2">
                       <button
                         type="button"
-                        class="rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-muted/60 disabled:opacity-50"
+                        class="rounded-md px-2 py-1 text-xs font-medium text-primary-text hover:bg-muted/60 disabled:opacity-50"
                         disabled={props.disabled || onCount() === pkg.modules.length}
                         onClick={() => toggle()(pkg.package, true)}
                       >

@@ -85,7 +85,7 @@ function MyStudentsContent() {
                       <div class="truncate font-medium text-text-strong">{personLabel(student)}</div>
                       <div class="truncate text-sm text-text-subtle">@{student.username}</div>
                     </div>
-                    <IconChevronRight class="h-5 w-5 shrink-0 text-text-subtle/70 transition-colors group-hover:text-primary" />
+                    <IconChevronRight class="h-5 w-5 shrink-0 text-text-subtle/70 transition-colors group-hover:text-primary-text" />
                   </button>
                 )}
               </For>

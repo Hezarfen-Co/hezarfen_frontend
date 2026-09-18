@@ -245,7 +245,7 @@ function AppointmentsContent() {
         <div class="flex flex-col gap-0.5">
           {timeCell(cell.row.original.starts_at, cell.row.original.ends_at)}
           <Show when={hasStandingProposal(cell.row.original)}>
-            <div class="text-info text-xs">{t("appointments.rescheduleProposed")}</div>
+            <div class="text-info-text text-xs">{t("appointments.rescheduleProposed")}</div>
           </Show>
         </div>
       ),
@@ -337,7 +337,7 @@ function AppointmentsContent() {
               `Appointment::window`), so the row's own time already shows the
               proposed one — label it instead of printing it twice. */}
           <Show when={hasStandingProposal(cell.row.original)}>
-            <div class="text-info text-xs">{t("appointments.proposedTime")}:</div>
+            <div class="text-info-text text-xs">{t("appointments.proposedTime")}:</div>
           </Show>
           {timeCell(cell.row.original.starts_at, cell.row.original.ends_at)}
         </div>
@@ -472,7 +472,7 @@ function AppointmentsContent() {
                 <Show when={nextBooking()}>
                   {(booking) => (
                     <div class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-border-line bg-surface-tint p-4">
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-base text-primary">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-base text-primary-text">
                         <IconCalendarDays class="h-4 w-4" />
                       </span>
                       <div class="min-w-0 flex-1">

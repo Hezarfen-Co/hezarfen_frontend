@@ -101,7 +101,7 @@ export function AvatarUpload(props: {
       </div>
 
       <Show when={error()}>
-        <p class="max-w-40 text-xs text-destructive">{error()}</p>
+        <p class="max-w-40 text-xs text-destructive-text">{error()}</p>
       </Show>
 
       <input

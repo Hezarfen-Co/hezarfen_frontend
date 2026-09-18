@@ -146,7 +146,7 @@ function QuestionDetailContent() {
                 </div>
               </div>
 
-              {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error()}</p>}
+              {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
 
               <div class="rounded-xl border bg-card p-6 shadow-xs">
                 <p class="whitespace-pre-wrap text-foreground">{q().body}</p>
@@ -188,7 +188,7 @@ function QuestionDetailContent() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        class="text-destructive hover:bg-destructive/10"
+                        class="text-destructive-text hover:bg-destructive/10"
                         disabled={imageBusy()}
                         onClick={() => void swapQuestionImage(null)}
                       >
@@ -218,7 +218,7 @@ function QuestionDetailContent() {
                           <div class="rounded-xl border bg-card/50 p-5">
                             <div class="flex items-center justify-between">
                               <div class="flex items-center gap-2 text-sm font-medium">
-                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] text-primary">
+                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] text-primary-text">
                                   {sol.author.display_name?.[0] || sol.author.username[0].toUpperCase()}
                                 </div>
                                 {personLabel(sol.author)}
@@ -231,7 +231,7 @@ function QuestionDetailContent() {
                                       <IconEdit class="h-4 w-4" />
                                     </Button>
                                   </Show>
-                                  <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteConfirmS(sol)} aria-label={t("common.delete")}>
+                                  <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive-text hover:bg-destructive/10" onClick={() => setDeleteConfirmS(sol)} aria-label={t("common.delete")}>
                                     <IconTrash class="h-4 w-4" />
                                   </Button>
                                 </div>
@@ -390,7 +390,7 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
                   type="button"
                   variant="ghost"
                   size="sm"
-                  class="ml-auto text-destructive hover:bg-destructive/10"
+                  class="ml-auto text-destructive-text hover:bg-destructive/10"
                   onClick={() => setRemoveImage(true)}
                 >
                   <IconX class="mr-1 h-4 w-4" />
@@ -404,7 +404,7 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
                 fallback={
                   <div class="flex flex-col items-center gap-2">
                     <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                      <IconPhoto class="h-6 w-6 text-primary" />
+                      <IconPhoto class="h-6 w-6 text-primary-text" />
                     </div>
                     <div class="flex items-center gap-2">
                       <span class="text-sm font-medium text-foreground">{file()?.name}</span>
@@ -412,7 +412,7 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
                         type="button"
                         variant="ghost"
                         size="icon"
-                        class="h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive z-10"
+                        class="h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive-text z-10"
                         onClick={(e) => {
                           e.stopPropagation();
                           e.preventDefault();

@@ -152,7 +152,7 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
   return (
     <section class="space-y-4 rounded-xl border border-border-line bg-surface-base p-4 shadow-xs">
       <div class="flex items-start gap-3">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text">
           <IconWaveform class="h-5 w-5" />
         </div>
         <div>

@@ -18,7 +18,7 @@ export function BuilderHeader() {
   return (
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-line bg-surface-base px-4 py-2.5">
       <Link to="/builder" class="flex min-w-0 items-center gap-2 text-sm font-semibold text-text-strong">
-        <IconShieldCheck class="h-4 w-4 shrink-0 text-primary" />
+        <IconShieldCheck class="h-4 w-4 shrink-0 text-primary-text" />
         <span class="truncate">{t("builder.console")}</span>
       </Link>
       <div class="flex min-w-0 items-center gap-3">

@@ -47,7 +47,7 @@ export function CelebiLauncher() {
 
   return (
     <section class="mx-auto flex max-w-3xl flex-col items-center gap-5 rounded-xl border border-dashed border-primary/25 bg-primary/[0.03] px-6 py-10 text-center">
-      <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary-text">
         <IconSparkles class="h-6 w-6" />
       </div>
       <div class="space-y-1">

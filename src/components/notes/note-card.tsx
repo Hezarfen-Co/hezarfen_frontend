@@ -68,11 +68,11 @@ export function NoteCard(props: {
         <p class={cn("mt-2 line-clamp-5 flex-1 text-[13px] leading-6", excerpt() ? "text-muted-foreground" : "italic text-muted-foreground/70")}>
           {excerpt() || t("notes.noContent")}
         </p>
-        <span class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+        <span class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-text opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
           {t("notes.open")}
           <IconChevronRight class="h-3.5 w-3.5" />
         </span>
-        {error() && <p class="mt-2 text-sm text-destructive">{error()}</p>}
+        {error() && <p class="mt-2 text-sm text-destructive-text">{error()}</p>}
       </article>
 
       <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={props.note.title}>
