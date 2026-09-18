@@ -1,40 +1,10 @@
 import { For, Show } from "solid-js";
-
-const SUMMARY_KEYS = ["summary", "ozet", "özet", "content", "text", "answer"];
-const LIST_KEYS = ["keywords", "key_points", "topics", "questions", "highlights"];
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value != null && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : null;
-}
-
-function firstText(record: Record<string, unknown> | null): string | null {
-  if (!record) return null;
-  for (const key of SUMMARY_KEYS) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  return null;
-}
-
-function firstList(record: Record<string, unknown> | null): string[] {
-  if (!record) return [];
-  for (const key of LIST_KEYS) {
-    const value = record[key];
-    if (Array.isArray(value)) {
-      const rows = value.filter((item): item is string => typeof item === "string" && !!item.trim());
-      if (rows.length > 0) return rows;
-    }
-  }
-  return [];
-}
+import { payloadPoints, payloadText } from "@/components/notes/rag-output-document";
 
 /** Render the useful parts of the AI service's open payload without exposing a JSON dump first. */
 export function RagOutputContent(props: { payload: unknown }) {
-  const record = () => asRecord(props.payload);
-  const summary = () => typeof props.payload === "string" ? props.payload : firstText(record());
-  const points = () => firstList(record());
+  const summary = () => payloadText(props.payload);
+  const points = () => payloadPoints(props.payload);
 
   return (
     <div class="space-y-3 text-sm leading-6">
