@@ -86,3 +86,18 @@ test("a create whose blueprint left pairs behind holds the page until the report
     expect(navigate).toHaveBeenCalledWith({ to: "/management/classes/$id", params: { id: "c-new" } }),
   );
 });
+
+test("a blank class name is flagged under the field, not sent", async () => {
+  getClasses.mockResolvedValue({ items: [] });
+  render(() => <PreferencesProvider><ClassesPage /></PreferencesProvider>);
+
+  fireEvent.click(await screen.findByRole("button", { name: /New class/ }));
+  const field = await screen.findByLabelText(/^Name/);
+  fireEvent.input(field, { target: { value: "   " } });
+  fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+  expect(await screen.findByText(/This field is required|Bu alan zorunlu/)).toBeTruthy();
+  expect(field.getAttribute("aria-invalid")).toBe("true");
+  expect(field.getAttribute("aria-describedby")).toBe("class-name-error");
+  expect(postClass).not.toHaveBeenCalled();
+});

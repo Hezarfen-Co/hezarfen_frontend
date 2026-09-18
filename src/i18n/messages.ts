@@ -616,6 +616,7 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "form.fieldRequired"
   | "common.close"
   | "common.dismiss"
   | "sidePanel.discardTitle"
@@ -2757,6 +2758,7 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "form.fieldRequired": "This field is required.",
   "common.close": "Close",
   "common.dismiss": "Dismiss",
   "sidePanel.discardTitle": "Discard your changes?",
@@ -4900,6 +4902,7 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "form.fieldRequired": "Bu alan zorunlu.",
   "common.close": "Kapat",
   "common.dismiss": "Gizle",
   "sidePanel.discardTitle": "Değişiklikler silinsin mi?",

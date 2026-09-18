@@ -57,6 +57,7 @@ function ClassesContent() {
   const [yearId, setYearId] = createSignal("");
   const [teacherId, setTeacherId] = createSignal("");
   const [error, setError] = createSignal("");
+  const [nameError, setNameError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   // A create whose grade's blueprint left pairs behind reports them here before
   // it opens the class: the response is the only place those rows ever appear.
@@ -116,6 +117,13 @@ function ClassesContent() {
   const createClass = async (event: SubmitEvent) => {
     event.preventDefault();
     setError("");
+    // Checked here rather than by the browser, so the message sits under the
+    // field in the app's own words — and a name of only spaces is caught too.
+    if (!name().trim()) {
+      setNameError(t("form.fieldRequired"));
+      document.getElementById("class-name")?.focus();
+      return;
+    }
     setPending(true);
     try {
       const created = await postClass({
@@ -174,9 +182,9 @@ function ClassesContent() {
   return (
     <div class="space-y-5">
       <SidePanel open={canManage() && showForm()} onOpenChange={setShowForm} guardUnsaved title={t("classGroups.newClass")} description={t("classGroups.subtitle")}>
-        <form class="space-y-4" onSubmit={createClass}>
+        <form class="space-y-4" noValidate onSubmit={createClass}>
           <div class="space-y-3">
-            <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="class-name" required maxlength={limits.latest?.course.max_class_name_len} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
+            <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive">*</span></Label><Input id="class-name" required aria-required="true" maxlength={limits.latest?.course.max_class_name_len} value={name()} error={nameError()} onInput={(e) => { setName(e.currentTarget.value); setNameError(""); }} /></div>
             <div class="space-y-1.5"><Label for="class-grade">{t("classGroups.grade")}</Label><Input id="class-grade" maxlength={limits.latest?.course.max_class_grade_len} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
             <div class="space-y-1.5"><Label for="class-year">{t("academicYears.year")}</Label><Select id="class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={years.latest ?? []}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
             <UserSearchSelect id="class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
