@@ -4,6 +4,13 @@ import arrowSquareOutUrl from "@phosphor-icons/core/regular/arrow-square-out.svg
 import bellUrl from "@phosphor-icons/core/regular/bell.svg?url";
 import bookOpenUrl from "@phosphor-icons/core/regular/book-open.svg?url";
 import calendarDotsUrl from "@phosphor-icons/core/regular/calendar-dots.svg?url";
+import calendarBlankUrl from "@phosphor-icons/core/regular/calendar-blank.svg?url";
+import calendarCheckUrl from "@phosphor-icons/core/regular/calendar-check.svg?url";
+import calendarStarUrl from "@phosphor-icons/core/regular/calendar-star.svg?url";
+import clockUserUrl from "@phosphor-icons/core/regular/clock-user.svg?url";
+import handshakeUrl from "@phosphor-icons/core/regular/handshake.svg?url";
+import listChecksUrl from "@phosphor-icons/core/regular/list-checks.svg?url";
+import timerUrl from "@phosphor-icons/core/regular/timer.svg?url";
 import caretDownUrl from "@phosphor-icons/core/regular/caret-down.svg?url";
 import chalkboardTeacherUrl from "@phosphor-icons/core/regular/chalkboard-teacher.svg?url";
 import chartPieUrl from "@phosphor-icons/core/regular/chart-pie.svg?url";
@@ -453,6 +460,34 @@ export function IconCalendarDays(props: IconProps) {
 
 export function IconClock(props: IconProps) {
   return <PhosphorIcon {...props} src={clockUrl} />;
+}
+
+export function IconCalendarBlank(props: IconProps) {
+  return <PhosphorIcon {...props} src={calendarBlankUrl} />;
+}
+
+export function IconCalendarCheck(props: IconProps) {
+  return <PhosphorIcon {...props} src={calendarCheckUrl} />;
+}
+
+export function IconCalendarStar(props: IconProps) {
+  return <PhosphorIcon {...props} src={calendarStarUrl} />;
+}
+
+export function IconClockUser(props: IconProps) {
+  return <PhosphorIcon {...props} src={clockUserUrl} />;
+}
+
+export function IconHandshake(props: IconProps) {
+  return <PhosphorIcon {...props} src={handshakeUrl} />;
+}
+
+export function IconListChecks(props: IconProps) {
+  return <PhosphorIcon {...props} src={listChecksUrl} />;
+}
+
+export function IconTimer(props: IconProps) {
+  return <PhosphorIcon {...props} src={timerUrl} />;
 }
 
 export function IconExam(props: IconProps) {
