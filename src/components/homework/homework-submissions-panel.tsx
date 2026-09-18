@@ -2,7 +2,7 @@ import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getInstanceEnrollments } from "@/api/instances";
-import { deleteHomeworkResultByUserId, getHomeworkRosterSubmissionFileUrl, getHomeworkSubmissions, postHomeworkResult } from "@/api/homework";
+import { deleteHomeworkResultByUserId, getHomeworkSubmissionFileUrl, getHomeworkSubmissions, postHomeworkResult } from "@/api/homework";
 import { formatApiError } from "@/api/client";
 import type { HomeworkRosterEntry } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
@@ -207,7 +207,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
                               <p class="truncate font-medium">{file.name}</p>
                               <p class="text-xs text-text-subtle">{formatBytes(file.size)}</p>
                             </div>
-                            <a href={getHomeworkRosterSubmissionFileUrl(props.homeworkId, viewTarget()!.user, file.id)} download={file.name}>
+                            <a href={getHomeworkSubmissionFileUrl(props.homeworkId, file.id)} download={file.name}>
                               <Button type="button" size="icon" variant="ghost" class="h-7 w-7 rounded-lg" title={t("notes.downloadFile")}>
                                 <IconDownload class="h-3.5 w-3.5" />
                               </Button>

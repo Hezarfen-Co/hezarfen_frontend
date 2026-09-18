@@ -7,7 +7,6 @@ import {
   getHomework,
   getHomeworkById,
   getHomeworkReport,
-  getHomeworkRosterSubmissionFileUrl,
   getHomeworkResult,
   getHomeworkSubmission,
   getHomeworkSubmissionFileBlob,
@@ -143,10 +142,6 @@ describe("homework API", () => {
 
   it("getHomeworkSubmissionFileUrl returns encoded URL", () => {
     expect(getHomeworkSubmissionFileUrl("hw/1", "f?1")).toBe("/api/homework/hw%2F1/submission/files/f%3F1");
-  });
-
-  it("getHomeworkRosterSubmissionFileUrl returns encoded URL", () => {
-    expect(getHomeworkRosterSubmissionFileUrl("hw/1", "u?1", "f?1")).toBe("/api/homework/hw%2F1/submissions/u%3F1/files/f%3F1");
   });
 
   it("deleteHomeworkSubmissionFile calls /homework/:id/submission/files/:fid", async () => {

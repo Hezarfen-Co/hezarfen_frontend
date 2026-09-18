@@ -84,9 +84,7 @@ describe("podcast API", () => {
     expect(url).toBe("/api/podcast/jobs/a%20b");
   });
 
-  it("podcastAudioUrl carries the artifact path as a query param, encoded", () => {
-    expect(podcastAudioUrl("ses/duz_okuma/j1/episode.mp3")).toBe(
-      "/api/podcast/audio?path=ses%2Fduz_okuma%2Fj1%2Fepisode.mp3",
-    );
+  it("podcastAudioUrl addresses the job's own audio door, encoded", () => {
+    expect(podcastAudioUrl("j 1")).toBe("/api/podcast/jobs/j%201/audio");
   });
 });

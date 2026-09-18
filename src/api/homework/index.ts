@@ -8,7 +8,6 @@ export * from "./deleteHomeworkSubmission";
 export * from "./postHomeworkSubmissionFile";
 export * from "./getHomeworkSubmissionFileBlob";
 export * from "./getHomeworkSubmissionFileUrl";
-export * from "./getHomeworkRosterSubmissionFileUrl";
 export * from "./deleteHomeworkSubmissionFile";
 export * from "./postHomeworkResult";
 export * from "./deleteHomeworkResultByUserId";

@@ -58,10 +58,12 @@ describe.skipIf(!isLive)(`ai contract @ ${contractBaseUrl}`, () => {
     expect([400, 404, 503]).toContain(response.status);
   });
 
-  it("rejects an audio path that escapes the school's output directory", async () => {
-    const response = await api(`/podcast/audio?path=${encodeURIComponent("../../etc/passwd")}`);
-    // 400, not 404: a caller probing the boundary is told the truth about the
-    // path rather than being left to guess whether the file exists.
-    expect([400, 503]).toContain(response.status);
+  it("answers nothing for an audio job id that is not the caller's", async () => {
+    // The stream is addressed by job id and resolved from the caller's own job
+    // row, so a caller cannot name a file at all — an unknown id is a 404, and
+    // never bytes. (The old `?path=` door, which took a client-supplied path
+    // and answered 400 on escape, is gone.)
+    const response = await api(`/podcast/jobs/${encodeURIComponent("00000000-0000-0000-0000-000000000000")}/audio`);
+    expect([404, 503]).toContain(response.status);
   });
 });

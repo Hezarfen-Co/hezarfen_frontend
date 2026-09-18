@@ -206,7 +206,7 @@ export function PodcastPanel(props: { noteId: string; active?: boolean }) {
         {(result) => (
           <div class="space-y-2 rounded-lg border border-success/25 bg-success/5 p-3">
             <p class="text-sm font-medium">{t("podcast.ready")}</p>
-            <audio class="w-full" controls preload="metadata" src={podcastAudioUrl(result().audio_id)}>
+            <audio class="w-full" controls preload="metadata" src={podcastAudioUrl(result().job_id)}>
               {t("podcast.audioUnsupported")}
             </audio>
           </div>
