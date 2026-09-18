@@ -33,6 +33,7 @@ export function SearchableSelect(props: {
 }) {
   const t = useT();
   const [query, setQuery] = createSignal("");
+  const [open, setOpen] = createSignal(false);
   const selected = createMemo(() => props.options.find((o) => o.value === props.value) ?? null);
   const filter = (option: SearchableOption, input: string) => matchesSearch(input, option.label);
   // Kobalte renders nothing when its filter keeps no option, which reads as a
@@ -46,15 +47,18 @@ export function SearchableSelect(props: {
   return (
     <Combobox<SearchableOption>
       options={props.options}
+      // Open state is ours: Kobalte's click handler only ever OPENS (and only
+      // when triggerMode is "focus"), so with it a field click could not close
+      // the list again and a pick re-opened it on the focus-back. Owning the
+      // signal makes the field a real toggle: click opens, click again closes,
+      // picking an option leaves it closed. Everything else (typing, ArrowDown,
+      // Escape, the chevron, click-outside) still drives this same signal.
+      open={open()}
+      onOpenChange={setOpen}
       value={selected()}
       onChange={(option) => props.onChange(option?.value ?? "")}
       onInputChange={setQuery}
       defaultFilter={filter}
-      // Kobalte's default triggerMode "input" opens on typing or ArrowDown but
-      // ignores a click on the field itself, so the box only reacted to the
-      // chevron. "focus" makes the field the affordance: a plain click opens
-      // the whole list (focus does too), typing still filters.
-      triggerMode="focus"
       // Without this Kobalte closes the popover when its filter keeps nothing,
       // so the "no results" line below would never get a chance to render.
       allowsEmptyCollection
@@ -72,7 +76,13 @@ export function SearchableSelect(props: {
       )}
     >
       <ComboboxControl class={props.class}>
-        <ComboboxInput id={props.id} />
+        <ComboboxInput
+          id={props.id}
+          // The field is the affordance: a plain click toggles the list. The
+          // chevron is a sibling button, so its own pointerdown toggle never
+          // reaches this handler.
+          onClick={() => setOpen((isOpen) => !isOpen)}
+        />
         <ComboboxTrigger />
       </ComboboxControl>
       <ComboboxHiddenSelect />
