@@ -478,6 +478,7 @@ export function ExamQuestionsPanel(props: {
                               size="sm"
                               class="h-8 w-8 p-0 text-destructive"
                               onClick={() => setRemoveQuestion(q)}
+                              aria-label={t("common.delete")}
                             >
                               <IconTrash class="h-4 w-4" />
                             </Button>

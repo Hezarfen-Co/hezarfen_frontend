@@ -268,6 +268,7 @@ function AskQuestionDialog(props: { onClose: () => void; onSuccess: () => void }
                         e.preventDefault();
                         setFile(null);
                       }}
+                      aria-label={t("common.remove")}
                     >
                       <IconX class="h-4 w-4" />
                     </Button>

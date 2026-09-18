@@ -450,6 +450,7 @@ export function QuestionForm(props: {
                       disabled={rows().length <= BANK_QUESTION_LIMITS.minChoices}
                       class="mt-0.5 h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                       onClick={() => removeChoice(row().id)}
+                      aria-label={t("common.delete")}
                     >
                       <IconTrash class="h-3.5 w-3.5" />
                     </Button>

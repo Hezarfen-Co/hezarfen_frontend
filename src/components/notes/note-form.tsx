@@ -196,6 +196,7 @@ export function NoteForm(props: {
                         size="icon"
                         class="h-8 w-8 rounded-md text-destructive hover:text-destructive"
                         onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index()))}
+                        aria-label={t("common.delete")}
                       >
                         <IconTrash class="h-4 w-4" />
                       </Button>

@@ -465,6 +465,9 @@
        teardown reveals below the last element — is painted from `html`, not
        from `body`. Without this it falls back to the UA's white. */
     overscroll-behavior-y: none;
+    /* WCAG 2.4.11: a focused or anchored element must not land under the
+       sticky 45px shell header. */
+    scroll-padding-top: calc(45px + env(safe-area-inset-top) + 0.5rem);
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

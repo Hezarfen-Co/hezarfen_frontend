@@ -52,7 +52,7 @@ export function DatePicker(props: {
   class?: string;
   onChange: (value: string) => void;
 }) {
-  const { locale } = usePreferences();
+  const { locale, t } = usePreferences();
   let root: HTMLDivElement | undefined;
   let panel: HTMLDivElement | undefined;
   const [open, setOpen] = createSignal(false);
@@ -64,7 +64,7 @@ export function DatePicker(props: {
   const monthLabel = createMemo(() =>
     new Intl.DateTimeFormat(locale(), { month: "long", year: "numeric" }).format(month()),
   );
-  const todayLabel = createMemo(() => locale().startsWith("tr") ? "Bugün" : "Today");
+  const todayLabel = createMemo(() => t("calendar.today"));
   const dayHeaders = createMemo(() => {
     const base = new Date(2024, 0, 1);
     return Array.from({ length: 7 }, (_, i) => {
@@ -146,11 +146,11 @@ export function DatePicker(props: {
             on:pointerdown={(e) => e.stopPropagation()}
           >
             <div class="mb-3 flex items-center justify-between gap-2">
-              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(-1)}>
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(-1)} aria-label={t("common.prev")}>
                 <IconChevronLeft class="h-4 w-4" />
               </button>
               <p class="min-w-0 truncate px-2 text-sm font-semibold capitalize">{monthLabel()}</p>
-              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(1)}>
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(1)} aria-label={t("common.next")}>
                 <IconChevronRight class="h-4 w-4" />
               </button>
             </div>

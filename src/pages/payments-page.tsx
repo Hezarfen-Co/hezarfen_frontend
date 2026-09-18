@@ -946,7 +946,7 @@ function PaymentsContent() {
                     <DatePicker id={`inst-due-${idx}`} placeholder={t("form.datePlaceholder")} required value={row().due} onChange={(value) => setRowDue(idx, value)} />
                   </div>
                   <Show when={rows().length > 1}>
-                    <Button type="button" variant="ghost" size="sm" class="text-destructive" onClick={() => removeRow(idx)}>
+                    <Button type="button" variant="ghost" size="sm" class="text-destructive" onClick={() => removeRow(idx)} aria-label={t("common.delete")}>
                       <IconTrash class="h-4 w-4" />
                     </Button>
                   </Show>

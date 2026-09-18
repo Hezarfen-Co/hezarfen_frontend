@@ -64,6 +64,12 @@ export function AppShell(props: ParentProps) {
 
   return (
     <div class="min-h-[var(--app-viewport)] bg-background text-foreground">
+      <a
+        href="#main-content"
+        class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[90] focus:rounded-md focus:bg-surface-base focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:ring-2 focus:ring-ring"
+      >
+        {t("common.skipToContent")}
+      </a>
       <Show when={!auth.user()}>
         <NavBar />
       </Show>
@@ -132,7 +138,7 @@ export function AppShell(props: ParentProps) {
           />
         </Show>
 
-        <main class="min-w-0 flex-1">
+        <main id="main-content" tabIndex={-1} class="min-w-0 flex-1 outline-hidden">
           <Show when={auth.user() && !fullScreen()}>
             <header class="sticky top-[env(safe-area-inset-top)] z-30 flex h-[45px] items-center gap-3 border-b border-border/70 bg-background px-4 sm:px-6 lg:px-4">
               <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-52 lg:w-[260px]">

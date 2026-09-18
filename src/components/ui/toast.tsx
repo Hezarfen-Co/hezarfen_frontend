@@ -2,6 +2,7 @@ import { For, createSignal } from "solid-js";
 import { Portal } from "solid-js/web";
 import { IconCheck, IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { useT } from "@/stores/preferences-context";
 
 type Toast = {
   id: number;
@@ -22,9 +23,12 @@ function dismissToast(id: number) {
 }
 
 export function Toaster() {
+  const t = useT();
   return (
     <Portal>
-      <div class="pointer-events-none fixed inset-x-3 top-4 z-80 flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:w-[380px]">
+      {/* A polite live region: a saved/deleted confirmation is read out
+          without stealing focus from where the user is working. */}
+      <div role="status" aria-live="polite" class="pointer-events-none fixed inset-x-3 top-4 z-80 flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:w-[380px]">
         <For each={toasts()}>
           {(toast) => (
             <div class="pointer-events-auto flex min-h-[65px] w-full items-center gap-3 rounded-lg border border-border-line bg-surface-base px-4 py-3 text-foreground shadow-xl shadow-black/10">
@@ -35,7 +39,7 @@ export function Toaster() {
               <button
                 type="button"
                 class={cn("inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-[0.96] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring")}
-                aria-label="Dismiss"
+                aria-label={t("common.dismiss")}
                 onClick={() => dismissToast(toast.id)}
               >
                 <IconX class="h-3.5 w-3.5" />

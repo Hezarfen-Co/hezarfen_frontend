@@ -419,6 +419,14 @@ export function CommandPalette(props: CommandPaletteProps) {
             class="flex-1 h-9 w-full bg-transparent px-1 text-sm sm:text-base font-medium text-foreground outline-hidden border-none shadow-none focus:outline-hidden focus:ring-0 placeholder:text-muted-foreground/60"
             onInput={(event) => setQuery(event.currentTarget.value)}
             onKeyDown={handleKeyDown}
+            // Combobox pattern: focus stays in the field while arrow keys move
+            // an active option that assistive tech follows.
+            role="combobox"
+            aria-label={t("common.searchPlaceholder")}
+            aria-expanded="true"
+            aria-controls="command-palette-list"
+            aria-autocomplete="list"
+            aria-activedescendant={filteredItems().length > 0 ? `command-item-${selectedIndex()}` : undefined}
           />
           <Show when={query()}>
             <button
@@ -429,10 +437,11 @@ export function CommandPalette(props: CommandPaletteProps) {
                 inputRef?.focus();
               }}
               title={t("common.clearSearch")}
+              aria-label={t("common.clearSearch")}
             >
               <IconX class="h-3.5 w-3.5" />
             </button>
-            <span class="rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground shrink-0 font-mono">
+            <span role="status" class="rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground shrink-0 font-mono">
               {filteredItems().length} {t("dashboard.ready").toLowerCase()}
             </span>
           </Show>
@@ -447,15 +456,21 @@ export function CommandPalette(props: CommandPaletteProps) {
         </Show>
 
         {/* Command Items List */}
-        <div ref={listRef} class="max-h-[min(65vh,28rem)] overflow-y-auto p-2 space-y-4">
+        <div
+          ref={listRef}
+          id="command-palette-list"
+          role="listbox"
+          aria-label={t("dashboard.commandCenter")}
+          class="max-h-[min(65vh,28rem)] overflow-y-auto p-2 space-y-4"
+        >
           <Show
             when={filteredItems().length > 0}
             fallback={<p class="px-3 py-12 text-center text-sm text-muted-foreground">{t("common.noResults")}</p>}
           >
             <For each={groupedItems()}>
-              {(group) => (
-                <div class="space-y-1">
-                  <div class="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              {(group, groupIndex) => (
+                <div class="space-y-1" role="group" aria-labelledby={`command-group-${groupIndex()}`}>
+                  <div id={`command-group-${groupIndex()}`} class="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                     {group.label}
                   </div>
                   <For each={group.items}>
@@ -465,6 +480,10 @@ export function CommandPalette(props: CommandPaletteProps) {
                       return (
                         <button
                           type="button"
+                          id={`command-item-${globalIndex}`}
+                          role="option"
+                          aria-selected={isSelected()}
+                          tabIndex={-1}
                           data-index={globalIndex}
                           onClick={() => executeItem(item)}
                           onMouseEnter={() => setSelectedIndex(globalIndex)}

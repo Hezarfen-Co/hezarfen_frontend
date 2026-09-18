@@ -227,11 +227,11 @@ function QuestionDetailContent() {
                               <Show when={isMine || isModerator()}>
                                 <div class="flex items-center gap-1">
                                   <Show when={isMine}>
-                                    <Button variant="ghost" size="icon" class="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditSolution(sol)}>
+                                    <Button variant="ghost" size="icon" class="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditSolution(sol)} aria-label={t("common.edit")}>
                                       <IconEdit class="h-4 w-4" />
                                     </Button>
                                   </Show>
-                                  <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteConfirmS(sol)}>
+                                  <Button variant="ghost" size="icon" class="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteConfirmS(sol)} aria-label={t("common.delete")}>
                                     <IconTrash class="h-4 w-4" />
                                   </Button>
                                 </div>
@@ -418,6 +418,7 @@ function SolutionFormDialog(props: { questionId: string; initialData?: SolutionR
                           e.preventDefault();
                           setFile(null);
                         }}
+                        aria-label={t("common.remove")}
                       >
                         <IconX class="h-4 w-4" />
                       </Button>
