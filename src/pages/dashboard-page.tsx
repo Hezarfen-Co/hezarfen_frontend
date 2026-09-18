@@ -118,6 +118,20 @@ export default function DashboardPage() {
   return <RouteGuard><DashboardContent /></RouteGuard>;
 }
 
+/**
+ * One panel's placeholder while its own reads are in flight: each board
+ * section has its own Suspense, so a slow source holds back only its panel
+ * instead of the whole page behind one spinner.
+ */
+function PanelSkeleton() {
+  return (
+    <div class="animate-pulse space-y-3 rounded-xl border border-border-line bg-surface-base p-4" aria-hidden="true">
+      <div class="h-4 w-40 rounded bg-surface-tint" />
+      <div class="h-24 rounded-lg bg-surface-tint" />
+    </div>
+  );
+}
+
 function DashboardContent() {
   // Every panel reads its own source; one failed request must not take the
   // others down with it (see createBoardResources).
@@ -732,6 +746,7 @@ function DashboardContent() {
             </div>
           </Show>
 
+          <Suspense fallback={<PanelSkeleton />}>
           <section class="space-y-3" aria-labelledby="highlights-heading">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h2 id="highlights-heading" class="text-base font-semibold tracking-tight text-text-strong">{t("dashboard.analytics")}</h2>
@@ -750,7 +765,9 @@ function DashboardContent() {
               </For>
             </div>
           </section>
+          </Suspense>
 
+          <Suspense fallback={<PanelSkeleton />}>
           <Show when={role() === "student"}>
             {/* STU-01's own "Bugünün Planı" and "Konu Yetkinliğim" main-column
                 cards need a study-plan/mastery API this app doesn't have, and
@@ -816,7 +833,9 @@ function DashboardContent() {
               <ComingSoonPanel title={t("dashboard.student.audioWorkshop")} />
             </div>
           </Show>
+          </Suspense>
 
+          <Suspense fallback={<PanelSkeleton />}>
           <Show when={role() === "teacher"}>
             {/* TCH-01's "Bugünün Programı" needs a bulk sessions/timetable
                 endpoint this app doesn't have, and "Sınıf Performansı" needs
@@ -878,7 +897,9 @@ function DashboardContent() {
               <ComingSoonPanel title={t("dashboard.teacher.classPerformance")} />
             </div>
           </Show>
+          </Suspense>
 
+          <Suspense fallback={<PanelSkeleton />}>
           <Show when={(role() === "manager" || role() === "admin") && on("exams")}>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
               <ChartLine
@@ -897,7 +918,9 @@ function DashboardContent() {
               />
             </div>
           </Show>
+          </Suspense>
 
+          <Suspense fallback={<PanelSkeleton />}>
           <Show when={role() === "parent"}>
             {/* PAR-01's "Gelişim" (topic-mastery trend) needs mastery data this
                 app doesn't have, and "Öğretmen Notları" has no backend concept
@@ -990,7 +1013,9 @@ function DashboardContent() {
               <ComingSoonPanel title={t("dashboard.parent.teacherNotes")} />
             </div>
           </Show>
+          </Suspense>
 
+          <Suspense fallback={<PanelSkeleton />}>
           <section class="flex flex-col gap-4 rounded-xl border border-border-line bg-surface-base p-4" aria-labelledby="deadlines-heading">
             <h2 id="deadlines-heading" class="text-base font-semibold tracking-tight">{t("dashboard.deadlines")}</h2>
             <DataTable
@@ -1004,7 +1029,9 @@ function DashboardContent() {
               onRowClick={openDeadline}
             />
           </section>
+          </Suspense>
 
+          <Suspense fallback={<PanelSkeleton />}>
           <Show when={!heatmapIsFocus() || on("pomodoro")}>
           <ChartHeatmap
             title={heatmapIsFocus() ? t("dashboard.focusHeatmap") : t("dashboard.activityHeatmap")}
@@ -1029,6 +1056,7 @@ function DashboardContent() {
             }
           />
           </Show>
+          </Suspense>
         </Suspense>
     </div>
   );
