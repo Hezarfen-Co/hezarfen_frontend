@@ -50,6 +50,11 @@ export function SearchableSelect(props: {
       onChange={(option) => props.onChange(option?.value ?? "")}
       onInputChange={setQuery}
       defaultFilter={filter}
+      // Kobalte's default triggerMode "input" opens on typing or ArrowDown but
+      // ignores a click on the field itself, so the box only reacted to the
+      // chevron. "focus" makes the field the affordance: a plain click opens
+      // the whole list (focus does too), typing still filters.
+      triggerMode="focus"
       // Without this Kobalte closes the popover when its filter keeps nothing,
       // so the "no results" line below would never get a chance to render.
       allowsEmptyCollection
