@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@solidjs/testing-library";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { DataTable } from "@/components/ui/data-table";
+import { DataSection } from "@/components/ui/data-section";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
 type Row = { name: string; role?: string };
@@ -118,4 +119,31 @@ test("a display column renders its own cell instead of the empty dash", () => {
   ));
 
   expect(screen.getByText("#ada")).toBeTruthy();
+});
+
+test("the header action toolbar of every shared host can shrink below its max-content width", () => {
+  // `shrink-0` plus the flex default `min-width: auto` pinned the toolbar to
+  // its max-content width, so a wide action row pushed the whole document
+  // past a 390px viewport instead of wrapping inside the constrained parent.
+  render(() => (
+    <>
+      <PreferencesProvider>
+        <DataTable
+          columns={[columns[0]]}
+          data={[{ name: "Ada" }]}
+          enableColumnVisibility={false}
+          actions={<button type="button">Export</button>}
+        />
+      </PreferencesProvider>
+      <DataSection title="Card" actions={<button type="button">Export</button>} />
+    </>
+  ));
+
+  const toolbars = screen.getAllByText("Export").map((action) => action.parentElement as HTMLElement);
+  expect(toolbars).toHaveLength(2);
+  for (const toolbar of toolbars) {
+    expect(toolbar.classList).toContain("flex-wrap");
+    expect(toolbar.classList).toContain("min-w-0");
+    expect(toolbar.classList).not.toContain("shrink-0");
+  }
 });
