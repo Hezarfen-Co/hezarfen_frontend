@@ -31,6 +31,7 @@ import { ChartProgressRing } from "@/components/ui/chart-progress-ring";
 import { DataTable } from "@/components/ui/data-table";
 import { CommandSearchField } from "@/components/dashboard/command-search-field";
 import { QuickLinkColumn, type QuickLinkRow } from "@/components/dashboard/quick-link-column";
+import { ChildHomeworkPanel } from "@/components/dashboard/child-homework-panel";
 import { TodayLessonsPanel } from "@/components/dashboard/today-lessons-panel";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import {
@@ -1012,7 +1013,15 @@ function DashboardContent() {
               </Show>
             </div>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
-              <ComingSoonPanel class="lg:col-span-2" title={t("dashboard.parent.progress")} />
+              {/* PAR progress: the child's homework report (a parent-readable
+                  route) as overdue / due-this-week, in place of the coming-soon
+                  slot; marks-based progress still has no parent-facing trend. */}
+              <Show
+                when={on("homework") && selectedChildId() && clock()}
+                fallback={<ComingSoonPanel class="lg:col-span-2" title={t("dashboard.parent.progress")} />}
+              >
+                <ChildHomeworkPanel class="lg:col-span-2" childId={selectedChildId()} now={clock()!.now} />
+              </Show>
               <ComingSoonPanel title={t("dashboard.parent.teacherNotes")} />
             </div>
           </Show>

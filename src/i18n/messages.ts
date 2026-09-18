@@ -616,6 +616,12 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "childHomework.title"
+  | "childHomework.missing"
+  | "childHomework.noneMissing"
+  | "childHomework.dueSoon"
+  | "childHomework.noneDueSoon"
+  | "childHomework.allClear"
   | "today.title"
   | "today.owed"
   | "today.empty"
@@ -2774,6 +2780,12 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "childHomework.title": "Homework",
+  "childHomework.missing": "{count} homework not handed in",
+  "childHomework.noneMissing": "Nothing overdue",
+  "childHomework.dueSoon": "{count} due this week",
+  "childHomework.noneDueSoon": "Nothing due this week",
+  "childHomework.allClear": "Nothing overdue and nothing due this week.",
   "today.title": "Today's lessons",
   "today.owed": "{count} roll calls waiting",
   "today.empty": "No lessons today.",
@@ -4934,6 +4946,12 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "childHomework.title": "Ödevler",
+  "childHomework.missing": "{count} ödev teslim edilmedi",
+  "childHomework.noneMissing": "Geciken ödev yok",
+  "childHomework.dueSoon": "{count} ödevin teslimi bu hafta",
+  "childHomework.noneDueSoon": "Bu hafta teslim yok",
+  "childHomework.allClear": "Geciken ya da bu hafta teslim edilecek ödev yok.",
   "today.title": "Bugünkü derslerim",
   "today.owed": "{count} yoklama bekliyor",
   "today.empty": "Bugün dersin yok.",

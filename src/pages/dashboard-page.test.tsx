@@ -165,6 +165,11 @@ vi.mock("@/api/events", () => ({
   ]),
 }));
 vi.mock("@/api/homework", () => ({
+  getHomeworkReport: async () => page([
+    { class_course: "instance-1", homework: "hw-late", title: "Essay draft", subject: "s-1", due_at: now - 2 * DAY, submitted: false, late: false, missing: true, result: null },
+    { class_course: "instance-1", homework: "hw-soon", title: "Worksheet 4", subject: "s-1", due_at: now + 2 * DAY, submitted: false, late: false, missing: false, result: null },
+    { class_course: "instance-1", homework: "hw-done", title: "Handed in", subject: "s-1", due_at: now + DAY, submitted: true, late: false, missing: false, result: null },
+  ]),
   getHomework: async () => page([
     {
       id: "homework-1",
@@ -339,4 +344,15 @@ test("a teacher's board leads with today's lessons and what their roll call need
   expect(within(panel).queryByText("Old")).toBeNull();
   expect(within(panel).getByText(/Roll call not taken|Yoklama alınmadı/)).toBeTruthy();
   expect(within(panel).getByRole("link").getAttribute("href")).toBe("/instances/$id");
+});
+
+test("a parent sees the child's overdue and due-this-week homework in plain sentences", async () => {
+  renderDashboard("parent");
+
+  const panel = await screen.findByRole("region", { name: /^(Homework|Ödevler)$/ });
+  expect(within(panel).getByText(/1 homework not handed in|1 ödev teslim edilmedi/)).toBeTruthy();
+  expect(within(panel).getByText("Essay draft")).toBeTruthy();
+  expect(within(panel).getByText(/1 due this week|1 ödevin teslimi bu hafta/)).toBeTruthy();
+  expect(within(panel).getByText("Worksheet 4")).toBeTruthy();
+  expect(within(panel).queryByText("Handed in")).toBeNull();
 });
