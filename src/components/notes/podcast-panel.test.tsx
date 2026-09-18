@@ -80,4 +80,47 @@ describe("PodcastPanel", () => {
     expect(podcastApi.podcastAudioUrl).toHaveBeenCalledWith("pj1");
     expect(document.querySelector("audio")?.getAttribute("src")).toBe("/api/podcast/jobs/pj1/audio");
   });
+
+  it("downloads the finished episode under the note's own title", async () => {
+    sessionStorage.setItem("hezarfen.podcast.note-7", "pj1");
+    podcastApi.getPodcastJobById.mockResolvedValue({ job_id: "pj1", state: "done", stage: "done", progress: 1 });
+    podcastApi.getPodcastJobResultById.mockResolvedValue({
+      job_id: "pj1",
+      audio_id: "ses/duz_okuma/pj1/episode.mp3",
+      audio_ids: ["ses/duz_okuma/pj1/episode.mp3"],
+      duration_secs: 42,
+      script_id: "s1",
+      script_ids: ["s1"],
+      format: "duz_okuma",
+    });
+
+    render(() => (
+      <PreferencesProvider>
+        <PodcastPanel noteId="note-7" noteTitle="Hücre ve Canlıların Ortak Özellikleri" />
+      </PreferencesProvider>
+    ));
+
+    await waitFor(() => {
+      expect(screen.getByText("Your episode is ready.")).toBeTruthy();
+    });
+    const link = screen.getByRole("link", { name: "Download episode" }) as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("/api/podcast/jobs/pj1/audio");
+    expect(link.getAttribute("download")).toBe("Hücre ve Canlıların Ortak Özellikleri.mp3");
+  });
+
+  it("shows no download control while the episode is still being made", async () => {
+    sessionStorage.setItem("hezarfen.podcast.note-7", "pj2");
+    podcastApi.getPodcastJobById.mockResolvedValue({ job_id: "pj2", state: "running", stage: "script", progress: 0.4 });
+
+    render(() => (
+      <PreferencesProvider>
+        <PodcastPanel noteId="note-7" noteTitle="Hücre" />
+      </PreferencesProvider>
+    ));
+
+    await waitFor(() => {
+      expect(screen.getByText("Creating audio")).toBeTruthy();
+    });
+    expect(screen.queryByRole("link", { name: "Download episode" })).toBeNull();
+  });
 });

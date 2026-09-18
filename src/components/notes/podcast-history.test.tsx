@@ -77,6 +77,28 @@ describe("PodcastHistory", () => {
     expect(document.querySelector("audio")).toBeNull();
   });
 
+  it("downloads a finished episode under the note's own title", async () => {
+    podcastApi.listPodcastJobs.mockResolvedValue(page([job({})]));
+
+    renderHistory("note-1");
+
+    await waitFor(() => expect(screen.getByText("Hücre")).toBeTruthy());
+    const link = screen.getByRole("link", { name: "Bölümü indir" }) as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("/api/podcast/jobs/job-1/audio");
+    expect(link.getAttribute("download")).toBe("Hücre.mp3");
+  });
+
+  it("gives a non-done row no download control", async () => {
+    podcastApi.listPodcastJobs.mockResolvedValue(
+      page([job({ state: "running", duration_secs: null, finished_at: null })]),
+    );
+
+    renderHistory("note-1");
+
+    await waitFor(() => expect(screen.getByText("Hazırlanıyor")).toBeTruthy());
+    expect(screen.queryByRole("link", { name: "Bölümü indir" })).toBeNull();
+  });
+
   it("asks the door about the open note only", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(page([job({})]));
 

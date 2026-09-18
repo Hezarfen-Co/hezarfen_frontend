@@ -97,7 +97,7 @@ export function NoteStudioPanel() {
                     canManage={canManageSelected()}
                     active
                   />
-                  <PodcastPanel noteId={note().id} active />
+                  <PodcastPanel noteId={note().id} noteTitle={note().title} active />
                 </div>
               )}
             </Show>

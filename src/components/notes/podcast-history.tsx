@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { IconWaveform } from "@/components/ui/icons";
+import { IconDownload, IconWaveform } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
 import { formatDate, formatDurationClock } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -27,6 +28,7 @@ type Scope = "note" | "all";
  */
 export function PodcastHistory(props: { noteId?: string; active?: boolean; refetchKey?: string | number }) {
   const t = useT();
+  const downloadT = usePodcastDownloadT();
   const { locale } = usePreferences();
   const [playing, setPlaying] = createSignal("");
   const [scope, setScope] = createSignal<Scope>("note");
@@ -148,16 +150,32 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
                       </div>
                     </div>
                     <Show when={row.state === "done"}>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        class="shrink-0 rounded-lg"
-                        aria-label={t("podcast.history.play")}
-                        onClick={() => setPlaying(row.job_id)}
-                      >
-                        <IconWaveform class="h-4 w-4" />
-                      </Button>
+                      <div class="flex shrink-0 items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          class="shrink-0 rounded-lg"
+                          aria-label={t("podcast.history.play")}
+                          onClick={() => setPlaying(row.job_id)}
+                        >
+                          <IconWaveform class="h-4 w-4" />
+                        </Button>
+                        <a
+                          href={podcastAudioUrl(row.job_id)}
+                          download={podcastDownloadFilename(
+                            row.source_title ?? row.source_id,
+                            downloadT("podcast.download.fallback"),
+                          )}
+                          aria-label={downloadT("podcast.download.aria")}
+                          class="inline-flex"
+                        >
+                          <Button type="button" size="sm" variant="outline" class="shrink-0 rounded-lg">
+                            <IconDownload class="h-4 w-4" />
+                            {downloadT("podcast.download.label")}
+                          </Button>
+                        </a>
+                      </div>
                     </Show>
                   </li>
                 )}

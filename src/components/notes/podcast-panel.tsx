@@ -11,16 +11,18 @@ import {
 import { formatApiError, type PodcastFormat, type PodcastJobArtifacts, type PodcastJobStatus } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { IconWaveform, IconX } from "@/components/ui/icons";
+import { IconDownload, IconWaveform, IconX } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { PodcastHistory } from "@/components/notes/podcast-history";
+import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
 import { useT } from "@/stores/preferences-context";
 
 const POLL_MS = 2_000;
 
-export function PodcastPanel(props: { noteId: string; active?: boolean }) {
+export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitle?: string }) {
   const t = useT();
+  const downloadT = usePodcastDownloadT();
   const [format, setFormat] = createSignal<PodcastFormat>("duz_okuma");
   const [jobId, setJobId] = createSignal("");
   const [status, setStatus] = createSignal<PodcastJobStatus | null>(null);
@@ -210,6 +212,17 @@ export function PodcastPanel(props: { noteId: string; active?: boolean }) {
             <audio class="w-full" controls preload="metadata" src={podcastAudioUrl(result().job_id)}>
               {t("podcast.audioUnsupported")}
             </audio>
+            <a
+              href={podcastAudioUrl(result().job_id)}
+              download={podcastDownloadFilename(props.noteTitle, downloadT("podcast.download.fallback"))}
+              aria-label={downloadT("podcast.download.aria")}
+              class="inline-flex"
+            >
+              <Button type="button" size="sm" variant="outline" class="rounded-lg">
+                <IconDownload class="h-4 w-4" />
+                {downloadT("podcast.download.label")}
+              </Button>
+            </a>
           </div>
         )}
       </Show>
