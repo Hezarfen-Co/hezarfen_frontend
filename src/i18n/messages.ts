@@ -1973,6 +1973,9 @@ export type MessageKey =
   | "messages.deleteForeverOnlyTrash"
   | "messages.readOnlyReceived"
   | "messages.trashEmptiedToast"
+  | "messages.emptyTrash"
+  | "messages.emptyTrashSummary"
+  | "messages.emptyTrashPageSummary"
   | "calendar.title"
   | "calendar.today"
   | "calendar.noEvents"
@@ -4191,6 +4194,9 @@ const en: Dict = {
   "messages.deleteForeverOnlyTrash": "Permanent delete only applies to messages in the trash.",
   "messages.readOnlyReceived": "Only received messages can be marked read or unread.",
   "messages.trashEmptiedToast": "Trash emptied.",
+  "messages.emptyTrash": "Empty trash",
+  "messages.emptyTrashSummary": "{count} messages will be deleted permanently. This cannot be undone.",
+  "messages.emptyTrashPageSummary": "The {count} messages on this page will be deleted permanently ({total} in trash). This cannot be undone.",
   "nav.academicYears": "Academic years",
   "instances.title": "Sections",
   "instances.item": "section",
@@ -6321,6 +6327,9 @@ const tr: Dict = {
   "messages.deleteForeverOnlyTrash": "Kalıcı silme yalnızca çöp kutusundaki mesajlar için geçerli.",
   "messages.readOnlyReceived": "Yalnızca gelen mesajların okundu durumu değiştirilebilir.",
   "messages.trashEmptiedToast": "Çöp kutusu boşaltıldı.",
+  "messages.emptyTrash": "Çöp kutusunu boşalt",
+  "messages.emptyTrashSummary": "{count} mesaj kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+  "messages.emptyTrashPageSummary": "Bu sayfadaki {count} mesaj kalıcı olarak silinecek (çöp kutusunda toplam {total}). Bu işlem geri alınamaz.",
   "nav.academicYears": "Eğitim yılları",
   "instances.title": "Şubeler",
   "instances.item": "şube",

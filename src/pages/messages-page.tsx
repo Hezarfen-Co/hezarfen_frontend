@@ -37,6 +37,7 @@ import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { createFlash } from "@/lib/flash";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function MessagesPage() {
   const t = useT();
@@ -147,6 +148,16 @@ export default function MessagesPage() {
       console.error("Message action error:", err);
       setFlash(formatApiError(err));
     }
+  };
+
+  const [confirmEmptyTrash, setConfirmEmptyTrash] = createSignal(false);
+  /** Empty trash deletes the loaded page only; the summary says so when more remain. */
+  const emptyTrashSummary = () => {
+    const count = messages().length;
+    const total = messagePage()?.total ?? count;
+    return total > count
+      ? t("messages.emptyTrashPageSummary", { count, total })
+      : t("messages.emptyTrashSummary", { count });
   };
 
   const handleEmptyTrash = async () => {
@@ -343,10 +354,10 @@ export default function MessagesPage() {
                         variant="outline"
                         size="sm"
                         class="h-8 rounded-lg text-[13px] text-destructive hover:bg-destructive/10"
-                        onClick={handleEmptyTrash}
+                        onClick={() => setConfirmEmptyTrash(true)}
                       >
                         <IconTrash class="mr-1.5 h-3.5 w-3.5" />
-                        Çöp Kutusunu Boşalt
+                        {t("messages.emptyTrash")}
                       </Button>
                     </Show>
 
@@ -472,6 +483,15 @@ export default function MessagesPage() {
           initialBody={replyData()?.body}
         />
       </div>
+      <ConfirmDialog
+        open={confirmEmptyTrash()}
+        onOpenChange={setConfirmEmptyTrash}
+        title={t("messages.emptyTrash")}
+        variant="destructive"
+        summary={emptyTrashSummary()}
+        confirmLabel={t("messages.emptyTrash")}
+        onConfirm={handleEmptyTrash}
+      />
     </RouteGuard>
   );
 }
