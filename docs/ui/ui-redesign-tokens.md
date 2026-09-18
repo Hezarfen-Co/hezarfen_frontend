@@ -31,6 +31,10 @@ Dark:
 Success, warning, destructive, and info remain semantic. Custom palette choice
 continues to override `--ui-accent`, which feeds `--primary`.
 
+Token names: `text-muted-foreground` and `text-text-subtle`, `bg-card` and
+`bg-surface-base` resolve to the same values (the shadcn names alias the
+`surface-*`/`text-*` palette). New code uses the shadcn names; both stay valid.
+
 Colored text uses the `*-text` tokens, never the fills: `text-primary-text`,
 `text-success-text`, `text-warning-text`, `text-info-text`,
 `text-destructive-text`. The fills (`bg-primary`, `bg-warning/10`, dots,

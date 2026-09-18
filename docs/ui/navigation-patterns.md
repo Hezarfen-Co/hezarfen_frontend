@@ -9,20 +9,30 @@ Use one of two patterns for every new interaction:
 
 - Desktop uses one fixed role navigation: `15rem` expanded and `4rem`
   collapsed. Collapse preference persists.
-- Primary destinations come from `src/components/layout/nav-items.ts`; sidebar,
-  mobile bar, header route labels, and command search reuse that metadata.
-- Student: Today, Classes, Calendar, Progress.
-- Teacher: Today, Classes, Students, Calendar.
-- Manager/admin: Today, Classes, Students, Calendar, School.
-- Parent: Today, Children, Calendar, Meals.
-- Unsupported destinations are hidden. Secondary destinations are ordered by
-  user intent: Academics (course work), Planning (events and appointments),
-  Workspace (personal tools), Community, then role-specific management.
-  Appointments is always visible under Planning.
+- Everything comes from `src/components/layout/nav-items.ts`: a group tree
+  per role (`ADMIN_GROUPS` for manager and admin, `TEACHER_GROUPS`,
+  `STUDENT_GROUPS`, `PARENT_GROUPS`), filtered by role (`minRole`,
+  `exactRole`) and by the school's enabled modules. Sidebar, mobile sheet,
+  header route labels, breadcrumbs' hub labels and command search reuse it.
+- Groups today:
+  - manager/admin: School management, Teaching & content, Student tracking,
+    School services, Institution, AI
+  - teacher: My classroom, Student tracking, Teaching & content, Other, AI
+  - student: Study, Teaching & content, AI, Other
+  - parent: My student, Institution, AI
+- Every item has its own icon for its meaning; the collapsed sidebar shows
+  icons only, so two items must not share one.
+- Unsupported destinations are hidden; "yakında" items are the one approved
+  placeholder.
 - Account stays at sidebar bottom; profile, theme, language, guide, and logout
   live in its menu. Messages and notifications live in the top header.
-- Mobile keeps the primary bottom bar and ends with Account, which opens the
-  complete grouped navigation drawer.
+- Mobile bottom bar: Home plus two ids per role from `PRIMARY_IDS_BY_ROLE`,
+  then Search and Menu; Menu opens the full grouped tree in a sheet.
+- The header back button goes back in app history, or to the nearest
+  existing parent route on a deep link (`src/lib/back-target.ts`); it never
+  leaves the app.
+- A route that throws renders `RouteErrorFallback` in the page slot; the
+  shell and navigation stay.
 
 ## Hubs
 
@@ -30,10 +40,13 @@ Use one of two patterns for every new interaction:
 - `/studies` and `/clubs` redirect to the matching `/courses?kind=...` view.
 - `/marks` is the student Progress hub; Report card and Attendance share tabs.
 - `/attendance` redirects to the Attendance tab for old links.
-- `/students` is parent Children for parents and the staff lookup/report hub for
-  teacher+.
-- `/school` groups settings, terms, staff work, meals, and admin-only users.
+- `/students` is the parent's Children hub.
+- School management pages live under `/management/*` (classes, academic
+  years, terms, settings, staff work, payments, modules, rosters); there is
+  no single `/school` page.
 - Course workspaces stay shallow: Overview, Work, Sessions, People.
+- Durable detail pages carry `Breadcrumbs` (hub → record), not an in-page
+  back button.
 
 ## Dashboard (homepage)
 
