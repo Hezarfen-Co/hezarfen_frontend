@@ -5,6 +5,7 @@ import {
   createRouter,
   redirect,
 } from "@tanstack/solid-router";
+import { RouteErrorFallback } from "@/components/layout/route-error";
 import { Suspense, createRenderEffect, createRoot, lazy, type Component } from "solid-js";
 import { AppShell } from "@/components/layout/app-shell";
 import { NotFoundPage } from "@/components/system/not-found-page";
@@ -616,6 +617,7 @@ function RouterPending() {
 export const router = createRouter({
   routeTree,
   defaultPendingComponent: RouterPending,
+  defaultErrorComponent: RouteErrorFallback,
   defaultPreload: false,
   scrollRestoration: true,
 });
