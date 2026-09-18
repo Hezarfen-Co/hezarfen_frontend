@@ -1,14 +1,49 @@
 import { For } from "solid-js";
 import { Button } from "@/components/ui/button";
 import { IconSparkles } from "@/components/ui/icons";
+import type { MessageKey } from "@/i18n/messages";
+import { hasMinRole } from "@/lib/roles";
 import { openCelebiPanel } from "@/stores/celebi-panel";
+import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+
+// Every example is a question the deployed Çelebi assistant answers for the
+// role that sees it — a prompt outside the viewer's scope comes back as a
+// refusal or a "please rephrase", so the sets are checked against the live bot
+// rather than guessed. The manager band covers managers and admins; a student
+// set is the fallback because a parent never reaches this tab.
+const EXAMPLE_KEYS: Record<"student" | "teacher" | "manager", MessageKey[]> = {
+  student: [
+    "aiHub.celebiExample.student1",
+    "aiHub.celebiExample.student2",
+    "aiHub.celebiExample.student3",
+  ],
+  teacher: [
+    "aiHub.celebiExample.teacher1",
+    "aiHub.celebiExample.teacher2",
+    "aiHub.celebiExample.teacher3",
+  ],
+  manager: [
+    "aiHub.celebiExample.manager1",
+    "aiHub.celebiExample.manager2",
+    "aiHub.celebiExample.manager3",
+  ],
+};
 
 // Çelebi itself is a shell panel — it follows the viewer across every route,
 // so the hub tab opens that one panel instead of mounting a second chat.
 export function CelebiLauncher() {
   const t = useT();
-  const examples = () => [t("aiHub.celebiExample1"), t("aiHub.celebiExample2"), t("aiHub.celebiExample3")];
+  const auth = useAuth();
+  const examples = () => {
+    const role = auth.user()?.role;
+    const band = hasMinRole(role, "manager")
+      ? "manager"
+      : hasMinRole(role, "teacher")
+        ? "teacher"
+        : "student";
+    return EXAMPLE_KEYS[band].map((key) => t(key));
+  };
 
   return (
     <section class="mx-auto flex max-w-3xl flex-col items-center gap-5 rounded-xl border border-dashed border-primary/25 bg-primary/[0.03] px-6 py-10 text-center">

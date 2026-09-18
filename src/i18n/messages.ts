@@ -35,9 +35,15 @@ export type MessageKey =
   | "aiHub.description"
   | "aiHub.tab.studio"
   | "aiHub.tab.insights"
-  | "aiHub.celebiExample1"
-  | "aiHub.celebiExample2"
-  | "aiHub.celebiExample3"
+  | "aiHub.celebiExample.student1"
+  | "aiHub.celebiExample.student2"
+  | "aiHub.celebiExample.student3"
+  | "aiHub.celebiExample.teacher1"
+  | "aiHub.celebiExample.teacher2"
+  | "aiHub.celebiExample.teacher3"
+  | "aiHub.celebiExample.manager1"
+  | "aiHub.celebiExample.manager2"
+  | "aiHub.celebiExample.manager3"
   | "aiHub.celebiHint"
   | "nav.today"
   | "nav.classes"
@@ -2129,9 +2135,19 @@ const en: Dict = {
   "aiHub.description": "Every AI surface in one place: note outputs and podcasts, student analysis, and Çelebi.",
   "aiHub.tab.studio": "Note studio",
   "aiHub.tab.insights": "Analysis",
-  "aiHub.celebiExample1": "Which homework is due this week?",
-  "aiHub.celebiExample2": "How many days has my class missed?",
-  "aiHub.celebiExample3": "Summarise the topics of my next exam.",
+  // Çelebi's intent engine only understands Turkish: the same English wording
+  // comes back as "please rephrase" from the live assistant, so the examples
+  // ship the Turkish question verbatim in both locales. Each one is checked
+  // against the deployed assistant for the role that sees it.
+  "aiHub.celebiExample.student1": "Bu hafta hangi ödevlerin teslimi var?",
+  "aiHub.celebiExample.student2": "Sınıfım kaç gün devamsızlık yaptı?",
+  "aiHub.celebiExample.student3": "Notlarımı nereden görürüm?",
+  "aiHub.celebiExample.teacher1": "Yoklama nasıl alınır?",
+  "aiHub.celebiExample.teacher2": "Dersime nasıl sınav eklerim?",
+  "aiHub.celebiExample.teacher3": "Sınavı nasıl puanlarım?",
+  "aiHub.celebiExample.manager1": "Yeni akademik dönem eklemek istiyorum",
+  "aiHub.celebiExample.manager2": "Personel mesai kayıtlarını nereden yönetirim?",
+  "aiHub.celebiExample.manager3": "Ücret tahsilatını nereden takip ederim",
   "aiHub.celebiHint": "Çelebi opens as a side panel and stays with you on every page.",
   "nav.today": "Today",
   "nav.classes": "Courses",
@@ -4234,9 +4250,15 @@ const tr: Dict = {
   "aiHub.description": "Tüm yapay zekâ araçları tek yerde: not çıktıları ve podcast, öğrenci analizi ve Çelebi.",
   "aiHub.tab.studio": "Not stüdyosu",
   "aiHub.tab.insights": "Analiz",
-  "aiHub.celebiExample1": "Bu hafta hangi ödevlerin teslimi var?",
-  "aiHub.celebiExample2": "Sınıfım kaç gün devamsızlık yaptı?",
-  "aiHub.celebiExample3": "Yaklaşan sınavımın konularını özetle.",
+  "aiHub.celebiExample.student1": "Bu hafta hangi ödevlerin teslimi var?",
+  "aiHub.celebiExample.student2": "Sınıfım kaç gün devamsızlık yaptı?",
+  "aiHub.celebiExample.student3": "Notlarımı nereden görürüm?",
+  "aiHub.celebiExample.teacher1": "Yoklama nasıl alınır?",
+  "aiHub.celebiExample.teacher2": "Dersime nasıl sınav eklerim?",
+  "aiHub.celebiExample.teacher3": "Sınavı nasıl puanlarım?",
+  "aiHub.celebiExample.manager1": "Yeni akademik dönem eklemek istiyorum",
+  "aiHub.celebiExample.manager2": "Personel mesai kayıtlarını nereden yönetirim?",
+  "aiHub.celebiExample.manager3": "Ücret tahsilatını nereden takip ederim",
   "aiHub.celebiHint": "Çelebi yan panel olarak açılır ve her sayfada seninle kalır.",
   "nav.today": "Bugün",
   "nav.classes": "Dersler",
