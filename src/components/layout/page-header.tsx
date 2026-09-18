@@ -55,7 +55,7 @@ export function PageHeader(
           {props.children}
         </div>
         <Show when={props.actions}>
-          <div class="flex shrink-0 flex-wrap items-center gap-2">{props.actions}</div>
+          <div class="flex min-w-0 flex-wrap items-center gap-2">{props.actions}</div>
         </Show>
       </div>
     </div>

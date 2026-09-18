@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@solidjs/testing-library";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { DataTable } from "@/components/ui/data-table";
 import { DataSection } from "@/components/ui/data-section";
+import { PageHeader } from "@/components/layout/page-header";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
 type Row = { name: string; role?: string };
@@ -136,11 +137,12 @@ test("the header action toolbar of every shared host can shrink below its max-co
         />
       </PreferencesProvider>
       <DataSection title="Card" actions={<button type="button">Export</button>} />
+      <PageHeader title="Page" actions={<button type="button">Export</button>} />
     </>
   ));
 
   const toolbars = screen.getAllByText("Export").map((action) => action.parentElement as HTMLElement);
-  expect(toolbars).toHaveLength(2);
+  expect(toolbars).toHaveLength(3);
   for (const toolbar of toolbars) {
     expect(toolbar.classList).toContain("flex-wrap");
     expect(toolbar.classList).toContain("min-w-0");
