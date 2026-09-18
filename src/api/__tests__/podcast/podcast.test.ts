@@ -50,10 +50,7 @@ describe("podcast API", () => {
     mockFetchSuccess({
       job_id: "j1",
       audio_id: "ses/duz_okuma/j1/episode.mp3",
-      audio_ids: ["ses/duz_okuma/j1/episode.mp3"],
       duration_secs: 312.5,
-      script_id: "s1",
-      script_ids: ["s1"],
       format: "duz_okuma",
     });
 

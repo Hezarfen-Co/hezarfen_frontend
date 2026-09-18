@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getInsightByUserId,
   getInsightRuns,
+  getInsightsPending,
   getMyInsight,
   postInsightComputeByUserId,
   postInsightsRefresh,
@@ -82,6 +83,17 @@ describe("insights API", () => {
 
     const [url] = lastFetchCall();
     expect(url).toBe("/api/insights/runs");
+  });
+
+  it("getInsightsPending GETs /insights/pending", async () => {
+    mockFetchSuccess({ students: ["u1", "u2"] });
+
+    const result = await getInsightsPending();
+    expect(result.students).toEqual(["u1", "u2"]);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/insights/pending");
+    expect(init?.method).toBe("GET");
   });
 
   it("postInsightsRefresh POSTs /insights/refresh with the named students", async () => {

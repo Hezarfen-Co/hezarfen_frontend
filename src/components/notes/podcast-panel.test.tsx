@@ -61,10 +61,7 @@ describe("PodcastPanel", () => {
     podcastApi.getPodcastJobResultById.mockResolvedValue({
       job_id: "pj1",
       audio_id: "ses/duz_okuma/pj1/episode.mp3",
-      audio_ids: ["ses/duz_okuma/pj1/episode.mp3"],
       duration_secs: 42,
-      script_id: "s1",
-      script_ids: ["s1"],
       format: "duz_okuma",
     });
 
@@ -87,10 +84,7 @@ describe("PodcastPanel", () => {
     podcastApi.getPodcastJobResultById.mockResolvedValue({
       job_id: "pj1",
       audio_id: "ses/duz_okuma/pj1/episode.mp3",
-      audio_ids: ["ses/duz_okuma/pj1/episode.mp3"],
       duration_secs: 42,
-      script_id: "s1",
-      script_ids: ["s1"],
       format: "duz_okuma",
     });
 

@@ -1338,6 +1338,9 @@ export type InsightRun = {
  failed_modules: string[];
 };
 
+/** The freshest run's pending students, in the service's order. */
+export type InsightPendingList = { students: string[] };
+
 // ---------------------------------------------------------------------------
 // podcast — narrating a course note
 // ---------------------------------------------------------------------------
@@ -1370,20 +1373,16 @@ export type PodcastJobStatus = {
  error_code?: string | null;
 };
 
-/** A finished job's artifacts, passed through verbatim. */
+/** A finished job's artifacts. */
 export type PodcastJobArtifacts = {
  job_id: string;
  /** The produced audio's path inside the school's output root. Display-only:
   * the stream is addressed by `job_id` (see `podcastAudioUrl`), never by this
   * path, so a caller cannot name a file outside its own school. */
  audio_id: string;
- /** One entry per produced chapter; usually `[audio_id]`. */
- audio_ids: string[];
- duration_secs: number;
- script_id: string;
- /** One entry per script the audio was aligned to. */
- script_ids: string[];
- format: PodcastFormat;
+ duration_secs?: number | null;
+ /** The resolved narration format. */
+ format?: PodcastFormat | null;
 };
 
 /** The verdict on a cancel. `false` is not an error — see `postPodcastJobCancel`. */
