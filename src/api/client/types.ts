@@ -1392,3 +1392,27 @@ export type PodcastCancelVerdict = {
  /** Whether *this call* cancelled something. */
  cancelled: boolean;
 };
+
+/** One row in the caller's own episode history — `GET /podcast/jobs`. The
+ * backend's own row plus the title of the course note it narrates; every field
+ * past `job_id`/`state`/`source_id`/`created_at` can be `null` until the job
+ * settles (or forever, if the note is gone). */
+export type PodcastJobSummary = {
+ job_id: string;
+ /** `queued` | `running` | `done` | `failed` | `cancelled`. */
+ state: string;
+ /** The narration the service resolved; `null` until its first report. */
+ format: PodcastFormat | null;
+ /** The course note this episode narrates. */
+ source_id: string;
+ /** That note's title; `null` once the note is gone — fall back to `source_id`. */
+ source_title: string | null;
+ /** UTC unix-milliseconds, server-stamped. */
+ created_at: number;
+ /** When the job reached its terminal state; `null` while it is live. */
+ finished_at: number | null;
+ /** The finished episode's running time in seconds; `null` until then. */
+ duration_secs: number | null;
+ /** The failure's own code, once one is on the record. */
+ error_code: string | null;
+};

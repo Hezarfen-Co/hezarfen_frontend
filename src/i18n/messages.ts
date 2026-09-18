@@ -903,6 +903,14 @@ export type MessageKey =
   | "podcast.state.done"
   | "podcast.state.failed"
   | "podcast.state.cancelled"
+  | "podcast.history.title"
+  | "podcast.history.state.pending"
+  | "podcast.history.state.done"
+  | "podcast.history.state.failed"
+  | "podcast.history.state.cancelled"
+  | "podcast.history.empty"
+  | "podcast.history.emptyHint"
+  | "podcast.history.play"
   | "insights.title"
   | "insights.subtitle"
   | "insights.student"
@@ -3013,6 +3021,14 @@ const en: Dict = {
   "podcast.state.done": "Ready",
   "podcast.state.failed": "Failed",
   "podcast.state.cancelled": "Cancelled",
+  "podcast.history.title": "Recent episodes",
+  "podcast.history.state.pending": "Preparing",
+  "podcast.history.state.done": "Ready",
+  "podcast.history.state.failed": "Failed",
+  "podcast.history.state.cancelled": "Cancelled",
+  "podcast.history.empty": "No episodes created yet",
+  "podcast.history.emptyHint": "Episodes appear here once the studio produces one.",
+  "podcast.history.play": "Play episode",
   "insights.title": "Hezarfen Intelligence",
   "insights.subtitle": "Review student signals, recommendations, and nightly analysis runs.",
   "insights.student": "Student",
@@ -5125,6 +5141,14 @@ const tr: Dict = {
   "podcast.state.done": "Hazır",
   "podcast.state.failed": "Başarısız",
   "podcast.state.cancelled": "İptal edildi",
+  "podcast.history.title": "Son bölümler",
+  "podcast.history.state.pending": "Hazırlanıyor",
+  "podcast.history.state.done": "Hazır",
+  "podcast.history.state.failed": "Başarısız",
+  "podcast.history.state.cancelled": "İptal edildi",
+  "podcast.history.empty": "Henüz bölüm oluşturulmadı",
+  "podcast.history.emptyHint": "Stüdyo bir bölüm ürettiğinde burada görünür.",
+  "podcast.history.play": "Bölümü oynat",
   "insights.title": "Hezarfen Zeka",
   "insights.subtitle": "Öğrenci sinyallerini, önerileri ve gece analizlerini inceleyin.",
   "insights.student": "Öğrenci",

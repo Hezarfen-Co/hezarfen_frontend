@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { IconWaveform, IconX } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { PodcastHistory } from "@/components/notes/podcast-history";
 import { useT } from "@/stores/preferences-context";
 
 const POLL_MS = 2_000;
@@ -212,6 +213,8 @@ export function PodcastPanel(props: { noteId: string; active?: boolean }) {
           </div>
         )}
       </Show>
+
+      <PodcastHistory active={active()} refetchKey={status()?.state === "done" ? jobId() : ""} />
     </section>
   );
 }
