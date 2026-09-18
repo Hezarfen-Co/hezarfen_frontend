@@ -13,6 +13,8 @@ import { formatDateTime } from "@/lib/format";
 import {
   buildRunReportMarkdown,
   buildRunReportModel,
+  confidenceText,
+  failedStageText,
   formatRunDuration,
   moduleLabel,
   runReportFileName,
@@ -130,7 +132,13 @@ function ReportDocument(props: {
               </li>
             </Show>
             <Show when={props.model.run.failed_modules.length > 0}>
-              <li>{tx("failedModules", { modules: props.model.run.failed_modules.join(", ") })}</li>
+              <li>
+                {tx("failedModules", {
+                  modules: props.model.run.failed_modules
+                    .map((stage) => failedStageText(prefs.locale(), stage))
+                    .join(", "),
+                })}
+              </li>
             </Show>
           </ul>
         </Show>
@@ -216,7 +224,9 @@ function ReportDocument(props: {
                   <tr class="border-t border-border-hairline">
                     <td class="py-2 pr-3 font-medium text-text-strong">{student.name}</td>
                     <td class="py-2 pr-3 text-muted-foreground">{studentStatusText(prefs.locale(), student)}</td>
-                    <td class="py-2 pr-3 text-muted-foreground">{student.confidence ?? tx("noData")}</td>
+                    <td class="py-2 pr-3 text-muted-foreground">
+                      {student.confidence == null ? tx("noData") : confidenceText(prefs.locale(), student.confidence)}
+                    </td>
                     <td class="mono py-2 pr-3 text-right tabular-nums">{student.attention}</td>
                     <td class="mono py-2 pr-3 text-right tabular-nums">{student.cards}</td>
                     <td class="mono py-2 pr-3 tabular-nums">{studentMarksText(prefs.locale(), student)}</td>
