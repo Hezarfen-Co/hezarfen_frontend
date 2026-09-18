@@ -12,8 +12,10 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
-import { IconSparkles, IconTrash } from "@/components/ui/icons";
+import { IconEye, IconSparkles, IconTrash } from "@/components/ui/icons";
 import { RagOutputContent } from "@/components/notes/rag-output-content";
+import { RagOutputDrawer } from "@/components/notes/rag-output-drawer";
+import { ragOutputMessage } from "@/components/notes/rag-output-messages";
 
 const RAG_PAGE_SIZE = 10;
 
@@ -28,6 +30,8 @@ export function RagOutputsPanel(props: {
   noteId: string;
   active: boolean;
   source: NoteFileSource;
+  /** The note's title, shown by name in the output drawer. */
+  noteTitle?: string;
   /** Delete control is teacher-only; readers see the list. Defaults to true. */
   canManage?: boolean;
 }) {
@@ -36,6 +40,7 @@ export function RagOutputsPanel(props: {
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [deleteTarget, setDeleteTarget] = createSignal<RagOutput | null>(null);
+  const [viewTarget, setViewTarget] = createSignal<RagOutput | null>(null);
   const [generating, setGenerating] = createSignal(false);
   /** Set when a reindex attempt ended without a new output — the truthful state. */
   const [missed, setMissed] = createSignal("");
@@ -160,28 +165,45 @@ export function RagOutputsPanel(props: {
                       {formatDateTime(output.generated_at, locale())}
                     </span>
                     <span class="ml-auto">
-                      <Show when={props.canManage !== false && props.source.deleteRagOutput}>
-                        <TableRowActions
-                          label={t("common.actions")}
-                          actions={[
-                            {
+                      <TableRowActions
+                        label={t("common.actions")}
+                        actions={[
+                          {
+                            label: ragOutputMessage(locale(), "view"),
+                            icon: <IconEye class="h-4 w-4" />,
+                            onSelect: () => setViewTarget(output),
+                          },
+                          ...(props.canManage !== false && props.source.deleteRagOutput
+                            ? [{
                               label: t("common.delete"),
                               icon: <IconTrash class="h-4 w-4" />,
                               destructive: true,
                               onSelect: () => setDeleteTarget(output),
-                            },
-                          ]}
-                        />
-                      </Show>
+                            }]
+                            : []),
+                        ]}
+                      />
                     </span>
                   </div>
-                  <RagOutputContent payload={output.payload} />
+                  <button
+                    type="button"
+                    class="block w-full cursor-pointer rounded-md p-1.5 text-left transition-colors hover:bg-accent/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={ragOutputMessage(locale(), "view")}
+                    onClick={() => setViewTarget(output)}
+                  >
+                    <RagOutputContent payload={output.payload} />
+                  </button>
                 </li>
               )}
             </For>
           </ul>
         </Show>
       </Suspense>
+      <RagOutputDrawer
+        output={viewTarget()}
+        noteTitle={props.noteTitle}
+        onOpenChange={(open) => !open && setViewTarget(null)}
+      />
       <ConfirmDialog
         open={deleteTarget() != null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}

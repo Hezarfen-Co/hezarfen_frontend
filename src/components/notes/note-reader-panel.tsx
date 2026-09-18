@@ -39,7 +39,7 @@ export function NoteReaderPanel(props: {
             </article>
             <NoteFilesPanel noteId={n().id} source={props.source} canManage={props.canManage} active={props.open} />
             <Show when={props.source.listRagOutputs}>
-              <RagOutputsPanel noteId={n().id} source={props.source} canManage={props.canManage} active={props.open} />
+              <RagOutputsPanel noteId={n().id} source={props.source} canManage={props.canManage} active={props.open} noteTitle={n().title} />
               <PodcastPanel noteId={n().id} noteTitle={n().title} active={props.open} />
             </Show>
           </div>
