@@ -75,7 +75,7 @@ export function NoteCard(props: {
         {error() && <p class="mt-2 text-sm text-destructive-text">{error()}</p>}
       </article>
 
-      <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={props.note.title}>
+      <SidePanel guardUnsaved open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={props.note.title}>
         <NoteForm
           initial={props.note}
           submitLabel={t("common.update")}

@@ -74,7 +74,7 @@ export function CreateUserPanel(props: {
   };
 
   return (
-    <SidePanel
+    <SidePanel guardUnsaved
       open={props.open}
       onOpenChange={(open) => { if (!open) close(); }}
       title={t("admin.createUser")}

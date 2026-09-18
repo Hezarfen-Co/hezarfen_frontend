@@ -355,7 +355,7 @@ function CourseDetailContent() {
                   }}
                 />
 
-                <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().title}>
+                <SidePanel guardUnsaved open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().title}>
                   <form
                     class="space-y-4"
                     onSubmit={(e) => {

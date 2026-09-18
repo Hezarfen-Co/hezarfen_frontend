@@ -369,7 +369,7 @@ function AppointmentsContent() {
 
   return (
     <div class="space-y-5">
-      <SidePanel open={showPublish()} onOpenChange={setShowPublish} title={t("appointments.publish")} description={t("appointments.publishSubtitle")}>
+      <SidePanel guardUnsaved open={showPublish()} onOpenChange={setShowPublish} title={t("appointments.publish")} description={t("appointments.publishSubtitle")}>
         <PublishSlotsForm
           onCancel={() => setShowPublish(false)}
           onSubmit={async (values) => {
@@ -387,7 +387,7 @@ function AppointmentsContent() {
         />
       </SidePanel>
 
-      <SidePanel open={bookSlot() != null} onOpenChange={(o) => !o && setBookSlot(null)} title={t("appointments.book")} description={t("appointments.bookSubtitle")}>
+      <SidePanel guardUnsaved open={bookSlot() != null} onOpenChange={(o) => !o && setBookSlot(null)} title={t("appointments.book")} description={t("appointments.bookSubtitle")}>
         <Show when={bookSlot()}>
           {(slot) => (
             <BookAppointmentForm
@@ -411,7 +411,7 @@ function AppointmentsContent() {
         </Show>
       </SidePanel>
 
-      <SidePanel open={reschedAppt() != null} onOpenChange={(o) => !o && setReschedAppt(null)} title={t("appointments.reschedule")} description={t("appointments.rescheduleSubtitle")}>
+      <SidePanel guardUnsaved open={reschedAppt() != null} onOpenChange={(o) => !o && setReschedAppt(null)} title={t("appointments.reschedule")} description={t("appointments.rescheduleSubtitle")}>
         <Show when={reschedAppt()}>
           {(appt) => (
             <RescheduleForm

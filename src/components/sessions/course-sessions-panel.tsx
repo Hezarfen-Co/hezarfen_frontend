@@ -265,7 +265,7 @@ export function CourseSessionsPanel(props: {
         />
       </Suspense>
 
-      <SidePanel
+      <SidePanel guardUnsaved
         open={panelOpen()}
         onOpenChange={(open) => {
           if (!open) {

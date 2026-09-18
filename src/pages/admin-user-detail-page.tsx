@@ -133,7 +133,7 @@ function AdminUserDetailContent() {
               </div>
             </section>
 
-            <SidePanel
+            <SidePanel guardUnsaved
               open={editing()}
               onOpenChange={setEditing}
               title={t("profile.edit")}

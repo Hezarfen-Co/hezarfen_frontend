@@ -356,7 +356,7 @@ function StaffWorkContent() {
         </Show>
       </SidePanel>
 
-      <SidePanel
+      <SidePanel guardUnsaved
         open={editTarget() != null}
         onOpenChange={(open) => {
           if (!open) {

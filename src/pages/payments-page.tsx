@@ -850,7 +850,7 @@ function PaymentsContent() {
       </SidePanel>
 
       {/* ---------------- Collect payment panel ---------------- */}
-      <SidePanel
+      <SidePanel guardUnsaved
         open={collectEntry() != null}
         onOpenChange={(open) => { if (!open) setCollectEntry(null); }}
         title={t("payments.collectFrom")}
@@ -889,7 +889,7 @@ function PaymentsContent() {
       </SidePanel>
 
       {/* ---------------- Correction panel (refund / reverse) ---------------- */}
-      <SidePanel
+      <SidePanel guardUnsaved
         open={lineAction() != null}
         onOpenChange={(open) => { if (!open) setLineAction(null); }}
         title={lineAction()?.kind === "refund" ? t("payments.recordRefund") : t("payments.reverse")}
@@ -917,7 +917,7 @@ function PaymentsContent() {
       </SidePanel>
 
       {/* ---------------- Plan create / edit ---------------- */}
-      <SidePanel open={panelOpen()} onOpenChange={(open) => { setPanelOpen(open); if (!open) resetPlanForm(); }} title={editing() ? t("payments.editPlan") : t("payments.createPlan")} description={t("payments.subtitle")}>
+      <SidePanel guardUnsaved open={panelOpen()} onOpenChange={(open) => { setPanelOpen(open); if (!open) resetPlanForm(); }} title={editing() ? t("payments.editPlan") : t("payments.createPlan")} description={t("payments.subtitle")}>
         <form class="space-y-4" onSubmit={savePlan}>
           <Show when={error()}>
             <Alert variant="destructive">{error()}</Alert>

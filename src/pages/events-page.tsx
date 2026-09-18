@@ -160,7 +160,7 @@ function EventsContent() {
 
   return (
     <div class="space-y-6">
-      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("events.create")} description={t("events.subtitle")}>
+      <SidePanel guardUnsaved open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("events.create")} description={t("events.subtitle")}>
         <EventForm
           submitLabel={t("common.create")}
           onCancel={() => setShowForm(false)}

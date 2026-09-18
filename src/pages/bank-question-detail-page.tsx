@@ -196,7 +196,7 @@ function BankQuestionDetailContent() {
               </Show>
             </section>
 
-            <SidePanel open={editing()} onOpenChange={setEditing} title={t("bank.edit")} description={current().text} size="wide">
+            <SidePanel guardUnsaved open={editing()} onOpenChange={setEditing} title={t("bank.edit")} description={current().text} size="wide">
               <BankQuestionForm
                 initial={current()}
                 courses={manageableCourses()}

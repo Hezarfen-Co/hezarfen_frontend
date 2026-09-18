@@ -155,7 +155,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
         <Show when={submissions.error}><Alert variant="destructive">{formatApiError(submissions.error, locale())}</Alert></Show>
         <DataTable columns={columns()} data={submissions()?.items ?? []} filterColumn="user" enablePagination pageSize={10} empty={t("common.noResults")} />
       </Suspense>
-      <SidePanel open={gradeTarget() != null} onOpenChange={(open) => !open && closeGrade()} title={t("homework.grade")} description={gradeTarget() ? studentLabel(gradeTarget()!.user) : ""}>
+      <SidePanel guardUnsaved open={gradeTarget() != null} onOpenChange={(open) => !open && closeGrade()} title={t("homework.grade")} description={gradeTarget() ? studentLabel(gradeTarget()!.user) : ""}>
         <form class="space-y-4" onSubmit={(event) => void saveGrade(event)}>
           <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
           <div class="space-y-1.5">

@@ -254,7 +254,7 @@ function CreateBoardPanel(props: {
   };
 
   return (
-    <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("whiteboard.create")}>
+    <SidePanel guardUnsaved open={props.open} onOpenChange={props.onOpenChange} title={t("whiteboard.create")}>
       <div class="space-y-4">
         <Show when={error()}>
           <ErrorAlert message={error()} />

@@ -114,7 +114,7 @@ function CoursesContent() {
 
   return (
     <div class="space-y-6">
-      <SidePanel open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: kindInSentence() })} description={t("courses.subtitle", { item: kindLabel() })}>
+      <SidePanel guardUnsaved open={canCreate() && showForm()} onOpenChange={setShowForm} title={t("common.createItem", { item: kindInSentence() })} description={t("courses.subtitle", { item: kindLabel() })}>
         <form class="space-y-4" onSubmit={createCourse}>
           <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
           <div class="flex items-center justify-between rounded-xl border border-border-line bg-surface-tint px-3 py-2 text-xs text-text-subtle">

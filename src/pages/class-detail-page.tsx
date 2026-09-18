@@ -312,7 +312,7 @@ function ClassDetailContent() {
               </Tabs>
 
               {/* Edit class */}
-              <SidePanel open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().name}>
+              <SidePanel guardUnsaved open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().name}>
                 <form class="space-y-4" onSubmit={(e) => { e.preventDefault(); void wrap(async () => { await patchClassById(id(), { name: name().trim(), grade: grade().trim() || null, year: yearId() || null, teacher_id: teacherId() || null }); setEditing(false); await refresh(refetchClass); }, "common.saved"); }}>
                   <div class="space-y-3">
                     <div class="space-y-1.5"><Label for="edit-class-name">{t("classGroups.className")}</Label><Input id="edit-class-name" maxlength={limits.latest?.course.max_class_name_len} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
@@ -333,7 +333,7 @@ function ClassDetailContent() {
               </SidePanel>
 
               {/* Attach course */}
-              <SidePanel open={showAttachCourse()} onOpenChange={setShowAttachCourse} title={t("classGroups.attachCourse")} description={t("classGroups.attachCourseHelp")}>
+              <SidePanel guardUnsaved open={showAttachCourse()} onOpenChange={setShowAttachCourse} title={t("classGroups.attachCourse")} description={t("classGroups.attachCourseHelp")}>
                 <form class="space-y-3" onSubmit={(e) => { e.preventDefault(); const cid = attachCourseId(); if (!cid) return; void wrap(async () => { await postClassInstance(id(), { course_id: cid }); setAttachCourseId(""); setShowAttachCourse(false); await refresh(refetchCourses); }, "common.saved"); }}>
                   <div class="space-y-1.5">
                     <Label for="class-attach-course">{t("classGroups.selectCourse")}</Label>

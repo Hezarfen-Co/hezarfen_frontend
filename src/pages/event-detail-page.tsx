@@ -217,7 +217,7 @@ function EventDetailContent() {
               }}
             />
 
-            <SidePanel
+            <SidePanel guardUnsaved
               open={editing()}
               onOpenChange={setEditing}
               title={t("common.edit")}

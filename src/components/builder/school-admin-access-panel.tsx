@@ -56,7 +56,7 @@ export function SchoolAdminAccessPanel(props: {
   };
 
   return (
-    <SidePanel
+    <SidePanel guardUnsaved
       open={props.mode != null}
       onOpenChange={(open) => {
         if (!open) {

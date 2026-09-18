@@ -101,7 +101,7 @@ export function BlueprintPanel(props: {
   };
 
   return (
-    <SidePanel
+    <SidePanel guardUnsaved
       open={props.open}
       onOpenChange={props.onOpenChange}
       title={editing() ? t("classBlueprints.edit") : t("classBlueprints.new")}

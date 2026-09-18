@@ -112,7 +112,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
-      <SidePanel open={props.createOpen} onOpenChange={setPanelOpen} title={editing() ? t("subjects.edit") : t("subjects.add")} description={t("subjects.help")}>
+      <SidePanel guardUnsaved open={props.createOpen} onOpenChange={setPanelOpen} title={editing() ? t("subjects.edit") : t("subjects.add")} description={t("subjects.help")}>
         <form class="space-y-3" onSubmit={(event) => void save(event)}>
           <div class="space-y-1.5">
             <Label for="subject-name">{t("subjects.name")}</Label>

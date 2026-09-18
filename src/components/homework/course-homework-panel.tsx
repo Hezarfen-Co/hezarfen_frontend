@@ -217,7 +217,7 @@ export function CourseHomeworkPanel(props: {
         </Show>
       </Suspense>
 
-      <SidePanel open={props.createOpen} onOpenChange={setPanelOpen} title={editing() ? t("homework.edit") : t("homework.add")} description={t("homework.help")}>
+      <SidePanel guardUnsaved open={props.createOpen} onOpenChange={setPanelOpen} title={editing() ? t("homework.edit") : t("homework.add")} description={t("homework.help")}>
         <form class="space-y-4" onSubmit={(event) => void save(event)}>
           <Show when={error()}>
             <Alert variant="destructive">{error()}</Alert>

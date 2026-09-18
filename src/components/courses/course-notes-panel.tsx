@@ -67,7 +67,7 @@ export function CourseNotesPanel(props: {
       </Show>
 
       <Show when={props.canManage}>
-        <SidePanel open={props.createOpen} onOpenChange={props.onCreateOpenChange} title={t("courseNotes.new")}>
+        <SidePanel guardUnsaved open={props.createOpen} onOpenChange={props.onCreateOpenChange} title={t("courseNotes.new")}>
           <NoteForm
             enableFiles
             submitLabel={t("common.create")}

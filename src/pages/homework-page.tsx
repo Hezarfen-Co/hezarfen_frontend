@@ -210,7 +210,7 @@ function HomeworkContent() {
 
   return (
     <div class="space-y-6">
-      <SidePanel open={createOpen()} onOpenChange={(open) => { setCreateOpen(open); if (!open) resetForm(); }} title={t("homework.add")} description={t("homework.help")}>
+      <SidePanel guardUnsaved open={createOpen()} onOpenChange={(open) => { setCreateOpen(open); if (!open) resetForm(); }} title={t("homework.add")} description={t("homework.help")}>
         <form class="space-y-4" onSubmit={(event) => void save(event)}>
           <Show when={error()}>
             <Alert variant="destructive">{error()}</Alert>

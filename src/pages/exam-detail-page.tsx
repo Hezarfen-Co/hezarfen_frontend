@@ -606,7 +606,7 @@ function ExamDetailContent() {
               }}
             />
 
-            <SidePanel
+            <SidePanel guardUnsaved
               open={editing()}
               onOpenChange={setEditing}
               title={t("common.edit")}
@@ -742,7 +742,7 @@ function ExamDetailContent() {
                 </TabsContent>
               </Tabs>
 
-              <SidePanel
+              <SidePanel guardUnsaved
                 open={gradeOpen()}
                 onOpenChange={setGradeOpen}
                 title={t("exams.gradeStudent")}

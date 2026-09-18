@@ -188,7 +188,7 @@ function BuilderSchoolDetailContent() {
         </Show>
       </Suspense>
 
-      <SidePanel open={editOpen()} onOpenChange={setEditOpen} title={t("builder.editSchool")} description={t("builder.editSchoolHint")}>
+      <SidePanel guardUnsaved open={editOpen()} onOpenChange={setEditOpen} title={t("builder.editSchool")} description={t("builder.editSchoolHint")}>
         <form class="space-y-4" onSubmit={saveEdit}>
           <Show when={editError()}>
             <Alert variant="destructive">{editError()}</Alert>

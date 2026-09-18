@@ -255,7 +255,7 @@ function AcademicYearsContent() {
         </Suspense>
       </section>
 
-      <SidePanel
+      <SidePanel guardUnsaved
         open={panelOpen()}
         onOpenChange={(open) => {
           setPanelOpen(open);
@@ -347,7 +347,7 @@ function AcademicYearsContent() {
         </form>
       </SidePanel>
 
-      <SidePanel
+      <SidePanel guardUnsaved
         open={rolloverTarget() !== null}
         onOpenChange={(open) => !open && setRolloverTarget(null)}
         title={t("academicYears.rollover")}

@@ -283,7 +283,7 @@ function QuestionBankContent() {
         </TabsContent>
       </Tabs>
 
-      <SidePanel
+      <SidePanel guardUnsaved
         open={createOpen() || editing() != null}
         onOpenChange={(open) => {
           if (!open) {

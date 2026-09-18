@@ -220,7 +220,7 @@ function ProfileContent() {
                 courseTotal={p().stats.courses}
               />
 
-              <SidePanel open={editing()} onOpenChange={setEditing} title={t("profile.edit")}>
+              <SidePanel guardUnsaved open={editing()} onOpenChange={setEditing} title={t("profile.edit")}>
                 <Show when={auth.user()}>
                   {(u) => (
                     <ProfileForm

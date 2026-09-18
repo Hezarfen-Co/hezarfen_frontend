@@ -251,7 +251,7 @@ function TermsContent() {
         </Suspense>
       </section>
 
-      <SidePanel
+      <SidePanel guardUnsaved
         open={panelOpen()}
         onOpenChange={(open) => {
           setPanelOpen(open);

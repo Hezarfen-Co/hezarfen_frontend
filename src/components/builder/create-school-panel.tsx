@@ -68,7 +68,7 @@ export function CreateSchoolPanel(props: { open: boolean; onOpenChange: (open: b
   };
 
   return (
-    <SidePanel
+    <SidePanel guardUnsaved
       size="wide"
       open={props.open}
       onOpenChange={(open) => {
