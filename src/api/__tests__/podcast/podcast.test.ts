@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getPodcastJobById,
   getPodcastJobResultById,
+  listPodcastJobs,
   podcastAudioUrl,
   postPodcastJob,
   postPodcastJobCancel,
@@ -86,5 +87,29 @@ describe("podcast API", () => {
 
   it("podcastAudioUrl addresses the job's own audio door, encoded", () => {
     expect(podcastAudioUrl("j 1")).toBe("/api/podcast/jobs/j%201/audio");
+  });
+
+  it("listPodcastJobs asks for the whole history when no note is given", async () => {
+    mockFetchSuccess({ items: [], total: 0, limit: 10, offset: 0 });
+
+    await listPodcastJobs({ limit: 10 });
+
+    expect(lastFetchCall()[0]).toBe("/api/podcast/jobs?limit=10");
+  });
+
+  it("listPodcastJobs narrows to one note, encoded", async () => {
+    mockFetchSuccess({ items: [], total: 0, limit: 10, offset: 0 });
+
+    await listPodcastJobs({ limit: 10, sourceId: "not 1" });
+
+    expect(lastFetchCall()[0]).toBe("/api/podcast/jobs?limit=10&source_id=not%201");
+  });
+
+  it("listPodcastJobs opens the query with the note when no page is given", async () => {
+    mockFetchSuccess({ items: [], total: 0, limit: null, offset: 0 });
+
+    await listPodcastJobs({ sourceId: "cn1" });
+
+    expect(lastFetchCall()[0]).toBe("/api/podcast/jobs?source_id=cn1");
   });
 });

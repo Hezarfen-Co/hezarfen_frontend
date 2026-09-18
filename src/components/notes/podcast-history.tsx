@@ -8,25 +8,39 @@ import { Button } from "@/components/ui/button";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { IconWaveform } from "@/components/ui/icons";
+import { cn } from "@/lib/cn";
 import { formatDate, formatDurationClock } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 const HISTORY_PAGE_SIZE = 10;
 
+type Scope = "note" | "all";
+
 /**
  * The caller's own episodes, under the Ses Atölyesi panel. One-directional:
  * the studio produces, this only reads. A finished episode plays through the
  * same job-id audio door the panel's own player uses.
+ *
+ * The list follows the note the panel is open on by default, so opening one
+ * note's studio never shows another's episodes; the header switch widens it to
+ * the whole history and states which of the two is on screen.
  */
-export function PodcastHistory(props: { active?: boolean; refetchKey?: string | number }) {
+export function PodcastHistory(props: { noteId?: string; active?: boolean; refetchKey?: string | number }) {
   const t = useT();
   const { locale } = usePreferences();
   const [playing, setPlaying] = createSignal("");
+  const [scope, setScope] = createSignal<Scope>("note");
   const active = () => props.active !== false;
 
+  // The source is the scope string, not a fresh object: an identity-stable
+  // value keeps the resource from refetching when nothing about it changed.
   const [list, { refetch }] = createResource(
-    () => (active() ? true : null),
-    () => listPodcastJobs({ limit: HISTORY_PAGE_SIZE }),
+    () => (active() ? (props.noteId ? scope() : "all") : null),
+    (current) =>
+      listPodcastJobs({
+        limit: HISTORY_PAGE_SIZE,
+        sourceId: current === "note" ? props.noteId : undefined,
+      }),
   );
 
   // The panel bumps the key ("", then the job id) when a generation finishes;
@@ -53,7 +67,49 @@ export function PodcastHistory(props: { active?: boolean; refetchKey?: string | 
 
   return (
     <div class="space-y-3 border-t border-border-line pt-4">
-      <h3 class="text-sm font-semibold">{t("podcast.history.title")}</h3>
+      <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <h3 class="text-sm font-semibold">{t("podcast.history.title")}</h3>
+        <Show when={props.noteId}>
+          <div
+            class="flex shrink-0 rounded-lg bg-muted p-0.5"
+            role="group"
+            aria-label={t("podcast.history.scope.label")}
+          >
+            <button
+              type="button"
+              aria-pressed={scope() === "note"}
+              onClick={() => setScope("note")}
+              class={cn(
+                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                scope() === "note"
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t("podcast.history.scope.note")}
+            </button>
+            <button
+              type="button"
+              aria-pressed={scope() === "all"}
+              onClick={() => setScope("all")}
+              class={cn(
+                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                scope() === "all"
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t("podcast.history.scope.all")}
+            </button>
+          </div>
+        </Show>
+      </div>
+
+      <p class="text-xs text-muted-foreground">
+        {props.noteId && scope() === "note"
+          ? t("podcast.history.scope.noteCaption")
+          : t("podcast.history.scope.allCaption")}
+      </p>
 
       <Show when={list.error}>
         <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -65,7 +121,11 @@ export function PodcastHistory(props: { active?: boolean; refetchKey?: string | 
             when={jobs().length > 0}
             fallback={
               <EmptyInline
-                title={t("podcast.history.empty")}
+                title={
+                  props.noteId && scope() === "note"
+                    ? t("podcast.history.emptyNote")
+                    : t("podcast.history.empty")
+                }
                 hint={t("podcast.history.emptyHint")}
               />
             }

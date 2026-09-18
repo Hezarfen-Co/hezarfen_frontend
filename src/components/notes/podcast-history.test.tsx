@@ -44,17 +44,17 @@ describe("PodcastHistory", () => {
     vi.clearAllMocks();
   });
 
-  const renderHistory = () =>
+  const renderHistory = (noteId?: string) =>
     render(() => (
       <PreferencesProvider>
-        <PodcastHistory active />
+        <PodcastHistory noteId={noteId} active />
       </PreferencesProvider>
     ));
 
   it("renders a finished row's title, state and duration, and plays it by job id", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(page([job({})]));
 
-    renderHistory();
+    renderHistory("note-1");
 
     await waitFor(() => expect(screen.getByText("Hücre")).toBeTruthy());
     expect(screen.getByText("Hazır")).toBeTruthy();
@@ -70,11 +70,50 @@ describe("PodcastHistory", () => {
       page([job({ state: "running", duration_secs: null, finished_at: null })]),
     );
 
-    renderHistory();
+    renderHistory("note-1");
 
     await waitFor(() => expect(screen.getByText("Hazırlanıyor")).toBeTruthy());
     expect(screen.queryByRole("button", { name: "Bölümü oynat" })).toBeNull();
     expect(document.querySelector("audio")).toBeNull();
+  });
+
+  it("asks the door about the open note only", async () => {
+    podcastApi.listPodcastJobs.mockResolvedValue(page([job({})]));
+
+    renderHistory("note-1");
+
+    await waitFor(() =>
+      expect(podcastApi.listPodcastJobs).toHaveBeenCalledWith({ limit: 10, sourceId: "note-1" }),
+    );
+    expect(screen.getByText("Yalnızca bu notun bölümleri gösteriliyor.")).toBeTruthy();
+  });
+
+  it("widens to the whole history when Tümü is picked", async () => {
+    podcastApi.listPodcastJobs.mockResolvedValue(page([job({})]));
+
+    renderHistory("note-1");
+    await waitFor(() => expect(podcastApi.listPodcastJobs).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole("button", { name: "Tümü" }));
+
+    await waitFor(() => expect(podcastApi.listPodcastJobs).toHaveBeenCalledTimes(2));
+    expect(podcastApi.listPodcastJobs).toHaveBeenLastCalledWith({ limit: 10, sourceId: undefined });
+    expect(screen.getByRole("button", { name: "Tümü" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Bu not" }).getAttribute("aria-pressed")).toBe("false");
+    expect(screen.getByText("Tüm notlarınızdaki bölümler gösteriliyor.")).toBeTruthy();
+  });
+
+  it("tells an empty note apart from an empty history", async () => {
+    podcastApi.listPodcastJobs.mockResolvedValue(page([]));
+
+    renderHistory("note-1");
+    await waitFor(() => expect(screen.getByText("Bu not için henüz bölüm yok")).toBeTruthy());
+    expect(screen.queryByText("Henüz bölüm oluşturulmadı")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Tümü" }));
+
+    await waitFor(() => expect(screen.getByText("Henüz bölüm oluşturulmadı")).toBeTruthy());
+    expect(screen.queryByText("Bu not için henüz bölüm yok")).toBeNull();
   });
 
   it("shows the empty state when the caller has no episodes", async () => {
@@ -83,12 +122,13 @@ describe("PodcastHistory", () => {
     renderHistory();
 
     await waitFor(() => expect(screen.getByText("Henüz bölüm oluşturulmadı")).toBeTruthy());
+    expect(podcastApi.listPodcastJobs).toHaveBeenCalledWith({ limit: 10, sourceId: undefined });
   });
 
   it("falls back to the note id when the note is gone", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(page([job({ source_id: "note-gone", source_title: null })]));
 
-    renderHistory();
+    renderHistory("note-1");
 
     await waitFor(() => expect(screen.getByText("note-gone")).toBeTruthy());
   });
@@ -99,7 +139,7 @@ describe("PodcastHistory", () => {
 
     render(() => (
       <PreferencesProvider>
-        <PodcastHistory active refetchKey={key()} />
+        <PodcastHistory noteId="note-1" active refetchKey={key()} />
       </PreferencesProvider>
     ));
 

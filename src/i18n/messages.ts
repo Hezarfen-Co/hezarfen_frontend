@@ -909,8 +909,14 @@ export type MessageKey =
   | "podcast.history.state.failed"
   | "podcast.history.state.cancelled"
   | "podcast.history.empty"
+  | "podcast.history.emptyNote"
   | "podcast.history.emptyHint"
   | "podcast.history.play"
+  | "podcast.history.scope.label"
+  | "podcast.history.scope.note"
+  | "podcast.history.scope.all"
+  | "podcast.history.scope.noteCaption"
+  | "podcast.history.scope.allCaption"
   | "insights.title"
   | "insights.subtitle"
   | "insights.student"
@@ -3027,8 +3033,14 @@ const en: Dict = {
   "podcast.history.state.failed": "Failed",
   "podcast.history.state.cancelled": "Cancelled",
   "podcast.history.empty": "No episodes created yet",
+  "podcast.history.emptyNote": "No episodes for this note yet",
   "podcast.history.emptyHint": "Episodes appear here once the studio produces one.",
   "podcast.history.play": "Play episode",
+  "podcast.history.scope.label": "Episode scope",
+  "podcast.history.scope.note": "This note",
+  "podcast.history.scope.all": "All",
+  "podcast.history.scope.noteCaption": "Showing this note's episodes only.",
+  "podcast.history.scope.allCaption": "Showing episodes from every note.",
   "insights.title": "Hezarfen Intelligence",
   "insights.subtitle": "Review student signals, recommendations, and nightly analysis runs.",
   "insights.student": "Student",
@@ -5147,8 +5159,14 @@ const tr: Dict = {
   "podcast.history.state.failed": "Başarısız",
   "podcast.history.state.cancelled": "İptal edildi",
   "podcast.history.empty": "Henüz bölüm oluşturulmadı",
+  "podcast.history.emptyNote": "Bu not için henüz bölüm yok",
   "podcast.history.emptyHint": "Stüdyo bir bölüm ürettiğinde burada görünür.",
   "podcast.history.play": "Bölümü oynat",
+  "podcast.history.scope.label": "Bölüm kapsamı",
+  "podcast.history.scope.note": "Bu not",
+  "podcast.history.scope.all": "Tümü",
+  "podcast.history.scope.noteCaption": "Yalnızca bu notun bölümleri gösteriliyor.",
+  "podcast.history.scope.allCaption": "Tüm notlarınızdaki bölümler gösteriliyor.",
   "insights.title": "Hezarfen Zeka",
   "insights.subtitle": "Öğrenci sinyallerini, önerileri ve gece analizlerini inceleyin.",
   "insights.student": "Öğrenci",

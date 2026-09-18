@@ -214,7 +214,11 @@ export function PodcastPanel(props: { noteId: string; active?: boolean }) {
         )}
       </Show>
 
-      <PodcastHistory active={active()} refetchKey={status()?.state === "done" ? jobId() : ""} />
+      <PodcastHistory
+        noteId={props.noteId}
+        active={active()}
+        refetchKey={status()?.state === "done" ? jobId() : ""}
+      />
     </section>
   );
 }
