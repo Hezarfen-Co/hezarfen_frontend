@@ -1,8 +1,13 @@
-import { createMemo } from "solid-js";
+import { Show, createMemo, createSignal } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import type { InsightRun } from "@/api/client";
+import { InsightRunReport } from "@/components/insights/insight-run-report";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
+import { IconFileText } from "@/components/ui/icons";
+import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
+import { runReportText, type RunReportKey } from "@/i18n/insights-run-report";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
 import { usePreferences } from "@/stores/preferences-context";
@@ -18,6 +23,9 @@ function statusVariant(status: string) {
 export function InsightRunsTable(props: { runs: InsightRun[] }) {
   const prefs = usePreferences();
   const tx = (key: string, vars?: Record<string, string | number>) => prefs.t(key as never, vars);
+  const rtx = (key: RunReportKey, vars?: Record<string, string | number>) =>
+    runReportText(prefs.locale(), key, vars);
+  const [selectedRun, setSelectedRun] = createSignal<InsightRun | null>(null);
   const statusLabel = (status: string) =>
     ["running", "ok", "partial", "failed", "skipped"].includes(status)
       ? tx(`insights.status.${status}`)
@@ -95,19 +103,58 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
         );
       },
     },
+    {
+      id: "actions",
+      header: tx("common.actions"),
+      enableSorting: false,
+      meta: {
+        headerClass: "w-[150px] min-w-[150px] max-w-[150px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "w-[150px] min-w-[150px] max-w-[150px] h-[45px] text-center whitespace-nowrap",
+      },
+      cell: (cell) => (
+        <TableRowActions
+          label={tx("common.actions")}
+          actions={[
+            {
+              label: rtx("open"),
+              icon: <IconFileText class="h-4 w-4" />,
+              onSelect: () => setSelectedRun(cell.row.original),
+            },
+          ]}
+        />
+      ),
+    },
   ]);
 
   return (
-    <DataTable
-      title={tx("insights.runs")}
-      description={tx("insights.runsSubtitle")}
-      columns={columns()}
-      data={props.runs}
-      empty={tx("insights.emptyRuns")}
-      tableClass="min-w-[820px]"
-      enablePagination
-      pageSize={10}
-      storageKey="insight-runs"
-    />
+    <>
+      <DataTable
+        title={tx("insights.runs")}
+        description={tx("insights.runsSubtitle")}
+        columns={columns()}
+        data={props.runs}
+        empty={tx("insights.emptyRuns")}
+        tableClass="min-w-[980px]"
+        enablePagination
+        pageSize={10}
+        storageKey="insight-runs"
+        onRowClick={(run) => setSelectedRun(run)}
+      />
+
+      <Show keyed when={selectedRun()}>
+        {(run) => (
+          <SidePanel
+            size="xl"
+            open
+            onOpenChange={(open) => {
+              if (!open) setSelectedRun(null);
+            }}
+            title={rtx("panelDescription", { day: run.run_day })}
+          >
+            <InsightRunReport run={run} />
+          </SidePanel>
+        )}
+      </Show>
+    </>
   );
 }
