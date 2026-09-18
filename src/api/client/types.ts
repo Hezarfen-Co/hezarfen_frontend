@@ -1373,8 +1373,9 @@ export type PodcastJobStatus = {
 /** A finished job's artifacts, passed through verbatim. */
 export type PodcastJobArtifacts = {
  job_id: string;
- /** The produced audio, relative to the school's output root — feed it to
-  * `podcastAudioUrl`, never to a fetch of your own. */
+ /** The produced audio's path inside the school's output root. Display-only:
+  * the stream is addressed by `job_id` (see `podcastAudioUrl`), never by this
+  * path, so a caller cannot name a file outside its own school. */
  audio_id: string;
  /** One entry per produced chapter; usually `[audio_id]`. */
  audio_ids: string[];

@@ -8,7 +8,7 @@ const podcastApi = vi.hoisted(() => ({
   getPodcastJobById: vi.fn(),
   getPodcastJobResultById: vi.fn(),
   postPodcastJobCancel: vi.fn(),
-  podcastAudioUrl: vi.fn((id: string) => `/api/podcast/audio?path=${encodeURIComponent(id)}`),
+  podcastAudioUrl: vi.fn((jobId: string) => `/api/podcast/jobs/${encodeURIComponent(jobId)}/audio`),
 }));
 
 vi.mock("@/api/podcast", () => podcastApi);
@@ -49,5 +49,34 @@ describe("PodcastPanel", () => {
     });
     expect(sessionStorage.getItem("hezarfen.podcast.note-7")).toBe("j1");
     expect(screen.getByText("Waiting in queue")).toBeTruthy();
+  });
+
+  it("points the audio element at the job's audio door, not the artifact path", async () => {
+    // A finished job restored from sessionStorage: the panel must address the
+    // stream by `job_id`. Handing it `audio_id` (the output-root path) composes
+    // a URL the backend has no route for, and the player dies silently.
+    sessionStorage.setItem("hezarfen.podcast.note-7", "pj1");
+    podcastApi.getPodcastJobById.mockResolvedValue({ job_id: "pj1", state: "done", stage: "done", progress: 1 });
+    podcastApi.getPodcastJobResultById.mockResolvedValue({
+      job_id: "pj1",
+      audio_id: "ses/duz_okuma/pj1/episode.mp3",
+      audio_ids: ["ses/duz_okuma/pj1/episode.mp3"],
+      duration_secs: 42,
+      script_id: "s1",
+      script_ids: ["s1"],
+      format: "duz_okuma",
+    });
+
+    render(() => (
+      <PreferencesProvider>
+        <PodcastPanel noteId="note-7" />
+      </PreferencesProvider>
+    ));
+
+    await waitFor(() => {
+      expect(screen.getByText("Your episode is ready.")).toBeTruthy();
+    });
+    expect(podcastApi.podcastAudioUrl).toHaveBeenCalledWith("pj1");
+    expect(document.querySelector("audio")?.getAttribute("src")).toBe("/api/podcast/jobs/pj1/audio");
   });
 });
