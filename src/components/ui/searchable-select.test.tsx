@@ -19,7 +19,7 @@ function renderSelect(onChange = vi.fn()) {
   return { input: screen.getByRole("combobox"), onChange };
 }
 
-it("opens the option list on a plain click on the field", async () => {
+it("1. opens the option list on a plain click on the field", async () => {
   const { input } = renderSelect();
 
   // No typing, no chevron: the field itself is the affordance.
@@ -29,16 +29,45 @@ it("opens the option list on a plain click on the field", async () => {
   expect(screen.getByRole("option", { name: "10-B · Türkçe" })).toBeTruthy();
 });
 
-it("reports the picked value when an option is clicked", async () => {
+it("2. closes again when the open field is clicked", async () => {
+  const { input } = renderSelect();
+
+  fireEvent.click(input);
+  await screen.findByRole("option", { name: "9-A · Matematik" });
+
+  fireEvent.click(input);
+
+  await waitFor(() => expect(screen.queryByRole("option")).toBeNull());
+});
+
+it("3. reports the picked value and stays closed after the pick", async () => {
   const { input, onChange } = renderSelect();
 
   fireEvent.click(input);
   fireEvent.click(await screen.findByRole("option", { name: "10-B · Türkçe" }));
 
   await waitFor(() => expect(onChange).toHaveBeenCalledWith("t"));
+  // The close → refocus dance must not re-open the list by itself.
+  await waitFor(() => expect(screen.queryByRole("option")).toBeNull());
 });
 
-it("closes on Escape without changing the value", async () => {
+it("4. closes when clicking outside the field", async () => {
+  const { input } = renderSelect();
+
+  fireEvent.click(input);
+  await screen.findByRole("option", { name: "9-A · Matematik" });
+
+  // Kobalte attaches its document-level outside listener one macrotask after
+  // it opens; a real click always lands long after that.
+  const tick = Promise.withResolvers<void>();
+  setTimeout(tick.resolve, 0);
+  await tick.promise;
+  fireEvent.pointerDown(document.body);
+
+  await waitFor(() => expect(screen.queryByRole("option")).toBeNull());
+});
+
+it("5. closes on Escape without changing the value", async () => {
   const { input, onChange } = renderSelect();
 
   fireEvent.click(input);
@@ -50,18 +79,27 @@ it("closes on Escape without changing the value", async () => {
   expect(onChange).not.toHaveBeenCalled();
 });
 
-it("closes the list after a pick and keeps the chevron working", async () => {
+it("6. opens on ArrowDown from the closed field", async () => {
+  const { input } = renderSelect();
+
+  fireEvent.keyDown(input, { key: "ArrowDown" });
+
+  await waitFor(() => expect(screen.getByRole("option", { name: "9-A · Matematik" })).toBeTruthy());
+});
+
+it("7. chevron toggles the list open and closed", async () => {
   const { onChange } = renderSelect();
 
   // Opened from the chevron, not the field: the trigger must still open.
   // Kobalte toggles on pointerdown (a bare click event never reaches it).
   const trigger = screen.getByRole("button");
   fireEvent.pointerDown(trigger, { pointerType: "mouse", button: 0 });
-  fireEvent.click(trigger);
-  fireEvent.click(await screen.findByRole("option", { name: "9-A · Matematik" }));
+  await screen.findByRole("option", { name: "9-A · Matematik" });
+
+  fireEvent.pointerDown(trigger, { pointerType: "mouse", button: 0 });
 
   await waitFor(() => expect(screen.queryByRole("option")).toBeNull());
-  expect(onChange).toHaveBeenCalledWith("m");
+  expect(onChange).not.toHaveBeenCalled();
 });
 
 it("finds an option across a dash and word order", async () => {
