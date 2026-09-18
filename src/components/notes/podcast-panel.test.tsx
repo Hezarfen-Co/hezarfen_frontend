@@ -8,6 +8,7 @@ const podcastApi = vi.hoisted(() => ({
   getPodcastJobById: vi.fn(),
   getPodcastJobResultById: vi.fn(),
   postPodcastJobCancel: vi.fn(),
+  listPodcastJobs: vi.fn(async () => ({ items: [], total: 0, limit: 10, offset: 0 })),
   podcastAudioUrl: vi.fn((jobId: string) => `/api/podcast/jobs/${encodeURIComponent(jobId)}/audio`),
 }));
 
