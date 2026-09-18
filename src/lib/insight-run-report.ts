@@ -272,13 +272,24 @@ export function moduleLabel(locale: Locale, id: ModuleId): string {
   return runReportText(locale, "moduleSubmission");
 }
 
-const STATUS_LABELS: Record<string, Record<string, string>> = {
-  tr: { running: "Sürüyor", ok: "Tamamlandı", partial: "Kısmi", failed: "Başarısız", skipped: "Atlandı" },
-  en: { running: "Running", ok: "Completed", partial: "Partial", failed: "Failed", skipped: "Skipped" },
+const STATUS_KEYS: Record<string, MessageKey> = {
+  running: "insights.status.running",
+  ok: "insights.status.ok",
+  partial: "insights.status.partial",
+  failed: "insights.status.failed",
+  skipped: "insights.status.skipped",
 };
 
+/**
+ * A run status, from the app's dictionary — the same keys the run table's own
+ * badge uses, so the ledger and the report can never disagree about what
+ * `partial` says. A status this build does not know stays raw rather than being
+ * guessed at.
+ */
 export function runReportStatusLabel(locale: Locale, status: string): string {
-  return STATUS_LABELS[locale][status] ?? status;
+  const key = STATUS_KEYS[status];
+  if (!key) return status;
+  return messages[locale][key] ?? messages.en[key] ?? status;
 }
 
 const CONFIDENCE_KEYS: Record<string, MessageKey> = {
@@ -315,6 +326,17 @@ export function failedStageText(locale: Locale, stage: string): string {
 
 export function runReportFileName(runDay: string): string {
   return `okul-analiz-raporu-${runDay}.md`;
+}
+
+/**
+ * The run's pending students, by name, in the ledger's own order — the panel
+ * and the export both render this one line, so the count, the names and the
+ * `—` for a student the roster cannot resolve can never drift apart.
+ */
+export function pendingStudentsLine(locale: Locale, model: RunReportModel): string | null {
+  if (model.run.pending_students.length === 0) return null;
+  const named = model.pending.map((row) => row.name ?? "—").join(", ");
+  return `${runReportText(locale, "pendingStudents", { count: model.run.pending_students.length })}: ${named}`;
 }
 
 /** `0,716` in Turkish, `0.716` in English — the same number either way. */
@@ -380,13 +402,8 @@ export function buildRunReportMarkdown(model: RunReportModel, locale: Locale): s
   );
   const issueCount = run.pending_students.length + run.failed_modules.length + (run.budget_exceeded ? 1 : 0);
   lines.push(`- ${t("issues")}: ${issueCount === 0 ? t("noIssues") : String(issueCount)}`);
-  if (run.pending_students.length > 0) {
-    // Same list, same order as the panel: the export names them, not just counts them.
-    const named = model.pending.length > 0
-      ? `: ${model.pending.map((row) => row.name ?? "—").join(", ")}`
-      : "";
-    lines.push(`- ${t("pendingStudents", { count: run.pending_students.length })}${named}`);
-  }
+  const pendingLine = pendingStudentsLine(locale, model);
+  if (pendingLine) lines.push(`- ${pendingLine}`);
   if (run.failed_modules.length > 0) {
     lines.push(
       `- ${t("failedModules", { modules: run.failed_modules.map((stage) => failedStageText(locale, stage)).join(", ") })}`,

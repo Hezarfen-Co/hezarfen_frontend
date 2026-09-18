@@ -17,6 +17,7 @@ import {
   failedStageText,
   formatRunDuration,
   moduleLabel,
+  pendingStudentsLine,
   runReportFileName,
   runReportStatusLabel,
   studentAttendanceText,
@@ -125,11 +126,8 @@ function ReportDocument(props: {
         </dl>
         <Show when={props.model.run.pending_students.length + props.model.run.failed_modules.length > 0}>
           <ul class="space-y-1 text-xs text-warning">
-            <Show when={props.model.run.pending_students.length > 0}>
-              <li>
-                {tx("pendingStudents", { count: props.model.run.pending_students.length })}
-                {props.model.pending.length > 0 ? `: ${props.model.pending.map((row) => row.name ?? "—").join(", ")}` : ""}
-              </li>
+            <Show when={pendingStudentsLine(prefs.locale(), props.model)}>
+              {(line) => <li>{line()}</li>}
             </Show>
             <Show when={props.model.run.failed_modules.length > 0}>
               <li>

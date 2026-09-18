@@ -10,7 +10,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { runReportText, type RunReportKey } from "@/i18n/insights-run-report";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
-import { failedStageText } from "@/lib/insight-run-report";
+import { failedStageText, runReportStatusLabel } from "@/lib/insight-run-report";
 import { usePreferences } from "@/stores/preferences-context";
 
 function statusVariant(status: string) {
@@ -27,10 +27,6 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
   const rtx = (key: RunReportKey, vars?: Record<string, string | number>) =>
     runReportText(prefs.locale(), key, vars);
   const [selectedRun, setSelectedRun] = createSignal<InsightRun | null>(null);
-  const statusLabel = (status: string) =>
-    ["running", "ok", "partial", "failed", "skipped"].includes(status)
-      ? tx(`insights.status.${status}`)
-      : status;
   const columns = createMemo<ColumnDef<InsightRun>[]>(() => [
     {
       accessorKey: "run_day",
@@ -47,7 +43,7 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
       header: tx("insights.result"),
       cell: (cell) => (
         <Badge variant={statusVariant(cell.row.original.status)} class="rounded-full">
-          {statusLabel(cell.row.original.status)}
+          {runReportStatusLabel(prefs.locale(), cell.row.original.status)}
         </Badge>
       ),
     },
