@@ -95,6 +95,10 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   });
   const [search, setSearch] = createSignal("");
   const searchValue = () => props.searchValue ?? search();
+  // Sorting is client-side only, and the backend takes no sort parameter: on
+  // a server-paged table it would reorder the visible page alone while the
+  // header claimed the whole list. Off there unless a caller opts in.
+  const sortingEnabled = () => props.enableSorting ?? !props.manualPagination;
   const tableData = () => {
     const query = searchValue().trim();
     if (!query || !props.searchPredicate) return props.data;
@@ -107,7 +111,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     get columns() {
       return props.columns;
     },
-    enableSorting: props.enableSorting ?? true,
+    enableSorting: sortingEnabled(),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -218,7 +222,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
     const align = alignOf(header.column);
-    if (!(props.enableSorting ?? true) || !header.column.getCanSort()) {
+    if (!sortingEnabled() || !header.column.getCanSort()) {
       // The th already carries alignClass; the block span makes text-align resolve.
       return <span class="block truncate whitespace-nowrap">{content}</span>;
     }

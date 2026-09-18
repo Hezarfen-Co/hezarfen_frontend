@@ -170,3 +170,26 @@ test("a search that matches nothing says so and clears back to the list", () => 
   fireEvent.click(within(screen.getByRole("table")).getByRole("button", { name: /Clear search|Aramayı temizle/ }));
   expect(screen.getByText("Ada")).toBeTruthy();
 });
+
+test("a server-paged table offers no header sort, since it could only sort one page", () => {
+  const sortable: ColumnDef<Row>[] = [{ accessorKey: "name", header: "Name" }];
+  const { unmount } = render(() => (
+    <PreferencesProvider>
+      <DataTable columns={sortable} data={[{ name: "Ada" }]} enableColumnVisibility={false} />
+    </PreferencesProvider>
+  ));
+  expect(screen.getByRole("button", { name: /Name/ })).toBeTruthy();
+  unmount();
+
+  render(() => (
+    <PreferencesProvider>
+      <DataTable
+        columns={sortable}
+        data={[{ name: "Ada" }]}
+        enableColumnVisibility={false}
+        manualPagination={{ pageIndex: 0, pageSize: 10, total: 40, onPageChange: () => {} }}
+      />
+    </PreferencesProvider>
+  ));
+  expect(screen.queryByRole("button", { name: /^Name/ })).toBeNull();
+});
