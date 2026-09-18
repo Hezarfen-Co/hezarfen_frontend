@@ -1,5 +1,5 @@
 import { For, Show, Suspense, createEffect, createMemo, createSignal, type Component } from "solid-js";
-import { createResource } from "@/lib/create-resource";
+import { createBoardResources } from "@/lib/board-resources";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import type { Role } from "@/api/client";
@@ -19,6 +19,7 @@ import { getMyAttendance, getMyCourses, getMyMarks, getUserAttendance } from "@/
 import { getTime } from "@/api/time/getTime";
 import { getUsers } from "@/api/users";
 import { RouteGuard } from "@/components/layout/route-guard";
+import { Button } from "@/components/ui/button";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -118,6 +119,10 @@ export default function DashboardPage() {
 }
 
 function DashboardContent() {
+  // Every panel reads its own source; one failed request must not take the
+  // others down with it (see createBoardResources).
+  const board = createBoardResources();
+  const createResource = board.createResource;
   const auth = useAuth();
   const t = useT();
   const navigate = useNavigate();
@@ -142,7 +147,7 @@ function DashboardContent() {
     () => role() === "parent" || !on("courses") ? null : role(),
     (currentRole) => quiet(currentRole === "student" ? getMyCourses() : getCourses()),
   );
-  const courseCount = () => (courses()?.items ?? []).filter((course) => course.kind === "course").length;
+  const courseCount = () => (courses.error ? "—" : String((courses()?.items ?? []).filter((course) => course.kind === "course").length));
   // `/events` has no role gate — a parent-teacher conference is a real PAR-01
   // "Yaklaşan" item, so parent reads this too (unlike `exams`/`homework`
   // below, which really are course-scoped and out of a parent's reach).
@@ -397,37 +402,40 @@ function DashboardContent() {
     return total ? Math.round((present / total) * 100) : null;
   });
 
+  /** A stat over a list total; a source that failed shows "—", never a made-up 0. */
+  const countOf = (source: { (): { total: number } | null | undefined; error: unknown }) =>
+    source.error ? "—" : String(source()?.total ?? 0);
   const allStats = createMemo<StatCardData[]>(() => {
     const r = role();
     if (r === "student") {
       return [
-        { labelKey: "dashboard.stats.courses", module: "courses", value: String(courseCount()), Icon: IconBook },
-        { labelKey: "dashboard.stats.exams", module: "exams", value: String(exams()?.total ?? 0), Icon: IconExam },
+        { labelKey: "dashboard.stats.courses", module: "courses", value: courseCount(), Icon: IconBook },
+        { labelKey: "dashboard.stats.exams", module: "exams", value: countOf(exams), Icon: IconExam },
         { labelKey: "dashboard.stats.average", module: "marks", value: marks()?.overall_average == null ? "—" : marks()!.overall_average!.toFixed(1), Icon: IconChart },
         { labelKey: "dashboard.stats.attendance", module: "attendance", value: attendanceRate() == null ? "—" : `${attendanceRate()}%`, Icon: IconClipboardCheck },
       ];
     }
     if (r === "teacher") {
       return [
-        { labelKey: "dashboard.stats.courses", module: "courses", value: String(courseCount()), Icon: IconBook },
+        { labelKey: "dashboard.stats.courses", module: "courses", value: courseCount(), Icon: IconBook },
         { labelKey: "dashboard.stats.students", module: "courses", value: teacherStudentCount() == null ? "—" : String(teacherStudentCount()), Icon: IconUsers },
-        { labelKey: "dashboard.stats.exams", module: "exams", value: String(exams()?.total ?? 0), Icon: IconExam },
-        { labelKey: "dashboard.stats.homework", module: "homework", value: String(homework()?.total ?? 0), Icon: IconHomework },
+        { labelKey: "dashboard.stats.exams", module: "exams", value: countOf(exams), Icon: IconExam },
+        { labelKey: "dashboard.stats.homework", module: "homework", value: countOf(homework), Icon: IconHomework },
       ];
     }
     if (r === "parent") {
       return [
-        { labelKey: "dashboard.stats.children", value: String(children()?.total ?? 0), Icon: IconUsers },
-        { labelKey: "dashboard.stats.appointments", module: "appointments", value: String(appointments()?.total ?? 0), Icon: IconCalendarDays },
-        { labelKey: "dashboard.stats.meals", module: "meals", value: String(menus()?.total ?? 0), Icon: IconUtensils },
+        { labelKey: "dashboard.stats.children", value: countOf(children), Icon: IconUsers },
+        { labelKey: "dashboard.stats.appointments", module: "appointments", value: countOf(appointments), Icon: IconCalendarDays },
+        { labelKey: "dashboard.stats.meals", module: "meals", value: countOf(menus), Icon: IconUtensils },
         { labelKey: "dashboard.stats.childAttendance", module: "attendance", value: childAttendanceBreakdown()?.rate == null ? "—" : `${childAttendanceBreakdown()!.rate}%`, Icon: IconClipboardCheck },
       ];
     }
     return [
-      { labelKey: "dashboard.stats.courses", module: "courses", value: String(courseCount()), Icon: IconBook },
-      { labelKey: "dashboard.stats.exams", module: "exams", value: String(exams()?.total ?? 0), Icon: IconExam },
-      { labelKey: "dashboard.stats.events", module: "events", value: String(events()?.total ?? 0), Icon: IconCalendarDays },
-      { labelKey: "dashboard.stats.meals", module: "meals", value: String(menus()?.total ?? 0), Icon: IconUtensils },
+      { labelKey: "dashboard.stats.courses", module: "courses", value: courseCount(), Icon: IconBook },
+      { labelKey: "dashboard.stats.exams", module: "exams", value: countOf(exams), Icon: IconExam },
+      { labelKey: "dashboard.stats.events", module: "events", value: countOf(events), Icon: IconCalendarDays },
+      { labelKey: "dashboard.stats.meals", module: "meals", value: countOf(menus), Icon: IconUtensils },
     ];
   });
   const stats = () => allStats().filter((stat) => !stat.module || on(stat.module));
@@ -716,7 +724,12 @@ function DashboardContent() {
 
         <Suspense fallback={<PageSpinner />}>
           <Show when={error()}>
-            <p class="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error()}</p>
+            <div role="alert" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              <span class="min-w-0 flex-1">{t("dashboard.partialError")} {error()}</span>
+              <Button type="button" size="sm" variant="outline" class="shrink-0 border-destructive/40" onClick={() => board.retryFailed()}>
+                {t("common.tryAgain")}
+              </Button>
+            </div>
           </Show>
 
           <section class="space-y-3" aria-labelledby="highlights-heading">

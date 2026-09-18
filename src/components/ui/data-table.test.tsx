@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@solidjs/testing-library";
+import { fireEvent, render, screen, within } from "@solidjs/testing-library";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { DataTable } from "@/components/ui/data-table";
 import { DataSection } from "@/components/ui/data-section";
@@ -148,4 +148,25 @@ test("the header action toolbar of every shared host can shrink below its max-co
     expect(toolbar.classList).toContain("min-w-0");
     expect(toolbar.classList).not.toContain("shrink-0");
   }
+});
+
+test("a search that matches nothing says so and clears back to the list", () => {
+  render(() => (
+    <PreferencesProvider>
+      <DataTable
+        columns={columns}
+        data={[{ name: "Ada" }]}
+        empty="No people yet."
+        enableColumnVisibility={false}
+        searchPredicate={(row, query) => row.name.toLowerCase().includes(query.toLowerCase())}
+      />
+    </PreferencesProvider>
+  ));
+
+  fireEvent.input(screen.getByRole("textbox"), { target: { value: "zzz" } });
+  expect(screen.queryByText("No people yet.")).toBeNull();
+  expect(screen.getByText(/Nothing matches|eşleşen kayıt yok/)).toBeTruthy();
+
+  fireEvent.click(within(screen.getByRole("table")).getByRole("button", { name: /Clear search|Aramayı temizle/ }));
+  expect(screen.getByText("Ada")).toBeTruthy();
 });

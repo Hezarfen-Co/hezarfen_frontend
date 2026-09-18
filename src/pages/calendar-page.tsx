@@ -1,5 +1,5 @@
 import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
-import { createResource } from "@/lib/create-resource";
+import { createBoardResources } from "@/lib/board-resources";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import { getHomework } from "@/api/homework";
@@ -149,14 +149,17 @@ function CalendarContent() {
   const [selected, setSelected] = createSignal(dateKey(nowDate()));
   const [view, setView] = createSignal<CalendarView>("month");
 
-  const [events] = createResource(async () => (await getEvents({ limit: 100 })).items, { initialValue: [] });
-  const [exams] = createResource(async () => (await getExams({ limit: 100 })).items, { initialValue: [] });
-  const [appointments] = createResource(async () => (await getAppointments({ limit: 100 })).items, { initialValue: [] });
-  const [homework] = createResource(async () => (await getHomework({ limit: 100 })).items, { initialValue: [] });
+  // Each feed stands alone: a failed one reads as empty and is named in the
+  // notice above the grid, instead of blanking the whole calendar.
+  const board = createBoardResources();
+  const [events] = board.createResource(async () => (await getEvents({ limit: 100 })).items);
+  const [exams] = board.createResource(async () => (await getExams({ limit: 100 })).items);
+  const [appointments] = board.createResource(async () => (await getAppointments({ limit: 100 })).items);
+  const [homework] = board.createResource(async () => (await getHomework({ limit: 100 })).items);
 
   // Lessons and study/club meetings both come from course sessions; the course's
   // own `kind` is what separates them.
-  const [sessions] = createResource(
+  const [sessions] = board.createResource(
     () => auth.user()?.role ?? null,
     async (role) => {
       // Sessions hang off the instance (şube × ders) now; the catalog course is
@@ -181,14 +184,22 @@ function CalendarContent() {
       );
       return pages.flat();
     },
-    { initialValue: [] },
   );
+  const feeds = [
+    { resource: sessions, labelKey: "calendar.lessons" },
+    { resource: exams, labelKey: "calendar.exams" },
+    { resource: homework, labelKey: "calendar.homework" },
+    { resource: events, labelKey: "calendar.events" },
+    { resource: appointments, labelKey: "calendar.appointments" },
+  ] as const;
+  const loadingFeeds = () => feeds.some((feed) => feed.resource.loading);
+  const failedFeeds = () => feeds.filter((feed) => feed.resource.error).map((feed) => t(feed.labelKey));
 
   const counterpart = (a: Appointment) => appointmentCounterpart(a, auth.user()?.id);
 
   const items = createMemo<CalendarItem[]>(() => {
     const rows: CalendarItem[] = [];
-    for (const { session, course } of sessions()) {
+    for (const { session, course } of sessions() ?? []) {
       rows.push({
         id: session.id,
         kind: course.kind === "course" ? "lesson" : "study",
@@ -198,18 +209,18 @@ function CalendarContent() {
         href: `/courses/${course.id}`,
       });
     }
-    for (const exam of exams()) {
+    for (const exam of exams() ?? []) {
       if (!exam.starts_at || exam.draft) continue;
       rows.push({ id: exam.id, kind: "exam", title: exam.title, at: exam.starts_at, endsAt: exam.ends_at, href: `/exams/${exam.id}` });
     }
-    for (const hw of homework()) {
+    for (const hw of homework() ?? []) {
       rows.push({ id: hw.id, kind: "homework", title: hw.title, at: hw.due_at, endsAt: null, href: `/homework/${hw.id}` });
     }
-    for (const event of events()) {
+    for (const event of events() ?? []) {
       if (!event.starts_at) continue;
       rows.push({ id: event.id, kind: "event", title: event.title, at: event.starts_at, endsAt: event.ends_at, href: `/events/${event.id}` });
     }
-    for (const appointment of appointments()) {
+    for (const appointment of appointments() ?? []) {
       if (!appointment.starts_at || (appointment.status !== "pending" && appointment.status !== "approved")) continue;
       rows.push({
         id: appointment.id,
@@ -333,11 +344,11 @@ function CalendarContent() {
           <div class="min-w-0">
             <h1 class="truncate text-lg font-semibold tracking-tight text-foreground sm:text-xl">{t("calendar.title")}</h1>
             <div class="mt-1.5 flex items-center gap-1 sm:gap-2">
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={goPrev}>
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={goPrev} aria-label={t("common.prev")}>
                 <IconChevronLeft class="h-4 w-4" />
               </Button>
               <span class="truncate text-sm font-semibold tracking-tight sm:text-base">{rangeLabel()}</span>
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={goNext}>
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={goNext} aria-label={t("common.next")}>
                 <IconChevronRight class="h-4 w-4" />
               </Button>
             </div>
@@ -380,6 +391,17 @@ function CalendarContent() {
           </For>
         </div>
 
+        <Show when={failedFeeds().length > 0}>
+          <div role="alert" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <span class="min-w-0 flex-1">{t("calendar.feedsFailed", { feeds: failedFeeds().join(", ") })}</span>
+            <Button type="button" size="sm" variant="outline" class="shrink-0 border-destructive/40" onClick={() => board.retryFailed()}>
+              {t("common.tryAgain")}
+            </Button>
+          </div>
+        </Show>
+        <Show when={loadingFeeds()}>
+          <p role="status" class="text-xs text-muted-foreground">{t("common.loading")}</p>
+        </Show>
         <Suspense fallback={<PageSpinner />}>
           <div class={cn("grid min-h-0 flex-1 gap-4", view() === "month" && "xl:grid-cols-[minmax(0,1fr)_20rem]")}>
             <Show when={view() === "week"}>

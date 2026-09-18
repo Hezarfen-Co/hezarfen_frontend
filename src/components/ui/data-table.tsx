@@ -332,10 +332,24 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
               fallback={
                 <TableRow>
                   <TableCell colSpan={colSpan()} class="py-8 text-center text-muted-foreground">
-                    <div class="flex flex-col items-center gap-3">
-                      <Illustration name={searchValue().trim() ? "no-results" : (props.emptyIllustration ?? "empty")} class="h-20 w-32" />
-                      <span>{props.empty ?? t("common.noResults")}</span>
-                    </div>
+                    {/* A search that matches nothing is not an empty list: say so and offer the way back. */}
+                    <Show
+                      when={searchFieldValue().trim()}
+                      fallback={
+                        <div class="flex flex-col items-center gap-3">
+                          <Illustration name={props.emptyIllustration ?? "empty"} class="h-20 w-32" />
+                          <span>{props.empty ?? t("common.noResults")}</span>
+                        </div>
+                      }
+                    >
+                      <div class="flex flex-col items-center gap-3">
+                        <Illustration name="no-results" class="h-20 w-32" />
+                        <span>{t("common.noMatches")}</span>
+                        <Button type="button" size="sm" variant="outline" onClick={() => handleSearch("")}>
+                          {t("common.clearSearch")}
+                        </Button>
+                      </div>
+                    </Show>
                   </TableCell>
                 </TableRow>
               }

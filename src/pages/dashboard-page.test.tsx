@@ -1,15 +1,16 @@
-import { cleanup, fireEvent, render, screen } from "@solidjs/testing-library";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@solidjs/testing-library";
 import type { JSX } from "solid-js";
 import DashboardPage from "@/pages/dashboard-page";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
-const { navigate, authUser, schoolModules, calls, refuseExams } = vi.hoisted(() => ({
+const { navigate, authUser, schoolModules, calls, refuseExams, failExams } = vi.hoisted(() => ({
   navigate: vi.fn(),
   authUser: { authenticated: true, role: "student" },
   // null = module state unknown (fail open, everything shown).
   schoolModules: { enabled: null as string[] | null },
   calls: [] as string[],
   refuseExams: { on: false },
+  failExams: { times: 0 },
 }));
 
 vi.mock("@tanstack/solid-router", () => ({
@@ -100,6 +101,11 @@ vi.mock("@/api/exams", async () => {
   getExams: async () => {
     // A builder switched exams off after the modules list was read.
     if (refuseExams.on) throw new ApiError(403, "forbidden", null, "exams");
+    // A plain server failure, not a module refusal.
+    if (failExams.times > 0) {
+      failExams.times -= 1;
+      throw new Error("exams are down");
+    }
     return page([
     {
       id: "exam-1",
@@ -193,6 +199,7 @@ afterEach(() => {
   schoolModules.enabled = null;
   calls.length = 0;
   refuseExams.on = false;
+  failExams.times = 0;
 });
 
 function renderDashboard(role: string) {
@@ -301,4 +308,18 @@ test("a module refusal mid-session reads as no data instead of breaking the boar
 
   expect(await screen.findByRole("heading", { name: "Upcoming deadlines" })).toBeTruthy();
   expect(screen.queryByText(/permission|switched off/i)).toBeNull();
+});
+
+test("a failed source leaves the other panels up and can be retried", async () => {
+  failExams.times = 1;
+  renderDashboard("manager");
+
+  const notice = await screen.findByRole("alert");
+  expect(notice.textContent).toMatch(/could not load|yüklenemedi/);
+  expect(screen.getByRole("heading", { name: "Upcoming deadlines" })).toBeTruthy();
+  expect(await screen.findByText("Event deadline")).toBeTruthy();
+
+  fireEvent.click(within(notice).getByRole("button"));
+  expect(await screen.findByText("Exam deadline")).toBeTruthy();
+  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
 });

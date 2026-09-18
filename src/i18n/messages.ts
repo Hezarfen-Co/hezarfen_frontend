@@ -606,6 +606,7 @@ export type MessageKey =
   | "common.next"
   | "common.pageOf"
   | "common.noResults"
+  | "common.noMatches"
   | "common.creator"
   | "common.searchPlaceholder"
   | "common.all"
@@ -615,6 +616,7 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "dashboard.partialError"
   | "common.breadcrumb"
   | "common.truncatedNotice"
   | "common.createItem"
@@ -1978,6 +1980,7 @@ export type MessageKey =
   | "messages.emptyTrashSummary"
   | "messages.emptyTrashPageSummary"
   | "calendar.title"
+  | "calendar.feedsFailed"
   | "calendar.today"
   | "calendar.noEvents"
   | "calendar.events"
@@ -2738,6 +2741,7 @@ const en: Dict = {
   "common.next": "Next",
   "common.pageOf": "{page} / {total}",
   "common.noResults": "No results.",
+  "common.noMatches": "Nothing matches your search.",
   "common.creator": "Created by",
   "common.searchPlaceholder": "Search…",
   "common.all": "All",
@@ -2747,6 +2751,7 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "dashboard.partialError": "Some panels could not load and show no data.",
   "common.breadcrumb": "Breadcrumb",
   "common.truncatedNotice": "Showing the first {shown} of {total} records.",
   "common.createItem": "Create new {item}",
@@ -3195,6 +3200,7 @@ const en: Dict = {
   "events.helpBody":
     "Teachers and managers record attendance for students only. Managers can edit any event.",
   "calendar.title": "Calendar",
+  "calendar.feedsFailed": "Could not load: {feeds}. The calendar is missing those items.",
   "calendar.today": "Today",
   "calendar.noEvents": "Nothing scheduled on this day.",
   "calendar.events": "Events",
@@ -4872,6 +4878,7 @@ const tr: Dict = {
   "common.next": "Sonraki",
   "common.pageOf": "{page} / {total}",
   "common.noResults": "Sonuç yok.",
+  "common.noMatches": "Aramanızla eşleşen kayıt yok.",
   "common.creator": "Oluşturan",
   "common.searchPlaceholder": "Ara…",
   "common.all": "Tümü",
@@ -4881,6 +4888,7 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "dashboard.partialError": "Bazı bölümler yüklenemedi ve veri göstermiyor.",
   "common.breadcrumb": "Sayfa konumu",
   "common.truncatedNotice": "{total} kayıttan ilk {shown} tanesi gösteriliyor.",
   "common.createItem": "Yeni {item} oluştur",
@@ -5329,6 +5337,7 @@ const tr: Dict = {
   "events.helpBody":
     "Öğretmenler ve yöneticiler yalnız öğrenciler için yoklama kaydeder. Yöneticiler her etkinliği düzenleyebilir.",
   "calendar.title": "Takvim",
+  "calendar.feedsFailed": "Yüklenemedi: {feeds}. Takvimde bu kayıtlar eksik.",
   "calendar.today": "Bugün",
   "calendar.noEvents": "Bu güne ait bir şey yok.",
   "calendar.events": "Etkinlikler",
