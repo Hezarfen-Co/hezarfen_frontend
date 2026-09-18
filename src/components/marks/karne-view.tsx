@@ -1,7 +1,8 @@
-import { For, Show } from "solid-js";
-import type { KarneReport, Term } from "@/api/client";
+import { For, Show, createMemo } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
+import type { KarneInstance, KarneReport, Term } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
-import { DataTableEmpty } from "@/components/ui/data-table";
+import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
 import { Select } from "@/components/ui/select";
 import { useT } from "@/stores/preferences-context";
 
@@ -25,6 +26,26 @@ export function KarneView(props: {
     if (verdict === "kaldi") return t("karne.failed");
     return verdict ?? "—";
   };
+
+  const columns = createMemo<ColumnDef<KarneInstance>[]>(() => [
+    { accessorKey: "course", header: t("nav.courses"), meta: { cellClass: "font-medium" } },
+    { accessorKey: "ders_saati", header: t("instances.dersSaati"), meta: { cellClass: "mono tabular-nums text-muted-foreground" } },
+    {
+      id: "average",
+      accessorFn: (line) => formatAverage(line.average),
+      header: t("marks.courseAvg"),
+      meta: { cellClass: "mono font-semibold tabular-nums" },
+    },
+    {
+      id: "band",
+      header: t("karne.band"),
+      cell: (cell) => (
+        <Show when={cell.row.original.band} fallback="—">
+          {(band) => <Badge variant="outline" class="rounded-full">{band()}</Badge>}
+        </Show>
+      ),
+    },
+  ]);
 
   return (
     <div class="space-y-4">
@@ -59,34 +80,14 @@ export function KarneView(props: {
         when={props.report.instances.length > 0}
         fallback={<DataTableEmpty class="rounded-lg border border-border bg-card py-10">{t("karne.empty")}</DataTableEmpty>}
       >
-        <div class="overflow-x-auto rounded-lg border border-border bg-card">
-          <table class="w-full text-sm">
-            <thead class="border-b border-border/60 text-left text-xs text-muted-foreground">
-              <tr>
-                <th class="p-3 font-medium">{t("nav.courses")}</th>
-                <th class="p-3 font-medium">{t("instances.dersSaati")}</th>
-                <th class="p-3 font-medium">{t("marks.courseAvg")}</th>
-                <th class="p-3 font-medium">{t("karne.band")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <For each={props.report.instances}>
-                {(line) => (
-                  <tr class="border-b border-border/60 last:border-0">
-                    <td class="min-w-0 p-3 font-medium">{line.course}</td>
-                    <td class="mono p-3 tabular-nums text-muted-foreground">{line.ders_saati}</td>
-                    <td class="mono p-3 font-semibold tabular-nums">{formatAverage(line.average)}</td>
-                    <td class="p-3">
-                      <Show when={line.band} fallback="—">
-                        {(band) => <Badge variant="outline" class="rounded-full">{band()}</Badge>}
-                      </Show>
-                    </td>
-                  </tr>
-                )}
-              </For>
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={columns()}
+          data={props.report.instances}
+          enablePagination={false}
+          enableColumnVisibility={false}
+          enableSorting={false}
+          tableClass="min-w-[28rem]"
+        />
       </Show>
     </div>
   );

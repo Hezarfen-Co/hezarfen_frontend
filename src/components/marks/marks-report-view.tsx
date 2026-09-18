@@ -27,6 +27,42 @@ function scoreWidth(mark: number | null): string {
 
 export function MarksReportView(props: { report: MarksReport; compact?: boolean }) {
   const t = useT();
+  type CourseBlock = MarksReport["courses"][number];
+  const courseColumns = createMemo<ColumnDef<CourseBlock>[]>(() => [
+    {
+      id: "course",
+      header: t("nav.courses"),
+      meta: { headerClass: "w-[42%]" },
+      cell: (cell) => (
+        <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} class="block truncate font-medium hover:text-primary-text hover:underline">
+          {cell.row.original.course.title}
+        </Link>
+      ),
+    },
+    {
+      id: "instance",
+      header: t("instances.title"),
+      meta: { headerClass: "w-[28%]", cellClass: "text-muted-foreground" },
+      cell: (cell) => (
+        <Link to="/instances/$id" params={{ id: cell.row.original.instance }} class="block truncate hover:text-primary-text hover:underline">
+          {t("instances.open")}
+        </Link>
+      ),
+    },
+    {
+      id: "average",
+      header: t("marks.courseAvg"),
+      meta: { headerClass: "w-[30%]" },
+      cell: (cell) => (
+        <div class="flex items-center gap-2">
+          <div class="h-1.5 w-12 min-w-8 shrink overflow-hidden rounded-full bg-muted">
+            <div class="h-full rounded-full bg-primary" style={{ width: scoreWidth(cell.row.original.average) }} />
+          </div>
+          <span class="mono shrink-0 text-xs font-semibold tabular-nums">{markWithGrade(cell.row.original.average, cell.row.original.average_grade)}</span>
+        </div>
+      ),
+    },
+  ]);
   const [settings] = createResource(() => getSettings());
   const compact = () => props.compact === true;
   const resultCount = createMemo(() => props.report.courses.reduce((total, course) => total + course.results.length, 0));
@@ -111,48 +147,14 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
         </Tabs>
 
         <Show when={tab() === "general"}>
-          <div class="overflow-x-auto rounded-lg border border-border bg-card shadow-xs">
-            <table class="w-full min-w-[28rem] table-fixed text-sm">
-              <colgroup>
-                <col class="w-[42%]" />
-                <col class="w-[28%]" />
-                <col class="w-[30%]" />
-              </colgroup>
-              <thead>
-                <tr class="border-b border-border text-left text-xs text-muted-foreground">
-                  <th class="p-3 font-medium">{t("nav.courses")}</th>
-                  <th class="p-3 font-medium">{t("appointments.teacher")}</th>
-                  <th class="p-3 font-medium">{t("marks.courseAvg")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <For each={props.report.courses}>
-                  {(block) => (
-                    <tr class="border-b border-border/60 last:border-0">
-                      <td class="min-w-0 p-3">
-                        <Link to="/courses/$id" params={{ id: block.course.id }} class="block truncate font-medium hover:text-primary-text hover:underline">
-                          {block.course.title}
-                        </Link>
-                      </td>
-                      <td class="min-w-0 p-3 text-muted-foreground">
-                        <Link to="/instances/$id" params={{ id: block.instance }} class="block truncate hover:text-primary-text hover:underline">
-                          {t("instances.open")}
-                        </Link>
-                      </td>
-                      <td class="min-w-0 p-3">
-                        <div class="flex items-center gap-2">
-                          <div class="h-1.5 w-12 min-w-8 shrink overflow-hidden rounded-full bg-muted">
-                            <div class="h-full rounded-full bg-primary" style={{ width: scoreWidth(block.average) }} />
-                          </div>
-                          <span class="mono shrink-0 text-xs font-semibold tabular-nums">{markWithGrade(block.average, block.average_grade)}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </For>
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={courseColumns()}
+            data={props.report.courses}
+            enablePagination={false}
+            enableColumnVisibility={false}
+            enableSorting={false}
+            tableClass="min-w-[28rem]"
+          />
         </Show>
 
         <Show when={tab() === "byCourse"}>
