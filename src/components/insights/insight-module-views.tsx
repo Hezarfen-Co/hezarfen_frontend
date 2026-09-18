@@ -341,6 +341,12 @@ function MarksCourseCard(props: { id: string; statRaw: unknown; courseTitle: Cou
               />
             </Show>
           </dl>
+          {/* An available trend can still withhold its slope (a series shorter
+              than the regression window). The row would vanish silently; the
+              service's reason is rendered in its place instead. */}
+          <Show when={num(trend().slope_per_30d) === null && str(trend().reason)}>
+            {(reason) => <NoteLine label={detailText("marks.trendSlope")}>{reason()}</NoteLine>}
+          </Show>
         </Show>
       </div>
     </div>
