@@ -448,7 +448,10 @@ export type BlueprintSkip = {
  reason: string;
 };
 
-export type BlueprintResult = { blueprint: ClassBlueprint; skipped: BlueprintSkip[] };
+// `matched` is how many sections the pump reached. 0 means no section carries
+// the grade label — the template was saved and stocked nothing, which an empty
+// `skipped` alone cannot tell apart from "every section took the whole list".
+export type BlueprintResult = { blueprint: ClassBlueprint; matched: number; skipped: BlueprintSkip[] };
 
 export type BlueprintApplyResult = { skipped: BlueprintSkip[] };
 

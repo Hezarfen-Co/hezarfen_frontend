@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteClassBlueprintByGrade, getClassBlueprints, getClassBlueprintStatus } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { getLimits } from "@/api/limits";
-import { formatApiError, type BlueprintSectionStatus, type BlueprintSkip, type BlueprintStatus, type ClassBlueprint } from "@/api/client";
+import { formatApiError, type BlueprintResult, type BlueprintSectionStatus, type BlueprintSkip, type BlueprintStatus, type ClassBlueprint } from "@/api/client";
 import { BlueprintPanel } from "@/components/classes/blueprint-panel";
 import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-report";
 import { Alert } from "@/components/ui/alert";
@@ -31,6 +31,7 @@ export function BlueprintsTab(props: {
   const [editing, setEditing] = createSignal<ClassBlueprint | null>(null);
   const [deleting, setDeleting] = createSignal<ClassBlueprint | null>(null);
   const [skipped, setSkipped] = createSignal<BlueprintSkip[]>([]);
+  const [unmatchedGrade, setUnmatchedGrade] = createSignal<string | null>(null);
   const [reportOpen, setReportOpen] = createSignal(false);
   const [status, setStatus] = createSignal<BlueprintStatus | null>(null);
 
@@ -107,12 +108,19 @@ export function BlueprintsTab(props: {
   // A saved blueprint is not an error even when some pairs did not attach: the
   // template was written either way, so the toast fires and the shortfall is a
   // separate, dismissible report.
-  const handleSaved = async (rows: BlueprintSkip[]) => {
+  const handleSaved = async (result: BlueprintResult) => {
     setPanelOpen(false);
     setEditing(null);
     await refetch();
-    setSkipped(rows);
-    setFlash(t("classBlueprints.saved"));
+    setSkipped(result.skipped);
+    // A grade label nobody carries is saved just the same, so it must not
+    // read as "applied" — that is the one outcome the admin needs to fix.
+    if (result.matched === 0) {
+      setUnmatchedGrade(result.blueprint.grade);
+      return;
+    }
+    setUnmatchedGrade(null);
+    setFlash(t("classBlueprints.savedMatched", { count: result.matched }));
   };
 
   const remove = async () => {
@@ -159,6 +167,13 @@ export function BlueprintsTab(props: {
       </Show>
       <Show when={error()}>
         <Alert variant="destructive">{error()}</Alert>
+      </Show>
+      <Show when={unmatchedGrade()}>
+        {(grade) => (
+          <Alert class="border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+            {t("classBlueprints.noMatch", { grade: grade() })}
+          </Alert>
+        )}
       </Show>
       <Show when={skipped().length > 0}>
         <Alert class="flex flex-wrap items-center justify-between gap-3 border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
@@ -207,7 +222,7 @@ export function BlueprintsTab(props: {
         courses={courses.latest ?? []}
         maxCourses={limits.latest?.course.max_class_courses ?? 50}
         maxGradeLen={limits.latest?.course.max_class_grade_len ?? 20}
-        onSaved={(result) => void handleSaved(result.skipped)}
+        onSaved={(result) => void handleSaved(result)}
       />
 
       <BlueprintSkippedReport

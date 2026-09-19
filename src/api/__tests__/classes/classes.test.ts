@@ -144,7 +144,7 @@ describe("classes API", () => {
   });
 
   it("postClassBlueprint POSTs /classes/blueprints with the body", async () => {
-    mockFetchSuccess({ blueprint: { grade: "9", courses: [], creator: {} }, skipped: [] });
+    mockFetchSuccess({ blueprint: { grade: "9", courses: [], creator: {} }, matched: 2, skipped: [] });
     const body = { grade: "9", course_ids: ["co1", "co2"] };
     await postClassBlueprint(body);
     const [url, init] = lastFetchCall();
@@ -168,7 +168,7 @@ describe("classes API", () => {
   });
 
   it("patchClassBlueprintByGrade PATCHes the whole course set", async () => {
-    mockFetchSuccess({ blueprint: { grade: "9", courses: [], creator: {} }, skipped: [] });
+    mockFetchSuccess({ blueprint: { grade: "9", courses: [], creator: {} }, matched: 2, skipped: [] });
     const body = { course_ids: ["co1"] };
     await patchClassBlueprintByGrade("9", body);
     const [url, init] = lastFetchCall();
