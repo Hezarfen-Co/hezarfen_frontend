@@ -60,13 +60,25 @@ type Bridge = {
   queue: (string | Uint8Array)[];
 };
 
+// Sent on every file this server answers itself (the SPA shell and its
+// assets). Framing is limited to our own origin: the app embeds same-origin
+// file previews, but no other site may frame it (clickjacking). HSTS is only
+// honoured over HTTPS, i.e. behind the TLS-terminating proxy in production.
+const SECURITY_HEADERS: Record<string, string> = {
+  "Content-Security-Policy": "frame-ancestors 'self'; object-src 'none'; base-uri 'self'",
+  "X-Frame-Options": "SAMEORIGIN",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Strict-Transport-Security": "max-age=31536000",
+};
+
 async function serveStatic(pathname: string): Promise<Response> {
   // No path traversal out of dist.
-  if (pathname.includes("..")) return new Response("bad request", { status: 400 });
+  if (pathname.includes("..")) return new Response("bad request", { status: 400, headers: SECURITY_HEADERS });
   const rel = pathname === "/" ? "/index.html" : pathname;
   const file = Bun.file(DIST + rel);
   if (await file.exists()) {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { ...SECURITY_HEADERS };
     // Vite emits content-hashed files under /assets — safe to cache forever.
     if (rel.startsWith("/assets/")) headers["Cache-Control"] = "public, max-age=31536000, immutable";
     else if (rel === "/index.html") headers["Cache-Control"] = "no-store";
@@ -75,9 +87,9 @@ async function serveStatic(pathname: string): Promise<Response> {
   // A missing hashed asset must stay a 404. Returning index.html here makes
   // browsers report a misleading "failed to fetch dynamically imported
   // module" because they receive HTML where JavaScript was requested.
-  if (rel.startsWith("/assets/")) return new Response("asset not found", { status: 404 });
+  if (rel.startsWith("/assets/")) return new Response("asset not found", { status: 404, headers: SECURITY_HEADERS });
   // SPA fallback: unknown non-asset paths are client routes, serve the shell.
-  return new Response(Bun.file(`${DIST}/index.html`), { headers: { "Cache-Control": "no-store" } });
+  return new Response(Bun.file(`${DIST}/index.html`), { headers: { ...SECURITY_HEADERS, "Cache-Control": "no-store" } });
 }
 
 async function proxyHttp(req: Request, url: URL): Promise<Response> {

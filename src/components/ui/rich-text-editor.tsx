@@ -1,5 +1,6 @@
 import { createSignal, createEffect } from "solid-js";
 import { cn } from "@/lib/cn";
+import { sanitizeRichText } from "@/lib/rich-text";
 import { useT } from "@/stores/preferences-context";
 
 interface RichTextEditorProps {
@@ -22,7 +23,9 @@ export function RichTextEditor(props: RichTextEditorProps) {
       if (!props.value) {
         editorRef.innerHTML = "";
       } else if (editorRef.innerHTML !== props.value) {
-        editorRef.innerHTML = props.value;
+        // The value can come back from the server (a saved homework answer),
+        // so it goes through the same sanitizer as every other stored HTML.
+        editorRef.innerHTML = sanitizeRichText(props.value);
       }
     }
   });
