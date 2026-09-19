@@ -18,6 +18,8 @@ const ROUTE_MODULES: ReadonlyArray<readonly [prefix: string, module: string]> = 
   ["/students/attendance", "attendance"],
   ["/students/exams", "marks"],
   ["/students/study", "pomodoro"],
+  // Note Studio works on course notes (lists them, runs RAG/podcast over them).
+  ["/ai/studio", "course_notes"],
   ["/question-bank", "bank_questions"],
   ["/appointments", "appointments"],
   ["/whiteboards", "boards"],

@@ -12,6 +12,7 @@ import { NotFoundPage } from "@/components/system/not-found-page";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { AuthProvider } from "@/stores/auth-context";
 import { ModulesProvider } from "@/stores/modules-context";
+import { AttendanceRedirect } from "@/components/layout/attendance-redirect";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
 function lazyRoute(loader: () => Promise<{ default: Component }>): Component {
@@ -272,9 +273,8 @@ const studentPomodoroRoute = createRoute({
 const attendanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/attendance",
-  beforeLoad: () => {
-    throw redirect({ to: "/marks", search: { tab: "attendance" } });
-  },
+  // Role-aware, so it has to wait for the session: see AttendanceRedirect.
+  component: AttendanceRedirect,
 });
 
 const studentAttendanceRoute = createRoute({

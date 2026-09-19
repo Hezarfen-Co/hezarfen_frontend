@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
@@ -37,6 +37,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useAuth } from "@/stores/auth-context";
+import { useModules } from "@/stores/modules-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
 import { cn } from "@/lib/cn";
@@ -46,6 +47,9 @@ const COURSE_KINDS: CourseKind[] = ["course", "study", "club"];
 
 /** One row of the "taught in" list: an instance plus the şube's name. */
 type SectionRow = { instance: Instance | ClassCourse; className: string };
+
+// Literal class names so Tailwind sees every column count the tab strip can take.
+const TAB_GRID_COLS: Record<number, string> = { 1: "sm:grid-cols-1", 2: "sm:grid-cols-2", 3: "sm:grid-cols-3", 4: "sm:grid-cols-4" };
 
 export default function CourseDetailPage() {
   return (
@@ -66,7 +70,26 @@ function CourseDetailContent() {
     return params().id;
   });
 
+  // Subjects, sections and course notes are separately sold modules; a tab for
+  // one the school switched off would only ever answer 403, so it is left out
+  // and the page opens on the first tab still there.
+  const modules = useModules();
+  const tabOn = {
+    subjects: () => modules.isEnabled("subjects"),
+    sections: () => modules.isEnabled("classes"),
+    notes: () => modules.isEnabled("course_notes"),
+  };
   const [courseTab, setCourseTab] = createSignal("subjects");
+  const availableTabs = () => [
+    ...(tabOn.subjects() ? ["subjects"] : []),
+    ...(tabOn.sections() ? ["sections"] : []),
+    ...(tabOn.notes() ? ["notes"] : []),
+    ...(hasMembers() ? ["members"] : []),
+  ];
+  createEffect(() => {
+    const tabs = availableTabs();
+    if (tabs.length > 0 && !tabs.includes(courseTab())) setCourseTab(tabs[0]);
+  });
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
@@ -90,7 +113,7 @@ function CourseDetailContent() {
   // in one call; the office has no course-scoped instance route, so it walks
   // the class list instead (one call per class, capped by the page limit).
   const [sections] = createResource(
-    () => (course() ? { courseId: id(), office: isOffice() } : null),
+    () => (course() && tabOn.sections() ? { courseId: id(), office: isOffice() } : null),
     async (args): Promise<SectionRow[]> => {
       if (!args) return [];
       if (!args.office) {
@@ -429,15 +452,22 @@ function CourseDetailContent() {
                 </Show>
 
                 <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-4">
-                  <TabsList class={cn("w-full justify-start gap-0 overflow-x-auto rounded-lg border-border-line bg-surface-base p-0 shadow-none sm:grid", hasMembers() ? "sm:grid-cols-4" : "sm:grid-cols-3")} aria-label={c().title}>
-                    <TabsTrigger value="subjects" onClick={(event) => { event.preventDefault(); setCourseTab("subjects"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconBook class="h-4 w-4" />{t("subjects.title")}</TabsTrigger>
-                    <TabsTrigger value="sections" onClick={(event) => { event.preventDefault(); setCourseTab("sections"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconSchool class="h-4 w-4" />{t("instances.title")}</TabsTrigger>
-                    <TabsTrigger value="notes" onClick={(event) => { event.preventDefault(); setCourseTab("notes"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Show when={noteCount() != null}><span class="ml-0.5 tabular-nums">{noteCount()}</span></Show></TabsTrigger>
+                  <TabsList class={cn("w-full justify-start gap-0 overflow-x-auto rounded-lg border-border-line bg-surface-base p-0 shadow-none sm:grid", TAB_GRID_COLS[availableTabs().length] ?? "sm:grid-cols-4")} aria-label={c().title}>
+                    <Show when={tabOn.subjects()}>
+                      <TabsTrigger value="subjects" onClick={(event) => { event.preventDefault(); setCourseTab("subjects"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconBook class="h-4 w-4" />{t("subjects.title")}</TabsTrigger>
+                    </Show>
+                    <Show when={tabOn.sections()}>
+                      <TabsTrigger value="sections" onClick={(event) => { event.preventDefault(); setCourseTab("sections"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconSchool class="h-4 w-4" />{t("instances.title")}</TabsTrigger>
+                    </Show>
+                    <Show when={tabOn.notes()}>
+                      <TabsTrigger value="notes" onClick={(event) => { event.preventDefault(); setCourseTab("notes"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Show when={noteCount() != null}><span class="ml-0.5 tabular-nums">{noteCount()}</span></Show></TabsTrigger>
+                    </Show>
                     <Show when={hasMembers()}>
                       <TabsTrigger value="members" onClick={(event) => { event.preventDefault(); setCourseTab("members"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconUsers class="h-4 w-4" />{t("courses.members")}</TabsTrigger>
                     </Show>
                   </TabsList>
 
+                  <Show when={tabOn.subjects()}>
                   <TabsContent value="subjects" forceMount class="space-y-3">
                     <CourseSubjectsPanel
                       courseId={id()}
@@ -446,7 +476,9 @@ function CourseDetailContent() {
                       onCreateOpenChange={setShowSubjectForm}
                     />
                   </TabsContent>
+                  </Show>
 
+                  <Show when={tabOn.sections()}>
                   <TabsContent value="sections" forceMount class="space-y-3">
                     <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
                       <DataToolbar
@@ -474,8 +506,11 @@ function CourseDetailContent() {
                       </Suspense>
                     </div>
                   </TabsContent>
+                  </Show>
 
-                  <TabsContent value="notes" forceMount class="space-y-3" />
+                  <Show when={tabOn.notes()}>
+                    <TabsContent value="notes" forceMount class="space-y-3" />
+                  </Show>
 
                   <Show when={hasMembers()}>
                   <TabsContent value="members" forceMount class="space-y-3">
@@ -498,15 +533,17 @@ function CourseDetailContent() {
                     </TabsContent>
                   </Show>
                 </Tabs>
-                <div class={courseTab() === "notes" ? "" : "hidden"}>
-                  <CourseNotesPanel
-                    courseId={id()}
-                    canManage={canManageCatalog()}
-                    createOpen={showNoteForm()}
-                    onCreateOpenChange={setShowNoteForm}
-                    onCountChange={setNoteCount}
-                  />
-                </div>
+                <Show when={tabOn.notes()}>
+                  <div class={courseTab() === "notes" ? "" : "hidden"}>
+                    <CourseNotesPanel
+                      courseId={id()}
+                      canManage={canManageCatalog()}
+                      createOpen={showNoteForm()}
+                      onCreateOpenChange={setShowNoteForm}
+                      onCountChange={setNoteCount}
+                    />
+                  </div>
+                </Show>
               </div>
             </Show>
           </Show>

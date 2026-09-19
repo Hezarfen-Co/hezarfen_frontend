@@ -79,6 +79,7 @@ const AI_STUDIO_ITEM: NavItem = {
   to: "/ai/studio",
   labelKey: "aiHub.tab.studio",
   Icon: IconWaveform,
+  module: "course_notes",
 };
 
 const AI_STUDY_ITEM: NavItem = {
@@ -101,6 +102,7 @@ const AI_CELEBI_ITEM: NavItem = {
   labelKey: "nav.celebi",
   Icon: IconSparkles,
   action: "celebi",
+  module: "chatbot",
 };
 
 const AI_GROUP: NavGroup = {

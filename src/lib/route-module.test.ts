@@ -6,6 +6,7 @@ describe("routeModule", () => {
     expect(routeModule("/notes/abc")).toBe("notes");
     expect(routeModule("/exam-room/1")).toBe("exams");
     expect(routeModule("/question-bank/9")).toBe("bank_questions");
+    expect(routeModule("/ai/studio")).toBe("course_notes");
   });
 
   it("prefers the longest prefix", () => {
@@ -18,5 +19,8 @@ describe("routeModule", () => {
     expect(routeModule("/calendar")).toBeNull();
     expect(routeModule("/management/students")).toBeNull();
     expect(routeModule("/notebook")).toBeNull();
+    // Study and insights read RAG/insight doors no school module gates.
+    expect(routeModule("/ai/study")).toBeNull();
+    expect(routeModule("/ai/insights")).toBeNull();
   });
 });

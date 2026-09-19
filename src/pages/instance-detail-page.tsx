@@ -45,6 +45,7 @@ import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
+import { useModules } from "@/stores/modules-context";
 import { useT } from "@/stores/preferences-context";
 
 export default function InstanceDetailPage() {
@@ -72,6 +73,25 @@ function InstanceDetailContent() {
   const linkedTab = () => (typeof linkedSearch().tab === "string" ? (linkedSearch().tab as string) : null);
   const linkedRollCall = () => (typeof linkedSearch().rollCall === "string" ? (linkedSearch().rollCall as string) : undefined);
   const [tab, setTab] = createSignal(linkedTab() ?? "exams");
+  // Exams, homework and sessions are separately sold modules; a tab for one the
+  // school switched off would only ever answer 403, so it is left out and the
+  // page falls back to the first tab still there.
+  const modules = useModules();
+  const tabOn = {
+    exams: () => modules.isEnabled("exams"),
+    homework: () => modules.isEnabled("homework"),
+    sessions: () => modules.isEnabled("sessions"),
+  };
+  createEffect(() => {
+    const tabs = [
+      ...(tabOn.exams() ? ["exams"] : []),
+      ...(tabOn.homework() ? ["homework"] : []),
+      ...(tabOn.sessions() ? ["sessions"] : []),
+      "teachers",
+      ...(canManage() ? ["students"] : []),
+    ];
+    if (!tabs.includes(tab())) setTab(tabs[0]);
+  });
   const [instance, { refetch: refetchInstance }] = createResource(id, (instanceId) => getInstanceById(instanceId));
   const [course] = createResource(() => instance()?.course ?? null, (courseId) => getCourseById(courseId));
   const [klass] = createResource(() => instance()?.class ?? null, (classId) => getClassById(classId).catch(() => null));
@@ -89,7 +109,7 @@ function InstanceDetailContent() {
   const canStaff = () => hasMinRole(auth.user()?.role ?? "student", "manager");
 
   const [exams, { refetch: refetchExams }] = createResource(
-    () => id(),
+    () => (tabOn.exams() ? id() : null),
     async (instanceId) => (instanceId ? (await getInstanceExams(instanceId)).items : []),
   );
   const [roster, { refetch: refetchRoster }] = createResource(
@@ -349,15 +369,17 @@ function InstanceDetailContent() {
                     <p class="truncate text-sm font-semibold text-text-default">{inst().enrollment_count}</p>
                   </div>
                 </div>
-                <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
-                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
-                    <IconExam class="h-4 w-4" />
-                  </span>
-                  <div class="min-w-0">
-                    <p class="text-xs font-medium text-text-subtle">{t("courses.exams")}</p>
-                    <p class="truncate text-sm font-semibold text-text-default">{examCount()}</p>
+                <Show when={tabOn.exams()}>
+                  <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
+                      <IconExam class="h-4 w-4" />
+                    </span>
+                    <div class="min-w-0">
+                      <p class="text-xs font-medium text-text-subtle">{t("courses.exams")}</p>
+                      <p class="truncate text-sm font-semibold text-text-default">{examCount()}</p>
+                    </div>
                   </div>
-                </div>
+                </Show>
               </div>
             </div>
 
@@ -518,15 +540,22 @@ function InstanceDetailContent() {
 
             <Tabs value={tab()} onChange={setTab} class="space-y-4">
               <TabsList class="flex w-full justify-start overflow-x-auto sm:grid sm:grid-cols-3 xl:grid-cols-5" aria-label={course.latest?.title ?? ""}>
-                <TabsTrigger value="exams" class="min-w-0"><IconExam class="h-4 w-4" />{t("courses.exams")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{examCount()}</Badge></TabsTrigger>
-                <TabsTrigger value="homework" class="min-w-0"><IconHomework class="h-4 w-4" />{t("homework.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{homeworkCount()}</Badge></TabsTrigger>
-                <TabsTrigger value="sessions" class="min-w-0"><IconCalendarDays class="h-4 w-4" />{t("sessions.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{sessionCount()}</Badge></TabsTrigger>
+                <Show when={tabOn.exams()}>
+                  <TabsTrigger value="exams" class="min-w-0"><IconExam class="h-4 w-4" />{t("courses.exams")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{examCount()}</Badge></TabsTrigger>
+                </Show>
+                <Show when={tabOn.homework()}>
+                  <TabsTrigger value="homework" class="min-w-0"><IconHomework class="h-4 w-4" />{t("homework.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{homeworkCount()}</Badge></TabsTrigger>
+                </Show>
+                <Show when={tabOn.sessions()}>
+                  <TabsTrigger value="sessions" class="min-w-0"><IconCalendarDays class="h-4 w-4" />{t("sessions.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{sessionCount()}</Badge></TabsTrigger>
+                </Show>
                 <TabsTrigger value="teachers" class="min-w-0"><IconSchool class="h-4 w-4" />{t("courses.teachers")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{inst().teachers.length}</Badge></TabsTrigger>
                 <Show when={canManage()}>
                   <TabsTrigger value="students" class="min-w-0"><IconUsers class="h-4 w-4" />{t("courses.roster")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{rosterCount()}</Badge></TabsTrigger>
                 </Show>
               </TabsList>
 
+              <Show when={tabOn.exams()}>
               <TabsContent value="exams" class="space-y-3">
                 <div class="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary" class="rounded-full">{countDescription(examCount(), t("courses.examItem"))}</Badge>
@@ -548,7 +577,9 @@ function InstanceDetailContent() {
                   />
                 </Suspense>
               </TabsContent>
+              </Show>
 
+              <Show when={tabOn.homework()}>
               <TabsContent value="homework" class="space-y-3">
                 <div class="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary" class="rounded-full">{countDescription(homeworkCount(), t("homework.item"))}</Badge>
@@ -568,7 +599,9 @@ function InstanceDetailContent() {
                   onCountChange={setHomeworkCount}
                 />
               </TabsContent>
+              </Show>
 
+              <Show when={tabOn.sessions()}>
               <TabsContent value="sessions" class="space-y-3">
                 <div class="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary" class="rounded-full">{countDescription(sessionCount(), t("sessions.item"))}</Badge>
@@ -591,6 +624,7 @@ function InstanceDetailContent() {
                   openRollCallFor={linkedRollCall()}
                 />
               </TabsContent>
+              </Show>
 
               <TabsContent value="teachers" class="space-y-3">
                 <div class="flex flex-wrap items-center gap-2 text-sm">
