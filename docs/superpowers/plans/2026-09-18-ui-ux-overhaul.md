@@ -156,10 +156,27 @@ Layer B: done.
   styles (internal only), categorical palette classes in calendar and
   role badges (one map per feature, both themes handled)
 
-## Layer C — outline (contract check first)
-Run `check-api-contract` for each item; then a separate brainstorm/spec per
-feature: role "Today" home → exception-based roll call → sentence insights →
-parent feed → notification hygiene → onboarding checklist.
+## Layer C — status (2026-09-19)
+
+Done, each on real reads only:
+- exception-based roll call: one list, one-tap save, "mark the rest
+  present", progress + counts, Present first (9bea6a1, 6e42004)
+- role "Today": teacher lessons with roll-call state and a deep link to the
+  roll call (981b841, 7a0de35); students get the same day plan (c24b341)
+- sentence insights: teacher homework queue (6716a73), parent overdue /
+  due-this-week homework (ee27f67)
+- admin setup checklist ticked by real counts (451977f)
+- RAG "Çalış" tab: grounded chat plus summarize / practice questions from an
+  answer's cited range (57a1d1a, 25b516f); summarize/questions answer 503
+  until the backend connects a worker for them
+- dev auto sign-in from .env.local (13b80a2)
+
+Not built, and why:
+- notification quiet hours / digest: the API has no notification or
+  preference endpoint for it (preferences are language, theme, palette)
+- per-task grade release and completion-vs-score visibility (Veracross,
+  ManageBac): need backend publish flags
+- a parent activity feed beyond homework: no parent-readable feed endpoint
 
 ## Out of scope
 - Backend changes (backend repo is read/run only).
