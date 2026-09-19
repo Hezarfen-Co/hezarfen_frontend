@@ -415,6 +415,7 @@ export type MessageKey =
   | "comingSoon.emptyTitle"
   | "comingSoon.emptyDescription"
   | "roster.student"
+  | "roster.studentName"
   | "roster.teacher"
   | "roster.class"
   | "roster.classAll"
@@ -609,6 +610,7 @@ export type MessageKey =
   | "common.next"
   | "common.pageOf"
   | "common.noResults"
+  | "common.scrollHint"
   | "common.noMatches"
   | "common.creator"
   | "common.searchPlaceholder"
@@ -2087,6 +2089,8 @@ export type MessageKey =
   | "calendar.title"
   | "calendar.feedsFailed"
   | "calendar.today"
+  | "calendar.month"
+  | "calendar.year"
   | "calendar.noEvents"
   | "calendar.events"
   | "calendar.exams"
@@ -2674,6 +2678,7 @@ const en: Dict = {
   "comingSoon.emptyTitle": "Not available yet",
   "comingSoon.emptyDescription": "This part of Hezarfen is still being built. Check back soon.",
   "roster.student": "Student",
+  "roster.studentName": "Student name",
   "roster.teacher": "Teacher",
   "roster.class": "Class",
   "roster.classAll": "Class: All",
@@ -2849,6 +2854,7 @@ const en: Dict = {
   "common.next": "Next",
   "common.pageOf": "{page} / {total}",
   "common.noResults": "No results.",
+  "common.scrollHint": "Scroll horizontally",
   "common.noMatches": "Nothing matches your search.",
   "common.creator": "Created by",
   "common.searchPlaceholder": "Search…",
@@ -3410,6 +3416,8 @@ const en: Dict = {
   "calendar.title": "Calendar",
   "calendar.feedsFailed": "Could not load: {feeds}. The calendar is missing those items.",
   "calendar.today": "Today",
+  "calendar.month": "Month",
+  "calendar.year": "Year",
   "calendar.noEvents": "Nothing scheduled on this day.",
   "calendar.events": "Events",
   "calendar.exams": "Exams",
@@ -4916,6 +4924,7 @@ const tr: Dict = {
   "comingSoon.emptyTitle": "Henüz kullanıma açık değil",
   "comingSoon.emptyDescription": "Hezarfen'in bu bölümü hâlâ hazırlanıyor. Yakında tekrar bakın.",
   "roster.student": "Öğrenci",
+  "roster.studentName": "Öğrenci Adı Soyadı",
   "roster.teacher": "Öğretmen",
   "roster.class": "Sınıf",
   "roster.classAll": "Sınıf: Tümü",
@@ -5091,6 +5100,7 @@ const tr: Dict = {
   "common.next": "Sonraki",
   "common.pageOf": "{page} / {total}",
   "common.noResults": "Sonuç yok.",
+  "common.scrollHint": "Yatay kaydır",
   "common.noMatches": "Aramanızla eşleşen kayıt yok.",
   "common.creator": "Oluşturan",
   "common.searchPlaceholder": "Ara…",
@@ -5652,6 +5662,8 @@ const tr: Dict = {
   "calendar.title": "Takvim",
   "calendar.feedsFailed": "Yüklenemedi: {feeds}. Takvimde bu kayıtlar eksik.",
   "calendar.today": "Bugün",
+  "calendar.month": "Ay",
+  "calendar.year": "Yıl",
   "calendar.noEvents": "Bu güne ait bir şey yok.",
   "calendar.events": "Etkinlikler",
   "calendar.exams": "Sınavlar",

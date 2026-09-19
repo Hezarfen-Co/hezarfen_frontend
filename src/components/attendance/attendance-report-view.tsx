@@ -79,21 +79,21 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
   return (
     <div class="min-w-0 space-y-4">
       <dl class="grid grid-cols-1 gap-3 sm:grid-cols-4">
-        <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
+        <div class={cn("rounded-lg border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
           <dt class="text-xs font-medium text-muted-foreground">{t("attendance.overallRate")}</dt>
-          <dd class="mt-2 text-3xl font-semibold tabular-nums">{percent(combined().rate)}</dd>
+          <dd class={cn("mt-2 text-3xl font-semibold tabular-nums", compact() && "text-2xl")}>{percent(combined().rate)}</dd>
         </div>
-        <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
+        <div class={cn("rounded-lg border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
           <dt class="text-xs font-medium text-muted-foreground">{t("attendance.totalAbsence")}</dt>
-          <dd class="mt-2 text-3xl font-semibold tabular-nums">{combined().totalAbsence}</dd>
+          <dd class={cn("mt-2 text-3xl font-semibold tabular-nums", compact() && "text-2xl")}>{combined().totalAbsence}</dd>
         </div>
-        <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
+        <div class={cn("rounded-lg border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
           <dt class="text-xs font-medium text-muted-foreground">{t("status.excused")}</dt>
-          <dd class="mt-2 text-3xl font-semibold tabular-nums">{combined().excused}</dd>
+          <dd class={cn("mt-2 text-3xl font-semibold tabular-nums", compact() && "text-2xl")}>{combined().excused}</dd>
         </div>
-        <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
+        <div class={cn("rounded-lg border border-border bg-card p-4 shadow-xs", compact() && "p-3 shadow-none")}>
           <dt class="text-xs font-medium text-muted-foreground">{t("status.absent")}</dt>
-          <dd class="mt-2 text-3xl font-semibold tabular-nums">{combined().absent}</dd>
+          <dd class={cn("mt-2 text-3xl font-semibold tabular-nums", compact() && "text-2xl")}>{combined().absent}</dd>
         </div>
       </dl>
 

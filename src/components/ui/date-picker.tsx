@@ -14,7 +14,7 @@ function formatDate(date: Date): string {
 }
 
 function parseDate(value: string): Date | null {
-  const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const match = value.trim().match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
   if (!match) return null;
   const [, dayRaw, monthRaw, yearRaw] = match;
   const day = Number(dayRaw);
@@ -61,9 +61,13 @@ export function DatePicker(props: {
   const [month, setMonth] = createSignal(selected() ?? new Date());
   const today = new Date();
   const days = createMemo(() => monthDays(month()));
-  const monthLabel = createMemo(() =>
-    new Intl.DateTimeFormat(locale(), { month: "long", year: "numeric" }).format(month()),
-  );
+  const monthNames = createMemo(() => Array.from({ length: 12 }, (_, index) =>
+    new Intl.DateTimeFormat(locale(), { month: "long" }).format(new Date(2024, index, 1)),
+  ));
+  const yearOptions = createMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 121 }, (_, index) => currentYear - 100 + index);
+  });
   const todayLabel = createMemo(() => t("calendar.today"));
   const dayHeaders = createMemo(() => {
     const base = new Date(2024, 0, 1);
@@ -114,6 +118,14 @@ export function DatePicker(props: {
     setMonth((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1));
   };
 
+  const setMonthPart = (value: string) => {
+    setMonth((current) => new Date(current.getFullYear(), Number(value), 1));
+  };
+
+  const setYearPart = (value: string) => {
+    setMonth((current) => new Date(Number(value), current.getMonth(), 1));
+  };
+
   const pick = (date: Date) => {
     props.onChange(formatDate(date));
     setOpen(false);
@@ -127,12 +139,16 @@ export function DatePicker(props: {
           class={cn("pr-9 placeholder:text-muted-foreground/45", props.class)}
           inputMode="numeric"
           placeholder={props.placeholder}
-          pattern="\d{2}/\d{2}/\d{4}"
+          pattern="\d{1,2}[./-]\d{1,2}[./-]\d{4}"
           value={props.value}
           required={props.required}
           onFocus={() => setOpen(true)}
           onClick={() => setOpen(true)}
           onInput={(e) => props.onChange(e.currentTarget.value)}
+          onBlur={() => {
+            const date = parseDate(props.value);
+            if (date) props.onChange(formatDate(date));
+          }}
         />
         <IconCalendar class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       </div>
@@ -149,7 +165,24 @@ export function DatePicker(props: {
               <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(-1)} aria-label={t("common.prev")}>
                 <IconChevronLeft class="h-4 w-4" />
               </button>
-              <p class="min-w-0 truncate px-2 text-sm font-semibold capitalize">{monthLabel()}</p>
+              <div class="flex min-w-0 items-center gap-1">
+                <select
+                  aria-label={t("calendar.month")}
+                  class="h-8 min-w-0 max-w-36 rounded-md border-0 bg-transparent px-1 text-sm font-semibold capitalize outline-hidden hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+                  value={month().getMonth()}
+                  onChange={(event) => setMonthPart(event.currentTarget.value)}
+                >
+                  <For each={monthNames()}>{(name, index) => <option value={index()}>{name}</option>}</For>
+                </select>
+                <select
+                  aria-label={t("calendar.year")}
+                  class="h-8 w-20 rounded-md border-0 bg-transparent px-1 text-sm font-semibold outline-hidden hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+                  value={month().getFullYear()}
+                  onChange={(event) => setYearPart(event.currentTarget.value)}
+                >
+                  <For each={yearOptions()}>{(year) => <option value={year}>{year}</option>}</For>
+                </select>
+              </div>
               <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring" onClick={() => moveMonth(1)} aria-label={t("common.next")}>
                 <IconChevronRight class="h-4 w-4" />
               </button>

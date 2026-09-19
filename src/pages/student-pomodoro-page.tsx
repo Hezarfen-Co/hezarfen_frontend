@@ -2,7 +2,6 @@ import { Show, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getPomodoroByUser } from "@/api/pomodoro";
-import { getUserSearch } from "@/api/users";
 import type { PersonRef } from "@/api/client";
 import { ApiError, formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -15,6 +14,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
+import { getStudentDirectory, type StudentDirectoryRow } from "@/lib/student-directory";
 import { useT } from "@/stores/preferences-context";
 
 const PAGE_SIZE = 10;
@@ -32,18 +32,15 @@ function StudentPomodoroContent() {
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
   const [error, setError] = createSignal("");
 
-  const [list] = createResource(
-    async () => {
-      try {
-        setError("");
-        return (await getUserSearch("", undefined, "student")).items;
-      } catch (err) {
-        setError(formatApiError(err));
-        return [];
-      }
-    },
-    { initialValue: [] },
-  );
+  const [list] = createResource(async () => {
+    try {
+      setError("");
+      return await getStudentDirectory();
+    } catch (err) {
+      setError(formatApiError(err));
+      return [];
+    }
+  }, { initialValue: [] as StudentDirectoryRow[] });
 
   const [log, { refetch: refetchLog }] = createResource(
     () => viewUser()?.id ?? null,
@@ -64,18 +61,20 @@ function StudentPomodoroContent() {
 
   const rows = () => list();
   const listLoading = () => list.loading;
-  const searchPerson = (person: PersonRef, query: string) =>
-    matchesSearch(query, person.username, person.display_name);
-  const studentColumns = createMemo<ColumnDef<PersonRef>[]>(() => [
+  const searchPerson = (row: StudentDirectoryRow, query: string) =>
+    matchesSearch(query, row.person.display_name, ...row.classes.map((cls) => cls.name));
+  const studentColumns = createMemo<ColumnDef<StudentDirectoryRow>[]>(() => [
     {
-      accessorKey: "username",
-      header: t("admin.username"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.username}</span>,
+      id: "student",
+      accessorFn: (row) => row.person.display_name || row.person.username,
+      header: t("roster.studentName"),
+      cell: (cell) => <span class="font-medium">{cell.row.original.person.display_name || t("exams.nameless")}</span>,
     },
     {
-      accessorKey: "display_name",
-      header: t("profile.name"),
-      cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
+      id: "class",
+      accessorFn: (row) => row.classes.map((cls) => cls.name).join(", "),
+      header: t("roster.class"),
+      cell: (cell) => <span>{cell.row.original.classes.map((cls) => cls.name).join(", ") || "—"}</span>,
     },
     {
       id: "actions",
@@ -90,7 +89,7 @@ function StudentPomodoroContent() {
               icon: <IconEye class="h-4 w-4" />,
               onSelect: () => {
                 setError("");
-                setViewUser(cell.row.original);
+                setViewUser(cell.row.original.person);
               },
             },
           ]}
@@ -119,9 +118,9 @@ function StudentPomodoroContent() {
             enablePagination
             pageSize={PAGE_SIZE}
             storageKey="student-pomodoro"
-            onRowClick={(person) => {
+            onRowClick={(row) => {
               setError("");
-              setViewUser(person);
+              setViewUser(row.person);
             }}
           />
         </Show>

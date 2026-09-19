@@ -81,11 +81,13 @@ export function UserTable(props: {
     matchesSearch(query, user.username, user.phone, displayName(user), user.email, t(`role.${user.role}` as MessageKey));
   const columns = createMemo<ColumnDef<User>[]>(() => [
     {
-      accessorKey: "username",
-      header: t("admin.username"),
+      id: "name",
+      accessorFn: displayName,
+      header: t("profile.name"),
       size: 220,
       minSize: 140,
       meta: { cellClass: "truncate font-medium" },
+      cell: (cell) => displayName(cell.row.original),
     },
     {
       id: "phone",

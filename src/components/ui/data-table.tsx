@@ -1,4 +1,4 @@
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
 import {
   type Column,
@@ -157,7 +157,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const stickyRightLocked = (columnId: string) =>
     columnId === "actions" || (columnId === "update" && table.getColumn("actions") == null);
   const isStickyLeft = (column: Column<TData, unknown>) => column.columnDef.meta?.stickyLeft === true;
-  const alignOf = (column: Column<TData, unknown>) => column.columnDef.meta?.align ?? "left";
+  const alignOf = (_column: Column<TData, unknown>) => "center" as const;
   const dividerClass = (column: Column<TData, unknown>) => {
     const divider = column.columnDef.meta?.divider;
     return divider === "left" ? "border-l border-border/70" : divider === "right" ? "border-r border-border/70" : undefined;
@@ -520,7 +520,27 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
 }
 
 export function DataTableFrame(props: ParentProps<{ class?: string }>) {
-  return <div class={cn("data-table-wrap", props.class)}>{props.children}</div>;
+  const t = useT();
+  let frame: HTMLDivElement | undefined;
+  const [scrollable, setScrollable] = createSignal(false);
+  const checkOverflow = () => setScrollable(!!frame && frame.scrollWidth > frame.clientWidth + 2);
+  createEffect(() => {
+    queueMicrotask(checkOverflow);
+    if (typeof ResizeObserver === "undefined" || !frame) return;
+    const observer = new ResizeObserver(checkOverflow);
+    observer.observe(frame);
+    onCleanup(() => observer.disconnect());
+  });
+  return (
+    <div ref={frame} class={cn("data-table-wrap relative", props.class)}>
+      {props.children}
+      <Show when={scrollable()}>
+        <span class="pointer-events-none sticky bottom-2 left-[calc(100%-6rem)] z-30 ml-[calc(100%-6.5rem)] inline-flex w-fit items-center gap-1 rounded-full border border-border/70 bg-surface-base/95 px-2 py-1 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur" aria-hidden="true">
+          ↔ {t("common.scrollHint")}
+        </span>
+      </Show>
+    </div>
+  );
 }
 
 export function DataTableEmpty(props: ParentProps<{ class?: string }>) {

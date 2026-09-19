@@ -55,7 +55,7 @@ test("keeps only the rightmost action column sticky and fixed at 110x45", () => 
   expect(roleHeader?.classList).not.toContain("table-sticky-head-right");
 });
 
-test("freezes the meta.stickyLeft column and aligns head + cell together", () => {
+test("freezes the meta.stickyLeft column and keeps the table centered", () => {
   const alignedColumns: ColumnDef<Row>[] = [
     { accessorKey: "name", header: "Name", meta: { stickyLeft: true } },
     { accessorKey: "role", header: "Role", meta: { align: "right" } },
@@ -73,9 +73,9 @@ test("freezes the meta.stickyLeft column and aligns head + cell together", () =>
 
   const roleHeader = headers.find((header) => header.textContent?.startsWith("Role"));
   const roleCell = screen.getByRole("cell", { name: "Admin" });
-  // Same alignment class on head and cell so columns never drift apart.
-  expect(roleHeader?.classList).toContain("text-right");
-  expect(roleCell.classList).toContain("text-right");
+  // List tables use one consistent centered alignment, including numeric columns.
+  expect(roleHeader?.classList).toContain("text-center");
+  expect(roleCell.classList).toContain("text-center");
 });
 
 test("paginates tables by default", () => {

@@ -87,11 +87,6 @@ function liveRosterName(entry: LiveRosterEntry, fallback: string): string {
     textField(record, "display_name") ||
     (nestedUser ? textField(nestedUser, "display_name") : "") ||
     fullName ||
-    textField(record, "username") ||
-    textField(record, "user_name") ||
-    (nestedUser ? textField(nestedUser, "username") : "") ||
-    (typeof record.user === "string" ? record.user : "") ||
-    textField(record, "user_id") ||
     fallback
   );
 }
@@ -189,9 +184,9 @@ function LiveMonitorContent() {
     const questionCount = m?.question_count ?? 0;
     return [
       {
-        id: "username",
+        id: "student",
         accessorFn: (entry) => liveRosterName(entry, ""),
-        header: t("admin.username"),
+        header: t("roster.studentName"),
         meta: { cellClass: "font-medium" },
         cell: (cell) => liveRosterName(cell.row.original, t("exams.nameless")),
       },
@@ -325,7 +320,7 @@ function LiveMonitorContent() {
                     <DataTable
                       columns={columns()}
                       data={liveRows()}
-                      filterColumn="username"
+                      filterColumn="student"
                       storageKey="live-exam-roster"
                       enablePagination
                       pageSize={PAGE_SIZE}

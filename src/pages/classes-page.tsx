@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BlueprintsTab } from "@/components/classes/blueprints-tab";
-import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
+import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
 import { matchesSearch } from "@/lib/search-text";
@@ -291,40 +291,23 @@ function ClassCard(props: { cls: ClassGroup; yearName: string; memberCount: numb
     <button
       type="button"
       onClick={props.onClick}
-      class="flex flex-col gap-3 rounded-lg border border-border-line bg-surface-base p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      class="group flex flex-col gap-4 rounded-2xl border border-border-line/80 bg-surface-base p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <div class="flex items-center gap-2.5">
-        <span class="flex h-9 w-10 shrink-0 items-center justify-center rounded-md bg-info/10 text-[13px] font-semibold text-info-text">
+      <div class="flex items-start gap-3">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary-text">
           {props.cls.grade || "—"}
         </span>
         <div class="min-w-0 flex-1">
-          <p class="truncate text-[15px] font-semibold text-text-strong">{props.cls.name}</p>
-          <p class="truncate text-xs text-text-subtle">
-            {t("classGroups.homeroomTeacher")}: {props.cls.teacher ? personLabel(props.cls.teacher) : t("classGroups.noTeacher")}
-          </p>
+          <p class="truncate text-base font-semibold text-text-strong">{props.cls.name}</p>
+          <p class="mt-1 truncate text-xs text-text-subtle">{props.cls.teacher ? personLabel(props.cls.teacher) : t("classGroups.noTeacher")}</p>
         </div>
-        <ComingSoonBadge class="shrink-0" />
-        <IconChevronRight class="h-4 w-4 shrink-0 text-text-subtle" />
+        <IconChevronRight class="h-4 w-4 shrink-0 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-primary-text" />
       </div>
-      <div class="grid grid-cols-2 gap-2 border-t border-border-hairline pt-3 text-xs">
-        <div>
-          <p class="text-text-subtle">{t("classGroups.attendanceRate")}</p>
-          <ComingSoonValue class="mt-0.5" />
-        </div>
-        <div>
-          <p class="text-text-subtle">{t("classGroups.competency")}</p>
-          <ComingSoonValue class="mt-0.5" />
-        </div>
-      </div>
-      <div class="flex items-center justify-between gap-2 border-t border-border-hairline pt-3 text-sm">
-        <Badge variant="outline" class="min-w-0 max-w-[60%] rounded-full"><span class="truncate">{props.yearName}</span></Badge>
+      <div class="flex items-center gap-2 text-xs text-text-subtle">
+        <Badge variant="outline" class="min-w-0 max-w-[65%] rounded-full bg-transparent"><span class="truncate">{props.yearName}</span></Badge>
         <Show when={props.memberCount != null} fallback={<span class="shrink-0 text-xs text-text-subtle">—</span>}>
-          <span class="shrink-0 font-medium text-text-default">{t("classGroups.studentsCount", { count: String(props.memberCount) })}</span>
+          <span class="shrink-0">{t("classGroups.studentsCount", { count: String(props.memberCount) })}</span>
         </Show>
-      </div>
-      <div class="flex items-center justify-between gap-2 border-t border-border-hairline pt-3 text-xs text-text-subtle">
-        <span>{t("classGroups.weakestTopic")}</span>
-        <ComingSoonValue />
       </div>
     </button>
   );

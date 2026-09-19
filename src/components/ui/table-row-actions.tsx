@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js";
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,10 +19,17 @@ type TableRowAction = {
 
 export function TableRowActions(props: { label: string; actions: TableRowAction[]; compact?: boolean; triggerLabel?: string }) {
   const t = useT();
+  const singleAction = () => props.actions.length === 1 ? props.actions[0] : undefined;
+  const run = (action: TableRowAction) => {
+    if (action.disabled) return;
+    setTimeout(action.onSelect, 0);
+  };
 
   return (
     <div class="flex justify-center">
-      <DropdownMenu placement="bottom-end" gutter={6}>
+      <Show
+        when={singleAction()}
+        fallback={<DropdownMenu placement="bottom-end" gutter={6}>
         <DropdownMenuTrigger
           class={props.compact
             ? "inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-muted data-expanded:text-foreground"
@@ -52,7 +59,24 @@ export function TableRowActions(props: { label: string; actions: TableRowAction[
             )}
           </For>
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu>}
+      >
+        {(action) => (
+          <button
+            type="button"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-muted-foreground outline-hidden transition-colors hover:border-primary/20 hover:bg-primary/8 hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+            aria-label={action().label}
+            title={action().label}
+            disabled={action().disabled}
+            onClick={(event) => {
+              event.stopPropagation();
+              run(action());
+            }}
+          >
+            {action().icon}
+          </button>
+        )}
+      </Show>
     </div>
   );
 }

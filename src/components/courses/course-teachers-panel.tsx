@@ -37,9 +37,9 @@ export function CourseTeachersPanel(props: {
     {
       id: "name",
       accessorFn: (row) => row.display_name || row.username,
-      header: t("admin.username"),
+      header: t("roster.teacher"),
       meta: { cellClass: "font-medium" },
-      cell: (cell) => cell.row.original.display_name || cell.row.original.username,
+      cell: (cell) => cell.row.original.display_name || "—",
     },
     ...(props.canStaff
       ? [

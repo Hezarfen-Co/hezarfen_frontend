@@ -38,10 +38,15 @@ function renderGrid(earned: { id: string; earned_at: number }[]) {
   ));
 }
 
+function openBadges() {
+  screen.getByRole("button", { name: /Badges/ }).click();
+}
+
 afterEach(() => vi.restoreAllMocks());
 
 test("shows the whole catalogue, earned and locked alike", () => {
   renderGrid([{ id: "homework_submitted_1", earned_at: 1_700_000_000_000 }]);
+  openBadges();
   expect(screen.getAllByRole("generic", { hidden: true }).length).toBeGreaterThan(0);
   // Both the earned and the unearned tier are present — the incomplete grid is
   // the point, so an unearned badge is never hidden.
@@ -51,6 +56,7 @@ test("shows the whole catalogue, earned and locked alike", () => {
 
 test("an unearned badge shows its progress inline, an earned one shows its date", () => {
   renderGrid([{ id: "homework_submitted_1", earned_at: 1_700_000_000_000 }]);
+  openBadges();
   // The tooltip is hover-only, so the tile itself must carry the numbers:
   // 7 of 10 done on the second tier.
   expect(screen.getAllByText("7 / 10").length).toBeGreaterThan(0);
@@ -63,6 +69,7 @@ test("an unearned badge shows its progress inline, an earned one shows its date"
 
 test("a badge whose stat this build does not know shows no progress bar", () => {
   renderGrid([]);
+  openBadges();
   // Falls back to the raw id for the label and to the generic locked line.
   expect(screen.getByText("streak_1000")).toBeTruthy();
   expect(screen.getAllByText("Not earned yet").length).toBe(1);
@@ -70,6 +77,7 @@ test("a badge whose stat this build does not know shows no progress bar", () => 
 
 test("every tile is focusable and labelled, so the tooltip is reachable by keyboard", () => {
   renderGrid([]);
+  openBadges();
   const tiles = screen.getAllByLabelText(/—/);
   expect(tiles.length).toBe(catalog.length);
   for (const tile of tiles) expect(tile.getAttribute("tabindex")).toBe("0");

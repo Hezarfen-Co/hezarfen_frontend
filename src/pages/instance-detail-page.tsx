@@ -170,13 +170,13 @@ function InstanceDetailContent() {
 
   const rosterColumns = createMemo<ColumnDef<Enrollment>[]>(() => [
     {
-      id: "username",
+      id: "student",
       accessorFn: (row) => row.user.display_name || row.user.username,
-      header: t("admin.username"),
+      header: t("roster.studentName"),
       meta: { cellClass: "font-medium" },
       cell: (cell) => (
         <span class="flex items-center gap-2">
-          {cell.row.original.user.display_name || cell.row.original.user.username}
+          {cell.row.original.user.display_name || t("exams.nameless")}
           <Show when={cell.row.original.source}>
             <Badge variant="secondary" class="rounded-full text-xs font-normal">
               {t("course.fromClass", { name: klass.latest?.name ?? "—" })}
@@ -184,6 +184,13 @@ function InstanceDetailContent() {
           </Show>
         </span>
       ),
+    },
+    {
+      id: "class",
+      accessorFn: () => klass.latest?.name ?? "—",
+      header: t("roster.class"),
+      meta: { cellClass: "text-muted-foreground" },
+      cell: () => klass.latest?.name ?? "—",
     },
     {
       id: "actions",
@@ -201,7 +208,7 @@ function InstanceDetailContent() {
                 onSelect: () =>
                   setRemoveTarget({
                     userId: cell.row.original.user.id,
-                    userName: cell.row.original.user.display_name || cell.row.original.user.username,
+                    userName: cell.row.original.user.display_name || t("exams.nameless"),
                   }),
               },
             ]}
@@ -614,7 +621,7 @@ function InstanceDetailContent() {
                   </div>
                   <Suspense fallback={<DataTableSkeleton />}>
                     <Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="people" title={t("exams.emptyRoster")} />}>
-                      <DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="username" enablePagination pageSize={10} />
+                      <DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="student" enablePagination pageSize={10} />
                     </Show>
                   </Suspense>
                 </TabsContent>

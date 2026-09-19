@@ -2,7 +2,6 @@ import { Show, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getUserMarks } from "@/api/reports";
-import { getUserSearch } from "@/api/users";
 import { ApiError, formatApiError } from "@/api/client";
 import type { MarksReport, PersonRef } from "@/api/client";
 import { cn } from "@/lib/cn";
@@ -16,6 +15,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
+import { getStudentDirectory, type StudentDirectoryRow } from "@/lib/student-directory";
 import { useT } from "@/stores/preferences-context";
 
 const PAGE_SIZE = 10;
@@ -36,18 +36,15 @@ function StudentMarksContent() {
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
   const [error, setError] = createSignal("");
 
-  const [list] = createResource(
-    async () => {
-      try {
-        setError("");
-        return (await getUserSearch("", undefined, "student")).items;
-      } catch (err) {
-        setError(formatApiError(err));
-        return [];
-      }
-    },
-    { initialValue: [] },
-  );
+  const [list] = createResource(async () => {
+    try {
+      setError("");
+      return await getStudentDirectory();
+    } catch (err) {
+      setError(formatApiError(err));
+      return [];
+    }
+  }, { initialValue: [] as StudentDirectoryRow[] });
 
   // Per-student overall marks for the inline "average" column. No bulk endpoint
   // exists, so this is one getUserMarks call per listed student, bounded by cap.
@@ -56,7 +53,7 @@ function StudentMarksContent() {
   const MARKS_FETCH_CAP = 200;
   const [marksMapRes] = createResource(
     () => {
-      const ids = list().map((user) => user.id);
+      const ids = list().map((row) => row.person.id);
       return ids.length > 0 && ids.length <= MARKS_FETCH_CAP ? ids : null;
     },
     async (ids) => {
@@ -101,26 +98,28 @@ function StudentMarksContent() {
     return [...list()];
   };
   const listLoading = () => list.loading;
-  const searchPerson = (person: PersonRef, query: string) =>
-    matchesSearch(query, person.username, person.display_name);
-  const columns = createMemo<ColumnDef<PersonRef>[]>(() => [
+  const searchPerson = (row: StudentDirectoryRow, query: string) =>
+    matchesSearch(query, row.person.display_name, ...row.classes.map((cls) => cls.name));
+  const columns = createMemo<ColumnDef<StudentDirectoryRow>[]>(() => [
     {
-      accessorKey: "username",
-      header: t("admin.username"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.username}</span>,
+      id: "student",
+      accessorFn: (row) => row.person.display_name || row.person.username,
+      header: t("roster.studentName"),
+      cell: (cell) => <span class="font-medium">{cell.row.original.person.display_name || t("exams.nameless")}</span>,
     },
     {
-      accessorKey: "display_name",
-      header: t("profile.name"),
-      cell: (cell) => <span class="text-muted-foreground">{cell.row.original.display_name || "—"}</span>,
+      id: "class",
+      accessorFn: (row) => row.classes.map((cls) => cls.name).join(", "),
+      header: t("roster.class"),
+      cell: (cell) => <span>{cell.row.original.classes.map((cls) => cls.name).join(", ") || "—"}</span>,
     },
     {
       id: "average",
       header: t("marks.overall"),
-      accessorFn: (user) => marksOf(user.id)?.overall_average ?? -1,
+      accessorFn: (row) => marksOf(row.person.id)?.overall_average ?? -1,
       meta: { align: "right" },
       cell: (cell) => {
-        const rep = marksOf(cell.row.original.id);
+        const rep = marksOf(cell.row.original.person.id);
         if (rep == null) return <span class="text-sm text-muted-foreground">—</span>;
         if (rep.overall_average == null)
           return <span class="text-sm text-muted-foreground">{rep.overall_grade ?? "—"}</span>;
@@ -148,7 +147,7 @@ function StudentMarksContent() {
               icon: <IconEye class="h-4 w-4" />,
               onSelect: () => {
                 setError("");
-                setViewUser(cell.row.original);
+                setViewUser(cell.row.original.person);
               },
             },
           ]}
@@ -177,9 +176,9 @@ function StudentMarksContent() {
             enablePagination
             pageSize={PAGE_SIZE}
             storageKey="student-marks"
-            onRowClick={(person) => {
+            onRowClick={(row) => {
               setError("");
-              setViewUser(person);
+              setViewUser(row.person);
             }}
           />
         </Show>

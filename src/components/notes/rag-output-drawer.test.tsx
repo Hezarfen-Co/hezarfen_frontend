@@ -179,7 +179,8 @@ describe("RagOutputDrawer", () => {
     expect(screen.getByText("Preview")).toBeTruthy();
     expect(screen.getByText("hücre zarı")).toBeTruthy();
     expect(screen.getByText("organel")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Actions" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Actions" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Export" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "View" })).toBeNull();
   });

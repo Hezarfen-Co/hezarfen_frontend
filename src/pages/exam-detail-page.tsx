@@ -313,7 +313,7 @@ function ExamDetailContent() {
     {
       id: "user",
       accessorFn: (row) => personLabel(row.user),
-      header: t("events.userId"),
+      header: t("roster.studentName"),
       meta: { cellClass: "font-medium" },
       cell: (cell) => personLabel(cell.row.original.user),
     },

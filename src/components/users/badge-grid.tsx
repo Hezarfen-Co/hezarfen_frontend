@@ -114,7 +114,12 @@ export function BadgeGrid(props: {
 
   return (
     <section class="data-shell space-y-4 p-4">
-      <div class="flex flex-wrap items-start justify-between gap-3">
+      <button
+        type="button"
+        class="flex w-full flex-wrap items-center justify-between gap-3 rounded-lg text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+        aria-expanded={showAll()}
+        onClick={() => setShowAll(!showAll())}
+      >
         <div class="min-w-0">
           <h2 class="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground">
             <PixelIcon name="trophy" class="h-5 w-5 text-primary-text" />
@@ -122,8 +127,9 @@ export function BadgeGrid(props: {
           </h2>
           <p class="mt-1 text-sm text-muted-foreground">{t("badges.subtitle")}</p>
         </div>
-        <Show when={props.catalog.length > 0}>
-          <div class="flex items-center gap-3 rounded-lg border border-border/70 bg-muted/40 px-3 py-2">
+        <div class="flex items-center gap-3">
+          <Show when={props.catalog.length > 0}>
+            <div class="hidden items-center gap-3 rounded-lg border border-border/70 bg-muted/40 px-3 py-2 sm:flex">
             <PixelIcon name="crown" class="h-5 w-5 text-yellow-500" />
             <div class="min-w-0">
               <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{t("badges.levelLabel")}</p>
@@ -140,11 +146,14 @@ export function BadgeGrid(props: {
                 {t("badges.earnedCount", { earned: earnedCount(), total: props.catalog.length })}
               </p>
             </div>
-          </div>
-        </Show>
-      </div>
+            </div>
+          </Show>
+          <PixelIcon name={showAll() ? "chevron-up" : "chevron-down"} class="h-5 w-5 shrink-0 text-muted-foreground" />
+        </div>
+      </button>
 
-      <Show when={props.catalog.length > 0} fallback={<p class="text-sm text-muted-foreground">{t("badges.none")}</p>}>
+      <Show when={showAll()}>
+        <Show when={props.catalog.length > 0} fallback={<p class="text-sm text-muted-foreground">{t("badges.none")}</p>}>
         <Show
           when={next()}
           fallback={
@@ -298,6 +307,7 @@ export function BadgeGrid(props: {
               {showAll() ? t("badges.showLess") : t("badges.showAll", { count: ladders().length })}
             </button>
           </div>
+        </Show>
         </Show>
       </Show>
     </section>
