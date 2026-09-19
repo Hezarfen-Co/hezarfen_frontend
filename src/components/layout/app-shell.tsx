@@ -21,7 +21,6 @@ import { celebiPanelOpen, openCelebiPanel, setCelebiPanelOpen } from "@/stores/c
 import { commandPaletteOpen, openCommandPalette, setCommandPaletteOpen } from "@/stores/command-palette";
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
-import { useGoBack } from "@/lib/use-go-back";
 import { cn } from "@/lib/cn";
 import { ModuleGate } from "@/components/layout/module-gate";
 
@@ -38,7 +37,6 @@ export function AppShell(props: ParentProps) {
   const [profileOpen, setProfileOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
-  const goBack = useGoBack();
   const fullScreen = () => location().pathname.startsWith("/exam-room/");
   const routeLabel = createMemo(() => {
     const key = routeLabelKey(location().pathname, auth.user()?.role);
@@ -133,19 +131,8 @@ export function AppShell(props: ParentProps) {
 
         <main id="main-content" tabIndex={-1} class="min-w-0 flex-1 outline-hidden">
           <Show when={auth.user() && !fullScreen()}>
-            <header class="sticky top-[env(safe-area-inset-top)] z-30 flex h-[45px] items-center gap-3 border-b border-border/70 bg-background px-4 sm:px-6 lg:px-4">
+            <header class="sticky top-[env(safe-area-inset-top)] z-30 flex h-[49px] items-center gap-3 border-b border-border/70 bg-background px-4 pt-1.5 sm:px-6 lg:px-4">
               <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-52 lg:w-[260px]">
-                <Show when={location().pathname !== "/"}>
-                  <button
-                    type="button"
-                    onClick={goBack}
-                    class="topbar-control flex h-9 w-9 shrink-0 items-center justify-center rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={t("common.back")}
-                    title={t("common.back")}
-                  >
-                    <IconChevronLeft class="h-4 w-4" />
-                  </button>
-                </Show>
                 <span class="hidden truncate text-sm font-semibold sm:block" title={routeLabel()}>{routeLabel()}</span>
               </div>
 

@@ -545,6 +545,7 @@ export type MessageKey =
   | "notifications.empty"
   | "notifications.tabAll"
   | "notifications.tabSystem"
+  | "notifications.goToPage"
   | "errors.notFoundDescription"
   | "errors.accessDeniedDescription"
   | "network.offlineTitle"
@@ -2543,6 +2544,7 @@ const en: Dict = {
   "notifications.empty": "No new notifications yet.",
   "notifications.tabAll": "All",
   "notifications.tabSystem": "System",
+  "notifications.goToPage": "Go to page",
   "errors.notFoundDescription": "The page you're looking for may have moved or been deleted.",
   "errors.accessDeniedDescription": "Your role can't view this section. Ask an administrator if you need access.",
   "network.offlineTitle": "You're offline",
@@ -4730,6 +4732,7 @@ const tr: Dict = {
   "notifications.empty": "Henüz yeni bir bildiriminiz yok.",
   "notifications.tabAll": "Tümü",
   "notifications.tabSystem": "Sistem",
+  "notifications.goToPage": "Sayfaya git",
   "errors.notFoundDescription": "Aradığın sayfa taşınmış ya da silinmiş olabilir.",
   "errors.accessDeniedDescription": "Rolün bu bölümü görüntülemeye yetkili değil. Gerekliyse kurum yöneticinden yetki iste.",
   "network.offlineTitle": "Bağlantın koptu",

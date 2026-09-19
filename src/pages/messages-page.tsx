@@ -185,23 +185,6 @@ export default function MessagesPage() {
   return (
     <RouteGuard>
       <div class="space-y-4">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div class="min-w-0">
-            <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("nav.messages")}</h1>
-          </div>
-          <Button
-            size="sm"
-            class="shrink-0 rounded-lg"
-            onClick={() => {
-              setReplyData(null);
-              setComposeOpen(true);
-            }}
-          >
-            <IconPlus class="h-4 w-4" />
-            <span>{t("messages.newMessage")}</span>
-          </Button>
-        </div>
-
         <div class="min-h-[50vh] sm:min-h-[calc(100vh-11rem)]">
         <section class="data-shell overflow-hidden p-0">
           <div class="flex min-h-[50vh] flex-col sm:min-h-[calc(100vh-11rem)]">
@@ -215,9 +198,9 @@ export default function MessagesPage() {
               </Show>
             </div>
             {/* Folder toolbar — the app shell already owns the global sidebar. */}
-            <aside class="flex flex-wrap items-center gap-2 border-b border-border-hairline bg-surface-overlay px-3 py-2.5">
+            <aside class="flex flex-wrap items-center justify-between gap-2 border-b border-border-hairline bg-surface-overlay px-3 py-2.5">
               {/* Folder navigation stays compact, leaving the only sidebar to the app shell. */}
-              <nav class="flex min-w-0 max-w-full flex-1 items-center gap-1 overflow-x-auto">
+              <nav class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
                 <button
                   type="button"
                   class={cn(
@@ -311,6 +294,17 @@ export default function MessagesPage() {
                   </div>
                 </button>
               </nav>
+              <Button
+                size="sm"
+                class="shrink-0 rounded-lg"
+                onClick={() => {
+                  setReplyData(null);
+                  setComposeOpen(true);
+                }}
+              >
+                <IconPlus class="h-4 w-4" />
+                <span>{t("messages.newMessage")}</span>
+              </Button>
             </aside>
 
             {/* Gmail Main Content Area */}
