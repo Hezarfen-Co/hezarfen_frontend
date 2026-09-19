@@ -33,6 +33,7 @@ import { CommandSearchField } from "@/components/dashboard/command-search-field"
 import { QuickLinkColumn, type QuickLinkRow } from "@/components/dashboard/quick-link-column";
 import { ChildHomeworkPanel } from "@/components/dashboard/child-homework-panel";
 import { HomeworkQueuePanel } from "@/components/dashboard/homework-queue-panel";
+import { SetupChecklistPanel } from "@/components/dashboard/setup-checklist-panel";
 import { TodayLessonsPanel } from "@/components/dashboard/today-lessons-panel";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import {
@@ -748,6 +749,15 @@ function DashboardContent() {
                 {t("common.tryAgain")}
               </Button>
             </div>
+          </Show>
+
+          {/* ADM setup: what a new school still needs, ticked by real counts;
+              it disappears once every step is done. Its own Suspense so the
+              board never waits on it. */}
+          <Show when={isAdminHome() && !schoolModules.loading()}>
+            <Suspense>
+              <SetupChecklistPanel moduleOn={on} />
+            </Suspense>
           </Show>
 
           <Suspense fallback={<PanelSkeleton />}>

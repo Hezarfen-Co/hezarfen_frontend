@@ -64,3 +64,7 @@ Reference: `src/pages/dashboard-page.tsx`. The homepage is a **read-only status 
 - **Parent homework:** `ChildHomeworkPanel` reads the selected child's
   `/homework/report/{user}` (overdue / due this week) with no links — a parent
   cannot open the course-scoped homework page.
+- **Admin setup checklist:** `SetupChecklistPanel` ticks five steps (academic
+  year, teachers, students, classes, courses) by real `limit=1` totals, links
+  each to where it is added, shows a failed read as "could not check", and
+  hides itself once every step is done. Module-off steps are left out.

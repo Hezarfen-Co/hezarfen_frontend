@@ -616,6 +616,16 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "setup.title"
+  | "setup.progress"
+  | "setup.academicYear"
+  | "setup.teachers"
+  | "setup.students"
+  | "setup.classes"
+  | "setup.courses"
+  | "setup.done"
+  | "setup.todo"
+  | "setup.unknown"
   | "homeworkQueue.title"
   | "homeworkQueue.toGradeTotal"
   | "homeworkQueue.missing"
@@ -2789,6 +2799,16 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "setup.title": "School setup",
+  "setup.progress": "{done} of {total} done",
+  "setup.academicYear": "Academic year",
+  "setup.teachers": "Teachers",
+  "setup.students": "Students",
+  "setup.classes": "Classes",
+  "setup.courses": "Courses",
+  "setup.done": "Done",
+  "setup.todo": "Not added yet",
+  "setup.unknown": "Could not check",
   "homeworkQueue.title": "Homework waiting on you",
   "homeworkQueue.toGradeTotal": "{count} to grade",
   "homeworkQueue.missing": "{count} not handed in",
@@ -4964,6 +4984,16 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "setup.title": "Okul kurulumu",
+  "setup.progress": "{total} adımdan {done} tamam",
+  "setup.academicYear": "Eğitim yılı",
+  "setup.teachers": "Öğretmenler",
+  "setup.students": "Öğrenciler",
+  "setup.classes": "Şubeler",
+  "setup.courses": "Dersler",
+  "setup.done": "Tamam",
+  "setup.todo": "Henüz eklenmedi",
+  "setup.unknown": "Kontrol edilemedi",
   "homeworkQueue.title": "Seni bekleyen ödevler",
   "homeworkQueue.toGradeTotal": "{count} notlanacak",
   "homeworkQueue.missing": "{count} teslim etmedi",

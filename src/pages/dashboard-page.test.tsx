@@ -205,6 +205,9 @@ vi.mock("@/api/classes", () => ({
   getClassesByUserId: async () => page([]),
   getClasses: async () => page([]),
 }));
+vi.mock("@/api/academic-years", () => ({
+  getAcademicYears: async () => page([{ id: "y-1", name: "2026-2027" }]),
+}));
 vi.mock("@/api/users", () => ({
   getUsers: async () => page([]),
   getUserSearch: async () => page([]),
@@ -379,4 +382,15 @@ test("a teacher sees which of their homework is waiting on them, in plain senten
   expect(within(panel).getByText("Homework deadline")).toBeTruthy();
   expect(within(panel).getByText(/1 not handed in · 2 waiting for a grade|1 teslim etmedi · 2 not bekliyor/)).toBeTruthy();
   expect(within(panel).getByText(/2 to grade|2 notlanacak/)).toBeTruthy();
+});
+
+test("an admin sees what school setup still needs, ticked by real counts", async () => {
+  renderDashboard("admin");
+
+  const panel = await screen.findByRole("region", { name: /School setup|Okul kurulumu/ });
+  const step = (name: RegExp) => within(panel).getByText(name).closest("a")!;
+  expect(step(/Academic year|Eğitim yılı/).textContent).toMatch(/Done|Tamam/);
+  expect(step(/^(Courses|Dersler)$/).textContent).toMatch(/Done|Tamam/);
+  expect(step(/^(Teachers|Öğretmenler)$/).textContent).toMatch(/Not added yet|Henüz eklenmedi/);
+  expect(within(panel).getByText(/2 of 5 done|5 adımdan 2 tamam/)).toBeTruthy();
 });
