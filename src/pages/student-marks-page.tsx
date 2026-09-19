@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
+import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye } from "@/components/ui/icons";
@@ -31,6 +32,8 @@ export default function StudentMarksPage() {
   );
 }
 
+const MARKS_FETCH_CAP = 200;
+
 function StudentMarksContent() {
   const t = useT();
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
@@ -47,28 +50,26 @@ function StudentMarksContent() {
   }, { initialValue: [] as StudentDirectoryRow[] });
 
   // Per-student overall marks for the inline "average" column. No bulk endpoint
-  // exists, so this is one getUserMarks call per listed student, bounded by cap.
-  // ponytail: N+1 marks fetch, capped at 200; add a bulk /reports/marks endpoint
-  // if whole-school listing is needed. Mirrors the payments roster balance fetch.
-  const MARKS_FETCH_CAP = 200;
+  // exists, so this is one getUserMarks call per listed student — at most
+  // FAN_OUT_LIMIT in flight, and skipped past the cap with a visible notice
+  // instead of a column that silently reads "—" for everyone.
   const [marksMapRes] = createResource(
     () => {
       const ids = list().map((row) => row.person.id);
       return ids.length > 0 && ids.length <= MARKS_FETCH_CAP ? ids : null;
     },
     async (ids) => {
-      const pairs = await Promise.all(
-        ids.map(async (id) => {
-          try {
-            return [id, await getUserMarks(id)] as const;
-          } catch {
-            return [id, null] as const;
-          }
-        }),
-      );
+      const pairs = await mapConcurrent(ids, FAN_OUT_LIMIT, async (id) => {
+        try {
+          return [id, await getUserMarks(id)] as const;
+        } catch {
+          return [id, null] as const;
+        }
+      });
       return Object.fromEntries(pairs) as Record<string, MarksReport | null>;
     },
   );
+  const marksCapped = () => list().length > MARKS_FETCH_CAP;
   const marksOf = (id: string) => marksMapRes()?.[id];
 
   const [report, { refetch: refetchReport }] = createResource(
@@ -161,6 +162,10 @@ function StudentMarksContent() {
       <section class="space-y-4 p-0">
         <Show when={error() && !viewUser()}>
           <Alert variant="destructive">{error()}</Alert>
+        </Show>
+
+        <Show when={!listLoading() && marksCapped()}>
+          <Alert role="status">{t("marks.averageCapped", { cap: MARKS_FETCH_CAP })}</Alert>
         </Show>
 
         <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>

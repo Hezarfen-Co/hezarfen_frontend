@@ -46,6 +46,8 @@ type ShellFeedContextValue = {
 
 const ShellFeedContext = createContext<ShellFeedContextValue>();
 
+const HOMEWORK_FEED_LIMIT = 100;
+
 const emptyPage = <T,>(): Page<T> => ({ items: [], total: 0, limit: null, offset: 0 });
 
 type UserFeed = Omit<ShellFeedContextValue, "nowMs">;
@@ -151,7 +153,11 @@ function createUserFeed(loggedIn: boolean, modulesLoading: () => boolean, isEnab
     async () => {
       try {
         if (!isEnabled("homework")) return emptyPage<Homework>();
-        return await getHomework();
+        // `/homework` has no due-date filter and lists newest-created first,
+        // so a page of the most recent rows holds everything still upcoming
+        // in practice. Unbounded, this poll pulled the school's whole
+        // homework history every minute on every page.
+        return await getHomework({ limit: HOMEWORK_FEED_LIMIT });
       } catch {
         return emptyPage<Homework>();
       }

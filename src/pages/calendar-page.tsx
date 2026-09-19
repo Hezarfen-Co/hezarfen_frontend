@@ -1,5 +1,6 @@
 import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createBoardResources } from "@/lib/board-resources";
+import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import { getHomework } from "@/api/homework";
@@ -31,6 +32,7 @@ const MONTH_NAMES_TR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", 
 const SESSION_COURSE_CAP = 25;
 /** Chips a single day cell shows before collapsing the rest into "+N". */
 const CHIPS_PER_CELL = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 type CalendarKind = "lesson" | "study" | "exam" | "homework" | "event" | "appointment";
 
@@ -152,10 +154,19 @@ function CalendarContent() {
   // Each feed stands alone: a failed one reads as empty and is named in the
   // notice above the grid, instead of blanking the whole calendar.
   const board = createBoardResources();
-  const [events] = board.createResource(async () => (await getEvents({ limit: 100 })).items);
-  const [exams] = board.createResource(async () => (await getExams({ limit: 100 })).items);
-  const [appointments] = board.createResource(async () => (await getAppointments({ limit: 100 })).items);
-  const [homework] = board.createResource(async () => (await getHomework({ limit: 100 })).items);
+  // Events and exams take a schedule window, so they are read from the first
+  // day the grid can show (the month's leading week included) onward, with no
+  // row cap — a fixed `limit` silently emptied later months once a school had
+  // more rows than the cap. The window only ever widens backwards: paging
+  // forward stays inside what is loaded, paging to an earlier month refetches.
+  const viewStart = () => new Date(viewYear(), viewMonth(), 1).getTime() - 7 * DAY_MS;
+  const loadedFrom = createMemo<number>((prev) => Math.min(prev, viewStart()), viewStart());
+  const [events] = board.createResource(loadedFrom, async (from) => (await getEvents({ ends_after: from })).items);
+  const [exams] = board.createResource(loadedFrom, async (from) => (await getExams({ ends_after: from })).items);
+  // Appointments and homework have no date filter and list newest-created
+  // first, so a cap would drop rows by creation order, not by date: read all.
+  const [appointments] = board.createResource(async () => (await getAppointments()).items);
+  const [homework] = board.createResource(async () => (await getHomework()).items);
 
   // Lessons and study/club meetings both come from course sessions; the course's
   // own `kind` is what separates them.
@@ -169,18 +180,20 @@ function CalendarContent() {
         role === "student" ? getMyCourses() : getCourses(),
       ]);
       const byId = new Map<string, Course>(courses.items.map((course) => [course.id, course]));
-      const pages = await Promise.all(
-        instances.items.slice(0, SESSION_COURSE_CAP).map(async (instance) => {
+      const pages = await mapConcurrent(
+        instances.items.slice(0, SESSION_COURSE_CAP), FAN_OUT_LIMIT, async (instance) => {
           const course = byId.get(instance.course);
           if (!course) return [];
           try {
-            const page = await getInstanceSessions(instance.id, { limit: 100 });
+            // No cap: a weekly lesson alone passes 100 sessions in a school
+            // year, and the rows past a cap were the later months.
+            const page = await getInstanceSessions(instance.id);
             return page.items.map((session) => ({ session, course }));
           } catch {
             // One unreadable section must not empty the whole calendar.
             return [];
           }
-        }),
+        },
       );
       return pages.flat();
     },

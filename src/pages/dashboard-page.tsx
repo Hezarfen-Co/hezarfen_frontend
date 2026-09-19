@@ -181,6 +181,7 @@ function DashboardContent() {
   // Unfiltered: `/homework` has no due-date window, so this one read serves both
   // the deadlines table (filtered by `scheduleStatus`) and the backwards-looking
   // heatmap.
+  // `limit: 100` matches the shell's feed read, so the two coalesce.
   const [homework] = createResource(
     () => role() === "parent" || !on("homework") ? null : role(),
     () => quiet(getHomework({ limit: 100 })),
@@ -189,9 +190,11 @@ function DashboardContent() {
     () => role() === "parent" ? true : null,
     () => quiet(getMyStudents({ limit: 12 })),
   );
+  // Same page as the shell's notification poll (`limit: 100`), so the two
+  // concurrent first-paint reads coalesce into one request in `client`.
   const [appointments] = createResource(
     () => (on("appointments") ? true : null),
-    () => quiet(getAppointments({ limit: 20 })),
+    () => quiet(getAppointments({ limit: 100 })),
   );
   const [menus] = createResource(
     () => (on("meals") ? clock()?.now : null),

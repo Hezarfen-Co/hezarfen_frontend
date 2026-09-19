@@ -11,6 +11,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { DataToolbar } from "@/components/ui/data-toolbar";
 import { DropdownSelect, Select } from "@/components/ui/select";
 import { Alert } from "@/components/ui/alert";
+import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableSkeleton } from "@/components/ui/data-table";
@@ -101,17 +102,16 @@ function ClassesContent() {
     return ids.length > 0 && ids.length <= MEMBER_COUNT_FETCH_CAP ? ids : null;
   });
   const [memberCounts] = createResource(memberCountIds, async (ids) => {
-    const entries = await Promise.all(
-      ids.map(async (id) => {
-        try {
-          return [id, (await getClassMembers(id, { limit: 1 })).total] as const;
-        } catch {
-          return [id, null] as const;
-        }
-      }),
-    );
+    const entries = await mapConcurrent(ids, FAN_OUT_LIMIT, async (id) => {
+      try {
+        return [id, (await getClassMembers(id, { limit: 1 })).total] as const;
+      } catch {
+        return [id, null] as const;
+      }
+    });
     return new Map(entries);
   });
+  const memberCountsCapped = () => listData().length > MEMBER_COUNT_FETCH_CAP;
 
   const createClass = async (event: SubmitEvent) => {
     event.preventDefault();
@@ -253,6 +253,10 @@ function ClassesContent() {
                 }
               />
             </div>
+
+            <Show when={memberCountsCapped()}>
+              <Alert role="status">{t("classGroups.memberCountCapped", { cap: MEMBER_COUNT_FETCH_CAP })}</Alert>
+            </Show>
 
             <Suspense fallback={<DataTableSkeleton />}>
               <Show when={searched().length > 0} fallback={<EmptyState kind="people" title={t("classGroups.empty")} />}>

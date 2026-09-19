@@ -20,7 +20,7 @@ import {
   type PaymentLine,
   type StatementEntry,
 } from "@/api/payments";
-import { getUserSearch } from "@/api/users";
+import { getUserProfile, getUserSearch } from "@/api/users";
 import { formatApiError, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
@@ -47,6 +47,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { formatTry } from "@/lib/meals";
 import { PAYMENT_METHOD_KEYS, sortStatementEntries, statementStatus } from "@/lib/payments";
 import { matchesSearch } from "@/lib/search-text";
+import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -149,6 +150,15 @@ function PaymentsContent() {
   const pagedStudents = () => studentsPage()?.items ?? [];
   const studentsTotal = () => studentsPage()?.total ?? 0;
 
+  const [routeProfile] = createResource(
+    () => {
+      const routeId = routeStudentId();
+      if (!routeId || studentsPage.loading) return null;
+      return pagedStudents().some((user) => user.id === routeId) ? null : routeId;
+    },
+    (userId) => getUserProfile(userId).catch(() => null),
+  );
+
   createEffect(() => {
     const routeId = routeStudentId();
     if (!routeId) {
@@ -161,9 +171,14 @@ function PaymentsContent() {
       return;
     }
     // A direct visit/refresh on /management/payments/$userId whose student
-    // isn't on the currently loaded page — there's no non-admin "read one
-    // user" endpoint to resolve a name from, so fall back to the id itself.
-    // The statement/balance/ledger reads below only need the id to work.
+    // isn't on the currently loaded page. The statement/balance/ledger reads
+    // below only need the id; the header name comes from the public profile
+    // (readable by any staff account) once it resolves.
+    const named = routeProfile.latest;
+    if (named && named.id === routeId) {
+      setSelectedStudent({ id: named.id, username: named.username, display_name: named.display_name });
+      return;
+    }
     setSelectedStudent((prev) => (prev?.id === routeId ? prev : { id: routeId, username: routeId, display_name: null }));
   });
 
@@ -175,15 +190,13 @@ function PaymentsContent() {
       return users.length > 0 ? users : null;
     },
     async (users): Promise<PaymentStudentRow[]> =>
-      Promise.all(
-        users.map(async (user) => {
-          try {
-            return { ...user, balance_minor: (await getPaymentBalanceByUserId(user.id)).balance_minor };
-          } catch {
-            return { ...user, balance_minor: null };
-          }
-        }),
-      ),
+      mapConcurrent(users, FAN_OUT_LIMIT, async (user) => {
+        try {
+          return { ...user, balance_minor: (await getPaymentBalanceByUserId(user.id)).balance_minor };
+        } catch {
+          return { ...user, balance_minor: null };
+        }
+      }),
   );
 
   const studentColumns = createMemo<ColumnDef<PaymentStudentRow>[]>(() => [
