@@ -13,7 +13,7 @@ import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
-import { IconChevronLeft, IconSparkles } from "@/components/ui/icons";
+import { IconPanelLeft, IconSparkles } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
@@ -107,13 +107,13 @@ export function AppShell(props: ParentProps) {
                 meets the header's bottom border. */}
             <button
               type="button"
-              class="absolute right-0 top-[45px] z-10 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-xs outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              class="absolute right-0 top-[45px] z-10 flex h-7 w-7 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-xs outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
               aria-expanded={!collapsed()}
               title={collapsed() ? t("nav.expand") : t("nav.collapse")}
               onClick={() => prefs.toggleSidebar()}
             >
-              <IconChevronLeft class={cn("h-3.5 w-3.5 transition-transform duration-200", collapsed() && "rotate-180")} />
+              <IconPanelLeft class={cn("h-4 w-4 transition-transform duration-200", collapsed() && "rotate-180")} />
             </button>
 
           </aside>

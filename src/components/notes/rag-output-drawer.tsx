@@ -174,7 +174,7 @@ export function RagOutputDrawer(props: {
 
                 <dl class="grid gap-1 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-3">
                   <dt class="text-muted-foreground">{rt("date")}</dt>
-                  <dd class="mono text-xs sm:pt-0.5">{formatDateTime(output().generated_at, locale())}</dd>
+                  <dd class="text-xs sm:pt-0.5">{formatDateTime(output().generated_at, locale())}</dd>
                   <Show when={noteTitle()}>
                     <dt class="text-muted-foreground">{rt("note")}</dt>
                     <dd>{noteTitle()}</dd>

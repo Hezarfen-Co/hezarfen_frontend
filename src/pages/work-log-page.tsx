@@ -52,17 +52,17 @@ function WorkLogContent() {
     {
       accessorKey: "check_in",
       header: t("work.checkIn"),
-      cell: (cell) => <span class="mono">{formatDateTime(cell.row.original.check_in, locale())}</span>,
+      cell: (cell) => formatDateTime(cell.row.original.check_in, locale()),
     },
     {
       accessorKey: "check_out",
       header: t("work.checkOut"),
-      cell: (cell) => <span class="mono">{formatDateTime(cell.row.original.check_out, locale())}</span>,
+      cell: (cell) => formatDateTime(cell.row.original.check_out, locale()),
     },
     {
       accessorKey: "duration_ms",
       header: t("work.duration"),
-      cell: (cell) => <span class="mono">{formatDurationMinutes(cell.row.original.duration_ms, locale())}</span>,
+      cell: (cell) => formatDurationMinutes(cell.row.original.duration_ms, locale()),
     },
     {
       id: "status",
@@ -112,7 +112,7 @@ function WorkLogContent() {
         }
       />
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Suspense fallback={<PageSpinner />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />

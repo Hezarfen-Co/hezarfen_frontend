@@ -128,12 +128,12 @@ function QuestionBankContent() {
     {
       accessorKey: "points",
       header: t("questions.points"),
-      meta: { headerClass: "text-center", cellClass: "mono text-center" },
+      meta: { headerClass: "text-center", cellClass: "text-center" },
     },
     {
       accessorKey: "used_count",
       header: t("bank.usedCount"),
-      meta: { headerClass: "text-center", cellClass: "mono text-center" },
+      meta: { headerClass: "text-center", cellClass: "text-center" },
     },
     {
       id: "visibility",
@@ -220,7 +220,7 @@ function QuestionBankContent() {
         </TabsList>
 
         <TabsContent value={bankTab()} class="mt-4 border-0 bg-transparent p-0 shadow-none">
-          <section class="data-shell space-y-4 p-4">
+          <section class="space-y-4 p-0">
             <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
               <Show when={list.error}>
                 <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -238,7 +238,7 @@ function QuestionBankContent() {
                 }
                 columns={columns()}
                 data={list()?.items ?? []}
-                tableClass="min-w-[48rem]"
+                tableClass="min-w-[40rem]"
                 filterPlaceholder={t("bank.search")}
                 filterHint={t("search.hint.bank")}
                 searchValue={query()}

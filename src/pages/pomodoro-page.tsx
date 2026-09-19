@@ -116,17 +116,17 @@ function PomodoroContent() {
     {
       accessorKey: "started_at",
       header: t("pomodoro.startedAt"),
-      cell: (cell) => <span class="mono whitespace-nowrap">{formatDateTime(cell.row.original.started_at, locale())}</span>,
+      cell: (cell) => <span class="whitespace-nowrap">{formatDateTime(cell.row.original.started_at, locale())}</span>,
     },
     {
       accessorKey: "finished_at",
       header: t("pomodoro.finishedAt"),
-      cell: (cell) => <span class="mono whitespace-nowrap">{formatDateTime(cell.row.original.finished_at, locale())}</span>,
+      cell: (cell) => <span class="whitespace-nowrap">{formatDateTime(cell.row.original.finished_at, locale())}</span>,
     },
     {
       accessorKey: "duration_ms",
       header: t("pomodoro.duration"),
-      cell: (cell) => <span class="mono tabular-nums">{formatDurationClock(cell.row.original.duration_ms)}</span>,
+      cell: (cell) => <span class="tabular-nums">{formatDurationClock(cell.row.original.duration_ms)}</span>,
     },
     {
       accessorKey: "counted",
@@ -236,7 +236,7 @@ function PomodoroContent() {
                 <p class={cn("text-xs font-medium uppercase tracking-[0.08em]", running() && isOvertime() ? "text-destructive-text" : "text-muted-foreground")}>
                   {running() ? (isOvertime() ? t("pomodoro.overtime") : t("pomodoro.remaining")) : t("pomodoro.total")}
                 </p>
-                <p class={cn("mono mt-2 text-5xl font-semibold leading-none tracking-tight tabular-nums sm:text-6xl", running() && isOvertime() && "text-destructive-text")}>
+                <p class={cn("mt-2 text-5xl font-semibold leading-none tracking-tight tabular-nums sm:text-6xl", running() && isOvertime() && "text-destructive-text")}>
                   {running() && isOvertime() && "+"}
                   {formatDurationClock(running() ? (isOvertime() ? overtimeMs() : remainingMs()) : log()?.total_focus_ms)}
                 </p>
@@ -311,20 +311,20 @@ function PomodoroContent() {
         <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
           <div class="detail-metric-card">
             <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.today")}</p>
-            <p class="mono mt-2 text-2xl font-semibold tabular-nums">{formatDurationClock(todayFocus())}</p>
+            <p class="mt-2 text-2xl font-semibold tabular-nums">{formatDurationClock(todayFocus())}</p>
           </div>
           <div class="detail-metric-card">
             <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.average")}</p>
-            <p class="mono mt-2 text-2xl font-semibold tabular-nums">{formatDurationClock(averageFocus())}</p>
+            <p class="mt-2 text-2xl font-semibold tabular-nums">{formatDurationClock(averageFocus())}</p>
           </div>
           <div class="detail-metric-card">
             <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.sessions")}</p>
-            <p class="mono mt-2 text-2xl font-semibold tabular-nums">{log()?.total ?? 0}</p>
+            <p class="mt-2 text-2xl font-semibold tabular-nums">{log()?.total ?? 0}</p>
           </div>
         </div>
       </section>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <div class="flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 class="text-lg font-semibold">{t("pomodoro.history")}</h2>

@@ -50,7 +50,7 @@ export function HomeworkReportView(props: { userId: string }) {
       id: "due_at",
       accessorFn: (row) => row.due_at,
       header: t("homework.dueAt"),
-      meta: { cellClass: "mono whitespace-nowrap text-xs text-muted-foreground" },
+      meta: { cellClass: "whitespace-nowrap text-xs text-muted-foreground" },
       cell: (cell) => formatDateTime(cell.row.original.due_at, locale()),
     },
     {

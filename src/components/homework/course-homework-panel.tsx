@@ -175,7 +175,7 @@ export function CourseHomeworkPanel(props: {
       id: "due_at",
       accessorFn: (row) => row.due_at,
       header: t("homework.dueAt"),
-      meta: { cellClass: "mono text-xs text-text-subtle" },
+      meta: { cellClass: "text-xs text-text-subtle" },
       cell: (cell) => formatDateTime(cell.row.original.due_at, locale()),
     },
     {

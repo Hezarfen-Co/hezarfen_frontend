@@ -31,7 +31,7 @@ export function MealMenuCard(props: {
       <div class="flex items-start justify-between gap-3">
         <div class="flex min-w-0 items-center gap-3">
           <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-hairline bg-surface-tint"><IconUtensils class="h-5 w-5" /></span>
-          <div class="min-w-0"><h2 class="truncate font-semibold text-text-strong">{props.menu.slot}</h2><time class="mono text-xs text-text-subtle" datetime={props.menu.date}>{props.menu.date}</time></div>
+          <div class="min-w-0"><h2 class="truncate font-semibold text-text-strong">{props.menu.slot}</h2><time class="text-xs text-text-subtle" datetime={props.menu.date}>{props.menu.date}</time></div>
         </div>
         <span class="shrink-0 font-semibold tabular-nums">{formatTry(total(), props.locale)}</span>
       </div>
@@ -46,7 +46,7 @@ export function MealMenuCard(props: {
         <div class="mt-3 space-y-1">
           <div class="flex justify-between text-xs text-text-subtle">
             <span>{props.labels.reservations}: {props.reservationCount}</span>
-            <span class="mono">%{occupancyPct()}</span>
+            <span>%{occupancyPct()}</span>
           </div>
           <div class="h-1.5 overflow-hidden rounded-full bg-surface-fill">
             <div class="h-full rounded-full bg-success" style={{ width: `${occupancyPct()}%` }} />
@@ -55,7 +55,7 @@ export function MealMenuCard(props: {
       </Show>
       <div class="mt-auto flex justify-between border-t border-border-hairline pt-3 text-xs text-text-subtle">
         <span>{props.menu.dishes.length} {props.labels.dishes}</span>
-        <span>{props.labels.capacity}: <span class="mono">{props.menu.capacity ?? "∞"}</span></span>
+        <span>{props.labels.capacity}: <span>{props.menu.capacity ?? "∞"}</span></span>
       </div>
       <div class="mt-2 flex items-center justify-between text-xs text-text-subtle">
         <span>{props.labels.topPick}</span>

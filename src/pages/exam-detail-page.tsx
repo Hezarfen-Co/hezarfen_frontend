@@ -477,7 +477,7 @@ function ExamDetailContent() {
                 </span>
                 <div class="min-w-0">
                   <p class="text-xs font-medium text-muted-foreground">{t("exams.maxAttempts")}</p>
-                  <p class="mono truncate text-sm font-semibold">
+                  <p class="truncate text-sm font-semibold">
                     <Show when={isStudent()} fallback={ex().max_attempts}>
                       {ownAttemptSummary() ? `${ownAttemptSummary()!.attempts_used} / ${ex().max_attempts}` : `0 / ${ex().max_attempts}`}
                     </Show>
@@ -507,7 +507,7 @@ function ExamDetailContent() {
                 </span>
                 <div class="min-w-0">
                   <p class="text-xs font-medium text-muted-foreground">{t("exams.durationMinutes")}</p>
-                  <p class="mono truncate text-sm font-semibold">
+                  <p class="truncate text-sm font-semibold">
                     {formatDurationMinutes(examDurationMs(ex().duration_ms, ex().starts_at, ex().ends_at), locale())}
                   </p>
                 </div>
@@ -672,19 +672,19 @@ function ExamDetailContent() {
                         <div class="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
                           <div class="rounded-xl border border-border-line bg-surface-overlay p-4">
                             <p class="text-xs font-medium text-text-subtle">{t("exams.graded")}</p>
-                            <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().graded}</p>
+                            <p class="mt-1 text-2xl font-semibold tabular-nums">{s().graded}</p>
                           </div>
                           <div class="rounded-xl border border-border-line bg-surface-overlay p-4">
                             <p class="text-xs font-medium text-text-subtle">{t("exams.average")}</p>
-                            <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
+                            <p class="mt-1 text-2xl font-semibold tabular-nums">{s().average == null ? "—" : s().average}</p>
                           </div>
                           <div class="rounded-xl border border-border-line bg-surface-overlay p-4">
                             <p class="text-xs font-medium text-text-subtle">{t("exams.min")}</p>
-                            <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
+                            <p class="mt-1 text-2xl font-semibold tabular-nums">{s().min == null ? "—" : s().min}</p>
                           </div>
                           <div class="rounded-xl border border-border-line bg-surface-overlay p-4">
                             <p class="text-xs font-medium text-text-subtle">{t("exams.max")}</p>
-                            <p class="mono mt-1 text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
+                            <p class="mt-1 text-2xl font-semibold tabular-nums">{s().max == null ? "—" : s().max}</p>
                           </div>
                         </div>
                       )}

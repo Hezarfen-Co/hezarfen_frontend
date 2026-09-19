@@ -163,11 +163,12 @@ function HomeworkContent() {
     {
       accessorKey: "title",
       header: t("form.title"),
+      size: 220,
+      minSize: 180,
       meta: { cellClass: "font-medium" },
       cell: (cell) => (
         <div class="min-w-0">
           <p class="truncate font-medium">{cell.row.original.title}</p>
-          <p class="truncate text-xs text-text-subtle">{cell.row.original.description || "—"}</p>
         </div>
       ),
     },
@@ -175,6 +176,8 @@ function HomeworkContent() {
       id: "course",
       accessorFn: (row) => courseName(row.class_course),
       header: t("nav.courses"),
+      size: 180,
+      minSize: 140,
       meta: { cellClass: "max-w-0 truncate text-text-subtle" },
       cell: (cell) => <span class="block truncate">{courseName(cell.row.original.class_course)}</span>,
     },
@@ -182,13 +185,17 @@ function HomeworkContent() {
       id: "due_at",
       accessorFn: (row) => row.due_at,
       header: t("homework.dueAt"),
-      meta: { cellClass: "mono whitespace-nowrap text-text-subtle" },
+      size: 150,
+      minSize: 130,
+      meta: { cellClass: "whitespace-nowrap text-text-subtle" },
       cell: (cell) => formatDateTime(cell.row.original.due_at, locale()),
     },
     {
       id: "assigned",
       accessorFn: (row) => row.assigned?.length ?? 0,
       header: t("homework.assigned"),
+      size: 150,
+      minSize: 120,
       cell: (cell) => cell.row.original.assigned?.length ? t("common.countItem", { count: cell.row.original.assigned.length, item: t("courses.rosterItem") }) : t("homework.wholeCourse"),
     },
     {
@@ -253,34 +260,31 @@ function HomeworkContent() {
         </TabsList>
 
         <TabsContent value={dueTab()} class="mt-4 border-0 bg-transparent p-0 shadow-none">
-          <section class="data-shell space-y-4 p-4">
-            <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-              <Show when={list.error}>
-                <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-              </Show>
-              <DataTable
-                title={pageTitle()}
-                description={t("homework.listHelp")}
-                actions={
-                  <Show when={canCreate()}>
-                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("homework.add")}
-                    </Button>
-                  </Show>
-                }
-                columns={columns()}
-                data={dueFilteredList()}
-                tableClass="table-fixed min-w-5xl"
-                filterColumn="title"
-                enablePagination
-                pageSize={10}
-                empty={t("homework.empty")}
-                storageKey="homework"
-                onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
-              />
-            </Suspense>
-          </section>
+          <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
+            <Show when={list.error}>
+              <Alert variant="destructive">{formatApiError(list.error)}</Alert>
+            </Show>
+            <DataTable
+              columns={columns()}
+              data={dueFilteredList()}
+              tableClass="table-fixed min-w-[44rem]"
+              filterColumn="title"
+              filterHint={t("search.hint.homework")}
+              enablePagination
+              pageSize={10}
+              empty={t("homework.empty")}
+              storageKey="homework"
+              actions={
+                <Show when={canCreate()}>
+                  <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("homework.add")}
+                  </Button>
+                </Show>
+              }
+              onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
+            />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>

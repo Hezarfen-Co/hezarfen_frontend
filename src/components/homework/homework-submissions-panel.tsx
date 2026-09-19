@@ -40,11 +40,12 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
   );
   const [enrollments] = createResource(
     () => props.instanceId,
-    async (instanceId) => (await getInstanceEnrollments(instanceId)).items,
+    async (instanceId) => (await getInstanceEnrollments(instanceId, { limit: 200 })).items,
   );
+  const enrollmentUsers = createMemo(() => new Map((enrollments() ?? []).map((row) => [row.user.id, row.user])));
   const studentLabel = (userId: string) => {
-    const user = (enrollments() ?? []).find((row) => row.user.id === userId)?.user;
-    return user?.username ?? userId;
+    const user = enrollmentUsers().get(userId);
+    return user?.display_name?.trim() || user?.username || userId;
   };
 
   const openGrade = (row: HomeworkRosterEntry) => {
@@ -85,7 +86,9 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
       setPending(false);
     }
   };
-  const columns = createMemo<ColumnDef<HomeworkRosterEntry>[]>(() => [
+  const columns = createMemo<ColumnDef<HomeworkRosterEntry>[]>(() => {
+    enrollmentUsers();
+    return [
     {
       id: "user",
       accessorFn: (row) => studentLabel(row.user),
@@ -141,7 +144,8 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
         />
       ),
     },
-  ]);
+    ];
+  });
 
   return (
     <section class="data-shell space-y-4 p-5">
@@ -155,7 +159,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
         <Show when={submissions.error}><Alert variant="destructive">{formatApiError(submissions.error, locale())}</Alert></Show>
         <DataTable columns={columns()} data={submissions()?.items ?? []} filterColumn="user" enablePagination pageSize={10} empty={t("common.noResults")} />
       </Suspense>
-      <SidePanel guardUnsaved open={gradeTarget() != null} onOpenChange={(open) => !open && closeGrade()} title={t("homework.grade")} description={gradeTarget() ? studentLabel(gradeTarget()!.user) : ""}>
+      <SidePanel open={gradeTarget() != null} onOpenChange={(open) => !open && closeGrade()} title={t("homework.grade")} description={gradeTarget() ? studentLabel(gradeTarget()!.user) : ""}>
         <form class="space-y-4" onSubmit={(event) => void saveGrade(event)}>
           <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
           <div class="space-y-1.5">

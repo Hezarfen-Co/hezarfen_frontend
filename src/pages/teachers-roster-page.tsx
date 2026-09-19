@@ -58,7 +58,7 @@ function TeachersRosterContent() {
       accessorKey: "homeroomClasses",
       size: 90,
       header: t("roster.class"),
-      meta: { cellClass: "mono tabular-nums" },
+      meta: { cellClass: "tabular-nums" },
       cell: (cell) => (cell.row.original.homeroomClasses > 0 ? cell.row.original.homeroomClasses : "—"),
     },
     { id: "weekly", size: 130, header: t("roster.weeklyLessons"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
@@ -94,7 +94,7 @@ function TeachersRosterContent() {
       </Tabs>
 
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={data.error}>
             <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
@@ -102,6 +102,7 @@ function TeachersRosterContent() {
           <Show when={!data.error && data()}>
             {(rows) => (
               <DataTable
+                surfaceSections
                 title={t("nav.teachersRoster")}
                 description={t("roster.teachersSubtitle")}
                 actions={<><Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
@@ -117,7 +118,7 @@ function TeachersRosterContent() {
           </Show></>}
                 columns={columns()}
                 data={rows()}
-                tableClass="min-w-[940px]"
+                tableClass="min-w-[52rem]"
                 empty={t("roster.noTeachers")}
                 filterPlaceholder={t("roster.searchTeachers")}
                 filterHint={t("search.hint.teachers")}

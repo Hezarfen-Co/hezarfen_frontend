@@ -287,7 +287,7 @@ function InstanceDetailContent() {
                     <p class="text-xs font-medium text-text-subtle">{t("instances.dersSaati")}</p>
                     <Show
                       when={canManage()}
-                      fallback={<p class="mono truncate text-sm font-semibold text-text-default">{inst().ders_saati}</p>}
+                      fallback={<p class="truncate text-sm font-semibold text-text-default">{inst().ders_saati}</p>}
                     >
                       <Input
                         aria-label={t("instances.dersSaati")}
@@ -339,7 +339,7 @@ function InstanceDetailContent() {
                   </span>
                   <div class="min-w-0">
                     <p class="text-xs font-medium text-text-subtle">{t("courses.roster")}</p>
-                    <p class="mono truncate text-sm font-semibold text-text-default">{inst().enrollment_count}</p>
+                    <p class="truncate text-sm font-semibold text-text-default">{inst().enrollment_count}</p>
                   </div>
                 </div>
                 <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
@@ -348,7 +348,7 @@ function InstanceDetailContent() {
                   </span>
                   <div class="min-w-0">
                     <p class="text-xs font-medium text-text-subtle">{t("courses.exams")}</p>
-                    <p class="mono truncate text-sm font-semibold text-text-default">{examCount()}</p>
+                    <p class="truncate text-sm font-semibold text-text-default">{examCount()}</p>
                   </div>
                 </div>
               </div>

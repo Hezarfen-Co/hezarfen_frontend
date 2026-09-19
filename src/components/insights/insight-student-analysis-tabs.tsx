@@ -103,11 +103,11 @@ function StudyChart(props: { value: unknown; t: (key: string) => string }) {
       <dl class="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border-line bg-border-line lg:grid-cols-1">
         <div class="bg-surface-base p-4">
           <dt class="text-xs text-muted-foreground">{props.t("insights.analysis.activeDays")}</dt>
-          <dd class="mt-1 font-mono text-2xl font-semibold tabular-nums text-text-strong">{String(num(recent().active_days) ?? "—")}</dd>
+          <dd class="mt-1 text-2xl font-semibold tabular-nums text-text-strong">{String(num(recent().active_days) ?? "—")}</dd>
         </div>
         <div class="bg-surface-base p-4">
           <dt class="text-xs text-muted-foreground">{props.t("insights.analysis.sessions")}</dt>
-          <dd class="mt-1 font-mono text-2xl font-semibold tabular-nums text-text-strong">{String(num(recent().n_stints) ?? "—")}</dd>
+          <dd class="mt-1 text-2xl font-semibold tabular-nums text-text-strong">{String(num(recent().n_stints) ?? "—")}</dd>
         </div>
       </dl>
     </div>

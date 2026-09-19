@@ -156,16 +156,8 @@ function CoursesContent() {
           <DataSection
             title={pageLabel()}
             description={t("courses.pageSubtitle")}
-            actions={
-              <Show when={canCreate()}>
-                <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowForm(true)}>
-                  <IconPlus class="h-4 w-4" />
-                  {t("common.createItem", { item: kindInSentence() })}
-                </Button>
-              </Show>
-            }
           >
-          <div aria-label={t("common.search")}>
+          <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs" aria-label={t("common.search")}>
             <DataToolbar
               inline
               searchValue={search()}
@@ -178,6 +170,14 @@ function CoursesContent() {
                   <option value="taught">{t("instances.taughtIn")}</option>
                   <option value="untaught">{t("instances.empty")}</option>
                 </Select>
+              }
+              actions={
+                <Show when={canCreate()}>
+                  <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowForm(true)}>
+                    <IconPlus class="h-4 w-4" />
+                    {t("common.createItem", { item: kindInSentence() })}
+                  </Button>
+                </Show>
               }
             />
           </div>
@@ -198,17 +198,9 @@ function CoursesContent() {
                         course={course}
                         sections={t("common.countItem", { count: course.class_course_count, item: t("instances.item") })}
                         enrolled={auth.user()?.role === "student"}
-                        showTeacherActions={hasMinRole(auth.user()?.role, "teacher")}
                         labels={{
-                          taughtIn: t("instances.taughtIn"),
-                          enrolled: t("courses.enrolled"),
                           kind: courseKindLabel(course.kind, t),
-                          weeklyHours: t("courses.weeklyHours"),
-                          competency: t("courses.competency"),
-                          attendance: t("courses.attendanceRate"),
-                          progress: t("courses.progress"),
-                          takeAttendance: t("courses.takeAttendance"),
-                          analysis: t("courses.analysis"),
+                          enrolled: t("courses.enrolled"),
                         }}
                       />
                     )}

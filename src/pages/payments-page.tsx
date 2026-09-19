@@ -117,7 +117,6 @@ function PaymentsContent() {
   onCleanup(() => clearTimeout(queryTimer));
 
   const [studentPage, setStudentPage] = createSignal(0);
-  const [studentPageSize, setStudentPageSize] = createSignal(STUDENT_PAGE_SIZE);
   // Reset to page 1 whenever the query or plan filter changes underneath it.
   createEffect(() => {
     debouncedQuery();
@@ -134,7 +133,7 @@ function PaymentsContent() {
   // (already name-resolved) plan roster and filters/pages it client-side —
   // a plan's assignees are a small, bounded list on their own.
   const [studentsPage, { refetch: refetchStudents }] = createResource(
-    () => ({ plan: planFilter(), q: debouncedQuery(), page: studentPage(), size: studentPageSize() }),
+    () => ({ plan: planFilter(), q: debouncedQuery(), page: studentPage(), size: STUDENT_PAGE_SIZE }),
     async ({ plan, q, page, size }): Promise<{ items: PersonRef[]; total: number }> => {
       if (plan) {
         const assignments = await getPlanAssignments(plan, { limit: 500 });
@@ -352,7 +351,7 @@ function PaymentsContent() {
       accessorKey: "due_at",
       header: t("payments.due"),
       size: 120,
-      cell: (cell) => <span class="mono whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive-text": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
+      cell: (cell) => <span class="whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive-text": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
     },
     {
       accessorKey: "outstanding_minor",
@@ -450,7 +449,7 @@ function PaymentsContent() {
   const planTotal = (plan: FeePlan) => plan.installments.reduce((sum, item) => sum + item.amount_minor, 0);
   const planColumns = createMemo<ColumnDef<FeePlan>[]>(() => [
     { accessorKey: "name", header: t("payments.planName"), cell: (cell) => <span class="font-medium">{cell.row.original.name}</span> },
-    { id: "installments", header: t("payments.installments"), cell: (cell) => <span class="mono text-sm">{cell.row.original.installments.length}</span> },
+    { id: "installments", header: t("payments.installments"), cell: (cell) => <span class="text-sm">{cell.row.original.installments.length}</span> },
     { id: "total", header: t("payments.total"), cell: (cell) => <span class="tabular-nums">{formatTry(planTotal(cell.row.original), moneyLocale())}</span> },
     {
       id: "actions",
@@ -601,7 +600,7 @@ function PaymentsContent() {
                 <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodOverdue")}</p><ComingSoonValue class="mt-1" /></div>
                 <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodExpected")}</p><ComingSoonValue class="mt-1" /></div>
               </div>
-              <section class="data-shell space-y-4 p-4">
+              <section class="space-y-4 p-0">
               <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
                 <Show when={studentsPage.error}>
                   <ErrorAlert message={formatApiError(studentsPage.error)} onRetry={() => void refetchStudents()} />
@@ -638,13 +637,9 @@ function PaymentsContent() {
                     enablePagination
                     manualPagination={{
                       pageIndex: studentPage(),
-                      pageSize: studentPageSize(),
+                      pageSize: STUDENT_PAGE_SIZE,
                       total: studentsTotal(),
                       onPageChange: setStudentPage,
-                      onPageSizeChange: (size) => {
-                        setStudentPageSize(size);
-                        setStudentPage(0);
-                      },
                     }}
                   />
               </Suspense>
@@ -669,7 +664,7 @@ function PaymentsContent() {
               <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.overdueCount")}</p><p class="mt-1 font-semibold tabular-nums" classList={{ "text-destructive-text": summary().overdue > 0 }}>{summary().overdue}</p></div>
             </div>
 
-            <section class="data-shell space-y-4 p-4">
+            <section class="space-y-4 p-0">
               <Suspense fallback={<DataTableSkeleton columns={5} rows={5} />}>
                 <Show when={statement.error}>
                   <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetchStatement()} />
@@ -750,7 +745,7 @@ function PaymentsContent() {
 
         {/* ---------------- Fee plans ---------------- */}
         <TabsContent value="plans" class="space-y-4">
-          <section class="data-shell space-y-4 p-4">
+          <section class="space-y-4 p-0">
             <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
               <Show when={plans.error}>
                 <ErrorAlert message={formatApiError(plans.error)} onRetry={() => void refetchPlans()} />
@@ -793,7 +788,7 @@ function PaymentsContent() {
                 <DetailField label={t("payments.credited")} value={formatTry(entry.credited_minor, moneyLocale())} />
                 <DetailField label={t("payments.outstanding")} value={formatTry(entry.outstanding_minor, moneyLocale())} />
                 <DetailField label={t("payments.reversed")} value={entry.reversed ? t("payments.reversed") : "—"} />
-                <DetailField label={t("payments.plan")} value={entry.plan ?? "—"} mono />
+                <DetailField label={t("payments.plan")} value={entry.plan ?? "—"} />
                 <DetailField label={t("admin.id")} value={entry.charge_id} mono />
               </div>
               <Show when={!entry.reversed && entry.outstanding_minor > 0}>
@@ -816,7 +811,7 @@ function PaymentsContent() {
             <div class="space-y-5">
               <div class="grid gap-4 sm:grid-cols-2">
                 <DetailField label={t("payments.total")} value={formatTry(planTotal(plan), moneyLocale())} />
-                <DetailField label={t("payments.installments")} value={String(plan.installments.length)} mono />
+                <DetailField label={t("payments.installments")} value={String(plan.installments.length)} />
                 <DetailField label={t("bank.owner")} value={personLabel(plan.created_by)} />
                 <DetailField label={t("bank.created")} value={formatDate(plan.created_at, locale())} />
               </div>

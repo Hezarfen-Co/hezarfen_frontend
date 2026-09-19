@@ -189,13 +189,13 @@ function ClassDetailContent() {
       id: "dersSaati",
       accessorFn: (row) => row.ders_saati,
       header: t("instances.dersSaati"),
-      meta: { cellClass: "mono" },
+      meta: { cellClass: "" },
     },
     {
       id: "roster",
       accessorFn: (row) => row.enrollment_count,
       header: t("courses.roster"),
-      meta: { cellClass: "mono" },
+      meta: { cellClass: "" },
     },
     {
       id: "attachedBy",

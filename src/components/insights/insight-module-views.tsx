@@ -86,7 +86,7 @@ export function LabeledRow(props: { label: string; value: string | null; mono?: 
       <dd
         class={cn(
           "min-w-0 text-right font-medium text-foreground",
-          props.mono && "font-mono",
+          props.mono && "",
         )}
       >
         {props.value ?? detailText("detail.value.missing")}
@@ -111,7 +111,7 @@ export function NoteLine(props: { label?: string; children: JSX.Element }) {
 function StatCell(props: { label: string; value: string | null }) {
   return (
     <div class="rounded-lg bg-surface-overlay px-2.5 py-2 text-center">
-      <p class="font-mono text-sm font-semibold text-foreground">
+      <p class="text-sm font-semibold text-foreground">
         {props.value ?? detailText("detail.value.missing")}
       </p>
       <p class="mt-0.5 text-[11px] text-muted-foreground">{props.label}</p>
@@ -417,8 +417,8 @@ function MarksView(props: { value: Rec; courseTitle: CourseTitle }) {
                   }}
                 >
                   <TableCell class="font-medium text-text-strong">{str(obj(stat).course_title) ?? courseLabel(id, props.courseTitle, index())}</TableCell>
-                  <TableCell class="text-center font-mono">{nText(obj(stat).average) ?? "—"}</TableCell>
-                  <TableCell class="text-center font-mono">{String(num(obj(stat).n_marks) ?? 0)}</TableCell>
+                  <TableCell class="text-center">{nText(obj(stat).average) ?? "—"}</TableCell>
+                  <TableCell class="text-center">{String(num(obj(stat).n_marks) ?? 0)}</TableCell>
                   <TableCell class="text-center"><Badge variant={bandVariant(stat)} class="rounded-full">{bandLabel(stat)}</Badge></TableCell>
                   <TableCell class="text-center text-xs text-muted-foreground">{trendLabel(stat)}</TableCell>
                 </TableRow>

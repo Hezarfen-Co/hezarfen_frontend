@@ -125,7 +125,7 @@ function StudentMarksContent() {
         if (rep.overall_average == null)
           return <span class="text-sm text-muted-foreground">{rep.overall_grade ?? "—"}</span>;
         return (
-          <span class={cn("mono font-semibold tabular-nums", avgTone(rep.overall_average))}>
+          <span class={cn("font-semibold tabular-nums", avgTone(rep.overall_average))}>
             {round(rep.overall_average)}
             <Show when={rep.overall_grade}>{(g) => <span class="ml-1 font-medium text-muted-foreground">/ {g()}</span>}</Show>
           </span>
@@ -159,7 +159,7 @@ function StudentMarksContent() {
 
   return (
     <div class="space-y-6">
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Show when={error() && !viewUser()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>

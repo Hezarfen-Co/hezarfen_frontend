@@ -9,7 +9,7 @@ import { RagOutputsPanel } from "@/components/notes/rag-outputs-panel";
 import { StudioOutputLibrary } from "@/components/ai/studio-output-library";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconSparkles, IconWaveform } from "@/components/ui/icons";
+import { IconSparkles } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -94,20 +94,7 @@ export function NoteStudioPanel() {
                 />
               </div>
             </section>
-            <Show
-              when={selected()}
-              fallback={
-                <section class="flex min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-primary/25 bg-primary/[0.03] px-6 py-8 text-center">
-                  <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary-text">
-                    <IconWaveform class="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p class="font-medium text-text-strong">{t("podcast.selectPrompt")}</p>
-                    <p class="mt-1 text-sm text-muted-foreground">{t("podcast.selectPromptHint")}</p>
-                  </div>
-                </section>
-              }
-            >
+            <Show when={selected()}>
               {(note) => (
                 <section ref={outputsSection} class="scroll-mt-20 space-y-3 rounded-2xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
                   <div class="flex flex-wrap items-center justify-between gap-2 px-1">
@@ -133,11 +120,13 @@ export function NoteStudioPanel() {
                 </section>
               )}
             </Show>
-            <StudioOutputLibrary
-              notes={(notes() ?? []).map((note) => ({ id: note.id, title: note.title, courseTitle: note.courseTitle }))}
-              selectedId={selectedId()}
-              onSelect={selectLibraryNote}
-            />
+            <Show when={!selected()}>
+              <StudioOutputLibrary
+                notes={(notes() ?? []).map((note) => ({ id: note.id, title: note.title, courseTitle: note.courseTitle }))}
+                selectedId={selectedId()}
+                onSelect={selectLibraryNote}
+              />
+            </Show>
           </div>
         </Show>
       </Show>

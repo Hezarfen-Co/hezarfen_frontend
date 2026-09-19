@@ -68,9 +68,6 @@ export function StudioOutputLibrary(props: {
     <section class="overflow-hidden rounded-xl border border-border-line bg-surface-base">
       <header class="flex flex-wrap items-start justify-between gap-3 border-b border-border-hairline px-4 py-4 sm:px-5">
         <div class="flex min-w-0 items-start gap-3">
-          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-tint text-text-subtle">
-            <IconNote class="h-4 w-4" />
-          </span>
           <div class="min-w-0">
             <h2 class="text-sm font-semibold text-text-strong">{t("aiStudio.library.title")}</h2>
             <p class="mt-0.5 text-xs text-muted-foreground">{t("aiStudio.library.description")}</p>
@@ -107,7 +104,9 @@ export function StudioOutputLibrary(props: {
                   >
                     <div class="flex w-full items-start gap-3">
                       <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text">
-                        <IconNote class="h-4 w-4" />
+                        <Show when={item.podcastCount > 0} fallback={<IconNote class="h-4 w-4" />}>
+                          <IconWaveform class="h-4 w-4" />
+                        </Show>
                       </span>
                       <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-semibold text-text-strong">{item.title}</p>

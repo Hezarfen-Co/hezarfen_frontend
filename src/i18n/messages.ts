@@ -966,8 +966,6 @@ export type MessageKey =
   | "podcast.pageDescription"
   | "podcast.source"
   | "podcast.selectNote"
-  | "podcast.selectPrompt"
-  | "podcast.selectPromptHint"
   | "podcast.noNotes"
   | "podcast.noNotesHint"
   | "podcast.format"
@@ -2042,11 +2040,13 @@ export type MessageKey =
   | "search.hint.exams"
   | "search.hint.events"
   | "search.hint.courses"
+  | "search.hint.courseNotes"
   | "search.hint.classes"
   | "search.hint.bank"
   | "search.hint.whiteboards"
   | "search.hint.chat"
   | "search.hint.deadlines"
+  | "search.hint.homework"
   | "search.hint.paymentsStudents"
   | "work.userNotFound"
   | "messages.inbox"
@@ -2812,7 +2812,7 @@ const en: Dict = {
   "common.export": "Export",
   "common.columns": "Columns",
   "common.visibleColumns": "Visible columns",
-  "common.pageRange": "{start}-{end} of {total}",
+  "common.pageRange": "{start}-{end} / {total}",
   "common.rowsPerPage": "{size} / page",
   "common.moreFilters": "More filters",
   "common.lessFilters": "Less filters",
@@ -3192,7 +3192,7 @@ const en: Dict = {
   "courseNotes.empty": "No notes on this course yet.",
   "courseNotes.emptyManageHint": "Write a note the whole class can read, and attach files to it.",
   "courseNotes.ragTitle": "AI summary",
-  "courseNotes.markdownPreview": "Markdown preview",
+  "courseNotes.markdownPreview": "Preview",
   "courseNotes.ragEmpty": "No AI outputs on this note yet.",
   "courseNotes.ragHint": "Create a fresh summary from this note and its attachments.",
   "courseNotes.ragGenerate": "Create summary",
@@ -3206,8 +3206,6 @@ const en: Dict = {
   "podcast.pageDescription": "Choose a lesson note, pick a narration style, and create its audio.",
   "podcast.source": "Lesson note",
   "podcast.selectNote": "Choose a lesson note…",
-  "podcast.selectPrompt": "Please choose a lesson note",
-  "podcast.selectPromptHint": "The narration options will appear here after you select a note above.",
   "podcast.noNotes": "No lesson notes are available.",
   "podcast.noNotesHint": "Add a note to one of your courses before creating audio.",
   "podcast.format": "Narration style",
@@ -4362,15 +4360,17 @@ const en: Dict = {
   "search.hint.students": "Matches name, surname and username. Use the filter next to it for a class.",
   "search.hint.teachers": "Matches name, surname and username.",
   "search.hint.people": "Matches name, surname, username and user id.",
-  "search.hint.users": "Matches username, name, e-mail, user id and role.",
+  "search.hint.users": "Matches username, phone, name, e-mail, user id and role.",
   "search.hint.exams": "Matches exam title, description, course, exam kind and status.",
   "search.hint.events": "Matches event title, description, audience and date.",
   "search.hint.courses": "Matches course title, description, creator, teacher and term.",
+  "search.hint.courseNotes": "Matches note title and content.",
   "search.hint.classes": "Matches class name, grade and homeroom teacher.",
   "search.hint.bank": "Matches a phrase inside the question text.",
   "search.hint.whiteboards": "Matches board titles on the page you are viewing.",
   "search.hint.chat": "Matches the text of the messages in this chat.",
   "search.hint.deadlines": "Matches the title of the upcoming items.",
+  "search.hint.homework": "Matches homework title, description and course.",
   "search.hint.paymentsStudents": "Matches a student's name, surname or username.",
   "work.userNotFound": "No work log found for this user.",
   "work.show": "Show log",
@@ -5054,7 +5054,7 @@ const tr: Dict = {
   "common.export": "Dışa aktar",
   "common.columns": "Sütunlar",
   "common.visibleColumns": "Görünür sütunlar",
-  "common.pageRange": "{total} kayıttan {start}-{end}",
+  "common.pageRange": "{start}-{end} / {total}",
   "common.rowsPerPage": "{size} / sayfa",
   "common.moreFilters": "Daha fazla filtre",
   "common.lessFilters": "Daha az filtre",
@@ -5434,7 +5434,7 @@ const tr: Dict = {
   "courseNotes.empty": "Bu derse ait henüz not yok.",
   "courseNotes.emptyManageHint": "Tüm sınıfın okuyabileceği bir not yazın, dosya da ekleyebilirsiniz.",
   "courseNotes.ragTitle": "Yapay zekâ özeti",
-  "courseNotes.markdownPreview": "Markdown önizleme",
+  "courseNotes.markdownPreview": "Önizleme",
   "courseNotes.ragEmpty": "Bu notta henüz YZ çıktısı yok.",
   "courseNotes.ragHint": "Bu not ve eklerinden güncel bir özet oluşturun.",
   "courseNotes.ragGenerate": "Özet oluştur",
@@ -5448,8 +5448,6 @@ const tr: Dict = {
   "podcast.pageDescription": "Ders notunu seçin, anlatım biçimini belirleyin ve ses kaydını oluşturun.",
   "podcast.source": "Ders notu",
   "podcast.selectNote": "Bir ders notu seçin…",
-  "podcast.selectPrompt": "Lütfen bir ders notu seçin",
-  "podcast.selectPromptHint": "Yukarıdan bir not seçtiğinizde anlatım seçenekleri burada açılacak.",
   "podcast.noNotes": "Kullanılabilir ders notu yok.",
   "podcast.noNotesHint": "Ses oluşturmadan önce derslerinizden birine not ekleyin.",
   "podcast.format": "Anlatım biçimi",
@@ -6604,15 +6602,17 @@ const tr: Dict = {
   "search.hint.students": "Ad, soyad ve kullan\u0131c\u0131 ad\u0131nda arar. S\u0131n\u0131f i\u00e7in yan\u0131ndaki filtreyi kullan\u0131n.",
   "search.hint.teachers": "Ad, soyad ve kullan\u0131c\u0131 ad\u0131nda arar.",
   "search.hint.people": "Ad, soyad, kullan\u0131c\u0131 ad\u0131 ve kullan\u0131c\u0131 ID'sinde arar.",
-  "search.hint.users": "Kullan\u0131c\u0131 ad\u0131, ad, e-posta, kullan\u0131c\u0131 ID'si ve rolde arar.",
+  "search.hint.users": "Kullan\u0131c\u0131 ad\u0131, telefon, ad, e-posta, kullan\u0131c\u0131 ID'si ve rolde arar.",
   "search.hint.exams": "S\u0131nav ad\u0131, a\u00e7\u0131klama, ders, s\u0131nav t\u00fcr\u00fc ve durumda arar.",
   "search.hint.events": "Etkinlik ad\u0131, a\u00e7\u0131klama, kat\u0131l\u0131mc\u0131 kitlesi ve tarihte arar.",
   "search.hint.courses": "Ders ad\u0131, a\u00e7\u0131klama, olu\u015fturan, \u00f6\u011fretmen ve d\u00f6nemde arar.",
+  "search.hint.courseNotes": "Not ba\u015fl\u0131\u011f\u0131 ve i\u00e7eri\u011finde arar.",
   "search.hint.classes": "\u015eube ad\u0131, s\u0131n\u0131f d\u00fczeyi ve dan\u0131\u015fman \u00f6\u011fretmende arar.",
   "search.hint.bank": "Soru metninde ge\u00e7en bir ifadeyi arar.",
   "search.hint.whiteboards": "A\u00e7\u0131k olan sayfadaki tahta ba\u015fl\u0131klar\u0131nda arar.",
   "search.hint.chat": "Bu sohbetteki mesajlar\u0131n metninde arar.",
   "search.hint.deadlines": "Yakla\u015fan kay\u0131tlar\u0131n ba\u015fl\u0131\u011f\u0131nda arar.",
+  "search.hint.homework": "\u00d6dev ad\u0131, a\u00e7\u0131klamas\u0131 ve dersinde arar.",
   "search.hint.paymentsStudents": "\u00d6\u011frencinin ad\u0131nda, soyad\u0131nda veya kullan\u0131c\u0131 ad\u0131nda arar.",
   "work.userNotFound": "Bu kullanıcı için mesai kaydı bulunamadı.",
   "work.show": "Kaydı göster",

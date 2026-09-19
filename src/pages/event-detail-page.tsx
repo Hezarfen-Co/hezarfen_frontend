@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataToolbar } from "@/components/ui/data-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -37,6 +38,7 @@ import { cn } from "@/lib/cn";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { personId, personLabel } from "@/lib/person";
+import { matchesSearch } from "@/lib/search-text";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -74,6 +76,7 @@ function EventDetailContent() {
   const [editing, setEditing] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [registrationTarget, setRegistrationTarget] = createSignal<string | null>(null);
+  const [rosterSearch, setRosterSearch] = createSignal("");
   const [eventTab, setEventTab] = createSignal("studentAttendance");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -89,6 +92,11 @@ function EventDetailContent() {
     () => (isTeacherPlus() ? id() : null),
     async (eventId) => (eventId ? (await getEventAttendance(eventId)).items : []),
   );
+  const visibleRoster = createMemo(() => {
+    const query = rosterSearch().trim();
+    const rows = roster() ?? [];
+    return query ? rows.filter((row) => matchesSearch(query, personLabel(row.user))) : rows;
+  });
 
   const canManage = () => {
     const e = event();
@@ -166,12 +174,12 @@ function EventDetailContent() {
         }
       >
         {(ev) => (
-          <div class="space-y-6">
-            <div class="space-y-2">
+          <div class="space-y-5">
+            <section class="rounded-xl border border-border-line bg-surface-base px-4 py-3 shadow-xs sm:px-5">
               <Breadcrumbs items={[{ label: t("events.title"), to: "/events" }, { label: ev().title }]} />
               <PageHeader
                 title={ev().title}
-                description={ev().description || "—"}
+                description={ev().description || undefined}
                 actions={
                   canManage() ? (
                     <div class="detail-action-group">
@@ -187,21 +195,21 @@ function EventDetailContent() {
                   ) : undefined
                 }
               />
-              <div class="grid gap-3 text-sm sm:grid-cols-3">
+              <div class="grid gap-3 border-t border-border-hairline pt-3 text-sm sm:grid-cols-3">
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.audience")}</p>
                   <p class="mt-1 font-medium">{audienceLabel(ev().audience, t)}</p>
                 </div>
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.starts")}</p>
-                  <p class="mono mt-1 font-medium">{formatDateTime(ev().starts_at, locale())}</p>
+                  <p class="mt-1 font-medium">{formatDateTime(ev().starts_at, locale())}</p>
                 </div>
                 <div class="detail-metric-card">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("events.ends")}</p>
-                  <p class="mono mt-1 font-medium">{formatDateTime(ev().ends_at, locale())}</p>
+                  <p class="mt-1 font-medium">{formatDateTime(ev().ends_at, locale())}</p>
                 </div>
               </div>
-            </div>
+            </section>
 
             <ConfirmDialog
               open={deleteOpen()}
@@ -263,19 +271,20 @@ function EventDetailContent() {
             />
 
             <Show when={isTeacherPlus()}>
-              <Tabs value={eventTab()} onChange={setEventTab} class="space-y-3">
-                <TabsList>
+              <Tabs value={eventTab()} onChange={setEventTab} class="space-y-4">
+                <TabsList class={cn("w-full justify-start gap-0 overflow-x-auto rounded-lg border-border-line bg-surface-base p-0 shadow-none sm:grid", ev().audience.kind === "registration" ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
                   <Show when={ev().audience.kind === "registration"}>
-                    <TabsTrigger value="registration">{t("events.registrationRoster")}</TabsTrigger>
+                    <TabsTrigger value="registration" class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none">{t("events.registrationRoster")}</TabsTrigger>
                   </Show>
-                  <TabsTrigger value="studentAttendance">{t("events.studentAttendance")}</TabsTrigger>
-                  <TabsTrigger value="attendanceRecords">{t("events.attendanceRecords")}</TabsTrigger>
+                  <TabsTrigger value="studentAttendance" class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none">{t("events.studentAttendance")}</TabsTrigger>
+                  <TabsTrigger value="attendanceRecords" class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none">{t("events.attendanceRecords")}</TabsTrigger>
                 </TabsList>
 
                 <Show when={ev().audience.kind === "registration"}>
                   <TabsContent value="registration" forceMount class="space-y-3">
-                    <p class="tab-panel-note">{t("events.registrationRosterHelp")}</p>
-                    <div class="grid gap-3 rounded-lg border bg-muted/20 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                    <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
+                      <p class="mb-3 text-sm text-muted-foreground">{t("events.registrationRosterHelp")}</p>
+                      <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                       <UserSearchSelect id="registration-user" label={t("events.attendee")} value={registrationUserId()} placeholder={t("events.selectAttendee")} emptyMessage={t("events.noAttendees")} role="student" onChange={setRegistrationUserId} />
                       <Button
                         type="button"
@@ -296,22 +305,25 @@ function EventDetailContent() {
                       >
                         {t("events.registerStudent")}
                       </Button>
+                      </div>
+                    </div>
+                    <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
+                      <DataToolbar searchValue={rosterSearch()} searchPlaceholder={t("common.searchPlaceholder")} onSearchInput={setRosterSearch} />
                     </div>
                     <Suspense fallback={<DataTableSkeleton columns={4} />}>
                       <Show when={roster()}>
-                        {(rows) => (
-                          <Show when={rows().length > 0} fallback={<EmptyState kind="events" title={t("events.noRoster")} />}>
-                            <DataTable columns={rosterColumns()} data={rows()} filterColumn="attendee" enablePagination pageSize={10} />
-                          </Show>
-                        )}
+                        <Show when={visibleRoster().length > 0} fallback={<EmptyState kind="events" title={t("events.noRoster")} />}>
+                          <DataTable columns={rosterColumns()} data={visibleRoster()} enablePagination pageSize={10} />
+                        </Show>
                       </Show>
                     </Suspense>
                   </TabsContent>
                 </Show>
 
                 <TabsContent value="studentAttendance" forceMount class="space-y-3">
-                  <p class="tab-panel-note">{t("events.studentAttendanceHelp")}</p>
-                  <div class="grid gap-3">
+                  <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
+                    <p class="mb-3 text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
+                    <div class="grid gap-3">
                     <UserSearchSelect id="other-user" label={t("events.attendee")} value={otherUserId()} placeholder={t("events.selectAttendee")} emptyMessage={t("events.noAttendees")} role="student" onChange={setOtherUserId} />
                     <AttendanceStatusPicker id="other-status" value={status()} onChange={setStatus} label={t("events.status")} />
                     <Button
@@ -333,25 +345,30 @@ function EventDetailContent() {
                     >
                       {t("events.saveStudentAttendance")}
                     </Button>
+                    </div>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="attendanceRecords" forceMount class="space-y-3">
-                  <p class="tab-panel-note">{t("events.attendanceRecordsHelp")}</p>
                   <Suspense fallback={<DataTableSkeleton columns={4} />}>
                     <Show when={attendance()}>
                       {(rows) => (
-                        <AttendanceTable
-                          rows={rows()}
-                          emptyLabel={t("events.noAttendance")}
-                          canRemove={isTeacherPlus()}
-                          onRemove={async (userId) => {
-                            await wrap(async () => {
-                              await deleteEventAttendanceByUserId(id(), userId);
-                              await refetchAttendance();
-                            }, t("common.deleted"));
-                          }}
-                        />
+                        <div class="space-y-3">
+                          <div class="rounded-xl border border-border-line bg-surface-base p-3 text-sm text-muted-foreground shadow-xs">
+                            {t("events.attendanceRecordsHelp")}
+                          </div>
+                          <AttendanceTable
+                            rows={rows()}
+                            emptyLabel={t("events.noAttendance")}
+                            canRemove={isTeacherPlus()}
+                            onRemove={async (userId) => {
+                              await wrap(async () => {
+                                await deleteEventAttendanceByUserId(id(), userId);
+                                await refetchAttendance();
+                              }, t("common.deleted"));
+                            }}
+                          />
+                        </div>
                       )}
                     </Show>
                   </Suspense>

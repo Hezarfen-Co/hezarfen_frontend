@@ -8,7 +8,8 @@ import { getLimits } from "@/api/limits";
 import { formatApiError, type BlueprintSkip, type ClassGroup } from "@/api/client";
 import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-report";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { DataTableSearch } from "@/components/ui/data-table-search";
+import { DataToolbar } from "@/components/ui/data-toolbar";
+import { DropdownSelect, Select } from "@/components/ui/select";
 import { DataSection } from "@/components/ui/data-section";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { IconChevronRight, IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BlueprintsTab } from "@/components/classes/blueprints-tab";
@@ -226,29 +226,36 @@ function ClassesContent() {
           <DataSection
             title={t("classGroups.title")}
             description={t("classGroups.subtitle")}
-            actions={
-              <Show when={canManage()}>
-                <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-                  {t("classGroups.mergeClasses")}
-                  <ComingSoonBadge class="ml-1.5" />
-                </Button>
-                <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowForm(true)}>
-                  <IconPlus class="h-4 w-4" />
-                  {t("classGroups.newClass")}
-                </Button>
-              </Show>
-            }
           >
-            <div class="flex flex-wrap items-center gap-2">
-              <DataTableSearch value={query()} onChange={setQuery} placeholder={t("classGroups.searchPlaceholder")} hint={t("search.hint.classes")} />
-              <Show when={grades().length > 0}>
-                <Tabs value={gradeFilter()} onChange={setGradeFilter}>
-                  <TabsList>
-                    <TabsTrigger value="all">{t("classGroups.allGrades")}</TabsTrigger>
-                    <For each={grades()}>{(g) => <TabsTrigger value={g}>{g}</TabsTrigger>}</For>
-                  </TabsList>
-                </Tabs>
-              </Show>
+            <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
+              <DataToolbar
+                searchValue={query()}
+                searchPlaceholder={t("classGroups.searchPlaceholder")}
+                searchHint={t("search.hint.classes")}
+                onSearchInput={setQuery}
+                filters={
+                  <Show when={grades().length > 0}>
+                    <DropdownSelect
+                      options={[{ value: "all", label: t("classGroups.allGrades") }, ...grades().map((g) => ({ value: g, label: g }))]}
+                      value={gradeFilter()}
+                      onChange={setGradeFilter}
+                      class="min-w-44"
+                    />
+                  </Show>
+                }
+                actions={
+                  <Show when={canManage()}>
+                    <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+                      {t("classGroups.mergeClasses")}
+                      <ComingSoonBadge class="ml-1.5" />
+                    </Button>
+                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowForm(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("classGroups.newClass")}
+                    </Button>
+                  </Show>
+                }
+              />
             </div>
 
             <Suspense fallback={<DataTableSkeleton />}>

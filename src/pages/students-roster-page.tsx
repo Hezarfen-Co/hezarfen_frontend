@@ -121,7 +121,7 @@ function StudentsRosterContent() {
       </Tabs>
 
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <Show when={data.error}>
             <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
@@ -129,6 +129,7 @@ function StudentsRosterContent() {
           <Show when={!data.error && data()}>
             {(value) => (
               <DataTable
+                surfaceSections
                 title={t("nav.studentsRoster")}
                 description={t("roster.studentsSubtitle")}
                 actions={<><Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
@@ -144,7 +145,7 @@ function StudentsRosterContent() {
           </Show></>}
                 columns={columns()}
                 data={rows()}
-                tableClass="min-w-[940px]"
+            tableClass="min-w-[52rem]"
                 empty={t("form.noStudents")}
                 filterPlaceholder={t("roster.searchStudents")}
                 filterHint={t("search.hint.students")}

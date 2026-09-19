@@ -6,6 +6,7 @@ import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import type { Locale } from "@/i18n/messages";
@@ -16,7 +17,7 @@ export function RagThreadList(props: {
   activeId?: string;
   version: number;
   locale: Locale;
-  labels: { untitled: string; emptyThreads: string; emptyThreadsHint: string; rename: string; delete: string };
+  labels: { untitled: string; emptyThreads: string; emptyThreadsHint: string; rename: string; actions: string; delete: string };
   onOpen: (thread: RagThread) => void;
   onRename: (thread: RagThread) => void;
   onRemove: (thread: RagThread) => void;
@@ -53,22 +54,14 @@ export function RagThreadList(props: {
                         <span class="w-full truncate text-sm font-medium">{thread.title || props.labels.untitled}</span>
                         <span class="text-[11px] tabular-nums text-muted-foreground">{formatDateTime(thread.updated_at, props.locale)}</span>
                       </button>
-                      <button
-                        type="button"
-                        class="flex w-9 shrink-0 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                        aria-label={props.labels.rename}
-                        onClick={() => props.onRename(thread)}
-                      >
-                        <IconEdit class="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        class="flex w-9 shrink-0 items-center justify-center border-l border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive-text"
-                        aria-label={props.labels.delete}
-                        onClick={() => props.onRemove(thread)}
-                      >
-                        <IconTrash class="h-3.5 w-3.5" />
-                      </button>
+                      <TableRowActions
+                        compact
+                        label={props.labels.actions}
+                        actions={[
+                          { label: props.labels.rename, icon: <IconEdit class="h-4 w-4" />, onSelect: () => props.onRename(thread) },
+                          { label: props.labels.delete, icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => props.onRemove(thread) },
+                        ]}
+                      />
                     </li>
                   )}
                 </For>

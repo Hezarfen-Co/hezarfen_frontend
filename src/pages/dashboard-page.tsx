@@ -837,7 +837,7 @@ function DashboardContent() {
                     )}
                   </For>
                 </div>
-                <p class="mono text-xs tabular-nums text-text-subtle">{t("dashboard.student.thisWeekTotal", { minutes: String(weeklyFocusTotal()) })}</p>
+                <p class="text-xs tabular-nums text-text-subtle">{t("dashboard.student.thisWeekTotal", { minutes: String(weeklyFocusTotal()) })}</p>
               </div>
               </Show>
             </div>
@@ -981,19 +981,19 @@ function DashboardContent() {
                     <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                       <div class="rounded-lg bg-surface-tint px-3 py-2">
                         <p class="text-xs text-text-subtle">{t("dashboard.attend.present")}</p>
-                        <p class="mono text-lg font-semibold tabular-nums text-text-strong">{breakdown().present}</p>
+                        <p class="text-lg font-semibold tabular-nums text-text-strong">{breakdown().present}</p>
                       </div>
                       <div class="rounded-lg bg-surface-tint px-3 py-2">
                         <p class="text-xs text-text-subtle">{t("dashboard.attend.absent")}</p>
-                        <p class="mono text-lg font-semibold tabular-nums text-text-strong">{breakdown().absent}</p>
+                        <p class="text-lg font-semibold tabular-nums text-text-strong">{breakdown().absent}</p>
                       </div>
                       <div class="rounded-lg bg-surface-tint px-3 py-2">
                         <p class="text-xs text-text-subtle">{t("dashboard.attend.excused")}</p>
-                        <p class="mono text-lg font-semibold tabular-nums text-text-strong">{breakdown().excused}</p>
+                        <p class="text-lg font-semibold tabular-nums text-text-strong">{breakdown().excused}</p>
                       </div>
                       <div class="rounded-lg bg-surface-tint px-3 py-2">
                         <p class="text-xs text-text-subtle">{t("dashboard.parent.attendanceRate")}</p>
-                        <p class="mono text-lg font-semibold tabular-nums text-text-strong">{breakdown().rate == null ? "—" : `${breakdown().rate}%`}</p>
+                        <p class="text-lg font-semibold tabular-nums text-text-strong">{breakdown().rate == null ? "—" : `${breakdown().rate}%`}</p>
                       </div>
                     </div>
                   )}
@@ -1013,14 +1013,14 @@ function DashboardContent() {
                 >
                   {(summary) => (
                     <div class="flex flex-col gap-2 pt-1">
-                      <p class="mono text-sm tabular-nums text-text-strong">
+                      <p class="text-sm tabular-nums text-text-strong">
                         {t("dashboard.parent.installmentsPaid", { paid: String(summary().paidCount), total: String(summary().total) })}
                       </p>
-                      <p class="text-xs text-text-subtle">{t("dashboard.parent.balance")}: <span class="mono tabular-nums text-text-default">{formatTry(summary().balanceMinor, locale() === "tr" ? "tr-TR" : "en-US")}</span></p>
+                      <p class="text-xs text-text-subtle">{t("dashboard.parent.balance")}: <span class="tabular-nums text-text-default">{formatTry(summary().balanceMinor, locale() === "tr" ? "tr-TR" : "en-US")}</span></p>
                       <Show when={summary().next}>
                         {(next) => (
                           <p class="text-xs text-text-subtle">
-                            {t("dashboard.parent.nextInstallment")}: {formatDateTime(next().due_at!, locale())} · <span class="mono tabular-nums text-text-default">{formatTry(next().amount_minor, locale() === "tr" ? "tr-TR" : "en-US")}</span>
+                            {t("dashboard.parent.nextInstallment")}: {formatDateTime(next().due_at!, locale())} · <span class="tabular-nums text-text-default">{formatTry(next().amount_minor, locale() === "tr" ? "tr-TR" : "en-US")}</span>
                           </p>
                         )}
                       </Show>

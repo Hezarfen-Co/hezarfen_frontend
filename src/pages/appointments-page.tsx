@@ -144,7 +144,7 @@ function AppointmentsContent() {
   // digits line up across rows). Same-day windows show one date; cross-day
   // spells out the end date on the second line.
   const timeCell = (starts: number | null, ends: number | null) => (
-    <div class="mono flex flex-col text-xs leading-tight tabular-nums">
+    <div class="flex flex-col text-xs leading-tight tabular-nums">
       <span class="text-foreground">{formatDate(starts, locale())}</span>
       <span class="text-muted-foreground">
         {sameDay(starts, ends)
@@ -466,7 +466,7 @@ function AppointmentsContent() {
 
         <TabsContent value="appointments" class="mt-0 space-y-4 border-0 bg-transparent p-0 shadow-none">
           <Show when={isStaff()} fallback={
-            <section class="data-shell space-y-4 p-4">
+            <section class="space-y-4 p-0">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
                 <Show when={nextBooking()}>
@@ -477,7 +477,7 @@ function AppointmentsContent() {
                       </span>
                       <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-medium text-text-strong">{personLabel(booking().teacher)}</p>
-                        <p class="mono truncate text-xs text-text-subtle">{timeWindow(booking().starts_at, booking().ends_at)}</p>
+                        <p class="truncate text-xs text-text-subtle">{timeWindow(booking().starts_at, booking().ends_at)}</p>
                       </div>
                       {statusBadge(booking().status)}
                     </div>
@@ -498,7 +498,7 @@ function AppointmentsContent() {
               </Show>
             </section>
           }>
-            <section class="data-shell space-y-4 p-4">
+            <section class="space-y-4 p-0">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
                 <DataTable
@@ -520,7 +520,7 @@ function AppointmentsContent() {
 
         <TabsContent value="availability" class="mt-0 border-0 bg-transparent p-0 shadow-none">
           <Show when={isStaff()} fallback={
-            <section class="data-shell space-y-4 p-4">
+            <section class="space-y-4 p-0">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
                 <DataTable
@@ -538,7 +538,7 @@ function AppointmentsContent() {
               </Show>
             </section>
           }>
-            <section class="data-shell space-y-4 p-4">
+            <section class="space-y-4 p-0">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
                 <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
                 <DataTable

@@ -12,10 +12,7 @@ export function TabsList<T extends ValidComponent = "div">(
   return (
     <TabsPrimitive.List
       class={cn(
-        // Segmented pill bar: a bordered "well" the active tab sits inside,
-        // reading as a switch control rather than a subtle underline —
-        // matches what appointments/marks/course-detail already used ad hoc.
-        "inline-flex h-auto w-full max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-border/70 bg-card/80 p-1 text-muted-foreground shadow-xs sm:w-fit",
+        "inline-flex h-auto w-full max-w-full items-stretch justify-start gap-0 overflow-x-auto rounded-lg border border-border-line bg-surface-base p-0 text-muted-foreground shadow-none sm:w-fit",
         local.class,
       )}
       {...rest}
@@ -29,8 +26,9 @@ export function TabsTrigger<T extends ValidComponent = "button">(
   const [local, rest] = splitProps(props as ComponentProps<typeof TabsPrimitive.Trigger>, ["children", "class"]);
   return (
     <TabsPrimitive.Trigger
+      type="button"
       class={cn(
-        "group inline-flex h-8 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent px-3 text-sm font-medium text-muted-foreground transition-[background-color,border-color,box-shadow,color] duration-200 hover:bg-muted/70 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-selected:border-border data-selected:bg-surface-base data-selected:text-foreground data-selected:shadow-xs",
+        "group inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-none border-b-2 border-r border-transparent border-r-border-line px-3 text-sm font-medium text-muted-foreground transition-[background-color,border-color,box-shadow,color] duration-200 last:border-r-0 hover:bg-muted/50 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-selected:border-b-primary data-selected:bg-surface-base data-selected:text-foreground data-selected:shadow-none",
         local.class,
       )}
       {...rest}

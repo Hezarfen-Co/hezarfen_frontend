@@ -98,12 +98,13 @@ function EventsContent() {
     {
       accessorKey: "title",
       header: t("events.title"),
+      size: 220,
+      minSize: 180,
       cell: (cell) => (
         <div class="min-w-0">
           <Link to="/events/$id" params={{ id: cell.row.original.id }} class="truncate font-medium hover:text-primary-text hover:underline">
             {cell.row.original.title}
           </Link>
-          <p class="truncate text-xs text-muted-foreground">{cell.row.original.description || "—"}</p>
         </div>
       ),
     },
@@ -111,7 +112,9 @@ function EventsContent() {
       id: "time",
       accessorFn: (event) => event.starts_at ?? event.ends_at ?? 0,
       header: t("events.starts"),
-      meta: { cellClass: "mono text-xs text-muted-foreground" },
+      size: 190,
+      minSize: 160,
+      meta: { cellClass: "text-xs text-muted-foreground" },
       cell: (cell) => (
         <div class="whitespace-nowrap">
           <p>{formatDateTime(cell.row.original.starts_at, locale())}</p>
@@ -125,6 +128,8 @@ function EventsContent() {
       id: "audience",
       accessorFn: (event) => audienceLabel(event.audience),
       header: t("events.audience"),
+      size: 140,
+      minSize: 120,
       cell: (cell) => <Badge variant="outline" class="rounded-full">{audienceLabel(cell.row.original.audience)}</Badge>,
     },
     {
@@ -197,7 +202,7 @@ function EventsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -221,7 +226,7 @@ function EventsContent() {
             }
             columns={columns()}
             data={rows()}
-            tableClass="table-fixed min-w-232"
+            tableClass="table-fixed min-w-[42rem]"
             searchPredicate={searchEvent}
             filterHint={t("search.hint.events")}
             enablePagination

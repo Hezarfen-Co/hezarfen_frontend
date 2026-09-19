@@ -177,10 +177,11 @@ function ExamsContent() {
     {
       accessorKey: "title",
       header: t("exams.title"),
+      size: 220,
+      minSize: 180,
       cell: (cell) => (
         <div class="min-w-0">
           <p class="truncate font-medium">{cell.row.original.title}</p>
-          <p class="truncate text-xs text-muted-foreground">{cell.row.original.description || "—"}</p>
         </div>
       ),
     },
@@ -188,19 +189,25 @@ function ExamsContent() {
       id: "course",
       accessorFn: (exam) => courseTitle(exam.class_course),
       header: t("instances.title"),
+      size: 180,
+      minSize: 140,
       meta: { cellClass: "truncate text-muted-foreground" },
       cell: (cell) => courseTitle(cell.row.original.class_course),
     },
     {
       accessorKey: "starts_at",
       header: t("events.starts"),
-      meta: { cellClass: "mono whitespace-nowrap text-muted-foreground" },
+      size: 160,
+      minSize: 140,
+      meta: { cellClass: "whitespace-nowrap text-muted-foreground" },
       cell: (cell) => formatDateTime(cell.row.original.starts_at, locale()),
     },
     {
       id: "status",
       accessorFn: (exam) => statusLabel(exam.displayStatus),
       header: t("attempt.status"),
+      size: 130,
+      minSize: 110,
       meta: { headerClass: "text-center", cellClass: "text-center" },
       cell: (cell) => {
         const status = cell.row.original.displayStatus;
@@ -308,7 +315,7 @@ function ExamsContent() {
         </TabsList>
 
         <TabsContent value={tab()} class="mt-4 border-0 bg-transparent p-0 shadow-none">
-          <section class="data-shell space-y-4 p-4">
+          <section class="space-y-4 p-0">
             <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
               <Show when={list.error}>
                 <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -332,7 +339,7 @@ function ExamsContent() {
                 }
                 columns={columns()}
                 data={rows()}
-                tableClass="table-fixed min-w-5xl"
+                tableClass="table-fixed min-w-[46rem]"
                 filterPlaceholder={t("exams.searchPlaceholder")}
                 filterHint={t("search.hint.exams")}
                 searchPredicate={searchExam}

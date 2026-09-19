@@ -231,7 +231,7 @@ function SettingsContent() {
                         <h2 class="text-base font-semibold">{t("settings.examKinds")}</h2>
                         <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{t("settings.examKindsHelp")}</p>
                       </div>
-                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">
+                      <Badge variant="secondary" class="shrink-0 tabular-nums">
                         {examKinds().length}
                       </Badge>
                     </div>
@@ -324,7 +324,7 @@ function SettingsContent() {
                         <h2 class="text-base font-semibold">{t("settings.attendanceStatuses")}</h2>
                         <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{t("settings.attendanceHelp")}</p>
                       </div>
-                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">
+                      <Badge variant="secondary" class="shrink-0 tabular-nums">
                         {attendanceStatuses().length}
                       </Badge>
                     </div>
@@ -413,7 +413,7 @@ function SettingsContent() {
                         <h2 class="text-base font-semibold">{t("settings.gradeBands")}</h2>
                         <p class="mt-0.5 text-xs leading-relaxed text-muted-foreground">{t("settings.gradeBandsHelp")}</p>
                       </div>
-                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">
+                      <Badge variant="secondary" class="shrink-0 tabular-nums">
                         {gradeBands().length}
                       </Badge>
                     </div>
@@ -510,7 +510,7 @@ function SettingsContent() {
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
                       <h2 class="text-base font-semibold">{t("settings.mealSlot")}</h2>
-                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">{mealSlots().length}</Badge>
+                      <Badge variant="secondary" class="shrink-0 tabular-nums">{mealSlots().length}</Badge>
                     </div>
                   </header>
                   <div class="flex-1 space-y-2 p-4">
@@ -553,7 +553,7 @@ function SettingsContent() {
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
                       <h2 class="text-base font-semibold">{t("settings.dietaryTags")}</h2>
-                      <Badge variant="secondary" class="mono shrink-0 tabular-nums">{dietaryTags().length}</Badge>
+                      <Badge variant="secondary" class="shrink-0 tabular-nums">{dietaryTags().length}</Badge>
                     </div>
                   </header>
                   <div class="flex-1 space-y-2 p-4">

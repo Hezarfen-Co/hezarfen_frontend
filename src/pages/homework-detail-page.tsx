@@ -66,7 +66,7 @@ export default function HomeworkDetailPage() {
                 </div>
                 <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("homework.dueAt")}</p>
-                  <p class="mono mt-1 font-medium tabular-nums text-text-default">{formatDateTime(item().due_at, locale())}</p>
+                  <p class="mt-1 font-medium text-text-default">{formatDateTime(item().due_at, locale())}</p>
                 </div>
                 <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("homework.assigned")}</p>

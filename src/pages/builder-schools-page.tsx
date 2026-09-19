@@ -74,13 +74,13 @@ function BuilderSchoolsContent() {
     {
       id: "modules",
       header: t("builder.modules"),
-      meta: { align: "right", cellClass: "mono tabular-nums" },
+      meta: { align: "right", cellClass: "tabular-nums" },
       cell: (cell) => cell.row.original.modules.length,
     },
     {
       accessorKey: "created_at",
       header: t("builder.createdAt"),
-      cell: (cell) => <span class="mono text-sm">{formatDateTime(cell.row.original.created_at, locale())}</span>,
+      cell: (cell) => <span class="text-sm">{formatDateTime(cell.row.original.created_at, locale())}</span>,
     },
     {
       id: "actions",
@@ -111,7 +111,7 @@ function BuilderSchoolsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={6} />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
@@ -128,7 +128,7 @@ function BuilderSchoolsContent() {
               }
               columns={columns()}
               data={list() ?? []}
-              tableClass="min-w-176"
+            tableClass="min-w-[52rem]"
               empty={t("builder.noSchools")}
               filterColumn="name"
               enablePagination

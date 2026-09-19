@@ -101,7 +101,7 @@ function StudentPomodoroContent() {
 
   return (
     <div class="space-y-6">
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Show when={error() && !viewUser()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>

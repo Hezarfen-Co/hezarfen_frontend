@@ -307,7 +307,7 @@ function LiveMonitorContent() {
                   </div>
                 </section>
 
-                <section class="data-shell space-y-4 p-5">
+                <section class="space-y-4 p-0">
                   <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h2 class="text-lg font-semibold">{t("exams.liveRoster")}</h2>
@@ -343,7 +343,7 @@ function LiveMonitorContent() {
                     {(row) => (
                       <div class="grid gap-4 sm:grid-cols-2">
                         <DetailField label={t("attempt.attempt")} value={attemptLabel(row, snapshot()?.exam.max_attempts ?? 0)} />
-                        <DetailField label={t("marks.mark")} value={row.mark == null ? "—" : String(row.mark)} mono />
+                        <DetailField label={t("marks.mark")} value={row.mark == null ? "—" : String(row.mark)} />
                         <DetailField label={t("events.starts")} value={formatDateTime(row.started_at, locale())} />
                         <DetailField label={t("events.ends")} value={formatDateTime(row.finished_at, locale())} />
                         <DetailField label={t("attempt.left")} value={formatDateTime(row.left_at, locale())} />

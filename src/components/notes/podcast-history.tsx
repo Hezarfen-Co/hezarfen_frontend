@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { formatApiError } from "@/api/client";
 import { listPodcastJobs, podcastAudioUrl } from "@/api/podcast";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { IconDownload, IconWaveform } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
@@ -28,13 +29,20 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
   const downloadT = usePodcastDownloadT();
   const { locale } = usePreferences();
   const [playing, setPlaying] = createSignal("");
+  const [page, setPage] = createSignal(0);
   const active = () => props.active !== false;
+
+  createEffect(() => {
+    props.noteId;
+    setPage(0);
+  });
 
   // The source is the scope string, not a fresh object: an identity-stable
   // value keeps the resource from refetching when nothing about it changed.
+  const source = createMemo(() => (active() && props.noteId ? { noteId: props.noteId, page: page() } : null));
   const [list, { refetch }] = createResource(
-    () => (active() ? props.noteId ?? null : null),
-    (noteId) => listPodcastJobs({ limit: HISTORY_PAGE_SIZE, sourceId: noteId }),
+    source,
+    (scope) => listPodcastJobs({ limit: HISTORY_PAGE_SIZE, offset: scope.page * HISTORY_PAGE_SIZE, sourceId: scope.noteId }),
   );
 
   // The panel bumps the key ("", then the job id) when a generation finishes;
@@ -45,6 +53,12 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
   });
 
   const jobs = () => list()?.items ?? [];
+  const totalPages = createMemo(() => Math.max(1, Math.ceil((list()?.total ?? 0) / HISTORY_PAGE_SIZE)));
+  const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
+
+  createEffect(() => {
+    if (page() > totalPages() - 1) setPage(totalPages() - 1);
+  });
 
   const stateVariant = (state: string) => {
     if (state === "done") return "success" as const;
@@ -131,6 +145,9 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
                 )}
               </For>
             </ul>
+          </Show>
+          <Show when={(list()?.total ?? 0) > HISTORY_PAGE_SIZE}>
+            <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
           </Show>
         </Suspense>
       </Show>

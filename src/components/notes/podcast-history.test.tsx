@@ -12,8 +12,8 @@ const podcastApi = vi.hoisted(() => ({
 
 vi.mock("@/api/podcast", () => podcastApi);
 
-function page(items: PodcastJobSummary[]) {
-  return { items, total: items.length, limit: 10, offset: 0 };
+function page(items: PodcastJobSummary[], total = items.length, offset = 0) {
+  return { items, total, limit: 10, offset };
 }
 
 function job(over: Partial<PodcastJobSummary>): PodcastJobSummary {
@@ -105,7 +105,7 @@ describe("PodcastHistory", () => {
     renderHistory("note-1");
 
     await waitFor(() =>
-      expect(podcastApi.listPodcastJobs).toHaveBeenCalledWith({ limit: 10, sourceId: "note-1" }),
+      expect(podcastApi.listPodcastJobs).toHaveBeenCalledWith({ limit: 10, offset: 0, sourceId: "note-1" }),
     );
     expect(screen.queryByRole("button", { name: "Tümü" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Bu not" })).toBeNull();
@@ -117,7 +117,7 @@ describe("PodcastHistory", () => {
     renderHistory("note-1");
     await waitFor(() => expect(podcastApi.listPodcastJobs).toHaveBeenCalledTimes(1));
 
-    expect(podcastApi.listPodcastJobs).toHaveBeenLastCalledWith({ limit: 10, sourceId: "note-1" });
+    expect(podcastApi.listPodcastJobs).toHaveBeenLastCalledWith({ limit: 10, offset: 0, sourceId: "note-1" });
     expect(screen.queryByText("Tüm notlarınızdaki bölümler gösteriliyor.")).toBeNull();
   });
 
@@ -161,5 +161,24 @@ describe("PodcastHistory", () => {
     await waitFor(() => expect(podcastApi.listPodcastJobs).toHaveBeenCalledTimes(1));
     setKey("job-2");
     await waitFor(() => expect(podcastApi.listPodcastJobs).toHaveBeenCalledTimes(2));
+  });
+
+  it("paginates the selected note's podcast history", async () => {
+    const first = job({ job_id: "job-1", source_title: "İlk bölüm" });
+    const second = job({ job_id: "job-2", source_title: "İkinci bölüm" });
+    podcastApi.listPodcastJobs
+      .mockResolvedValueOnce(page([first], 11, 0))
+      .mockResolvedValueOnce(page([second], 11, 10));
+
+    renderHistory("note-1");
+
+    await waitFor(() => expect(screen.getByText("İlk bölüm")).toBeTruthy());
+    expect(screen.getByText("1 / 2")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sonraki" }));
+
+    await waitFor(() => expect(screen.getByText("İkinci bölüm")).toBeTruthy());
+    expect(podcastApi.listPodcastJobs).toHaveBeenLastCalledWith({ limit: 10, offset: 10, sourceId: "note-1" });
+    expect(screen.getByText("2 / 2")).toBeTruthy();
   });
 });

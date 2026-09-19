@@ -80,27 +80,42 @@ function TermsContent() {
     {
       accessorKey: "name",
       header: t("settings.name"),
+      size: 170,
+      minSize: 150,
+      meta: { cellClass: "min-w-0" },
       cell: (cell) => <span class="font-medium">{cell.row.original.name}</span>,
     },
     {
       id: "year",
       accessorFn: (row) => yearName(row.year),
       header: t("academicYears.year"),
-      cell: (cell) => <span class="text-sm text-muted-foreground">{yearName(cell.row.original.year)}</span>,
+      size: 180,
+      minSize: 150,
+      meta: { cellClass: "min-w-0" },
+      cell: (cell) => <span class="block truncate text-sm text-muted-foreground">{yearName(cell.row.original.year)}</span>,
     },
     {
       accessorKey: "starts_at",
       header: t("events.starts"),
-      cell: (cell) => <span class="mono text-sm">{formatDateTime(cell.row.original.starts_at, locale())}</span>,
+      size: 150,
+      minSize: 145,
+      meta: { cellClass: "whitespace-nowrap" },
+      cell: (cell) => <span class="whitespace-nowrap text-sm">{formatDateTime(cell.row.original.starts_at, locale())}</span>,
     },
     {
       accessorKey: "ends_at",
       header: t("events.ends"),
-      cell: (cell) => <span class="mono text-sm">{formatDateTime(cell.row.original.ends_at, locale())}</span>,
+      size: 150,
+      minSize: 145,
+      meta: { cellClass: "whitespace-nowrap" },
+      cell: (cell) => <span class="whitespace-nowrap text-sm">{formatDateTime(cell.row.original.ends_at, locale())}</span>,
     },
     {
       accessorKey: "archived_at",
       header: t("terms.archived"),
+      size: 115,
+      minSize: 105,
+      meta: { cellClass: "whitespace-nowrap" },
       cell: (cell) => (
         <Show when={cell.row.original.archived_at != null} fallback={<span class="text-muted-foreground">—</span>}>
           <Badge variant="secondary" class="rounded-full">{t("terms.archived")}</Badge>
@@ -226,7 +241,7 @@ function TermsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />

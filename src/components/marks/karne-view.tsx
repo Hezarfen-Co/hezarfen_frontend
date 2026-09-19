@@ -29,12 +29,12 @@ export function KarneView(props: {
 
   const columns = createMemo<ColumnDef<KarneInstance>[]>(() => [
     { accessorKey: "course", header: t("nav.courses"), meta: { cellClass: "font-medium" } },
-    { accessorKey: "ders_saati", header: t("instances.dersSaati"), meta: { cellClass: "mono tabular-nums text-muted-foreground" } },
+    { accessorKey: "ders_saati", header: t("instances.dersSaati"), meta: { cellClass: "tabular-nums text-muted-foreground" } },
     {
       id: "average",
       accessorFn: (line) => formatAverage(line.average),
       header: t("marks.courseAvg"),
-      meta: { cellClass: "mono font-semibold tabular-nums" },
+      meta: { cellClass: "font-semibold tabular-nums" },
     },
     {
       id: "band",

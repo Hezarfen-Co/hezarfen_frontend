@@ -105,7 +105,7 @@ export function TodayLessonsPanel(props: {
                     search={(forStudent() ? { tab: "sessions" } : { tab: "sessions", rollCall: lesson.session.id }) as never}
                     class="flex items-center gap-3 py-2.5 outline-hidden hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <span class="mono w-24 shrink-0 text-xs tabular-nums text-muted-foreground">
+                    <span class="w-24 shrink-0 text-xs tabular-nums text-muted-foreground">
                       {time(lesson.session.starts_at)}
                       <Show when={lesson.session.ends_at}>–{time(lesson.session.ends_at)}</Show>
                     </span>

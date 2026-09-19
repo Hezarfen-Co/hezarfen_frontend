@@ -217,7 +217,7 @@ export function CourseSessionsPanel(props: {
       id: "time",
       accessorFn: (row) => row.starts_at,
       header: t("appointments.time"),
-      meta: { cellClass: "mono text-xs text-muted-foreground" },
+      meta: { cellClass: "text-xs text-muted-foreground" },
       cell: (cell) => (
         <div class="whitespace-nowrap">
           <p>{formatDateTime(cell.row.original.starts_at, locale())}</p>
@@ -363,7 +363,7 @@ export function CourseSessionsPanel(props: {
                 <DetailField label={t("events.starts")} value={formatDateTime(session.starts_at, locale())} />
                 <DetailField label={t("events.ends")} value={formatDateTime(session.ends_at, locale())} />
                 <Show when={props.canManage}>
-                  <DetailField label={t("attendance.title")} value={`${detailAttendance()?.length ?? 0} / ${attendanceTargetCount(session)}`} mono />
+                  <DetailField label={t("attendance.title")} value={`${detailAttendance()?.length ?? 0} / ${attendanceTargetCount(session)}`} />
                 </Show>
               </div>
               <Show when={props.canManage}>

@@ -48,7 +48,7 @@ export function TableHead(props: ParentProps<ComponentProps<"th">>) {
   return (
     <th
       class={cn(
-        "sticky top-0 z-20 h-11 whitespace-nowrap px-3 text-left align-middle text-xs font-medium tracking-normal text-text-subtle first:pl-4 last:pr-4 has-[[role=checkbox]]:pr-0",
+        "sticky top-0 z-20 h-11 whitespace-nowrap border-r border-border-hairline px-3 text-center align-middle text-xs font-medium tracking-normal text-text-subtle last:border-r-0 first:pl-4 last:pr-4 has-[[role=checkbox]]:pr-0",
         local.class,
       )}
       {...rest}
@@ -61,7 +61,7 @@ export function TableHead(props: ParentProps<ComponentProps<"th">>) {
 export function TableCell(props: ParentProps<ComponentProps<"td">>) {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
-    <td class={cn("px-3 py-3 align-middle first:pl-4 last:pr-4 has-[[role=checkbox]]:pr-0", local.class)} {...rest}>
+    <td class={cn("border-r border-border-hairline px-3 py-3 align-middle last:border-r-0 first:pl-4 last:pr-4 has-[[role=checkbox]]:pr-0", local.class)} {...rest}>
       {local.children}
     </td>
   );

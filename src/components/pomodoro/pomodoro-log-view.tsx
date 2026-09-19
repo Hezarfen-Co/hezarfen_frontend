@@ -19,17 +19,17 @@ export function PomodoroLogView(props: { log: PomodoroLog }) {
     {
       accessorKey: "started_at",
       header: t("pomodoro.startedAt"),
-      cell: (cell) => <span class="mono whitespace-nowrap">{formatDateTime(cell.row.original.started_at, locale())}</span>,
+      cell: (cell) => <span class="whitespace-nowrap">{formatDateTime(cell.row.original.started_at, locale())}</span>,
     },
     {
       accessorKey: "finished_at",
       header: t("pomodoro.finishedAt"),
-      cell: (cell) => <span class="mono whitespace-nowrap">{formatDateTime(cell.row.original.finished_at, locale())}</span>,
+      cell: (cell) => <span class="whitespace-nowrap">{formatDateTime(cell.row.original.finished_at, locale())}</span>,
     },
     {
       accessorKey: "duration_ms",
       header: t("pomodoro.duration"),
-      cell: (cell) => <span class="mono tabular-nums">{formatDurationClock(cell.row.original.duration_ms)}</span>,
+      cell: (cell) => <span class="tabular-nums">{formatDurationClock(cell.row.original.duration_ms)}</span>,
     },
     {
       accessorKey: "counted",
@@ -50,7 +50,7 @@ export function PomodoroLogView(props: { log: PomodoroLog }) {
     <div class="space-y-4">
       <div class="detail-metric-card">
         <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">{t("pomodoro.total")}</p>
-        <p class="mono mt-2 text-3xl font-semibold tabular-nums">{formatDurationClock(props.log.total_focus_ms)}</p>
+        <p class="mt-2 text-3xl font-semibold tabular-nums">{formatDurationClock(props.log.total_focus_ms)}</p>
       </div>
       <DataTable columns={columns()} data={props.log.items} empty={t("pomodoro.empty")} enablePagination pageSize={10} />
     </div>

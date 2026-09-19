@@ -5,12 +5,15 @@ import { formatApiError } from "@/api/client";
 import { NoteForm } from "@/components/notes/note-form";
 import { NoteList } from "@/components/notes/note-list";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { DataToolbar } from "@/components/ui/data-toolbar";
+import { IconPlus } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SidePanel } from "@/components/ui/side-panel";
 import { createFlash } from "@/lib/flash";
-import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { courseNoteFiles } from "@/lib/note-source";
+import { matchesSearch } from "@/lib/search-text";
 import { useT } from "@/stores/preferences-context";
 
 const NOTE_PAGE_SIZE = 6;
@@ -18,7 +21,6 @@ const NOTE_PAGE_SIZE = 6;
 export function CourseNotesPanel(props: {
   courseId: string;
   canManage: boolean;
-  active: boolean;
   createOpen: boolean;
   onCreateOpenChange: (open: boolean) => void;
   onCountChange: (count: number) => void;
@@ -27,24 +29,36 @@ export function CourseNotesPanel(props: {
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [page, setPage] = createSignal(0);
+  const [search, setSearch] = createSignal("");
 
   const [list, { refetch }] = createResource(
-    () => (props.active ? ({ courseId: props.courseId, page: page() }) : null),
-    async (key) =>
-      loadListPage({
-        page: key.page,
-        pageSize: NOTE_PAGE_SIZE,
-        clientMode: false,
-        fetch: (params) => getCourseNotes(key.courseId, params),
-      }),
+    () => props.courseId,
+    (courseId) => getCourseNotes(courseId, { limit: 100 }),
   );
 
-  const total = () => list()?.total ?? 0;
-  const pageItems = () => list()?.items ?? [];
-  const totalPages = createMemo(() => pagesOf(total(), NOTE_PAGE_SIZE));
+  const allNotes = () => list()?.items ?? [];
+  const filteredNotes = createMemo(() => {
+    const query = search().trim();
+    return query ? allNotes().filter((note) => matchesSearch(query, note.title, note.content)) : allNotes();
+  });
+  const total = () => filteredNotes().length;
+  const pageItems = createMemo(() => filteredNotes().slice(page() * NOTE_PAGE_SIZE, (page() + 1) * NOTE_PAGE_SIZE));
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(total() / NOTE_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
 
-  createEffect(() => props.onCountChange(total()));
+  createEffect(() => {
+    search();
+    setPage(0);
+  });
+
+  createEffect(() => {
+    const result = list();
+    if (result) props.onCountChange(result.total);
+  });
+
+  createEffect(() => {
+    if (page() > totalPages() - 1) setPage(totalPages() - 1);
+  });
 
   const wrap = async (fn: () => Promise<void>, okMessage: string) => {
     setError("");
@@ -58,13 +72,30 @@ export function CourseNotesPanel(props: {
   };
 
   return (
-    <section class="min-w-0 space-y-4 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4">
+    <section class="min-w-0 space-y-4">
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
       <Show when={error() && !props.createOpen}>
         <Alert variant="destructive">{error()}</Alert>
       </Show>
+
+      <div class="space-y-3 rounded-lg border border-border-line bg-surface-base p-3">
+        <DataToolbar
+          inline
+          searchValue={search()}
+          searchPlaceholder={t("common.searchPlaceholder")}
+          searchHint={t("search.hint.courseNotes")}
+          onSearchInput={setSearch}
+          actions={
+            <Show when={props.canManage}>
+              <Button type="button" size="sm" class="shrink-0 rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
+                <IconPlus class="h-4 w-4" />{t("courseNotes.add")}
+              </Button>
+            </Show>
+          }
+        />
+      </div>
 
       <Show when={props.canManage}>
         <SidePanel guardUnsaved open={props.createOpen} onOpenChange={props.onCreateOpenChange} title={t("courseNotes.new")}>
@@ -99,33 +130,35 @@ export function CourseNotesPanel(props: {
         </SidePanel>
       </Show>
 
-      <Suspense fallback={<PageSpinner />}>
-        <Show when={list.error}>
-          <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-        </Show>
-        <Show when={list()}>
-          <NoteList
-            notes={pageItems()}
-            source={courseNoteFiles}
-            canManage={props.canManage}
-            emptyTitle={t("courseNotes.empty")}
-            emptyDescription={props.canManage ? t("courseNotes.emptyManageHint") : undefined}
-            onUpdate={(id, values) =>
-              wrap(async () => {
-                await patchCourseNoteById(id, values);
-              }, t("common.saved"))
-            }
-            onDelete={(id) =>
-              wrap(async () => {
-                await deleteCourseNoteById(id);
-              }, t("common.deleted"))
-            }
-          />
-          <Show when={total() > NOTE_PAGE_SIZE}>
-            <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+      <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
+        <Suspense fallback={<PageSpinner />}>
+          <Show when={list.error}>
+            <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
-        </Show>
-      </Suspense>
+          <Show when={list()}>
+            <NoteList
+              notes={pageItems()}
+              source={courseNoteFiles}
+              canManage={props.canManage}
+              emptyTitle={t("courseNotes.empty")}
+              emptyDescription={props.canManage ? t("courseNotes.emptyManageHint") : undefined}
+              onUpdate={(id, values) =>
+                wrap(async () => {
+                  await patchCourseNoteById(id, values);
+                }, t("common.saved"))
+              }
+              onDelete={(id) =>
+                wrap(async () => {
+                  await deleteCourseNoteById(id);
+                }, t("common.deleted"))
+              }
+            />
+            <Show when={total() > NOTE_PAGE_SIZE}>
+              <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+            </Show>
+          </Show>
+        </Suspense>
+      </div>
     </section>
   );
 }

@@ -69,7 +69,7 @@ function AdminUserDetailContent() {
             <Show when={error()}>
               <Alert variant="destructive">{error()}</Alert>
             </Show>
-            <div class="space-y-2">
+            <section class="rounded-xl border border-border-line bg-surface-base px-4 py-3 shadow-xs sm:px-5">
             <Breadcrumbs
               items={[
                 { label: t("nav.users"), to: "/admin/users" },
@@ -82,17 +82,17 @@ function AdminUserDetailContent() {
               actions={
                 <>
                   <Link to="/profile/$userId" params={{ userId: current().id }}>
-                    <Button variant="outline" size="sm">
+                    <Button type="button" variant="outline" size="sm">
                       <IconExternalLink class="h-4 w-4" />
                       {t("profile.viewProfile")}
                     </Button>
                   </Link>
-                  <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
                     <IconEdit class="h-4 w-4" />
                     {t("common.edit")}
                   </Button>
                   <Show when={current().role === "parent"}>
-                    <Button variant="outline" size="sm" onClick={() => setStudentsOpen(true)}>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setStudentsOpen(true)}>
                       <IconUsers class="h-4 w-4" />
                       {t("parentLink.manage")}
                     </Button>
@@ -100,7 +100,7 @@ function AdminUserDetailContent() {
                 </>
               }
             />
-            </div>
+            </section>
 
             <section class="data-shell grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
               <DetailField label={t("admin.username")} value={current().username} />

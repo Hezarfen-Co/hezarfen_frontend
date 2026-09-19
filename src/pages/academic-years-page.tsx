@@ -146,9 +146,12 @@ function AcademicYearsContent() {
     {
       accessorKey: "name",
       header: t("settings.name"),
+      size: 190,
+      minSize: 170,
+      meta: { cellClass: "min-w-0" },
       cell: (cell) => (
-        <span class="flex items-center gap-2 font-medium">
-          {cell.row.original.name}
+        <span class="flex min-w-0 items-center gap-2 font-medium">
+          <span class="truncate">{cell.row.original.name}</span>
           <Show when={cell.row.original.archived_at != null}>
             <Badge variant="secondary" class="rounded-full">{t("academicYears.archived")}</Badge>
           </Show>
@@ -158,24 +161,34 @@ function AcademicYearsContent() {
     {
       accessorKey: "starts_at",
       header: t("events.starts"),
-      cell: (cell) => <span class="mono text-sm">{formatDateTime(cell.row.original.starts_at, locale())}</span>,
+      size: 150,
+      minSize: 145,
+      meta: { cellClass: "whitespace-nowrap" },
+      cell: (cell) => <span class="whitespace-nowrap text-sm">{formatDateTime(cell.row.original.starts_at, locale())}</span>,
     },
     {
       accessorKey: "ends_at",
       header: t("events.ends"),
-      cell: (cell) => <span class="mono text-sm">{formatDateTime(cell.row.original.ends_at, locale())}</span>,
+      size: 150,
+      minSize: 145,
+      meta: { cellClass: "whitespace-nowrap" },
+      cell: (cell) => <span class="whitespace-nowrap text-sm">{formatDateTime(cell.row.original.ends_at, locale())}</span>,
     },
     {
       id: "classes",
       accessorFn: (row) => row.class_count,
       header: t("academicYears.classCount"),
-      meta: { cellClass: "mono" },
+      size: 90,
+      minSize: 80,
+      meta: { cellClass: "text-center", align: "center" },
     },
     {
       id: "terms",
       accessorFn: (row) => row.term_count,
       header: t("academicYears.termCount"),
-      meta: { cellClass: "mono" },
+      size: 90,
+      minSize: 80,
+      meta: { cellClass: "text-center", align: "center" },
     },
     {
       id: "actions",
@@ -230,7 +243,7 @@ function AcademicYearsContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={6} />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />

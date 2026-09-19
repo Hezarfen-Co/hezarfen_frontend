@@ -127,7 +127,7 @@ function AiInsightStudentContent() {
                         >
                           {(summary) => (
                             <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                              <span class="font-mono tabular-nums">{numericDate(summary().computed_at)}</span>
+                              <span class="tabular-nums">{numericDate(summary().computed_at)}</span>
                               <span aria-hidden="true">·</span>
                               <Badge variant={confidenceVariant(summary().confidence)} class="rounded-full">
                                 {confidenceLabel(summary().confidence)}

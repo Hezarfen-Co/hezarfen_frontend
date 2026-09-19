@@ -58,7 +58,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
           <div class="h-1.5 w-12 min-w-8 shrink overflow-hidden rounded-full bg-muted">
             <div class="h-full rounded-full bg-primary" style={{ width: scoreWidth(cell.row.original.average) }} />
           </div>
-          <span class="mono shrink-0 text-xs font-semibold tabular-nums">{markWithGrade(cell.row.original.average, cell.row.original.average_grade)}</span>
+          <span class="shrink-0 text-xs font-semibold tabular-nums">{markWithGrade(cell.row.original.average, cell.row.original.average_grade)}</span>
         </div>
       ),
     },
@@ -100,13 +100,13 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
     {
       id: "weight",
       header: t("marks.weight"),
-      meta: { align: "right", divider: "left", cellClass: "mono" },
+      meta: { align: "right", divider: "left", cellClass: "" },
       cell: (cell) => examWeight(cell.row.original, settings()?.exam_kinds) ?? "—",
     },
     {
       accessorKey: "mark",
       header: t("marks.mark"),
-      meta: { align: "right", cellClass: "mono font-semibold" },
+      meta: { align: "right", cellClass: "font-semibold" },
       cell: (cell) => markWithGrade(cell.row.original.mark, cell.row.original.grade),
     },
   ]);

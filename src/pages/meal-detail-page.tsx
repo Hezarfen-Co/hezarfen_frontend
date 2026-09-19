@@ -199,7 +199,7 @@ function MealDetailContent() {
 
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("meals.total")}</p><p class="mt-1 font-semibold">{formatTry(total(), moneyLocale())}</p></div>
-              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("meals.capacity")}</p><p class="mono mt-1 font-semibold">{current().capacity ?? "∞"}</p></div>
+              <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("meals.capacity")}</p><p class="mt-1 font-semibold">{current().capacity ?? "∞"}</p></div>
               <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("meals.cutoff")}</p><p class="mt-1 font-semibold">{cutoff() == null ? t("meals.noCutoff") : formatDateTime(cutoff(), locale())}</p></div>
               <div class="detail-metric-card"><p class="text-xs uppercase text-muted-foreground">{t("meals.bookingStatus")}</p><p class="mt-1 font-semibold">{cutoffClosed() ? t("meals.closed") : t("meals.open")}</p></div>
             </div>

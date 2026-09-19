@@ -123,7 +123,7 @@ function ReportDocument(props: {
             {(metric) => (
               <div class="detail-metric-card">
                 <dt class="text-xs text-muted-foreground">{metric.label}</dt>
-                <dd class="mono mt-1 text-sm font-medium">{metric.value}</dd>
+                <dd class="mt-1 text-sm font-medium">{metric.value}</dd>
               </div>
             )}
           </For>
@@ -182,9 +182,9 @@ function ReportDocument(props: {
                 <p class="text-xs text-muted-foreground">{tx("modulesEmpty")}</p>
               </Show>
               <p class="text-sm">
-                {tx("attention")}: <span class="mono tabular-nums">{props.model.totals.attention}</span> · {tx("cards")}:{" "}
-                <span class="mono tabular-nums">{props.model.totals.cards}</span> · {tx("segments")}:{" "}
-                <span class="mono tabular-nums">{props.model.totals.segments}</span>
+                {tx("attention")}: <span class="tabular-nums">{props.model.totals.attention}</span> · {tx("cards")}:{" "}
+                <span class="tabular-nums">{props.model.totals.cards}</span> · {tx("segments")}:{" "}
+                <span class="tabular-nums">{props.model.totals.segments}</span>
               </p>
               <Show when={props.model.roster_error}>
                 {(message) => <p class="text-xs text-destructive-text">{tx("rosterFailed", { message: message() })}</p>}
@@ -229,10 +229,10 @@ function ReportDocument(props: {
                     <td class="py-2 pr-3 text-muted-foreground">
                       {student.confidence == null ? tx("noData") : confidenceText(prefs.locale(), student.confidence)}
                     </td>
-                    <td class="mono py-2 pr-3 text-right tabular-nums">{student.attention}</td>
-                    <td class="mono py-2 pr-3 text-right tabular-nums">{student.cards}</td>
-                    <td class="mono py-2 pr-3 tabular-nums">{studentMarksText(prefs.locale(), student)}</td>
-                    <td class="mono py-2 pr-3 tabular-nums">{studentAttendanceText(prefs.locale(), student)}</td>
+                    <td class="py-2 pr-3 text-right tabular-nums">{student.attention}</td>
+                    <td class="py-2 pr-3 text-right tabular-nums">{student.cards}</td>
+                    <td class="py-2 pr-3 tabular-nums">{studentMarksText(prefs.locale(), student)}</td>
+                    <td class="py-2 pr-3 tabular-nums">{studentAttendanceText(prefs.locale(), student)}</td>
                     <td class="py-2 pr-3 text-muted-foreground">{formatDateTime(student.computed_at, prefs.locale())}</td>
                     <Show when={props.onOpenStudent}>
                       <td class="py-2">

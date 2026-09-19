@@ -11,20 +11,22 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataToolbar } from "@/components/ui/data-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Textarea } from "@/components/ui/textarea";
 import { createFlash } from "@/lib/flash";
+import { matchesSearch } from "@/lib/search-text";
 import { useT } from "@/stores/preferences-context";
 
-export function CourseSubjectsPanel(props: { courseId: string; canManage: boolean; active: boolean; createOpen: boolean; onCreateOpenChange: (open: boolean) => void; onCountChange: (count: number) => void }) {
+export function CourseSubjectsPanel(props: { courseId: string; canManage: boolean; createOpen: boolean; onCreateOpenChange: (open: boolean) => void }) {
   const t = useT();
   const [subjects, { refetch }] = createResource(
-    () => (props.active ? props.courseId : null),
+    () => props.courseId,
     async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
   );
   const [editing, setEditing] = createSignal<Subject | null>(null);
@@ -34,6 +36,11 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [flash, setFlash] = createFlash();
+  const [search, setSearch] = createSignal("");
+  const visibleSubjects = createMemo(() => {
+    const query = search().trim();
+    return query ? (subjects() ?? []).filter((subject) => matchesSearch(query, subject.name, subject.description)) : subjects() ?? [];
+  });
   const columns = createMemo<ColumnDef<Subject>[]>(() => [
     {
       accessorKey: "name",
@@ -75,8 +82,6 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
     setDescription(subject?.description ?? "");
   });
 
-  createEffect(() => props.onCountChange(subjects()?.length ?? 0));
-
   const openEdit = (subject: Subject) => {
     setEditing(subject);
     props.onCreateOpenChange(true);
@@ -108,7 +113,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
   };
 
   return (
-    <div class="space-y-4">
+    <div class="space-y-3">
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -160,11 +165,29 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
 
       {error() && <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
 
-      <Suspense fallback={<DataTableSkeleton />}>
-        <Show when={(subjects() ?? []).length > 0} fallback={<EmptyState kind="courses" title={t("subjects.empty")} />}>
-          <DataTable columns={columns()} data={subjects() ?? []} filterColumn="name" enablePagination pageSize={10} />
-        </Show>
-      </Suspense>
+      <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
+        <DataToolbar
+          inline
+          searchValue={search()}
+          searchPlaceholder={t("common.searchPlaceholder")}
+          onSearchInput={setSearch}
+          actions={
+            <Show when={props.canManage}>
+              <Button type="button" size="sm" class="rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
+                <IconPlus class="h-4 w-4" />{t("subjects.add")}
+              </Button>
+            </Show>
+          }
+        />
+      </div>
+
+      <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
+        <Suspense fallback={<DataTableSkeleton />}>
+          <Show when={visibleSubjects().length > 0} fallback={<EmptyState kind="courses" title={t("subjects.empty")} />}>
+            <DataTable columns={columns()} data={visibleSubjects()} enablePagination pageSize={10} />
+          </Show>
+        </Suspense>
+      </div>
     </div>
   );
 }

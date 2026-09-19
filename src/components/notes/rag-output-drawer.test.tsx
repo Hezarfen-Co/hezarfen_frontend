@@ -176,7 +176,7 @@ describe("RagOutputDrawer", () => {
     renderPanel(HEALTHY);
     await waitFor(() => expect(screen.getByText(SUMMARY)).toBeTruthy());
 
-    expect(screen.getByText("Markdown preview")).toBeTruthy();
+    expect(screen.getByText("Preview")).toBeTruthy();
     expect(screen.getByText("hücre zarı")).toBeTruthy();
     expect(screen.getByText("organel")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Actions" })).toBeTruthy();

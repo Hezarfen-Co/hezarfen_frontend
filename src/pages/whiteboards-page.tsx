@@ -5,7 +5,7 @@ import { getBoards, postBoard, type Board } from "@/api/boards";
 import { getUserSearch } from "@/api/users";
 import { formatApiError, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { DataTableSearch } from "@/components/ui/data-table-search";
+import { DataToolbar } from "@/components/ui/data-toolbar";
 import { DataSection } from "@/components/ui/data-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,12 +64,6 @@ function WhiteboardsContent() {
       <DataSection
         title={t("whiteboard.title")}
         description={t("whiteboard.subtitle")}
-        actions={
-          <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
-            <IconPlus class="h-4 w-4" />
-            {t("whiteboard.create")}
-          </Button>
-        }
       >
         <Suspense fallback={<PageSpinner />}>
           <Show when={boards.error}>
@@ -79,8 +73,21 @@ function WhiteboardsContent() {
             when={(boards()?.items ?? []).length > 0}
             fallback={<EmptyState kind="whiteboard" title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
           >
-            <div class="space-y-4">
-              <DataTableSearch value={query()} onChange={setQuery} placeholder={t("whiteboard.searchPlaceholder")} hint={t("search.hint.whiteboards")} />
+            <div class="space-y-3">
+              <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
+                <DataToolbar
+                  searchValue={query()}
+                  searchPlaceholder={t("whiteboard.searchPlaceholder")}
+                  searchHint={t("search.hint.whiteboards")}
+                  onSearchInput={setQuery}
+                  actions={
+                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
+                      <IconPlus class="h-4 w-4" />
+                      {t("whiteboard.create")}
+                    </Button>
+                  }
+                />
+              </div>
               <Show when={visibleBoards().length > 0} fallback={<EmptyState kind="search" title={t("common.noResults")} />}>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <For each={visibleBoards()}>

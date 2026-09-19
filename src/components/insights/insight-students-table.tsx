@@ -1,9 +1,9 @@
-import { For, createMemo, createSignal, type JSX } from "solid-js";
+import { createMemo, createSignal, type JSX } from "solid-js";
 import { Link, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { DropdownSelect } from "@/components/ui/select";
 import { IconEye } from "@/components/ui/icons";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { runReportText } from "@/i18n/insights-run-report";
@@ -102,7 +102,7 @@ export function InsightStudentsTable(props: {
       header: rt("attention"),
       meta: { align: "center" },
       cell: (cell) => (
-        <span class={cn("mono tabular-nums", cell.row.original.attention > 0 ? "font-semibold text-warning-text" : muted)}>
+        <span class={cn("tabular-nums", cell.row.original.attention > 0 ? "font-semibold text-warning-text" : muted)}>
           {loaded(cell.row.original) || cell.row.original.state === "no_summary" ? cell.row.original.attention : "—"}
         </span>
       ),
@@ -112,14 +112,14 @@ export function InsightStudentsTable(props: {
       accessorFn: (row) => row.cards,
       header: rt("cards"),
       meta: { align: "center" },
-      cell: (cell) => <span class="mono tabular-nums">{cell.row.original.state === "not_loaded" ? "—" : cell.row.original.cards}</span>,
+      cell: (cell) => <span class="tabular-nums">{cell.row.original.state === "not_loaded" ? "—" : cell.row.original.cards}</span>,
     },
     {
       id: "marks",
       accessorFn: (row) => row.marks.average ?? -1,
       header: rt("marksAverage"),
       meta: { align: "center" },
-      cell: (cell) => <span class={cn("mono tabular-nums", !loaded(cell.row.original) && muted)}>{studentMarksText(locale(), cell.row.original)}</span>,
+      cell: (cell) => <span class={cn("tabular-nums", !loaded(cell.row.original) && muted)}>{studentMarksText(locale(), cell.row.original)}</span>,
     },
     {
       id: "attendance",
@@ -129,7 +129,7 @@ export function InsightStudentsTable(props: {
       cell: (cell) => {
         const row = cell.row.original;
         const low = loaded(row) && row.attendance.observed > 0 && (row.attendance.rate ?? 1) < 0.85;
-        return <span class={cn("mono tabular-nums", low && "font-semibold text-warning-text", !loaded(row) && muted)}>{studentAttendanceText(locale(), row)}</span>;
+        return <span class={cn("tabular-nums", low && "font-semibold text-warning-text", !loaded(row) && muted)}>{studentAttendanceText(locale(), row)}</span>;
       },
     },
     {
@@ -137,7 +137,7 @@ export function InsightStudentsTable(props: {
       accessorFn: (row) => row.study.stints,
       header: t("insights.studyStints"),
       meta: { align: "center" },
-      cell: (cell) => <span class={cn("mono tabular-nums", !loaded(cell.row.original) && muted)}>{loaded(cell.row.original) ? cell.row.original.study.stints : "—"}</span>,
+      cell: (cell) => <span class={cn("tabular-nums", !loaded(cell.row.original) && muted)}>{loaded(cell.row.original) ? cell.row.original.study.stints : "—"}</span>,
     },
     {
       id: "confidence",
@@ -150,7 +150,7 @@ export function InsightStudentsTable(props: {
       id: "computedAt",
       accessorFn: (row) => row.computed_at ?? 0,
       header: t("insights.computedAt"),
-      meta: { align: "center", cellClass: "mono text-xs text-muted-foreground whitespace-nowrap" },
+      meta: { align: "center", cellClass: "text-xs text-muted-foreground whitespace-nowrap" },
       cell: (cell) => calculatedDate(cell.row.original.computed_at),
     },
     {
@@ -175,11 +175,11 @@ export function InsightStudentsTable(props: {
     },
   ]);
 
-  const filters: { id: Filter; label: string }[] = [
-    { id: "all", label: t("insights.filter.all") },
-    { id: "attention", label: t("insights.filter.attention") },
-    { id: "none", label: t("insights.filter.noAnalysis") },
-  ];
+  const filters = createMemo(() => [
+    { value: "all" as Filter, label: `${t("insights.filter.all")} (${counts().all})` },
+    { value: "attention" as Filter, label: `${t("insights.filter.attention")} (${counts().attention})` },
+    { value: "none" as Filter, label: `${t("insights.filter.noAnalysis")} (${counts().none})` },
+  ]);
 
   return (
     <DataTable
@@ -195,26 +195,17 @@ export function InsightStudentsTable(props: {
       filterHint={t("search.hint.people")}
       searchPredicate={(row, query) => matchesSearch(query, row.name)}
       filters={
-        <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("insights.filter.all")}>
-          <For each={filters}>
-            {(item) => (
-              <Button
-                type="button"
-                size="sm"
-                variant={filter() === item.id ? "default" : "outline"}
-                aria-pressed={filter() === item.id}
-                onClick={() => setFilter(item.id)}
-              >
-                {item.label}
-                <span class="mono ml-1 tabular-nums opacity-70">{counts()[item.id]}</span>
-              </Button>
-            )}
-          </For>
-        </div>
+        <DropdownSelect
+          options={filters()}
+          value={filter()}
+          onChange={setFilter}
+          labelPrefix={t("common.filter")}
+          class="min-w-44"
+        />
       }
       enablePagination
       pageSize={10}
-      tableClass="insight-grid-table min-w-[70rem]"
+      tableClass="insight-grid-table min-w-[60rem]"
       storageKey="insight-students-v2"
     />
   );

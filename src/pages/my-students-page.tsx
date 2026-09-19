@@ -172,13 +172,13 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
     {
       accessorKey: "weight",
       header: t("marks.weight"),
-      meta: { align: "right", cellClass: "mono tabular-nums" },
+      meta: { align: "right", cellClass: "tabular-nums" },
       cell: (cell) => cell.row.original.weight,
     },
     {
       accessorKey: "mark",
       header: t("marks.mark"),
-      meta: { align: "right", cellClass: "mono font-semibold tabular-nums" },
+      meta: { align: "right", cellClass: "font-semibold tabular-nums" },
       cell: (cell) => formatNumber(cell.row.original.mark),
     },
   ]);

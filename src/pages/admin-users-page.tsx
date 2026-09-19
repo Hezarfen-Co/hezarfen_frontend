@@ -90,7 +90,7 @@ function AdminUsersContent() {
         </TabsList>
       </Tabs>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
           <TruncationNotice
             shown={list()?.items.length ?? 0}

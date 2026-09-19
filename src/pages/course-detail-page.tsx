@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataToolbar } from "@/components/ui/data-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconBook, IconEdit, IconNote, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
 import { createFlash } from "@/lib/flash";
@@ -38,6 +39,8 @@ import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
+import { cn } from "@/lib/cn";
+import { matchesSearch } from "@/lib/search-text";
 
 const COURSE_KINDS: CourseKind[] = ["course", "study", "club"];
 
@@ -127,8 +130,8 @@ function CourseDetailContent() {
   const [showSubjectForm, setShowSubjectForm] = createSignal(false);
   const [showNoteForm, setShowNoteForm] = createSignal(false);
   const [showMemberForm, setShowMemberForm] = createSignal(false);
-  const [subjectCount, setSubjectCount] = createSignal(0);
-  const [noteCount, setNoteCount] = createSignal(0);
+  const [noteCount, setNoteCount] = createSignal<number | null>(null);
+  const [sectionSearch, setSectionSearch] = createSignal("");
   const [memberUserId, setMemberUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -146,9 +149,11 @@ function CourseDetailContent() {
   const courseKindLabel = (value: CourseKind | undefined) =>
     value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
   const courseListSearch = (value: CourseKind | undefined) => (value ? ({ kind: value } as never) : ({} as never));
-  const countDescription = (count: number, item: string) => t("common.countItem", { count, item });
-
   const sectionCount = createMemo(() => sections()?.length ?? 0);
+  const visibleSections = createMemo(() => {
+    const query = sectionSearch().trim();
+    return query ? (sections() ?? []).filter((section) => matchesSearch(query, section.className)) : sections() ?? [];
+  });
   const memberCount = createMemo(() => members()?.length ?? 0);
   const memberUserIds = () => (members() ?? []).map((row) => row.user.id);
 
@@ -168,13 +173,13 @@ function CourseDetailContent() {
       id: "dersSaati",
       accessorFn: (row) => row.instance.ders_saati,
       header: t("instances.dersSaati"),
-      meta: { cellClass: "mono" },
+      meta: { cellClass: "" },
     },
     {
       id: "roster",
       accessorFn: (row) => row.instance.enrollment_count,
       header: t("courses.roster"),
-      meta: { cellClass: "mono" },
+      meta: { cellClass: "" },
     },
     {
       id: "karne",
@@ -260,7 +265,7 @@ function CourseDetailContent() {
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
               <div class="mx-auto w-full max-w-[1440px] space-y-4">
-                <div class="space-y-1.5">
+                <section class="rounded-xl border border-border-line bg-surface-base px-4 py-3 shadow-xs sm:px-5">
                   <Breadcrumbs
                     items={[
                       { label: courseKindLabel(c().kind), to: "/courses", search: courseListSearch(c().kind) },
@@ -269,7 +274,7 @@ function CourseDetailContent() {
                   />
                   <PageHeader
                     title={c().title}
-                    description={c().description || "—"}
+                    description={c().description || undefined}
                     class="border-border-line"
                     actions={
                       <Show when={canManageCatalog()}>
@@ -288,36 +293,7 @@ function CourseDetailContent() {
                       </Show>
                     }
                   />
-                  <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                    <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
-                        <IconBook class="h-4 w-4" />
-                      </span>
-                      <div class="min-w-0">
-                        <p class="text-xs font-medium text-text-subtle">{t("courses.kind")}</p>
-                        <p class="truncate text-sm font-semibold text-text-default">{courseKindLabel(c().kind)}</p>
-                      </div>
-                    </div>
-                    <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
-                        <IconSchool class="h-4 w-4" />
-                      </span>
-                      <div class="min-w-0">
-                        <p class="text-xs font-medium text-text-subtle">{t("instances.taughtIn")}</p>
-                        <p class="mono truncate text-sm font-semibold text-text-default">{c().class_course_count}</p>
-                      </div>
-                    </div>
-                    <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3">
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-tint text-text-subtle">
-                        <IconUsers class="h-4 w-4" />
-                      </span>
-                      <div class="min-w-0">
-                        <p class="text-xs font-medium text-text-subtle">{t("courses.members")}</p>
-                        <p class="mono truncate text-sm font-semibold text-text-default">{c().course_membership_count}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                </section>
 
                 <ConfirmDialog
                   open={deleteOpen()}
@@ -453,95 +429,84 @@ function CourseDetailContent() {
                 </Show>
 
                 <Tabs value={courseTab()} onChange={setCourseTab} class="space-y-4">
-                  <TabsList class="flex w-full justify-start overflow-x-auto sm:grid sm:grid-cols-4" aria-label={c().title}>
-                    <TabsTrigger value="subjects" class="min-w-0"><IconBook class="h-4 w-4" />{t("subjects.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{subjectCount()}</Badge></TabsTrigger>
-                    <TabsTrigger value="sections" class="min-w-0"><IconSchool class="h-4 w-4" />{t("instances.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{sectionCount()}</Badge></TabsTrigger>
-                    <TabsTrigger value="notes" class="min-w-0"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{noteCount()}</Badge></TabsTrigger>
+                  <TabsList class={cn("w-full justify-start gap-0 overflow-x-auto rounded-lg border-border-line bg-surface-base p-0 shadow-none sm:grid", hasMembers() ? "sm:grid-cols-4" : "sm:grid-cols-3")} aria-label={c().title}>
+                    <TabsTrigger value="subjects" onClick={(event) => { event.preventDefault(); setCourseTab("subjects"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconBook class="h-4 w-4" />{t("subjects.title")}</TabsTrigger>
+                    <TabsTrigger value="sections" onClick={(event) => { event.preventDefault(); setCourseTab("sections"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconSchool class="h-4 w-4" />{t("instances.title")}</TabsTrigger>
+                    <TabsTrigger value="notes" onClick={(event) => { event.preventDefault(); setCourseTab("notes"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Show when={noteCount() != null}><span class="ml-0.5 tabular-nums">{noteCount()}</span></Show></TabsTrigger>
                     <Show when={hasMembers()}>
-                      <TabsTrigger value="members" class="min-w-0"><IconUsers class="h-4 w-4" />{t("courses.members")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{c().course_membership_count}</Badge></TabsTrigger>
+                      <TabsTrigger value="members" onClick={(event) => { event.preventDefault(); setCourseTab("members"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconUsers class="h-4 w-4" />{t("courses.members")}</TabsTrigger>
                     </Show>
                   </TabsList>
 
-                  <TabsContent value="subjects" class="space-y-3">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary" class="rounded-full">{countDescription(subjectCount(), t("subjects.item"))}</Badge>
-                      <Show when={canManageCatalog()}>
-                        <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowSubjectForm(true)}>
-                          <IconPlus class="h-4 w-4" />{t("subjects.add")}
-                        </Button>
-                      </Show>
-                    </div>
+                  <TabsContent value="subjects" forceMount class="space-y-3">
                     <CourseSubjectsPanel
                       courseId={id()}
                       canManage={canManageCatalog()}
-                      active={courseTab() === "subjects"}
                       createOpen={showSubjectForm()}
                       onCreateOpenChange={setShowSubjectForm}
-                      onCountChange={setSubjectCount}
                     />
                   </TabsContent>
 
-                  <TabsContent value="sections" class="space-y-3">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary" class="rounded-full">{countDescription(sectionCount(), t("instances.item"))}</Badge>
-                      <span class="text-xs text-text-subtle">{t("instances.selectSectionHelp")}</span>
+                  <TabsContent value="sections" forceMount class="space-y-3">
+                    <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
+                      <DataToolbar
+                        inline
+                        searchValue={sectionSearch()}
+                        searchPlaceholder={t("common.searchPlaceholder")}
+                        onSearchInput={setSectionSearch}
+                      />
                     </div>
-                    <Suspense fallback={<DataTableSkeleton />}>
-                      <Show
-                        when={sectionCount() > 0}
-                        fallback={<EmptyState kind="people" title={t("instances.empty")} description={t("instances.emptyHelp")} />}
-                      >
-                        <DataTable
-                          columns={sectionColumns()}
-                          data={sections() ?? []}
-                          filterColumn="class"
-                          enablePagination
-                          pageSize={10}
-                          onRowClick={(row) => void navigate({ to: "/instances/$id", params: { id: row.instance.id } })}
-                        />
-                      </Show>
-                    </Suspense>
+                    <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
+                      <Suspense fallback={<DataTableSkeleton />}>
+                        <Show
+                          when={sectionCount() > 0}
+                          fallback={<EmptyState kind="people" title={t("instances.empty")} description={t("instances.emptyHelp")} />}
+                        >
+                          <DataTable
+                            columns={sectionColumns()}
+                            data={visibleSections()}
+                            enablePagination
+                            pageSize={10}
+                            empty={t("common.noMatches")}
+                            onRowClick={(row) => void navigate({ to: "/instances/$id", params: { id: row.instance.id } })}
+                          />
+                        </Show>
+                      </Suspense>
+                    </div>
                   </TabsContent>
 
-                  <TabsContent value="notes" class="space-y-3">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary" class="rounded-full">{countDescription(noteCount(), t("courseNotes.item"))}</Badge>
-                      <Show when={canManageCatalog()}>
-                        <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowNoteForm(true)}>
-                          <IconPlus class="h-4 w-4" />{t("courseNotes.add")}
-                        </Button>
-                      </Show>
-                    </div>
-                    <CourseNotesPanel
-                      courseId={id()}
-                      canManage={canManageCatalog()}
-                      active={courseTab() === "notes"}
-                      createOpen={showNoteForm()}
-                      onCreateOpenChange={setShowNoteForm}
-                      onCountChange={setNoteCount}
-                    />
-                  </TabsContent>
+                  <TabsContent value="notes" forceMount class="space-y-3" />
 
                   <Show when={hasMembers()}>
-                    <TabsContent value="members" class="space-y-3">
-                      <div class="flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" class="rounded-full">{countDescription(memberCount(), t("courses.memberItem"))}</Badge>
-                        <Show when={canManageCatalog()}>
-                          <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowMemberForm(true)}>
+                  <TabsContent value="members" forceMount class="space-y-3">
+                      <Show when={canManageCatalog()}>
+                        <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
+                          <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowMemberForm(true)}>
                             <IconPlus class="h-4 w-4" />{t("courses.addMember")}
                           </Button>
+                        </div>
+                      </Show>
+                      <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
+                        <Show when={canManageCatalog()} fallback={<EmptyState kind="people" title={t("common.accessDenied")} />}>
+                          <Suspense fallback={<DataTableSkeleton />}>
+                            <Show when={memberCount() > 0} fallback={<EmptyState kind="people" title={t("exams.emptyRoster")} />}>
+                              <DataTable columns={memberColumns()} data={members() ?? []} filterColumn="username" enablePagination pageSize={10} />
+                            </Show>
+                          </Suspense>
                         </Show>
                       </div>
-                      <Show when={canManageCatalog()} fallback={<EmptyState kind="people" title={t("common.accessDenied")} />}>
-                        <Suspense fallback={<DataTableSkeleton />}>
-                          <Show when={memberCount() > 0} fallback={<EmptyState kind="people" title={t("exams.emptyRoster")} />}>
-                            <DataTable columns={memberColumns()} data={members() ?? []} filterColumn="username" enablePagination pageSize={10} />
-                          </Show>
-                        </Suspense>
-                      </Show>
                     </TabsContent>
                   </Show>
                 </Tabs>
+                <div class={courseTab() === "notes" ? "" : "hidden"}>
+                  <CourseNotesPanel
+                    courseId={id()}
+                    canManage={canManageCatalog()}
+                    createOpen={showNoteForm()}
+                    onCreateOpenChange={setShowNoteForm}
+                    onCountChange={setNoteCount}
+                  />
+                </div>
               </div>
             </Show>
           </Show>

@@ -47,7 +47,7 @@ export function BookAppointmentForm(props: {
           <span class="text-muted-foreground">{t("appointments.teacher")}:</span>{" "}
           <span class="font-medium">{personLabel(props.slot.teacher)}</span>
         </p>
-        <p class="mono text-xs text-muted-foreground">
+        <p class="text-xs text-muted-foreground">
           {formatDateTime(props.slot.starts_at, locale())} — {formatDateTime(props.slot.ends_at, locale())}
         </p>
       </div>

@@ -80,7 +80,7 @@ function StatementContent() {
     {
       accessorKey: "due_at",
       header: t("payments.due"),
-      cell: (cell) => <span class="mono block whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive-text": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
+      cell: (cell) => <span class="block whitespace-nowrap text-sm" classList={{ "font-semibold text-destructive-text": cell.row.original.overdue }}>{cell.row.original.due_at == null ? "—" : formatDate(cell.row.original.due_at, locale())}</span>,
     },
     {
       accessorKey: "outstanding_minor",
@@ -127,7 +127,7 @@ function StatementContent() {
       <section class="data-shell p-4">
         <div class="flex flex-wrap items-baseline justify-between gap-2">
           <p class="text-sm font-medium text-text-subtle">{t("payments.collected")}</p>
-          <p class="mono text-lg font-semibold tabular-nums text-text-strong">
+          <p class="text-lg font-semibold tabular-nums text-text-strong">
             {formatTry(summary().collected, moneyLocale())}
             <span class="font-normal text-text-subtle"> / {formatTry(summary().billed, moneyLocale())}</span>
           </p>
@@ -150,7 +150,7 @@ function StatementContent() {
         </div>
       </section>
 
-      <section class="data-shell space-y-4 p-4">
+      <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={6} />}>
           <Show when={statement.error}>
             <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetch()} />
@@ -183,7 +183,7 @@ function StatementContent() {
               <DetailField label={t("payments.credited")} value={formatTry(entry.credited_minor, moneyLocale())} />
               <DetailField label={t("payments.outstanding")} value={formatTry(entry.outstanding_minor, moneyLocale())} />
               <DetailField label={t("payments.reversed")} value={entry.reversed ? t("payments.reversed") : "—"} />
-              <DetailField label={t("payments.plan")} value={entry.plan ?? "—"} mono />
+              <DetailField label={t("payments.plan")} value={entry.plan ?? "—"} />
               <DetailField label={t("admin.id")} value={entry.charge_id} mono />
             </div>
           )}

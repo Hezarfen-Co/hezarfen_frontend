@@ -10,7 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconRefresh, IconSparkles } from "@/components/ui/icons";
+import { IconSparkles } from "@/components/ui/icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createFlash } from "@/lib/flash";
 import { toStudentSignal, type StudentSignal } from "@/lib/insight-run-report";
@@ -62,18 +62,6 @@ export function InsightsBoard() {
   const rows = createMemo(() => Object.values(signals()));
   const overview = createMemo(() => insightOverview(rows(), students.latest?.length ?? 0));
 
-  const refreshPage = async () => {
-    setPageError("");
-    try {
-      const tasks: Promise<unknown>[] = [Promise.resolve(refetchSelfInsight())];
-      if (canBrowseStudents()) tasks.push(Promise.resolve(refetchStudents()));
-      if (canManageRuns()) tasks.push(Promise.resolve(refetchRuns()));
-      await Promise.all(tasks);
-    } catch (error) {
-      setPageError(formatApiError(error));
-    }
-  };
-
   const queueSchoolRefresh = async () => {
     if (refreshingAll() || !canManageRuns()) return;
     setRefreshingAll(true);
@@ -105,10 +93,6 @@ export function InsightsBoard() {
               empty={role() === "parent" ? tx("insights.emptyLinkedStudents") : tx("insights.emptyStudents")}
               actions={
                 <>
-                  <Button variant="outline" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => void refreshPage()}>
-                    <IconRefresh class="h-4 w-4" />
-                    {tx("common.refresh")}
-                  </Button>
                   <Show when={canManageRuns()}>
                     <Button
                       size="sm"
@@ -155,10 +139,6 @@ export function InsightsBoard() {
               <h2 class="text-base font-semibold text-text-strong">{tx("insights.myAnalysis")}</h2>
               <p class="mt-1 text-sm text-muted-foreground">{tx("insights.myAnalysisSubtitle")}</p>
             </div>
-            <Button variant="outline" size="sm" class="rounded-lg" onClick={() => void refetchSelfInsight()}>
-              <IconRefresh class="h-4 w-4" />
-              {tx("common.refresh")}
-            </Button>
           </div>
           <Suspense fallback={<p class="py-8 text-center text-sm text-muted-foreground">{tx("common.loading")}</p>}>
             <Show when={selfInsight.error}>

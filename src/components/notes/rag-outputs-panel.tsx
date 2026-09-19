@@ -271,7 +271,7 @@ export function RagOutputsPanel(props: {
             <article class="overflow-hidden rounded-lg border border-border/60 bg-background/50">
               <header class="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 px-3 py-2">
                 <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("courseNotes.markdownPreview")}</span>
-                <span class="mono text-xs text-muted-foreground">{formatDateTime(current().generated_at, locale())}</span>
+                <span class="text-xs text-muted-foreground">{formatDateTime(current().generated_at, locale())}</span>
               </header>
               <div class="p-4">
                 <RagOutputContent payload={current().payload} />

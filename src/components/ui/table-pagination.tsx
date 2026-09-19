@@ -1,6 +1,5 @@
-import { Show } from "solid-js";
 import { Button } from "@/components/ui/button";
-import { DropdownSelect } from "@/components/ui/select";
+import { IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import { useT } from "@/stores/preferences-context";
 
 export type TablePaginationProps = {
@@ -11,59 +10,44 @@ export type TablePaginationProps = {
   /** Total row count (across all pages). */
   total: number;
   onPageChange: (pageIndex: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
-  pageSizeOptions?: number[];
 };
 
-/** Footer: "X kayıttan a-b arası" + page-size select + prev/next + "page / total". */
+/** Footer: "X kayıttan a-b arası" + prev/next + "page / total". */
 export function TablePagination(props: TablePaginationProps) {
   const t = useT();
-  // Always include the active page size so the select shows a selected value
-  // instead of rendering blank when a page passes a non-standard size (e.g. 12).
-  const options = () => {
-    const base = props.pageSizeOptions ?? [10, 25, 50];
-    return base.includes(props.pageSize) ? base : [...base, props.pageSize].sort((a, b) => a - b);
-  };
   const start = () => (props.total === 0 ? 0 : props.pageIndex * props.pageSize + 1);
   const end = () => Math.min((props.pageIndex + 1) * props.pageSize, props.total);
 
   return (
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <span class="text-sm tabular-nums text-muted-foreground">
+    <div class="flex w-full flex-col gap-2 rounded-lg border border-border-line bg-surface-overlay px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
+      <span class="text-[11px] font-medium tabular-nums text-muted-foreground">
         {t("common.pageRange", { start: start(), end: end(), total: props.total })}
       </span>
-      <div class="flex flex-wrap items-center gap-2">
-        <Show when={props.onPageSizeChange}>
-          <DropdownSelect
-            triggerClass="h-8 rounded-md text-xs"
-            value={String(props.pageSize)}
-            options={options().map((size) => ({
-              value: String(size),
-              label: t("common.rowsPerPage", { size }),
-            }))}
-            onChange={(value) => props.onPageSizeChange?.(Number(value))}
-          />
-        </Show>
+      <div class="flex items-center justify-end gap-1">
         <Button
           type="button"
           variant="outline"
           size="sm"
+          class="h-7 gap-1 px-1.5 text-[11px]"
           disabled={props.pageIndex <= 0}
           onClick={() => props.onPageChange(Math.max(0, props.pageIndex - 1))}
         >
-          {t("common.prev")}
+          <IconChevronLeft class="h-3 w-3" />
+          <span class="hidden sm:inline">{t("common.prev")}</span>
         </Button>
-        <span class="text-sm tabular-nums text-muted-foreground">
+        <span class="min-w-12 rounded-md border border-border-line bg-surface-base px-1.5 py-0.5 text-center text-[11px] font-semibold tabular-nums text-foreground">
           {t("common.pageOf", { page: props.pageIndex + 1, total: props.pageCount })}
         </span>
         <Button
           type="button"
           variant="outline"
           size="sm"
+          class="h-7 gap-1 px-1.5 text-[11px]"
           disabled={props.pageIndex >= props.pageCount - 1}
           onClick={() => props.onPageChange(Math.min(props.pageCount - 1, props.pageIndex + 1))}
         >
-          {t("common.next")}
+          <span class="hidden sm:inline">{t("common.next")}</span>
+          <IconChevronRight class="h-3 w-3" />
         </Button>
       </div>
     </div>

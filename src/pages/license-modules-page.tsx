@@ -134,7 +134,7 @@ function LicenseModulesContent() {
                 </div>
               </section>
 
-              <section class="data-shell space-y-4 p-4">
+              <section class="space-y-4 p-0">
                 <DataTable
                   title={t("nav.licenseModules")}
                   description={t("modules.subtitle")}

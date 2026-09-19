@@ -10,12 +10,11 @@ import { ApiError } from "@/api/client";
 import type { Page, PersonRef, WorkEntry } from "@/api/client";
 import type { Locale } from "@/i18n/messages";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { DataTableSearch } from "@/components/ui/data-table-search";
-import { DataSection } from "@/components/ui/data-section";
+import { DataToolbar } from "@/components/ui/data-toolbar";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
+import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -188,7 +187,7 @@ function StaffWorkContent() {
       id: "time",
       accessorFn: (row) => row.check_in,
       header: t("work.checkIn"),
-      meta: { cellClass: "mono text-xs" },
+      meta: { cellClass: "text-xs" },
       cell: (cell) => (
         <div class="whitespace-nowrap">
           <p>{formatDateTime(cell.row.original.check_in, locale())}</p>
@@ -199,7 +198,7 @@ function StaffWorkContent() {
     {
       accessorKey: "duration_ms",
       header: t("work.duration"),
-      meta: { cellClass: "mono text-xs" },
+      meta: { cellClass: "text-xs" },
       cell: (cell) => formatDurationMinutes(cell.row.original.duration_ms, locale()),
     },
     {
@@ -287,45 +286,51 @@ function StaffWorkContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <DataSection
-        title={t("work.staffTitle")}
-        description={t("work.staffSubtitle")}
-        actions={
-          <>
-            <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-              {t("work.addEntry")}
-              <ComingSoonBadge class="ml-1.5" />
-            </Button>
-            <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-              {t("work.planShift")}
-              <ComingSoonBadge class="ml-1.5" />
-            </Button>
-          </>
-        }
-      >
-        <DataTableSearch value={staffSearch()} onChange={setStaffSearch} placeholder={t("work.searchPlaceholder")} hint={t("search.hint.people")} />
+      <div class="space-y-3">
+        <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
+          <DataToolbar
+            searchValue={staffSearch()}
+            searchPlaceholder={t("work.searchPlaceholder")}
+            searchHint={t("search.hint.people")}
+            onSearchInput={setStaffSearch}
+            actions={
+              <>
+                <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+                  {t("work.addEntry")}
+                  <ComingSoonBadge class="ml-1.5" />
+                </Button>
+                <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
+                  {t("work.planShift")}
+                  <ComingSoonBadge class="ml-1.5" />
+                </Button>
+              </>
+            }
+          />
+        </div>
 
-        <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
-          <Show when={pagedPeople().length > 0} fallback={<EmptyState kind="people" title={t("work.noTeachers")} />}>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <For each={pagedPeople()}>
-                {(person) => (
-                  <StaffCard
-                    person={person}
-                    stats={cardStats()?.get(person.id) ?? undefined}
-                    locale={locale()}
-                    onClick={() => {
-                      setError("");
-                      setViewUser(person);
-                    }}
-                  />
-                )}
-              </For>
-            </div>
-            <PaginationControls page={staffPage()} totalPages={staffPageCount()} onPageChange={setStaffPage} />
+        <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
+          <Show when={!peopleLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
+            <Show when={pagedPeople().length > 0} fallback={<EmptyState kind="people" title={t("work.noTeachers")} />}>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <For each={pagedPeople()}>
+                  {(person) => (
+                    <StaffCard
+                      person={person}
+                      stats={cardStats()?.get(person.id) ?? undefined}
+                      locale={locale()}
+                      onClick={() => {
+                        setError("");
+                        setViewUser(person);
+                      }}
+                    />
+                  )}
+                </For>
+              </div>
+              <PaginationControls page={staffPage()} totalPages={staffPageCount()} onPageChange={setStaffPage} />
+            </Show>
           </Show>
-        </Show>
-      </DataSection>
+        </div>
+      </div>
 
       <SidePanel
         size="wide"
@@ -446,12 +451,7 @@ function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | un
         <Show when={isOpen()}>
           <Badge>{t("work.open")}</Badge>
         </Show>
-        <ComingSoonBadge class="shrink-0" />
         <IconChevronRight class="h-4 w-4 shrink-0 text-text-subtle" />
-      </div>
-      <div class="flex items-center justify-between gap-2 text-xs">
-        <span class="text-text-subtle">{t("work.location")}</span>
-        <ComingSoonValue />
       </div>
 
       <Show
@@ -462,15 +462,15 @@ function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | un
           <div class="grid grid-cols-3 gap-2 text-xs">
             <div>
               <p class="text-text-subtle">{t("work.checkIn")}</p>
-              <p class="mono font-medium text-text-default">{formatDateTime(entry().check_in, props.locale)}</p>
+              <p class="font-medium text-text-default">{formatDateTime(entry().check_in, props.locale)}</p>
             </div>
             <div>
               <p class="text-text-subtle">{t("work.checkOut")}</p>
-              <p class="mono font-medium text-text-default">{entry().check_out == null ? "—" : formatDateTime(entry().check_out, props.locale)}</p>
+              <p class="font-medium text-text-default">{entry().check_out == null ? "—" : formatDateTime(entry().check_out, props.locale)}</p>
             </div>
             <div>
               <p class="text-text-subtle">{t("work.duration")}</p>
-              <p class="mono font-medium text-text-default">{duration() == null ? "—" : formatDurationMinutes(duration(), props.locale)}</p>
+              <p class="font-medium text-text-default">{duration() == null ? "—" : formatDurationMinutes(duration(), props.locale)}</p>
             </div>
           </div>
         )}
@@ -483,10 +483,6 @@ function StaffCard(props: { person: PersonRef; stats: StaffCardStats | null | un
         >
           {t("work.daysThisMonth", { count: String(props.stats?.daysThisMonth) })}
         </Show>
-      </div>
-      <div class="flex items-center justify-between gap-2 text-xs">
-        <span class="text-text-subtle">{t("work.quality")}</span>
-        <ComingSoonValue />
       </div>
     </button>
   );

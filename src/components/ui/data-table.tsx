@@ -67,7 +67,6 @@ export type DataTableProps<TData, TValue = unknown> = {
     pageSize: number;
     total: number;
     onPageChange: (pageIndex: number) => void;
-    onPageSizeChange?: (pageSize: number) => void;
   };
   /**
    * Below the `sm` breakpoint rows render as cards (first column as the
@@ -85,6 +84,8 @@ export type DataTableProps<TData, TValue = unknown> = {
    * Without a key the same controls remain available for the current mount.
    */
   storageKey?: string;
+  /** Split the title/toolbar and table into the same inner surfaces as detail pages. */
+  surfaceSections?: boolean;
 };
 
 const resolveUpdater = <T,>(updater: Updater<T>, old: T): T =>
@@ -114,6 +115,11 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     return props.data.filter((row) => props.searchPredicate?.(row, query));
   };
   const table = createSolidTable({
+    defaultColumn: {
+      size: 120,
+      minSize: 72,
+      maxSize: 360,
+    },
     get data() {
       return tableData();
     },
@@ -202,8 +208,9 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   };
   const showColumnMenu = () => (props.enableColumnVisibility ?? true) && hideableColumns().length > 0;
   const showSearch = () => props.searchPredicate != null || props.filterColumn != null || props.onSearchInput != null;
-  const showHeader = () => props.title != null || props.description != null || props.actions != null;
-  const showToolbar = () => showSearch() || props.filters != null || showColumnMenu();
+  const sectioned = () => props.surfaceSections !== false;
+  const showHeader = () => false;
+  const showToolbar = () => showSearch() || props.filters != null || showColumnMenu() || props.actions != null;
   const pageCount = () => props.manualPagination ? Math.max(1, Math.ceil(props.manualPagination.total / props.manualPagination.pageSize)) : table.getPageCount();
   const pageIndex = () => props.manualPagination?.pageIndex ?? table.getState().pagination.pageIndex;
   const pageSize = () => props.manualPagination?.pageSize ?? table.getState().pagination.pageSize;
@@ -256,10 +263,8 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   };
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
-    const align = alignOf(header.column);
     if (!sortingEnabled() || !header.column.getCanSort()) {
-      // The th already carries alignClass; the block span makes text-align resolve.
-      return <span class="block truncate whitespace-nowrap">{content}</span>;
+      return <span class="block truncate whitespace-nowrap text-center">{content}</span>;
     }
     const sorted = () => header.column.getIsSorted();
     return (
@@ -267,9 +272,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         type="button"
         variant="ghost"
         size="sm"
-        // th text-align positions this inline-flex button; -ml-2 cancels the button's
-        // px-2 so header text starts at the same gutter as the cell text below it.
-        class={cn("h-8 min-w-0 max-w-full px-2 font-medium tracking-normal normal-case", align === "left" && "-ml-2", sorted() && "text-foreground")}
+        class={cn("mx-auto h-8 min-w-0 max-w-full justify-center px-2 text-center font-medium tracking-normal normal-case", sorted() && "text-foreground")}
         onClick={() => header.column.toggleSorting(sorted() === "asc")}
       >
         <span class="truncate">{content}</span>
@@ -293,7 +296,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   return (
     <div class={cn("space-y-3", props.class)}>
       <Show when={showHeader()}>
-        <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class={cn("flex flex-wrap items-start justify-between gap-3", sectioned() && "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4")}>
           <div class="min-w-0">
             <Show when={props.title}>
               <h2 class="truncate text-lg font-semibold tracking-tight text-foreground">{props.title}</h2>
@@ -308,7 +311,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         </div>
       </Show>
       <Show when={showToolbar()}>
-        <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <div class={cn("flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between", sectioned() && "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs")}>
           <div class="flex flex-1 flex-wrap items-center gap-2">
             <Show when={showSearch()}>
               <DataTableSearch
@@ -322,11 +325,14 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
               <div class="flex flex-wrap items-center gap-2 [&_button]:h-8 [&_button]:rounded-lg [&_button]:text-[13px] [&_select]:h-8 [&_select]:rounded-lg [&_select]:text-[13px]">{props.filters}</div>
             </Show>
           </div>
-          <Show when={showColumnMenu()}>
-            <div class="flex justify-end">
+          <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <Show when={props.actions}>
+              <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-md">{props.actions}</div>
+            </Show>
+            <Show when={showColumnMenu()}>
               <DataTableViewMenu columns={viewMenuColumns()} />
-            </div>
-          </Show>
+            </Show>
+          </div>
         </div>
       </Show>
       <Show when={useCards()}>
@@ -394,7 +400,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         </ul>
       </Show>
       <Show when={!useCards()}>
-      <DataTableFrame>
+      <DataTableFrame class={sectioned() ? "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4" : undefined}>
         <Table
           class={cn("data-table table-fixed", props.tableClass)}
           style={{ width: `max(100%, ${tableWidth()}px)` }}
@@ -414,7 +420,6 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                         colSpan={header.colSpan}
                         class={cn(
                           "group/head relative overflow-hidden",
-                          alignClass[alignOf(header.column)],
                           dividerClass(header.column),
                           stickyHeadClass(header.column),
                           header.column.columnDef.meta?.headerClass,
@@ -508,11 +513,6 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           pageSize={pageSize()}
           total={totalRows()}
           onPageChange={setPageIndex}
-          onPageSizeChange={
-            props.manualPagination
-              ? props.manualPagination.onPageSizeChange
-              : (size) => { table.setPageSize(size); setPageIndex(0); }
-          }
         />
       </Show>
     </div>

@@ -78,7 +78,7 @@ export function UserTable(props: {
   const t = useT();
   const navigate = useNavigate();
   const searchUser = (user: User, query: string) =>
-    matchesSearch(query, user.username, displayName(user), user.email, t(`role.${user.role}` as MessageKey));
+    matchesSearch(query, user.username, user.phone, displayName(user), user.email, t(`role.${user.role}` as MessageKey));
   const columns = createMemo<ColumnDef<User>[]>(() => [
     {
       accessorKey: "username",
@@ -88,12 +88,12 @@ export function UserTable(props: {
       meta: { cellClass: "truncate font-medium" },
     },
     {
-      id: "name",
-      header: t("profile.name"),
+      id: "phone",
+      header: t("profile.phone"),
       size: 180,
-      minSize: 120,
+      minSize: 130,
       meta: { cellClass: "truncate" },
-      cell: (cell) => displayName(cell.row.original),
+      cell: (cell) => cell.row.original.phone || "—",
     },
     {
       accessorKey: "email",
@@ -164,6 +164,7 @@ export function UserTable(props: {
       storageKey="admin-users"
       searchPredicate={searchUser}
       filterHint={t("search.hint.users")}
+      surfaceSections
       enablePagination
       pageSize={20}
       onRowClick={props.onUserClick}

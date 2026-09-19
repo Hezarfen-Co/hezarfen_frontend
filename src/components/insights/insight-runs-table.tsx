@@ -57,7 +57,7 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
         const run = cell.row.original;
         return (
           <div class="text-center">
-            <p class="mono font-medium tabular-nums">{run.students_ok}/{run.students_total}</p>
+            <p class="font-medium tabular-nums">{run.students_ok}/{run.students_total}</p>
             <p class="text-[11px] text-muted-foreground">{run.students_failed} / {run.students_skipped}</p>
           </div>
         );
@@ -66,13 +66,13 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
     {
       accessorKey: "rows_written",
       header: tx("insights.written"),
-      meta: { align: "center", cellClass: "mono tabular-nums" },
+      meta: { align: "center", cellClass: "tabular-nums" },
     },
     {
       accessorKey: "duration_ms",
       header: tx("insights.duration"),
       meta: { align: "center" },
-      cell: (cell) => <span class="mono tabular-nums">{formatDurationMinutes(cell.row.original.duration_ms, prefs.locale())}</span>,
+      cell: (cell) => <span class="tabular-nums">{formatDurationMinutes(cell.row.original.duration_ms, prefs.locale())}</span>,
     },
     {
       id: "issues",
@@ -135,7 +135,7 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
         columns={columns()}
         data={props.runs}
         empty={tx("insights.emptyRuns")}
-        tableClass="insight-grid-table min-w-[980px]"
+        tableClass="insight-grid-table min-w-[56rem]"
         enablePagination
         pageSize={10}
         storageKey="insight-runs"

@@ -67,7 +67,7 @@ export function HomeworkQueuePanel(props: { homework: Homework[]; teacherId: str
                       ].filter(Boolean).join(" · ")}
                     </span>
                   </span>
-                  <span class="mono shrink-0 text-xs tabular-nums text-muted-foreground">{formatDateTime(row.homework.due_at, locale())}</span>
+                  <span class="shrink-0 text-xs tabular-nums text-muted-foreground">{formatDateTime(row.homework.due_at, locale())}</span>
                   <IconChevronRight class="h-4 w-4 shrink-0 text-muted-foreground/60" />
                 </Link>
               </li>

@@ -15,7 +15,7 @@ export function InsightOverview(props: { overview: Overview }) {
   const tile = (label: string, value: string, hint: string, tone?: "warn") => (
     <div class="rounded-xl border border-border-line bg-surface-base px-4 py-3">
       <p class="text-xs font-medium text-muted-foreground">{label}</p>
-      <p class={cn("mono mt-1 text-2xl font-semibold tabular-nums text-text-strong", tone === "warn" && "text-warning-text")}>{value}</p>
+      <p class={cn("mt-1 text-2xl font-semibold tabular-nums text-text-strong", tone === "warn" && "text-warning-text")}>{value}</p>
       <p class="mt-0.5 text-xs text-muted-foreground">{hint}</p>
     </div>
   );

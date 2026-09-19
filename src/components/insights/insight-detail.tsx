@@ -127,11 +127,11 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
                   <div class="grid gap-2 @md:grid-cols-2">
                     <div class="detail-metric-card">
                       <p class="text-xs text-muted-foreground">{tx("insights.computedAt")}</p>
-                      <p class="mono mt-1 text-sm font-medium">{formatDateTime(summary().computed_at, prefs.locale())}</p>
+                      <p class="mt-1 text-sm font-medium">{formatDateTime(summary().computed_at, prefs.locale())}</p>
                     </div>
                     <div class="detail-metric-card">
                       <p class="text-xs text-muted-foreground">{tx("insights.retainUntil")}</p>
-                      <p class="mono mt-1 text-sm font-medium">{formatDateTime(summary().retain_until, prefs.locale())}</p>
+                      <p class="mt-1 text-sm font-medium">{formatDateTime(summary().retain_until, prefs.locale())}</p>
                     </div>
                   </div>
                   <div class="space-y-3">
@@ -258,7 +258,7 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
                       <div class="space-y-1.5">
                         <div class="flex items-center justify-between text-xs">
                           <span class="text-muted-foreground">{tx("insights.accuracy")}</span>
-                          <span class="font-mono font-semibold">{percent(segment.accuracy)}</span>
+                          <span class="font-semibold">{percent(segment.accuracy)}</span>
                         </div>
                         <div class="h-2.5 overflow-hidden rounded-full bg-surface-fill">
                           <div class="h-full rounded-full bg-info" style={{ width: `${clampPercent(segment.accuracy)}%` }} />
@@ -266,15 +266,15 @@ export function InsightDetail(props: { insight: StudentInsight; mode?: "full" | 
                       </div>
                       <div class="grid grid-cols-3 gap-2 text-center">
                         <div class="rounded-lg bg-surface-overlay px-2 py-2">
-                          <p class="font-mono text-sm font-semibold">{segment.n_correct}/{segment.n_answers}</p>
+                          <p class="text-sm font-semibold">{segment.n_correct}/{segment.n_answers}</p>
                           <p class="text-[11px] text-muted-foreground">{tx("insights.answers")}</p>
                         </div>
                         <div class="rounded-lg bg-surface-overlay px-2 py-2">
-                          <p class="font-mono text-sm font-semibold">{percent(segment.overall_accuracy)}</p>
+                          <p class="text-sm font-semibold">{percent(segment.overall_accuracy)}</p>
                           <p class="text-[11px] text-muted-foreground">{tx("insights.overall")}</p>
                         </div>
                         <div class="rounded-lg bg-surface-overlay px-2 py-2">
-                          <p class={cn("font-mono text-sm font-semibold", segment.contrast < 0 ? "text-destructive-text" : "text-success-text")}>
+                          <p class={cn("text-sm font-semibold", segment.contrast < 0 ? "text-destructive-text" : "text-success-text")}>
                             {segment.contrast > 0 ? "+" : ""}{percent(segment.contrast)}
                           </p>
                           <p class="text-[11px] text-muted-foreground">{tx("insights.contrast")}</p>
