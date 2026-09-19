@@ -5,12 +5,13 @@ import { InsightsBoard } from "@/components/ai/insights-board";
 import { NoteStudioPanel } from "@/components/ai/note-studio-panel";
 import { PageHeader } from "@/components/layout/page-header";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { IconSparkles, IconChart, IconWaveform } from "@/components/ui/icons";
+import { IconBook, IconSparkles, IconChart, IconWaveform } from "@/components/ui/icons";
+import { RagStudyPanel } from "@/components/rag/rag-study-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
-export type AiHubTab = "studio" | "insights" | "celebi";
+export type AiHubTab = "studio" | "study" | "insights" | "celebi";
 
 export default function AiHubPage() {
   return (
@@ -29,7 +30,7 @@ function AiHubContent() {
   // A parent only ever reaches their children's analysis: course notes and
   // Çelebi are not theirs to open.
   const tabs = createMemo<AiHubTab[]>(() =>
-    role() === "parent" ? ["insights"] : ["studio", "insights", "celebi"],
+    role() === "parent" ? ["insights"] : ["studio", "study", "insights", "celebi"],
   );
   const requested = () => (search() as { tab?: AiHubTab }).tab;
   const [tab, setTab] = createSignal<AiHubTab>(
@@ -37,7 +38,13 @@ function AiHubContent() {
   );
 
   const label = (value: AiHubTab) =>
-    value === "studio" ? t("aiHub.tab.studio") : value === "insights" ? t("aiHub.tab.insights") : t("nav.celebi");
+    value === "studio"
+      ? t("aiHub.tab.studio")
+      : value === "study"
+        ? t("aiHub.tab.study")
+        : value === "insights"
+          ? t("aiHub.tab.insights")
+          : t("nav.celebi");
 
   return (
     <div class="space-y-5">
@@ -52,10 +59,14 @@ function AiHubContent() {
         }}
       >
         <Show when={tabs().length > 1}>
-          <TabsList class="grid w-full grid-cols-3 sm:w-fit">
+          <TabsList class="grid w-full grid-cols-2 sm:w-fit sm:grid-cols-4">
             <TabsTrigger value="studio" class="min-w-0">
               <IconWaveform class="h-4 w-4" />
               {label("studio")}
+            </TabsTrigger>
+            <TabsTrigger value="study" class="min-w-0">
+              <IconBook class="h-4 w-4" />
+              {label("study")}
             </TabsTrigger>
             <TabsTrigger value="insights" class="min-w-0">
               <IconChart class="h-4 w-4" />
@@ -70,6 +81,11 @@ function AiHubContent() {
         <Show when={tabs().includes("studio")}>
           <TabsContent value="studio" class="mt-0 border-0 bg-transparent p-0 shadow-none">
             <NoteStudioPanel />
+          </TabsContent>
+        </Show>
+        <Show when={tabs().includes("study")}>
+          <TabsContent value="study" class="mt-0 border-0 bg-transparent p-0 shadow-none">
+            <RagStudyPanel />
           </TabsContent>
         </Show>
         <TabsContent value="insights" class="mt-0 border-0 bg-transparent p-0 shadow-none">

@@ -616,6 +616,7 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "aiHub.tab.study"
   | "today.titleStudent"
   | "today.inProgress"
   | "childHomework.title"
@@ -2783,6 +2784,7 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "aiHub.tab.study": "Study",
   "today.titleStudent": "Today's lessons",
   "today.inProgress": "On now",
   "childHomework.title": "Homework",
@@ -4952,6 +4954,7 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "aiHub.tab.study": "Çalış",
   "today.titleStudent": "Bugünkü derslerin",
   "today.inProgress": "Şimdi",
   "childHomework.title": "Ödevler",

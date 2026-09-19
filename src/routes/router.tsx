@@ -450,8 +450,9 @@ const whiteboardRoute = createRoute({
   component: WhiteboardPage,
 });
 
-// One AI surface: the note studio (AI outputs + podcast), the insight board
-// and the Çelebi entry point, which used to sit on three unrelated routes.
+// One AI surface: the note studio (AI outputs + podcast), grounded study chat
+// over the course material (RAG), the insight board and the Çelebi entry
+// point, which used to sit on unrelated routes.
 const aiHubRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/ai",
@@ -463,6 +464,8 @@ const aiHubRoute = createRoute({
         ? ("celebi" as const)
         : search.tab === "studio"
         ? ("studio" as const)
+        : search.tab === "study"
+        ? ("study" as const)
         : undefined,
   }),
   component: AiHubPage,

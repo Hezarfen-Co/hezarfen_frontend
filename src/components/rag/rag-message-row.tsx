@@ -1,4 +1,4 @@
-import { Match, Show, Switch } from "solid-js";
+import { Match, Show, Switch, type JSX } from "solid-js";
 import type { RagMessage } from "@/api/client";
 import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { IconAlert, IconBotSquare } from "@/components/ui/icons";
@@ -7,6 +7,8 @@ import { cn } from "@/lib/cn";
 
 export function RagMessageRow(props: {
   message: RagMessage;
+  /** Rendered under the citations of an answer (e.g. study actions). */
+  footer?: JSX.Element;
   labels: {
     thinking: string;
     sources: string;
@@ -62,6 +64,7 @@ export function RagMessageRow(props: {
         </Switch>
         <Show when={assistant()}>
           <RagCitations citations={props.message.citations} labels={props.labels} />
+          {props.footer}
         </Show>
       </div>
     </article>
