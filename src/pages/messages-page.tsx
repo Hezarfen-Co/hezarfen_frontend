@@ -49,11 +49,6 @@ export default function MessagesPage() {
   const [query, setQuery] = createSignal("");
   const [composeOpen, setComposeOpen] = createSignal(false);
   const [isRefreshing, setIsRefreshing] = createSignal(false);
-  const [replyData, setReplyData] = createSignal<{
-    recipient: string;
-    subject: string;
-    body: string;
-  } | null>(null);
   const [isPending, startTransition] = useTransition();
   const [, setFlash] = createFlash();
 
@@ -297,10 +292,7 @@ export default function MessagesPage() {
               <Button
                 size="sm"
                 class="shrink-0 rounded-lg"
-                onClick={() => {
-                  setReplyData(null);
-                  setComposeOpen(true);
-                }}
+                onClick={() => setComposeOpen(true)}
               >
                 <IconPlus class="h-4 w-4" />
                 <span>{t("messages.newMessage")}</span>
@@ -466,15 +458,11 @@ export default function MessagesPage() {
           open={composeOpen()}
           onClose={() => {
             setComposeOpen(false);
-            setReplyData(null);
           }}
           onSuccess={() => {
             if (folder() === "sent") refetch();
             setFlash(t("messages.sentToast"));
           }}
-          initialRecipient={replyData()?.recipient}
-          initialSubject={replyData()?.subject}
-          initialBody={replyData()?.body}
         />
       </div>
       <ConfirmDialog

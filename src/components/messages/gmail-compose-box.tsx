@@ -13,9 +13,6 @@ interface GmailComposeBoxProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  initialRecipient?: string;
-  initialSubject?: string;
-  initialBody?: string;
 }
 
 export function GmailComposeBox(props: GmailComposeBoxProps) {
@@ -31,9 +28,9 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
 
   createEffect(() => {
     if (props.open) {
-      setRecipient(props.initialRecipient ?? "");
-      setSubject(props.initialSubject ?? "");
-      setBody(props.initialBody ?? "");
+      setRecipient("");
+      setSubject("");
+      setBody("");
       setLabel("");
       setIsMinimized(false);
       setError("");

@@ -6,7 +6,8 @@ import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { isRecord, type UnknownRecord } from "@/lib/is-record";
 import { SidePanel } from "@/components/ui/side-panel";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { usePreferences } from "@/stores/preferences-context";
 
 /**
@@ -386,47 +387,45 @@ function MarksView(props: { value: Rec; courseTitle: CourseTitle }) {
     return current.available === true ? detailText("marks.trend") : detailText("marks.band.insufficient_data");
   };
 
+  const courseRows = () => courses().map(([id, stat], index) => ({ id, stat, index }));
+  const centered = { align: "center" as const };
+  const courseColumns: ColumnDef<{ id: string; stat: unknown; index: number }>[] = [
+    {
+      id: "course",
+      header: detailText("marks.course"),
+      meta: { cellClass: "font-medium text-text-strong" },
+      cell: (cell) => str(obj(cell.row.original.stat).course_title) ?? courseLabel(cell.row.original.id, props.courseTitle, cell.row.original.index),
+    },
+    { id: "average", header: detailText("marks.average"), meta: centered, cell: (cell) => nText(obj(cell.row.original.stat).average) ?? "—" },
+    { id: "n_marks", header: detailText("marks.nMarks"), meta: centered, cell: (cell) => String(num(obj(cell.row.original.stat).n_marks) ?? 0) },
+    {
+      id: "placement",
+      header: detailText("marks.placement"),
+      meta: centered,
+      cell: (cell) => <Badge variant={bandVariant(cell.row.original.stat)} class="rounded-full">{bandLabel(cell.row.original.stat)}</Badge>,
+    },
+    {
+      id: "trend",
+      header: detailText("marks.trend"),
+      meta: { ...centered, cellClass: "text-xs text-muted-foreground" },
+      cell: (cell) => trendLabel(cell.row.original.stat),
+    },
+  ];
+
   return (
     <div class="space-y-3">
       <dl class="space-y-1.5">
         <LabeledRow label={detailText("marks.classCount")} value={String((props.value.classes as unknown[] | undefined)?.length ?? 0)} mono />
       </dl>
-      <div class="overflow-x-auto rounded-lg border border-border-hairline">
-        <Table class="min-w-[42rem]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>{detailText("marks.course")}</TableHead>
-              <TableHead class="text-center">{detailText("marks.average")}</TableHead>
-              <TableHead class="text-center">{detailText("marks.nMarks")}</TableHead>
-              <TableHead class="text-center">{detailText("marks.placement")}</TableHead>
-              <TableHead class="text-center">{detailText("marks.trend")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={courses()}>
-              {([id, stat], index) => (
-                <TableRow
-                  class="cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-                  tabIndex={0}
-                  onClick={() => setSelectedCourse({ id, stat, index: index() })}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      setSelectedCourse({ id, stat, index: index() });
-                    }
-                  }}
-                >
-                  <TableCell class="font-medium text-text-strong">{str(obj(stat).course_title) ?? courseLabel(id, props.courseTitle, index())}</TableCell>
-                  <TableCell class="text-center">{nText(obj(stat).average) ?? "—"}</TableCell>
-                  <TableCell class="text-center">{String(num(obj(stat).n_marks) ?? 0)}</TableCell>
-                  <TableCell class="text-center"><Badge variant={bandVariant(stat)} class="rounded-full">{bandLabel(stat)}</Badge></TableCell>
-                  <TableCell class="text-center text-xs text-muted-foreground">{trendLabel(stat)}</TableCell>
-                </TableRow>
-              )}
-            </For>
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        columns={courseColumns}
+        data={courseRows()}
+        enableColumnVisibility={false}
+        enablePagination={false}
+        mobileLayout="scroll"
+        tableClass="min-w-[42rem]"
+        onRowClick={(row) => setSelectedCourse(row)}
+      />
 
       <SidePanel
         open={selectedCourse() != null}

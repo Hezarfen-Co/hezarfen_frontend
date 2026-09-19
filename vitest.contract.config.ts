@@ -7,10 +7,13 @@ import { defineConfig } from "vitest/config";
  *
  * Boot a throwaway backend (do not point this at the container on :8080):
  *   ~/.surrealdb/surreal start --user root --pass root --bind 127.0.0.1:8100 memory
- *   cd ../../Rust/hezarfen_backend && PORT=8081 DB_URL=ws://127.0.0.1:8100 \
+ *   cd <your hezarfen_backend checkout> && PORT=8081 DB_URL=ws://127.0.0.1:8100 \
  *     DB_USER=root DB_PASS=root ADMIN_USERNAME=admin ADMIN_PASSWORD=admin123 cargo run
  * Then:
  *   CONTRACT_BASE_URL=http://127.0.0.1:8081 bun run test:contract
+ *
+ * The backend repo is private and not cloned next to this one by default —
+ * clone it anywhere, the path above is a placeholder.
  *
  * Without CONTRACT_BASE_URL the whole suite skips (green, not failed).
  * Optional: ADMIN_USERNAME / ADMIN_PASSWORD (default admin / admin123).
