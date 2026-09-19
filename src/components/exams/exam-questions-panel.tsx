@@ -39,7 +39,8 @@ const QUESTION_PAGE_SIZE = 1;
 
 export function ExamQuestionsPanel(props: {
   examId: string;
-  courseId: string;
+  /** The exam's catalog course; null until the instance behind the exam resolves. */
+  courseId: string | null;
   readOnly?: boolean;
   embedded?: boolean;
   createOpen?: boolean;
@@ -50,7 +51,19 @@ export function ExamQuestionsPanel(props: {
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
   const [bankOpen, setBankOpen] = createSignal(false);
   const [banking, setBanking] = createSignal("");
-  const [subjects] = createResource(() => props.courseId, async (courseId) => (await getCourseSubjects(courseId)).items);
+  // Solid only skips a fetch on null/undefined/false — an empty string would
+  // still ask for `/courses//subjects`. A subject list that cannot load only
+  // costs the name lookup (ids stay readable), so it must not throw into the page.
+  const [subjects] = createResource(
+    () => props.courseId || null,
+    async (courseId) => {
+      try {
+        return (await getCourseSubjects(courseId)).items;
+      } catch {
+        return [];
+      }
+    },
+  );
   const [questions, { refetch }] = createResource(() => props.examId, async (examId) => {
     try {
       return (await getExamQuestions(examId)).items;

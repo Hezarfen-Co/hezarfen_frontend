@@ -17,6 +17,7 @@ import { postExamResult } from "@/api/exams";
 import { ApiError, formatApiError } from "@/api/client";
 import type { ExamResult } from "@/api/client";
 import { ExamForm } from "@/components/exams/exam-form";
+import { ExamAudiencePanel } from "@/components/exams/exam-audience-panel";
 import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { AnswerSheetView } from "@/components/exams/answer-sheet-view";
 import { ExamResultBadge } from "@/components/exams/exam-result-badge";
@@ -30,7 +31,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconCalendarDays, IconChart, IconChevronDown, IconClipboardCheck, IconClock, IconEdit, IconExam, IconEye, IconRefresh, IconTrash } from "@/components/ui/icons";
+import { IconCalendarDays, IconChart, IconChevronDown, IconClipboardCheck, IconClock, IconEdit, IconExam, IconEye, IconRefresh, IconSchool, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -663,6 +664,7 @@ function ExamDetailContent() {
                   <TabsTrigger value="statistics"><IconChart class="h-4 w-4" />{t("exams.statistics")}</TabsTrigger>
                   <TabsTrigger value="questions"><IconExam class="h-4 w-4" />{t("questions.title")}</TabsTrigger>
                   <TabsTrigger value="results"><IconClipboardCheck class="h-4 w-4" />{t("exams.results")}</TabsTrigger>
+                  <TabsTrigger value="audience"><IconSchool class="h-4 w-4" />{t("exams.audience.tab")}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="statistics" forceMount class="data-shell p-4">
@@ -693,7 +695,7 @@ function ExamDetailContent() {
                 </TabsContent>
 
                 <TabsContent value="questions" forceMount class="data-shell p-4">
-                  <ExamQuestionsPanel examId={id()} courseId={instance()?.course ?? ""} readOnly={isFinished()} embedded />
+                  <ExamQuestionsPanel examId={id()} courseId={instance()?.course ?? null} readOnly={isFinished()} embedded />
                 </TabsContent>
 
                 <TabsContent value="results" forceMount class="data-shell space-y-4 p-4">
@@ -739,6 +741,15 @@ function ExamDetailContent() {
                       </Show>
                     </Show>
                   </Suspense>
+                </TabsContent>
+
+                <TabsContent value="audience" class="data-shell p-4">
+                  <ExamAudiencePanel
+                    examId={id()}
+                    ownerInstanceId={ex().class_course}
+                    courseId={instance()?.course ?? null}
+                    canManage={hasCourseManagementRights()}
+                  />
                 </TabsContent>
               </Tabs>
 

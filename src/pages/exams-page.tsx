@@ -460,7 +460,7 @@ function ExamsContent() {
           <div class="space-y-4">
             <ExamQuestionsPanel
               examId={createdExam()!.id}
-              courseId={examCourseId(createdExam()!) ?? ""}
+              courseId={examCourseId(createdExam()!)}
               embedded
             />
             <div class="flex justify-end border-t pt-3">
@@ -526,7 +526,7 @@ function ExamsContent() {
               <Show when={editTab() === "questions"}>
                 <ExamQuestionsPanel
                   examId={exam().id}
-                  courseId={examCourseId(exam()) ?? ""}
+                  courseId={examCourseId(exam())}
                   embedded
                 />
               </Show>

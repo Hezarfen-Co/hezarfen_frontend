@@ -146,34 +146,42 @@ describe("exams API - core", () => {
     expect(init?.method ?? "GET").toBe("GET");
     expect(init?.credentials).toBe("same-origin");
   });
-  it("getExamAudience calls /exams/:id/audience", async () => {
-    mockFetchSuccess({ items: [], total: 0 });
+  it("getExamAudience reads the whole audience array", async () => {
+    mockFetchSuccess([{ instance: "i1", class: "c1", course: "co1" }]);
 
-    await getExamAudience("x1", { limit: 10 });
+    const audience = await getExamAudience("x1");
 
-    const [url] = lastFetchCall();
-    expect(url).toBe("/api/exams/x1/audience?limit=10");
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/exams/x1/audience");
+    expect(init?.method ?? "GET").toBe("GET");
+    expect(audience).toEqual([{ instance: "i1", class: "c1", course: "co1" }]);
   });
 
-  it("postExamAudience announces the exam to another instance", async () => {
-    mockFetchSuccess({ instance: "i2", class: "c2", course: "co1" });
+  it("postExamAudience announces the exam and returns the audience after the write", async () => {
+    const after = [
+      { instance: "i1", class: "c1", course: "co1" },
+      { instance: "i2", class: "c2", course: "co1" },
+    ];
+    mockFetchSuccess(after);
 
-    await postExamAudience("x1", "i2");
+    const audience = await postExamAudience("x1", "i2");
 
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/exams/x1/audience");
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe(JSON.stringify({ instance: "i2" }));
+    expect(audience).toEqual(after);
   });
 
-  it("deleteExamAudienceByInstanceId calls /exams/:id/audience/:instance", async () => {
-    mockFetch204();
+  it("deleteExamAudienceByInstanceId withdraws one instance and returns what is left", async () => {
+    mockFetchSuccess([{ instance: "i1", class: "c1", course: "co1" }]);
 
-    await deleteExamAudienceByInstanceId("x1", "i2");
+    const audience = await deleteExamAudienceByInstanceId("x1", "i2");
 
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/exams/x1/audience/i2");
     expect(init?.method).toBe("DELETE");
+    expect(audience).toHaveLength(1);
   });
 
 });
