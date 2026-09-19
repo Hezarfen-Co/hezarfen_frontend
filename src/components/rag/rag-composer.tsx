@@ -29,13 +29,13 @@ export function RagComposer(props: {
 
   return (
     <form
-      class="border-t border-border/70 bg-surface-base px-4 py-3"
+      class="border-t border-border/70 bg-surface-base px-4 py-3 sm:px-6"
       onSubmit={(event) => {
         event.preventDefault();
         if (!props.disabled) props.onSubmit();
       }}
     >
-      <div class="flex items-end gap-2 rounded-xl border border-border bg-background px-3 py-2 transition-colors focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring">
+      <div class="mx-auto flex w-full max-w-3xl items-end gap-2 rounded-xl border border-border bg-background px-3 py-2 transition-colors focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring">
         <Textarea
           ref={field}
           rows={1}
@@ -63,7 +63,7 @@ export function RagComposer(props: {
           <IconSend class="h-4 w-4" />
         </Button>
       </div>
-      <p class="mt-1.5 px-1 text-[11px] leading-4 text-muted-foreground">{props.hint}</p>
+      <p class="mx-auto mt-1.5 w-full max-w-3xl px-1 text-[11px] leading-4 text-muted-foreground">{props.hint}</p>
     </form>
   );
 }

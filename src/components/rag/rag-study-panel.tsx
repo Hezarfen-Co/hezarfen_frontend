@@ -1,4 +1,4 @@
-import { For, Show, createSignal, onCleanup } from "solid-js";
+import { For, Show, createEffect, createSignal, on, onCleanup } from "solid-js";
 import { formatApiError } from "@/api/client";
 import type { RagMessage, RagThread } from "@/api/client";
 import {
@@ -14,11 +14,12 @@ import { RagComposer } from "@/components/rag/rag-composer";
 import { ragCopy } from "@/components/rag/rag-copy";
 import { RagMessageRow } from "@/components/rag/rag-message-row";
 import { RagStudyActions } from "@/components/rag/rag-study-actions";
+import { RagStudyWelcome } from "@/components/rag/rag-study-welcome";
 import { RagThreadList } from "@/components/rag/rag-thread-list";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconEdit, IconPlus } from "@/components/ui/icons";
+import { IconBook, IconEdit, IconPlus } from "@/components/ui/icons";
 import { scopeFromCitations } from "@/lib/rag-study-scope";
 import { usePreferences } from "@/stores/preferences-context";
 
@@ -161,6 +162,25 @@ export function RagStudyPanel() {
     }
   };
 
+  // Follow the conversation: a new turn (or a streamed chunk) keeps the view
+  // on the latest message, unless the reader has scrolled up to reread.
+  let scroller: HTMLDivElement | undefined;
+  createEffect(
+    on(
+      () => {
+        const items = messages();
+        return `${items.length}:${items[items.length - 1]?.content.length ?? 0}`;
+      },
+      () => {
+        const el = scroller;
+        if (!el) return;
+        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
+        if (nearBottom || sending()) queueMicrotask(() => el.scrollTo({ top: el.scrollHeight }));
+      },
+      { defer: true },
+    ),
+  );
+
   /** The user turn an answer replies to, used as the study range's label. */
   const questionBefore = (index: number) => {
     for (let i = index - 1; i >= 0; i -= 1) if (messages()[i]?.role === "user") return messages()[i]!.content;
@@ -172,7 +192,7 @@ export function RagStudyPanel() {
       <aside class="flex h-full min-h-0 flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
         <div class="flex items-center justify-between gap-2">
           <h2 class="text-sm font-semibold text-text-strong">{copy().history}</h2>
-          <Button type="button" size="sm" class="h-8 rounded-lg" onClick={newThread}>
+          <Button type="button" size="sm" class="h-8 rounded-lg" disabled={!threadId() && messages().length === 0} onClick={newThread}>
             <IconPlus class="h-4 w-4" />
             {copy().newThread}
           </Button>
@@ -189,10 +209,15 @@ export function RagStudyPanel() {
       </aside>
 
       <section class="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border-line bg-surface-base shadow-xs" aria-label={copy().title}>
-        <header class="flex shrink-0 items-center justify-between gap-3 border-b border-border-line px-4 py-3">
-          <div class="min-w-0">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{copy().tabLabel}</p>
-            <p class="truncate text-sm font-semibold text-text-strong">{activeThread()?.title || (threadId() ? copy().untitled : copy().emptyChat)}</p>
+        <header class="flex shrink-0 items-center justify-between gap-3 border-b border-border-line px-4 py-3 sm:px-5">
+          <div class="flex min-w-0 items-center gap-3">
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary-text">
+              <IconBook class="h-4 w-4" />
+            </span>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold text-text-strong">{threadId() ? activeThread()?.title || copy().untitled : copy().title}</p>
+              <p class="truncate text-xs text-muted-foreground">{copy().description}</p>
+            </div>
           </div>
           <div class="flex shrink-0 items-center gap-2">
             <Show when={activeThread()}>
@@ -204,13 +229,16 @@ export function RagStudyPanel() {
             </Show>
           </div>
         </header>
-        <div class="min-h-0 flex-1 space-y-4 overflow-y-auto p-4" aria-live="polite">
+        <div ref={scroller} class="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6" aria-live="polite">
+          <div class="mx-auto w-full max-w-3xl space-y-5">
           <Show when={error()}>
             <Alert variant="destructive">{error()}</Alert>
           </Show>
           <Show
             when={messages().length > 0}
-            fallback={<p class="py-16 text-center text-sm text-muted-foreground">{copy().emptyChatHint}</p>}
+            fallback={
+              <RagStudyWelcome title={copy().emptyChat} hint={copy().emptyChatHint} />
+            }
           >
             <For each={messages()}>
               {(message, index) => {
@@ -239,6 +267,7 @@ export function RagStudyPanel() {
               }}
             </For>
           </Show>
+          </div>
         </div>
         <RagComposer
           value={draft()}

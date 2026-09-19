@@ -45,10 +45,16 @@ export function RagThreadList(props: {
               <ul class="space-y-1.5">
                 <For each={result().items}>
                   {(thread) => (
-                    <li class={cn("flex overflow-hidden rounded-lg border border-border", thread.id === props.activeId ? "bg-accent" : "bg-card")}>
+                    <li
+                      class={cn(
+                        "flex overflow-hidden rounded-lg border transition-colors",
+                        thread.id === props.activeId ? "border-primary/40 bg-primary/5" : "border-border-hairline bg-card hover:border-border-line",
+                      )}
+                      aria-current={thread.id === props.activeId ? "true" : undefined}
+                    >
                       <button
                         type="button"
-                        class="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-3 py-2 text-left transition-colors hover:bg-muted"
+                        class="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-3 py-2 text-left transition-colors hover:bg-muted/60"
                         onClick={() => props.onOpen(thread)}
                       >
                         <span class="w-full truncate text-sm font-medium">{thread.title || props.labels.untitled}</span>
