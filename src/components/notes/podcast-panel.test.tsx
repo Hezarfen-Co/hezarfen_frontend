@@ -42,7 +42,7 @@ describe("PodcastPanel", () => {
       </PreferencesProvider>
     ));
 
-    fireEvent.change(screen.getByLabelText("Narration style"), { target: { value: "tek_ogretici" } });
+    fireEvent.change(await screen.findByLabelText("Narration style"), { target: { value: "tek_ogretici" } });
     fireEvent.click(screen.getByRole("button", { name: "Create podcast" }));
 
     await waitFor(() => {

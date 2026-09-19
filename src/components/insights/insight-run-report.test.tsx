@@ -147,7 +147,7 @@ const INSIGHT_S2: StudentInsight = {
 
 const INSIGHT_S3: StudentInsight = { user_id: "s3", summary: null, attention: [], cards: [], segments: [] };
 
-const panel = () => within(document.querySelector(".side-panel-body") as HTMLElement);
+const panel = () => within(screen.getByRole("region", { name: /^Çalıştırma günü / }));
 
 async function openReport(runDay: string) {
   render(() => (

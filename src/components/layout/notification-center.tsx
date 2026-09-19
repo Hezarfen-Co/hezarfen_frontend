@@ -353,7 +353,7 @@ export function NotificationCenter() {
                               {notificationGroupLabel(group.type)}
                             </span>
                           </div>
-                          <span class="shrink-0 rounded-full bg-background/70 px-1.5 py-0.5 font-mono text-[10px] font-bold text-text-subtle">
+                          <span class="shrink-0 rounded-full bg-background/70 px-1.5 py-0.5 font-mono text-[11px] font-bold text-text-subtle">
                             {group.items.length}
                           </span>
                         </div>

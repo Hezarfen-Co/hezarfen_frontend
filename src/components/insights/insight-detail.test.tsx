@@ -278,6 +278,12 @@ const renderInsight = (value: StudentInsight) =>
     </PreferencesProvider>
   ));
 
+const openMarksCourse = () => {
+  const courseRow = screen.getByRole("cell", { name: "Matematik" }).closest("tr") as HTMLElement;
+  fireEvent.click(courseRow);
+  return screen.getByRole("dialog", { name: "Matematik" });
+};
+
 /** The fixture's single course with its `trend` member swapped. */
 const marksWith = (trend: UnknownRecord): StudentInsight => {
   const summary = insight.summary ?? { confidence: "none", computed_at: NOW, retain_until: NOW + WEEK };
@@ -296,6 +302,8 @@ describe("InsightDetail", () => {
   it("labels every module member in Turkish instead of echoing payload keys", () => {
     renderDrawer();
     const human = screen.getByTestId("insight-human").textContent ?? "";
+    const marksDetail = openMarksCourse().textContent ?? "";
+    const visible = `${human} ${marksDetail}`;
 
     for (const label of [
       "Devam oranı",
@@ -306,7 +314,7 @@ describe("InsightDetail", () => {
       "Şubedeki konumu",
       "Yeterli veri yok",
     ]) {
-      expect(human, `label ${label}`).toContain(label);
+      expect(visible, `label ${label}`).toContain(label);
     }
     expect(human).toContain("Dersler arası denge");
     expect(human).toContain("Yaklaşan teslimler");
@@ -326,7 +334,7 @@ describe("InsightDetail", () => {
       "n_marks",
       "within_student_contrast",
     ]) {
-      expect(human, `raw key ${rawKey}`).not.toContain(rawKey);
+      expect(visible, `raw key ${rawKey}`).not.toContain(rawKey);
     }
   });
 
@@ -345,17 +353,19 @@ describe("InsightDetail", () => {
   it("renders the service's honest reasons as sentences", () => {
     renderDrawer();
     const human = screen.getByTestId("insight-human").textContent ?? "";
+    const marksDetail = openMarksCourse().textContent ?? "";
+    const visible = `${human} ${marksDetail}`;
 
-    expect(human).toContain("eğilim için en az 6 not gerekir");
-    expect(human).toContain("Veri toplanıyor (2/3)");
-    expect(human).toContain("kontrast için bantlanmış en az 3 ders gerekir");
-    expect(human).toContain("Isı haritası için 3/5 oturum");
-    expect(human).toContain("Erteleme profili submitted_at gerektirir");
-    expect(human).toContain("Dönem kümülatifi; son 30 gün penceresi yok.");
+    expect(visible).toContain("eğilim için en az 6 not gerekir");
+    expect(visible).toContain("Veri toplanıyor (2/3)");
+    expect(visible).toContain("kontrast için bantlanmış en az 3 ders gerekir");
+    expect(visible).toContain("Isı haritası için 3/5 oturum");
+    expect(visible).toContain("Erteleme profili submitted_at gerektirir");
+    expect(visible).toContain("Dönem kümülatifi; son 30 gün penceresi yok.");
     // A rate-space difference is percentage points: -0.16 is "-16 puan", not
     // "-0,2 puan" — the raw number must never leak through unconverted.
-    expect(human).toContain("-16 puan");
-    expect(human).toContain("-4 puan");
+    expect(visible).toContain("-16 puan");
+    expect(visible).toContain("-4 puan");
   });
 
   it("keeps the whole raw payload in the collapsed technical disclosure", () => {
@@ -428,10 +438,10 @@ describe("InsightDetail", () => {
         rising: false,
       }),
     );
-    const human = screen.getByTestId("insight-human").textContent ?? "";
+    const marksDetail = openMarksCourse().textContent ?? "";
 
-    expect(human).toContain(reason);
-    expect(human).not.toContain("/ 30 gün");
+    expect(marksDetail).toContain(reason);
+    expect(marksDetail).not.toContain("/ 30 gün");
   });
 
   it("shows the slope row when the trend computed one", () => {
@@ -448,10 +458,10 @@ describe("InsightDetail", () => {
         rising: false,
       }),
     );
-    const human = screen.getByTestId("insight-human").textContent ?? "";
+    const marksDetail = openMarksCourse().textContent ?? "";
 
-    expect(human).toContain("+3,4 puan / 30 gün");
-    expect(human).not.toContain("eğim hesaplanmadı");
+    expect(marksDetail).toContain("+3,4 puan / 30 gün");
+    expect(marksDetail).not.toContain("eğim hesaplanmadı");
   });
 
   it("keeps the cards-only mode free of the drawer's full-view sections", () => {
