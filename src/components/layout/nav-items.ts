@@ -97,9 +97,10 @@ const AI_INSIGHTS_ITEM: NavItem = {
 
 const AI_CELEBI_ITEM: NavItem = {
   id: "ai-celebi",
-  to: "/ai/celebi",
+  to: "",
   labelKey: "nav.celebi",
   Icon: IconSparkles,
+  action: "celebi",
 };
 
 const AI_GROUP: NavGroup = {

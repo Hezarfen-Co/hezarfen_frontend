@@ -238,6 +238,23 @@
   padding-bottom: 0;
 }
 
+/* Insight ledgers are intentionally spreadsheet-like: centered metrics and
+ * explicit cell rules make a wide scan easier than a card-style table. */
+.insight-grid-table th,
+.insight-grid-table td {
+  border-right: 1px solid hsl(var(--border));
+  text-align: center;
+}
+
+.insight-grid-table th:last-child,
+.insight-grid-table td:last-child {
+  border-right: 0;
+}
+
+.insight-grid-table tbody tr:nth-child(even) {
+  background-color: color-mix(in oklab, hsl(var(--muted)) 18%, hsl(var(--card)));
+}
+
 @utility detail-breadcrumb {
   @apply flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground font-medium;
 

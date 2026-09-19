@@ -74,7 +74,7 @@ const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
 const AiStudioPage = lazyRoute(() => import("@/pages/ai-studio-page"));
 const AiStudyPage = lazyRoute(() => import("@/pages/ai-study-page"));
 const AiInsightsPage = lazyRoute(() => import("@/pages/ai-insights-page"));
-const AiCelebiPage = lazyRoute(() => import("@/pages/ai-celebi-page"));
+const AiInsightStudentPage = lazyRoute(() => import("@/pages/ai-insight-student-page"));
 const ComingSoonPage = lazyRoute(() => import("@/pages/coming-soon-page"));
 const StudentsRosterPage = lazyRoute(() => import("@/pages/students-roster-page"));
 const TeachersRosterPage = lazyRoute(() => import("@/pages/teachers-roster-page"));
@@ -481,10 +481,11 @@ const aiInsightsRoute = createRoute({
   component: AiInsightsPage,
 });
 
-const aiCelebiRoute = createRoute({
+// One student's analysis as a full page (it used to be a side panel).
+const aiInsightStudentRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/ai/celebi",
-  component: AiCelebiPage,
+  path: "/ai/insights/$userId",
+  component: AiInsightStudentPage,
 });
 
 // The audio workshop had its own route before the hub gathered it.
@@ -614,7 +615,7 @@ const routeTree = rootRoute.addChildren([
   aiStudioRoute,
   aiStudyRoute,
   aiInsightsRoute,
-  aiCelebiRoute,
+  aiInsightStudentRoute,
   soundStudioRoute,
   studentsRosterRoute,
   teachersRosterRoute,

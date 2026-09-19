@@ -619,6 +619,19 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "insights.readFailed"
+  | "insights.studyStints"
+  | "insights.filter.all"
+  | "insights.filter.attention"
+  | "insights.filter.noAnalysis"
+  | "insights.overview.analysed"
+  | "insights.overview.needAttention"
+  | "insights.overview.marks"
+  | "insights.overview.attendance"
+  | "insights.overview.reading"
+  | "insights.overview.ofTotal"
+  | "insights.overview.noData"
+  | "insights.notFound"
   | "auth.demoLogin"
   | "setup.title"
   | "setup.progress"
@@ -994,6 +1007,7 @@ export type MessageKey =
   | "insights.noSummary"
   | "insights.noSummaryHint"
   | "insights.computedAt"
+  | "insights.confidence"
   | "insights.retainUntil"
   | "insights.sectionNotComputed"
   | "insights.noEvidence"
@@ -1016,6 +1030,23 @@ export type MessageKey =
   | "insights.confidence.none"
   | "insights.confidence.exploratory"
   | "insights.confidence.stable"
+  | "insights.analysis.overview"
+  | "insights.analysis.visual"
+  | "insights.analysis.rate"
+  | "insights.analysis.present"
+  | "insights.analysis.absent"
+  | "insights.analysis.late"
+  | "insights.analysis.excused"
+  | "insights.analysis.average"
+  | "insights.analysis.courses"
+  | "insights.analysis.bestMark"
+  | "insights.analysis.focusHours"
+  | "insights.analysis.activeDays"
+  | "insights.analysis.regularity"
+  | "insights.analysis.sessions"
+  | "insights.analysis.submittedRate"
+  | "insights.analysis.submitted"
+  | "insights.analysis.missing"
   | "insights.runs"
   | "insights.runsSubtitle"
   | "insights.runDay"
@@ -2809,6 +2840,19 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "insights.readFailed": "Could not read",
+  "insights.studyStints": "Focus",
+  "insights.filter.all": "All",
+  "insights.filter.attention": "Needs attention",
+  "insights.filter.noAnalysis": "No analysis yet",
+  "insights.overview.analysed": "Analysed",
+  "insights.overview.needAttention": "Need attention",
+  "insights.overview.marks": "Average mark",
+  "insights.overview.attendance": "Attendance",
+  "insights.overview.reading": "Reading {loaded} of {total} students…",
+  "insights.overview.ofTotal": "of {total}",
+  "insights.overview.noData": "No data yet",
+  "insights.notFound": "This student is not in your list.",
   "auth.demoLogin": "Sign in with the demo account ({username})",
   "setup.title": "School setup",
   "setup.progress": "{done} of {total} done",
@@ -3183,7 +3227,8 @@ const en: Dict = {
   "insights.summary": "Summary",
   "insights.noSummary": "No analysis yet",
   "insights.noSummaryHint": "Queue a computation to create the first analysis.",
-  "insights.computedAt": "Computed at",
+  "insights.computedAt": "Date",
+  "insights.confidence": "Confidence",
   "insights.retainUntil": "Retained until",
   "insights.sectionNotComputed": "This section was not computed.",
   "insights.noEvidence": "No supporting data.",
@@ -3206,6 +3251,23 @@ const en: Dict = {
   "insights.confidence.none": "Insufficient data",
   "insights.confidence.exploratory": "Exploratory",
   "insights.confidence.stable": "Stable",
+  "insights.analysis.overview": "Overview",
+  "insights.analysis.visual": "Visual analysis",
+  "insights.analysis.rate": "Rate",
+  "insights.analysis.present": "Present",
+  "insights.analysis.absent": "Absent",
+  "insights.analysis.late": "Late",
+  "insights.analysis.excused": "Excused",
+  "insights.analysis.average": "Average",
+  "insights.analysis.courses": "Courses",
+  "insights.analysis.bestMark": "Highest average",
+  "insights.analysis.focusHours": "Focus hours",
+  "insights.analysis.activeDays": "Active days",
+  "insights.analysis.regularity": "Regularity",
+  "insights.analysis.sessions": "Sessions",
+  "insights.analysis.submittedRate": "Submission rate",
+  "insights.analysis.submitted": "Submitted",
+  "insights.analysis.missing": "Missing",
   "insights.runs": "Analysis runs",
   "insights.runsSubtitle": "Nightly and manually queued school analyses.",
   "insights.runDay": "Run day",
@@ -5001,6 +5063,19 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "insights.readFailed": "Okunamadı",
+  "insights.studyStints": "Odak",
+  "insights.filter.all": "Tümü",
+  "insights.filter.attention": "Dikkat gerekenler",
+  "insights.filter.noAnalysis": "Analizi olmayanlar",
+  "insights.overview.analysed": "Analiz edilen",
+  "insights.overview.needAttention": "Dikkat gereken",
+  "insights.overview.marks": "Not ortalaması",
+  "insights.overview.attendance": "Devam oranı",
+  "insights.overview.reading": "{total} öğrenciden {loaded} okundu…",
+  "insights.overview.ofTotal": "{total} öğrenciden",
+  "insights.overview.noData": "Henüz veri yok",
+  "insights.notFound": "Bu öğrenci listende yok.",
   "auth.demoLogin": "Demo hesabıyla gir ({username})",
   "setup.title": "Okul kurulumu",
   "setup.progress": "{total} adımdan {done} tamam",
@@ -5375,7 +5450,8 @@ const tr: Dict = {
   "insights.summary": "Özet",
   "insights.noSummary": "Henüz analiz yok",
   "insights.noSummaryHint": "İlk analizi oluşturmak için hesaplamayı sıraya alın.",
-  "insights.computedAt": "Hesaplanma",
+  "insights.computedAt": "Tarih",
+  "insights.confidence": "Güven",
   "insights.retainUntil": "Saklanma sonu",
   "insights.sectionNotComputed": "Bu bölüm hesaplanmadı.",
   "insights.noEvidence": "Destekleyici veri yok.",
@@ -5398,6 +5474,23 @@ const tr: Dict = {
   "insights.confidence.none": "Yetersiz veri",
   "insights.confidence.exploratory": "Keşifsel",
   "insights.confidence.stable": "Kararlı",
+  "insights.analysis.overview": "Genel bakış",
+  "insights.analysis.visual": "Grafiksel analiz",
+  "insights.analysis.rate": "Oran",
+  "insights.analysis.present": "Var",
+  "insights.analysis.absent": "Yok",
+  "insights.analysis.late": "Geç",
+  "insights.analysis.excused": "İzinli",
+  "insights.analysis.average": "Ortalama",
+  "insights.analysis.courses": "Ders",
+  "insights.analysis.bestMark": "En yüksek ortalama",
+  "insights.analysis.focusHours": "Odak saati",
+  "insights.analysis.activeDays": "Aktif gün",
+  "insights.analysis.regularity": "Düzenlilik",
+  "insights.analysis.sessions": "Oturum",
+  "insights.analysis.submittedRate": "Teslim oranı",
+  "insights.analysis.submitted": "Teslim",
+  "insights.analysis.missing": "Eksik",
   "insights.runs": "Analiz çalıştırmaları",
   "insights.runsSubtitle": "Gece çalışan ve elle sıraya alınan okul analizleri.",
   "insights.runDay": "Çalışma günü",

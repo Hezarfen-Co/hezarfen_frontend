@@ -163,12 +163,13 @@ test("the AI group exposes four separate module routes", () => {
   expect(routeLabelKey("/ai/studio", "student")).toBe("aiHub.tab.studio");
 });
 
-test("AI modules navigate while account settings still opens a shell surface", () => {
+test("AI modules navigate while Çelebi and account settings open shell surfaces", () => {
   const celebi = visibleNavGroups("student")
     .flatMap((g) => g.items)
     .find((i) => i.id === "ai-celebi");
-  expect(celebi?.to).toBe("/ai/celebi");
-  expect(celebi?.action).toBeUndefined();
+  expect(celebi?.to).toBe("");
+  expect(celebi?.action).toBe("celebi");
+  expect(routeNavItem("/ai/celebi", "student")).toBeUndefined();
   const settings = visibleNavGroups("student")
     .flatMap((g) => g.items)
     .find((i) => i.id === "settings-student");

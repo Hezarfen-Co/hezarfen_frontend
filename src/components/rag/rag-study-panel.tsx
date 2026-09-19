@@ -18,8 +18,7 @@ import { RagThreadList } from "@/components/rag/rag-thread-list";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { EmptyInline } from "@/components/ui/empty-inline";
-import { IconPlus } from "@/components/ui/icons";
+import { IconEdit, IconPlus } from "@/components/ui/icons";
 import { scopeFromCitations } from "@/lib/rag-study-scope";
 import { usePreferences } from "@/stores/preferences-context";
 
@@ -35,6 +34,7 @@ export function RagStudyPanel() {
   const { locale } = usePreferences();
   const copy = () => ragCopy(locale());
   const [threadId, setThreadId] = createSignal<string | undefined>();
+  const [activeThread, setActiveThread] = createSignal<RagThread>();
   const [threadsVersion, setThreadsVersion] = createSignal(0);
   const [messages, setMessages] = createSignal<RagMessage[]>([]);
   const [draft, setDraft] = createSignal("");
@@ -113,6 +113,7 @@ export function RagStudyPanel() {
     stopStream();
     setError("");
     setThreadId(thread.id);
+    setActiveThread(thread);
     try {
       setMessages((await getRagThreadMessages(thread.id, { limit: 500 })).items);
     } catch (err) {
@@ -124,6 +125,7 @@ export function RagStudyPanel() {
     stopStream();
     setError("");
     setThreadId(undefined);
+    setActiveThread(undefined);
     setMessages([]);
   };
 
@@ -139,14 +141,17 @@ export function RagStudyPanel() {
       { id: `local-${now}`, thread_id: threadId() ?? "", role: "user", status: "complete", content, abstained: false, reason: "", citations: [], created_at: now },
     ]);
     try {
-      const activeThread = threadId() ?? (await postRagThread()).id;
-      setThreadId(activeThread);
-      const accepted = await postRagMessage(activeThread, content);
+      const currentThread = threadId();
+      const createdThread = currentThread ? undefined : await postRagThread();
+      const resolvedThreadId = currentThread ?? createdThread!.id;
+      if (createdThread) setActiveThread(createdThread);
+      setThreadId(resolvedThreadId);
+      const accepted = await postRagMessage(resolvedThreadId, content);
       setMessages((items) => [
         ...items,
-        { id: accepted.message_id, thread_id: activeThread, role: "assistant", status: "pending", content: "", abstained: false, reason: "", citations: [], created_at: Date.now() },
+        { id: accepted.message_id, thread_id: resolvedThreadId, role: "assistant", status: "pending", content: "", abstained: false, reason: "", citations: [], created_at: Date.now() },
       ]);
-      streamAnswer(activeThread, accepted.message_id);
+      streamAnswer(resolvedThreadId, accepted.message_id);
       setThreadsVersion((version) => version + 1);
     } catch (err) {
       setError(formatApiError(err));
@@ -163,8 +168,8 @@ export function RagStudyPanel() {
   };
 
   return (
-    <div class="grid min-h-[32rem] gap-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
-      <aside class="flex min-h-0 flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-3 lg:max-h-[calc(100dvh-14rem)]">
+    <div class="grid min-h-[calc(100dvh-10rem)] gap-4 lg:h-[calc(100dvh-10rem)] lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <aside class="flex h-full min-h-0 flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
         <div class="flex items-center justify-between gap-2">
           <h2 class="text-sm font-semibold text-text-strong">{copy().history}</h2>
           <Button type="button" size="sm" class="h-8 rounded-lg" onClick={newThread}>
@@ -183,14 +188,29 @@ export function RagStudyPanel() {
         />
       </aside>
 
-      <section class="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border-line bg-surface-base lg:max-h-[calc(100dvh-14rem)]" aria-label={copy().title}>
+      <section class="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border-line bg-surface-base shadow-xs" aria-label={copy().title}>
+        <header class="flex shrink-0 items-center justify-between gap-3 border-b border-border-line px-4 py-3">
+          <div class="min-w-0">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{copy().tabLabel}</p>
+            <p class="truncate text-sm font-semibold text-text-strong">{activeThread()?.title || (threadId() ? copy().untitled : copy().emptyChat)}</p>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
+            <Show when={activeThread()}>
+              {(thread) => (
+                <Button type="button" size="sm" variant="outline" class="h-8 rounded-lg" aria-label={copy().rename} title={copy().rename} onClick={() => setRenaming(thread())}>
+                  <IconEdit class="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </Show>
+          </div>
+        </header>
         <div class="min-h-0 flex-1 space-y-4 overflow-y-auto p-4" aria-live="polite">
           <Show when={error()}>
             <Alert variant="destructive">{error()}</Alert>
           </Show>
           <Show
             when={messages().length > 0}
-            fallback={<EmptyInline class="py-16" size="md" illustration="messages" title={copy().emptyChat} hint={copy().emptyChatHint} />}
+            fallback={<p class="py-16 text-center text-sm text-muted-foreground">{copy().emptyChatHint}</p>}
           >
             <For each={messages()}>
               {(message, index) => {
@@ -242,7 +262,9 @@ export function RagStudyPanel() {
         onConfirm={async (title) => {
           const thread = renaming();
           if (!thread) return;
-          await patchRagThreadById(thread.id, title?.trim() || null);
+          const nextTitle = title?.trim() || null;
+          await patchRagThreadById(thread.id, nextTitle);
+          if (activeThread()?.id === thread.id) setActiveThread({ ...activeThread()!, title: nextTitle });
           setThreadsVersion((version) => version + 1);
         }}
       />
