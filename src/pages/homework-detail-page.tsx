@@ -50,31 +50,31 @@ export default function HomeworkDetailPage() {
           fallback={<Show when={homework.error} fallback={<PageSpinner />}><Alert variant="destructive">{formatApiError(homework.error, locale())}</Alert></Show>}
         >
           {(item) => (
-            <div class="space-y-6">
-              <div class="space-y-2">
+            <div class="mx-auto w-full max-w-[1100px] space-y-5">
+              <section class="data-shell space-y-2 p-4 sm:p-5">
                 <Breadcrumbs items={[{ label: t("homework.title"), to: "/homework" }, { label: item().title }]} />
                 <PageHeader title={item().title} description={item().description || undefined} />
-              </div>
-              <div class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
+              </section>
+              <section class="data-shell grid gap-3 p-4 text-sm sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
+                <div class="rounded-xl border border-border-hairline bg-surface-tint px-4 py-4">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("nav.courses")}</p>
                   <p class="mt-1 font-medium text-text-default">{course()?.title ?? item().class_course}</p>
                 </div>
-                <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
+                <div class="rounded-xl border border-border-hairline bg-surface-tint px-4 py-4">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("subjects.subject")}</p>
                   <p class="mt-1 font-medium text-text-default">{subject()?.name ?? item().subject}</p>
                 </div>
-                <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
+                <div class="rounded-xl border border-border-hairline bg-surface-tint px-4 py-4">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("homework.dueAt")}</p>
                   <p class="mt-1 font-medium text-text-default">{formatDateTime(item().due_at, locale())}</p>
                 </div>
-                <div class="rounded-xl border border-border-line bg-surface-base px-4 py-4">
+                <div class="rounded-xl border border-border-hairline bg-surface-tint px-4 py-4">
                   <p class="text-xs font-medium uppercase tracking-[0.08em] text-text-subtle">{t("homework.assigned")}</p>
                   <Badge variant="outline" class="mt-2 rounded-full">
                     {item().assigned?.length ? t("common.countItem", { count: item().assigned!.length, item: t("courses.rosterItem") }) : t("homework.wholeCourse")}
                   </Badge>
                 </div>
-              </div>
+              </section>
               <Show when={auth.user()?.role === "student"}>
                 <HomeworkSubmissionPanel homeworkId={id()} />
               </Show>

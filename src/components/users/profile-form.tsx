@@ -131,7 +131,7 @@ export function ProfileForm(props: {
   };
 
   return (
-    <form onSubmit={submit} class="space-y-4">
+    <form onSubmit={submit} class="flex min-h-full flex-col space-y-4">
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -196,7 +196,7 @@ export function ProfileForm(props: {
         <DatePicker id="pf-birth" class="h-10" placeholder={t("form.datePlaceholder")} value={birthDate()} onChange={setBirthDate} />
       </div>
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
-      <div class="flex justify-end">
+      <div class="!mt-auto sticky bottom-0 -mx-5 flex justify-end border-t border-border-hairline bg-surface-base px-5 pb-1 pt-4">
         <Button type="submit" class="w-full sm:w-auto" disabled={pending()}>{t("common.save")}</Button>
       </div>
     </form>

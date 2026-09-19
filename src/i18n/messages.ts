@@ -570,6 +570,7 @@ export type MessageKey =
   | "common.reject"
   | "common.action"
   | "common.actions"
+  | "common.filter"
   | "common.export"
   | "common.columns"
   | "common.visibleColumns"
@@ -2814,6 +2815,7 @@ const en: Dict = {
   "common.reject": "Reject",
   "common.action": "Action",
   "common.actions": "Actions",
+  "common.filter": "Filter",
   "common.export": "Export",
   "common.columns": "Columns",
   "common.visibleColumns": "Visible columns",
@@ -5060,6 +5062,7 @@ const tr: Dict = {
   "common.reject": "Reddet",
   "common.action": "İşlem",
   "common.actions": "İşlemler",
+  "common.filter": "Filtre",
   "common.export": "Dışa aktar",
   "common.columns": "Sütunlar",
   "common.visibleColumns": "Görünür sütunlar",

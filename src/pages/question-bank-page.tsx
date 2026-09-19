@@ -15,6 +15,7 @@ import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconEdit, IconEye, IconEyeOff, IconPlus, IconTrash, IconUsers } from "@/components/ui/icons";
+import { PixelIcon } from "@/components/ui/pixel-icon";
 import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
@@ -206,6 +207,25 @@ function QuestionBankContent() {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
+      <section class="data-shell relative overflow-hidden p-4 sm:p-5">
+        <div class="pointer-events-none absolute -right-3 -top-5 flex rotate-6 items-center gap-3 text-primary/15" aria-hidden="true">
+          <PixelIcon name="book-open" class="h-16 w-16" />
+          <PixelIcon name="sparkles" class="h-10 w-10" />
+        </div>
+        <div class="relative flex items-start gap-3">
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary-text">
+            <PixelIcon name="users" class="h-5 w-5" />
+          </span>
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 class="text-lg font-semibold tracking-tight">{t("bank.title")}</h1>
+              <PixelIcon name="sparkles" class="h-4 w-4 text-amber-500" />
+            </div>
+            <p class="mt-1 max-w-2xl text-sm text-muted-foreground">{t("bank.subtitle")}</p>
+          </div>
+        </div>
+      </section>
+
       <Tabs
         value={bankTab()}
         onChange={(value) => {
@@ -230,7 +250,7 @@ function QuestionBankContent() {
                 description={`${t("bank.subtitle")} ${t("bank.countTotal", { total: total() })}`}
                 actions={
                   <Show when={manageableCourses().length > 0}>
-                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
                       <IconPlus class="h-4 w-4" />
                       {t("bank.create")}
                     </Button>

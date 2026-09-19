@@ -391,8 +391,8 @@ function ExamDetailContent() {
         {(ex) => (
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
-          <div class="mx-auto w-full max-w-[1100px] space-y-6">
-            <div class="sticky top-14 z-10 -mx-4 space-y-2 bg-surface-overlay px-4 pb-1 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+          <div class="mx-auto w-full max-w-[1100px] space-y-5">
+            <section class="data-shell space-y-2 p-4 sm:p-5">
               <Breadcrumbs items={[{ label: t("exams.title"), to: "/exams" }, { label: ex().title }]} />
               <PageHeader
                 title={ex().title}
@@ -460,9 +460,9 @@ function ExamDetailContent() {
                   </Badge>
                 </div>
               </PageHeader>
-            </div>
-            <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3.5">
+            </section>
+            <section class="data-shell grid gap-3 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
+              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-hairline bg-surface-tint p-3.5">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
                   <IconExam class="h-4 w-4" />
                 </span>
@@ -471,7 +471,7 @@ function ExamDetailContent() {
                   <p class="truncate text-sm font-semibold">{examModeLabel(ex().mode)}</p>
                 </div>
               </div>
-              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3.5">
+              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-hairline bg-surface-tint p-3.5">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
                   <IconRefresh class="h-4 w-4" />
                 </span>
@@ -487,7 +487,7 @@ function ExamDetailContent() {
                   </Show>
                 </div>
               </div>
-              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3.5">
+              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-hairline bg-surface-tint p-3.5">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
                   <IconCalendarDays class="h-4 w-4" />
                 </span>
@@ -501,7 +501,7 @@ function ExamDetailContent() {
                   </Show>
                 </div>
               </div>
-              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-line bg-surface-base p-3.5">
+              <div class="flex min-w-0 items-center gap-3 rounded-xl border border-border-hairline bg-surface-tint p-3.5">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
                   <IconClock class="h-4 w-4" />
                 </span>
@@ -512,7 +512,7 @@ function ExamDetailContent() {
                   </p>
                 </div>
               </div>
-            </div>
+            </section>
 
             <SidePanel
               open={answerSheetOpen()}

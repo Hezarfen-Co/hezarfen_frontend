@@ -306,7 +306,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             </Show>
           </div>
           <Show when={props.actions}>
-            <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-md">{props.actions}</div>
+            <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md">{props.actions}</div>
           </Show>
         </div>
       </Show>
@@ -327,7 +327,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </div>
           <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
             <Show when={props.actions}>
-              <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-md">{props.actions}</div>
+              <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md">{props.actions}</div>
             </Show>
             <Show when={showColumnMenu()}>
               <DataTableViewMenu columns={viewMenuColumns()} />

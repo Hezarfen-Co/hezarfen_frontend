@@ -112,7 +112,13 @@ export function SidePanel(
             </DialogPrimitive.CloseButton>
           </div>
           <div
-            class={cn("side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5", props.bodyClass)}
+            class={cn(
+              "side-panel-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5",
+              // Short forms should still use the full panel height so their
+              // actions settle at the bottom instead of floating above empty space.
+              "[&>form]:flex [&>form]:min-h-full [&>form]:flex-col [&>form>div:last-child]:mt-auto",
+              props.bodyClass,
+            )}
             onInput={markTouched}
             onChange={markTouched}
           >

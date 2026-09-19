@@ -65,44 +65,44 @@ function AdminUserDetailContent() {
         }
       >
         {(current) => (
-          <div class="space-y-5">
+          <div class="mx-auto w-full max-w-[1100px] space-y-5">
             <Show when={error()}>
               <Alert variant="destructive">{error()}</Alert>
             </Show>
-            <section class="rounded-xl border border-border-line bg-surface-base px-4 py-3 shadow-xs sm:px-5">
-            <Breadcrumbs
-              items={[
-                { label: t("nav.users"), to: "/admin/users" },
-                { label: [current().name, current().surname].filter(Boolean).join(" ") || current().username },
-              ]}
-            />
-            <PageHeader
-              title={[current().name, current().surname].filter(Boolean).join(" ") || current().username}
-              description={`@${current().username}`}
-              actions={
-                <>
-                  <Link to="/profile/$userId" params={{ userId: current().id }}>
-                    <Button type="button" variant="outline" size="sm">
-                      <IconExternalLink class="h-4 w-4" />
-                      {t("profile.viewProfile")}
+            <section class="data-shell space-y-2 p-4 sm:p-5">
+              <Breadcrumbs
+                items={[
+                  { label: t("nav.users"), to: "/admin/users" },
+                  { label: [current().name, current().surname].filter(Boolean).join(" ") || current().username },
+                ]}
+              />
+              <PageHeader
+                title={[current().name, current().surname].filter(Boolean).join(" ") || current().username}
+                description={`@${current().username}`}
+                actions={
+                  <>
+                    <Link to="/profile/$userId" params={{ userId: current().id }}>
+                      <Button type="button" variant="ghost" size="sm">
+                        <IconExternalLink class="h-4 w-4" />
+                        {t("profile.viewProfile")}
+                      </Button>
+                    </Link>
+                    <Button type="button" size="sm" onClick={() => setEditing(true)}>
+                      <IconEdit class="h-4 w-4" />
+                      {t("common.edit")}
                     </Button>
-                  </Link>
-                  <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
-                    <IconEdit class="h-4 w-4" />
-                    {t("common.edit")}
-                  </Button>
-                  <Show when={current().role === "parent"}>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setStudentsOpen(true)}>
-                      <IconUsers class="h-4 w-4" />
-                      {t("parentLink.manage")}
-                    </Button>
-                  </Show>
-                </>
-              }
-            />
+                    <Show when={current().role === "parent"}>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setStudentsOpen(true)}>
+                        <IconUsers class="h-4 w-4" />
+                        {t("parentLink.manage")}
+                      </Button>
+                    </Show>
+                  </>
+                }
+              />
             </section>
 
-            <section class="data-shell grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
+            <section class="data-shell grid gap-4 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3">
               <DetailField label={t("admin.username")} value={current().username} />
               <DetailField label={t("profile.email")} value={current().email || "—"} />
               <DetailField label={t("profile.phone")} value={current().phone || "—"} />

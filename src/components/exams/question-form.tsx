@@ -246,7 +246,7 @@ export function QuestionForm(props: {
   };
 
   return (
-    <form class="space-y-3" onSubmit={(e) => void submit(e)}>
+    <form class="flex min-h-full flex-col space-y-3" onSubmit={(e) => void submit(e)}>
       <div class="rounded-lg border bg-card p-3.5 shadow-xs">
         <div class="space-y-2">
           <Label for="question-text" class="text-sm font-semibold">{t("questions.text")}</Label>
@@ -464,7 +464,7 @@ export function QuestionForm(props: {
 
       {error() && <p class="rounded-sm bg-destructive/10 px-3 py-1.5 text-sm text-destructive-text">{error()}</p>}
 
-      <div class="flex flex-wrap items-center gap-2 pt-1">
+      <div class="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2 border-t border-border-hairline bg-surface-base px-5 pb-1 pt-4">
         <Button type="submit" class="h-8 text-xs font-semibold" disabled={pending()}>
           {props.submitLabel ?? (props.initial ? t("common.update") : t("common.create"))}
         </Button>
