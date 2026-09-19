@@ -79,3 +79,29 @@ test("logs in without a school and completes the multi-school selection", async 
     expect(navigate).toHaveBeenCalledWith({ to: "/" });
   });
 });
+
+test("a demo build opens the form filled and signs in with one click", async () => {
+  vi.stubEnv("VITE_DEMO_LOGIN_USERNAME", "admin");
+  vi.stubEnv("VITE_DEMO_LOGIN_PASSWORD", "admin123");
+  postLogin.mockResolvedValue({ id: "u1", username: "admin", role: "admin" });
+  refresh.mockResolvedValue({ id: "u1", username: "admin", role: "admin" });
+
+  render(() => <LoginPage />);
+
+  expect((screen.getByLabelText("auth.username") as HTMLInputElement).value).toBe("admin");
+  fireEvent.input(screen.getByLabelText("auth.username"), { target: { value: "someone" } });
+  fireEvent.click(screen.getByRole("button", { name: "auth.demoLogin:admin" }));
+
+  await waitFor(() => expect(postLogin).toHaveBeenCalledWith({ username: "admin", password: "admin123" }));
+  vi.unstubAllEnvs();
+});
+
+test("without demo settings the form starts empty and offers no demo button", () => {
+  // Stub empty: vitest also reads a developer's .env.local.
+  vi.stubEnv("VITE_DEMO_LOGIN_USERNAME", "");
+  vi.stubEnv("VITE_DEMO_LOGIN_PASSWORD", "");
+  render(() => <LoginPage />);
+  expect((screen.getByLabelText("auth.username") as HTMLInputElement).value).toBe("");
+  expect(screen.queryByRole("button", { name: /auth.demoLogin/ })).toBeNull();
+  vi.unstubAllEnvs();
+});

@@ -55,6 +55,8 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 > **Dev auto sign-in**: for local testing, put `VITE_DEV_AUTOLOGIN_USERNAME` and `VITE_DEV_AUTOLOGIN_PASSWORD` (optionally `VITE_DEV_AUTOLOGIN_SCHOOL`, a school slug) in `.env.local`, which git ignores. `bun run dev` then signs in on the first `401`; logging out turns it off for that tab. It lives in `src/lib/dev-auto-login.ts` behind `import.meta.env.DEV`, so `vite build` drops it and the credentials never reach `dist/`.
 
+> **Demo sign-in**: set `VITE_DEMO_LOGIN_USERNAME` and `VITE_DEMO_LOGIN_PASSWORD` at build time and the login page opens filled with them, plus a one-click "Demo hesabıyla gir" button (`src/lib/demo-login.ts`). Unlike the dev auto sign-in these values are bundled into `dist/`, so set them only for a demo school's build.
+
 ---
 
 ## 🐳 Run in a container (podman)

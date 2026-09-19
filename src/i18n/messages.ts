@@ -616,6 +616,7 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "auth.demoLogin"
   | "setup.title"
   | "setup.progress"
   | "setup.academicYear"
@@ -2799,6 +2800,7 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "auth.demoLogin": "Sign in with the demo account ({username})",
   "setup.title": "School setup",
   "setup.progress": "{done} of {total} done",
   "setup.academicYear": "Academic year",
@@ -4984,6 +4986,7 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "auth.demoLogin": "Demo hesabıyla gir ({username})",
   "setup.title": "Okul kurulumu",
   "setup.progress": "{total} adımdan {done} tamam",
   "setup.academicYear": "Eğitim yılı",

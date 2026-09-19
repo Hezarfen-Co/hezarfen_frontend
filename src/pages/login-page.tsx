@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/solid-router";
 import { createSignal, For, Show } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { postLogin, postLogout, postSelectSchool } from "@/api/auth";
+import { demoCredentials } from "@/lib/demo-login";
 import type { SchoolChoiceResponse } from "@/api/auth";
 import { getLimits } from "@/api/limits";
 import { ApiError, formatApiError, formatApiErrorMessage } from "@/api/client";
@@ -26,8 +27,9 @@ function LoginForm() {
   const auth = useAuth();
   const navigate = useNavigate();
   const t = useT();
-  const [username, setUsername] = createSignal("");
-  const [password, setPassword] = createSignal("");
+  const demo = demoCredentials();
+  const [username, setUsername] = createSignal(demo?.username ?? "");
+  const [password, setPassword] = createSignal(demo?.password ?? "");
   const [showPassword, setShowPassword] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -161,6 +163,22 @@ function LoginForm() {
               <Button type="submit" class="h-9 w-full text-sm" disabled={pending()}>
                 {pending() ? t("common.loading") : t("auth.login")}
               </Button>
+              <Show when={demo}>
+                {(account) => (
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    class="h-9 w-full text-sm"
+                    disabled={pending()}
+                    onClick={() => {
+                      setUsername(account().username);
+                      setPassword(account().password);
+                    }}
+                  >
+                    {t("auth.demoLogin", { username: account().username })}
+                  </Button>
+                )}
+              </Show>
             </form>
 
             <p class="mt-8 border-t border-border-hairline pt-6 text-center text-sm text-text-subtle">
