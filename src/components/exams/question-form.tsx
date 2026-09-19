@@ -58,6 +58,8 @@ export type QuestionFormInitial = {
 
 export function QuestionForm(props: {
   initial?: QuestionFormInitial;
+  /** Starting text/kind for a new question (an AI-generated draft); ignored when `initial` is set. */
+  draft?: { text: string; kind: QuestionKind };
   subjects: Subject[];
   /** True while `subjects` is still loading, so a missing subject is not misreported. */
   subjectsPending?: boolean;
@@ -72,10 +74,10 @@ export function QuestionForm(props: {
 }) {
   const t = useT();
   let textAreaRef: HTMLTextAreaElement | undefined;
-  const [text, setText] = createSignal(props.initial?.text ?? "");
+  const [text, setText] = createSignal(props.initial?.text ?? props.draft?.text ?? "");
   // No first-subject default: the subject is submitted, so the user picks it.
   const [subjectId, setSubjectId] = createSignal(props.initial?.subject ?? "");
-  const [kind, setKind] = createSignal<QuestionKind>(props.initial?.kind ?? "choice");
+  const [kind, setKind] = createSignal<QuestionKind>(props.initial?.kind ?? props.draft?.kind ?? "choice");
   const [points, setPoints] = createSignal(String(props.initial?.points ?? 1));
   const [choiceSet, setChoiceSet] = createSignal<ChoiceSet>(
     props.initial ? storedChoiceSet(props.initial.choices, props.initial.correct) : blankChoiceSet(),
@@ -99,9 +101,9 @@ export function QuestionForm(props: {
   createEffect(() => {
     const initial = props.initial;
     untrack(() => {
-      setText(initial?.text ?? "");
+      setText(initial?.text ?? props.draft?.text ?? "");
       setSubjectId(initial?.subject ?? "");
-      setKind(initial?.kind ?? "choice");
+      setKind(initial?.kind ?? props.draft?.kind ?? "choice");
       setPoints(String(initial?.points ?? 1));
       setChoiceSet(initial ? storedChoiceSet(initial.choices, initial.correct) : blankChoiceSet());
       setImage(null);
@@ -380,7 +382,10 @@ export function QuestionForm(props: {
       <Show when={kind() === "choice"}>
         <div class="rounded-lg border bg-card p-3.5 shadow-xs">
           <div class="mb-3 flex items-center justify-between gap-2 border-b border-border/50 pb-2">
-            <Label class="text-sm font-semibold">{t("questions.choices")}</Label>
+            <div class="min-w-0">
+              <Label class="text-sm font-semibold">{t("questions.choices")}</Label>
+              <p class="mt-0.5 text-xs text-muted-foreground">{t("questions.correctHint")}</p>
+            </div>
             <Button type="button" variant="outline" size="sm" class="h-7 gap-1 text-xs" disabled={rows().length >= BANK_QUESTION_LIMITS.maxChoices} onClick={addChoice}>
               <IconPlus class="h-3.5 w-3.5" />
               {t("questions.addChoice")}
@@ -464,12 +469,15 @@ export function QuestionForm(props: {
 
       {error() && <p class="rounded-sm bg-destructive/10 px-3 py-1.5 text-sm text-destructive-text">{error()}</p>}
 
-      <div class="sticky bottom-0 -mx-5 flex flex-wrap items-center gap-2 border-t border-border-hairline bg-surface-base px-5 pb-1 pt-4">
-        <Button type="submit" class="h-8 text-xs font-semibold" disabled={pending()}>
-          {props.submitLabel ?? (props.initial ? t("common.update") : t("common.create"))}
-        </Button>
-        <Button type="button" variant="outline" class="h-8 text-xs font-semibold" onClick={props.onCancel}>
+      {/* `-bottom-5 pb-5` reaches over the panel body's own bottom padding —
+          with `bottom-0` the footer stuck above it and the form scrolled
+          visibly underneath. */}
+      <div class="!mt-auto sticky -bottom-5 z-10 -mx-5 -mb-5 flex flex-wrap items-center justify-end gap-2 border-t border-border-hairline bg-surface-base px-5 pb-5 pt-4">
+        <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={props.onCancel}>
           {t("common.cancel")}
+        </Button>
+        <Button type="submit" size="sm" class="min-w-[7.5rem] rounded-lg" disabled={pending()}>
+          {props.submitLabel ?? (props.initial ? t("common.update") : t("common.create"))}
         </Button>
       </div>
     </form>

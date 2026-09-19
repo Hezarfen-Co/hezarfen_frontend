@@ -19,7 +19,6 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { FormDialog } from "@/components/ui/form-dialog";
 import { SidePanel } from "@/components/ui/side-panel";
 import { BankQuestionPicker } from "@/components/exams/bank-question-picker";
 import { QuestionForm, type QuestionValues } from "@/components/exams/question-form";
@@ -290,16 +289,23 @@ export function ExamQuestionsPanel(props: {
         />
       </SidePanel>
 
-      <FormDialog
+      {/* A question with choices, pictures and a drawing is long — it gets
+          the full-height side panel (like the bank picker next to it) instead
+          of a centred dialog that scrolled under its own footer. */}
+      <SidePanel
+        guardUnsaved
+        size="wide"
         open={formOpen() || editing() != null}
         onOpenChange={(open) => {
           if (!open) {
-            setEditing(null);
-            setFormOpen(false);
+            closeAfterGesture(() => {
+              setEditing(null);
+              setFormOpen(false);
+            });
           }
         }}
         title={editing() ? t("questions.edit") : t("questions.add")}
-        description={t("questions.title")}
+        description={editing() ? t("questions.editHelp") : t("questions.addHelp")}
       >
         <QuestionForm
           initial={formInitial()}
@@ -309,8 +315,8 @@ export function ExamQuestionsPanel(props: {
           choiceImageSrc={(choiceId) => `/api/exams/${props.examId}/questions/${editing()?.id}/choices/${choiceId}/image`}
           loadImageBlob={editing() ? () => getExamQuestionImageBlob(props.examId, editing()!.id) : undefined}
           onCancel={() => {
-            // In-body Cancel bypasses FormDialog's deferred onOpenChange, so
-            // defer here too — otherwise the same tap can reopen the form.
+            // Deferred like the panel's own close — otherwise the same tap
+            // can land on the trigger underneath and reopen the form.
             closeAfterGesture(() => {
               setEditing(null);
               setFormOpen(false);
@@ -318,7 +324,7 @@ export function ExamQuestionsPanel(props: {
           }}
           onSubmit={submit}
         />
-      </FormDialog>
+      </SidePanel>
 
       {error() && <p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
 

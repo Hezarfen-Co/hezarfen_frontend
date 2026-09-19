@@ -400,7 +400,11 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         </ul>
       </Show>
       <Show when={!useCards()}>
-      <DataTableFrame class={sectioned() ? "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4" : undefined}>
+      {/* No inner padding: the header row sits flush on the card's top edge.
+          A padded frame left it floating inside the card, and the sticky
+          header then pinned below that padding while rows scrolled through
+          the gap above it. */}
+      <DataTableFrame class={sectioned() ? "shadow-xs" : undefined}>
         <Table
           class={cn("data-table table-fixed", props.tableClass)}
           style={{ width: `max(100%, ${tableWidth()}px)` }}
