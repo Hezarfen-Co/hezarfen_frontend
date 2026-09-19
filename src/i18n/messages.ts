@@ -633,6 +633,7 @@ export type MessageKey =
   | "today.upcoming"
   | "rollCall.progress"
   | "rollCall.markRestPresent"
+  | "rollCall.studentsDone"
   | "rollCall.marking"
   | "rollCall.onlyUnmarked"
   | "rollCall.allMarked"
@@ -2799,6 +2800,7 @@ const en: Dict = {
   "today.upcoming": "Not started",
   "rollCall.progress": "{marked} of {total} marked",
   "rollCall.markRestPresent": "Mark the rest present",
+  "rollCall.studentsDone": "Every student is marked",
   "rollCall.marking": "Saving {done} of {total}…",
   "rollCall.onlyUnmarked": "Only unmarked",
   "rollCall.allMarked": "Everyone is marked.",
@@ -4967,6 +4969,7 @@ const tr: Dict = {
   "today.upcoming": "Başlamadı",
   "rollCall.progress": "{total} kişiden {marked} işaretlendi",
   "rollCall.markRestPresent": "Kalanları Var işaretle",
+  "rollCall.studentsDone": "Tüm öğrenciler işaretli",
   "rollCall.marking": "{total} kişiden {done} kaydedildi…",
   "rollCall.onlyUnmarked": "Yalnızca işaretlenmemişler",
   "rollCall.allMarked": "Herkes işaretlendi.",

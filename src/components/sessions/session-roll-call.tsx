@@ -36,9 +36,12 @@ export function SessionRollCall(props: {
 }) {
   const t = useT();
   const [settings] = createResource(() => getSettings());
-  const statuses = createMemo<AttendanceStatus[]>(
-    () => settings.latest?.attendance_statuses ?? ATTENDANCE_STATUSES.map((item) => item.value),
-  );
+  // The school's statuses in its own order, except "present" leads: it is
+  // the one a teacher taps most, so it sits first on every row.
+  const statuses = createMemo<AttendanceStatus[]>(() => {
+    const list = settings.latest?.attendance_statuses ?? ATTENDANCE_STATUSES.map((item) => item.value);
+    return list.includes("present") ? ["present", ...list.filter((status) => status !== "present")] : list;
+  });
   const [attendance] = createResource(
     () => props.sessionId,
     async (sessionId) => (await getSessionAttendance(sessionId)).items,
@@ -76,6 +79,7 @@ export function SessionRollCall(props: {
     }
     return tally;
   });
+  const studentsLeft = createMemo(() => unmarked().filter((target) => !target.isTeacher).length);
   const visibleTargets = createMemo(() => (onlyUnmarked() ? unmarked() : targets()));
 
   const setBusy = (userId: string, busy: boolean) =>
@@ -193,14 +197,17 @@ export function SessionRollCall(props: {
             <Button
               type="button"
               size="sm"
+              variant={studentsLeft() > 0 || bulk() ? "default" : "outline"}
               class="h-9 rounded-lg"
-              disabled={!ready() || bulk() != null || unmarked().filter((target) => !target.isTeacher).length === 0}
+              disabled={!ready() || bulk() != null || studentsLeft() === 0}
               onClick={() => void markRestPresent()}
             >
               <IconCheck class="h-4 w-4" />
               {bulk()
                 ? t("rollCall.marking", { done: bulk()!.done, total: bulk()!.total })
-                : t("rollCall.markRestPresent")}
+                : studentsLeft() > 0
+                  ? t("rollCall.markRestPresent")
+                  : t("rollCall.studentsDone")}
             </Button>
             <Button
               type="button"
