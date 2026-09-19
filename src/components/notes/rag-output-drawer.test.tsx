@@ -172,26 +172,16 @@ describe("RagOutputDrawer", () => {
     vi.clearAllMocks();
   });
 
-  it("opens the drawer from the card body and shows the stored output", async () => {
+  it("renders the stored output inline and exposes grouped actions", async () => {
     renderPanel(HEALTHY);
     await waitFor(() => expect(screen.getByText(SUMMARY)).toBeTruthy());
 
-    fireEvent.click(screen.getByRole("button", { name: "View" }));
-
-    await waitFor(() => expect(screen.getByText("Source attachments")).toBeTruthy());
-    // Attachments by name, and the prose — now on screen twice: card and drawer.
-    expect(screen.getByText("hücre-notu.pdf")).toBeTruthy();
-    expect(screen.getByText("organeller.pdf")).toBeTruthy();
-    expect(screen.getAllByText(SUMMARY).length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText(NOTE_TITLE).length).toBeGreaterThanOrEqual(1);
-    // Every payload field stays reachable: the lesser ones in the open, the raw
-    // object behind the disclosure.
-    expect(screen.getByText("Text chunks")).toBeTruthy();
-    expect(screen.getByText("18")).toBeTruthy();
-    expect(screen.getByText("Technical details")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Copy" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Download (.md)" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Print / PDF" })).toBeTruthy();
+    expect(screen.getByText("Markdown preview")).toBeTruthy();
+    expect(screen.getByText("hücre zarı")).toBeTruthy();
+    expect(screen.getByText("organel")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Actions" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Export" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "View" })).toBeNull();
   });
 
   it("builds a Markdown document with title, date, source names and body — and no raw ids", () => {

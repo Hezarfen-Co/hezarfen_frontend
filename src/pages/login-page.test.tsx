@@ -96,12 +96,13 @@ test("a demo build opens the form filled and signs in with one click", async () 
   vi.unstubAllEnvs();
 });
 
-test("without demo settings the form starts empty and offers no demo button", () => {
+test("without demo settings the form uses the default demo credentials and offers no demo button", () => {
   // Stub empty: vitest also reads a developer's .env.local.
   vi.stubEnv("VITE_DEMO_LOGIN_USERNAME", "");
   vi.stubEnv("VITE_DEMO_LOGIN_PASSWORD", "");
   render(() => <LoginPage />);
-  expect((screen.getByLabelText("auth.username") as HTMLInputElement).value).toBe("");
+  expect((screen.getByLabelText("auth.username") as HTMLInputElement).value).toBe("admin");
+  expect((screen.getByLabelText("auth.password") as HTMLInputElement).value).toBe("admin123");
   expect(screen.queryByRole("button", { name: /auth.demoLogin/ })).toBeNull();
   vi.unstubAllEnvs();
 });

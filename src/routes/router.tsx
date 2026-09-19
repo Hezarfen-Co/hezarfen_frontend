@@ -71,7 +71,10 @@ const ProfilePage = lazyRoute(() => import("@/pages/profile-page"));
 const PaymentStatementPage = lazyRoute(() => import("@/pages/payment-statement-page"));
 const WhiteboardsPage = lazyRoute(() => import("@/pages/whiteboards-page"));
 const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
-const AiHubPage = lazyRoute(() => import("@/pages/ai-hub-page"));
+const AiStudioPage = lazyRoute(() => import("@/pages/ai-studio-page"));
+const AiStudyPage = lazyRoute(() => import("@/pages/ai-study-page"));
+const AiInsightsPage = lazyRoute(() => import("@/pages/ai-insights-page"));
+const AiCelebiPage = lazyRoute(() => import("@/pages/ai-celebi-page"));
 const ComingSoonPage = lazyRoute(() => import("@/pages/coming-soon-page"));
 const StudentsRosterPage = lazyRoute(() => import("@/pages/students-roster-page"));
 const TeachersRosterPage = lazyRoute(() => import("@/pages/teachers-roster-page"));
@@ -450,25 +453,38 @@ const whiteboardRoute = createRoute({
   component: WhiteboardPage,
 });
 
-// One AI surface: the note studio (AI outputs + podcast), grounded study chat
-// over the course material (RAG), the insight board and the Çelebi entry
-// point, which used to sit on unrelated routes.
-const aiHubRoute = createRoute({
+// Keep the old hub URL as a compatibility redirect. Each AI module now owns
+// its own route and sidebar entry.
+const aiRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/ai",
-  validateSearch: (search: Record<string, unknown>) => ({
-    tab:
-      search.tab === "insights"
-        ? ("insights" as const)
-        : search.tab === "celebi"
-        ? ("celebi" as const)
-        : search.tab === "studio"
-        ? ("studio" as const)
-        : search.tab === "study"
-        ? ("study" as const)
-        : undefined,
-  }),
-  component: AiHubPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/ai/studio" });
+  },
+});
+
+const aiStudioRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/ai/studio",
+  component: AiStudioPage,
+});
+
+const aiStudyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/ai/study",
+  component: AiStudyPage,
+});
+
+const aiInsightsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/ai/insights",
+  component: AiInsightsPage,
+});
+
+const aiCelebiRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/ai/celebi",
+  component: AiCelebiPage,
 });
 
 // The audio workshop had its own route before the hub gathered it.
@@ -476,7 +492,7 @@ const soundStudioRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sound-studio",
   beforeLoad: () => {
-    throw redirect({ to: "/ai", search: { tab: "studio" } as never });
+    throw redirect({ to: "/ai/studio" });
   },
 });
 
@@ -594,7 +610,11 @@ const routeTree = rootRoute.addChildren([
   paymentStatementRoute,
   whiteboardsRoute,
   whiteboardRoute,
-  aiHubRoute,
+  aiRoute,
+  aiStudioRoute,
+  aiStudyRoute,
+  aiInsightsRoute,
+  aiCelebiRoute,
   soundStudioRoute,
   studentsRosterRoute,
   teachersRosterRoute,

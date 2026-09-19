@@ -569,6 +569,7 @@ export type MessageKey =
   | "common.reject"
   | "common.action"
   | "common.actions"
+  | "common.export"
   | "common.columns"
   | "common.visibleColumns"
   | "common.pageRange"
@@ -635,6 +636,8 @@ export type MessageKey =
   | "homeworkQueue.toGrade"
   | "homeworkQueue.empty"
   | "aiHub.tab.study"
+  | "aiStudio.tab.podcast"
+  | "aiStudio.tab.summary"
   | "today.titleStudent"
   | "today.inProgress"
   | "childHomework.title"
@@ -926,6 +929,7 @@ export type MessageKey =
   | "courseNotes.empty"
   | "courseNotes.emptyManageHint"
   | "courseNotes.ragTitle"
+  | "courseNotes.markdownPreview"
   | "courseNotes.ragEmpty"
   | "courseNotes.ragHint"
   | "courseNotes.ragGenerate"
@@ -2595,7 +2599,7 @@ const en: Dict = {
   "nav.mockExams": "Mock exams",
   "nav.opticalReading": "Optical reading",
   "nav.hezarfenZeka": "Hezarfen AI",
-  "nav.celebi": "Çelebi",
+  "nav.celebi": "Çelebi Assistant",
   "nav.reports": "Reports",
   "nav.licenseModules": "License & modules",
   "nav.dataProtection": "Data protection & audit",
@@ -2755,6 +2759,7 @@ const en: Dict = {
   "common.reject": "Reject",
   "common.action": "Action",
   "common.actions": "Actions",
+  "common.export": "Export",
   "common.columns": "Columns",
   "common.visibleColumns": "Visible columns",
   "common.pageRange": "{start}-{end} of {total}",
@@ -2821,6 +2826,8 @@ const en: Dict = {
   "homeworkQueue.toGrade": "{count} waiting for a grade",
   "homeworkQueue.empty": "Nothing is waiting on your recent homework.",
   "aiHub.tab.study": "Study",
+  "aiStudio.tab.podcast": "Podcast creation",
+  "aiStudio.tab.summary": "AI summary",
   "today.titleStudent": "Today's lessons",
   "today.inProgress": "On now",
   "childHomework.title": "Homework",
@@ -3111,7 +3118,8 @@ const en: Dict = {
   "courseNotes.add": "Add note",
   "courseNotes.empty": "No notes on this course yet.",
   "courseNotes.emptyManageHint": "Write a note the whole class can read, and attach files to it.",
-  "courseNotes.ragTitle": "AI outputs",
+  "courseNotes.ragTitle": "AI summary",
+  "courseNotes.markdownPreview": "Markdown preview",
   "courseNotes.ragEmpty": "No AI outputs on this note yet.",
   "courseNotes.ragHint": "Create a fresh summary from this note and its attachments.",
   "courseNotes.ragGenerate": "Create summary",
@@ -4403,7 +4411,7 @@ const tr: Dict = {
   "ai.searchCount": "{current} / {total}",
   "ai.noSearchResults": "Aramanla eşleşen mesaj yok.",
   "aiHub.description": "Tüm yapay zekâ araçları tek yerde: not çıktıları ve podcast, öğrenci analizi ve Çelebi.",
-  "aiHub.tab.studio": "Not stüdyosu",
+  "aiHub.tab.studio": "Not Stüdyosu",
   "aiHub.tab.insights": "Analiz",
   "aiHub.celebiExample.student1": "Bu hafta hangi ödevlerin teslimi var?",
   "aiHub.celebiExample.student2": "Sınıfım kaç gün devamsızlık yaptı?",
@@ -4783,7 +4791,7 @@ const tr: Dict = {
   "nav.mockExams": "Deneme sınavları",
   "nav.opticalReading": "Optik okuma",
   "nav.hezarfenZeka": "Hezarfen Zekâ",
-  "nav.celebi": "Çelebi",
+  "nav.celebi": "Çelebi Asistan",
   "nav.reports": "Raporlar",
   "nav.licenseModules": "Lisans ve modüller",
   "nav.dataProtection": "KVKK ve denetim",
@@ -4943,6 +4951,7 @@ const tr: Dict = {
   "common.reject": "Reddet",
   "common.action": "İşlem",
   "common.actions": "İşlemler",
+  "common.export": "Dışa aktar",
   "common.columns": "Sütunlar",
   "common.visibleColumns": "Görünür sütunlar",
   "common.pageRange": "{total} kayıttan {start}-{end}",
@@ -5008,7 +5017,9 @@ const tr: Dict = {
   "homeworkQueue.missing": "{count} teslim etmedi",
   "homeworkQueue.toGrade": "{count} not bekliyor",
   "homeworkQueue.empty": "Son ödevlerinde bekleyen bir şey yok.",
-  "aiHub.tab.study": "Çalış",
+  "aiHub.tab.study": "Çalışma",
+  "aiStudio.tab.podcast": "Podcast oluşturma",
+  "aiStudio.tab.summary": "Yapay zekâ özeti",
   "today.titleStudent": "Bugünkü derslerin",
   "today.inProgress": "Şimdi",
   "childHomework.title": "Ödevler",
@@ -5299,7 +5310,8 @@ const tr: Dict = {
   "courseNotes.add": "Not ekle",
   "courseNotes.empty": "Bu derse ait henüz not yok.",
   "courseNotes.emptyManageHint": "Tüm sınıfın okuyabileceği bir not yazın, dosya da ekleyebilirsiniz.",
-  "courseNotes.ragTitle": "YZ çıktıları",
+  "courseNotes.ragTitle": "Yapay zekâ özeti",
+  "courseNotes.markdownPreview": "Markdown önizleme",
   "courseNotes.ragEmpty": "Bu notta henüz YZ çıktısı yok.",
   "courseNotes.ragHint": "Bu not ve eklerinden güncel bir özet oluşturun.",
   "courseNotes.ragGenerate": "Özet oluştur",

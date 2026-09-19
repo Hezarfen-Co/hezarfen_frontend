@@ -99,7 +99,7 @@ describe("PodcastHistory", () => {
     expect(screen.queryByRole("link", { name: "Bölümü indir" })).toBeNull();
   });
 
-  it("asks the door about the open note only", async () => {
+  it("asks the door about the selected note only", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(page([job({})]));
 
     renderHistory("note-1");
@@ -107,22 +107,18 @@ describe("PodcastHistory", () => {
     await waitFor(() =>
       expect(podcastApi.listPodcastJobs).toHaveBeenCalledWith({ limit: 10, sourceId: "note-1" }),
     );
-    expect(screen.getByText("Yalnızca bu notun bölümleri gösteriliyor.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Tümü" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Bu not" })).toBeNull();
   });
 
-  it("widens to the whole history when Tümü is picked", async () => {
+  it("does not offer a global history scope", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(page([job({})]));
 
     renderHistory("note-1");
     await waitFor(() => expect(podcastApi.listPodcastJobs).toHaveBeenCalledTimes(1));
 
-    fireEvent.click(screen.getByRole("button", { name: "Tümü" }));
-
-    await waitFor(() => expect(podcastApi.listPodcastJobs).toHaveBeenCalledTimes(2));
-    expect(podcastApi.listPodcastJobs).toHaveBeenLastCalledWith({ limit: 10, sourceId: undefined });
-    expect(screen.getByRole("button", { name: "Tümü" }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByRole("button", { name: "Bu not" }).getAttribute("aria-pressed")).toBe("false");
-    expect(screen.getByText("Tüm notlarınızdaki bölümler gösteriliyor.")).toBeTruthy();
+    expect(podcastApi.listPodcastJobs).toHaveBeenLastCalledWith({ limit: 10, sourceId: "note-1" });
+    expect(screen.queryByText("Tüm notlarınızdaki bölümler gösteriliyor.")).toBeNull();
   });
 
   it("tells an empty note apart from an empty history", async () => {
@@ -132,19 +128,16 @@ describe("PodcastHistory", () => {
     await waitFor(() => expect(screen.getByText("Bu not için henüz bölüm yok")).toBeTruthy());
     expect(screen.queryByText("Henüz bölüm oluşturulmadı")).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Tümü" }));
-
-    await waitFor(() => expect(screen.getByText("Henüz bölüm oluşturulmadı")).toBeTruthy());
-    expect(screen.queryByText("Bu not için henüz bölüm yok")).toBeNull();
+    expect(screen.queryByText("Henüz bölüm oluşturulmadı")).toBeNull();
   });
 
-  it("shows the empty state when the caller has no episodes", async () => {
+  it("does not query a global history when no note is selected", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(page([]));
 
     renderHistory();
 
     await waitFor(() => expect(screen.getByText("Henüz bölüm oluşturulmadı")).toBeTruthy());
-    expect(podcastApi.listPodcastJobs).toHaveBeenCalledWith({ limit: 10, sourceId: undefined });
+    expect(podcastApi.listPodcastJobs).not.toHaveBeenCalled();
   });
 
   it("falls back to the note id when the note is gone", async () => {

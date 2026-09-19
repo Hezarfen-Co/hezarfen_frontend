@@ -8,10 +8,11 @@ import { PodcastPanel } from "@/components/notes/podcast-panel";
 import { RagOutputsPanel } from "@/components/notes/rag-outputs-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconWaveform } from "@/components/ui/icons";
+import { IconSparkles, IconWaveform } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { courseNoteFiles } from "@/lib/note-source";
@@ -25,6 +26,7 @@ export function NoteStudioPanel() {
   const t = useT();
   const auth = useAuth();
   const [selectedId, setSelectedId] = createSignal("");
+  const [activeTab, setActiveTab] = createSignal<"summary" | "podcast">("summary");
   const [notes, { refetch }] = createResource(
     () => auth.user()?.role ?? null,
     async (role) => {
@@ -64,11 +66,12 @@ export function NoteStudioPanel() {
           when={(notes()?.length ?? 0) > 0}
           fallback={<EmptyState kind="notes" title={t("podcast.noNotes")} description={t("podcast.noNotesHint")} />}
         >
-          <div class="mx-auto max-w-3xl space-y-4">
-            <section class="data-shell space-y-2 p-4">
+          <div class="w-full space-y-4">
+            <section class="data-shell w-full space-y-2 p-4">
               <Label for="sound-studio-note">{t("podcast.source")}</Label>
               <SearchableSelect
                 id="sound-studio-note"
+                class="w-full"
                 value={selectedId()}
                 onChange={setSelectedId}
                 options={options()}
@@ -90,16 +93,34 @@ export function NoteStudioPanel() {
               }
             >
               {(note) => (
-                <div class="space-y-4">
-                  <RagOutputsPanel
-                    noteId={note().id}
-                    source={courseNoteFiles}
-                    canManage={canManageSelected()}
-                    active
-                    noteTitle={note().title}
-                  />
-                  <PodcastPanel noteId={note().id} noteTitle={note().title} active />
-                </div>
+                <Tabs
+                  value={activeTab()}
+                  onChange={(value) => setActiveTab(value as "summary" | "podcast")}
+                  class="w-full space-y-4"
+                >
+                  <TabsList class="w-full">
+                    <TabsTrigger value="summary" class="min-w-0 flex-1">
+                      <IconSparkles class="h-4 w-4" />
+                      {t("aiStudio.tab.summary")}
+                    </TabsTrigger>
+                    <TabsTrigger value="podcast" class="min-w-0 flex-1">
+                      <IconWaveform class="h-4 w-4" />
+                      {t("aiStudio.tab.podcast")}
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="summary" class="mt-0 w-full">
+                    <RagOutputsPanel
+                      noteId={note().id}
+                      source={courseNoteFiles}
+                      canManage={canManageSelected()}
+                      active={activeTab() === "summary"}
+                      noteTitle={note().title}
+                    />
+                  </TabsContent>
+                  <TabsContent value="podcast" class="mt-0 w-full">
+                    <PodcastPanel noteId={note().id} noteTitle={note().title} active={activeTab() === "podcast"} />
+                  </TabsContent>
+                </Tabs>
               )}
             </Show>
           </div>

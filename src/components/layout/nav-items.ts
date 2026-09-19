@@ -3,7 +3,6 @@ import type { Role } from "@/api/client";
 import {
   IconArchive,
   IconBook,
-  IconBotSquare,
   IconBriefcase,
   IconCalendarBlank,
   IconCalendarCheck,
@@ -35,6 +34,7 @@ import {
   IconUserCog,
   IconUsers,
   IconUtensils,
+  IconWaveform,
 } from "@/components/ui/icons";
 import type { MessageKey } from "@/i18n/messages";
 import { hasExactRole, roleInRange } from "@/lib/roles";
@@ -74,22 +74,46 @@ export const HOME_ITEM: NavItem = {
   exact: true,
 };
 
-const CELEBI_ITEM: NavItem = {
-  id: "celebi",
-  to: "",
-  labelKey: "nav.celebi",
-  Icon: IconSparkles,
-  action: "celebi",
+const AI_STUDIO_ITEM: NavItem = {
+  id: "ai-studio",
+  to: "/ai/studio",
+  labelKey: "aiHub.tab.studio",
+  Icon: IconWaveform,
 };
 
-// The hub gathers the note studio, the insight board and the Çelebi entry —
-// what used to be a sound-studio row, an unreachable insights page and a
-// "yakında" placeholder.
-const AI_HUB_ITEM: NavItem = {
-  id: "ai-hub",
-  to: "/ai",
-  labelKey: "nav.hezarfenZeka",
-  Icon: IconBotSquare,
+const AI_STUDY_ITEM: NavItem = {
+  id: "ai-study",
+  to: "/ai/study",
+  labelKey: "aiHub.tab.study",
+  Icon: IconBook,
+};
+
+const AI_INSIGHTS_ITEM: NavItem = {
+  id: "ai-insights",
+  to: "/ai/insights",
+  labelKey: "aiHub.tab.insights",
+  Icon: IconChart,
+};
+
+const AI_CELEBI_ITEM: NavItem = {
+  id: "ai-celebi",
+  to: "/ai/celebi",
+  labelKey: "nav.celebi",
+  Icon: IconSparkles,
+};
+
+const AI_GROUP: NavGroup = {
+  id: "ai",
+  labelKey: "nav.group.ai",
+  Icon: IconSparkles,
+  items: [AI_STUDIO_ITEM, AI_STUDY_ITEM, AI_INSIGHTS_ITEM, AI_CELEBI_ITEM],
+};
+
+const PARENT_AI_GROUP: NavGroup = {
+  id: "ai",
+  labelKey: "nav.group.ai",
+  Icon: IconSparkles,
+  items: [AI_INSIGHTS_ITEM],
 };
 
 function settingsAction(id: string): NavItem {
@@ -107,6 +131,7 @@ function soonGroup(items: NavItem[]): NavGroup {
 // Admin and manager share one tree — manager just qualifies for fewer of its
 // items, via the same minRole gates the rest of this file already uses.
 const ADMIN_GROUPS: NavGroup[] = [
+  AI_GROUP,
   {
     id: "school",
     labelKey: "nav.group.school",
@@ -167,12 +192,6 @@ const ADMIN_GROUPS: NavGroup[] = [
       { id: "settings", to: "/management/settings", labelKey: "settings.title", Icon: IconSettings, minRole: "manager" },
     ],
   },
-  {
-    id: "ai",
-    labelKey: "nav.group.ai",
-    Icon: IconSparkles,
-    items: [CELEBI_ITEM, AI_HUB_ITEM],
-  },
   soonGroup([
     { id: "mock-exams", to: "/coming-soon/deneme-sinavlari", labelKey: "nav.mockExams", Icon: IconTarget, soon: true, minRole: "manager" },
     { id: "optical-reading", to: "/coming-soon/optik-okuma", labelKey: "nav.opticalReading", Icon: IconScan, soon: true, minRole: "manager" },
@@ -182,6 +201,7 @@ const ADMIN_GROUPS: NavGroup[] = [
 ];
 
 const TEACHER_GROUPS: NavGroup[] = [
+  AI_GROUP,
   {
     id: "my-classroom",
     labelKey: "nav.group.myClassroom",
@@ -228,12 +248,6 @@ const TEACHER_GROUPS: NavGroup[] = [
       settingsAction("settings-teacher"),
     ],
   },
-  {
-    id: "ai",
-    labelKey: "nav.group.ai",
-    Icon: IconSparkles,
-    items: [CELEBI_ITEM, AI_HUB_ITEM],
-  },
   soonGroup([
     { id: "student-analysis", to: "/coming-soon/ogrenci-analizi", labelKey: "nav.studentAnalysis", Icon: IconChart, soon: true },
     { id: "pending-approvals", to: "/coming-soon/bekleyen-onaylar", labelKey: "nav.pendingApprovals", Icon: IconHelpCircle, soon: true },
@@ -242,6 +256,7 @@ const TEACHER_GROUPS: NavGroup[] = [
 ];
 
 const STUDENT_GROUPS: NavGroup[] = [
+  AI_GROUP,
   {
     id: "study",
     labelKey: "nav.group.study",
@@ -265,12 +280,6 @@ const STUDENT_GROUPS: NavGroup[] = [
     ],
   },
   {
-    id: "ai",
-    labelKey: "nav.group.ai",
-    Icon: IconSparkles,
-    items: [CELEBI_ITEM, AI_HUB_ITEM],
-  },
-  {
     id: "other",
     labelKey: "nav.group.other",
     Icon: IconCalendarDays,
@@ -289,6 +298,7 @@ const STUDENT_GROUPS: NavGroup[] = [
 ];
 
 const PARENT_GROUPS: NavGroup[] = [
+  PARENT_AI_GROUP,
   {
     id: "my-student",
     labelKey: "nav.group.myStudent",
@@ -313,12 +323,6 @@ const PARENT_GROUPS: NavGroup[] = [
       { id: "meals", to: "/meals", labelKey: "nav.meals", Icon: IconUtensils, module: "meals" },
       settingsAction("settings-parent"),
     ],
-  },
-  {
-    id: "ai",
-    labelKey: "nav.group.ai",
-    Icon: IconSparkles,
-    items: [AI_HUB_ITEM],
   },
 ];
 

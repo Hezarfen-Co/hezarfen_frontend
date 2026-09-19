@@ -34,12 +34,12 @@ test("admin's sidebar splits into short labelled sections with the soon shelf la
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
+    { id: "ai", items: ["ai-studio", "ai-study", "ai-insights", "ai-celebi"] },
     { id: "school", items: ["students-roster", "teachers-roster", "class-groups", "academic-years", "terms", "schedule"] },
     { id: "teaching", items: ["courses", "homework", "exams", "question-bank", "questions", "notes", "whiteboards"] },
     { id: "tracking", items: ["student-attendance", "student-marks", "student-pomodoros"] },
     { id: "services", items: ["events", "appointments", "school-meals"] },
     { id: "institution", items: ["payments-collection", "staff-work", "work", "users", "license-modules", "settings"] },
-    { id: "ai", items: ["celebi", "ai-hub"] },
     { id: "soon", items: ["mock-exams", "optical-reading", "reports", "data-protection"] },
   ]);
 });
@@ -61,11 +61,11 @@ test("teacher's sidebar splits into short labelled sections with the soon shelf 
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
+    { id: "ai", items: ["ai-studio", "ai-study", "ai-insights", "ai-celebi"] },
     { id: "my-classroom", items: ["my-classes", "my-schedule", "courses"] },
     { id: "tracking", items: ["student-attendance", "student-marks", "student-pomodoros"] },
     { id: "teaching", items: ["homework", "exams", "question-bank", "questions", "notes", "whiteboards"] },
     { id: "other", items: ["parent-communication", "appointments", "events", "meals", "work", "settings-teacher"] },
-    { id: "ai", items: ["celebi", "ai-hub"] },
     { id: "soon", items: ["student-analysis", "pending-approvals", "question-generation"] },
   ]);
 });
@@ -77,9 +77,9 @@ test("student's sidebar splits into short labelled sections with the soon shelf 
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
+    { id: "ai", items: ["ai-studio", "ai-study", "ai-insights", "ai-celebi"] },
     { id: "study", items: ["topic-mastery", "exam-results", "my-homework", "pomodoro"] },
     { id: "teaching", items: ["courses", "notes", "questions", "whiteboards"] },
-    { id: "ai", items: ["celebi", "ai-hub"] },
     { id: "other", items: ["calendar", "events", "messages", "appointments", "meals", "settings-student"] },
     { id: "soon", items: ["study-plan"] },
   ]);
@@ -106,10 +106,10 @@ test("parent's sidebar keeps the Figma Öğrencim / Kurum tree plus every backed
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
+    { id: "ai", items: ["ai-insights"] },
     { id: "my-student", items: ["progress-report", "absence", "child-exam-results", "child-study-plan"] },
     { id: "institution", items: ["payment-statement", "appointments", "messages", "calendar", "events", "meals", "settings-parent"] },
-    // A parent's only AI surface: their children's analysis on the hub.
-    { id: "ai", items: ["ai-hub"] },
+    // A parent's only AI surface: their children's analysis.
   ]);
 });
 
@@ -151,25 +151,24 @@ test("entries with no backend yet are flagged soon and route to the shared place
   expect(opticalReading?.to).toBe("/coming-soon/optik-okuma");
 });
 
-// Every AI feature the backend answers for sits on one hub route; Çelebi keeps
-// its own row because it opens the shell panel instead of navigating.
-test("the AI group is the hub plus the Çelebi panel, and nothing is a placeholder", () => {
-  for (const role of ["student", "teacher", "manager", "admin", "parent"] as const) {
+test("the AI group exposes four separate module routes", () => {
+  for (const role of ["student", "teacher", "manager", "admin"] as const) {
     const ai = visibleNavGroups(role).find((group) => group.id === "ai");
-    expect(ai).toBeDefined();
-    const hub = ai?.items.find((item) => item.id === "ai-hub");
-    expect(hub?.to).toBe("/ai");
-    expect(hub?.soon).toBeFalsy();
+    expect(ai?.items.map((item) => item.id)).toEqual(["ai-studio", "ai-study", "ai-insights", "ai-celebi"]);
+    expect(ai?.items.every((item) => !item.soon)).toBe(true);
   }
-  expect(routeNavItem("/ai", "student")?.id).toBe("ai-hub");
-  expect(routeLabelKey("/ai", "student")).toBe("nav.hezarfenZeka");
+  expect(visibleNavGroups("parent").find((group) => group.id === "ai")?.items.map((item) => item.id)).toEqual(["ai-insights"]);
+  expect(routeNavItem("/ai/studio", "student")?.id).toBe("ai-studio");
+  expect(routeNavItem("/ai/insights", "parent")?.id).toBe("ai-insights");
+  expect(routeLabelKey("/ai/studio", "student")).toBe("aiHub.tab.studio");
 });
 
-test("Çelebi and account settings open an existing shell surface instead of navigating", () => {
+test("AI modules navigate while account settings still opens a shell surface", () => {
   const celebi = visibleNavGroups("student")
     .flatMap((g) => g.items)
-    .find((i) => i.id === "celebi");
-  expect(celebi?.action).toBe("celebi");
+    .find((i) => i.id === "ai-celebi");
+  expect(celebi?.to).toBe("/ai/celebi");
+  expect(celebi?.action).toBeUndefined();
   const settings = visibleNavGroups("student")
     .flatMap((g) => g.items)
     .find((i) => i.id === "settings-student");

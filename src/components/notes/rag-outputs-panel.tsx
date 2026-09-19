@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createSignal, onCleanup } from "solid-js";
+import { Show, Suspense, createSignal, onCleanup } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getAiCapabilities } from "@/api/ai";
 import { formatApiError } from "@/api/client";
@@ -12,12 +12,17 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
-import { IconEye, IconSparkles, IconTrash } from "@/components/ui/icons";
+import { IconCopy, IconDownload, IconFileText, IconSparkles, IconTrash } from "@/components/ui/icons";
 import { RagOutputContent } from "@/components/notes/rag-output-content";
-import { RagOutputDrawer } from "@/components/notes/rag-output-drawer";
-import { ragOutputMessage } from "@/components/notes/rag-output-messages";
+import {
+  buildRagOutputMarkdown,
+  ragOutputFileName,
+  readRagOutputDocument,
+  type RagOutputPassage,
+} from "@/components/notes/rag-output-document";
+import { ragOutputMessage, ragOutputPassagePages } from "@/components/notes/rag-output-messages";
 
-const RAG_PAGE_SIZE = 10;
+const RAG_PAGE_SIZE = 1;
 
 /**
  * The capability a worker must have declared for a reindex call to have any
@@ -40,13 +45,18 @@ export function RagOutputsPanel(props: {
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [deleteTarget, setDeleteTarget] = createSignal<RagOutput | null>(null);
-  const [viewTarget, setViewTarget] = createSignal<RagOutput | null>(null);
   const [generating, setGenerating] = createSignal(false);
+  const [copied, setCopied] = createSignal(false);
+  const [copyError, setCopyError] = createSignal("");
   /** Set when a reindex attempt ended without a new output — the truthful state. */
   const [missed, setMissed] = createSignal("");
   let pollTimer: ReturnType<typeof setTimeout> | undefined;
+  let copiedTimer: ReturnType<typeof setTimeout> | undefined;
 
-  onCleanup(() => pollTimer && clearTimeout(pollTimer));
+  onCleanup(() => {
+    if (pollTimer) clearTimeout(pollTimer);
+    if (copiedTimer) clearTimeout(copiedTimer);
+  });
 
   const [list, { refetch }] = createResource(
     () => (props.active && props.source.listRagOutputs ? props.noteId : null),
@@ -58,6 +68,69 @@ export function RagOutputsPanel(props: {
   );
 
   const outputs = () => list()?.items ?? [];
+  const output = () => outputs()[0] ?? null;
+  const noteTitle = () => props.noteTitle?.trim() ?? "";
+  const passageHeader = (passage: RagOutputPassage) => {
+    const source = passage.sourceName
+      ?? (passage.fromNote ? noteTitle() || ragOutputMessage(locale(), "noteText") : ragOutputMessage(locale(), "unnamedSource"));
+    const pages = ragOutputPassagePages(locale(), passage.pageStart, passage.pageEnd);
+    return pages ? `${source} · ${pages}` : source;
+  };
+  const passagesNote = (read: ReturnType<typeof readRagOutputDocument>) => {
+    if (!read.passagesTruncated) return "";
+    return read.chunksTotal != null
+      ? ragOutputMessage(locale(), "passagesTruncated", { shown: read.passages.length, total: read.chunksTotal })
+      : ragOutputMessage(locale(), "passagesTruncatedNoTotal", { shown: read.passages.length });
+  };
+  const markdown = () => {
+    const current = output();
+    const read = current ? readRagOutputDocument(current) : null;
+    if (!current || !read) return "";
+    return buildRagOutputMarkdown({
+      title: noteTitle() || ragOutputMessage(locale(), "drawerTitle"),
+      date: formatDateTime(current.generated_at, locale()),
+      noteTitle: noteTitle(),
+      document: read,
+      labels: {
+        date: ragOutputMessage(locale(), "date"),
+        note: ragOutputMessage(locale(), "note"),
+        sources: ragOutputMessage(locale(), "sources"),
+        failed: ragOutputMessage(locale(), "failedTitle"),
+        otherFields: ragOutputMessage(locale(), "otherFields"),
+        passages: ragOutputMessage(locale(), "passages"),
+        passageHeader,
+        passagesTruncated: passagesNote(read),
+      },
+    });
+  };
+  const copy = async () => {
+    setCopyError("");
+    if (!navigator.clipboard?.writeText) {
+      setCopyError(ragOutputMessage(locale(), "copyFailed"));
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(markdown());
+      setCopied(true);
+      copiedTimer = setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setCopied(false);
+      setCopyError(ragOutputMessage(locale(), "copyFailed"));
+    }
+  };
+  const download = () => {
+    const current = output();
+    if (!current) return;
+    const blob = new Blob([markdown()], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = ragOutputFileName(current.generated_at);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
   // The button is live only when a worker actually serves `rag.index`. A
   // discovery failure is not evidence of absence, so leave it live and let the
   // call itself report; while the list is still loading we do not know either.
@@ -127,17 +200,49 @@ export function RagOutputsPanel(props: {
 
   return (
     <section class="space-y-3 rounded-lg border border-border/80 bg-card p-4 shadow-xs dark:border-white/8">
-      <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 class="text-sm font-semibold">{t("courseNotes.ragTitle")}</h3>
           <p class="mt-0.5 text-xs text-muted-foreground">{t("courseNotes.ragHint")}</p>
         </div>
-        <Show when={props.canManage !== false && props.source.reindexRag}>
-          <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled={!available() || generating()} onClick={() => void generate()}>
-            <IconSparkles class="h-4 w-4" />
-            {generating() ? t("courseNotes.ragGenerating") : t("courseNotes.ragGenerate")}
-          </Button>
-        </Show>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <Show when={props.canManage !== false && props.source.reindexRag}>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              class="topbar-ai-control h-8 min-w-[78px] rounded-lg px-2"
+              disabled={!available() || generating()}
+              onClick={() => void generate()}
+            >
+              <IconSparkles class="h-3.5 w-3.5" />
+              {generating() ? t("courseNotes.ragGenerating") : t("courseNotes.ragGenerate")}
+            </Button>
+          </Show>
+          <Show when={output() && props.canManage !== false && props.source.deleteRagOutput}>
+            <TableRowActions
+              label={t("common.actions")}
+              triggerLabel={t("common.actions")}
+              actions={[{
+                label: t("common.delete"),
+                icon: <IconTrash class="h-4 w-4" />,
+                destructive: true,
+                onSelect: () => setDeleteTarget(output()),
+              }]}
+            />
+          </Show>
+          <Show when={output()}>
+            <TableRowActions
+              label={t("common.export")}
+              triggerLabel={t("common.export")}
+              actions={[
+                { label: ragOutputMessage(locale(), "copy"), icon: <IconCopy class="h-4 w-4" />, onSelect: () => void copy() },
+                { label: ragOutputMessage(locale(), "download"), icon: <IconDownload class="h-4 w-4" />, onSelect: download },
+                { label: ragOutputMessage(locale(), "print"), icon: <IconFileText class="h-4 w-4" />, onSelect: () => window.print() },
+              ]}
+            />
+          </Show>
+        </div>
       </div>
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
@@ -148,6 +253,12 @@ export function RagOutputsPanel(props: {
       <Show when={missed()}>
         <Alert variant="warning">{missed()}</Alert>
       </Show>
+      <Show when={copied()}>
+        <Alert variant="success">{ragOutputMessage(locale(), "copied")}</Alert>
+      </Show>
+      <Show when={copyError()}>
+        <Alert variant="destructive">{copyError()}</Alert>
+      </Show>
       <Show when={!available()}>
         <Alert variant="warning">{t("courseNotes.ragUnavailable")}</Alert>
       </Show>
@@ -155,55 +266,20 @@ export function RagOutputsPanel(props: {
         <Show when={list.error}>
           <Alert variant="destructive">{formatApiError(list.error)}</Alert>
         </Show>
-        <Show when={outputs().length > 0} fallback={<p class="text-sm text-muted-foreground">{missed() ? t("courseNotes.ragEmptyFailed") : t("courseNotes.ragEmpty")}</p>}>
-          <ul class="space-y-3">
-            <For each={outputs()}>
-              {(output) => (
-                <li class="space-y-1.5 rounded-lg border border-border/60 p-3">
-                  <div class="flex items-center gap-2">
-                    <span class="mono text-xs text-muted-foreground">
-                      {formatDateTime(output.generated_at, locale())}
-                    </span>
-                    <span class="ml-auto">
-                      <TableRowActions
-                        label={t("common.actions")}
-                        actions={[
-                          {
-                            label: ragOutputMessage(locale(), "view"),
-                            icon: <IconEye class="h-4 w-4" />,
-                            onSelect: () => setViewTarget(output),
-                          },
-                          ...(props.canManage !== false && props.source.deleteRagOutput
-                            ? [{
-                              label: t("common.delete"),
-                              icon: <IconTrash class="h-4 w-4" />,
-                              destructive: true,
-                              onSelect: () => setDeleteTarget(output),
-                            }]
-                            : []),
-                        ]}
-                      />
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    class="block w-full cursor-pointer rounded-md p-1.5 text-left transition-colors hover:bg-accent/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={ragOutputMessage(locale(), "view")}
-                    onClick={() => setViewTarget(output)}
-                  >
-                    <RagOutputContent payload={output.payload} />
-                  </button>
-                </li>
-              )}
-            </For>
-          </ul>
+        <Show when={output()} fallback={<p class="text-sm text-muted-foreground">{missed() ? t("courseNotes.ragEmptyFailed") : t("courseNotes.ragEmpty")}</p>}>
+          {(current) => (
+            <article class="overflow-hidden rounded-lg border border-border/60 bg-background/50">
+              <header class="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 px-3 py-2">
+                <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("courseNotes.markdownPreview")}</span>
+                <span class="mono text-xs text-muted-foreground">{formatDateTime(current().generated_at, locale())}</span>
+              </header>
+              <div class="p-4">
+                <RagOutputContent payload={current().payload} />
+              </div>
+            </article>
+          )}
         </Show>
       </Suspense>
-      <RagOutputDrawer
-        output={viewTarget()}
-        noteTitle={props.noteTitle}
-        onOpenChange={(open) => !open && setViewTarget(null)}
-      />
       <ConfirmDialog
         open={deleteTarget() != null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}

@@ -17,7 +17,7 @@ type TableRowAction = {
   disabled?: boolean;
 };
 
-export function TableRowActions(props: { label: string; actions: TableRowAction[]; compact?: boolean }) {
+export function TableRowActions(props: { label: string; actions: TableRowAction[]; compact?: boolean; triggerLabel?: string }) {
   const t = useT();
 
   return (
@@ -30,7 +30,7 @@ export function TableRowActions(props: { label: string; actions: TableRowAction[
           aria-label={props.label}
           title={props.label}
         >
-          {!props.compact && <span>{t("common.action")}</span>}
+          {!props.compact && <span>{props.triggerLabel ?? t("common.action")}</span>}
           <IconDotsVertical class="h-3.5 w-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent class="w-48">

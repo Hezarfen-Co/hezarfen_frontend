@@ -28,8 +28,8 @@ function LoginForm() {
   const navigate = useNavigate();
   const t = useT();
   const demo = demoCredentials();
-  const [username, setUsername] = createSignal(demo?.username ?? "");
-  const [password, setPassword] = createSignal(demo?.password ?? "");
+  const [username, setUsername] = createSignal(demo?.username ?? "admin");
+  const [password, setPassword] = createSignal(demo?.password ?? "admin123");
   const [showPassword, setShowPassword] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);

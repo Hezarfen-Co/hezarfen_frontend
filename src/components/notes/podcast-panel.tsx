@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
+import { For, Show, Suspense, createEffect, createSignal, onCleanup } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getAiCapabilities } from "@/api/ai";
 import {
@@ -150,6 +150,13 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
   ];
 
   return (
+    <Suspense
+      fallback={
+        <section class="flex min-h-44 items-center justify-center rounded-xl border border-border-line bg-surface-base p-4 shadow-xs">
+          <p class="text-sm text-muted-foreground">{t("common.loading")}</p>
+        </section>
+      }
+    >
     <section class="space-y-4 rounded-xl border border-border-line bg-surface-base p-4 shadow-xs">
       <div class="flex items-start gap-3">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text">
@@ -232,5 +239,6 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
         refetchKey={status()?.state === "done" ? jobId() : ""}
       />
     </section>
+    </Suspense>
   );
 }
