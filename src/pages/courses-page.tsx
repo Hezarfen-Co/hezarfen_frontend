@@ -7,7 +7,6 @@ import { getLimits } from "@/api/limits";
 import { formatApiError, type CourseKind } from "@/api/client";
 import { CourseCard } from "@/components/courses/course-card";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { DataSection } from "@/components/ui/data-section";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataToolbar } from "@/components/ui/data-toolbar";
@@ -44,7 +43,6 @@ function CoursesContent() {
   const prefs = usePreferences();
   const [pageKind, setPageKind] = createSignal<CourseKind | undefined>(routeSearch().kind);
   const createKind = (): CourseKind => pageKind() ?? "course";
-  const pageLabel = () => t("nav.classes");
   const kindLabel = () => createKind() === "study" ? t("courses.kind.study") : createKind() === "club" ? t("courses.kind.club") : t("courses.kind.course");
   const kindInSentence = () =>
     kindLabelSingular().toLocaleLowerCase(prefs.locale() === "tr" ? "tr-TR" : "en-US");
@@ -153,10 +151,6 @@ function CoursesContent() {
         </TabsList>
 
         <TabsContent value={pageKind() ?? "all"} class="mt-4 space-y-4 border-0 bg-transparent p-0 shadow-none">
-          <DataSection
-            title={pageLabel()}
-            description={t("courses.pageSubtitle")}
-          >
           <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs" aria-label={t("common.search")}>
             <DataToolbar
               inline
@@ -210,7 +204,7 @@ function CoursesContent() {
               </Show>
             </Show>
           </Suspense>
-          </DataSection>
+
         </TabsContent>
       </Tabs>
     </div>

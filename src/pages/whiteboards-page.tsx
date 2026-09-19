@@ -6,7 +6,6 @@ import { getUserSearch } from "@/api/users";
 import { formatApiError, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { DataToolbar } from "@/components/ui/data-toolbar";
-import { DataSection } from "@/components/ui/data-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -61,10 +60,21 @@ function WhiteboardsContent() {
 
   return (
     <div class="space-y-5">
-      <DataSection
-        title={t("whiteboard.title")}
-        description={t("whiteboard.subtitle")}
-      >
+      <div class="space-y-4">
+        <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs" aria-label={t("common.search")}>
+          <DataToolbar
+            searchValue={query()}
+            searchPlaceholder={t("whiteboard.searchPlaceholder")}
+            searchHint={t("search.hint.whiteboards")}
+            onSearchInput={setQuery}
+            actions={
+              <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
+                <IconPlus class="h-4 w-4" />
+                {t("whiteboard.create")}
+              </Button>
+            }
+          />
+        </div>
         <Suspense fallback={<PageSpinner />}>
           <Show when={boards.error}>
             <ErrorAlert message={formatApiError(boards.error, locale())} />
@@ -74,20 +84,6 @@ function WhiteboardsContent() {
             fallback={<EmptyState kind="whiteboard" title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
           >
             <div class="space-y-3">
-              <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
-                <DataToolbar
-                  searchValue={query()}
-                  searchPlaceholder={t("whiteboard.searchPlaceholder")}
-                  searchHint={t("search.hint.whiteboards")}
-                  onSearchInput={setQuery}
-                  actions={
-                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("whiteboard.create")}
-                    </Button>
-                  }
-                />
-              </div>
               <Show when={visibleBoards().length > 0} fallback={<EmptyState kind="search" title={t("common.noResults")} />}>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <For each={visibleBoards()}>
@@ -114,7 +110,7 @@ function WhiteboardsContent() {
             </div>
           </Show>
         </Suspense>
-      </DataSection>
+      </div>
 
       <CreateBoardPanel
         open={createOpen()}
