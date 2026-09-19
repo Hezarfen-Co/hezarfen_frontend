@@ -165,6 +165,11 @@ vi.mock("@/api/events", () => ({
   ]),
 }));
 vi.mock("@/api/homework", () => ({
+  getHomeworkSubmissions: async () => page([
+    { user: "s-1", submission: null, result: null, missing: true, unenrolled: false },
+    { user: "s-2", submission: { text: "x", submitted_at: now, updated_at: now, late: false, files: [] }, result: null, missing: false, unenrolled: false },
+    { user: "s-3", submission: { text: "y", submitted_at: now, updated_at: now, late: false, files: [] }, result: null, missing: false, unenrolled: false },
+  ]),
   getHomeworkReport: async () => page([
     { class_course: "instance-1", homework: "hw-late", title: "Essay draft", subject: "s-1", due_at: now - 2 * DAY, submitted: false, late: false, missing: true, result: null },
     { class_course: "instance-1", homework: "hw-soon", title: "Worksheet 4", subject: "s-1", due_at: now + 2 * DAY, submitted: false, late: false, missing: false, result: null },
@@ -175,6 +180,7 @@ vi.mock("@/api/homework", () => ({
       id: "homework-1",
       title: "Homework deadline",
       due_at: now + 5_000,
+      created_by: "u-1",
     },
     { id: "homework-past", title: "Past homework", due_at: now - 6 * DAY },
   ]),
@@ -364,4 +370,13 @@ test("a student's board shows the day's lessons with no roll-call reads", async 
   expect(within(panel).getByText("Fractions")).toBeTruthy();
   expect(within(panel).getByText(/On now|Şimdi/)).toBeTruthy();
   expect(within(panel).queryByText(/Roll call|Yoklama/)).toBeNull();
+});
+
+test("a teacher sees which of their homework is waiting on them, in plain sentences", async () => {
+  renderDashboard("teacher");
+
+  const panel = await screen.findByRole("region", { name: /Homework waiting on you|Seni bekleyen ödevler/ });
+  expect(within(panel).getByText("Homework deadline")).toBeTruthy();
+  expect(within(panel).getByText(/1 not handed in · 2 waiting for a grade|1 teslim etmedi · 2 not bekliyor/)).toBeTruthy();
+  expect(within(panel).getByText(/2 to grade|2 notlanacak/)).toBeTruthy();
 });

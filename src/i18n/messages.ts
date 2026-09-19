@@ -616,6 +616,11 @@ export type MessageKey =
   | "common.deleted"
   | "common.saved"
   | "common.loadAll"
+  | "homeworkQueue.title"
+  | "homeworkQueue.toGradeTotal"
+  | "homeworkQueue.missing"
+  | "homeworkQueue.toGrade"
+  | "homeworkQueue.empty"
   | "aiHub.tab.study"
   | "today.titleStudent"
   | "today.inProgress"
@@ -2784,6 +2789,11 @@ const en: Dict = {
   "common.deleted": "Deleted.",
   "common.saved": "Saved successfully.",
   "common.loadAll": "Load all",
+  "homeworkQueue.title": "Homework waiting on you",
+  "homeworkQueue.toGradeTotal": "{count} to grade",
+  "homeworkQueue.missing": "{count} not handed in",
+  "homeworkQueue.toGrade": "{count} waiting for a grade",
+  "homeworkQueue.empty": "Nothing is waiting on your recent homework.",
   "aiHub.tab.study": "Study",
   "today.titleStudent": "Today's lessons",
   "today.inProgress": "On now",
@@ -4954,6 +4964,11 @@ const tr: Dict = {
   "common.deleted": "Silindi.",
   "common.saved": "Başarıyla kaydedildi.",
   "common.loadAll": "Tümünü yükle",
+  "homeworkQueue.title": "Seni bekleyen ödevler",
+  "homeworkQueue.toGradeTotal": "{count} notlanacak",
+  "homeworkQueue.missing": "{count} teslim etmedi",
+  "homeworkQueue.toGrade": "{count} not bekliyor",
+  "homeworkQueue.empty": "Son ödevlerinde bekleyen bir şey yok.",
   "aiHub.tab.study": "Çalış",
   "today.titleStudent": "Bugünkü derslerin",
   "today.inProgress": "Şimdi",

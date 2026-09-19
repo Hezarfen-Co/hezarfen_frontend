@@ -56,6 +56,11 @@ Reference: `src/pages/dashboard-page.tsx`. The homepage is a **read-only status 
   itself. The teacher panel reads roll-call counts only for lessons that have
   started; the student panel never reads roll call. Gate it on the `sessions`
   module.
+- **Teacher homework queue:** `HomeworkQueuePanel` reads the roster
+  (`/homework/{id}/submissions`) of at most `QUEUE_CAP` of the teacher's own
+  homework due in the last 14 days or next 2, and says how many have not handed
+  in and how many wait for a grade; rows link to the homework. No bulk endpoint,
+  so the cap stays; a failed read drops its row.
 - **Parent homework:** `ChildHomeworkPanel` reads the selected child's
   `/homework/report/{user}` (overdue / due this week) with no links — a parent
   cannot open the course-scoped homework page.

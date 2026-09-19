@@ -32,6 +32,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { CommandSearchField } from "@/components/dashboard/command-search-field";
 import { QuickLinkColumn, type QuickLinkRow } from "@/components/dashboard/quick-link-column";
 import { ChildHomeworkPanel } from "@/components/dashboard/child-homework-panel";
+import { HomeworkQueuePanel } from "@/components/dashboard/homework-queue-panel";
 import { TodayLessonsPanel } from "@/components/dashboard/today-lessons-panel";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import {
@@ -850,9 +851,14 @@ function DashboardContent() {
                 out, so it keeps its ComingSoonPanel slot. The AI suggestion
                 queue has no backend at all. The one real rail item behind that
                 queue — a pending appointment request — gets the rail. */}
-            <Show when={on("sessions") && clock()}>
-              {(ready) => <TodayLessonsPanel now={ready().now} courseTitle={courseTitleOf} />}
-            </Show>
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              <Show when={on("sessions") && clock()}>
+                {(ready) => <TodayLessonsPanel now={ready().now} courseTitle={courseTitleOf} />}
+              </Show>
+              <Show when={on("homework") && clock()}>
+                {(ready) => <HomeworkQueuePanel homework={homework()?.items ?? []} teacherId={user().id} now={ready().now} />}
+              </Show>
+            </div>
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
               <Show when={on("exams")}>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2">
