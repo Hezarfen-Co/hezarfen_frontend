@@ -10,7 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { Badge } from "@/components/ui/badge";
-import { IconAlert, IconChart, IconDownload, IconSparkles } from "@/components/ui/icons";
+import { IconDownload, IconSparkles } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { createFlash } from "@/lib/flash";
 import { loadInsightStudents } from "@/lib/insight-students";
@@ -110,17 +110,33 @@ function AiInsightStudentContent() {
       <Show when={!insight.error} fallback={null}>
         <Show when={insight()} fallback={<PageSpinner />}>
           {(value) => (
-            <div class="space-y-5">
-              <section class="overflow-hidden rounded-2xl border border-border-line bg-surface-base shadow-xs">
-                <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div class="space-y-4">
+              <section class="rounded-xl border border-border-line bg-surface-base shadow-xs">
+                <div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                   <div class="flex min-w-0 items-center gap-4">
-                    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-lg font-semibold text-primary-foreground shadow-xs">
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground shadow-xs">
                       {initials()}
                     </div>
                     <div class="min-w-0">
                       <p class="text-xs font-semibold uppercase tracking-[0.14em] text-primary-text">{t("insights.title")}</p>
-                      <h1 class="mt-1 truncate text-2xl font-semibold tracking-tight text-text-strong">{studentName()}</h1>
-                      <p class="mt-1 text-sm text-muted-foreground">{t("insights.studentAnalysis")}</p>
+                      <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <h1 class="truncate text-2xl font-semibold tracking-tight text-text-strong">{studentName()}</h1>
+                        <Show
+                          when={value().summary}
+                          fallback={<span class="text-xs text-muted-foreground">{t("insights.noSummary")}</span>}
+                        >
+                          {(summary) => (
+                            <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                              <span class="font-mono tabular-nums">{numericDate(summary().computed_at)}</span>
+                              <span aria-hidden="true">·</span>
+                              <Badge variant={confidenceVariant(summary().confidence)} class="rounded-full">
+                                {confidenceLabel(summary().confidence)}
+                              </Badge>
+                            </div>
+                          )}
+                        </Show>
+                      </div>
+                      <p class="mt-0.5 text-sm text-muted-foreground">{t("insights.studentAnalysis")}</p>
                     </div>
                   </div>
                   <div class="flex flex-wrap items-center gap-2">
@@ -136,32 +152,9 @@ function AiInsightStudentContent() {
                     </Show>
                   </div>
                 </div>
-                <div class="grid border-t border-border-line sm:grid-cols-4">
-                  <div class="border-border-line px-5 py-3 sm:border-r">
-                    <p class="text-xs text-muted-foreground">{t("insights.computedAt")}</p>
-                    <p class="mono mt-1 text-sm font-semibold text-text-strong">{numericDate(value().summary?.computed_at)}</p>
-                  </div>
-                  <div class="border-border-line px-5 py-3 sm:border-r">
-                    <p class="text-xs text-muted-foreground">{t("insights.confidence")}</p>
-                    <Show
-                      when={value().summary}
-                      fallback={<span class="mt-1 block text-sm text-muted-foreground">—</span>}
-                    >
-                      {(summary) => <Badge variant={confidenceVariant(summary().confidence)} class="mt-1 rounded-full">{confidenceLabel(summary().confidence)}</Badge>}
-                    </Show>
-                  </div>
-                  <div class="border-border-line px-5 py-3 sm:border-r">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconAlert class="h-3.5 w-3.5" />{t("insights.attention")}</p>
-                    <p class="mono mt-1 text-lg font-semibold text-text-strong">{value().attention.length}</p>
-                  </div>
-                  <div class="px-5 py-3">
-                    <p class="flex items-center gap-1.5 text-xs text-muted-foreground"><IconChart class="h-3.5 w-3.5" />{t("insights.recommendations")}</p>
-                    <p class="mono mt-1 text-lg font-semibold text-text-strong">{value().cards.length}</p>
-                  </div>
-                </div>
               </section>
 
-              <section class="data-shell p-5">
+              <section class="data-shell p-4 sm:p-5">
                 <InsightStudentAnalysisTabs insight={value()} />
               </section>
             </div>

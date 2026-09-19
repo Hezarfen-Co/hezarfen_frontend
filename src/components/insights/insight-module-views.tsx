@@ -1,10 +1,12 @@
-import { For, Show, type JSX } from "solid-js";
+import { For, Show, createSignal, type JSX } from "solid-js";
 import { Badge } from "@/components/ui/badge";
 import { detailText, dimensionLabel, type InsightDetailKey } from "@/i18n/insights-detail";
 import type { Locale } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { isRecord, type UnknownRecord } from "@/lib/is-record";
+import { SidePanel } from "@/components/ui/side-panel";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePreferences } from "@/stores/preferences-context";
 
 /**
@@ -236,7 +238,7 @@ const BAND_KEYS: Record<string, InsightDetailKey> = {
   insufficient_data: "marks.band.insufficient_data",
 };
 
-function MarksCourseCard(props: { id: string; statRaw: unknown; courseTitle: CourseTitle; index: number }) {
+function MarksCourseDetail(props: { id: string; statRaw: unknown; courseTitle: CourseTitle; index: number }) {
   const stat = () => obj(props.statRaw);
   const placement = () => obj(stat().placement);
   const trend = () => obj(stat().trend);
@@ -356,22 +358,94 @@ function MarksCourseCard(props: { id: string; statRaw: unknown; courseTitle: Cou
 function MarksView(props: { value: Rec; courseTitle: CourseTitle }) {
   const courses = () => Object.entries(obj(props.value.courses));
   const contrast = () => obj(props.value.within_student_contrast);
+  const [selectedCourse, setSelectedCourse] = createSignal<{ id: string; stat: unknown; index: number } | null>(null);
   const contrastTitle = () =>
     str(contrast().course_title) ??
     (str(contrast().course) ? props.courseTitle(contrast().course as string) : null);
+  const selectedTitle = () => {
+    const selected = selectedCourse();
+    return selected
+      ? str(obj(selected.stat).course_title) ?? courseLabel(selected.id, props.courseTitle, selected.index)
+      : "";
+  };
+  const placement = (statRaw: unknown) => obj(obj(statRaw).placement);
+  const trend = (statRaw: unknown) => obj(obj(statRaw).trend);
+  const bandLabel = (statRaw: unknown) => {
+    const band = str(placement(statRaw).band);
+    const key = (band === null ? undefined : BAND_KEYS[band]) ?? "marks.band.insufficient_data";
+    return detailText(key);
+  };
+  const bandVariant = (statRaw: unknown) => {
+    const band = str(placement(statRaw).band);
+    return band === "review" ? ("warning" as const) : band === "strong" ? ("success" as const) : ("secondary" as const);
+  };
+  const trendLabel = (statRaw: unknown) => {
+    const current = trend(statRaw);
+    if (current.rising === true) return detailText("marks.rising");
+    if (current.dropped === true) return detailText("marks.dropped");
+    return current.available === true ? detailText("marks.trend") : detailText("marks.band.insufficient_data");
+  };
 
   return (
     <div class="space-y-3">
       <dl class="space-y-1.5">
         <LabeledRow label={detailText("marks.classCount")} value={String((props.value.classes as unknown[] | undefined)?.length ?? 0)} mono />
       </dl>
-      <div class="max-h-[28rem] space-y-2 overflow-y-auto pr-1">
-        <For each={courses()}>
-          {([id, stat], index) => (
-            <MarksCourseCard id={id} statRaw={stat} courseTitle={props.courseTitle} index={index()} />
-          )}
-        </For>
+      <div class="overflow-x-auto rounded-lg border border-border-hairline">
+        <Table class="min-w-[42rem]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{detailText("marks.course")}</TableHead>
+              <TableHead class="text-center">{detailText("marks.average")}</TableHead>
+              <TableHead class="text-center">{detailText("marks.nMarks")}</TableHead>
+              <TableHead class="text-center">{detailText("marks.placement")}</TableHead>
+              <TableHead class="text-center">{detailText("marks.trend")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={courses()}>
+              {([id, stat], index) => (
+                <TableRow
+                  class="cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  tabIndex={0}
+                  onClick={() => setSelectedCourse({ id, stat, index: index() })}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedCourse({ id, stat, index: index() });
+                    }
+                  }}
+                >
+                  <TableCell class="font-medium text-text-strong">{str(obj(stat).course_title) ?? courseLabel(id, props.courseTitle, index())}</TableCell>
+                  <TableCell class="text-center font-mono">{nText(obj(stat).average) ?? "—"}</TableCell>
+                  <TableCell class="text-center font-mono">{String(num(obj(stat).n_marks) ?? 0)}</TableCell>
+                  <TableCell class="text-center"><Badge variant={bandVariant(stat)} class="rounded-full">{bandLabel(stat)}</Badge></TableCell>
+                  <TableCell class="text-center text-xs text-muted-foreground">{trendLabel(stat)}</TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
       </div>
+
+      <SidePanel
+        open={selectedCourse() != null}
+        onOpenChange={(open) => { if (!open) setSelectedCourse(null); }}
+        title={selectedTitle()}
+        description={detailText("marks.average")}
+        size="wide"
+      >
+        <Show when={selectedCourse()}>
+          {(selected) => (
+            <MarksCourseDetail
+              id={selected().id}
+              statRaw={selected().stat}
+              courseTitle={props.courseTitle}
+              index={selected().index}
+            />
+          )}
+        </Show>
+      </SidePanel>
 
       <div class="space-y-1.5 border-t border-border-hairline pt-3">
         <p class="text-xs font-medium text-text-strong">{detailText("marks.contrast")}</p>

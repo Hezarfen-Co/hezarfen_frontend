@@ -42,6 +42,7 @@ export const insightsDetailTr = {
   "attendance.coursesEmpty": "Ders bazında devam kaydı yok.",
 
   // --- marks -------------------------------------------------------------
+  "marks.course": "Ders",
   "marks.courseFallback": "Ders {n}",
   "marks.nMarks": "Not sayısı",
   "marks.average": "Ağırlıklı ortalama",

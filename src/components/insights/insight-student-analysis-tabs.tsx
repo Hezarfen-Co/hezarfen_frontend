@@ -2,7 +2,10 @@ import { For, Show } from "solid-js";
 import type { StudentInsight } from "@/api/client";
 import { InsightDetail } from "@/components/insights/insight-detail";
 import { InsightModuleView } from "@/components/insights/insight-module-views";
+import { ChartBar, type ChartBarItem } from "@/components/ui/chart-bar";
+import { ChartProgressRing, type ProgressRingSegment } from "@/components/ui/chart-progress-ring";
 import { EmptyInline } from "@/components/ui/empty-inline";
+import { IconAlert, IconChart, IconChevronDown } from "@/components/ui/icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isRecord, type UnknownRecord } from "@/lib/is-record";
 import { usePreferences } from "@/stores/preferences-context";
@@ -13,90 +16,48 @@ const obj = (value: unknown): Rec => (isRecord(value) ? value : {});
 const num = (value: unknown): number | null =>
   typeof value === "number" && Number.isFinite(value) ? value : null;
 
-function ChartCard(props: { label: string; value: string; hint?: string }) {
-  return (
-    <div class="rounded-xl border border-border-line bg-surface-base px-4 py-3">
-      <p class="text-xs text-muted-foreground">{props.label}</p>
-      <p class="mono mt-1 text-xl font-semibold tabular-nums text-text-strong">{props.value}</p>
-      <Show when={props.hint}>
-        <p class="mt-1 text-[11px] text-muted-foreground">{props.hint}</p>
-      </Show>
-    </div>
-  );
-}
-
-function BarChart(props: {
-  items: Array<{ label: string; value: number | null; color?: string }>;
-  format?: (value: number) => string;
-}) {
-  const max = () => Math.max(...props.items.map((item) => item.value ?? 0), 1);
-  const format = (value: number) => props.format?.(value) ?? String(value);
-  return (
-    <div class="space-y-3">
-      <For each={props.items}>
-        {(item) => (
-          <div class="space-y-1.5">
-            <div class="flex items-center justify-between gap-3 text-xs">
-              <span class="truncate text-muted-foreground">{item.label}</span>
-              <span class="mono shrink-0 font-semibold text-text-strong">
-                {item.value == null ? "—" : format(item.value)}
-              </span>
-            </div>
-            <div class="h-2 overflow-hidden rounded-full bg-surface-fill">
-              <div
-                class={`h-full rounded-full ${item.color ?? "bg-primary"}`}
-                style={{ width: `${item.value == null ? 0 : Math.max(3, (item.value / max()) * 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
-      </For>
-    </div>
-  );
-}
-
 function AttendanceChart(props: { value: unknown; t: (key: string) => string }) {
   const overall = () => obj(obj(props.value).overall);
   const count = (key: string) => num(overall()[key]) ?? 0;
   const rate = () => num(overall().rate);
+  const segments = (): ProgressRingSegment[] => [
+    { id: "present", label: props.t("insights.analysis.present"), value: count("present"), colorClass: "bg-success" },
+    { id: "absent", label: props.t("insights.analysis.absent"), value: count("absent"), colorClass: "bg-destructive" },
+    { id: "late", label: props.t("insights.analysis.late"), value: count("late"), colorClass: "bg-warning" },
+    { id: "excused", label: props.t("insights.analysis.excused"), value: count("excused"), colorClass: "bg-info" },
+  ];
   return (
-    <div class="space-y-4">
-      <div class="grid gap-3 sm:grid-cols-3">
-        <ChartCard label={props.t("insights.analysis.rate")} value={rate() == null ? "—" : `%${Math.round(rate()! * 100)}`} />
-        <ChartCard label={props.t("insights.analysis.present")} value={String(count("present"))} />
-        <ChartCard label={props.t("insights.analysis.absent")} value={String(count("absent"))} />
-      </div>
-      <BarChart
-        items={[
-          { label: props.t("insights.analysis.present"), value: count("present"), color: "bg-success" },
-          { label: props.t("insights.analysis.absent"), value: count("absent"), color: "bg-destructive" },
-          { label: props.t("insights.analysis.late"), value: count("late"), color: "bg-warning" },
-          { label: props.t("insights.analysis.excused"), value: count("excused"), color: "bg-info" },
-        ]}
-      />
-    </div>
+    <ChartProgressRing
+      title={props.t("insights.modules.attendance")}
+      subtitle={props.t("insights.analysis.currentSnapshot")}
+      valueText={rate() == null ? "—" : `%${Math.round(rate()! * 100)}`}
+      subtext={props.t("insights.analysis.rate")}
+      segments={segments()}
+    />
   );
 }
 
 function MarksChart(props: { value: unknown; t: (key: string) => string }) {
   const courses = () => Object.entries(obj(obj(props.value).courses));
-  const items = () => courses().map(([id, raw]) => {
+  const items = (): ChartBarItem[] => courses().flatMap(([id, raw]) => {
     const stat = obj(raw);
-    return { label: String(stat.course_title ?? id).slice(0, 32), value: num(stat.average) };
+    const value = num(stat.average);
+    return value == null ? [] : [{
+      id,
+      label: String(stat.course_title ?? id).slice(0, 32),
+      value,
+      max: 100,
+      formattedValue: value.toLocaleString("tr-TR", { maximumFractionDigits: 1 }),
+    }];
   });
-  const averages = () => items().map((item) => item.value).filter((value): value is number => value != null);
-  const average = () => averages().length ? averages().reduce((sum, value) => sum + value, 0) / averages().length : null;
   return (
-    <div class="space-y-4">
-      <div class="grid gap-3 sm:grid-cols-3">
-        <ChartCard label={props.t("insights.analysis.average")} value={average() == null ? "—" : average()!.toLocaleString("tr-TR", { maximumFractionDigits: 1 })} />
-        <ChartCard label={props.t("insights.analysis.courses")} value={String(items().length)} />
-        <ChartCard label={props.t("insights.analysis.bestMark")} value={averages().length ? Math.max(...averages()).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) : "—"} />
-      </div>
-      <Show when={items().length > 0} fallback={<EmptyInline title={props.t("insights.noSummary")} illustration="charts" />}>
-        <BarChart items={items()} format={(value) => value.toLocaleString("tr-TR", { maximumFractionDigits: 1 })} />
-      </Show>
-    </div>
+    <ChartBar
+      title={props.t("insights.modules.marks")}
+      subtitle={props.t("insights.analysis.courseComparison")}
+      items={items()}
+      maxScale={100}
+      itemsPerPage={8}
+    />
   );
 }
 
@@ -106,21 +67,49 @@ function StudyChart(props: { value: unknown; t: (key: string) => string }) {
     const milliseconds = num(recent().total_focus_ms);
     return milliseconds == null ? null : milliseconds / 3_600_000;
   };
+  const previous = () => obj(obj(props.value).previous_28d);
+  const focusItems = (): ChartBarItem[] => {
+    const currentHours = hours();
+    const previousMs = num(previous().total_focus_ms);
+    const previousHours = previousMs == null ? null : previousMs / 3_600_000;
+    const items: ChartBarItem[] = [];
+    if (currentHours != null) {
+      items.push({
+        id: "current",
+        label: props.t("insights.analysis.currentPeriod"),
+        value: currentHours,
+        formattedValue: currentHours.toLocaleString("tr-TR", { maximumFractionDigits: 1 }),
+        colorClass: "bg-primary",
+      });
+    }
+    if (previousHours != null) {
+      items.push({
+        id: "previous",
+        label: props.t("insights.analysis.previousPeriod"),
+        value: previousHours,
+        formattedValue: previousHours.toLocaleString("tr-TR", { maximumFractionDigits: 1 }),
+        colorClass: "bg-info",
+      });
+    }
+    return items;
+  };
   return (
-    <div class="space-y-4">
-      <div class="grid gap-3 sm:grid-cols-3">
-        <ChartCard label={props.t("insights.analysis.focusHours")} value={hours() == null ? "—" : hours()!.toLocaleString("tr-TR", { maximumFractionDigits: 1 })} />
-        <ChartCard label={props.t("insights.analysis.activeDays")} value={String(num(recent().active_days) ?? "—")} />
-        <ChartCard label={props.t("insights.analysis.regularity")} value={num(recent().regularity) == null ? "—" : `%${Math.round(num(recent().regularity)! * 100)}`} />
-      </div>
-      <BarChart
-        items={[
-          { label: props.t("insights.analysis.focusHours"), value: hours(), color: "bg-primary" },
-          { label: props.t("insights.analysis.activeDays"), value: num(recent().active_days), color: "bg-info" },
-          { label: props.t("insights.analysis.sessions"), value: num(recent().n_stints), color: "bg-success" },
-        ]}
-        format={(value) => value.toLocaleString("tr-TR", { maximumFractionDigits: 1 })}
+    <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_14rem]">
+      <ChartBar
+        title={props.t("insights.analysis.focusHours")}
+        subtitle={props.t("insights.analysis.periodComparison")}
+        items={focusItems()}
       />
+      <dl class="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border-line bg-border-line lg:grid-cols-1">
+        <div class="bg-surface-base p-4">
+          <dt class="text-xs text-muted-foreground">{props.t("insights.analysis.activeDays")}</dt>
+          <dd class="mt-1 font-mono text-2xl font-semibold tabular-nums text-text-strong">{String(num(recent().active_days) ?? "—")}</dd>
+        </div>
+        <div class="bg-surface-base p-4">
+          <dt class="text-xs text-muted-foreground">{props.t("insights.analysis.sessions")}</dt>
+          <dd class="mt-1 font-mono text-2xl font-semibold tabular-nums text-text-strong">{String(num(recent().n_stints) ?? "—")}</dd>
+        </div>
+      </dl>
     </div>
   );
 }
@@ -130,21 +119,21 @@ function SubmissionChart(props: { value: unknown; t: (key: string) => string }) 
   const count = (key: string) => num(overall()[key]) ?? 0;
   const total = () => count("n");
   const submittedRate = () => total() > 0 ? count("n_submitted") / total() : null;
+  const onTime = () => Math.max(0, count("n_submitted") - count("n_late"));
+  const segments = (): ProgressRingSegment[] => [
+    { id: "on-time", label: props.t("insights.analysis.onTime"), value: onTime(), colorClass: "bg-success" },
+    { id: "late", label: props.t("insights.analysis.late"), value: count("n_late"), colorClass: "bg-warning" },
+    { id: "missing", label: props.t("insights.analysis.missing"), value: count("n_missing"), colorClass: "bg-destructive" },
+  ];
   return (
-    <div class="space-y-4">
-      <div class="grid gap-3 sm:grid-cols-3">
-        <ChartCard label={props.t("insights.analysis.submittedRate")} value={submittedRate() == null ? "—" : `%${Math.round(submittedRate()! * 100)}`} />
-        <ChartCard label={props.t("insights.analysis.submitted")} value={String(count("n_submitted"))} />
-        <ChartCard label={props.t("insights.analysis.missing")} value={String(count("n_missing"))} />
-      </div>
-      <BarChart
-        items={[
-          { label: props.t("insights.analysis.submitted"), value: count("n_submitted"), color: "bg-success" },
-          { label: props.t("insights.analysis.late"), value: count("n_late"), color: "bg-warning" },
-          { label: props.t("insights.analysis.missing"), value: count("n_missing"), color: "bg-destructive" },
-        ]}
-      />
-    </div>
+    <ChartProgressRing
+      title={props.t("insights.modules.submission")}
+      subtitle={props.t("insights.analysis.currentSnapshot")}
+      valueText={submittedRate() == null ? "—" : `%${Math.round(submittedRate()! * 100)}`}
+      subtext={props.t("insights.analysis.submittedRate")}
+      segments={segments()}
+      total={total()}
+    />
   );
 }
 
@@ -162,17 +151,30 @@ function ModuleTab(props: {
   };
   return (
     <Show when={props.value != null} fallback={<EmptyInline title={props.t("insights.sectionNotComputed")} illustration="charts" />}>
-      <div class="space-y-5">
-        <section class="rounded-xl border border-border-line bg-surface-base p-4">
-          <div class="mb-4 flex items-center justify-between gap-3">
-            <h2 class="text-sm font-semibold text-text-strong">{props.t(`insights.modules.${props.module}`)}</h2>
-            <span class="text-xs text-muted-foreground">{props.t("insights.analysis.visual")}</span>
+      <div class="space-y-3">
+        {chart()}
+        <details class="group overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-surface-base to-info/5 shadow-xs">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 p-4 sm:p-5 [&::-webkit-details-marker]:hidden">
+            <span class="flex min-w-0 items-center gap-3">
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary-text shadow-xs">
+                <IconChart class="h-5 w-5" />
+              </span>
+              <span class="min-w-0">
+                <span class="block text-sm font-semibold text-text-strong">{props.t("insights.analysis.details")}</span>
+                <span class="mt-0.5 block text-xs leading-5 text-muted-foreground">{props.t("insights.analysis.detailsHint")}</span>
+              </span>
+            </span>
+            <span class="flex shrink-0 items-center gap-2 rounded-lg border border-border-line bg-surface-base px-3 py-2 text-xs font-medium text-text-strong shadow-xs transition-colors group-hover:border-primary/30 group-hover:text-primary-text">
+              <span class="hidden sm:inline">{props.t("insights.analysis.detailsAction")}</span>
+              <IconChevronDown class="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+            </span>
+          </summary>
+          <div class="border-t border-primary/15 bg-surface-base/90 p-4 sm:p-5">
+            <div class="rounded-xl border border-border-hairline bg-surface-overlay/40 p-3 sm:p-4">
+              <InsightModuleView module={props.module} value={props.value} courseTitle={props.courseTitle} />
+            </div>
           </div>
-          {chart()}
-        </section>
-        <section class="rounded-xl border border-border-line bg-surface-base p-4">
-          <InsightModuleView module={props.module} value={props.value} courseTitle={props.courseTitle} />
-        </section>
+        </details>
       </div>
   </Show>
   );
@@ -199,25 +201,28 @@ export function InsightStudentAnalysisTabs(props: { insight: StudentInsight }) {
         <TabsTrigger value="submission">{t("insights.modules.submission")}</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="overview" class="mt-0 space-y-5">
-        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <ChartCard label={t("insights.modules.attendance")} value={num(obj(obj(moduleValue("attendance")).overall).rate) == null ? "—" : `%${Math.round(num(obj(obj(moduleValue("attendance")).overall).rate)! * 100)}`} />
-          <ChartCard label={t("insights.modules.marks")} value={(() => {
-            const values = Object.values(obj(obj(moduleValue("marks")).courses)).map((raw) => num(obj(raw).average)).filter((value): value is number => value != null);
-            return values.length ? (values.reduce((sum, value) => sum + value, 0) / values.length).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) : "—";
-          })()} />
-          <ChartCard label={t("insights.modules.study")} value={(() => {
-            const milliseconds = num(obj(obj(moduleValue("study")).recent_28d).total_focus_ms);
-            return milliseconds == null ? "—" : `${(milliseconds / 3_600_000).toLocaleString("tr-TR", { maximumFractionDigits: 1 })} sa`;
-          })()} />
-          <ChartCard label={t("insights.modules.submission")} value={(() => {
-            const overall = obj(obj(moduleValue("submission")).overall);
-            const total = num(overall.n) ?? 0;
-            const submitted = num(overall.n_submitted) ?? 0;
-            return total > 0 ? `%${Math.round((submitted / total) * 100)}` : "—";
-          })()} />
-        </section>
-        <InsightDetail insight={props.insight} mode="cards" />
+      <TabsContent value="overview" class="mt-0">
+        <div class="grid gap-3 lg:grid-cols-2">
+          <section class="space-y-3 rounded-xl border border-border-line bg-surface-base p-4">
+            <div class="flex items-center gap-2">
+              <IconAlert class="h-4 w-4 text-warning-text" />
+              <h2 class="text-sm font-semibold text-text-strong">{t("insights.attention")}</h2>
+            </div>
+            <Show
+              when={props.insight.attention.length > 0}
+              fallback={<EmptyInline title={t("insights.noAttention")} illustration="empty" />}
+            >
+              <div class="space-y-2">
+                <For each={props.insight.attention}>
+                  {(item) => <article class="rounded-lg border border-warning/25 bg-warning/5 p-3 text-sm text-text-strong">{item.fact}</article>}
+                </For>
+              </div>
+            </Show>
+          </section>
+          <div class="rounded-xl border border-border-line bg-surface-base p-4">
+            <InsightDetail insight={props.insight} mode="cards" />
+          </div>
+        </div>
       </TabsContent>
 
       <TabsContent value="attendance" class="mt-0">

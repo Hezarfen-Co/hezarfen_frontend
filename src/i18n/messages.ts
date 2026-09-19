@@ -651,6 +651,16 @@ export type MessageKey =
   | "aiHub.tab.study"
   | "aiStudio.tab.podcast"
   | "aiStudio.tab.summary"
+  | "aiStudio.outputs.title"
+  | "aiStudio.outputs.description"
+  | "aiStudio.library.title"
+  | "aiStudio.library.description"
+  | "aiStudio.library.count"
+  | "aiStudio.library.empty"
+  | "aiStudio.library.emptyHint"
+  | "aiStudio.library.summary"
+  | "aiStudio.library.podcastCount"
+  | "aiStudio.library.open"
   | "today.titleStudent"
   | "today.inProgress"
   | "childHomework.title"
@@ -1047,6 +1057,15 @@ export type MessageKey =
   | "insights.analysis.submittedRate"
   | "insights.analysis.submitted"
   | "insights.analysis.missing"
+  | "insights.analysis.currentSnapshot"
+  | "insights.analysis.courseComparison"
+  | "insights.analysis.currentPeriod"
+  | "insights.analysis.previousPeriod"
+  | "insights.analysis.periodComparison"
+  | "insights.analysis.onTime"
+  | "insights.analysis.details"
+  | "insights.analysis.detailsHint"
+  | "insights.analysis.detailsAction"
   | "insights.runs"
   | "insights.runsSubtitle"
   | "insights.runDay"
@@ -2872,6 +2891,16 @@ const en: Dict = {
   "aiHub.tab.study": "Study",
   "aiStudio.tab.podcast": "Podcast creation",
   "aiStudio.tab.summary": "AI summary",
+  "aiStudio.outputs.title": "Studio outputs",
+  "aiStudio.outputs.description": "Select a lesson note and keep its summary and podcast together for quick access.",
+  "aiStudio.library.title": "Your generated library",
+  "aiStudio.library.description": "Return to notes that already have a summary or podcast, just like a NotebookLM studio.",
+  "aiStudio.library.count": "{count} notes",
+  "aiStudio.library.empty": "Your generated content will appear here",
+  "aiStudio.library.emptyHint": "Create a summary or podcast for a lesson note to add it to this area.",
+  "aiStudio.library.summary": "AI summary",
+  "aiStudio.library.podcastCount": "{count} podcasts",
+  "aiStudio.library.open": "Open note",
   "today.titleStudent": "Today's lessons",
   "today.inProgress": "On now",
   "childHomework.title": "Homework",
@@ -3233,9 +3262,9 @@ const en: Dict = {
   "insights.sectionNotComputed": "This section was not computed.",
   "insights.noEvidence": "No supporting data.",
   "insights.modules.attendance": "Attendance",
-  "insights.modules.marks": "Marks",
+  "insights.modules.marks": "Report card",
   "insights.modules.study": "Study",
-  "insights.modules.submission": "Submissions",
+  "insights.modules.submission": "Homework",
   "insights.attention": "Attention signals",
   "insights.noAttention": "No attention signal.",
   "insights.schoolWide": "School-wide",
@@ -3268,6 +3297,15 @@ const en: Dict = {
   "insights.analysis.submittedRate": "Submission rate",
   "insights.analysis.submitted": "Submitted",
   "insights.analysis.missing": "Missing",
+  "insights.analysis.currentSnapshot": "Current measured distribution",
+  "insights.analysis.courseComparison": "Course averages on a 100-point scale",
+  "insights.analysis.currentPeriod": "Last 28 days",
+  "insights.analysis.previousPeriod": "Previous 28 days",
+  "insights.analysis.periodComparison": "Focus time by period (hours)",
+  "insights.analysis.onTime": "On time",
+  "insights.analysis.details": "What supports this analysis?",
+  "insights.analysis.detailsHint": "Explore comparisons, trends and the limits of the available data.",
+  "insights.analysis.detailsAction": "Explore",
   "insights.runs": "Analysis runs",
   "insights.runsSubtitle": "Nightly and manually queued school analyses.",
   "insights.runDay": "Run day",
@@ -5095,6 +5133,16 @@ const tr: Dict = {
   "aiHub.tab.study": "Çalışma",
   "aiStudio.tab.podcast": "Podcast oluşturma",
   "aiStudio.tab.summary": "Yapay zekâ özeti",
+  "aiStudio.outputs.title": "Hazır çıktılar",
+  "aiStudio.outputs.description": "Bir ders notu seçin; özetini ve podcast'ini hızlı erişim için aynı alanda üretin.",
+  "aiStudio.library.title": "Üretim kitaplığın",
+  "aiStudio.library.description": "NotebookLM'deki gibi, özeti veya podcast'i hazır olan notlarına doğrudan dön.",
+  "aiStudio.library.count": "{count} not",
+  "aiStudio.library.empty": "Ürettiğin içerikler burada görünecek",
+  "aiStudio.library.emptyHint": "Bu alana eklemek için bir ders notundan özet veya podcast oluştur.",
+  "aiStudio.library.summary": "Yapay zekâ özeti",
+  "aiStudio.library.podcastCount": "{count} podcast",
+  "aiStudio.library.open": "Nota git",
   "today.titleStudent": "Bugünkü derslerin",
   "today.inProgress": "Şimdi",
   "childHomework.title": "Ödevler",
@@ -5456,9 +5504,9 @@ const tr: Dict = {
   "insights.sectionNotComputed": "Bu bölüm hesaplanmadı.",
   "insights.noEvidence": "Destekleyici veri yok.",
   "insights.modules.attendance": "Yoklama",
-  "insights.modules.marks": "Notlar",
+  "insights.modules.marks": "Karne",
   "insights.modules.study": "Çalışma",
-  "insights.modules.submission": "Teslimler",
+  "insights.modules.submission": "Ödevler",
   "insights.attention": "Dikkat sinyalleri",
   "insights.noAttention": "Dikkat sinyali yok.",
   "insights.schoolWide": "Okul geneli",
@@ -5491,6 +5539,15 @@ const tr: Dict = {
   "insights.analysis.submittedRate": "Teslim oranı",
   "insights.analysis.submitted": "Teslim",
   "insights.analysis.missing": "Eksik",
+  "insights.analysis.currentSnapshot": "Güncel ölçüm dağılımı",
+  "insights.analysis.courseComparison": "100 puan üzerinden ders ortalamaları",
+  "insights.analysis.currentPeriod": "Son 28 gün",
+  "insights.analysis.previousPeriod": "Önceki 28 gün",
+  "insights.analysis.periodComparison": "Dönemlere göre odak süresi (saat)",
+  "insights.analysis.onTime": "Zamanında",
+  "insights.analysis.details": "Bu analizin dayanağı ne?",
+  "insights.analysis.detailsHint": "Karşılaştırmaları, eğilimleri ve mevcut verinin sınırlarını keşfet.",
+  "insights.analysis.detailsAction": "İncele",
   "insights.runs": "Analiz çalıştırmaları",
   "insights.runsSubtitle": "Gece çalışan ve elle sıraya alınan okul analizleri.",
   "insights.runDay": "Çalışma günü",
