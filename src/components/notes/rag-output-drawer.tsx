@@ -9,8 +9,14 @@ import {
   fieldValueText,
   ragOutputFileName,
   readRagOutputDocument,
+  type RagOutputDocument,
+  type RagOutputPassage,
 } from "@/components/notes/rag-output-document";
-import { ragOutputMessage, type RagOutputMessageKey } from "@/components/notes/rag-output-messages";
+import {
+  ragOutputMessage,
+  ragOutputPassagePages,
+  type RagOutputMessageKey,
+} from "@/components/notes/rag-output-messages";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences } from "@/stores/preferences-context";
 
@@ -58,6 +64,20 @@ export function RagOutputDrawer(props: {
 
   const doc = () => (props.output ? readRagOutputDocument(props.output) : null);
   const noteTitle = () => props.noteTitle?.trim() ?? "";
+  /** One passage's heading: the source file by name, its page range if any. */
+  const passageHeader = (passage: RagOutputPassage) => {
+    const source = passage.sourceName
+      ?? (passage.fromNote ? noteTitle() || rt("noteText") : rt("unnamedSource"));
+    const pages = ragOutputPassagePages(locale(), passage.pageStart, passage.pageEnd);
+    return pages ? `${source} · ${pages}` : source;
+  };
+  /** The honest note when the service's cap means more passages exist. */
+  const passagesNote = (read: RagOutputDocument) => {
+    if (!read.passagesTruncated) return "";
+    return read.chunksTotal != null
+      ? rt("passagesTruncated", { shown: read.passages.length, total: read.chunksTotal })
+      : rt("passagesTruncatedNoTotal", { shown: read.passages.length });
+  };
   const markdown = () => {
     const output = props.output;
     const read = doc();
@@ -73,6 +93,9 @@ export function RagOutputDrawer(props: {
         sources: rt("sources"),
         failed: rt("failedTitle"),
         otherFields: rt("otherFields"),
+        passages: rt("passages"),
+        passageHeader,
+        passagesTruncated: passagesNote(read),
       },
     });
   };
@@ -198,6 +221,28 @@ export function RagOutputDrawer(props: {
                       <For each={read().points}>{(point) => <li>{point}</li>}</For>
                     </ul>
                   </Show>
+                </Show>
+
+                <Show when={read().passages.length > 0}>
+                  <div class="space-y-2">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{rt("passages")}</p>
+                    <ul class="space-y-3">
+                      <For each={read().passages}>
+                        {(passage) => (
+                          <li class="rounded-lg border border-border/60 p-3">
+                            <p class="text-xs text-muted-foreground">{passageHeader(passage)}</p>
+                            {/* Scrolls past its cap on screen; print flows it out in full. */}
+                            <div class="mt-1.5 max-h-60 overflow-y-auto print:max-h-none">
+                              <p class="whitespace-pre-wrap break-words text-sm leading-6">{passage.text}</p>
+                            </div>
+                          </li>
+                        )}
+                      </For>
+                    </ul>
+                    <Show when={passagesNote(read())}>
+                      <p class="text-xs text-muted-foreground">{passagesNote(read())}</p>
+                    </Show>
+                  </div>
                 </Show>
 
                 <Show when={read().fields.length > 0}>

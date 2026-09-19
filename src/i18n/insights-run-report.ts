@@ -19,6 +19,11 @@ export type RunReportKey =
   | "copyFailed"
   | "download"
   | "downloaded"
+  | "schoolReport"
+  | "schoolReportGenerating"
+  | "schoolReportUnavailable"
+  | "schoolReportUnreadable"
+  | "schoolReportTooLarge"
   | "print"
   | "runSection"
   | "schoolSection"
@@ -82,6 +87,11 @@ const tr: Record<RunReportKey, string> = {
   copyFailed: "Rapor panoya kopyalanamadı.",
   download: "İndir (.md)",
   downloaded: "Rapor indirildi.",
+  schoolReport: "Okul raporu (HTML)",
+  schoolReportGenerating: "Rapor oluşturuluyor…",
+  schoolReportUnavailable: "Okul raporu servisi şu an kullanılamıyor. Sonra tekrar dene.",
+  schoolReportUnreadable: "Rapor oluşturuldu ama belge okunamadı. Tekrar dene.",
+  schoolReportTooLarge: "Rapor belgesi sunucunun boyut sınırını aştı.",
   print: "Yazdır / PDF",
   runSection: "Çalıştırma özeti",
   schoolSection: "Okul geneli",
@@ -146,6 +156,11 @@ const en: Record<RunReportKey, string> = {
   copyFailed: "Could not copy the report.",
   download: "Download (.md)",
   downloaded: "Report downloaded.",
+  schoolReport: "School report (HTML)",
+  schoolReportGenerating: "Generating report…",
+  schoolReportUnavailable: "The school report service is not available right now. Try again later.",
+  schoolReportUnreadable: "The report was generated but the document could not be read back. Try again.",
+  schoolReportTooLarge: "The report document is larger than the server's size limit.",
   print: "Print / PDF",
   runSection: "Run summary",
   schoolSection: "School overview",

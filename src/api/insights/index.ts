@@ -4,3 +4,6 @@ export * from "./postInsightComputeByUserId";
 export * from "./getInsightRuns";
 export * from "./postInsightsRefresh";
 export * from "./getInsightsPending";
+export * from "./insightRunReportUrl";
+export * from "./postInsightRunReport";
+export * from "./getInsightRunReport";
