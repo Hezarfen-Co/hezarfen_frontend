@@ -118,7 +118,7 @@ function TermsContent() {
       meta: { cellClass: "whitespace-nowrap" },
       cell: (cell) => (
         <Show when={cell.row.original.archived_at != null} fallback={<span class="text-muted-foreground">—</span>}>
-          <Badge variant="secondary" class="rounded-full">{t("terms.archived")}</Badge>
+          <Badge variant="secondary" class="shrink-0 whitespace-nowrap rounded-full">{t("terms.archived")}</Badge>
         </Show>
       ),
     },

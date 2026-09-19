@@ -10,7 +10,6 @@ import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-r
 import { RouteGuard } from "@/components/layout/route-guard";
 import { DataToolbar } from "@/components/ui/data-toolbar";
 import { DropdownSelect, Select } from "@/components/ui/select";
-import { DataSection } from "@/components/ui/data-section";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -223,10 +222,7 @@ function ClassesContent() {
         </Show>
 
         <TabsContent value="classes">
-          <DataSection
-            title={t("classGroups.title")}
-            description={t("classGroups.subtitle")}
-          >
+          <div class="space-y-4">
             <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
               <DataToolbar
                 searchValue={query()}
@@ -274,7 +270,7 @@ function ClassesContent() {
                 </div>
               </Show>
             </Suspense>
-          </DataSection>
+          </div>
         </TabsContent>
 
         <TabsContent value="blueprints">
@@ -303,8 +299,10 @@ function ClassCard(props: { cls: ClassGroup; yearName: string; memberCount: numb
         </div>
         <IconChevronRight class="h-4 w-4 shrink-0 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-primary-text" />
       </div>
-      <div class="flex items-center gap-2 text-xs text-text-subtle">
-        <Badge variant="outline" class="min-w-0 max-w-[65%] rounded-full bg-transparent"><span class="truncate">{props.yearName}</span></Badge>
+      <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-xs text-text-subtle">
+        <Badge variant="outline" class="min-w-0 max-w-full justify-start rounded-full bg-transparent" title={props.yearName}>
+          <span class="min-w-0 truncate">{props.yearName}</span>
+        </Badge>
         <Show when={props.memberCount != null} fallback={<span class="shrink-0 text-xs text-text-subtle">—</span>}>
           <span class="shrink-0">{t("classGroups.studentsCount", { count: String(props.memberCount) })}</span>
         </Show>

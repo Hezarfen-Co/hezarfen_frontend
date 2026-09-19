@@ -150,10 +150,10 @@ function AcademicYearsContent() {
       minSize: 170,
       meta: { cellClass: "min-w-0" },
       cell: (cell) => (
-        <span class="flex min-w-0 items-center gap-2 font-medium">
-          <span class="truncate">{cell.row.original.name}</span>
+        <span class="flex min-w-0 flex-wrap items-center justify-center gap-2 font-medium">
+          <span class="min-w-0 truncate">{cell.row.original.name}</span>
           <Show when={cell.row.original.archived_at != null}>
-            <Badge variant="secondary" class="rounded-full">{t("academicYears.archived")}</Badge>
+            <Badge variant="secondary" class="shrink-0 whitespace-nowrap rounded-full">{t("academicYears.archived")}</Badge>
           </Show>
         </span>
       ),
