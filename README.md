@@ -53,6 +53,8 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 > **Proxy Note**: Vite proxies `/api/*` and WebSocket connections to `BACKEND_ORIGIN`, preserving HttpOnly session cookies across same-origin calls. Local development defaults to `https://hezarfen-backend.dizey.sh`, so `bun run dev` works without a backend process on the laptop; use `BACKEND_ORIGIN=http://127.0.0.1:7656 bun run dev` to target one locally. The production Bun server gets its co-located loopback default from the image and can be overridden through `hezarfen_frontend.env` (see "Run in a container" below).
 
+> **Dev auto sign-in**: for local testing, put `VITE_DEV_AUTOLOGIN_USERNAME` and `VITE_DEV_AUTOLOGIN_PASSWORD` (optionally `VITE_DEV_AUTOLOGIN_SCHOOL`, a school slug) in `.env.local`, which git ignores. `bun run dev` then signs in on the first `401`; logging out turns it off for that tab. It lives in `src/lib/dev-auto-login.ts` behind `import.meta.env.DEV`, so `vite build` drops it and the credentials never reach `dist/`.
+
 ---
 
 ## 🐳 Run in a container (podman)

@@ -12,6 +12,7 @@ import { getMe } from "@/api/users";
 import { postLogout } from "@/api/auth";
 import type { User } from "@/api/client";
 import { ApiError } from "@/api/client";
+import { devAutoLogin, stopDevAutoLogin } from "@/lib/dev-auto-login";
 import { usePreferences } from "@/stores/preferences-context";
 
 type AuthContextValue = {
@@ -50,7 +51,7 @@ export function AuthProvider(props: ParentProps) {
     try {
       return await getMe();
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) return null;
+      if (err instanceof ApiError && err.status === 401) return await devAutoLogin();
       setError(err);
       return null;
     }
@@ -85,6 +86,7 @@ export function AuthProvider(props: ParentProps) {
   });
 
   const logout = async () => {
+    stopDevAutoLogin();
     try {
       await postLogout();
     } finally {
