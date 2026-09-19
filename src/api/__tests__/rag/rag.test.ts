@@ -6,6 +6,8 @@ import {
   getRagThreads,
   patchRagThreadById,
   postRagMessage,
+  postRagQuestions,
+  postRagSummarize,
   postRagThread,
   ragStreamUrl,
 } from "../../rag";
@@ -100,5 +102,28 @@ describe("rag API", () => {
 
   it("ragStreamUrl builds the SSE path for an EventSource", () => {
     expect(ragStreamUrl("r 1", "m1")).toBe("/api/rag/threads/r%201/messages/m1/stream");
+  });
+  it("postRagSummarize POSTs /rag/summarize with the study scope", async () => {
+    mockFetchSuccess({ text: "Özet", abstained: false, reason: "", citations: [], scope_pages: [3, 4], hierarchical: false });
+
+    const result = await postRagSummarize({ ders: "Fizik", sinif: "9", span_ids: ["s1", "s2"], scope_label: "Kuvvet" });
+    expect(result.scope_pages).toEqual([3, 4]);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/rag/summarize");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ ders: "Fizik", sinif: "9", span_ids: ["s1", "s2"], scope_label: "Kuvvet" }));
+  });
+
+  it("postRagQuestions POSTs /rag/questions with the scope and set shape", async () => {
+    mockFetchSuccess({ items: [{ question: "Q?", answer: "A", difficulty: "orta" }], abstained: false, reason: "", span_ids: ["s1"], pages: [3] });
+
+    const result = await postRagQuestions({ ders: "Fizik", pages: [3], n: 3, difficulty: "kolay" });
+    expect(result.items[0]?.answer).toBe("A");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/rag/questions");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ ders: "Fizik", pages: [3], n: 3, difficulty: "kolay" }));
   });
 });

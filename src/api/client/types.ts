@@ -1182,6 +1182,61 @@ export type RagCitation = {
  file?: string | null;
 };
 
+// Which corpus, and which range inside it, a study request works over
+// (`/rag/summarize`, `/rag/questions`). Name `pages` or `span_ids`; naming
+// neither is answered with an abstention (`empty_scope`), not refused.
+export type RagStudyScope = {
+ ders: string;
+ /** Required in practice when the subject is taught at more than one grade (else 400). */
+ sinif?: string | null;
+ pages?: number[];
+ span_ids?: string[];
+ /** A human label for the range, e.g. the heading the caller selected. */
+ scope_label?: string | null;
+};
+
+export type RagQuestionsRequest = RagStudyScope & {
+ /** Service vocabulary: `kolay` / `orta` / `zor`; the backend defaults to `orta`. */
+ difficulty?: string;
+ /** 1..=20, backend default 5. */
+ n?: number;
+ /** Base the set on this question when variations of one exercise are wanted. */
+ seed_question?: string | null;
+};
+
+export type RagSummaryCitation = {
+ n: number;
+ pages: number[];
+ span_ids: string[];
+};
+
+// `abstained` with a `reason` is a complete answer, as on a chat turn.
+export type RagSummary = {
+ text: string;
+ abstained: boolean;
+ reason: string;
+ citations: RagSummaryCitation[];
+ /** The pages the summary actually covered. */
+ scope_pages: number[];
+ /** Summarized per section and rolled up, rather than flat. */
+ hierarchical: boolean;
+};
+
+export type RagQuestion = {
+ question: string;
+ answer: string;
+ difficulty: string;
+};
+
+export type RagQuestionSet = {
+ items: RagQuestion[];
+ abstained: boolean;
+ reason: string;
+ /** The retrieval spans the whole set is bounded to. */
+ span_ids: string[];
+ pages: number[];
+};
+
 export type RagMessage = {
  id: string;
  thread_id: string;
