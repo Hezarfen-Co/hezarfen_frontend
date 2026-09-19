@@ -38,3 +38,46 @@ export function matchesSearch(query: string, ...fields: (string | null | undefin
   const haystack = fields.map(foldSearchText).join(" ");
   return terms.every((term) => haystack.includes(term));
 }
+
+export type SearchMatchRange = { start: number; end: number };
+
+/**
+ * Finds the visible ranges for a query while keeping the original string's
+ * offsets. Search stays Turkish-aware, but the caller can still render the
+ * matching characters in their original spelling.
+ */
+export function searchMatchRanges(value: string, query: string): SearchMatchRange[] {
+  const terms = foldSearchText(query).split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return [];
+
+  const foldedChars: string[] = [];
+  const sourceRanges: Array<{ start: number; end: number }> = [];
+  let sourceOffset = 0;
+  for (const char of value) {
+    const folded = foldSearchText(char);
+    for (const foldedChar of folded) {
+      foldedChars.push(foldedChar);
+      sourceRanges.push({ start: sourceOffset, end: sourceOffset + char.length });
+    }
+    sourceOffset += char.length;
+  }
+
+  const foldedValue = foldedChars.join("");
+  const ranges: SearchMatchRange[] = [];
+  for (const term of terms) {
+    let from = 0;
+    while (from < foldedValue.length) {
+      const index = foldedValue.indexOf(term, from);
+      if (index < 0) break;
+      const endIndex = index + term.length - 1;
+      const start = sourceRanges[index]?.start;
+      const end = sourceRanges[endIndex]?.end;
+      if (start !== undefined && end !== undefined) ranges.push({ start, end });
+      from = index + Math.max(term.length, 1);
+    }
+  }
+
+  return ranges
+    .filter((range, index, all) => all.findIndex((other) => other.start === range.start && other.end === range.end) === index)
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+}

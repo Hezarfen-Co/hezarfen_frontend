@@ -15,6 +15,9 @@ export type DataTableSearchProps = {
    * honest: it must list what the filter really reads, nothing more.
    */
   hint?: string;
+  /** Optional styling for the focused hint, e.g. a wider panel search hint. */
+  hintClass?: string;
+  onKeyDown?: (event: KeyboardEvent) => void;
   class?: string;
 };
 
@@ -37,6 +40,8 @@ export function DataTableSearch(props: DataTableSearchProps) {
         // Escape empties the box instead of only blurring it: a filter the
         // keyboard cannot undo leaves the list silently narrowed.
         onKeyDown={(event: KeyboardEvent) => {
+          props.onKeyDown?.(event);
+          if (event.defaultPrevented) return;
           if (event.key !== "Escape" || !props.value) return;
           event.preventDefault();
           event.stopPropagation();
@@ -61,7 +66,7 @@ export function DataTableSearch(props: DataTableSearchProps) {
       <Show when={props.hint && focused()}>
         <p
           id={hintId}
-          class="absolute left-0 top-full z-30 mt-1 w-full min-w-max max-w-[22rem] rounded-lg border border-border/80 bg-popover px-2.5 py-1.5 text-[11px] leading-snug text-muted-foreground shadow-md"
+          class={cn("absolute left-0 top-full z-30 mt-1 w-full min-w-max max-w-[22rem] rounded-lg border border-border/80 bg-popover px-2.5 py-1.5 text-[11px] leading-snug text-muted-foreground shadow-md", props.hintClass)}
         >
           {props.hint}
         </p>

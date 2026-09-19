@@ -4,6 +4,14 @@ import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 test("renders bold text", () => {
   const { container } = render(() => <CelebiMarkdown text="a **bold** word" />);
   expect(container.querySelector("strong")?.textContent).toBe("bold");
+  expect(container.querySelector("strong")?.className).toContain("underline");
+});
+
+test("keeps the typing cursor at the end of the visible answer", () => {
+  const { container } = render(() => <CelebiMarkdown text={"first\n\nlast"} showCursor />);
+  const cursor = container.querySelector('[aria-hidden="true"]');
+  expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(1);
+  expect(cursor?.parentElement?.textContent).toContain("last");
 });
 
 test("renders inline code", () => {

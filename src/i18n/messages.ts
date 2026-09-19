@@ -31,6 +31,7 @@ export type MessageKey =
   | "ai.newChat"
   | "ai.chats"
   | "ai.noChats"
+  | "ai.searchCount"
   | "ai.noSearchResults"
   | "aiHub.description"
   | "aiHub.tab.studio"
@@ -2196,7 +2197,7 @@ const en: Dict = {
   "ai.thinking1": "Çelebi is thinking…",
   "ai.thinking2": "Looking into it…",
   "ai.thinking3": "Almost there…",
-  "ai.hint": "Enter to send · Shift+Enter for a new line · AI-generated",
+  "ai.hint": "Enter to send · Shift+Enter for a new line · Çelebi AI",
   "ai.goTo": "Go to the page",
   "ai.didYouMean": "Did you mean one of these?",
   "ai.skipTyping": "Show the whole answer",
@@ -2206,6 +2207,7 @@ const en: Dict = {
   "ai.newChat": "New chat",
   "ai.chats": "Chats",
   "ai.noChats": "No chats yet. Start one and it will appear here.",
+  "ai.searchCount": "{current} / {total}",
   "ai.noSearchResults": "No messages match your search.",
   "aiHub.description": "Every AI surface in one place: note outputs and podcasts, student analysis, and Çelebi.",
   "aiHub.tab.studio": "Note studio",
@@ -4386,7 +4388,7 @@ const tr: Dict = {
   "ai.thinking1": "Çelebi düşünüyor…",
   "ai.thinking2": "Araştırıyor…",
   "ai.thinking3": "Neredeyse hazır…",
-  "ai.hint": "Enter gönder · Shift+Enter alt satır · Yapay zekâ üretimi",
+  "ai.hint": "Enter gönder · Shift+Enter alt satır · Çelebi AI",
   "ai.goTo": "Sayfaya git",
   "ai.didYouMean": "Bunu mu demek istedin?",
   "ai.skipTyping": "Cevabın tamamını göster",
@@ -4396,6 +4398,7 @@ const tr: Dict = {
   "ai.newChat": "Yeni sohbet",
   "ai.chats": "Sohbetler",
   "ai.noChats": "Henüz sohbet yok. Başlattığın sohbetler burada görünür.",
+  "ai.searchCount": "{current} / {total}",
   "ai.noSearchResults": "Aramanla eşleşen mesaj yok.",
   "aiHub.description": "Tüm yapay zekâ araçları tek yerde: not çıktıları ve podcast, öğrenci analizi ve Çelebi.",
   "aiHub.tab.studio": "Not stüdyosu",

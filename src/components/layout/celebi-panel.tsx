@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch, createEffect, createSignal, on, onCleanup, untrack } from "solid-js";
+import { For, Match, Show, Suspense, Switch, createEffect, createSignal, on, onCleanup, untrack, type JSX } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import { chatbotStreamUrl, deleteChatbotThreadById, getChatbotMessageById, getChatbotThreadMessages, getChatbotThreads, patchChatbotThreadById, postChatbotMessage, postChatbotThread, type ChatbotMessage, type ChatbotThread } from "@/api/chatbot";
 import { formatApiError } from "@/api/client";
@@ -10,10 +10,11 @@ import { CelebiThreadList } from "@/components/layout/celebi-thread-list";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTableSearch } from "@/components/ui/data-table-search";
 import { EmptyInline } from "@/components/ui/empty-inline";
-import { IconAlert, IconBotSquare, IconChevronDown, IconChevronLeft, IconCopy, IconEdit, IconMessage, IconPlus } from "@/components/ui/icons";
+import { IconAlert, IconBotSquare, IconChevronDown, IconChevronLeft, IconChevronUp, IconCopy, IconEdit, IconMessage, IconPlus, IconSearch, IconX } from "@/components/ui/icons";
+import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { cn } from "@/lib/cn";
-import { matchesSearch } from "@/lib/search-text";
+import { matchesSearch, searchMatchRanges } from "@/lib/search-text";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 type PanelMessage = Pick<ChatbotMessage, "id" | "role" | "status" | "content" | "truncated" | "error_code" | "navigation" | "suggestions">;
@@ -42,6 +43,8 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   const [sending, setSending] = createSignal(false);
   const [copiedId, setCopiedId] = createSignal<string>();
   const [searchQuery, setSearchQuery] = createSignal("");
+  const [searchOpen, setSearchOpen] = createSignal(false);
+  const [searchMatchIndex, setSearchMatchIndex] = createSignal(0);
 
   const copyMessage = async (message: PanelMessage) => {
     await navigator.clipboard.writeText(message.content);
@@ -134,6 +137,66 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
     if (!query) return messages();
     return messages().filter((message) => matchesSearch(query, message.content));
   };
+  const updateSearchQuery = (value: string) => {
+    setSearchQuery(value);
+    setSearchMatchIndex(0);
+  };
+  const searchHits = () => {
+    const query = searchQuery().trim();
+    if (!query) return [] as Array<{ messageId: string }>;
+    return messages().flatMap((message) =>
+      searchMatchRanges(message.content, query).map(() => ({ messageId: message.id })),
+    );
+  };
+  const activeSearchIndex = () => {
+    const total = searchHits().length;
+    return total > 0 ? Math.min(searchMatchIndex(), total - 1) : 0;
+  };
+  const activeSearchHit = () => searchHits()[activeSearchIndex()];
+  const scrollToSearchHit = (hit: { messageId: string } | undefined) => {
+    if (!hit || !transcript) return;
+    const messageNode = Array.from(transcript.querySelectorAll<HTMLElement>("[data-search-message-id]"))
+      .find((node) => node.dataset.searchMessageId === hit.messageId);
+    messageNode?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  const moveSearchMatch = (direction: -1 | 1) => {
+    const total = searchHits().length;
+    if (total === 0) return;
+    const next = (activeSearchIndex() + direction + total) % total;
+    setSearchMatchIndex(next);
+    requestAnimationFrame(() => scrollToSearchHit(searchHits()[next]));
+  };
+  const handleSearchKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      moveSearchMatch(-1);
+    } else if (event.key === "ArrowDown") {
+      event.preventDefault();
+      moveSearchMatch(1);
+    }
+  };
+  const highlightedMessageText = (value: string, query: string): JSX.Element => {
+    const ranges = searchMatchRanges(value, query);
+    if (ranges.length === 0) return <>{value}</>;
+    const parts: JSX.Element[] = [];
+    let cursor = 0;
+    for (const range of ranges) {
+      if (range.start > cursor) parts.push(<>{value.slice(cursor, range.start)}</>);
+      parts.push(
+        <span class="rounded-sm bg-muted/75 px-0.5 text-foreground line-through decoration-muted-foreground/65 decoration-2" data-search-match="true">
+          {value.slice(range.start, range.end)}
+        </span>,
+      );
+      cursor = range.end;
+    }
+    if (cursor < value.length) parts.push(<>{value.slice(cursor)}</>);
+    return <>{parts}</>;
+  };
+  createEffect(() => {
+    const hit = activeSearchHit();
+    if (!hit) return;
+    requestAnimationFrame(() => scrollToSearchHit(hit));
+  });
   createEffect(() => {
     const items = messages();
     typedCount();
@@ -176,12 +239,19 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
       if (match && threadId() === active) setThreadTitle(match.title);
     } catch { /* history is non-blocking */ }
   };
-  const openThread = async (thread: ChatbotThread) => { stopPolling(); stopStream(); stopReveal(); setPinned(true); setUnread(false); setView("chat"); setSearchQuery(""); setThreadId(thread.id); setThreadTitle(thread.title); setMessages((await getChatbotThreadMessages(thread.id, { limit: 500 })).items); };
-  const createThread = () => { stopPolling(); stopStream(); stopReveal(); setSearchQuery(""); setThreadId(undefined); setThreadTitle(null); setMessages([]); };
+  const openThread = async (thread: ChatbotThread) => { stopPolling(); stopStream(); stopReveal(); setPinned(true); setUnread(false); setView("chat"); setSearchOpen(false); updateSearchQuery(""); setThreadId(thread.id); setThreadTitle(thread.title); setMessages((await getChatbotThreadMessages(thread.id, { limit: 500 })).items); };
+  const createThread = () => { stopPolling(); stopStream(); stopReveal(); setSearchOpen(false); updateSearchQuery(""); setThreadId(undefined); setThreadTitle(null); setMessages([]); };
+  const startNewChat = () => { createThread(); setView("chat"); };
+  const openThreads = () => { setSearchOpen(false); setSearchQuery(""); setView("threads"); };
   // Rename and delete go through the shared confirm dialog, never the
   // browser's own prompt()/confirm() boxes.
   const [renaming, setRenaming] = createSignal<ChatbotThread | null>(null);
   const [removing, setRemoving] = createSignal<ChatbotThread | null>(null);
+  const renameActiveThread = () => {
+    const activeId = threadId();
+    if (!activeId) return;
+    setRenaming({ id: activeId, title: threadTitle(), created_at: 0, updated_at: 0 });
+  };
   const renameThread = async (thread: ChatbotThread, title: string | undefined) => {
     const updated = await patchChatbotThreadById(thread.id, { title: title?.trim() || null });
     if (threadId() === thread.id) setThreadTitle(updated.title);
@@ -282,49 +352,120 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
   return (
     <SidePanel open={props.open} onOpenChange={props.onOpenChange} title={t("ai.title")} description={t("ai.description")} bodyClass="overflow-hidden pb-0">
       <div class="flex h-full min-h-0 flex-col">
-        <div class="mb-3 flex shrink-0 items-center gap-2 border-b border-border pb-3">
+        <div class="mb-3 shrink-0 border-b border-border pb-3">
           <Show
             when={view() === "chat"}
             fallback={
-              <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={() => setView("chat")}>
-                <IconChevronLeft class="h-3.5 w-3.5" />
-                {t("common.back")}
-              </button>
+              <div class="flex min-w-0 items-center gap-2">
+                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={() => setView("chat")}>
+                  <IconChevronLeft class="h-3.5 w-3.5" />
+                  {t("common.back")}
+                </button>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{t("ai.chats")}</span>
+                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={(event) => { event.preventDefault(); startNewChat(); }}>
+                  <IconPlus class="h-3.5 w-3.5" />
+                  {t("ai.newChat")}
+                </button>
+              </div>
             }
           >
-            <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={createThread}>
-              <IconPlus class="h-3.5 w-3.5" />
-              {t("ai.newChat")}
-            </button>
-          </Show>
-          <span class="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-            {view() === "threads" ? t("ai.chats") : threadId() ? threadTitle() || t("ai.untitledChat") : t("ai.newChat")}
-          </span>
-          <Show when={view() === "chat"}>
-            <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={() => setView("threads")}>
-              <IconMessage class="h-3.5 w-3.5" />
-              {t("ai.chats")}
-            </button>
+            <div class="flex min-w-0 items-center justify-between gap-3">
+              <div class="flex shrink-0 items-center gap-1.5">
+                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={(event) => { event.preventDefault(); startNewChat(); }}>
+                  <IconPlus class="h-3.5 w-3.5" />
+                  {t("ai.newChat")}
+                </button>
+                <button type="button" class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent" onClick={(event) => { event.preventDefault(); openThreads(); }}>
+                  <IconMessage class="h-3.5 w-3.5" />
+                  {t("ai.chats")}
+                </button>
+              </div>
+              <Show when={threadId()}>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{threadTitle() || t("ai.untitledChat")}</span>
+                <button
+                  type="button"
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  aria-label={t("ai.renameChat")}
+                  title={t("ai.renameChat")}
+                  onClick={(event) => { event.preventDefault(); renameActiveThread(); }}
+                >
+                  <IconEdit class="h-3.5 w-3.5" />
+                </button>
+              </Show>
+              <div class="flex shrink-0 items-center">
+                <Show
+                  when={!searchOpen()}
+                  fallback={
+                    <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-xs font-medium text-foreground transition-colors hover:bg-accent" aria-label={t("common.close")} title={t("common.close")} onClick={() => { setSearchOpen(false); updateSearchQuery(""); }}>
+                      <IconX class="h-3.5 w-3.5" />
+                    </button>
+                  }
+                >
+                  <button type="button" class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-xs font-medium text-foreground transition-colors hover:bg-accent" aria-label={t("common.search")} title={t("common.search")} aria-expanded={searchOpen()} onClick={(event) => { event.preventDefault(); setSearchOpen(true); }}>
+                    <IconSearch class="h-3.5 w-3.5" />
+                  </button>
+                </Show>
+              </div>
+            </div>
           </Show>
         </div>
         <Show when={view() === "threads"}>
           <div class="min-h-0 flex-1">
-            <CelebiThreadList
-              activeId={threadId()}
-              version={threadsVersion()}
-              onOpen={(thread) => void openThread(thread)}
-              onRename={setRenaming}
-              onRemove={setRemoving}
-            />
+            <Suspense fallback={<PageSpinner />}>
+              <CelebiThreadList
+                activeId={threadId()}
+                version={threadsVersion()}
+                onOpen={(thread) => void openThread(thread)}
+                onRename={setRenaming}
+                onRemove={setRemoving}
+              />
+            </Suspense>
           </div>
         </Show>
         {/* Hidden rather than unmounted while the history is open, so going
             back lands on the same scroll position and a streaming answer
             keeps writing. */}
         <div class={cn("flex min-h-0 flex-1 flex-col", view() !== "chat" && "hidden")}>
-        <div class="mb-3 shrink-0">
-          <DataTableSearch value={searchQuery()} onChange={setSearchQuery} placeholder={t("ai.searchPlaceholder")} hint={t("search.hint.chat")} class="w-full" />
-        </div>
+        <Show when={searchOpen()}>
+          <div class="mb-3 flex shrink-0 items-start gap-2">
+            <DataTableSearch
+              value={searchQuery()}
+              onChange={updateSearchQuery}
+              onKeyDown={handleSearchKeyDown}
+              placeholder={t("ai.searchPlaceholder")}
+              hint={t("search.hint.chat")}
+              hintClass="w-full min-w-0 max-w-none border-primary/40 bg-card px-3 py-2 text-xs font-medium text-foreground shadow-lg"
+              class="min-w-0 flex-1 sm:max-w-none"
+            />
+            <Show when={searchQuery().trim()}>
+              <div class="flex h-8 shrink-0 items-center gap-0.5 rounded-lg border border-border bg-card px-1 shadow-sm">
+                <span class="px-1.5 text-[11px] tabular-nums text-muted-foreground" aria-live="polite">
+                  {t("ai.searchCount", { current: searchHits().length > 0 ? activeSearchIndex() + 1 : 0, total: searchHits().length })}
+                </span>
+                <button
+                  type="button"
+                  class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                  aria-label={t("common.prev")}
+                  title={t("common.prev")}
+                  disabled={searchHits().length === 0}
+                  onClick={() => moveSearchMatch(-1)}
+                >
+                  <IconChevronUp class="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  class="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                  aria-label={t("common.next")}
+                  title={t("common.next")}
+                  disabled={searchHits().length === 0}
+                  onClick={() => moveSearchMatch(1)}
+                >
+                  <IconChevronDown class="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </Show>
+          </div>
+        </Show>
         {/* The jump control floats over the bottom of the transcript, next to
             the newest message it leads to, instead of sitting up by search. */}
         <div class="relative flex min-h-0 flex-1 flex-col">
@@ -342,10 +483,16 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
           <div class="flex flex-col gap-3">
             <For each={filteredMessages()}>
               {(message) => (
-                <div class={message.role === "user" ? "ml-8 rounded-lg rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground selection:bg-primary-foreground selection:text-primary-text" : "mr-6 rounded-lg rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm"}>
+                <div
+                  data-search-message-id={message.id}
+                  class={cn(
+                    message.role === "user" ? "ml-8 rounded-lg rounded-br-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground selection:bg-primary-foreground selection:text-primary-text" : "mr-6 rounded-lg rounded-bl-sm border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm",
+                    activeSearchHit()?.messageId === message.id && "ring-2 ring-primary/35",
+                  )}
+                >
                   <Switch>
                     <Match when={message.role === "user"}>
-                      <p class="whitespace-pre-wrap leading-6">{message.content}</p>
+                      <p class="whitespace-pre-wrap leading-6">{highlightedMessageText(message.content, searchQuery())}</p>
                     </Match>
                     <Match when={message.status === "failed" && !message.content}>
                       <p class="whitespace-pre-wrap leading-6">{failureMessage(message.error_code)}</p>
@@ -356,9 +503,8 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
                       <span class="flex items-center gap-2 text-muted-foreground"><IconBotSquare class="h-4 w-4 text-primary-text" /><span class="animate-pulse"><CelebiThinkingLabel /></span></span>
                     </Match>
                     <Match when={true}>
-                      <CelebiMarkdown text={visibleContent(message)} />
+                      <CelebiMarkdown text={visibleContent(message)} showCursor={isRevealing(message)} searchQuery={searchQuery()} />
                       <Show when={isRevealing(message)}>
-                        <span class="ml-1 inline-block h-3.5 w-0.5 animate-pulse rounded-full bg-primary align-middle" aria-hidden="true" />
                         <button
                           type="button"
                           class="mt-2 block text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"

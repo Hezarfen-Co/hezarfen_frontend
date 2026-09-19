@@ -1,4 +1,5 @@
-import { For, Show } from "solid-js";
+import { For, Show, type JSX } from "solid-js";
+import { searchMatchRanges } from "@/lib/search-text";
 
 type Segment =
   | { kind: "text"; value: string }
@@ -100,16 +101,37 @@ function parseBlocks(text: string): Block[] {
   return blocks;
 }
 
-function InlineSegments(props: { segments: Segment[] }) {
+function highlightedText(value: string, query?: string): JSX.Element {
+  const ranges = searchMatchRanges(value, query ?? "");
+  if (ranges.length === 0) return <>{value}</>;
+
+  const parts: JSX.Element[] = [];
+  let cursor = 0;
+  for (const range of ranges) {
+    if (range.start > cursor) parts.push(<>{value.slice(cursor, range.start)}</>);
+    parts.push(
+      <span class="rounded-sm bg-muted/75 px-0.5 text-foreground line-through decoration-muted-foreground/65 decoration-2" data-search-match="true">
+        {value.slice(range.start, range.end)}
+      </span>,
+    );
+    cursor = range.end;
+  }
+  if (cursor < value.length) parts.push(<>{value.slice(cursor)}</>);
+  return <>{parts}</>;
+}
+
+function InlineSegments(props: { segments: Segment[]; searchQuery?: string }) {
   return (
     <For each={props.segments}>
       {(segment) => (
-        <Show when={segment.kind !== "text"} fallback={<>{(segment as { value: string }).value}</>}>
+        <Show when={segment.kind !== "text"} fallback={highlightedText((segment as { value: string }).value, props.searchQuery)}>
           <Show when={segment.kind === "bold"}>
-            <strong>{(segment as { value: string }).value}</strong>
+          <strong class="font-semibold text-primary-text underline decoration-primary/45 decoration-2 underline-offset-2">
+            {highlightedText((segment as { value: string }).value, props.searchQuery)}
+          </strong>
           </Show>
           <Show when={segment.kind === "code"}>
-            <code class="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">{(segment as { value: string }).value}</code>
+            <code class="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">{highlightedText((segment as { value: string }).value, props.searchQuery)}</code>
           </Show>
           <Show when={segment.kind === "link"}>
             <a
@@ -118,7 +140,7 @@ function InlineSegments(props: { segments: Segment[] }) {
               rel="noreferrer"
               class="underline underline-offset-2 hover:text-primary-text"
             >
-              {(segment as { label: string }).label}
+              {highlightedText((segment as { label: string }).label, props.searchQuery)}
             </a>
           </Show>
         </Show>
@@ -127,30 +149,46 @@ function InlineSegments(props: { segments: Segment[] }) {
   );
 }
 
-export function CelebiMarkdown(props: { text: string }) {
+export function CelebiMarkdown(props: { text: string; showCursor?: boolean; searchQuery?: string }) {
   const blocks = () => parseBlocks(props.text);
   return (
     <div class="space-y-2">
       <For each={blocks()}>
-        {(block) => (
+        {(block, index) => {
+          const lastBlock = () => index() === blocks().length - 1;
+          return (
           <Show when={block.kind === "paragraph"} fallback={
             <Show when={block.kind === "code-block"} fallback={
               <ul class="list-disc space-y-1 pl-5">
                 <For each={(block as { items: Segment[][] }).items}>
-                  {(item) => <li><InlineSegments segments={item} /></li>}
+                  {(item, itemIndex) => (
+                    <li>
+                      <InlineSegments segments={item} searchQuery={props.searchQuery} />
+                      <Show when={props.showCursor && lastBlock() && itemIndex() === (block as { items: Segment[][] }).items.length - 1}>
+                        <span class="ml-1 inline-block h-3.5 w-0.5 animate-pulse rounded-full bg-primary align-middle" aria-hidden="true" />
+                      </Show>
+                    </li>
+                  )}
                 </For>
               </ul>
             }>
               <pre class="overflow-x-auto rounded-lg bg-muted p-2.5 text-xs">
-                <code>{(block as { value: string }).value}</code>
+                <code>{highlightedText((block as { value: string }).value, props.searchQuery)}</code>
+                <Show when={props.showCursor && lastBlock()}>
+                  <span class="ml-1 inline-block h-3.5 w-0.5 animate-pulse rounded-full bg-primary align-middle" aria-hidden="true" />
+                </Show>
               </pre>
             </Show>
           }>
             <p class="whitespace-pre-wrap leading-6">
-              <InlineSegments segments={(block as { segments: Segment[] }).segments} />
+              <InlineSegments segments={(block as { segments: Segment[] }).segments} searchQuery={props.searchQuery} />
+              <Show when={props.showCursor && lastBlock()}>
+                <span class="ml-1 inline-block h-3.5 w-0.5 animate-pulse rounded-full bg-primary align-middle" aria-hidden="true" />
+              </Show>
             </p>
           </Show>
-        )}
+          );
+        }}
       </For>
     </div>
   );

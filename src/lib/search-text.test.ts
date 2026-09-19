@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { foldSearchText, matchesSearch } from "@/lib/search-text";
+import { foldSearchText, matchesSearch, searchMatchRanges } from "@/lib/search-text";
 
 describe("foldSearchText", () => {
   it("folds Turkish letters onto their ASCII shape", () => {
@@ -46,5 +46,18 @@ describe("matchesSearch", () => {
   it("skips fields with no value instead of matching on them", () => {
     expect(matchesSearch("ayse", null, undefined, "Ayşe")).toBe(true);
     expect(matchesSearch("ayse", null, undefined)).toBe(false);
+  });
+});
+
+describe("searchMatchRanges", () => {
+  it("keeps original offsets while folding Turkish letters", () => {
+    expect(searchMatchRanges("Öğretmen Ayşe", "ogretmen")).toEqual([{ start: 0, end: 8 }]);
+  });
+
+  it("returns every occurrence in reading order", () => {
+    expect(searchMatchRanges("Sınav bugün, sınav yarın", "sinav")).toEqual([
+      { start: 0, end: 5 },
+      { start: 13, end: 18 },
+    ]);
   });
 });
