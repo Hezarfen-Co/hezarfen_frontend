@@ -47,5 +47,15 @@ Reference: `src/pages/dashboard-page.tsx`. The homepage is a **read-only status 
 - **Heatmap source per role:** student = own `/pomodoro/me` focus minutes;
   parent = own appointments; teacher+ = dated exams/events/homework already read by
   the page. Never read another user's pomodoro log here.
-- **Role privacy:** no teacher-only navigation shortcuts on the board. No inferred
-  priority or manual refresh.
+- **Role privacy:** no generic teacher-only navigation shortcuts on the board
+  (quick links to management pages). No inferred priority or manual refresh.
+- **Allowed exception — "today" rows:** `TodayLessonsPanel` rows may link each
+  lesson to its own section (`/instances/$id?tab=sessions&rollCall=<session>`
+  for a teacher, `?tab=sessions` for a student). The link is a record of the
+  viewer's own day, not a shortcut, and the board still takes no attendance
+  itself. The teacher panel reads roll-call counts only for lessons that have
+  started; the student panel never reads roll call. Gate it on the `sessions`
+  module.
+- **Parent homework:** `ChildHomeworkPanel` reads the selected child's
+  `/homework/report/{user}` (overdue / due this week) with no links — a parent
+  cannot open the course-scoped homework page.
