@@ -32,10 +32,11 @@ export function SideNav(props: {
   const modules = useModules();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const search = useRouterState({ select: (state) => state.location.search as Record<string, unknown> });
 
   const home = () => (auth.user() ? [HOME_ITEM] : []);
   const groups = () => visibleNavGroups(auth.user()?.role, modules.enabled());
-  const current = () => routeNavItem(pathname(), auth.user()?.role);
+  const current = () => routeNavItem(pathname(), auth.user()?.role, search());
   const unread = () => feed.unreadMessages().total;
   const badgeFor = (item: NavItem) => (item.id === "messages" ? unread() : 0);
 
@@ -143,7 +144,7 @@ export function SideNav(props: {
                         </button>
                       }
                     >
-                      <Link to={item.to} onClick={() => props.onNavigate?.()} title={t(item.labelKey)} aria-current={itemActive() ? "page" : undefined} class={linkClass()}>
+                      <Link to={item.to} search={item.search as never} onClick={() => props.onNavigate?.()} title={t(item.labelKey)} aria-current={itemActive() ? "page" : undefined} class={linkClass()}>
                         {content}
                       </Link>
                     </Show>
@@ -204,7 +205,7 @@ export function SideNav(props: {
                             return;
                           }
                           props.onNavigate?.();
-                          void navigate({ to: item.to });
+                          void navigate({ to: item.to, search: item.search as never });
                         }}
                       >
                         <item.Icon class="h-4 w-4 shrink-0" />

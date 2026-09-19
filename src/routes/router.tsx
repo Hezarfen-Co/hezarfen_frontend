@@ -76,6 +76,7 @@ const AiStudioPage = lazyRoute(() => import("@/pages/ai-studio-page"));
 const AiStudyPage = lazyRoute(() => import("@/pages/ai-study-page"));
 const AiInsightsPage = lazyRoute(() => import("@/pages/ai-insights-page"));
 const AiInsightStudentPage = lazyRoute(() => import("@/pages/ai-insight-student-page"));
+const QuestionGenerationPage = lazyRoute(() => import("@/pages/question-generation-page"));
 const ComingSoonPage = lazyRoute(() => import("@/pages/coming-soon-page"));
 const StudentsRosterPage = lazyRoute(() => import("@/pages/students-roster-page"));
 const TeachersRosterPage = lazyRoute(() => import("@/pages/teachers-roster-page"));
@@ -488,6 +489,12 @@ const aiInsightStudentRoute = createRoute({
   component: AiInsightStudentPage,
 });
 
+const questionGenerationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/ai/question-generation",
+  component: QuestionGenerationPage,
+});
+
 // The audio workshop had its own route before the hub gathered it.
 const soundStudioRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -543,9 +550,6 @@ const COMING_SOON_SLUGS = [
   "optik-okuma",
   "raporlar",
   "kvkk-denetim",
-  "ogrenci-analizi",
-  "bekleyen-onaylar",
-  "soru-uretimi",
   "calisma-programim",
 ] as const;
 
@@ -616,6 +620,7 @@ const routeTree = rootRoute.addChildren([
   aiStudyRoute,
   aiInsightsRoute,
   aiInsightStudentRoute,
+  questionGenerationRoute,
   soundStudioRoute,
   studentsRosterRoute,
   teachersRosterRoute,

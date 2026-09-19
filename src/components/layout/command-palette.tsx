@@ -240,7 +240,7 @@ export function CommandPalette(props: CommandPaletteProps) {
           description: groupName,
           keywords: `${item.to} ${t(item.labelKey)} ${groupName}`,
           icon: item.Icon,
-          onSelect: () => void navigate({ to: item.to }),
+          onSelect: () => void navigate({ to: item.to, search: item.search as never }),
         });
       }
     }

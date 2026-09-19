@@ -17,9 +17,6 @@ const COMING_SOON_LABELS: Record<string, MessageKey> = {
   "optik-okuma": "nav.opticalReading",
   raporlar: "nav.reports",
   "kvkk-denetim": "nav.dataProtection",
-  "ogrenci-analizi": "nav.studentAnalysis",
-  "bekleyen-onaylar": "nav.pendingApprovals",
-  "soru-uretimi": "nav.questionGeneration",
   "calisma-programim": "nav.studyPlan",
 };
 

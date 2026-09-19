@@ -54,19 +54,18 @@ test("manager sees the same admin tree minus the admin-only entries", () => {
   expect(ids).not.toContain("data-protection");
 });
 
-test("teacher's sidebar splits into short labelled sections with the soon shelf last", () => {
+test("teacher's sidebar splits into short labelled sections, every entry live", () => {
   expect(
     visibleNavGroups("teacher").map((group) => ({
       id: group.id,
       items: group.items.map((item) => item.id),
     })),
   ).toEqual([
-    { id: "ai", items: ["ai-studio", "ai-study", "ai-insights", "ai-celebi"] },
+    { id: "ai", items: ["ai-studio", "ai-study", "ai-celebi"] },
     { id: "my-classroom", items: ["my-classes", "my-schedule", "courses"] },
-    { id: "tracking", items: ["student-attendance", "student-marks", "student-pomodoros"] },
-    { id: "teaching", items: ["homework", "exams", "question-bank", "questions", "notes", "whiteboards"] },
+    { id: "tracking", items: ["student-attendance", "student-marks", "student-pomodoros", "student-analysis"] },
+    { id: "teaching", items: ["homework", "exams", "question-bank", "question-generation", "questions", "pending-approvals", "notes", "whiteboards"] },
     { id: "other", items: ["parent-communication", "appointments", "events", "meals", "work", "settings-teacher"] },
-    { id: "soon", items: ["student-analysis", "pending-approvals", "question-generation"] },
   ]);
 });
 
@@ -152,7 +151,10 @@ test("entries with no backend yet are flagged soon and route to the shared place
 });
 
 test("the AI group exposes four separate module routes", () => {
-  for (const role of ["student", "teacher", "manager", "admin"] as const) {
+  // A teacher reaches the analysis board as "Öğrenci analizi" under Tracking.
+  expect(visibleNavGroups("teacher").find((group) => group.id === "ai")?.items.map((item) => item.id)).toEqual(["ai-studio", "ai-study", "ai-celebi"]);
+  expect(routeNavItem("/ai/insights", "teacher")?.id).toBe("student-analysis");
+  for (const role of ["student", "manager", "admin"] as const) {
     const ai = visibleNavGroups(role).find((group) => group.id === "ai");
     expect(ai?.items.map((item) => item.id)).toEqual(["ai-studio", "ai-study", "ai-insights", "ai-celebi"]);
     expect(ai?.items.every((item) => !item.soon)).toBe(true);
@@ -251,4 +253,10 @@ test("module gate hides nests the school did not buy", () => {
 
 test("ungated entries never drop on module filtering", () => {
   expect(moduleVisible({ id: "x", to: "/calendar", labelKey: "nav.calendar", Icon: (() => null) as never }, [])).toBe(true);
+});
+
+test("a search-carrying entry wins over the plain entry for the same path", () => {
+  expect(routeNavItem("/questions", "teacher", { status: "pending" })?.id).toBe("pending-approvals");
+  expect(routeNavItem("/questions", "teacher", { status: "approved" })?.id).toBe("questions");
+  expect(routeNavItem("/questions", "teacher")?.id).toBe("questions");
 });

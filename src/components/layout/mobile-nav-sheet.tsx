@@ -35,11 +35,12 @@ export function MobileNavSheet(props: {
   const feed = useShellFeed();
   const modules = useModules();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const search = useRouterState({ select: (state) => state.location.search as Record<string, unknown> });
 
   // The primary destinations are already one tap away in the tab bar, so the
   // sheet lists everything else.
   const groups = () => visibleNavGroups(auth.user()?.role, modules.enabled());
-  const current = () => routeNavItem(pathname(), auth.user()?.role);
+  const current = () => routeNavItem(pathname(), auth.user()?.role, search());
   const badgeFor = (item: NavItem) => (item.id === "messages" ? feed.unreadMessages().total : 0);
   const runAction = (item: NavItem) => {
     props.onClose();
@@ -218,7 +219,7 @@ export function MobileNavSheet(props: {
                             </button>
                           }
                         >
-                          <Link to={item.to} onClick={props.onClose} aria-current={active() ? "page" : undefined} class={rowClass()}>
+                          <Link to={item.to} search={item.search as never} onClick={props.onClose} aria-current={active() ? "page" : undefined} class={rowClass()}>
                             {content}
                           </Link>
                         </Show>

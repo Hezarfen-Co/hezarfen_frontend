@@ -48,6 +48,12 @@ export type NavItem = {
   maxRole?: Role;
   exactRole?: Role;
   exact?: boolean;
+  /**
+   * Search params the entry links with (`/questions?status=pending`). It is
+   * active only while the URL carries them, and then wins over a plain entry
+   * for the same path.
+   */
+  search?: Record<string, string>;
   /** Backend module nest behind this entry; hidden when the school did not buy it. */
   module?: string;
   /** No backend yet — routes to the shared placeholder and carries a "yakında" badge. */
@@ -110,6 +116,15 @@ const AI_GROUP: NavGroup = {
   labelKey: "nav.group.ai",
   Icon: IconSparkles,
   items: [AI_STUDIO_ITEM, AI_STUDY_ITEM, AI_INSIGHTS_ITEM, AI_CELEBI_ITEM],
+};
+
+// A teacher's student analysis is the same board, listed under Tracking as
+// "Öğrenci analizi" — so their AI group leaves it out instead of listing it twice.
+const TEACHER_AI_GROUP: NavGroup = {
+  id: "ai",
+  labelKey: "nav.group.ai",
+  Icon: IconSparkles,
+  items: [AI_STUDIO_ITEM, AI_STUDY_ITEM, AI_CELEBI_ITEM],
 };
 
 const PARENT_AI_GROUP: NavGroup = {
@@ -204,7 +219,7 @@ const ADMIN_GROUPS: NavGroup[] = [
 ];
 
 const TEACHER_GROUPS: NavGroup[] = [
-  AI_GROUP,
+  TEACHER_AI_GROUP,
   {
     id: "my-classroom",
     labelKey: "nav.group.myClassroom",
@@ -223,6 +238,7 @@ const TEACHER_GROUPS: NavGroup[] = [
       { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, module: "attendance" },
       { id: "student-marks", to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, module: "marks" },
       { id: "student-pomodoros", to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconTimer, module: "pomodoro" },
+      { id: "student-analysis", to: "/ai/insights", labelKey: "nav.studentAnalysis", Icon: IconChart },
     ],
   },
   {
@@ -233,7 +249,11 @@ const TEACHER_GROUPS: NavGroup[] = [
       { id: "homework", to: "/homework", labelKey: "nav.homework", Icon: IconHomework, module: "homework" },
       { id: "exams", to: "/exams", labelKey: "nav.exams", Icon: IconExam, module: "exams" },
       { id: "question-bank", to: "/question-bank", labelKey: "nav.questionBank", Icon: IconArchive, module: "bank_questions" },
+      { id: "question-generation", to: "/ai/question-generation", labelKey: "nav.questionGeneration", Icon: IconSparkles },
       { id: "questions", to: "/questions", labelKey: "nav.questions", Icon: IconHelpCircle, module: "questions" },
+      // The pool's own pending tab: for a teacher, `?status=pending` is the
+      // approval queue (`POST /questions/{id}/approve`).
+      { id: "pending-approvals", to: "/questions", search: { status: "pending" }, labelKey: "nav.pendingApprovals", Icon: IconClipboardCheck, module: "questions" },
       { id: "notes", to: "/notes", labelKey: "nav.notes", Icon: IconNote, module: "notes" },
       { id: "whiteboards", to: "/whiteboards", labelKey: "nav.whiteboards", Icon: IconEdit, module: "boards" },
     ],
@@ -251,11 +271,6 @@ const TEACHER_GROUPS: NavGroup[] = [
       settingsAction("settings-teacher"),
     ],
   },
-  soonGroup([
-    { id: "student-analysis", to: "/coming-soon/ogrenci-analizi", labelKey: "nav.studentAnalysis", Icon: IconChart, soon: true },
-    { id: "pending-approvals", to: "/coming-soon/bekleyen-onaylar", labelKey: "nav.pendingApprovals", Icon: IconHelpCircle, soon: true },
-    { id: "question-generation", to: "/coming-soon/soru-uretimi", labelKey: "nav.questionGeneration", Icon: IconEdit, soon: true },
-  ]),
 ];
 
 const STUDENT_GROUPS: NavGroup[] = [
@@ -408,10 +423,15 @@ export function primaryPathActive(pathname: string, item: NavItem) {
   return pathActive(pathname, item.to, item.exact);
 }
 
-export function routeNavItem(pathname: string, role: Role | undefined): NavItem | undefined {
+function searchMatches(item: NavItem, search: Record<string, unknown> | undefined) {
+  if (!item.search) return true;
+  return Object.entries(item.search).every(([key, value]) => search?.[key] === value);
+}
+
+export function routeNavItem(pathname: string, role: Role | undefined, search?: Record<string, unknown>): NavItem | undefined {
   return [...primaryNavItems(role), ...visibleNavItems(role)]
-    .filter((item) => pathActive(pathname, item.to, item.exact))
-    .sort((a, b) => b.to.length - a.to.length)[0];
+    .filter((item) => pathActive(pathname, item.to, item.exact) && searchMatches(item, search))
+    .sort((a, b) => b.to.length - a.to.length || Number(!!b.search) - Number(!!a.search))[0];
 }
 
 // Routes that are reachable but carry no sidebar entry — the account menu, a

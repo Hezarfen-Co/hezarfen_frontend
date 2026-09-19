@@ -24,6 +24,8 @@ import { useT } from "@/stores/preferences-context";
  */
 export function BankQuestionForm(props: {
   initial?: BankQuestion;
+  /** A new template started from generated text, filed under this course. */
+  draft?: { courseId: string; text: string };
   courses: Course[];
   onSaved: (question: BankQuestion) => void;
   onCancel: () => void;
@@ -34,7 +36,7 @@ export function BankQuestionForm(props: {
     () => props.initial?.subject ?? null,
     async (subjectId) => (await getSubjectById(subjectId).catch(() => null))?.course ?? "",
   );
-  const [courseId, setCourseId] = createSignal("");
+  const [courseId, setCourseId] = createSignal(props.draft?.courseId ?? "");
   // Editing keeps the template's own course even when it is not one of ours (it is
   // shown as a disabled option); only a new template falls back to the first course.
   const selectedCourse = () =>
@@ -126,6 +128,7 @@ export function BankQuestionForm(props: {
 
       <QuestionForm
         initial={props.initial}
+        draft={props.draft ? { text: props.draft.text, kind: "text" } : undefined}
         subjects={subjects() ?? []}
         subjectsPending={initialCourse.loading || subjects.loading}
         imageSrc={props.initial?.image ? `${imageBase()}/image` : undefined}
