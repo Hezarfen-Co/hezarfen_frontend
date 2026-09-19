@@ -8,7 +8,7 @@ import {
 } from "solid-js";
 import { patchMyPreferences } from "@/api/users";
 import type { User } from "@/api/client";
-import { formatMessage, messages, type Locale, type MessageKey } from "@/i18n/messages";
+import { formatMessage, isLocaleLoaded, loadLocale, messageFor, type Locale, type MessageKey } from "@/i18n/messages";
 
 export type ThemeMode = "light" | "dark";
 
@@ -60,7 +60,8 @@ function removeStorage(key: string) {
   }
 }
 
-function readLocale(): Locale {
+/** The locale the app boots in — the saved choice, else the browser language. */
+export function readLocale(): Locale {
   const storage = getStorage();
   if (!storage) return "en";
   try {
@@ -259,8 +260,25 @@ export function PreferencesProvider(props: ParentProps) {
     void patchMyPreferences(body).catch(() => undefined);
   };
 
+  // A dictionary is its own chunk, so a switch waits for it before flipping —
+  // otherwise one frame would render raw keys. The last request wins when two
+  // switches race.
+  let wantedLocale: Locale = locale();
+  const switchLocale = (l: Locale) => {
+    wantedLocale = l;
+    if (isLocaleLoaded(l)) {
+      setLocaleSignal(l);
+      return;
+    }
+    void loadLocale(l).then(
+      () => {
+        if (wantedLocale === l) setLocaleSignal(l);
+      },
+      () => undefined,
+    );
+  };
   const setLocale = (l: Locale) => {
-    setLocaleSignal(l);
+    switchLocale(l);
     persistPreferences({ language: l });
   };
   const setTheme = (th: ThemeMode) => {
@@ -279,7 +297,7 @@ export function PreferencesProvider(props: ParentProps) {
     setTheme(next);
   };
   const hydratePreferences = (user: Pick<User, "theme" | "language" | "palette_color">) => {
-    if (user.language === "en" || user.language === "tr") setLocaleSignal(user.language);
+    if (user.language === "en" || user.language === "tr") switchLocale(user.language);
     if (user.theme === "light" || user.theme === "dark") setThemeSignal(user.theme);
     if (user.palette_color && HEX_COLOR.test(user.palette_color)) {
       setPaletteColorSignal(user.palette_color.toLowerCase());
@@ -290,7 +308,7 @@ export function PreferencesProvider(props: ParentProps) {
 
   const t = (key: MessageKey, vars?: Record<string, string | number>) => {
     const loc = locale();
-    const text = messages[loc][key] ?? messages.en[key] ?? key;
+    const text = messageFor(loc, key) ?? key;
     return formatMessage(text, vars);
   };
 

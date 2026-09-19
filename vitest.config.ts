@@ -24,6 +24,7 @@ export default defineConfig({
           name: "node",
           globals: true,
           environment: "node",
+          setupFiles: ["./src/i18n/test-locales.ts"],
           include: ["src/**/*.test.ts"],
           exclude: [...exclude, "src/components/layout/nav-items.test.ts"],
         },
@@ -44,7 +45,7 @@ export default defineConfig({
           environmentOptions: {
             jsdom: { url: "http://localhost/" },
           },
-          setupFiles: ["./src/test-setup.ts"],
+          setupFiles: ["./src/i18n/test-locales.ts", "./src/test-setup.ts"],
           include: ["src/**/*.test.tsx", "src/components/layout/nav-items.test.ts"],
           exclude,
         },

@@ -1,6 +1,6 @@
 import type { InsightRun, PersonRef, StudentInsight } from "@/api/client";
 import { runReportText } from "@/i18n/insights-run-report";
-import { messages, type Locale, type MessageKey } from "@/i18n/messages";
+import { messageFor, type Locale, type MessageKey } from "@/i18n/messages";
 import { formatDateTime } from "@/lib/format";
 
 /**
@@ -289,7 +289,7 @@ const STATUS_KEYS: Record<string, MessageKey> = {
 export function runReportStatusLabel(locale: Locale, status: string): string {
   const key = STATUS_KEYS[status];
   if (!key) return status;
-  return messages[locale][key] ?? messages.en[key] ?? status;
+  return messageFor(locale, key) ?? status;
 }
 
 const CONFIDENCE_KEYS: Record<string, MessageKey> = {
@@ -306,7 +306,7 @@ const CONFIDENCE_KEYS: Record<string, MessageKey> = {
 export function confidenceText(locale: Locale, confidence: string): string {
   const key = CONFIDENCE_KEYS[confidence];
   if (!key) return confidence;
-  return messages[locale][key] ?? messages.en[key] ?? confidence;
+  return messageFor(locale, key) ?? confidence;
 }
 
 /**
