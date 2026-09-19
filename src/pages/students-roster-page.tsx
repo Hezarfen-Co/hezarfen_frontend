@@ -87,10 +87,10 @@ function StudentsRosterContent() {
         <span class="truncate text-sm">{cell.row.original.classes.map((cls) => cls.name).join(", ") || "—"}</span>
       ),
     },
-    { id: "mastery", size: 130, header: t("roster.mastery"), enableSorting: false, cell: () => <ComingSoonValue /> },
-    { id: "attendance", size: 130, header: t("roster.attendance"), enableSorting: false, cell: () => <ComingSoonValue /> },
-    { id: "plan", size: 130, header: t("roster.planAdherence"), enableSorting: false, cell: () => <ComingSoonValue /> },
-    { id: "status", size: 130, header: t("roster.status"), enableSorting: false, cell: () => <ComingSoonValue /> },
+    { id: "mastery", size: 130, header: t("roster.mastery"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
+    { id: "attendance", size: 130, header: t("roster.attendance"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
+    { id: "plan", size: 130, header: t("roster.planAdherence"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
+    { id: "status", size: 130, header: t("roster.status"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
     {
       id: "actions",
       header: t("common.actions"),

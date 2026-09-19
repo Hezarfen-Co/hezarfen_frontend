@@ -53,7 +53,7 @@ function TeachersRosterContent() {
 
   const columns = createMemo<ColumnDef<TeacherRow>[]>(() => [
     { id: "teacher", size: 220, header: t("roster.teacher"), cell: (cell) => <RosterPersonCell person={cell.row.original.person} /> },
-    { id: "branch", size: 130, header: t("roster.branch"), enableSorting: false, cell: () => <ComingSoonValue /> },
+    { id: "branch", size: 130, header: t("roster.branch"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
     {
       accessorKey: "homeroomClasses",
       size: 90,
@@ -61,9 +61,9 @@ function TeachersRosterContent() {
       meta: { cellClass: "mono tabular-nums" },
       cell: (cell) => (cell.row.original.homeroomClasses > 0 ? cell.row.original.homeroomClasses : "—"),
     },
-    { id: "weekly", size: 130, header: t("roster.weeklyLessons"), enableSorting: false, cell: () => <ComingSoonValue /> },
-    { id: "acceptance", size: 130, header: t("roster.suggestionAcceptance"), enableSorting: false, cell: () => <ComingSoonValue /> },
-    { id: "status", size: 130, header: t("roster.status"), enableSorting: false, cell: () => <ComingSoonValue /> },
+    { id: "weekly", size: 130, header: t("roster.weeklyLessons"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
+    { id: "acceptance", size: 130, header: t("roster.suggestionAcceptance"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
+    { id: "status", size: 130, header: t("roster.status"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
     {
       id: "actions",
       header: t("common.actions"),

@@ -79,9 +79,9 @@ function LicenseModulesContent() {
         </Badge>
       ),
     },
-    { id: "unitPrice", header: t("modules.unitPrice"), meta: { align: "right" }, enableSorting: false, cell: () => <ComingSoonValue /> },
-    { id: "seats", header: t("modules.activeSeats"), meta: { align: "right" }, enableSorting: false, cell: () => <ComingSoonValue /> },
-    { id: "annual", header: t("modules.annualAmount"), meta: { align: "right" }, enableSorting: false, cell: () => <ComingSoonValue /> },
+    { id: "unitPrice", header: t("modules.unitPrice"), meta: { align: "right", hideInCards: true }, enableSorting: false, cell: () => <ComingSoonValue /> },
+    { id: "seats", header: t("modules.activeSeats"), meta: { align: "right", hideInCards: true }, enableSorting: false, cell: () => <ComingSoonValue /> },
+    { id: "annual", header: t("modules.annualAmount"), meta: { align: "right", hideInCards: true }, enableSorting: false, cell: () => <ComingSoonValue /> },
   ]);
 
   return (

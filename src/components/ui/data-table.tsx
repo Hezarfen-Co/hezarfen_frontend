@@ -38,6 +38,8 @@ declare module "@tanstack/solid-table" {
     stickyLeft?: boolean;
     /** Vertical divider on the given edge — separates frozen label from metric columns. */
     divider?: "left" | "right";
+    /** Leave this column out of the phone card layout (e.g. a "yakında" placeholder). */
+    hideInCards?: boolean;
   }
 }
 
@@ -335,7 +337,8 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           >
             <For each={table.getRowModel().rows}>
               {(row) => {
-                const cells = () => row.getVisibleCells().filter((cell) => cell.column.id !== "select");
+                const cells = () =>
+                  row.getVisibleCells().filter((cell) => cell.column.id !== "select" && !cell.column.columnDef.meta?.hideInCards);
                 const action = () => cells().find((cell) => cell.column.id === "actions");
                 const body = () => cells().filter((cell) => cell.column.id !== "actions");
                 return (
