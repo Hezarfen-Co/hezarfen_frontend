@@ -4,7 +4,10 @@ import type { PodcastJobSummary, RagOutput } from "@/api/client";
 import { StudioOutputLibrary } from "@/components/ai/studio-output-library";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
-const podcastApi = vi.hoisted(() => ({ listPodcastJobs: vi.fn() }));
+const podcastApi = vi.hoisted(() => ({
+  listPodcastJobs: vi.fn(),
+  podcastAudioUrl: vi.fn((jobId: string) => `/api/podcast/jobs/${encodeURIComponent(jobId)}/audio`),
+}));
 const courseNotesApi = vi.hoisted(() => ({ getCourseNoteRag: vi.fn() }));
 
 vi.mock("@/api/podcast", () => podcastApi);
@@ -52,7 +55,7 @@ describe("StudioOutputLibrary", () => {
     podcastApi.listPodcastJobs.mockResolvedValue(page([
       podcast({ job_id: "job-1" }),
       podcast({ job_id: "job-2" }),
-      podcast({ job_id: "job-failed", source_id: "note-3", state: "failed" }),
+      podcast({ job_id: "job-failed", source_id: "note-3", source_title: "Polinomlar", state: "failed", error_code: "tts_failed" }),
     ]));
     courseNotesApi.getCourseNoteRag.mockImplementation(async (noteId: string) =>
       page(noteId === "note-2" ? [summary(noteId)] : []),
@@ -65,28 +68,54 @@ describe("StudioOutputLibrary", () => {
     vi.clearAllMocks();
   });
 
-  it("shows only notes with finished outputs and selects one directly", async () => {
-    const onSelect = vi.fn();
-
+  const renderLibrary = (onSelect = vi.fn()) => {
     render(() => (
       <PreferencesProvider>
         <StudioOutputLibrary notes={notes} selectedId="note-1" onSelect={onSelect} />
       </PreferencesProvider>
     ));
+    return onSelect;
+  };
 
-    await waitFor(() => expect(screen.getByText("Hücre")).toBeTruthy());
+  it("lists one row per produced artifact, newest first, failures included", async () => {
+    renderLibrary();
+
+    await waitFor(() => expect(screen.getAllByText("Hücre").length).toBe(2));
+    // The failed run is part of the history and says so rather than vanishing.
+    expect(screen.getByText("Polinomlar")).toBeTruthy();
+    expect(screen.getByText("Başarısız")).toBeTruthy();
     expect(screen.getByText("Kuvvet")).toBeTruthy();
-    expect(screen.queryByText("Polinomlar")).toBeNull();
-    expect(screen.getByText("2 podcast")).toBeTruthy();
-    expect(screen.getByText("Yapay zekâ özeti")).toBeTruthy();
-    expect(screen.getByText("2 not")).toBeTruthy();
+    expect(screen.getByText("4 çıktı")).toBeTruthy();
 
-    const selected = screen.getByRole("button", { name: /Hücre/ });
-    expect(selected.getAttribute("aria-current")).toBe("true");
-
-    fireEvent.click(screen.getByRole("button", { name: /Kuvvet/ }));
-    expect(onSelect).toHaveBeenCalledWith("note-2");
     expect(podcastApi.listPodcastJobs).toHaveBeenCalledWith({ limit: 100 });
     expect(courseNotesApi.getCourseNoteRag).toHaveBeenCalledTimes(3);
+  });
+
+  it("marks every row of the selected note as current", async () => {
+    renderLibrary();
+
+    await waitFor(() => expect(screen.getAllByText("Hücre").length).toBe(2));
+    const current = screen.getAllByRole("button").filter((el) => el.getAttribute("aria-current") === "true");
+    expect(current.length).toBe(2);
+  });
+
+  it("opens the run inspector for an episode instead of selecting its note", async () => {
+    const onSelect = renderLibrary();
+
+    await waitFor(() => expect(screen.getAllByText("Hücre").length).toBe(2));
+    fireEvent.click(screen.getAllByRole("button", { name: /Hücre/ })[0]!);
+
+    await waitFor(() => expect(screen.getByText("Üretim ayrıntısı")).toBeTruthy());
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("opens the note for a summary row, which has no artifact of its own", async () => {
+    const onSelect = renderLibrary();
+
+    await waitFor(() => expect(screen.getByText("Kuvvet")).toBeTruthy());
+    fireEvent.click(screen.getByRole("button", { name: /Kuvvet/ }));
+
+    expect(onSelect).toHaveBeenCalledWith("note-2");
+    expect(screen.queryByText("Üretim ayrıntısı")).toBeNull();
   });
 });

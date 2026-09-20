@@ -15,6 +15,7 @@ import { IconDownload, IconWaveform, IconX } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { PodcastHistory } from "@/components/notes/podcast-history";
+import { PodcastStageTrail, type PodcastStageEntry } from "@/components/notes/podcast-stage-trail";
 import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
 import { cn } from "@/lib/cn";
 import { createLivePoll } from "@/lib/create-live-poll";
@@ -36,7 +37,15 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
   // restated by the status door, so it is shown as the one estimate it is and
   // never recomputed into a countdown the backend did not promise.
   const [etaSecs, setEtaSecs] = createSignal<number | null>(null);
+  const [stages, setStages] = createSignal<PodcastStageEntry[]>([]);
   let generation = 0;
+
+  // One row per stage the service reports, appended only when it actually
+  // changes; the trail is this client's observation, not a backend timeline.
+  const recordStage = (stage: string) => {
+    if (!stage) return;
+    setStages((list) => (list[list.length - 1]?.stage === stage ? list : [...list, { stage, at: Date.now() }]));
+  };
 
   // Declared before the resource below: its source runs during setup, so a
   // later `const active` would be read in its temporal dead zone.
@@ -54,6 +63,7 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
       const next = await getPodcastJobById(id);
       if (token !== generation || !active()) return;
       setStatus(next);
+      recordStage(next.stage);
       if (next.state === "done") {
         const result = await getPodcastJobResultById(id);
         if (token === generation) setArtifacts(result);
@@ -76,6 +86,7 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
     setStatus(null);
     setArtifacts(null);
     setEtaSecs(null);
+    setStages([]);
     setError("");
     if (!enabled || !noteId || typeof sessionStorage === "undefined") return;
     const stored = sessionStorage.getItem(storageKey());
@@ -101,6 +112,8 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
       if (token !== generation) return;
       setJobId(receipt.job_id);
       setStatus({ job_id: receipt.job_id, state: receipt.state, stage: "queued", progress: 0 });
+      setStages([]);
+      recordStage("queued");
       setEtaSecs(receipt.eta_secs);
       if (typeof sessionStorage !== "undefined") sessionStorage.setItem(storageKey(), receipt.job_id);
     } catch (err) {
@@ -202,29 +215,29 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
 
       <Show when={status()}>
         {(current) => (
-          <div class="space-y-3 rounded-lg border border-border/70 bg-muted/20 p-3">
-            <div class="flex items-center justify-between gap-3 text-sm">
-              <span class="font-medium">{stateLabel(current().state)}</span>
-              <span class="font-mono text-xs tabular-nums text-muted-foreground">{progress()}%</span>
-            </div>
-            <div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={progress()} aria-valuemin="0" aria-valuemax="100">
-              <div class="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progress()}%` }} />
+          <div class="space-y-3 rounded-lg border border-border-hairline bg-surface-overlay/40 p-3">
+            {/* Compact textual metadata over a progress bar: the state, how far
+                the service says it is, and its one estimate. */}
+            <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <span class="text-sm font-medium">{stateLabel(current().state)}</span>
+              <span
+                class="text-xs tabular-nums text-muted-foreground"
+                role="progressbar"
+                aria-valuenow={progress()}
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                {progress()}%
+                <Show when={working() && etaSecs() != null}>
+                  <span class="ml-2">{t("podcast.etaHint", { secs: etaSecs()! })}</span>
+                </Show>
+              </span>
             </div>
             {/* The stage names itself in the service's own vocabulary and is not
-                an enumerated set, so only the prefix is translated — the value
-                is shown as it came rather than guessed at. */}
-            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              <Show when={current().stage}>
-                {(stage) => (
-                  <span>
-                    {t("podcast.stageLabel")} <span class="font-medium text-foreground">{stage()}</span>
-                  </span>
-                )}
-              </Show>
-              <Show when={working() && etaSecs() != null}>
-                <span class="tabular-nums">{t("podcast.etaHint", { secs: etaSecs()! })}</span>
-              </Show>
-            </div>
+                an enumerated set, so the values are shown as they came. */}
+            <Show when={stages().length > 0}>
+              <PodcastStageTrail entries={stages()} live={working()} label={t("podcast.stageLabel")} />
+            </Show>
             <Show when={working()}>
               <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled={cancelling()} onClick={() => void cancel()}>
                 <IconX class="h-4 w-4" />{t("podcast.cancel")}

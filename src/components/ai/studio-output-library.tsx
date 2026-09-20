@@ -1,13 +1,15 @@
-import { For, Show, Suspense, createMemo } from "solid-js";
+import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getCourseNoteRag } from "@/api/course-notes";
 import { listPodcastJobs } from "@/api/podcast";
+import type { PodcastJobSummary } from "@/api/client";
+import { StudioRunInspector } from "@/components/ai/studio-run-inspector";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInline } from "@/components/ui/empty-inline";
-import { IconNote, IconSparkles, IconWaveform } from "@/components/ui/icons";
+import { IconSparkles, IconWaveform } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { cn } from "@/lib/cn";
-import { formatDate } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 export type StudioLibraryNote = {
@@ -16,10 +18,19 @@ export type StudioLibraryNote = {
   courseTitle: string;
 };
 
-type StudioLibraryItem = StudioLibraryNote & {
-  podcastCount: number;
-  hasSummary: boolean;
-  latestAt: number;
+/**
+ * One thing the studio produced. A podcast row is a real job row — it keeps the
+ * whole summary so the inspector can read it without a second request — while a
+ * summary row is the single stored output a note carries.
+ */
+type StudioArtifact = {
+  key: string;
+  noteId: string;
+  title: string;
+  courseTitle: string;
+  /** Sorts the list: when the run finished, else when it started. */
+  at: number;
+  job: PodcastJobSummary | null;
 };
 
 const LIBRARY_LIMIT = 100;
@@ -31,40 +42,82 @@ export function StudioOutputLibrary(props: {
 }) {
   const t = useT();
   const { locale } = usePreferences();
+  const [inspecting, setInspecting] = createSignal<PodcastJobSummary | null>(null);
   const source = createMemo(() => props.notes.map((note) => note.id).join(","));
-  const [items] = createResource(source, async (): Promise<StudioLibraryItem[]> => {
+
+  const stateVariant = (state: string) => {
+    if (state === "done") return "success" as const;
+    if (state === "failed") return "destructive" as const;
+    if (state === "cancelled") return "secondary" as const;
+    return "warning" as const;
+  };
+  const stateLabel = (state: string) => {
+    if (state === "done") return t("podcast.history.state.done");
+    if (state === "failed") return t("podcast.history.state.failed");
+    if (state === "cancelled") return t("podcast.history.state.cancelled");
+    return t("podcast.history.state.pending");
+  };
+  const formatLabel = (format: string | null) => {
+    if (!format) return "";
+    if (format === "duz_okuma") return t("podcast.format.duz_okuma");
+    if (format === "tek_ogretici") return t("podcast.format.tek_ogretici");
+    if (format === "ogrenci_hoca") return t("podcast.format.ogrenci_hoca");
+    return format;
+  };
+  const dotClass = (state: string) => {
+    if (state === "done") return "bg-success";
+    if (state === "failed") return "bg-destructive";
+    if (state === "cancelled") return "bg-muted-foreground/50";
+    return "bg-warning";
+  };
+
+  const [items] = createResource(source, async (): Promise<StudioArtifact[]> => {
     const [podcastResult, ...summaryResults] = await Promise.allSettled([
       listPodcastJobs({ limit: LIBRARY_LIMIT }),
       ...props.notes.map((note) => getCourseNoteRag(note.id, { limit: 1 })),
     ]);
-    const podcasts = podcastResult.status === "fulfilled" ? podcastResult.value.items : [];
-    const podcastsByNote = new Map<string, { count: number; latestAt: number }>();
+    const byId = new Map(props.notes.map((note) => [note.id, note]));
+    const rows: StudioArtifact[] = [];
 
-    for (const podcast of podcasts) {
-      if (podcast.state !== "done") continue;
-      const current = podcastsByNote.get(podcast.source_id) ?? { count: 0, latestAt: 0 };
-      podcastsByNote.set(podcast.source_id, {
-        count: current.count + 1,
-        latestAt: Math.max(current.latestAt, podcast.finished_at ?? podcast.created_at),
-      });
+    // Every job, not only the finished ones: a failed or cancelled run is part
+    // of the history and saying so is more useful than hiding it.
+    if (podcastResult.status === "fulfilled") {
+      for (const job of podcastResult.value.items) {
+        const note = byId.get(job.source_id);
+        rows.push({
+          key: `podcast:${job.job_id}`,
+          noteId: job.source_id,
+          title: note?.title ?? job.source_title ?? job.source_id,
+          courseTitle: note?.courseTitle ?? "",
+          at: job.finished_at ?? job.created_at,
+          job,
+        });
+      }
     }
 
-    return props.notes
-      .map((note, index): StudioLibraryItem | null => {
-        const summaryResult = summaryResults[index];
-        const summary = summaryResult?.status === "fulfilled" ? summaryResult.value.items[0] : undefined;
-        const podcast = podcastsByNote.get(note.id);
-        if (!summary && !podcast) return null;
-        return {
-          ...note,
-          podcastCount: podcast?.count ?? 0,
-          hasSummary: !!summary,
-          latestAt: Math.max(summary?.generated_at ?? 0, podcast?.latestAt ?? 0),
-        };
-      })
-      .filter((item): item is StudioLibraryItem => item != null)
-      .sort((a, b) => b.latestAt - a.latestAt);
+    props.notes.forEach((note, index) => {
+      const result = summaryResults[index];
+      const summary = result?.status === "fulfilled" ? result.value.items[0] : undefined;
+      if (!summary) return;
+      rows.push({
+        key: `summary:${summary.id}`,
+        noteId: note.id,
+        title: note.title,
+        courseTitle: note.courseTitle,
+        at: summary.generated_at,
+        job: null,
+      });
+    });
+
+    return rows.sort((a, b) => b.at - a.at);
   });
+
+  const open = (item: StudioArtifact) => {
+    // A produced episode has an artifact of its own to inspect; a summary is
+    // rendered by the note's own producer panel, so that row opens the note.
+    if (item.job) setInspecting(item.job);
+    else props.onSelect(item.noteId);
+  };
 
   return (
     <section class="overflow-hidden rounded-xl border border-border-line bg-surface-base">
@@ -84,54 +137,62 @@ export function StudioOutputLibrary(props: {
         <Show
           when={(items()?.length ?? 0) > 0}
           fallback={
-            <div class="px-4 py-5 sm:px-5">
+            <div class="px-4 py-5">
               <EmptyInline title={t("aiStudio.library.empty")} hint={t("aiStudio.library.emptyHint")} />
             </div>
           }
         >
-          {/* Studio's own working screens are flat, dense lists rather than
-              card grids: hairline dividers, one row per thing, and the active
-              row marked by an accent edge instead of a box of its own. */}
+          {/* A run history, the way a studio lists one: hairline dividers, a
+              status dot, what was produced and when — no cards. */}
           <ul class="divide-y divide-border-hairline">
             <For each={items()}>
               {(item) => (
                 <li>
                   <button
                     type="button"
-                    aria-current={props.selectedId === item.id ? "true" : undefined}
+                    aria-current={props.selectedId === item.noteId ? "true" : undefined}
                     class={cn(
                       "flex w-full items-center gap-3 border-l-2 px-4 py-2.5 text-left outline-hidden transition-colors hover:bg-surface-tint focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-                      props.selectedId === item.id
-                        ? "border-l-primary bg-primary/[0.04]"
-                        : "border-l-transparent",
+                      props.selectedId === item.noteId ? "border-l-primary bg-primary/[0.04]" : "border-l-transparent",
                     )}
-                    onClick={() => props.onSelect(item.id)}
+                    onClick={() => open(item)}
                   >
-                    <span class="shrink-0 text-muted-foreground">
-                      <Show when={item.podcastCount > 0} fallback={<IconNote class="h-4 w-4" />}>
-                        <IconWaveform class="h-4 w-4" />
-                      </Show>
-                    </span>
+                    <span
+                      class={cn("h-1.5 w-1.5 shrink-0 rounded-full", item.job ? dotClass(item.job.state) : "bg-success")}
+                    />
                     <span class="min-w-0 flex-1">
                       <span class="block truncate text-sm font-medium text-text-strong">{item.title}</span>
-                      <span class="mt-0.5 block truncate text-xs text-muted-foreground">{item.courseTitle}</span>
+                      <span class="mt-0.5 block truncate text-xs text-muted-foreground">
+                        {item.courseTitle}
+                      </span>
                     </span>
                     <span class="hidden shrink-0 items-center gap-1.5 sm:flex">
-                      <Show when={item.hasSummary}>
-                        <Badge variant="outline" class="gap-1 rounded-md font-normal">
-                          <IconSparkles class="h-3 w-3" />
-                          {t("aiStudio.library.summary")}
-                        </Badge>
-                      </Show>
-                      <Show when={item.podcastCount > 0}>
-                        <Badge variant="outline" class="gap-1 rounded-md font-normal">
-                          <IconWaveform class="h-3 w-3" />
-                          {t("aiStudio.library.podcastCount", { count: item.podcastCount })}
-                        </Badge>
+                      <Show
+                        when={item.job}
+                        fallback={
+                          <Badge variant="outline" class="gap-1 rounded-md font-normal">
+                            <IconSparkles class="h-3 w-3" />
+                            {t("aiStudio.library.summary")}
+                          </Badge>
+                        }
+                      >
+                        {(job) => (
+                          <>
+                            <Badge variant="outline" class="gap-1 rounded-md font-normal">
+                              <IconWaveform class="h-3 w-3" />
+                              {formatLabel(job().format) || t("podcast.title")}
+                            </Badge>
+                            <Show when={job().state !== "done"}>
+                              <Badge variant={stateVariant(job().state)} class="rounded-md font-normal">
+                                {stateLabel(job().state)}
+                              </Badge>
+                            </Show>
+                          </>
+                        )}
                       </Show>
                     </span>
                     <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
-                      {formatDate(item.latestAt, locale())}
+                      {formatDateTime(item.at, locale())}
                     </span>
                   </button>
                 </li>
@@ -140,6 +201,15 @@ export function StudioOutputLibrary(props: {
           </ul>
         </Show>
       </Suspense>
+
+      <StudioRunInspector
+        job={inspecting()}
+        onOpenChange={(next) => { if (!next) setInspecting(null); }}
+        formatLabel={formatLabel}
+        stateLabel={stateLabel}
+        stateVariant={stateVariant}
+        title={t("aiStudio.run.title")}
+      />
     </section>
   );
 }
