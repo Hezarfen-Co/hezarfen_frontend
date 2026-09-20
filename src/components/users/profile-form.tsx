@@ -54,6 +54,14 @@ export function ProfileForm(props: {
   branches?: string[];
   maxDisplayNameLen?: number;
   maxBioLen?: number;
+  /**
+   * Offer the school-issued student number. It is the office's field, not the
+   * account holder's, so only the admin surface passes this; it stays hidden
+   * for anyone editing their own profile. Ignored for a non-student role,
+   * which the server refuses a number for anyway.
+   */
+  editStudentNumber?: boolean;
+  maxStudentNumberLen?: number;
   onSaved: () => void;
   onSave?: (body: ProfileUpdate) => Promise<User>;
 }) {
@@ -66,6 +74,8 @@ export function ProfileForm(props: {
   const [displayName, setDisplayName] = createSignal(props.profile?.display_name ?? "");
   const [bio, setBio] = createSignal(props.profile?.bio ?? "");
   const [branch, setBranch] = createSignal(props.profile?.branch ?? "");
+  const [studentNumber, setStudentNumber] = createSignal(props.user.student_number ?? "");
+  const showStudentNumber = () => !!props.editStudentNumber && props.user.role === "student";
   // Branş is a teacher's field; a stored value outside the list still shows so
   // saving the form never silently drops it.
   const branchOptions = () => {
@@ -100,6 +110,10 @@ export function ProfileForm(props: {
     if (e !== (props.user.email ?? "")) b.email = e;
     if (p !== (props.user.phone ?? "")) b.phone = p;
     if (d !== (props.user.birth_date ?? "")) b.birth_date = d;
+    // Blank clears it server-side, which is how the office un-numbers a student.
+    if (showStudentNumber() && studentNumber().trim() !== (props.user.student_number ?? "")) {
+      b.student_number = studentNumber().trim();
+    }
     if (props.profile) {
       // An empty string clears the field server-side; an omitted key keeps it.
       const dn = displayName().trim();
@@ -181,6 +195,19 @@ export function ProfileForm(props: {
             <option value="">{t("profile.branchNone")}</option>
             <For each={branchOptions()}>{(name) => <option value={name}>{name}</option>}</For>
           </Select>
+        </div>
+      </Show>
+      <Show when={showStudentNumber()}>
+        <div class="space-y-1.5">
+          <Label for="pf-student-number">{t("roster.studentNumber")}</Label>
+          <Input
+            id="pf-student-number"
+            class="h-10"
+            maxlength={props.maxStudentNumberLen}
+            value={studentNumber()}
+            onInput={(e) => setStudentNumber(e.currentTarget.value)}
+          />
+          <p class="text-xs text-muted-foreground">{t("admin.studentNumberHint")}</p>
         </div>
       </Show>
       <div class="space-y-1.5">

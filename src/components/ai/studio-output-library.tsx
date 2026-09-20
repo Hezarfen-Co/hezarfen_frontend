@@ -4,10 +4,11 @@ import { getCourseNoteRag } from "@/api/course-notes";
 import { listPodcastJobs } from "@/api/podcast";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInline } from "@/components/ui/empty-inline";
-import { IconChevronRight, IconNote, IconSparkles, IconWaveform } from "@/components/ui/icons";
+import { IconNote, IconSparkles, IconWaveform } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { cn } from "@/lib/cn";
-import { useT } from "@/stores/preferences-context";
+import { formatDate } from "@/lib/format";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 export type StudioLibraryNote = {
   id: string;
@@ -29,6 +30,7 @@ export function StudioOutputLibrary(props: {
   onSelect: (noteId: string) => void;
 }) {
   const t = useT();
+  const { locale } = usePreferences();
   const source = createMemo(() => props.notes.map((note) => note.id).join(","));
   const [items] = createResource(source, async (): Promise<StudioLibraryItem[]> => {
     const [podcastResult, ...summaryResults] = await Promise.allSettled([
@@ -66,17 +68,15 @@ export function StudioOutputLibrary(props: {
 
   return (
     <section class="overflow-hidden rounded-xl border border-border-line bg-surface-base">
-      <header class="flex flex-wrap items-start justify-between gap-3 border-b border-border-hairline px-4 py-4 sm:px-5">
-        <div class="flex min-w-0 items-start gap-3">
-          <div class="min-w-0">
-            <h2 class="text-sm font-semibold text-text-strong">{t("aiStudio.library.title")}</h2>
-            <p class="mt-0.5 text-xs text-muted-foreground">{t("aiStudio.library.description")}</p>
-          </div>
+      <header class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border-hairline px-4 py-3">
+        <div class="min-w-0">
+          <h2 class="text-sm font-semibold text-text-strong">{t("aiStudio.library.title")}</h2>
+          <p class="mt-0.5 text-xs text-muted-foreground">{t("aiStudio.library.description")}</p>
         </div>
         <Show when={(items()?.length ?? 0) > 0}>
-          <Badge variant="secondary" class="rounded-md">
+          <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
             {t("aiStudio.library.count", { count: items()?.length ?? 0 })}
-          </Badge>
+          </span>
         </Show>
       </header>
 
@@ -89,7 +89,10 @@ export function StudioOutputLibrary(props: {
             </div>
           }
         >
-          <ul class="grid gap-3 p-3 sm:grid-cols-2 sm:p-4 xl:grid-cols-3">
+          {/* Studio's own working screens are flat, dense lists rather than
+              card grids: hairline dividers, one row per thing, and the active
+              row marked by an accent edge instead of a box of its own. */}
+          <ul class="divide-y divide-border-hairline">
             <For each={items()}>
               {(item) => (
                 <li>
@@ -97,24 +100,23 @@ export function StudioOutputLibrary(props: {
                     type="button"
                     aria-current={props.selectedId === item.id ? "true" : undefined}
                     class={cn(
-                      "group flex h-full w-full flex-col rounded-xl border bg-background p-4 text-left outline-hidden transition-colors hover:border-primary/35 hover:bg-surface-tint focus-visible:ring-2 focus-visible:ring-ring",
-                      props.selectedId === item.id ? "border-primary/40 bg-primary/[0.035]" : "border-border-hairline",
+                      "flex w-full items-center gap-3 border-l-2 px-4 py-2.5 text-left outline-hidden transition-colors hover:bg-surface-tint focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                      props.selectedId === item.id
+                        ? "border-l-primary bg-primary/[0.04]"
+                        : "border-l-transparent",
                     )}
                     onClick={() => props.onSelect(item.id)}
                   >
-                    <div class="flex w-full items-start gap-3">
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text">
-                        <Show when={item.podcastCount > 0} fallback={<IconNote class="h-4 w-4" />}>
-                          <IconWaveform class="h-4 w-4" />
-                        </Show>
-                      </span>
-                      <div class="min-w-0 flex-1">
-                        <p class="truncate text-sm font-semibold text-text-strong">{item.title}</p>
-                        <p class="mt-0.5 truncate text-xs text-muted-foreground">{item.courseTitle}</p>
-                      </div>
-                    </div>
-
-                    <div class="mt-4 flex flex-wrap gap-1.5">
+                    <span class="shrink-0 text-muted-foreground">
+                      <Show when={item.podcastCount > 0} fallback={<IconNote class="h-4 w-4" />}>
+                        <IconWaveform class="h-4 w-4" />
+                      </Show>
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate text-sm font-medium text-text-strong">{item.title}</span>
+                      <span class="mt-0.5 block truncate text-xs text-muted-foreground">{item.courseTitle}</span>
+                    </span>
+                    <span class="hidden shrink-0 items-center gap-1.5 sm:flex">
                       <Show when={item.hasSummary}>
                         <Badge variant="outline" class="gap-1 rounded-md font-normal">
                           <IconSparkles class="h-3 w-3" />
@@ -127,11 +129,9 @@ export function StudioOutputLibrary(props: {
                           {t("aiStudio.library.podcastCount", { count: item.podcastCount })}
                         </Badge>
                       </Show>
-                    </div>
-
-                    <span class="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary-text">
-                      {t("aiStudio.library.open")}
-                      <IconChevronRight class="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                    <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
+                      {formatDate(item.latestAt, locale())}
                     </span>
                   </button>
                 </li>

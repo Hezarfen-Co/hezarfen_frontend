@@ -181,4 +181,29 @@ describe("PodcastHistory", () => {
     expect(podcastApi.listPodcastJobs).toHaveBeenLastCalledWith({ limit: 10, offset: 10, sourceId: "note-1" });
     expect(screen.getByText("2 / 2")).toBeTruthy();
   });
+
+  it("marks each episode with the narration the service settled on", async () => {
+    podcastApi.listPodcastJobs.mockResolvedValue(
+      page([
+        job({ job_id: "job-1", source_title: "Düz", format: "duz_okuma" }),
+        job({ job_id: "job-2", source_title: "İkili", format: "ogrenci_hoca" }),
+      ]),
+    );
+
+    renderHistory("note-1");
+
+    await waitFor(() => expect(screen.getByText("Düz okuma")).toBeTruthy());
+    expect(screen.getByText("Öğrenci ve öğretmen")).toBeTruthy();
+  });
+
+  it("leaves a job the service has not settled a format for unmarked", async () => {
+    podcastApi.listPodcastJobs.mockResolvedValue(
+      page([job({ state: "queued", format: null, duration_secs: null, finished_at: null })]),
+    );
+
+    renderHistory("note-1");
+
+    await waitFor(() => expect(screen.getByText("Hücre")).toBeTruthy());
+    expect(screen.queryByText("Düz okuma")).toBeNull();
+  });
 });

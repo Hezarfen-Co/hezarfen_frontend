@@ -11,6 +11,7 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
+import { studentDirectoryColumns } from "@/components/users/student-directory-columns";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
@@ -62,20 +63,9 @@ function StudentAttendanceContent() {
   const rows = () => list();
   const listLoading = () => list.loading;
   const searchPerson = (row: StudentDirectoryRow, query: string) =>
-    matchesSearch(query, row.person.display_name, ...row.classes.map((cls) => cls.name));
+    matchesSearch(query, row.person.display_name, row.person.student_number, ...row.classes.map((cls) => cls.name));
   const columns = createMemo<ColumnDef<StudentDirectoryRow>[]>(() => [
-    {
-      id: "student",
-      accessorFn: (row) => row.person.display_name || row.person.username,
-      header: t("roster.studentName"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.person.display_name || t("exams.nameless")}</span>,
-    },
-    {
-      id: "class",
-      accessorFn: (row) => row.classes.map((cls) => cls.name).join(", "),
-      header: t("roster.class"),
-      cell: (cell) => <span>{cell.row.original.classes.map((cls) => cls.name).join(", ") || "—"}</span>,
-    },
+    ...studentDirectoryColumns(t),
     {
       id: "actions",
       header: t("common.actions"),
@@ -108,7 +98,7 @@ function StudentAttendanceContent() {
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
-        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={3} rows={6} />}>
+        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <DataTable
             title={t("nav.studentAttendance")}
             description={t("attendance.lookup")}

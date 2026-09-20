@@ -17,6 +17,7 @@ import { Select } from "@/components/ui/select";
 import { PodcastHistory } from "@/components/notes/podcast-history";
 import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
 import { cn } from "@/lib/cn";
+import { createLivePoll } from "@/lib/create-live-poll";
 import { useT } from "@/stores/preferences-context";
 
 const POLL_MS = 2_000;
@@ -31,7 +32,10 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
   const [error, setError] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [cancelling, setCancelling] = createSignal(false);
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  // The service's own estimate, taken from the submit receipt. It is never
+  // restated by the status door, so it is shown as the one estimate it is and
+  // never recomputed into a countdown the backend did not promise.
+  const [etaSecs, setEtaSecs] = createSignal<number | null>(null);
   let generation = 0;
 
   // Declared before the resource below: its source runs during setup, so a
@@ -39,9 +43,10 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
   const active = () => props.active !== false;
   const [capabilities] = createResource(() => (active() ? getAiCapabilities() : null));
   const storageKey = () => `hezarfen.podcast.${props.noteId}`;
+  // A cancelled or finished job is simply not polled again; the ticker below
+  // asks whether there is live work rather than being torn down.
   const stopPolling = () => {
-    if (timer) clearTimeout(timer);
-    timer = undefined;
+    generation += 1;
   };
 
   const poll = async (id: string, token: number) => {
@@ -56,10 +61,7 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
       }
       if (next.state === "failed") {
         setError(t("podcast.failed"));
-        return;
       }
-      if (next.state === "cancelled") return;
-      timer = setTimeout(() => void poll(id, token), POLL_MS);
     } catch (err) {
       if (token === generation) setError(formatApiError(err));
     }
@@ -70,10 +72,10 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
     const enabled = active();
     generation += 1;
     const token = generation;
-    stopPolling();
     setJobId("");
     setStatus(null);
     setArtifacts(null);
+    setEtaSecs(null);
     setError("");
     if (!enabled || !noteId || typeof sessionStorage === "undefined") return;
     const stored = sessionStorage.getItem(storageKey());
@@ -85,14 +87,12 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
 
   onCleanup(() => {
     generation += 1;
-    stopPolling();
   });
 
   const submit = async () => {
     if (submitting()) return;
     generation += 1;
     const token = generation;
-    stopPolling();
     setSubmitting(true);
     setError("");
     setArtifacts(null);
@@ -101,8 +101,8 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
       if (token !== generation) return;
       setJobId(receipt.job_id);
       setStatus({ job_id: receipt.job_id, state: receipt.state, stage: "queued", progress: 0 });
+      setEtaSecs(receipt.eta_secs);
       if (typeof sessionStorage !== "undefined") sessionStorage.setItem(storageKey(), receipt.job_id);
-      timer = setTimeout(() => void poll(receipt.job_id, token), POLL_MS);
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -117,7 +117,6 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
     setError("");
     try {
       await postPodcastJobCancel(id);
-      generation += 1;
       stopPolling();
       setStatus((current) => current ? { ...current, state: "cancelled" } : current);
       if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(storageKey());
@@ -130,6 +129,13 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
 
   const progress = () => Math.round(Math.min(1, Math.max(0, status()?.progress ?? 0)) * 100);
   const working = () => ["queued", "running"].includes(status()?.state ?? "");
+
+  // Poll through the shared primitive so a parked tab stops asking and a
+  // tab-back is fresh at once — the hand-rolled timeout chain did neither.
+  createLivePoll(() => {
+    const id = jobId();
+    if (id && working() && active()) void poll(id, generation);
+  }, POLL_MS);
   const available = () => {
     const current = capabilities();
     if (!current || capabilities.error) return true;
@@ -152,12 +158,12 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
   return (
     <Suspense
       fallback={
-        <section class="flex min-h-44 items-center justify-center rounded-xl border border-border-line bg-surface-base p-4 shadow-xs">
+        <section class="flex min-h-44 items-center justify-center rounded-xl border border-border-line bg-surface-base p-4">
           <p class="text-sm text-muted-foreground">{t("common.loading")}</p>
         </section>
       }
     >
-    <section class="space-y-4 rounded-xl border border-border-line bg-surface-base p-4 shadow-xs">
+    <section class="space-y-4 rounded-xl border border-border-line bg-surface-base p-4">
       <div class="flex items-start gap-3">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text">
           <IconWaveform class="h-5 w-5" />
@@ -203,6 +209,21 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
             </div>
             <div class="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={progress()} aria-valuemin="0" aria-valuemax="100">
               <div class="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progress()}%` }} />
+            </div>
+            {/* The stage names itself in the service's own vocabulary and is not
+                an enumerated set, so only the prefix is translated — the value
+                is shown as it came rather than guessed at. */}
+            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <Show when={current().stage}>
+                {(stage) => (
+                  <span>
+                    {t("podcast.stageLabel")} <span class="font-medium text-foreground">{stage()}</span>
+                  </span>
+                )}
+              </Show>
+              <Show when={working() && etaSecs() != null}>
+                <span class="tabular-nums">{t("podcast.etaHint", { secs: etaSecs()! })}</span>
+              </Show>
             </div>
             <Show when={working()}>
               <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled={cancelling()} onClick={() => void cancel()}>

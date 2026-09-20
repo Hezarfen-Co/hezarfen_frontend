@@ -26,6 +26,9 @@ export type User = {
  theme: UserTheme | null;
  language: UserLanguage | null;
  palette_color: string | null;
+ // The school-issued student number, unique inside the school. Only ever a
+ // value on a `student` row — a role change away from `student` clears it.
+ student_number?: string | null;
 };
 
 // PATCH /users/me and PATCH /users/{id}/profile take the same body: an omitted
@@ -40,6 +43,11 @@ export type ProfileUpdate = {
  bio?: string | null;
  // The teacher's branş, by name from settings.branches.
  branch?: string | null;
+ // The school-issued student number, unique inside the school and only ever
+ // held by a `student` account. Omit to keep it; send "" (or whitespace) to
+ // clear it. Naming one for another role, or one another student holds, is
+ // refused.
+ student_number?: string | null;
 };
 
 // POST /users (admin): the school office opens an account directly. `role`
@@ -49,12 +57,20 @@ export type CreateUserInput = {
  username: string;
  password: string;
  role?: Role;
+ // Only a `student` account may hold one: naming it for any other role is a
+ // 400, and a number another student already holds is a 409. Omit (or leave
+ // blank) to open the account unnumbered.
+ student_number?: string | null;
 };
 
 export type PersonRef = {
  id: string;
  username: string;
  display_name: string | null;
+ // The school-issued student number; `null` for every account that holds none,
+ // every staff account included. It rides this ref the way a username does, so
+ // a roster that names a student can name their number without a second read.
+ student_number?: string | null;
 };
 
 // The lifetime counter a badge reads. Badges sharing a stat form a ladder.
@@ -824,6 +840,9 @@ export type Limits = {
   max_name_len: number;
   max_display_name_len: number;
   max_bio_len: number;
+  // A student number's length bound; the value is free text, unique inside the
+  // school and only ever held by a `student` account.
+  max_student_number_len: number;
   // Caps on what a profile read embeds, not on membership: the full lists
   // stay at /courses/me and /classes/me.
   max_profile_courses: number;

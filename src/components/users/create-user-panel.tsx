@@ -32,15 +32,20 @@ export function CreateUserPanel(props: {
   const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [role, setRole] = createSignal<Role>(props.fixedRole ?? "student");
+  const [studentNumber, setStudentNumber] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
 
   const userLimits = () => limits.latest?.user;
+  // Only a student account may hold a number; the server 400s on any other
+  // role, so the field is asked for — and sent — only when the role is student.
+  const effectiveRole = () => props.fixedRole ?? role();
 
   const reset = () => {
     setUsername("");
     setPassword("");
     setRole(props.fixedRole ?? "student");
+    setStudentNumber("");
     setError("");
   };
 
@@ -63,7 +68,14 @@ export function CreateUserPanel(props: {
     if (msg) { setError(msg); return; }
     setPending(true);
     try {
-      const created = await postUser({ username: username().trim(), password: password(), role: props.fixedRole ?? role() });
+      const number = studentNumber().trim();
+      const created = await postUser({
+        username: username().trim(),
+        password: password(),
+        role: effectiveRole(),
+        // Blank is the same as omitted, so an unnumbered student stays unnumbered.
+        ...(effectiveRole() === "student" && number ? { student_number: number } : {}),
+      });
       reset();
       props.onCreated(created);
     } catch (err) {
@@ -118,6 +130,20 @@ export function CreateUserPanel(props: {
             <Select id="create-user-role" class="h-10" value={role()} onChange={(e) => setRole(e.currentTarget.value as Role)}>
               <For each={ROLES}>{(r) => <option value={r}>{t(`role.${r}` as MessageKey)}</option>}</For>
             </Select>
+          </div>
+        </Show>
+        <Show when={effectiveRole() === "student"}>
+          <div class="space-y-1.5">
+            <Label for="create-user-student-number">{t("roster.studentNumber")}</Label>
+            <Input
+              id="create-user-student-number"
+              class="h-10 rounded-lg"
+              maxlength={userLimits()?.max_student_number_len}
+              autocomplete="off"
+              value={studentNumber()}
+              onInput={(e) => setStudentNumber(e.currentTarget.value)}
+            />
+            <p class="text-xs text-muted-foreground">{t("admin.studentNumberHint")}</p>
           </div>
         </Show>
         <div class="flex flex-wrap items-center justify-end gap-2">

@@ -228,4 +228,28 @@ describe("users API", () => {
     expect(init?.method).toBe("POST");
     expect(JSON.parse(init?.body as string)).toEqual(body);
   });
+
+  it("postUser carries the school-issued student number", async () => {
+    mockFetchSuccess({ id: "u9", username: "ayse", role: "student", student_number: "1234" });
+
+    const body = { username: "ayse", password: "secret123", role: "student" as const, student_number: "1234" };
+    await postUser(body);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/users");
+    expect(init?.method).toBe("POST");
+    expect(JSON.parse(init?.body as string)).toEqual(body);
+  });
+
+  it("patchUserProfile sends an empty student number to clear it", async () => {
+    mockFetchSuccess({ id: "u1", student_number: null });
+
+    const updates = { student_number: "" };
+    await patchUserProfile("u1", updates);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/users/u1/profile");
+    expect(init?.method).toBe("PATCH");
+    expect(JSON.parse(init?.body as string)).toEqual(updates);
+  });
 });

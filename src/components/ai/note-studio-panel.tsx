@@ -9,7 +9,6 @@ import { RagOutputsPanel } from "@/components/notes/rag-outputs-panel";
 import { StudioOutputLibrary } from "@/components/ai/studio-output-library";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconSparkles } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -70,42 +69,42 @@ export function NoteStudioPanel() {
           when={(notes()?.length ?? 0) > 0}
           fallback={<EmptyState kind="notes" title={t("podcast.noNotes")} description={t("podcast.noNotesHint")} />}
         >
-          <div class="w-full space-y-5">
-            <section class="overflow-hidden rounded-2xl border border-border-line bg-surface-base shadow-xs">
-              <div class="flex items-start gap-3 border-b border-border-line bg-primary/[0.035] px-4 py-4 sm:px-5">
-                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-text">
-                  <IconSparkles class="h-5 w-5" />
+          {/* Laid out the way a studio home reads: a plain title and one line
+              saying what it makes, the source picker, the producers, then
+              everything produced so far. Flat hairline cards, no banner and no
+              shadow stack — the work is the content, not the chrome. */}
+          <div class="w-full space-y-8">
+            <header class="space-y-1.5">
+              <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("aiHub.tab.studio")}</h1>
+              <p class="text-sm text-muted-foreground">{t("aiStudio.heading")}</p>
+            </header>
+
+            <div class="max-w-xl space-y-2">
+              <Label for="sound-studio-note">{t("podcast.source")}</Label>
+              <SearchableSelect
+                id="sound-studio-note"
+                class="w-full"
+                value={selectedId()}
+                onChange={setSelectedId}
+                options={options()}
+                placeholder={t("podcast.selectNote")}
+              />
+            </div>
+
+            <Show
+              when={selected()}
+              fallback={
+                <div class="rounded-xl border border-dashed border-border-line px-6 py-12 text-center">
+                  <p class="text-sm font-medium text-text-strong">{t("aiStudio.pickPrompt")}</p>
+                  <p class="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{t("aiStudio.pickPromptHint")}</p>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-xs font-medium uppercase tracking-[0.12em] text-primary-text">{t("aiHub.tab.studio")}</p>
-                  <h1 class="mt-1 text-lg font-semibold tracking-tight text-text-strong">{t("aiHub.tab.studio")}</h1>
-                  <p class="mt-1 max-w-2xl text-sm text-muted-foreground">{t("aiHub.description")}</p>
-                </div>
-              </div>
-              <div class="space-y-2 px-4 py-4 sm:px-5">
-                <Label for="sound-studio-note">{t("podcast.source")}</Label>
-                <SearchableSelect
-                  id="sound-studio-note"
-                  class="w-full"
-                  value={selectedId()}
-                  onChange={setSelectedId}
-                  options={options()}
-                  placeholder={t("podcast.selectNote")}
-                />
-              </div>
-            </section>
-            <Show when={selected()}>
+              }
+            >
               {(note) => (
-                <section ref={outputsSection} class="scroll-mt-20 space-y-3 rounded-2xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2 px-1">
-                    <div class="min-w-0">
-                      <p class="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("aiStudio.outputs.title")}</p>
-                      <h2 class="mt-1 truncate text-base font-semibold text-text-strong">{note().title}</h2>
-                      <p class="mt-1 text-xs text-muted-foreground">{t("aiStudio.outputs.description")}</p>
-                    </div>
-                    <span class="rounded-full border border-border-line bg-background px-2.5 py-1 text-xs text-muted-foreground">
-                      {note().courseTitle}
-                    </span>
+                <section ref={outputsSection} class="scroll-mt-20 space-y-4">
+                  <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <h2 class="min-w-0 truncate text-base font-semibold text-text-strong">{note().title}</h2>
+                    <span class="shrink-0 text-xs text-muted-foreground">{note().courseTitle}</span>
                   </div>
                   <div class="grid gap-4 xl:grid-cols-2">
                     <RagOutputsPanel
@@ -120,6 +119,10 @@ export function NoteStudioPanel() {
                 </section>
               )}
             </Show>
+
+            {/* The library is the landing view. Once a note is open the page is
+                about producing for that note, so the list of everything else
+                steps out of the way. */}
             <Show when={!selected()}>
               <StudioOutputLibrary
                 notes={(notes() ?? []).map((note) => ({ id: note.id, title: note.title, courseTitle: note.courseTitle }))}

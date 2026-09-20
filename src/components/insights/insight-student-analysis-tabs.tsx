@@ -5,7 +5,7 @@ import { InsightModuleView } from "@/components/insights/insight-module-views";
 import { ChartBar, type ChartBarItem } from "@/components/ui/chart-bar";
 import { ChartProgressRing, type ProgressRingSegment } from "@/components/ui/chart-progress-ring";
 import { EmptyInline } from "@/components/ui/empty-inline";
-import { IconAlert, IconChart, IconChevronDown } from "@/components/ui/icons";
+import { IconAlert, IconChevronDown } from "@/components/ui/icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isRecord, type UnknownRecord } from "@/lib/is-record";
 import { usePreferences } from "@/stores/preferences-context";
@@ -153,26 +153,20 @@ function ModuleTab(props: {
     <Show when={props.value != null} fallback={<EmptyInline title={props.t("insights.sectionNotComputed")} illustration="charts" />}>
       <div class="space-y-3">
         {chart()}
-        <details class="group overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-surface-base to-info/5 shadow-xs">
-          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 p-4 sm:p-5 [&::-webkit-details-marker]:hidden">
-            <span class="flex min-w-0 items-center gap-3">
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary-text shadow-xs">
-                <IconChart class="h-5 w-5" />
-              </span>
-              <span class="min-w-0">
-                <span class="block text-sm font-semibold text-text-strong">{props.t("insights.analysis.details")}</span>
-                <span class="mt-0.5 block text-xs leading-5 text-muted-foreground">{props.t("insights.analysis.detailsHint")}</span>
-              </span>
-            </span>
-            <span class="flex shrink-0 items-center gap-2 rounded-lg border border-border-line bg-surface-base px-3 py-2 text-xs font-medium text-text-strong shadow-xs transition-colors group-hover:border-primary/30 group-hover:text-primary-text">
-              <span class="hidden sm:inline">{props.t("insights.analysis.detailsAction")}</span>
-              <IconChevronDown class="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+        {/* The evidence behind the chart above. A native disclosure — keyboard
+            operable and state-exposing for free — kept deliberately quiet: the
+            numbers inside are the subject, so the frame does not compete with
+            them. The chevron leads, which is where a reader looks for one. */}
+        <details class="group rounded-xl border border-border-line bg-surface-base">
+          <summary class="flex cursor-pointer list-none items-center gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-surface-overlay/50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+            <IconChevronDown class="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium text-text-strong">{props.t("insights.analysis.details")}</span>
+              <span class="mt-0.5 block text-xs leading-5 text-muted-foreground">{props.t("insights.analysis.detailsHint")}</span>
             </span>
           </summary>
-          <div class="border-t border-primary/15 bg-surface-base/90 p-4 sm:p-5">
-            <div class="rounded-xl border border-border-hairline bg-surface-overlay/40 p-3 sm:p-4">
-              <InsightModuleView module={props.module} value={props.value} courseTitle={props.courseTitle} />
-            </div>
+          <div class="border-t border-border-hairline px-4 py-4">
+            <InsightModuleView module={props.module} value={props.value} courseTitle={props.courseTitle} />
           </div>
         </details>
       </div>

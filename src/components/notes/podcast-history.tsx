@@ -1,6 +1,7 @@
 import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { formatApiError } from "@/api/client";
+import type { MessageKey } from "@/i18n/messages";
 import { listPodcastJobs, podcastAudioUrl } from "@/api/podcast";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,15 @@ import { formatDate, formatDurationClock } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 const HISTORY_PAGE_SIZE = 10;
+
+// The three narrations the service produces. It settles the format on its first
+// report, so a live job often carries none yet, and a format this build has no
+// label for is shown verbatim rather than dropped.
+const FORMAT_KEYS: Record<string, MessageKey> = {
+  duz_okuma: "podcast.format.duz_okuma",
+  tek_ogretici: "podcast.format.tek_ogretici",
+  ogrenci_hoca: "podcast.format.ogrenci_hoca",
+};
 
 /**
  * The caller's own episodes, under the Ses Atölyesi panel. One-directional:
@@ -66,6 +76,11 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
     if (state === "cancelled") return "secondary" as const;
     return "warning" as const;
   };
+  const formatLabel = (format: string | null) => {
+    if (!format) return "";
+    const key = FORMAT_KEYS[format];
+    return key ? t(key) : format;
+  };
   const stateLabel = (state: string) => {
     if (state === "done") return t("podcast.history.state.done");
     if (state === "failed") return t("podcast.history.state.failed");
@@ -101,11 +116,15 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
             <ul class="space-y-2">
               <For each={jobs()}>
                 {(row) => (
-                  <li class="flex items-center gap-3 rounded-lg border border-border/60 p-3">
+                  <li class="rounded-lg border border-border/60 p-3">
+                    <div class="flex items-center gap-3">
                     <div class="min-w-0 flex-1">
                       <p class="truncate text-sm font-medium">{row.source_title ?? row.source_id}</p>
                       <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <Badge variant={stateVariant(row.state)}>{stateLabel(row.state)}</Badge>
+                        <Show when={formatLabel(row.format)}>
+                          {(label) => <Badge variant="outline">{label()}</Badge>}
+                        </Show>
                         <Show when={row.state === "failed" && row.error_code}>
                           <span class="mono">{row.error_code}</span>
                         </Show>
@@ -141,6 +160,15 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
                         </a>
                       </div>
                     </Show>
+                    </div>
+                    {/* The player opens in the row the reader clicked. A single
+                        one under the whole list put it a screen away from the
+                        episode it belonged to. */}
+                    <Show when={playing() === row.job_id}>
+                      <audio class="mt-3 w-full" controls autoplay preload="metadata" src={podcastAudioUrl(row.job_id)}>
+                        {t("podcast.audioUnsupported")}
+                      </audio>
+                    </Show>
                   </li>
                 )}
               </For>
@@ -152,11 +180,6 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
         </Suspense>
       </Show>
 
-      <Show when={playing()}>
-        <audio class="w-full" controls autoplay preload="metadata" src={podcastAudioUrl(playing())}>
-          {t("podcast.audioUnsupported")}
-        </audio>
-      </Show>
     </div>
   );
 }

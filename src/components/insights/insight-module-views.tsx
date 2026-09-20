@@ -1,5 +1,6 @@
 import { For, Show, createSignal, type JSX } from "solid-js";
 import { Badge } from "@/components/ui/badge";
+import { ChartComparatorBar } from "@/components/ui/chart-comparator-bar";
 import { detailText, dimensionLabel, type InsightDetailKey } from "@/i18n/insights-detail";
 import type { Locale } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
@@ -168,11 +169,24 @@ function AttendanceView(props: { value: Rec; courseTitle: CourseTitle }) {
                   <p class="text-xs font-semibold text-text-strong">
                     {courseLabel(id, props.courseTitle, index())}
                   </p>
+                  {/* The rate, its cohort baseline and the gap between them are
+                      one claim, so they read as one device instead of three rows
+                      the reader has to hold in their head at once. */}
+                  <Show
+                    when={num(stat().rate) !== null}
+                    fallback={<NoteLine>{detailText("attendance.rateSuppressed")}</NoteLine>}
+                  >
+                    <ChartComparatorBar
+                      label={detailText("attendance.rate")}
+                      fraction={num(stat().rate)!}
+                      valueText={pct(stat().rate)!}
+                      comparatorFraction={num(stat().cohort_median)}
+                      comparatorLabel={detailText("attendance.cohortMedian")}
+                      comparatorText={pct(stat().cohort_median)}
+                      gapText={ratePoints(stat().relative_gap)}
+                    />
+                  </Show>
                   <dl class="space-y-1">
-                    <LabeledRow label={detailText("attendance.rate")} value={pct(stat().rate)} mono />
-                    <Show when={num(stat().rate) === null}>
-                      <NoteLine>{detailText("attendance.rateSuppressed")}</NoteLine>
-                    </Show>
                     <LabeledRow
                       label={detailText("attendance.present")}
                       value={String(num(stat().present) ?? 0)}
@@ -190,18 +204,8 @@ function AttendanceView(props: { value: Rec; courseTitle: CourseTitle }) {
                     />
                     <LabeledRow label={detailText("attendance.excused")} value={String(num(stat().excused) ?? 0)} mono />
                     <LabeledRow
-                      label={detailText("attendance.cohortMedian")}
-                      value={pct(stat().cohort_median)}
-                      mono
-                    />
-                    <LabeledRow
                       label={detailText("attendance.cohortN")}
                       value={String(num(stat().cohort_n) ?? 0)}
-                      mono
-                    />
-                    <LabeledRow
-                      label={detailText("attendance.relativeGap")}
-                      value={ratePoints(stat().relative_gap)}
                       mono
                     />
                   </dl>
@@ -296,13 +300,24 @@ function MarksCourseDetail(props: { id: string; statRaw: unknown; courseTitle: C
           </div>
         </Show>
         <Show when={placed()}>
-          <LabeledRow label={detailText("marks.classAverage")} value={nText(placement().class_average)} mono />
-          <LabeledRow label={detailText("marks.classSd")} value={nText(placement().class_sd)} mono />
-          <LabeledRow label={detailText("marks.cohortN")} value={String(num(placement().cohort_n) ?? 0)} mono />
-          <LabeledRow label={detailText("marks.z")} value={zText(placement().z)} mono />
+          {/* The service's own sentence is the claim; the numbers below are what
+              backs it, so the sentence leads rather than trailing the dump. */}
           <Show when={str(placement().reason)}>
             {(reason) => <NoteLine>{reason()}</NoteLine>}
           </Show>
+          <Show when={num(stat().average) !== null}>
+            <ChartComparatorBar
+              label={detailText("marks.average")}
+              fraction={num(stat().average)! / 100}
+              valueText={nText(stat().average)!}
+              comparatorFraction={num(placement().class_average) == null ? null : num(placement().class_average)! / 100}
+              comparatorLabel={detailText("marks.classAverage")}
+              comparatorText={nText(placement().class_average)}
+            />
+          </Show>
+          <LabeledRow label={detailText("marks.classSd")} value={nText(placement().class_sd)} mono />
+          <LabeledRow label={detailText("marks.cohortN")} value={String(num(placement().cohort_n) ?? 0)} mono />
+          <LabeledRow label={detailText("marks.z")} value={zText(placement().z)} mono />
         </Show>
       </dl>
 

@@ -1,6 +1,7 @@
 import { Link, useLocation, useParams } from "@tanstack/solid-router";
 import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
+import { getLimits } from "@/api/limits";
 import { getSettings } from "@/api/settings";
 import { getUserById, getUserProfile, patchUserProfile, patchUserRole } from "@/api/users";
 import { formatApiError, type Role } from "@/api/client";
@@ -43,6 +44,7 @@ function AdminUserDetailContent() {
   // Branş (and display name/bio) live only on the profile read, not on User.
   const [profile, { refetch: refetchProfile }] = createResource(id, (userId) => getUserProfile(userId).catch(() => null));
   const [settings] = createResource(() => getSettings().catch(() => null));
+  const [limits] = createResource(() => getLimits().catch(() => null));
   const [editing, setEditing] = createSignal(false);
   const [studentsOpen, setStudentsOpen] = createSignal(false);
   const [pendingRole, setPendingRole] = createSignal<Role>("student");
@@ -107,6 +109,9 @@ function AdminUserDetailContent() {
               <DetailField label={t("profile.email")} value={current().email || "—"} />
               <DetailField label={t("profile.phone")} value={current().phone || "—"} />
               <DetailField label={t("profile.birthDate")} value={current().birth_date || "—"} />
+              <Show when={current().role === "student"}>
+                <DetailField label={t("roster.studentNumber")} value={current().student_number || "—"} />
+              </Show>
               <Show when={hasMinRole(current().role, "teacher")}>
                 <DetailField label={t("profile.branch")} value={profile.latest?.branch || "—"} />
               </Show>
@@ -143,6 +148,8 @@ function AdminUserDetailContent() {
                 user={current()}
                 profile={profile.latest ? { display_name: profile.latest.display_name, bio: profile.latest.bio, branch: profile.latest.branch } : undefined}
                 branches={settings.latest?.branches}
+                editStudentNumber
+                maxStudentNumberLen={limits.latest?.user.max_student_number_len}
                 onSave={(body) => patchUserProfile(current().id, body)}
                 onSaved={async () => {
                   setEditing(false);

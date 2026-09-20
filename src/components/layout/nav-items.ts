@@ -182,7 +182,7 @@ const ADMIN_GROUPS: NavGroup[] = [
     labelKey: "nav.group.tracking",
     Icon: IconClipboardCheck,
     items: [
-      { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, minRole: "teacher", module: "attendance" },
+      { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, minRole: "teacher", module: "attendance" },
       { id: "student-marks", to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, minRole: "teacher", module: "marks" },
       { id: "student-pomodoros", to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconTimer, minRole: "teacher", module: "pomodoro" },
     ],
@@ -235,7 +235,7 @@ const TEACHER_GROUPS: NavGroup[] = [
     labelKey: "nav.group.tracking",
     Icon: IconClipboardCheck,
     items: [
-      { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.attendance", Icon: IconClipboardCheck, module: "attendance" },
+      { id: "student-attendance", to: "/management/student-attendance", labelKey: "nav.studentAttendance", Icon: IconClipboardCheck, module: "attendance" },
       { id: "student-marks", to: "/management/student-marks", labelKey: "nav.studentMarks", Icon: IconChart, module: "marks" },
       { id: "student-pomodoros", to: "/management/pomodoros", labelKey: "nav.studentPomodoro", Icon: IconTimer, module: "pomodoro" },
       { id: "student-analysis", to: "/ai/insights", labelKey: "nav.studentAnalysis", Icon: IconChart },
