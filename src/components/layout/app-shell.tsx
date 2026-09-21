@@ -4,6 +4,7 @@ import { LogoMark } from "@/components/brand/logo-mark";
 import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
 import { CelebiPanel } from "@/components/layout/celebi-panel";
 import { CommandPalette } from "@/components/layout/command-palette";
+import { MobileQuickActions } from "@/components/layout/mobile-quick-actions";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
 import { NavBar } from "@/components/layout/nav-bar";
 import { NetworkStatusBanner } from "@/components/layout/network-status-banner";
@@ -22,6 +23,7 @@ import { commandPaletteOpen, openCommandPalette, setCommandPaletteOpen } from "@
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
+import { createMediaQuery } from "@/lib/create-media-query";
 import { ModuleGate } from "@/components/layout/module-gate";
 
 const SIDEBAR_EXPANDED = "w-[260px]";
@@ -38,6 +40,10 @@ export function AppShell(props: ParentProps) {
   const collapsed = () => prefs.sidebarCollapsed();
   const location = useLocation();
   const fullScreen = () => location().pathname.startsWith("/exam-room/");
+  // Below lg the header gives way to the floating action button. Chosen in
+  // JS rather than with CSS so only one of the two notification surfaces is
+  // mounted, and their dismissed state never has two in-memory copies.
+  const phone = createMediaQuery("(max-width: 63.98rem)");
   const routeLabel = createMemo(() => {
     const key = routeLabelKey(location().pathname, auth.user()?.role);
     return key ? t(key) : "";
@@ -130,7 +136,7 @@ export function AppShell(props: ParentProps) {
         </Show>
 
         <main id="main-content" tabIndex={-1} class="min-w-0 flex-1 outline-hidden">
-          <Show when={auth.user() && !fullScreen()}>
+          <Show when={auth.user() && !fullScreen() && !phone()}>
             <header class="sticky top-[env(safe-area-inset-top)] z-30 flex h-[49px] items-center gap-3 border-b border-border/70 bg-background px-4 pt-1.5 sm:px-6 lg:px-4">
               <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-52 lg:w-[260px]">
                 <span class="hidden truncate text-sm font-semibold sm:block" title={routeLabel()}>{routeLabel()}</span>
@@ -175,10 +181,15 @@ export function AppShell(props: ParentProps) {
           </div>
         </main>
       </div>
-      {/* MobileTabBar stays inside the provider — it is a shell surface, so a
-          useShellFeed() badge there must not throw. */}
+      {/* MobileTabBar and the quick actions stay inside the provider — they are
+          shell surfaces, so a useShellFeed() badge there must not throw. */}
       <Show when={auth.user() && !fullScreen()}>
         <MobileTabBar onMenu={() => setMobileOpen(true)} onSearch={openCommandPalette} />
+      </Show>
+      <Show when={auth.user() && !fullScreen() && phone()}>
+        <MobileQuickActions
+          hidden={mobileOpen() || celebiPanelOpen() || commandPaletteOpen() || profileOpen()}
+        />
       </Show>
       </ShellFeedProvider>
       <Show when={auth.user()}>

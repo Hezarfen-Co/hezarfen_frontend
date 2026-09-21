@@ -503,6 +503,10 @@
     /* WCAG 2.4.11: a focused or anchored element must not land under the
        sticky 45px shell header. */
     scroll-padding-top: calc(45px + env(safe-area-inset-top) + 0.5rem);
+    /* Phones have no header; the floating action button replaced it. */
+    @media (width < 64rem) {
+      scroll-padding-top: calc(env(safe-area-inset-top) + 0.5rem);
+    }
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
