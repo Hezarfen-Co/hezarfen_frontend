@@ -19,7 +19,7 @@ import { RagThreadList } from "@/components/rag/rag-thread-list";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconChevronDown, IconPlus } from "@/components/ui/icons";
+import { IconChevronDown, IconMenu, IconPlus, IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { scopeFromCitations } from "@/lib/rag-study-scope";
 import { usePreferences } from "@/stores/preferences-context";
@@ -45,6 +45,18 @@ export function RagStudyPanel() {
   const [studyUnavailable, setStudyUnavailable] = createSignal(false);
   const [renaming, setRenaming] = createSignal<RagThread | null>(null);
   const [removing, setRemoving] = createSignal<RagThread | null>(null);
+  // Below lg the history is a drawer from the left edge, the way a chat app
+  // on a phone keeps its conversations one tap away without spending the
+  // screen on them. From lg it is the fixed column beside the transcript.
+  const [historyOpen, setHistoryOpen] = createSignal(false);
+  createEffect(() => {
+    if (!historyOpen()) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setHistoryOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    onCleanup(() => window.removeEventListener("keydown", onKey));
+  });
 
   let pollTimer: number | undefined;
   let stream: EventSource | undefined;
@@ -223,21 +235,65 @@ export function RagStudyPanel() {
   };
 
   return (
-    <div class="grid min-h-[calc(100dvh-10rem)] gap-4 lg:h-[calc(100dvh-10rem)] lg:grid-cols-[18rem_minmax(0,1fr)]">
-      <aside class="flex h-full min-h-0 flex-col gap-3 rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
+    // Phones: one screen-tall column — top bar, transcript, composer — so the
+    // composer sits above the tab bar instead of scrolling away with the page.
+    <div class="grid h-[calc(var(--app-viewport)-5.5rem-max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] gap-4 max-lg:-mt-2 lg:h-[calc(100dvh-10rem)] lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        class={cn(
+          "fixed inset-0 z-[55] bg-black/45 transition-opacity duration-300 lg:hidden",
+          historyOpen() ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={() => setHistoryOpen(false)}
+      />
+      <aside
+        aria-label={copy().history}
+        class={cn(
+          "flex min-h-0 flex-col gap-3 bg-surface-base",
+          // Phone drawer. `visibility` rides the transition so the panel
+          // slides out before it leaves the tab order.
+          "fixed inset-y-0 left-0 z-[60] w-[min(20rem,85vw)] border-r border-border-line px-3 pb-[calc(max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-xl transition-[transform,visibility] duration-300 ease-out",
+          historyOpen() ? "visible translate-x-0" : "invisible -translate-x-full",
+          "lg:visible lg:static lg:z-auto lg:h-full lg:w-auto lg:translate-x-0 lg:rounded-xl lg:border lg:p-3 lg:shadow-xs lg:transition-none",
+        )}
+      >
         <div class="flex items-center justify-between gap-2">
           <h2 class="text-sm font-semibold text-text-strong">{copy().history}</h2>
-          <Button type="button" size="sm" class="h-8 rounded-lg" disabled={!threadId() && messages().length === 0} onClick={newThread}>
-            <IconPlus class="h-4 w-4" />
-            {copy().newThread}
-          </Button>
+          <div class="flex items-center gap-1">
+            <Button
+              type="button"
+              size="sm"
+              class="h-8 rounded-lg max-lg:h-10"
+              disabled={!threadId() && messages().length === 0}
+              onClick={() => {
+                setHistoryOpen(false);
+                newThread();
+              }}
+            >
+              <IconPlus class="h-4 w-4" />
+              {copy().newThread}
+            </Button>
+            <button
+              type="button"
+              class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+              aria-label={copy().closeHistory}
+              onClick={() => setHistoryOpen(false)}
+            >
+              <IconX class="h-5 w-5" />
+            </button>
+          </div>
         </div>
         <RagThreadList
           activeId={threadId()}
           version={threadsVersion()}
           locale={locale()}
           labels={copy()}
-          onOpen={(thread) => void openThread(thread)}
+          onOpen={(thread) => {
+            setHistoryOpen(false);
+            void openThread(thread);
+          }}
           onRename={setRenaming}
           onRemove={setRemoving}
         />
@@ -247,6 +303,31 @@ export function RagStudyPanel() {
           chat does. The conversation's own actions live on its row in the
           sidebar, which is where they were already duplicated. */}
       <section class="flex h-full min-h-0 flex-col" aria-label={copy().title}>
+        {/* Phone top bar: the drawer on the left, the open chat's name in the
+            middle, a fresh chat on the right. */}
+        <div class="flex shrink-0 items-center gap-2 border-b border-border-hairline pb-2 lg:hidden">
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-foreground outline-hidden transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={copy().openHistory}
+            aria-expanded={historyOpen()}
+            onClick={() => setHistoryOpen(true)}
+          >
+            <IconMenu class="h-5 w-5" />
+          </button>
+          <h1 class="min-w-0 flex-1 truncate text-center text-sm font-semibold text-text-strong">
+            {activeThread()?.title || (threadId() ? copy().untitled : copy().title)}
+          </h1>
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-foreground outline-hidden transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
+            aria-label={copy().newThread}
+            disabled={!threadId() && messages().length === 0}
+            onClick={newThread}
+          >
+            <IconPlus class="h-5 w-5" />
+          </button>
+        </div>
         <Show when={error()}>
           <div class="mx-auto w-full max-w-3xl px-4 pt-1 sm:px-6">
             <Alert variant="destructive">{error()}</Alert>

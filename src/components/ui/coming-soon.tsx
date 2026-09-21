@@ -6,7 +6,9 @@ import { useT } from "@/stores/preferences-context";
 export function ComingSoonBadge(props: { class?: string }) {
   const t = useT();
   return (
-    <Badge variant="secondary" class={cn("bg-surface-tint text-text-subtle", props.class)}>
+    // `data-coming-soon` lets a toolbar find the control carrying it — phones
+    // drop a button that can only say "not yet" (see DataTable's toolbar).
+    <Badge variant="secondary" data-coming-soon class={cn("bg-surface-tint text-text-subtle", props.class)}>
       {t("comingSoon.title")}
     </Badge>
   );

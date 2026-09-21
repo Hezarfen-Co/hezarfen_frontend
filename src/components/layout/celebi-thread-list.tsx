@@ -4,7 +4,7 @@ import { getChatbotThreads, type ChatbotThread } from "@/api/chatbot";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -71,7 +71,7 @@ export function CelebiThreadList(props: {
       </div>
       <Show when={totalPages() > 1}>
         <div class="mt-3 shrink-0">
-          <PaginationControls page={page()} totalPages={totalPages()} onPageChange={setPage} />
+          <TablePagination pageIndex={page()} pageCount={totalPages()} onPageChange={setPage} />
         </div>
       </Show>
     </div>

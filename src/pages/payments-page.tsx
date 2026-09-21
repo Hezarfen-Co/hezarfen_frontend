@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { For, Index, Show, Suspense, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
@@ -118,10 +119,12 @@ function PaymentsContent() {
   onCleanup(() => clearTimeout(queryTimer));
 
   const [studentPage, setStudentPage] = createSignal(0);
-  // Reset to page 1 whenever the query or plan filter changes underneath it.
+  const studentPageSize = createResponsivePageSize(STUDENT_PAGE_SIZE);
+  // Reset to page 1 whenever the query, plan filter or page size changes underneath it.
   createEffect(() => {
     debouncedQuery();
     planFilter();
+    studentPageSize();
     setStudentPage(0);
   });
 
@@ -134,7 +137,7 @@ function PaymentsContent() {
   // (already name-resolved) plan roster and filters/pages it client-side —
   // a plan's assignees are a small, bounded list on their own.
   const [studentsPage, { refetch: refetchStudents }] = createResource(
-    () => ({ plan: planFilter(), q: debouncedQuery(), page: studentPage(), size: STUDENT_PAGE_SIZE }),
+    () => ({ plan: planFilter(), q: debouncedQuery(), page: studentPage(), size: studentPageSize() }),
     async ({ plan, q, page, size }): Promise<{ items: PersonRef[]; total: number }> => {
       if (plan) {
         const assignments = await getPlanAssignments(plan, { limit: 500 });
@@ -650,7 +653,7 @@ function PaymentsContent() {
                     enablePagination
                     manualPagination={{
                       pageIndex: studentPage(),
-                      pageSize: STUDENT_PAGE_SIZE,
+                      pageSize: studentPageSize(),
                       total: studentsTotal(),
                       onPageChange: setStudentPage,
                     }}

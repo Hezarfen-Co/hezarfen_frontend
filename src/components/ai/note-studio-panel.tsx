@@ -7,13 +7,16 @@ import { formatApiError, type CourseNote } from "@/api/client";
 import { PodcastPanel } from "@/components/notes/podcast-panel";
 import { RagOutputsPanel } from "@/components/notes/rag-outputs-panel";
 import { StudioOutputLibrary } from "@/components/ai/studio-output-library";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorAlert } from "@/components/ui/error-alert";
+import { IconChevronLeft } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+import { cn } from "@/lib/cn";
 import { courseNoteFiles } from "@/lib/note-source";
 import { hasMinRole } from "@/lib/roles";
 
@@ -74,7 +77,9 @@ export function NoteStudioPanel() {
               everything produced so far. Flat hairline cards, no banner and no
               shadow stack — the work is the content, not the chrome. */}
           <div class="w-full space-y-8">
-            <header class="space-y-1.5">
+            {/* On a phone an open note needs the screen more than the page
+                title does; the picker below still says where you are. */}
+            <header class={cn("space-y-1.5", selected() && "max-sm:hidden")}>
               <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{t("aiHub.tab.studio")}</h1>
               <p class="text-sm text-muted-foreground">{t("aiStudio.heading")}</p>
             </header>
@@ -102,9 +107,24 @@ export function NoteStudioPanel() {
             >
               {(note) => (
                 <section ref={outputsSection} class="scroll-mt-20 space-y-4">
-                  <div class="flex flex-wrap items-baseline justify-between gap-2">
-                    <h2 class="min-w-0 truncate text-base font-semibold text-text-strong">{note().title}</h2>
-                    <span class="shrink-0 text-xs text-muted-foreground">{note().courseTitle}</span>
+                  {/* The library steps aside while a note is open; this is the
+                      way back to it without emptying the picker by hand. */}
+                  <div class="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      class="h-8 shrink-0 gap-1 rounded-lg max-sm:h-10 max-sm:w-10 max-sm:px-0"
+                      aria-label={t("aiStudio.backToLibrary")}
+                      onClick={() => setSelectedId("")}
+                    >
+                      <IconChevronLeft class="h-4 w-4" />
+                      <span class="hidden sm:inline">{t("aiStudio.backToLibrary")}</span>
+                    </Button>
+                    <div class="min-w-0 flex-1">
+                      <h2 class="truncate text-base font-semibold text-text-strong">{note().title}</h2>
+                      <p class="truncate text-xs text-muted-foreground">{note().courseTitle}</p>
+                    </div>
                   </div>
                   <div class="grid gap-4 xl:grid-cols-2">
                     <RagOutputsPanel

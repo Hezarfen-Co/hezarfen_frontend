@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getCourseNoteRag } from "@/api/course-notes";
 import { listPodcastJobs } from "@/api/podcast";
@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconSparkles, IconWaveform } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { cn } from "@/lib/cn";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { formatDateTime } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -34,6 +36,7 @@ type StudioArtifact = {
 };
 
 const LIBRARY_LIMIT = 100;
+const LIBRARY_PAGE_SIZE = 10;
 
 export function StudioOutputLibrary(props: {
   notes: StudioLibraryNote[];
@@ -112,6 +115,21 @@ export function StudioOutputLibrary(props: {
     return rows.sort((a, b) => b.at - a.at);
   });
 
+  // The history is merged here from two sources, so it pages in memory.
+  const [page, setPage] = createSignal(0);
+  const pageSize = createResponsivePageSize(LIBRARY_PAGE_SIZE);
+  const total = () => items()?.length ?? 0;
+  const pageCount = createMemo(() => Math.max(1, Math.ceil(total() / pageSize())));
+  const pageItems = createMemo(() => (items() ?? []).slice(page() * pageSize(), (page() + 1) * pageSize()));
+  createEffect(() => {
+    source();
+    pageSize();
+    setPage(0);
+  });
+  createEffect(() => {
+    if (page() > pageCount() - 1) setPage(pageCount() - 1);
+  });
+
   const open = (item: StudioArtifact) => {
     // A produced episode has an artifact of its own to inspect; a summary is
     // rendered by the note's own producer panel, so that row opens the note.
@@ -145,7 +163,7 @@ export function StudioOutputLibrary(props: {
           {/* A run history, the way a studio lists one: hairline dividers, a
               status dot, what was produced and when — no cards. */}
           <ul class="divide-y divide-border-hairline">
-            <For each={items()}>
+            <For each={pageItems()}>
               {(item) => (
                 <li>
                   <button
@@ -199,6 +217,18 @@ export function StudioOutputLibrary(props: {
               )}
             </For>
           </ul>
+          <Show when={pageCount() > 1}>
+            <div class="border-t border-border-hairline p-2">
+              <TablePagination
+                pageIndex={page()}
+                pageCount={pageCount()}
+                pageSize={pageSize()}
+                total={total()}
+                onPageChange={setPage}
+                class="border-0 bg-transparent"
+              />
+            </div>
+          </Show>
         </Show>
       </Suspense>
 

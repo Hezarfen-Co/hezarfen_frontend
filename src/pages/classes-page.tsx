@@ -232,10 +232,10 @@ function ClassesContent() {
                 filters={
                   <Show when={grades().length > 0}>
                     <DropdownSelect
-                      options={[{ value: "all", label: t("classGroups.allGrades") }, ...grades().map((g) => ({ value: g, label: g }))]}
+                      labelPrefix={t("classGroups.grade")}
+                      options={[{ value: "all", label: t("common.all") }, ...grades().map((g) => ({ value: g, label: g }))]}
                       value={gradeFilter()}
                       onChange={setGradeFilter}
-                      class="min-w-44"
                     />
                   </Show>
                 }

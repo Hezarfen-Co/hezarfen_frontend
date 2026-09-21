@@ -1,4 +1,5 @@
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, createSignal, createEffect, on } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import type { BankQuestion, Subject } from "@/api/client";
 import { formatApiError } from "@/api/client";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { createDebouncedSignal } from "@/lib/create-debounced-signal";
@@ -25,16 +26,18 @@ export function BankQuestionPicker(props: {
   const t = useT();
   const [query, setQuery, debouncedQuery] = createDebouncedSignal();
   const [page, setPage] = createSignal(0);
+  const pageSize = createResponsivePageSize(PICKER_PAGE_SIZE);
+  createEffect(on(pageSize, () => setPage(0), { defer: true }));
   const [selected, setSelected] = createSignal<BankQuestion | null>(null);
   const [subjectId, setSubjectId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [templates] = createResource(
-    () => ({ page: page(), q: debouncedQuery().trim() }),
+    () => ({ page: page(), size: pageSize(), q: debouncedQuery().trim() }),
     (params) =>
       getBankQuestions({
-        limit: PICKER_PAGE_SIZE,
-        offset: params.page * PICKER_PAGE_SIZE,
+        limit: params.size,
+        offset: params.page * params.size,
         ...(params.q ? { q: params.q } : {}),
       }),
   );
@@ -113,8 +116,8 @@ export function BankQuestionPicker(props: {
           {t("bank.countShown", { shown: visible().length, total: total() })}
         </p>
       </Show>
-      <Show when={pagesOf(total(), PICKER_PAGE_SIZE) > 1}>
-        <PaginationControls page={page()} totalPages={pagesOf(total(), PICKER_PAGE_SIZE)} onPageChange={setPage} />
+      <Show when={pagesOf(total(), pageSize()) > 1}>
+        <TablePagination pageIndex={page()} pageCount={pagesOf(total(), pageSize())} onPageChange={setPage} />
       </Show>
 
       <Show when={selected()}>

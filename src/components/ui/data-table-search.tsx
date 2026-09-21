@@ -49,7 +49,9 @@ export function DataTableSearch(props: DataTableSearchProps) {
         }}
         placeholder={props.placeholder ?? t("common.search")}
         aria-describedby={props.hint ? hintId : undefined}
-        class={cn("h-8 rounded-lg bg-muted/40 text-[13px] md:text-[13px]", props.value ? "pl-9 pr-8" : "pl-9")}
+        // Phones get a touch-sized box at 16px: below that iOS Safari zooms
+        // the page into a focused field. Compact from `sm` up.
+        class={cn("h-10 rounded-lg bg-muted/40 text-base sm:h-8 sm:text-[13px] md:text-[13px]", props.value ? "pl-9 pr-8" : "pl-9")}
       />
       <Show when={props.value}>
         <button

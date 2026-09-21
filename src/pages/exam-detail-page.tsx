@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
-import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteExamById } from "@/api/exams";
@@ -33,7 +34,6 @@ import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconCalendarDays, IconChart, IconChevronDown, IconClipboardCheck, IconClock, IconEdit, IconExam, IconEye, IconRefresh, IconSchool, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
-import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -116,6 +116,8 @@ function ExamDetailContent() {
   const [removeUserId, setRemoveUserId] = createSignal<string | null>(null);
   const [gradeOpen, setGradeOpen] = createSignal(false);
   const [resultPage, setResultPage] = createSignal(0);
+  const resultPageSize = createResponsivePageSize(RESULT_PAGE_SIZE);
+  createEffect(on(resultPageSize, () => setResultPage(0), { defer: true }));
   const [answerSheetUserId, setAnswerSheetUserId] = createSignal<string | null>(null);
   const answerSheetOpen = () => answerSheetUserId() != null;
   const [answerMark, setAnswerMark] = createSignal("0");
@@ -153,11 +155,11 @@ function ExamDetailContent() {
   );
 
   const [results, { refetch: refetchResults }] = createResource(
-    () => (hasCourseManagementRights() ? [id(), resultPage()] as const : null),
+    () => (hasCourseManagementRights() ? [id(), resultPage(), resultPageSize()] as const : null),
     async (source) => {
       if (!source) return { items: [], total: 0, limit: RESULT_PAGE_SIZE, offset: 0 };
-      const [examId, page] = source;
-      return getExamResults(examId, { limit: RESULT_PAGE_SIZE, offset: page * RESULT_PAGE_SIZE });
+      const [examId, page, size] = source;
+      return getExamResults(examId, { limit: size, offset: page * size });
     },
   );
   const [gradeResults, { refetch: refetchGradeResults }] = createResource(
@@ -258,7 +260,7 @@ function ExamDetailContent() {
     async (examId) => examId ? getExamLive(examId) : null,
   );
   const resultTotal = () => results()?.total ?? 0;
-  const resultTotalPages = () => Math.max(1, Math.ceil(resultTotal() / RESULT_PAGE_SIZE));
+  const resultTotalPages = () => Math.max(1, Math.ceil(resultTotal() / resultPageSize()));
   const setClampedAnswerMark = (value: string) => {
     if (value === "") {
       setAnswerMark(value);
@@ -735,10 +737,20 @@ function ExamDetailContent() {
                       when={(results()?.items ?? []).length > 0}
                       fallback={<EmptyState kind="exams" title={t("exams.noResults")} />}
                     >
-                      <DataTable columns={resultColumns()} data={results()?.items ?? []} filterColumn="user" />
-                      <Show when={resultTotal() > RESULT_PAGE_SIZE}>
-                        <PaginationControls page={Math.min(resultPage(), resultTotalPages() - 1)} totalPages={resultTotalPages()} onPageChange={setResultPage} />
-                      </Show>
+                      {/* Server-paged: the table's own pager drives the fetch, so a
+                          phone's smaller page never shows up as a second pager
+                          slicing the fetched page again. */}
+                      <DataTable
+                        columns={resultColumns()}
+                        data={results()?.items ?? []}
+                        filterColumn="user"
+                        manualPagination={{
+                          pageIndex: Math.min(resultPage(), resultTotalPages() - 1),
+                          pageSize: resultPageSize(),
+                          total: resultTotal(),
+                          onPageChange: setResultPage,
+                        }}
+                      />
                     </Show>
                   </Suspense>
                 </TabsContent>

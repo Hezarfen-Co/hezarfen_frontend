@@ -1,4 +1,5 @@
-import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import { getLimits } from "@/api/limits";
 import { getMealMenuBookings, getMealMenus, postMealMenu } from "@/api/meals";
@@ -16,7 +17,7 @@ import { IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { inputDateToIso, isoDateToInput } from "@/lib/datetime-input";
@@ -38,6 +39,8 @@ function MealsContent() {
   const { locale } = usePreferences();
   const canManage = () => hasMinRole(auth.user()?.role, "manager");
   const [page, setPage] = createSignal(0);
+  const pageSize = createResponsivePageSize(PAGE_SIZE);
+  createEffect(on(pageSize, () => setPage(0), { defer: true }));
   const [from, setFrom] = createSignal(today());
   const [slot, setSlot] = createSignal("all");
   const [showCreate, setShowCreate] = createSignal(false);
@@ -50,11 +53,11 @@ function MealsContent() {
   const [settings] = createResource(() => getSettings());
   const [limits, { refetch: refetchLimits }] = createResource(() => canManage() ? getLimits() : null);
   const [menus, { refetch }] = createResource(
-    () => [from(), page()] as const,
-    async ([start, index]) => getMealMenus({ from: start || undefined, limit: PAGE_SIZE, offset: index * PAGE_SIZE }),
+    () => [from(), page(), pageSize()] as const,
+    async ([start, index, size]) => getMealMenus({ from: start || undefined, limit: size, offset: index * size }),
   );
   const visible = createMemo(() => slot() === "all" ? menus()?.items ?? [] : (menus()?.items ?? []).filter((menu) => menu.slot === slot()));
-  const totalPages = createMemo(() => Math.max(1, Math.ceil((menus()?.total ?? 0) / PAGE_SIZE)));
+  const totalPages = createMemo(() => Math.max(1, Math.ceil((menus()?.total ?? 0) / pageSize())));
 
   // Real occupancy = confirmed bookings / capacity, both true fields — not the
   // fabricated İyi/Takipte/Risk badge Figma shows. `getMealMenuBookings` is
@@ -111,7 +114,7 @@ function MealsContent() {
           <Show when={menus.error}><ErrorAlert message={formatApiError(menus.error)} onRetry={() => void refetch()} /></Show>
           <Show when={visible().length > 0} fallback={<EmptyState kind="meals" title={t("meals.empty")} />}>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"><For each={visible()}>{(menu) => <MealMenuCard menu={menu} locale={locale() === "tr" ? "tr-TR" : "en-US"} labels={{ dishes: t("meals.dishes"), capacity: t("meals.capacity"), conflict: t("meals.conflict"), reservations: t("meals.reservations"), topPick: t("meals.topPick") }} reservationCount={reservationCounts()?.get(menu.id) ?? undefined} />}</For></div>
-            <PaginationControls page={page()} totalPages={totalPages()} onPageChange={setPage} />
+            <TablePagination pageIndex={page()} pageCount={totalPages()} onPageChange={setPage} />
           </Show>
         </Suspense>
       </DataSection>

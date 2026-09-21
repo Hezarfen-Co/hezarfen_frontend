@@ -1,4 +1,5 @@
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteWorkEntryById } from "@/api/work";
@@ -23,7 +24,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { IconChevronRight, IconEdit, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { formatDateTime, formatDurationMinutes } from "@/lib/format";
@@ -145,6 +146,7 @@ function StaffWorkContent() {
 
   const [staffSearch, setStaffSearch] = createSignal("");
   const [staffPage, setStaffPage] = createSignal(0);
+  const peoplePageSize = createResponsivePageSize(PEOPLE_PAGE_SIZE);
 
   const entryRows = () => entries().items;
   const peopleLoading = () => people.loading;
@@ -155,10 +157,11 @@ function StaffWorkContent() {
     const q = staffSearch().trim();
     return q ? people().filter((person) => searchPerson(person, q)) : people();
   });
-  const staffPageCount = createMemo(() => Math.max(1, Math.ceil(filteredPeople().length / PEOPLE_PAGE_SIZE)));
-  const pagedPeople = createMemo(() => filteredPeople().slice(staffPage() * PEOPLE_PAGE_SIZE, staffPage() * PEOPLE_PAGE_SIZE + PEOPLE_PAGE_SIZE));
+  const staffPageCount = createMemo(() => Math.max(1, Math.ceil(filteredPeople().length / peoplePageSize())));
+  const pagedPeople = createMemo(() => filteredPeople().slice(staffPage() * peoplePageSize(), (staffPage() + 1) * peoplePageSize()));
   createEffect(() => {
     staffSearch();
+    peoplePageSize();
     setStaffPage(0);
   });
 
@@ -326,7 +329,7 @@ function StaffWorkContent() {
                   )}
                 </For>
               </div>
-              <PaginationControls page={staffPage()} totalPages={staffPageCount()} onPageChange={setStaffPage} />
+              <TablePagination pageIndex={staffPage()} pageCount={staffPageCount()} onPageChange={setStaffPage} />
             </Show>
           </Show>
         </div>

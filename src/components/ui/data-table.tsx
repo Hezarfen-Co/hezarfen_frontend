@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
+import { For, Show, createEffect, createSignal, on, onCleanup } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
 import {
   type Column,
@@ -23,6 +23,7 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { IconArrowDown, IconArrowUp, IconChevronsUpDown } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { createMediaQuery } from "@/lib/create-media-query";
+import { COMPACT_SCREEN_QUERY, createResponsivePageSize } from "@/lib/create-page-size";
 import { createTablePreferences } from "@/lib/table-preferences";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useT } from "@/stores/preferences-context";
@@ -64,6 +65,7 @@ export type DataTableProps<TData, TValue = unknown> = {
   actions?: JSX.Element;
   manualPagination?: {
     pageIndex: number;
+    /** The size the caller actually fetched — pass a `createResponsivePageSize` accessor's value. */
     pageSize: number;
     total: number;
     onPageChange: (pageIndex: number) => void;
@@ -76,6 +78,7 @@ export type DataTableProps<TData, TValue = unknown> = {
   mobileLayout?: "cards" | "scroll";
   onRowClick?: (row: TData) => void;
   onSearchInput?: (value: string) => void;
+  /** Rows per page on a wide screen; phones get `compactPageSize` of it. */
   pageSize?: number;
   searchPredicate?: (row: TData, query: string) => boolean;
   searchValue?: string;
@@ -99,10 +102,12 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const prefs = createTablePreferences(props.storageKey);
   const [sorting, setSorting] = createSignal<SortingState>([]);
   const [columnFilters, setColumnFilters] = createSignal<ColumnFiltersState>([]);
-  const [pagination, setPagination] = createSignal<PaginationState>({
-    pageIndex: 0,
-    pageSize: props.pageSize ?? 10,
-  });
+  const clientPageSize = createResponsivePageSize(props.pageSize ?? 10);
+  const [clientPageIndex, setClientPageIndex] = createSignal(0);
+  const pagination = (): PaginationState => ({ pageIndex: clientPageIndex(), pageSize: clientPageSize() });
+  // A page index means nothing once the page size changes under it (a phone
+  // rotated, a window narrowed): start over rather than land mid-list.
+  createEffect(on(clientPageSize, () => setClientPageIndex(0), { defer: true }));
   const [search, setSearch] = createSignal("");
   const searchValue = () => props.searchValue ?? search();
   // Sorting is client-side only, and the backend takes no sort parameter: on
@@ -135,7 +140,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: (updater) =>
       prefs.setVisibility(resolveUpdater(updater, prefs.preferences().visibility)),
-    onPaginationChange: setPagination,
+    onPaginationChange: (updater) => setClientPageIndex(resolveUpdater(updater, pagination()).pageIndex),
     state: {
       get sorting() {
         return sorting();
@@ -206,7 +211,11 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     const share = column.getSize() / total;
     return `calc(${share * 100}% - ${share * actionColumnsWidth()}px)`;
   };
-  const showColumnMenu = () => (props.enableColumnVisibility ?? true) && hideableColumns().length > 0;
+  const compactScreen = createMediaQuery(COMPACT_SCREEN_QUERY);
+  const useCards = () => (props.mobileLayout ?? "cards") === "cards" && compactScreen();
+  // Cards print every visible column as a label/value pair, so a column picker
+  // there only hides lines; on phones it is one more control for nothing.
+  const showColumnMenu = () => (props.enableColumnVisibility ?? true) && hideableColumns().length > 0 && !useCards();
   const showSearch = () => props.searchPredicate != null || props.filterColumn != null || props.onSearchInput != null;
   const sectioned = () => props.surfaceSections !== false;
   const showHeader = () => false;
@@ -255,8 +264,6 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       </div>
     </Show>
   );
-  const compactScreen = createMediaQuery("(max-width: 639px)");
-  const useCards = () => (props.mobileLayout ?? "cards") === "cards" && compactScreen();
   const headerLabel = (columnId: string) => {
     const header = table.getFlatHeaders().find((candidate) => candidate.column.id === columnId);
     return header ? flexRender(header.column.columnDef.header, header.getContext()) : columnId;
@@ -311,28 +318,36 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         </div>
       </Show>
       <Show when={showToolbar()}>
-        <div class={cn("flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between", sectioned() && "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs")}>
-          <div class="flex flex-1 flex-wrap items-center gap-2">
-            <Show when={showSearch()}>
-              <DataTableSearch
-                value={searchFieldValue()}
-                onChange={handleSearch}
-                placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
-                hint={props.filterHint}
-              />
-            </Show>
-            <Show when={props.filters}>
-              <div class="flex flex-wrap items-center gap-2 [&_button]:h-8 [&_button]:rounded-lg [&_button]:text-[13px] [&_select]:h-8 [&_select]:rounded-lg [&_select]:text-[13px]">{props.filters}</div>
-            </Show>
-          </div>
-          <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
-            <Show when={props.actions}>
-              <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md">{props.actions}</div>
-            </Show>
-            <Show when={showColumnMenu()}>
-              <DataTableViewMenu columns={viewMenuColumns()} />
-            </Show>
-          </div>
+        {/* One wrapping row, ordered by width. Phones: search and actions share
+            the first line, filters get a line of their own that scrolls
+            sideways instead of stacking one control per line. From `lg`:
+            search, filters, then actions pushed to the right edge. Controls
+            are touch-sized (h-10) below `sm` and compact (h-8) above it. */}
+        <div class={cn("flex flex-wrap items-center gap-2", sectioned() && "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs")}>
+          <Show when={showSearch()}>
+            <DataTableSearch
+              class="order-1 w-auto min-w-40 flex-1 sm:max-w-xs"
+              value={searchFieldValue()}
+              onChange={handleSearch}
+              placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
+              hint={props.filterHint}
+            />
+          </Show>
+          <Show when={props.filters}>
+            <div class="order-3 -my-1 flex w-full items-center gap-2 overflow-x-auto py-1 [scrollbar-width:none] sm:my-0 sm:py-0 sm:flex-wrap sm:overflow-visible lg:order-2 lg:w-auto [&_button]:h-10 [&_button]:shrink-0 [&_button]:rounded-lg [&_button]:text-[13px] sm:[&_button]:h-8 [&_select]:h-10 [&_select]:rounded-lg [&_select]:text-[13px] sm:[&_select]:h-8 max-sm:[&>*]:flex-nowrap max-sm:[&>*]:shrink-0">{props.filters}</div>
+          </Show>
+          <Show when={props.actions || showColumnMenu()}>
+            <div class="order-2 ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2 lg:order-3">
+              <Show when={props.actions}>
+                {/* A "yakında" button does nothing yet; on a phone it only
+                    pushes the working action off the search row. */}
+                <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md max-sm:[&_button]:h-10 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
+              </Show>
+              <Show when={showColumnMenu()}>
+                <DataTableViewMenu columns={viewMenuColumns()} />
+              </Show>
+            </div>
+          </Show>
         </div>
       </Show>
       <Show when={useCards()}>
@@ -347,6 +362,11 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                   row.getVisibleCells().filter((cell) => cell.column.id !== "select" && !cell.column.columnDef.meta?.hideInCards);
                 const action = () => cells().find((cell) => cell.column.id === "actions");
                 const body = () => cells().filter((cell) => cell.column.id !== "actions");
+                // A "-" line only makes a phone card taller: leave out fields
+                // with no value. Display columns draw themselves from
+                // row.original, so they have no value to test and always stay.
+                const details = () =>
+                  body().slice(1).filter((cell) => cell.column.accessorFn == null || (cell.getValue() != null && cell.getValue() !== ""));
                 return (
                   <li>
                   <div
@@ -370,22 +390,17 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                       <div class="min-w-0 flex-1 font-medium">
                         <Show when={body()[0]}>{(first) => flexRender(first().column.columnDef.cell, first().getContext())}</Show>
                       </div>
-                      <Show when={action()}>{(cell) => <div class="-my-1 shrink-0">{flexRender(cell().column.columnDef.cell, cell().getContext())}</div>}</Show>
+                      {/* The row menu shrinks to its ⋮ glyph here — the word
+                          beside it cost the title a third of the card width. */}
+                      <Show when={action()}>{(cell) => <div class="-my-1 shrink-0 [&_[data-row-actions-label]]:hidden [&_[data-row-actions-trigger]]:h-10 [&_[data-row-actions-trigger]]:w-10 [&_[data-row-actions-trigger]]:min-w-0 [&_[data-row-actions-trigger]]:px-0">{flexRender(cell().column.columnDef.cell, cell().getContext())}</div>}</Show>
                     </div>
-                    <Show when={body().length > 1}>
+                    <Show when={details().length > 0}>
                       <dl class="mt-2 grid grid-cols-[minmax(6rem,auto)_minmax(0,1fr)] gap-x-3 gap-y-1.5">
-                        <For each={body().slice(1)}>
+                        <For each={details()}>
                           {(cell) => (
                             <>
                               <dt class="truncate text-xs text-muted-foreground">{headerLabel(cell.column.id)}</dt>
-                              <dd class="min-w-0 break-words text-foreground">
-                                <Show
-                                  when={cell.column.accessorFn == null || (cell.getValue() != null && cell.getValue() !== "")}
-                                  fallback={<span class="text-muted-foreground/60">-</span>}
-                                >
-                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </Show>
-                              </dd>
+                              <dd class="min-w-0 break-words text-foreground">{flexRender(cell.column.columnDef.cell, cell.getContext())}</dd>
                             </>
                           )}
                         </For>

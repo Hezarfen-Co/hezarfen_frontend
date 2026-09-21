@@ -199,19 +199,21 @@ export function RagOutputsPanel(props: {
   };
 
   return (
-    <section class="space-y-3 rounded-xl border border-border-line bg-surface-base p-4">
+    <section class="space-y-3 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 class="text-sm font-semibold">{t("courseNotes.ragTitle")}</h3>
           <p class="mt-0.5 text-xs text-muted-foreground">{t("courseNotes.ragHint")}</p>
         </div>
-        <div class="flex flex-wrap items-center justify-end gap-2">
+        {/* Phones: the actions take the full row at touch size, the main one
+            stretching, instead of a cluster of 32px targets. */}
+        <div class="flex flex-wrap items-center justify-end gap-2 max-sm:w-full max-sm:[&_[data-row-actions-trigger]]:h-10 max-sm:[&_[data-row-actions-trigger]]:min-w-10">
           <Show when={props.canManage !== false && props.source.reindexRag}>
             <Button
               type="button"
               size="sm"
               variant="ghost"
-              class="topbar-ai-control h-8 min-w-[78px] rounded-lg px-2"
+              class="topbar-ai-control h-8 min-w-[78px] rounded-lg px-2 max-sm:h-10 max-sm:flex-1"
               disabled={!available() || generating()}
               onClick={() => void generate()}
             >
@@ -273,7 +275,7 @@ export function RagOutputsPanel(props: {
                 <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("courseNotes.markdownPreview")}</span>
                 <span class="text-xs text-muted-foreground">{formatDateTime(current().generated_at, locale())}</span>
               </header>
-              <div class="p-4">
+              <div class="p-3 sm:p-4">
                 <RagOutputContent payload={current().payload} />
               </div>
             </article>

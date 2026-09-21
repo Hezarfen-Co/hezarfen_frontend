@@ -1,4 +1,5 @@
-import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { deleteNoteById } from "@/api/notes";
@@ -13,7 +14,7 @@ import { NoteList } from "@/components/notes/note-list";
 import { Button } from "@/components/ui/button";
 import { IconPlus, IconUploadCloud } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { SidePanel } from "@/components/ui/side-panel";
 import { createFlash } from "@/lib/flash";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
@@ -43,13 +44,15 @@ function NotesContent() {
     if (location().searchStr.includes("action=import")) setImportOpen(true);
   });
   const [page, setPage] = createSignal(0);
+  const pageSize = createResponsivePageSize(NOTE_PAGE_SIZE);
+  createEffect(on(pageSize, () => setPage(0), { defer: true }));
 
   const [list, { refetch }] = createResource(
-    () => page(),
-    async (currentPage) =>
+    () => ({ page: page(), size: pageSize() }),
+    async (source) =>
       loadListPage({
-        page: currentPage,
-        pageSize: NOTE_PAGE_SIZE,
+        page: source.page,
+        pageSize: source.size,
         clientMode: false,
         fetch: getNotes,
       }),
@@ -57,7 +60,7 @@ function NotesContent() {
 
   const total = () => list()?.total ?? 0;
   const pageItems = () => list()?.items ?? [];
-  const totalPages = createMemo(() => pagesOf(total(), NOTE_PAGE_SIZE));
+  const totalPages = createMemo(() => pagesOf(total(), pageSize()));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
 
   const wrap = async (fn: () => Promise<void>, okMessage: string) => {
@@ -129,8 +132,8 @@ function NotesContent() {
                   }, t("common.deleted"))
                 }
               />
-              <Show when={total() > NOTE_PAGE_SIZE}>
-                <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+              <Show when={total() > pageSize()}>
+                <TablePagination pageIndex={safePage()} pageCount={totalPages()} onPageChange={setPage} />
               </Show>
             </Show>
           </Suspense>

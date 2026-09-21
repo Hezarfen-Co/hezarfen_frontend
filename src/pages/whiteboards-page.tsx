@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { For, Show, Suspense, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import { getBoards, postBoard, type Board } from "@/api/boards";
 import { getUserSearch } from "@/api/users";
@@ -38,14 +39,15 @@ function WhiteboardsContent() {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  const PAGE_SIZE = 12;
+  const pageSize = createResponsivePageSize(12);
   const [page, setPage] = createSignal(0);
+  createEffect(on(pageSize, () => setPage(0), { defer: true }));
   const [boards, { refetch }] = createResource(
-    page,
-    (pageIndex) => getBoards({ limit: PAGE_SIZE, offset: pageIndex * PAGE_SIZE }),
+    () => ({ page: page(), size: pageSize() }),
+    (source) => getBoards({ limit: source.size, offset: source.page * source.size }),
   );
   const [createOpen, setCreateOpen] = createSignal(false);
-  const pageCount = createMemo(() => Math.max(1, Math.ceil((boards.latest?.total ?? 0) / PAGE_SIZE)));
+  const pageCount = createMemo(() => Math.max(1, Math.ceil((boards.latest?.total ?? 0) / pageSize())));
   const [query, setQuery] = createSignal("");
   // The board list endpoint has no server-side text filter, so this narrows
   // only the current page's real titles — a client-side search over real
@@ -98,11 +100,11 @@ function WhiteboardsContent() {
                   </For>
                 </div>
               </Show>
-              <Show when={(boards()?.total ?? 0) > PAGE_SIZE}>
+              <Show when={(boards()?.total ?? 0) > pageSize()}>
                 <TablePagination
                   pageIndex={page()}
                   pageCount={pageCount()}
-                  pageSize={PAGE_SIZE}
+                  pageSize={pageSize()}
                   total={boards()?.total ?? 0}
                   onPageChange={setPage}
                 />

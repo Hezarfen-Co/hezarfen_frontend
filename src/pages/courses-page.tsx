@@ -1,4 +1,5 @@
 import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
 import { getCourses, postCourse } from "@/api/courses";
@@ -16,7 +17,7 @@ import { IconPlus } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Select } from "@/components/ui/select";
 import { courseKindLabel } from "@/lib/course-kind";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -56,6 +57,7 @@ function CoursesContent() {
   // any şube has.
   const [taughtFilter, setTaughtFilter] = createSignal("all");
   const [page, setPage] = createSignal(0);
+  const pageSize = createResponsivePageSize(PAGE_SIZE);
   const [search, setSearch] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -68,7 +70,7 @@ function CoursesContent() {
     setPageKind(routeSearch().kind);
   });
   createEffect(() => {
-    pageKind(); taughtFilter(); search(); setPage(0);
+    pageKind(); taughtFilter(); search(); pageSize(); setPage(0);
   });
 
   const [limits, { refetch: refetchLimits }] = createResource(() => canCreate() ? getLimits() : null);
@@ -87,8 +89,8 @@ function CoursesContent() {
       return matchesSearch(query, course.title, course.description, personLabel(course.creator));
     });
   });
-  const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredCourses().length / PAGE_SIZE)));
-  const visibleCourses = createMemo(() => filteredCourses().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE));
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredCourses().length / pageSize())));
+  const visibleCourses = createMemo(() => filteredCourses().slice(page() * pageSize(), (page() + 1) * pageSize()));
 
   const createCourse = async (event: SubmitEvent) => {
     event.preventDefault();
@@ -200,7 +202,7 @@ function CoursesContent() {
                     )}
                   </For>
                 </div>
-                <PaginationControls page={page()} totalPages={totalPages()} onPageChange={setPage} />
+                <TablePagination pageIndex={page()} pageCount={totalPages()} onPageChange={setPage} />
               </Show>
             </Show>
           </Suspense>

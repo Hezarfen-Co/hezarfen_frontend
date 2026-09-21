@@ -8,7 +8,7 @@ import {
 } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Button } from "@/components/ui/button";
 import {
   IconArchive,
@@ -421,10 +421,10 @@ export default function MessagesPage() {
 
                       <Show when={messagePage() && messagePage()!.total > limit}>
                         <div class="p-4 border-t border-border-hairline">
-                          <PaginationControls
-                            page={page()}
+                          <TablePagination
+                            pageIndex={page()}
                             onPageChange={setPage}
-                            totalPages={Math.ceil((messagePage()?.total ?? 0) / limit)}
+                            pageCount={Math.ceil((messagePage()?.total ?? 0) / limit)}
                           />
                         </div>
                       </Show>

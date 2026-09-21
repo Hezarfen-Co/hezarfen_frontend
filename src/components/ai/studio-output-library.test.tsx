@@ -99,6 +99,27 @@ describe("StudioOutputLibrary", () => {
     expect(current.length).toBe(2);
   });
 
+  it("pages a long history ten rows at a time", async () => {
+    podcastApi.listPodcastJobs.mockResolvedValue(page(
+      Array.from({ length: 12 }, (_, index) =>
+        podcast({ job_id: `job-${index}`, source_title: `Bölüm ${index + 1}`, source_id: `other-${index}`, created_at: Date.UTC(2026, 0, 1, index), finished_at: Date.UTC(2026, 0, 1, index) }),
+      ),
+    ));
+    courseNotesApi.getCourseNoteRag.mockResolvedValue(page([]));
+    renderLibrary();
+
+    // Newest first: episode 12 leads page one, episode 2 closes it.
+    await waitFor(() => expect(screen.getByText("Bölüm 12")).toBeTruthy());
+    expect(screen.getByText("Bölüm 3")).toBeTruthy();
+    expect(screen.queryByText("Bölüm 2")).toBeNull();
+    expect(screen.getByText("1-10 / 12")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sonraki" }));
+    expect(screen.getByText("Bölüm 2")).toBeTruthy();
+    expect(screen.getByText("Bölüm 1")).toBeTruthy();
+    expect(screen.queryByText("Bölüm 12")).toBeNull();
+  });
+
   it("opens the run inspector for an episode instead of selecting its note", async () => {
     const onSelect = renderLibrary();
 

@@ -72,7 +72,8 @@ export function RagComposer(props: {
           <IconSend class="h-4 w-4" />
         </Button>
       </div>
-      <p class="mx-auto mt-2 w-full max-w-3xl px-1 text-center text-[11px] leading-4 text-muted-foreground">{props.hint}</p>
+      {/* Enter / Shift+Enter means nothing on a touch keyboard. */}
+      <p class="mx-auto mt-2 w-full max-w-3xl px-1 text-center text-[11px] leading-4 text-muted-foreground [@media(pointer:coarse)]:hidden">{props.hint}</p>
     </form>
   );
 }

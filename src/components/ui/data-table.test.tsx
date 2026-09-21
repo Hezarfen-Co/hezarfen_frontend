@@ -92,16 +92,39 @@ test("paginates tables by default", () => {
   expect(screen.getByText("Person 11")).toBeTruthy();
 });
 
-test("shows the pagination footer on a single page", () => {
+test("halves the page on a phone", () => {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: true,
+    media: query,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  }));
+  const rows = Array.from({ length: 11 }, (_, index) => ({ name: `Person ${index + 1}` }));
+  try {
+    render(() => (
+      <PreferencesProvider>
+        <DataTable columns={[columns[0]]} data={rows} enableColumnVisibility={false} />
+      </PreferencesProvider>
+    ));
+
+    expect(screen.getByText("Person 5")).toBeTruthy();
+    expect(screen.queryByText("Person 6")).toBeNull();
+    expect(screen.getByText("1 / 3")).toBeTruthy();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+test("a single page keeps the row count but drops the page buttons", () => {
   render(() => (
     <PreferencesProvider>
       <DataTable columns={[columns[0]]} data={[{ name: "Ada" }]} enableColumnVisibility={false} />
     </PreferencesProvider>
   ));
 
-  expect(screen.getByText("1 / 1")).toBeTruthy();
-  expect((screen.getByRole("button", { name: "Previous" }) as HTMLButtonElement).disabled).toBe(true);
-  expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByText("1-1 / 1")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Previous" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Next" })).toBeNull();
 });
 
 test("a display column renders its own cell instead of the empty dash", () => {

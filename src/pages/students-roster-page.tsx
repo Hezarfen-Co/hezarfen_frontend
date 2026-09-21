@@ -15,7 +15,7 @@ import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye, IconPlus, IconUploadCloud } from "@/components/ui/icons";
-import { Select } from "@/components/ui/select";
+import { DropdownSelect } from "@/components/ui/select";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useT } from "@/stores/preferences-context";
@@ -154,14 +154,18 @@ function StudentsRosterContent() {
                 }
                 filters={
                   <>
-                    <Select aria-label={t("roster.class")} value={classFilter()} onChange={(e) => setClassFilter(e.currentTarget.value)} wrapperClass="w-auto">
-                      <option value="">{t("roster.classAll")}</option>
-                      <For each={value().classes}>{(cls) => <option value={cls.id}>{cls.name}</option>}</For>
-                    </Select>
-                    <Select aria-label={t("academicYears.year")} value={yearFilter()} onChange={(e) => setYearFilter(e.currentTarget.value)} wrapperClass="w-auto">
-                      <option value="">{t("common.all")}</option>
-                      <For each={value().years}>{(year) => <option value={year.id}>{year.name}</option>}</For>
-                    </Select>
+                    <DropdownSelect
+                      labelPrefix={t("roster.class")}
+                      value={classFilter()}
+                      onChange={setClassFilter}
+                      options={[{ value: "", label: t("common.all") }, ...value().classes.map((cls) => ({ value: cls.id, label: cls.name }))]}
+                    />
+                    <DropdownSelect
+                      labelPrefix={t("academicYears.year")}
+                      value={yearFilter()}
+                      onChange={setYearFilter}
+                      options={[{ value: "", label: t("common.all") }, ...value().years.map((year) => ({ value: year.id, label: year.name }))]}
+                    />
                   </>
                 }
                 enablePagination

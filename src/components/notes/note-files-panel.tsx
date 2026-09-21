@@ -13,7 +13,7 @@ import { FormDialog } from "@/components/ui/form-dialog";
 import { createFlash } from "@/lib/flash";
 import { IconDownload, IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { cn } from "@/lib/cn";
 import { fileTypeMeta } from "@/lib/file-type";
@@ -253,7 +253,7 @@ export function NoteFilesPanel(props: {
             </For>
           </ul>
           <Show when={(files() ?? []).length > FILE_PAGE_SIZE}>
-            <PaginationControls page={filePage()} totalPages={totalPages()} onPageChange={setFilePage} />
+            <TablePagination pageIndex={filePage()} pageCount={totalPages()} onPageChange={setFilePage} />
           </Show>
           <NoteFilePreview noteId={props.noteId} source={props.source} file={previewFile()} onClose={() => setPreviewFile(null)} />
         </Show>

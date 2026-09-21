@@ -4,7 +4,7 @@ import type { ClassGroup, ProfileClassRef, ProfileCourseRef } from "@/api/client
 import { courseKindLabel } from "@/lib/course-kind";
 import { Badge } from "@/components/ui/badge";
 import { IconBook, IconSchool } from "@/components/ui/icons";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/cn";
 import { personLabel } from "@/lib/person";
@@ -91,9 +91,9 @@ export function ProfileMemberships(props: {
           </ul>
           <Show when={pageCount(props.classes.length) > 1}>
             <div class="mt-3">
-              <PaginationControls
-                page={classPage()}
-                totalPages={pageCount(props.classes.length)}
+              <TablePagination
+                pageIndex={classPage()}
+                pageCount={pageCount(props.classes.length)}
                 onPageChange={setClassPage}
               />
             </div>
@@ -132,9 +132,9 @@ export function ProfileMemberships(props: {
           </ul>
           <Show when={pageCount(props.courses.length) > 1}>
             <div class="mt-3">
-              <PaginationControls
-                page={coursePage()}
-                totalPages={pageCount(props.courses.length)}
+              <TablePagination
+                pageIndex={coursePage()}
+                pageCount={pageCount(props.courses.length)}
                 onPageChange={setCoursePage}
               />
             </div>

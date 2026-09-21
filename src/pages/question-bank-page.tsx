@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteBankQuestionById, getBankQuestions } from "@/api/bank-questions";
@@ -45,6 +46,8 @@ function QuestionBankContent() {
   const visibilityFilter = () => (bankTab() === "school" ? "school" : "all") as "all" | "private" | "school";
   const [subjectFilter, setSubjectFilter] = createSignal("all");
   const [page, setPage] = createSignal(0);
+  const pageSize = createResponsivePageSize(BANK_PAGE_SIZE);
+  createEffect(on(pageSize, () => setPage(0), { defer: true }));
   const [query, setQuery, debouncedQuery] = createDebouncedSignal();
   const [createOpen, setCreateOpen] = createSignal(false);
   const [editing, setEditing] = createSignal<BankQuestion | null>(null);
@@ -58,6 +61,7 @@ function QuestionBankContent() {
   const [list, { refetch }] = createResource(
     () => ({
       page: page(),
+      size: pageSize(),
       owner: ownerFilter(),
       subject: subjectFilter(),
       visibility: visibilityFilter(),
@@ -65,8 +69,8 @@ function QuestionBankContent() {
     }),
     async (filters) => {
       const result = await getBankQuestions({
-        limit: BANK_PAGE_SIZE,
-        offset: filters.page * BANK_PAGE_SIZE,
+        limit: filters.size,
+        offset: filters.page * filters.size,
         ...(filters.owner === "me" ? { owner: "me" } : {}),
         ...(filters.subject !== "all" ? { subject: filters.subject } : {}),
         ...(filters.visibility !== "all" ? { visibility: filters.visibility } : {}),
@@ -84,7 +88,7 @@ function QuestionBankContent() {
   // Deleting the last row of the last page shrinks the page count under the
   // current page; the table then hides its pagination bar entirely and the user
   // is stranded with no control to get back. Same clamp as exam-questions-panel.
-  const pageCount = () => Math.max(1, Math.ceil(total() / BANK_PAGE_SIZE));
+  const pageCount = () => Math.max(1, Math.ceil(total() / pageSize()));
   createEffect(() => {
     if (page() >= pageCount()) setPage(pageCount() - 1);
   });
@@ -267,7 +271,7 @@ function QuestionBankContent() {
                   setPage(0);
                 }}
                 enablePagination
-                manualPagination={{ pageIndex: page(), pageSize: BANK_PAGE_SIZE, total: total(), onPageChange: setPage }}
+                manualPagination={{ pageIndex: page(), pageSize: pageSize(), total: total(), onPageChange: setPage }}
                 empty={t("bank.empty")}
                 storageKey="question-bank"
                 onRowClick={(question) => navigate({ to: "/question-bank/$id", params: { id: question.id } })}

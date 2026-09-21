@@ -1,4 +1,5 @@
 import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import { deleteCourseNoteById, getCourseNotes, patchCourseNoteById, postCourseNote, postCourseNoteFile } from "@/api/course-notes";
 import { formatApiError } from "@/api/client";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { DataToolbar } from "@/components/ui/data-toolbar";
 import { IconPlus } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { PaginationControls } from "@/components/ui/pagination-controls";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { SidePanel } from "@/components/ui/side-panel";
 import { createFlash } from "@/lib/flash";
 import { courseNoteFiles } from "@/lib/note-source";
@@ -29,6 +30,7 @@ export function CourseNotesPanel(props: {
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [page, setPage] = createSignal(0);
+  const pageSize = createResponsivePageSize(NOTE_PAGE_SIZE);
   const [search, setSearch] = createSignal("");
 
   const [list, { refetch }] = createResource(
@@ -42,12 +44,13 @@ export function CourseNotesPanel(props: {
     return query ? allNotes().filter((note) => matchesSearch(query, note.title, note.content)) : allNotes();
   });
   const total = () => filteredNotes().length;
-  const pageItems = createMemo(() => filteredNotes().slice(page() * NOTE_PAGE_SIZE, (page() + 1) * NOTE_PAGE_SIZE));
-  const totalPages = createMemo(() => Math.max(1, Math.ceil(total() / NOTE_PAGE_SIZE)));
+  const pageItems = createMemo(() => filteredNotes().slice(page() * pageSize(), (page() + 1) * pageSize()));
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(total() / pageSize())));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
 
   createEffect(() => {
     search();
+    pageSize();
     setPage(0);
   });
 
@@ -153,8 +156,8 @@ export function CourseNotesPanel(props: {
                 }, t("common.deleted"))
               }
             />
-            <Show when={total() > NOTE_PAGE_SIZE}>
-              <PaginationControls page={safePage()} totalPages={totalPages()} onPageChange={setPage} />
+            <Show when={total() > pageSize()}>
+              <TablePagination pageIndex={safePage()} pageCount={totalPages()} onPageChange={setPage} />
             </Show>
           </Show>
         </Suspense>
