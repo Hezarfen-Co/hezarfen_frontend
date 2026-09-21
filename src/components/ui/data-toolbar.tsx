@@ -25,7 +25,7 @@ export function DataToolbar(props: {
     <div class={cn("flex flex-wrap items-center gap-2 sm:gap-3", props.class)}>
       <Show when={hasSearch()}>
         <DataTableSearch
-          class={cn("order-1 w-auto min-w-40 flex-1", !props.inline && "sm:max-w-72")}
+          class={cn("order-1 w-auto min-w-40 flex-1 grow-[100]", !props.inline && "sm:max-w-72")}
           value={props.searchValue ?? ""}
           placeholder={props.searchPlaceholder}
           hint={props.searchHint}
@@ -36,7 +36,7 @@ export function DataToolbar(props: {
         <div class="order-3 flex w-full flex-wrap items-center gap-2 sm:order-2 sm:w-auto">{props.filters}</div>
       </Show>
       <Show when={props.actions}>
-        <div class="order-2 ml-auto flex shrink-0 items-center gap-2 sm:order-3 max-sm:[&_button]:h-10 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
+        <div class="order-2 ml-auto flex shrink-0 grow items-center justify-end gap-2 sm:order-3 sm:grow-0 max-sm:[&_button]:h-10 max-sm:[&_button]:flex-1 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
       </Show>
     </div>
   );

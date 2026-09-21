@@ -48,8 +48,10 @@ test("keeps only the rightmost action column sticky and fixed at 110x45", () => 
   expect(actionsCell.classList).not.toContain("text-right");
   expect(actionsCell.style.width).toBe("110px");
   const columnTracks = document.querySelectorAll("col");
-  expect(columnTracks[0]?.style.width).toBe("calc(50% - 55px)");
-  expect(columnTracks[1]?.style.width).toBe("calc(50% - 55px)");
+  // Plain percentages: Chrome reads a %-and-px calc() on a table column as
+  // auto and splits the table evenly, whatever each column's size says.
+  expect(columnTracks[0]?.style.width).toBe("50%");
+  expect(columnTracks[1]?.style.width).toBe("50%");
   expect(columnTracks[2]?.style.width).toBe("110px");
   const roleHeader = screen.getAllByRole("columnheader").find((header) => header.textContent?.startsWith("Role"));
   expect(roleHeader?.classList).not.toContain("table-sticky-head-right");

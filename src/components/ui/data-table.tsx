@@ -208,8 +208,11 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     if (stickyRightLocked(column.id)) return "110px";
     const total = dataColumnsWidth();
     if (total === 0) return `${column.getSize()}px`;
-    const share = column.getSize() / total;
-    return `calc(${share * 100}% - ${share * actionColumnsWidth()}px)`;
+    // A plain percentage: Chrome treats a calc() that mixes % and px on a
+    // table column as auto, which split every table into equal columns and
+    // ignored each column's size. The shares sum to 100% beside the fixed
+    // 110px action column; the fixed layout scales them into what is left.
+    return `${(column.getSize() / total) * 100}%`;
   };
   const compactScreen = createMediaQuery(COMPACT_SCREEN_QUERY);
   const useCards = () => (props.mobileLayout ?? "cards") === "cards" && compactScreen();
@@ -326,7 +329,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         <div class={cn("flex flex-wrap items-center gap-2", sectioned() && "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs")}>
           <Show when={showSearch()}>
             <DataTableSearch
-              class="order-1 w-auto min-w-40 flex-1 sm:max-w-xs"
+              class="order-1 w-auto min-w-40 flex-1 grow-[100] sm:max-w-xs"
               value={searchFieldValue()}
               onChange={handleSearch}
               placeholder={props.filterPlaceholder ?? t("common.searchPlaceholder")}
@@ -337,11 +340,15 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             <div class="order-3 -my-1 flex w-full items-center gap-2 overflow-x-auto py-1 [scrollbar-width:none] sm:my-0 sm:py-0 sm:flex-wrap sm:overflow-visible lg:order-2 lg:w-auto [&_button]:h-10 [&_button]:shrink-0 [&_button]:rounded-lg [&_button]:text-[13px] sm:[&_button]:h-8 [&_select]:h-10 [&_select]:rounded-lg [&_select]:text-[13px] sm:[&_select]:h-8 max-sm:[&>*]:flex-nowrap max-sm:[&>*]:shrink-0">{props.filters}</div>
           </Show>
           <Show when={props.actions || showColumnMenu()}>
-            <div class="order-2 ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2 lg:order-3">
+            {/* Beside the search the actions keep their own width (the search
+                out-grows them 100:1). A label too long to fit there wraps to
+                a line of its own, where the sole grower takes the full row and
+                the button stretches instead of hanging off the right edge. */}
+            <div class="order-2 ml-auto flex shrink-0 grow flex-wrap items-center justify-end gap-2 sm:grow-0 lg:order-3">
               <Show when={props.actions}>
                 {/* A "yakında" button does nothing yet; on a phone it only
                     pushes the working action off the search row. */}
-                <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md max-sm:[&_button]:h-10 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
+                <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md max-sm:flex-1 max-sm:[&_button]:h-10 max-sm:[&_button]:flex-1 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
               </Show>
               <Show when={showColumnMenu()}>
                 <DataTableViewMenu columns={viewMenuColumns()} />
@@ -395,13 +402,19 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                       <Show when={action()}>{(cell) => <div class="-my-1 shrink-0 [&_[data-row-actions-label]]:hidden [&_[data-row-actions-trigger]]:h-10 [&_[data-row-actions-trigger]]:w-10 [&_[data-row-actions-trigger]]:min-w-0 [&_[data-row-actions-trigger]]:px-0">{flexRender(cell().column.columnDef.cell, cell().getContext())}</div>}</Show>
                     </div>
                     <Show when={details().length > 0}>
-                      <dl class="mt-2 grid grid-cols-[minmax(6rem,auto)_minmax(0,1fr)] gap-x-3 gap-y-1.5">
+                      {/* Two fields per line, label over value: a label/value
+                          row per field made every card as tall as its column
+                          count. Cells are written for a centred table column,
+                          so the card pulls their content back to the left. */}
+                      <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
                         <For each={details()}>
                           {(cell) => (
-                            <>
-                              <dt class="truncate text-xs text-muted-foreground">{headerLabel(cell.column.id)}</dt>
-                              <dd class="min-w-0 break-words text-foreground">{flexRender(cell.column.columnDef.cell, cell.getContext())}</dd>
-                            </>
+                            <div class="min-w-0">
+                              <dt class="truncate text-[11px] leading-4 text-muted-foreground">{headerLabel(cell.column.id)}</dt>
+                              <dd class="mt-0.5 min-w-0 break-words text-[13px] leading-5 text-foreground text-left [&_*]:text-left [&_.items-center]:items-start [&_.justify-center]:justify-start [&_.justify-end]:justify-start [&_.mx-auto]:mx-0">
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </dd>
+                            </div>
                           )}
                         </For>
                       </dl>

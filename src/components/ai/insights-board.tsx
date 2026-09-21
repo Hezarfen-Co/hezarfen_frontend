@@ -85,7 +85,9 @@ export function InsightsBoard() {
         </Show>
         <Show when={!students.error && students()}>
           <InsightOverview overview={overview()} />
-          <section class="data-shell space-y-4 p-4">
+          {/* No frame of its own: the table already draws its toolbar and
+              grid as cards, and a third card around them boxed them twice. */}
+          <section>
             <InsightStudentsTable
               rows={rows()}
               title={tx("insights.title")}
@@ -114,7 +116,7 @@ export function InsightsBoard() {
   );
 
   const runAnalysis = () => (
-    <section class="data-shell p-4">
+    <section>
       <Suspense fallback={<DataTableSkeleton columns={6} rows={5} />}>
         <Show when={runs.error}>
           <ErrorAlert message={formatApiError(runs.error)} onRetry={() => void refetchRuns()} />
