@@ -71,7 +71,7 @@ import linkSimpleUrl from "@phosphor-icons/core/regular/link-simple.svg?url";
 import arrowUUpLeftUrl from "@phosphor-icons/core/regular/arrow-u-up-left.svg?url";
 import arrowUUpRightUrl from "@phosphor-icons/core/regular/arrow-u-up-right.svg?url";
 
-type IconProps = {
+export type IconProps = {
   class?: string;
 };
 

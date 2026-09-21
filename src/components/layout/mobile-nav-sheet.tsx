@@ -1,8 +1,11 @@
 import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
 import { Link, useRouterState } from "@tanstack/solid-router";
 import { routeNavItem, visibleNavGroups, type NavItem } from "@/components/layout/nav-items";
-import { SidebarAccount } from "@/components/layout/sidebar-account";
-import { IconX } from "@/components/ui/icons";
+import { accountDisplayName, createAccountMenu } from "@/components/layout/account-menu";
+import { MobileAccountPanel } from "@/components/layout/mobile-account-panel";
+import { IconChevronLeft, IconChevronRight, IconX } from "@/components/ui/icons";
+import { UserAvatar } from "@/components/users/user-avatar";
+import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
@@ -42,6 +45,21 @@ export function MobileNavSheet(props: {
   const groups = () => visibleNavGroups(auth.user()?.role, modules.enabled());
   const current = () => routeNavItem(pathname(), auth.user()?.role, search());
   const badgeFor = (item: NavItem) => (item.id === "messages" ? feed.unreadMessages().total : 0);
+  // The account row drills into an account view inside this same sheet —
+  // a back arrow returns — instead of a dropdown stacked on top of the sheet.
+  const [view, setView] = createSignal<"nav" | "account">("nav");
+  createEffect(() => {
+    if (!props.open) setView("nav");
+  });
+  const menu = createAccountMenu({
+    onLogout: props.onLogout,
+    onLeave: props.onClose,
+    onOpenSettings: () => {
+      props.onClose();
+      props.onOpenProfile?.();
+    },
+  });
+
   const runAction = (item: NavItem) => {
     props.onClose();
     if (item.action === "celebi") props.onOpenCelebi?.();
@@ -156,7 +174,20 @@ export function MobileNavSheet(props: {
         </div>
 
         <div class="flex shrink-0 items-center justify-between px-4 pb-2 pt-1">
-          <h2 class="text-base font-semibold">{t("nav.menu")}</h2>
+          <Show
+            when={view() === "account"}
+            fallback={<h2 class="text-base font-semibold">{t("nav.menu")}</h2>}
+          >
+            <button
+              type="button"
+              onClick={() => setView("nav")}
+              class="-ml-2 flex h-10 items-center gap-1 rounded-md pl-1 pr-2 text-base font-semibold outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`${t("common.back")} — ${t("nav.menu")}`}
+            >
+              <IconChevronLeft class="h-5 w-5" />
+              {t("nav.account")}
+            </button>
+          </Show>
           <button
             type="button"
             ref={(el) => {
@@ -170,6 +201,17 @@ export function MobileNavSheet(props: {
           </button>
         </div>
 
+        {/* Both views share one grid cell and slide past each other; the
+            cell takes the taller view's height, so the sheet does not jump
+            when drilling in. `inert` keeps the off-screen view out of reach. */}
+        <div class="grid min-h-0 flex-1 overflow-hidden">
+        <div
+          inert={view() !== "nav"}
+          class={cn(
+            "flex min-h-0 flex-col transition-transform duration-300 ease-out [grid-area:1/1]",
+            view() === "nav" ? "translate-x-0" : "-translate-x-full",
+          )}
+        >
         <div class="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-1">
           <For each={groups()}>
             {(group) => (
@@ -232,15 +274,38 @@ export function MobileNavSheet(props: {
           </For>
         </div>
 
-        <SidebarAccount
-          menuPlacement="top-start"
-          onLogout={props.onLogout}
-          onNavigateAway={props.onClose}
-          onOpenSettings={() => {
-            props.onClose();
-            props.onOpenProfile?.();
-          }}
-        />
+        <Show when={menu.user()}>
+          {(u) => (
+            <div class="shrink-0 border-t border-border/80 p-2">
+              <button
+                type="button"
+                class="flex h-12 w-full items-center gap-2.5 rounded-md px-2 text-left outline-hidden transition-colors active:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={t("nav.account")}
+                onClick={() => setView("account")}
+              >
+                <UserAvatar userId={u().id} name={accountDisplayName(u())} hasAvatar={menu.hasAvatar()} size="sm" />
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[13px] font-semibold leading-4">{accountDisplayName(u())}</span>
+                  <span class="block truncate text-[11px] font-medium text-muted-foreground">
+                    {t(`role.${u().role}` as MessageKey)}
+                  </span>
+                </span>
+                <IconChevronRight class="h-4 w-4 shrink-0 text-muted-foreground" />
+              </button>
+            </div>
+          )}
+        </Show>
+        </div>
+        <div
+          inert={view() !== "account"}
+          class={cn(
+            "no-scrollbar min-h-0 overflow-y-auto overscroll-contain transition-transform duration-300 ease-out [grid-area:1/1]",
+            view() === "account" ? "translate-x-0" : "translate-x-full",
+          )}
+        >
+          <MobileAccountPanel menu={menu} />
+        </div>
+        </div>
       </div>
     </div>
   );
