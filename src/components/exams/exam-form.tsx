@@ -16,6 +16,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { examKindLabel } from "@/lib/exam-labels";
 import { pickCurrentTerm } from "@/lib/terms";
+import { countExamQuestions, isPublishing } from "@/lib/exam-publish";
 import { useT } from "@/stores/preferences-context";
 
 function dateInputFromMs(ms: number | null | undefined): string {
@@ -87,7 +88,9 @@ export function ExamForm(props: {
   const [maxAttempts, setMaxAttempts] = createSignal(String(props.initial?.max_attempts ?? 1));
   const [allowRejoin, setAllowRejoin] = createSignal(props.initial?.allow_rejoin ?? true);
   const [allowReview, setAllowReview] = createSignal(props.initial?.allow_review ?? false);
-  const [draft, setDraft] = createSignal(props.initial?.draft ?? false);
+  // A new exam starts as a draft: its questions are only added in step 2, so
+  // publishing on create would put an empty exam in front of students.
+  const [draft, setDraft] = createSignal(props.initial?.draft ?? true);
   const [startsDate, setStartsDate] = createSignal(dateInputFromMs(props.initial?.starts_at));
   const [startsTime, setStartsTime] = createSignal(timeInputFromMs(props.initial?.starts_at));
   const [endsDate, setEndsDate] = createSignal(dateInputFromMs(props.initial?.ends_at));
@@ -103,6 +106,8 @@ export function ExamForm(props: {
   const [pending, setPending] = createSignal(false);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const [pendingValues, setPendingValues] = createSignal<ExamFormValues | null>(null);
+  /** Set when the pending update would publish an exam that has no questions. */
+  const [publishingEmpty, setPublishingEmpty] = createSignal(false);
   const isEdit = () => !!props.initial?.id;
   const [settings] = createResource(() => getSettings());
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
@@ -160,7 +165,7 @@ export function ExamForm(props: {
         setHasRetakes(false);
         setMaxAttempts("1");
         setAllowRejoin(true);
-        setDraft(false);
+        setDraft(true);
         setStartsDate("");
         setStartsTime("");
         setEndsDate("");
@@ -212,6 +217,16 @@ export function ExamForm(props: {
     } satisfies ExamFormValues;
 
     if (isEdit()) {
+      let empty = false;
+      const examId = props.initial?.id;
+      if (examId && isPublishing(props.initial, values.draft)) {
+        try {
+          empty = (await countExamQuestions(examId)) === 0;
+        } catch {
+          // The count is advisory; the update confirmation still guards the save.
+        }
+      }
+      setPublishingEmpty(empty);
       setPendingValues(values);
       setConfirmOpen(true);
       return;
@@ -448,6 +463,9 @@ export function ExamForm(props: {
             <div>
               <span class="font-medium">{t("exams.draft")}</span>
               <p class="text-xs font-normal text-muted-foreground">{t("exams.draftHelp")}</p>
+              <Show when={!isEdit() && !draft()}>
+                <p class="mt-1 text-xs font-medium text-warning-text">{t("exams.publishOnCreateWarning")}</p>
+              </Show>
             </div>
           </label>
         </div>
@@ -470,7 +488,12 @@ export function ExamForm(props: {
         open={confirmOpen()}
         onOpenChange={setConfirmOpen}
         title={t("confirm.updateTitle")}
-        summary={t("confirm.updateExam", { title: pendingValues()?.title ?? "" })}
+        summary={
+          <Show when={publishingEmpty()} fallback={t("confirm.updateExam", { title: pendingValues()?.title ?? "" })}>
+            <span class="block">{t("confirm.updateExam", { title: pendingValues()?.title ?? "" })}</span>
+            <span class="mt-2 block font-medium text-warning-text">{t("exams.publishEmptyWarning")}</span>
+          </Show>
+        }
         onConfirm={async () => {
           const values = pendingValues();
           if (!values) return;

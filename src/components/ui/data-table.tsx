@@ -40,7 +40,7 @@ declare module "@tanstack/solid-table" {
     stickyLeft?: boolean;
     /** Vertical divider on the given edge — separates frozen label from metric columns. */
     divider?: "left" | "right";
-    /** Leave this column out of the phone card layout (e.g. a "yakında" placeholder). */
+    /** Leave this column out of the phone card layout (e.g. a column that only matters on a wide table). */
     hideInCards?: boolean;
   }
 }
@@ -220,7 +220,17 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const stickyRightLocked = (columnId: string) =>
     columnId === "actions" || (columnId === "update" && table.getColumn("actions") == null);
   const isStickyLeft = (column: Column<TData, unknown>) => column.columnDef.meta?.stickyLeft === true;
-  const alignOf = (_column: Column<TData, unknown>) => "center" as const;
+  // Headers stay centred; body cells read from the left edge. System columns
+  // (row actions, checkboxes) keep their controls centred under the header.
+  const isSystemColumnId = (columnId: string) => ["actions", "update", "select"].includes(columnId);
+  const alignOf = (column: Column<TData, unknown>) => isSystemColumnId(column.id) ? "center" as const : "left" as const;
+  // Cell renderers written for the old centred layout carry their own
+  // mx-auto / justify-center / text-center on their root; pull those to the
+  // start. Direct children only: deeper centring (avatar initials, icon
+  // buttons) is the widget's own layout, not the column's.
+  const leftCellClass = (column: Column<TData, unknown>) => isSystemColumnId(column.id)
+    ? undefined
+    : "[&>.mx-auto]:mx-0 [&>.justify-center]:justify-start [&>.text-center]:text-left";
   const dividerClass = (column: Column<TData, unknown>) => {
     const divider = column.columnDef.meta?.divider;
     return divider === "left" ? "border-l border-border/70" : divider === "right" ? "border-r border-border/70" : undefined;
@@ -438,9 +448,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                 the button stretches instead of hanging off the right edge. */}
             <div class="order-2 ml-auto flex shrink-0 grow flex-wrap items-center justify-end gap-2 sm:grow-0 lg:order-3">
               <Show when={props.actions}>
-                {/* A "yakında" button does nothing yet; on a phone it only
-                    pushes the working action off the search row. */}
-                <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md max-sm:flex-1 touch:[&_button]:h-10 max-sm:[&_button]:flex-1 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
+                <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md max-sm:flex-1 touch:[&_button]:h-10 max-sm:[&_button]:flex-1">{props.actions}</div>
               </Show>
               <Show when={showColumnMenu()}>
                 <DataTableViewMenu columns={viewMenuColumns()} />
@@ -610,6 +618,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                           <TableCell
                             class={cn(
                               alignClass[alignOf(cell.column)],
+                              leftCellClass(cell.column),
                               dividerClass(cell.column),
                               stickyCellClass(cell.column),
                               cell.column.columnDef.meta?.cellClass,
@@ -662,7 +671,7 @@ export function DataTableFrame(props: ParentProps<{ class?: string }>) {
   // frame's bottom edge it covered the last row's action button.
   return (
     <div class="space-y-1">
-      <div ref={frame} class={cn("data-table-wrap relative", props.class)}>
+      <div ref={frame} class={cn("data-table-wrap relative", props.class)} data-scrollable={scrollable() ? "" : undefined}>
         {props.children}
       </div>
       <Show when={scrollable()}>

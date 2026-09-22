@@ -2,7 +2,8 @@ import { For, Show, createEffect, createMemo, createSignal, type Component } fro
 import { cn } from "@/lib/cn";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { useT } from "@/stores/preferences-context";
+import { formatNumber } from "@/lib/format";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 export type ChartBarItem = {
   id: string;
@@ -26,6 +27,8 @@ export type ChartBarProps = {
 export const ChartBar: Component<ChartBarProps> = (props) => {
   const [pageIndex, setPageIndex] = createSignal(0);
   const t = useT();
+  const { locale } = usePreferences();
+  const display = (item: ChartBarItem) => item.formattedValue ?? formatNumber(item.value, locale());
 
   // The scale is computed off every item, not just the visible page, so bars
   // don't rescale as the reader pages through them.
@@ -85,7 +88,7 @@ export const ChartBar: Component<ChartBarProps> = (props) => {
                         {item.label}
                       </span>
                       <span class="font-mono text-xs font-semibold tabular-nums text-foreground">
-                        {item.formattedValue ?? item.value}
+                        {display(item)}
                       </span>
                     </div>
 
@@ -102,7 +105,7 @@ export const ChartBar: Component<ChartBarProps> = (props) => {
                   </div>
 
                   <div class="pointer-events-none absolute -top-7 right-0 z-20 rounded-lg bg-popover px-2.5 py-1 text-[11px] font-medium text-popover-foreground opacity-0 shadow-md border border-border transition-opacity group-hover:opacity-100">
-                    {item.label}: {item.formattedValue ?? item.value} ({Math.round(pct())}%)
+                    {item.label}: {display(item)} ({Math.round(pct())}%)
                   </div>
                 </div>
               );

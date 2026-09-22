@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/solid-router";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { IconBell } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { formatUnreadCount } from "@/lib/notifications";
 import { createNotificationFeed } from "@/components/layout/notification-feed";
 import { NotificationList } from "@/components/layout/notification-list";
 import { useT } from "@/stores/preferences-context";
@@ -34,12 +35,16 @@ export function NotificationCenter() {
           open() && "bg-muted text-foreground"
         )}
         title={t("notifications.title")}
-        aria-label={t("notifications.title")}
+        aria-label={
+          unreadCount() > 0
+            ? `${t("notifications.title")} — ${t("notifications.unreadCount", { count: unreadCount() })}`
+            : t("notifications.title")
+        }
       >
         <IconBell class="h-4 w-4" />
         <Show when={unreadCount() > 0}>
-          <span class="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-destructive-foreground ring-2 ring-background">
-            {unreadCount() > 9 ? "9+" : unreadCount()}
+          <span class="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-destructive-foreground ring-2 ring-background" aria-hidden="true">
+            {formatUnreadCount(unreadCount())}
           </span>
         </Show>
       </PopoverTrigger>

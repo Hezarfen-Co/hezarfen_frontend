@@ -22,7 +22,6 @@ import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BlueprintsTab } from "@/components/classes/blueprints-tab";
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
 import { matchesSearch } from "@/lib/search-text";
@@ -241,10 +240,6 @@ function ClassesContent() {
                 }
                 actions={
                   <Show when={canManage()}>
-                    <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-                      {t("classGroups.mergeClasses")}
-                      <ComingSoonBadge class="ml-1.5" />
-                    </Button>
                     <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowForm(true)}>
                       <IconPlus class="h-4 w-4" />
                       {t("classGroups.newClass")}

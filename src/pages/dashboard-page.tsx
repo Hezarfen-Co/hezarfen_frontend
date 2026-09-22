@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ComingSoonBadge, ComingSoonPanel } from "@/components/ui/coming-soon";
 import { ChartBar } from "@/components/ui/chart-bar";
 import { ChartHeatmap, type HeatmapEntry } from "@/components/ui/chart-heatmap";
 import { ChartLine } from "@/components/ui/chart-line";
@@ -832,17 +831,7 @@ function DashboardContent() {
 
           <Suspense fallback={<PanelSkeleton />}>
           <section class="space-y-3" aria-labelledby="highlights-heading">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="highlights-heading" class="text-base font-semibold tracking-tight text-text-strong">{t("dashboard.analytics")}</h2>
-              <Show when={isAdminHome()}>
-                <div class="flex items-center gap-2">
-                  <Select disabled wrapperClass="w-auto" class="h-8" aria-label={t("dashboard.admin.rangeThisMonth")}>
-                    <option>{t("dashboard.admin.rangeThisMonth")}</option>
-                  </Select>
-                  <ComingSoonBadge />
-                </div>
-              </Show>
-            </div>
+            <h2 id="highlights-heading" class="text-base font-semibold tracking-tight text-text-strong">{t("dashboard.analytics")}</h2>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <For each={stats()}>
                 {(stat) => <StatTile label={t(stat.labelKey)} value={stat.value} Icon={stat.Icon} />}
@@ -853,10 +842,9 @@ function DashboardContent() {
 
           <Suspense fallback={<PanelSkeleton />}>
           <Show when={role() === "student"}>
-            {/* STU-01's own "Bugünün Planı" and "Konu Yetkinliğim" main-column
-                cards need a study-plan/mastery API this app doesn't have, and
-                "Ses Atölyesi" has no backend concept at all — all three keep
-                their design slot as a ComingSoonPanel. "Bu Hafta" is real
+            {/* STU-01's "Konu Yetkinliğim" and "Ses Atölyesi" cards need a
+                mastery / audio backend this app doesn't have, so they are left
+                out rather than shown as placeholders. "Bu Hafta" is real
                 (this week's pomodoro minutes), so it gets the rail slot the
                 design reserves for that kind of card. */}
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-4">
@@ -911,13 +899,9 @@ function DashboardContent() {
               </div>
               </Show>
             </div>
-            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
-              <Show when={on("sessions") && clock()} fallback={<ComingSoonPanel title={t("dashboard.student.todayPlan")} />}>
-                {(ready) => <TodayLessonsPanel audience="student" now={ready().now} courseTitle={courseTitleOf} />}
-              </Show>
-              <ComingSoonPanel title={t("dashboard.student.mastery")} />
-              <ComingSoonPanel title={t("dashboard.student.audioWorkshop")} />
-            </div>
+            <Show when={on("sessions") && clock()}>
+              {(ready) => <TodayLessonsPanel audience="student" now={ready().now} courseTitle={courseTitleOf} />}
+            </Show>
           </Show>
           </Suspense>
 
@@ -928,7 +912,7 @@ function DashboardContent() {
                 each started lesson's roll-call count — it leads the board
                 because an untaken roll call is the one thing that cannot wait.
                 "Sınıf Performansı" needs per-class topic mastery, which is
-                out, so it keeps its ComingSoonPanel slot. The AI suggestion
+                out, so it is left off the board. The AI suggestion
                 queue has no backend at all. The one real rail item behind that
                 queue — a pending appointment request — gets the rail. */}
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -987,7 +971,6 @@ function DashboardContent() {
               </div>
               </Show>
             </div>
-            <ComingSoonPanel title={t("dashboard.teacher.classPerformance")} />
           </Show>
           </Suspense>
 
@@ -1016,8 +999,8 @@ function DashboardContent() {
           <Show when={role() === "parent"}>
             {/* PAR-01's "Gelişim" (topic-mastery trend) needs mastery data this
                 app doesn't have, and "Öğretmen Notları" has no backend concept
-                distinct from `/messages` — both keep their design slot as a
-                ComingSoonPanel. "Devamsızlık" and "Ödeme" are both real,
+                distinct from `/messages` — both are left off the board.
+                "Devamsızlık" and "Ödeme" are both real,
                 per-child reads already used elsewhere in the app (`/students`
                 child detail, `/payments`). */}
             <Show when={(children()?.items.length ?? 0) > 1}>
@@ -1100,18 +1083,12 @@ function DashboardContent() {
               </div>
               </Show>
             </div>
-            <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
-              {/* PAR progress: the child's homework report (a parent-readable
-                  route) as overdue / due-this-week, in place of the coming-soon
-                  slot; marks-based progress still has no parent-facing trend. */}
-              <Show
-                when={on("homework") && selectedChildId() && clock()}
-                fallback={<ComingSoonPanel class="lg:col-span-2" title={t("dashboard.parent.progress")} />}
-              >
-                <ChildHomeworkPanel class="lg:col-span-2" childId={selectedChildId()} now={clock()!.now} />
-              </Show>
-              <ComingSoonPanel title={t("dashboard.parent.teacherNotes")} />
-            </div>
+            {/* PAR progress: the child's homework report (a parent-readable
+                route) as overdue / due-this-week; marks-based progress still
+                has no parent-facing trend. */}
+            <Show when={on("homework") && selectedChildId() && clock()}>
+              <ChildHomeworkPanel childId={selectedChildId()} now={clock()!.now} />
+            </Show>
           </Show>
           </Suspense>
 

@@ -61,3 +61,12 @@ export function formatDecimal(value: number | null | undefined, locale: Locale =
     maximumFractionDigits: digits,
   }).format(value);
 }
+
+/**
+ * A chart or count value in the reader's locale with up to `maxDigits`
+ * decimals: "1.234,5" in Turkish, "1,234.5" in English. Whole numbers stay whole.
+ */
+export function formatNumber(value: number | null | undefined, locale: Locale = "en", maxDigits = 1): string {
+  if (value == null || !Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { maximumFractionDigits: maxDigits }).format(value);
+}

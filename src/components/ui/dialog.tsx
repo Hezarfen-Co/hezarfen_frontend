@@ -1,6 +1,6 @@
 import { Dialog as DialogPrimitive } from "@kobalte/core/dialog";
 import type { ComponentProps, ParentProps, ValidComponent } from "solid-js";
-import { splitProps } from "solid-js";
+import { Show, splitProps } from "solid-js";
 import { IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
@@ -9,13 +9,12 @@ export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.CloseButton;
 
 export function DialogContent<T extends ValidComponent = "div">(
-  props: ComponentProps<typeof DialogPrimitive.Content<T>> & { dismissable?: boolean },
+  props: ComponentProps<typeof DialogPrimitive.Content<T>> & { dismissable?: boolean; closeButton?: boolean },
 ) {
-  const [local, rest] = splitProps(props as ComponentProps<typeof DialogPrimitive.Content> & { dismissable?: boolean }, [
-    "class",
-    "children",
-    "dismissable",
-  ]);
+  const [local, rest] = splitProps(
+    props as ComponentProps<typeof DialogPrimitive.Content> & { dismissable?: boolean; closeButton?: boolean },
+    ["class", "children", "dismissable", "closeButton"],
+  );
   return (
     <DialogPrimitive.Portal>
       {/* z-[70]: above the mobile nav sheet (z-60) and tab bar (z-40). */}
@@ -39,6 +38,9 @@ export function DialogContent<T extends ValidComponent = "div">(
           onEscapeKeyDown={local.dismissable === false ? (e) => e.preventDefault() : undefined}
           {...rest}
         >
+          {/* `closeButton={false}` lets a dialog draw its own close control
+              (the command palette labels it, beside its clear-search ×). */}
+          <Show when={local.closeButton !== false}>
           <DialogPrimitive.CloseButton
             type="button"
             class="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-sm text-muted-foreground transition-all hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -46,6 +48,7 @@ export function DialogContent<T extends ValidComponent = "div">(
           >
             <IconX class="h-4 w-4" />
           </DialogPrimitive.CloseButton>
+          </Show>
           {local.children}
         </DialogPrimitive.Content>
       </div>

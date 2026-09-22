@@ -1,6 +1,7 @@
 import { For, Show, createMemo, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences } from "@/stores/preferences-context";
+import { formatDecimal } from "@/lib/format";
 import { EmptyInline } from "@/components/ui/empty-inline";
 
 export type ChartLineItem = {
@@ -25,9 +26,11 @@ const PADDING = { top: 18, right: 18, bottom: 34, left: 38 };
 const Y_TICKS = [0, 25, 50, 75, 100];
 const TOOLTIP_WIDTH = 190;
 const TOOLTIP_HEIGHT = 62;
+const TICK_MAX_CHARS = 14;
 
 export const ChartLine: Component<ChartLineProps> = (props) => {
-  const t = useT();
+  const { t, locale } = usePreferences();
+  const decimal = (value: number) => formatDecimal(value, locale());
   const maxValue = () => props.maxScale != null && props.maxScale > 0
     ? props.maxScale
     : Math.max(...props.items.map((item) => item.value), 1);
@@ -67,6 +70,14 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
     if (indexes[indexes.length - 1] !== props.items.length - 1) indexes.push(props.items.length - 1);
     return indexes;
   });
+  // An axis tick has ~1/6 of the width, so it carries the item's caption (a
+  // short date) or, when there is none, its position. Full labels overlap
+  // each other and are already in the tooltip and the "latest" line.
+  const tickLabel = (index: number) => {
+    const caption = props.items[index].caption;
+    if (!caption) return String(index + 1);
+    return caption.length > TICK_MAX_CHARS ? `${caption.slice(0, TICK_MAX_CHARS - 1)}…` : caption;
+  };
   const averageY = () => PADDING.top + (1 - Math.min(1, summary()!.average / maxValue())) * plotHeight;
 
   return (
@@ -99,11 +110,11 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
               </div>
               <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
                 <dt class="text-[11px] text-muted-foreground">{t("dashboard.chartAverage")}</dt>
-                <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{stats().average.toFixed(1)}</dd>
+                <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{decimal(stats().average)}</dd>
               </div>
               <div class="rounded-lg bg-surface-overlay px-2.5 py-2">
                 <dt class="text-[11px] text-muted-foreground">{t("dashboard.chartRange")}</dt>
-                <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{stats().minimum.toFixed(1)}–{stats().maximum.toFixed(1)}</dd>
+                <dd class="mt-0.5 font-mono text-sm font-semibold tabular-nums">{decimal(stats().minimum)}–{decimal(stats().maximum)}</dd>
               </div>
             </dl>
 
@@ -137,9 +148,6 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
                     stroke-width="1"
                     stroke-dasharray="4 4"
                   />
-                  <text x={PADDING.left + 5} y={averageY() - 5} class="fill-muted-foreground text-[11px]">
-                    {t("dashboard.chartAverage")}: {stats().average.toFixed(1)}
-                  </text>
                   <polyline points={points()} fill="none" class="stroke-primary" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                 </Show>
 
@@ -198,7 +206,7 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
                         text-anchor={index === 0 ? "start" : index === props.items.length - 1 ? "end" : "middle"}
                         class="fill-muted-foreground text-[11px]"
                       >
-                        {props.items[index].caption ?? props.items[index].label}
+                        {tickLabel(index)}
                       </text>
                     );
                   }}

@@ -16,6 +16,14 @@ vi.mock("@/stores/modules-context", () => ({
 }));
 vi.mock("@/api/users", () => ({ getUserSearch: vi.fn(async () => ({ items: [], total: 0, limit: 10, offset: 0 })) }));
 vi.mock("@/api/classes", () => ({ getMyClasses: vi.fn(async () => ({ items: [], total: 0, limit: 10, offset: 0 })) }));
+vi.mock("@/lib/command-search", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/command-search")>()),
+  loadCommandRecords: vi.fn(async () => [
+    { kind: "course", id: "c1", title: "Biyoloji", context: null, description: null, courseKind: "course", at: null },
+    { kind: "exam", id: "e1", title: "1. Yazılı", context: "Biyoloji — 10-B", description: null, at: null },
+    { kind: "course", id: "c2", title: "Kimya", context: null, description: null, courseKind: "course", at: null },
+  ]),
+}));
 
 beforeEach(() => {
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -45,4 +53,22 @@ test("the palette is a combobox whose active option follows the arrow keys", asy
   fireEvent.keyDown(field, { key: "ArrowDown" });
   expect(field.getAttribute("aria-activedescendant")).toBe(options[1].id);
   expect(options[1].getAttribute("aria-selected")).toBe("true");
+});
+
+test("typing a course name lists matching courses and exams as their own groups", async () => {
+  render(() => (
+    <PreferencesProvider>
+      <CommandPalette open onOpenChange={() => {}} />
+    </PreferencesProvider>
+  ));
+
+  const field = await screen.findByRole("combobox");
+  fireEvent.input(field, { target: { value: "biyoloji" } });
+
+  const courseOption = await screen.findByRole("option", { name: /^Biyoloji/ });
+  expect(courseOption).toBeTruthy();
+  expect(screen.getByRole("option", { name: /1\. Yazılı/ })).toBeTruthy();
+  expect(screen.queryByRole("option", { name: /Kimya/ })).toBeNull();
+  expect(screen.getByText("Courses")).toBeTruthy();
+  expect(screen.getByText("Exams")).toBeTruthy();
 });

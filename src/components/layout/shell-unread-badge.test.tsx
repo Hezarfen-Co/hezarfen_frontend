@@ -6,13 +6,14 @@ import { PreferencesProvider } from "@/stores/preferences-context";
 
 // The shell feed is the single source of truth for both badges; the test drives
 // it through signals so a refetch (new message arriving) is reproducible.
-const h = vi.hoisted(() => ({ feed: null as never }));
+const h = vi.hoisted(() => ({ feed: null as never, navigate: vi.fn() }));
 
 vi.mock("@/stores/shell-feed-context", () => ({ useShellFeed: () => h.feed }));
+vi.mock("@/api/messages", () => ({ patchMessageById: vi.fn(async () => ({})) }));
 vi.mock("@/stores/auth-context", () => ({ useAuth: () => ({ user: () => ({ id: "u-1" }) }) }));
 vi.mock("@tanstack/solid-router", () => ({
   Link: (props: never) => <a href={(props as { to: string }).to}>{(props as { children: unknown }).children}</a>,
-  useNavigate: () => () => undefined,
+  useNavigate: () => h.navigate,
 }));
 // Kobalte's popover keeps its content unmounted in jsdom; the badge and the
 // "dismiss all" button are the surfaces under test, so render both inline.
@@ -94,4 +95,37 @@ test("dismiss all clears the badge, a later message raises it again", async () =
   // A genuinely new message pushes the oldest listed one off the page.
   setUnreadMessages({ ...emptyPage, items: [msg("new"), ...listed.slice(0, 9)], total: 12 });
   expect(badges()).toEqual(["1"]);
+});
+
+test("the bell badge and the list header show the same capped unread count", () => {
+  const listed = Array.from({ length: 10 }, (_, i) => msg(`m${i}`));
+  mountFeed([], { items: listed, total: 20 });
+
+  render(() => (
+    <PreferencesProvider>
+      <NotificationCenter />
+    </PreferencesProvider>
+  ));
+
+  expect(badges()).toEqual(["9+"]);
+  const header = screen.getByLabelText("20 unread");
+  expect(header.textContent).toBe("9+");
+});
+
+test("a notification with a target page opens it directly and is marked read", async () => {
+  h.navigate.mockClear();
+  mountFeed([], { items: [msg("m1")], total: 1 });
+
+  render(() => (
+    <PreferencesProvider>
+      <NotificationCenter />
+    </PreferencesProvider>
+  ));
+
+  expect(badges()).toEqual(["1"]);
+  fireEvent.click(screen.getByText("subject m1"));
+  expect(h.navigate).toHaveBeenCalledWith({ to: "/messages" });
+  // No intermediate "go to page" step.
+  expect(screen.queryByText("Go to page")).toBeNull();
+  await vi.waitFor(() => expect(badges()).toEqual([]));
 });

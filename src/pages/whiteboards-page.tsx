@@ -265,8 +265,8 @@ function CreateBoardPanel(props: {
           <ErrorAlert message={error()} />
         </Show>
         <div class="space-y-1.5">
-          <Label>{t("whiteboard.titleLabel")}</Label>
-          <Input value={title()} maxlength={200} onInput={(e) => setTitle(e.currentTarget.value)} />
+          <Label for="new-whiteboard-title">{t("whiteboard.titleLabel")}</Label>
+          <Input id="new-whiteboard-title" value={title()} maxlength={200} onInput={(e) => setTitle(e.currentTarget.value)} />
         </div>
 
         <div class="space-y-1.5">

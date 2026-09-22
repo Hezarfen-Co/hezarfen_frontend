@@ -9,14 +9,13 @@ import { getEventAttendance } from "@/api/events";
 import { getEventById } from "@/api/events";
 import { getEventRoster } from "@/api/events";
 import { patchEventById } from "@/api/events";
-import { postEventAttendance } from "@/api/events";
 import { postEventRegister } from "@/api/events";
 import { formatApiError } from "@/api/client";
-import type { AttendanceStatus, EventAudience, EventRosterEntry } from "@/api/client";
+import type { EventAudience, EventRosterEntry } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
-import { AttendanceStatusPicker } from "@/components/events/attendance-status-picker";
 import { AttendanceTable } from "@/components/events/attendance-table";
 import { EventForm } from "@/components/events/event-form";
+import { EventRollCall } from "@/components/events/event-roll-call";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
@@ -35,6 +34,8 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { getAttendanceStatusMeta } from "@/lib/attendance-status";
 import { cn } from "@/lib/cn";
+import { createNow } from "@/lib/create-now";
+import { eventStatusLabelKey, isRollCallOpen } from "@/lib/event-roll-call";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { personId, personLabel } from "@/lib/person";
@@ -71,8 +72,6 @@ function EventDetailContent() {
     return params().id;
   });
 
-  const [status, setStatus] = createSignal<AttendanceStatus>("present");
-  const [otherUserId, setOtherUserId] = createSignal("");
   const [registrationUserId, setRegistrationUserId] = createSignal("");
   const [editing, setEditing] = createSignal(false);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
@@ -85,8 +84,11 @@ function EventDetailContent() {
   const isTeacherPlus = () => hasMinRole(auth.user()?.role, "teacher");
 
   const [event, { refetch: refetchEvent }] = createResource(id, (eventId) => getEventById(eventId));
+  // The expected-attendee roster, resolved by the backend from the event's
+  // audience (whole school, a role, a course, or the signup list) and joined
+  // with each person's recorded mark. It feeds both the signup list and roll call.
   const [roster, { refetch: refetchRoster }] = createResource(
-    () => (isTeacherPlus() && event()?.audience.kind === "registration" ? id() : null),
+    () => (isTeacherPlus() && event() ? id() : null),
     async (eventId) => (eventId ? (await getEventRoster(eventId)).items : []),
   );
   const [attendance, { refetch: refetchAttendance }] = createResource(
@@ -106,6 +108,8 @@ function EventDetailContent() {
     return e.creator === u.id || hasMinRole(u.role, "manager");
   };
   const [flash, setFlash] = createFlash();
+  const now = createNow();
+  const rollCallOpen = () => isRollCallOpen(event()?.starts_at, now());
   const rosterColumns = createMemo<ColumnDef<EventRosterEntry>[]>(() => [
     {
       id: "attendee",
@@ -120,9 +124,10 @@ function EventDetailContent() {
       cell: (cell) => {
         const status = cell.row.original.status;
         const meta = status ? getAttendanceStatusMeta(status) : null;
+        const key = status ? eventStatusLabelKey(status) ?? meta?.key : null;
         return status ? (
           <Badge variant="outline" class={cn("gap-1 rounded-full border px-2.5 py-1 normal-case", meta?.class)}>
-            {meta ? t(meta.key) : status}
+            {key ? t(key) : status}
           </Badge>
         ) : <span class="text-sm text-muted-foreground">{t("events.notMarked")}</span>;
       },
@@ -322,32 +327,24 @@ function EventDetailContent() {
                 </Show>
 
                 <TabsContent value="studentAttendance" forceMount class="space-y-3">
-                  <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
-                    <p class="mb-3 text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
-                    <div class="grid gap-3">
-                    <UserSearchSelect id="other-user" label={t("events.attendee")} value={otherUserId()} placeholder={t("events.selectAttendee")} emptyMessage={t("events.noAttendees")} role="student" onChange={setOtherUserId} />
-                    <AttendanceStatusPicker id="other-status" value={status()} onChange={setStatus} label={t("events.status")} />
-                    <Button
-                      type="button"
-                      class="w-full rounded-xl sm:w-auto"
-                      disabled={pending()}
-                      onClick={() => {
-                        const uid = otherUserId().trim();
-                        if (!uid) {
-                          setError(t("events.userIdRequired"));
-                          return;
-                        }
-                        void wrap(async () => {
-                          await postEventAttendance(id(), { status: status(), user_id: uid });
-                          setOtherUserId("");
-                          await refetchAttendance();
-                        }, t("common.saved"));
-                      }}
-                    >
-                      {t("events.saveStudentAttendance")}
-                    </Button>
-                    </div>
-                  </div>
+                  <p class="text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
+                  <Suspense fallback={<DataTableSkeleton columns={2} />}>
+                    <Show when={roster()} fallback={
+                      <Show when={roster.error}>
+                        <Alert variant="destructive">{formatApiError(roster.error)}</Alert>
+                      </Show>
+                    }>
+                      {(rows) => (
+                        <EventRollCall
+                          eventId={id()}
+                          roster={rows()}
+                          open={rollCallOpen()}
+                          closedReason={t("events.rollCall.opensAt", { date: formatDateTime(ev().starts_at, locale()) })}
+                          onSaved={() => Promise.all([refetchRoster(), refetchAttendance()])}
+                        />
+                      )}
+                    </Show>
+                  </Suspense>
                 </TabsContent>
 
                 <TabsContent value="attendanceRecords" forceMount class="space-y-3">

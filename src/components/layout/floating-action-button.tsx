@@ -1,6 +1,7 @@
 import { Index, Show, createEffect, createSignal, onCleanup, onMount, type Component } from "solid-js";
 import { IconChevronLeft, IconChevronRight, IconPlus, IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { formatUnreadCount } from "@/lib/notifications";
 import { clamp01, radialOffsets, readFloatingButton, writeFloatingButton } from "@/lib/floating-button";
 import { useT } from "@/stores/preferences-context";
 
@@ -25,7 +26,7 @@ const TAP_SLOP = 8;
 /** How close the button centre has to come to the hide target to snap into it. */
 const HIDE_REACH = 64;
 
-const badgeText = (count: number) => (count > 9 ? "9+" : String(count));
+const badgeText = formatUnreadCount;
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 /**

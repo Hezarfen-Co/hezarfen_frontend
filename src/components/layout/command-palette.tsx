@@ -19,6 +19,18 @@ import {
   IconX,
 } from "@/components/ui/icons";
 import { getUserSearch } from "@/api/users";
+import {
+  COMMAND_RECORD_KINDS,
+  COMMAND_RECORD_MIN_QUERY,
+  COMMAND_RECORD_ROUTES,
+  filterCommandRecords,
+  loadCommandRecords,
+  type CommandRecord,
+  type CommandRecordKind,
+} from "@/lib/command-search";
+import { courseKindLabel } from "@/lib/course-kind";
+import { formatDate, formatDateTime } from "@/lib/format";
+import type { MessageKey } from "@/i18n/messages";
 import { HOME_ITEM, visibleNavGroups } from "@/components/layout/nav-items";
 import { createStudentClassLabels } from "@/lib/student-classes";
 import { hasMinRole } from "@/lib/roles";
@@ -35,7 +47,21 @@ export type CommandPaletteProps = {
   onOpenProfile?: () => void;
 };
 
-type CommandCategory = "people" | "actions" | "pages" | "system";
+type CommandCategory = "people" | CommandRecordKind | "actions" | "pages" | "system";
+
+const RECORD_GROUP_KEY: Record<CommandRecordKind, MessageKey> = {
+  course: "command.group.courses",
+  exam: "command.group.exams",
+  homework: "command.group.homework",
+  event: "command.group.events",
+};
+
+const RECORD_ICON: Record<CommandRecordKind, typeof IconSearch> = {
+  course: IconBook,
+  exam: IconExam,
+  homework: IconHomework,
+  event: IconCalendar,
+};
 
 type CommandItem = {
   id: string;
@@ -82,6 +108,48 @@ export function CommandPalette(props: CommandPaletteProps) {
   // Two students called "Ayşe Yılmaz" are only told apart by their class, so
   // each visible match is resolved to one (see `student-classes`).
   const classLabels = createStudentClassLabels(() => (people.latest?.items ?? []).map((person) => person.id));
+
+  // Courses, exams, homework and events the user's own list pages show. Only
+  // kinds whose list page is in this user's nav are searched, read once per
+  // open (cached briefly across reopens) and filtered client-side per keystroke.
+  const recordKinds = createMemo<CommandRecordKind[]>(() => {
+    const routes = new Set(
+      visibleNavGroups(role(), modules.enabled()).flatMap((group) => group.items.map((item) => item.to)),
+    );
+    return COMMAND_RECORD_KINDS.filter((kind) => routes.has(COMMAND_RECORD_ROUTES[kind]));
+  });
+  const [records] = createResource(
+    () => {
+      const userRole = role();
+      const kinds = recordKinds();
+      return props.open && userRole && kinds.length > 0 ? { role: userRole, kinds } : null;
+    },
+    (source) => loadCommandRecords(source.role, source.kinds),
+  );
+  const recordDescription = (record: CommandRecord): string | undefined => {
+    const locale = prefs.locale();
+    switch (record.kind) {
+      case "course":
+        return record.courseKind ? courseKindLabel(record.courseKind, t) : undefined;
+      case "exam":
+        return [record.context, record.at != null ? formatDateTime(record.at, locale) : null].filter(Boolean).join(" · ") || undefined;
+      case "homework":
+        return [record.context, record.at != null ? t("command.homeworkDue", { date: formatDate(record.at, locale) }) : null]
+          .filter(Boolean)
+          .join(" · ") || undefined;
+      case "event":
+        return record.at != null ? formatDateTime(record.at, locale) : undefined;
+    }
+  };
+  const openRecord = (record: CommandRecord) => {
+    const params = { id: record.id };
+    if (record.kind === "course") void navigate({ to: "/courses/$id", params });
+    else if (record.kind === "exam") void navigate({ to: "/exams/$id", params });
+    else if (record.kind === "homework") void navigate({ to: "/homework/$id", params });
+    else void navigate({ to: "/events/$id", params });
+  };
+  const recordsLoading = () =>
+    records.loading && query().trim().length >= COMMAND_RECORD_MIN_QUERY && records.latest === undefined;
 
   const items = createMemo<CommandItem[]>(() => {
     const list: CommandItem[] = [];
@@ -300,9 +368,19 @@ export function CommandPalette(props: CommandPaletteProps) {
       title: person.display_name || person.username,
       description: classLabels()[person.id] ? `${classLabels()[person.id]} · ${person.username}` : person.username,
       icon: IconUsers,
-      onSelect: () => void navigate({ to: "/admin/users/$id", params: { id: person.id } }),
+      // Same destination as a row on the students list.
+      onSelect: () => void navigate({ to: "/profile/$userId", params: { userId: person.id } }),
     }));
-    return [...found, ...items().filter((item) =>
+    const matchedRecords: CommandItem[] = filterCommandRecords(records.latest ?? [], q).map((record) => ({
+      id: `${record.kind}-${record.id}`,
+      category: record.kind,
+      categoryLabel: t(RECORD_GROUP_KEY[record.kind]),
+      title: record.title,
+      description: recordDescription(record),
+      icon: RECORD_ICON[record.kind],
+      onSelect: () => openRecord(record),
+    }));
+    return [...found, ...matchedRecords, ...items().filter((item) =>
       matchesSearch(q, item.title, item.description, item.keywords, item.categoryLabel),
     )];
   });
@@ -321,7 +399,7 @@ export function CommandPalette(props: CommandPaletteProps) {
       map.get(item.category)!.push({ item, globalIndex: idx });
     });
 
-    const order: CommandCategory[] = ["people", "actions", "pages", "system"];
+    const order: CommandCategory[] = ["people", ...COMMAND_RECORD_KINDS, "actions", "pages", "system"];
     for (const cat of order) {
       const itemsInCat = map.get(cat);
       if (itemsInCat && itemsInCat.length > 0) {
@@ -396,6 +474,9 @@ export function CommandPalette(props: CommandPaletteProps) {
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent
         class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover"
+        // The palette draws its own labelled close control: the dialog's
+        // icon-only × sat beside the clear-search × and read as the same button.
+        closeButton={false}
         // The dialog's focus trap parks focus on the panel itself when it
         // opens, which used to swallow a focus() queued from an effect — the
         // palette opened with nothing focused and the first keystroke went
@@ -409,7 +490,7 @@ export function CommandPalette(props: CommandPaletteProps) {
         <DialogDescription class="sr-only">{t("common.searchPlaceholder")}</DialogDescription>
 
         {/* Search Bar Header */}
-        <div class="flex items-center gap-2.5 border-b border-border/80 px-4 py-3 pr-16 bg-muted/20">
+        <div class="flex items-center gap-2.5 border-b border-border/80 px-4 py-3 bg-muted/20">
           <IconSearch class="h-4 w-4 text-muted-foreground shrink-0" />
           <input
             ref={inputRef}
@@ -441,10 +522,21 @@ export function CommandPalette(props: CommandPaletteProps) {
             >
               <IconX class="h-3.5 w-3.5" />
             </button>
-            <span role="status" class="rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground shrink-0 font-mono">
-              {filteredItems().length} {t("dashboard.ready").toLowerCase()}
+            <span role="status" class="shrink-0 whitespace-nowrap rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+              {t("command.resultCount", { count: filteredItems().length })}
             </span>
           </Show>
+          <button
+            type="button"
+            class="ml-1 inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-border/80 bg-background px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            onClick={() => props.onOpenChange(false)}
+            aria-label={t("common.close")}
+            title={t("common.close")}
+          >
+            {/* Keyboards get the key to press, touch screens the word. */}
+            <kbd class="hidden font-mono text-[11px] font-semibold sm:inline">Esc</kbd>
+            <span class="sm:hidden">{t("common.close")}</span>
+          </button>
         </div>
 
         {/* What the field accepts — the palette takes names, pages and
@@ -452,6 +544,19 @@ export function CommandPalette(props: CommandPaletteProps) {
         <Show when={!query()}>
           <p class="border-b border-border/60 bg-muted/10 px-4 py-2 text-[11px] leading-snug text-muted-foreground">
             {role() === "admin" ? t("search.hint.commandAdmin") : t("search.hint.command")}
+            <Show when={recordKinds().length > 0}>
+              {" "}
+              {t("search.hint.commandRecords", {
+                kinds: recordKinds()
+                  .map((kind) => t(RECORD_GROUP_KEY[kind]).toLocaleLowerCase(prefs.locale() === "tr" ? "tr-TR" : "en-US"))
+                  .join(", "),
+              })}
+            </Show>
+          </p>
+        </Show>
+        <Show when={recordsLoading()}>
+          <p role="status" class="border-b border-border/60 px-4 py-2 text-[11px] text-muted-foreground">
+            {t("command.recordsLoading")}
           </p>
         </Show>
 

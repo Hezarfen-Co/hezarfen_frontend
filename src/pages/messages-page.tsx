@@ -30,14 +30,21 @@ import {
   deleteMessageById,
 } from "@/api/messages";
 import type { Message, MessageFolder } from "@/api/client";
+import type { MessageKey } from "@/i18n/messages";
 import { formatApiError } from "@/api/client";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { createFlash } from "@/lib/flash";
-import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+const folders: { id: MessageFolder; labelKey: MessageKey; icon: typeof IconMessage }[] = [
+  { id: "inbox", labelKey: "messages.inbox", icon: IconMessage },
+  { id: "sent", labelKey: "messages.sent", icon: IconSend },
+  { id: "archive", labelKey: "messages.archive", icon: IconArchive },
+  { id: "trash", labelKey: "messages.trash", icon: IconTrash },
+];
 
 export default function MessagesPage() {
   const t = useT();
@@ -169,129 +176,71 @@ export default function MessagesPage() {
     }
   };
 
-  const folderLabel = () => {
-    const f = folder();
-    if (f === "sent") return t("messages.sent");
-    if (f === "archive") return t("messages.archive");
-    if (f === "trash") return t("messages.trash");
-    return t("messages.inbox");
-  };
-
   return (
     <RouteGuard>
       <div class="space-y-4">
         <div class="min-h-[50vh] sm:min-h-[calc(100vh-11rem)]">
         <section class="data-shell overflow-hidden p-0">
           <div class="flex min-h-[50vh] flex-col sm:min-h-[calc(100vh-11rem)]">
-            {/* Card header — folder name + unread chip, matching Figma's "Gelen kutusu" card. */}
+            {/* Card header names the page; the active folder is already the
+                highlighted tab below, and the inbox tab carries the unread count. */}
             <div class="flex items-center gap-2 border-b border-border-hairline bg-surface-base px-4 py-3">
-              <p class="text-sm font-semibold text-text-strong">{folderLabel()}</p>
-              <Show when={folder() === "inbox" && unreadCount() && unreadCount()! > 0}>
-                <Badge variant="secondary" class="rounded-full text-[11px]">
-                  {unreadCount()} {t("messages.unread")}
-                </Badge>
-              </Show>
+              <h1 class="text-sm font-semibold text-text-strong">{t("nav.messages")}</h1>
             </div>
             {/* Folder toolbar — the app shell already owns the global sidebar. */}
             <aside class="flex flex-wrap items-center justify-between gap-2 border-b border-border-hairline bg-surface-overlay px-3 py-2.5">
-              {/* Folder navigation stays compact, leaving the only sidebar to the app shell. */}
-              <nav class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
-                <button
-                  type="button"
-                  class={cn(
-                    "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
-                    folder() === "inbox"
-                      ? "bg-primary/10 text-primary-text"
-                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                  )}
-                  onClick={() =>
-                    startTransition(() => {
-                      setFolder("inbox");
-                      setPage(1);
-                      setSelectedId("");
-                    })
-                  }
-                >
-                  <div class="flex items-center gap-3">
-                    <IconMessage class="h-4 w-4" />
-                    <span>{t("messages.inbox")}</span>
-                  </div>
-                  <Show when={unreadCount() ? unreadCount()! > 0 : false}>
-                    <span class="rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
-                      {unreadCount()}
-                    </span>
-                  </Show>
-                </button>
-
-                <button
-                  type="button"
-                  class={cn(
-                    "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
-                    folder() === "sent"
-                      ? "bg-primary/10 text-primary-text"
-                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                  )}
-                  onClick={() =>
-                    startTransition(() => {
-                      setFolder("sent");
-                      setPage(1);
-                      setSelectedId("");
-                    })
-                  }
-                >
-                  <div class="flex items-center gap-3">
-                    <IconSend class="h-4 w-4" />
-                    <span>{t("messages.sent")}</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  class={cn(
-                    "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
-                    folder() === "archive"
-                      ? "bg-primary/10 text-primary-text"
-                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                  )}
-                  onClick={() =>
-                    startTransition(() => {
-                      setFolder("archive");
-                      setPage(1);
-                      setSelectedId("");
-                    })
-                  }
-                >
-                  <div class="flex items-center gap-3">
-                    <IconArchive class="h-4 w-4" />
-                    <span>{t("messages.archive")}</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  class={cn(
-                    "flex h-8 shrink-0 items-center justify-between gap-2 rounded-lg px-3 text-xs font-semibold transition-colors",
-                    folder() === "trash"
-                      ? "bg-destructive/10 text-destructive-text"
-                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                  )}
-                  onClick={() =>
-                    startTransition(() => {
-                      setFolder("trash");
-                      setPage(1);
-                      setSelectedId("");
-                    })
-                  }
-                >
-                  <div class="flex items-center gap-3">
-                    <IconTrash class="h-4 w-4" />
-                    <span>{t("messages.trash")}</span>
-                  </div>
-                </button>
+              {/* On a phone the four folders share one full-width row as
+                  icon-over-label cells, so none of them hides off screen; from
+                  sm up they sit inline beside the new-message button. */}
+              <nav aria-label={t("messages.folders")} class="grid w-full grid-cols-4 gap-0.5 sm:flex sm:gap-1 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-center">
+                <For each={folders}>
+                  {(entry) => {
+                    const active = () => folder() === entry.id;
+                    const Icon = entry.icon;
+                    const badge = () => (entry.id === "inbox" ? unreadCount() ?? 0 : 0);
+                    return (
+                      <button
+                        type="button"
+                        aria-current={active() ? "page" : undefined}
+                        class={cn(
+                          "relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-0 py-1.5 text-[11px] font-semibold tracking-tight transition-colors sm:h-8 sm:tracking-normal sm:shrink-0 sm:flex-row sm:gap-2 sm:px-3 sm:py-0 sm:text-xs",
+                          active()
+                            ? entry.id === "trash"
+                              ? "bg-destructive/10 text-destructive-text"
+                              : "bg-primary/10 text-primary-text"
+                            : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                        )}
+                        onClick={() =>
+                          startTransition(() => {
+                            setFolder(entry.id);
+                            setPage(1);
+                            setSelectedId("");
+                          })
+                        }
+                      >
+                        <span class="relative flex items-center">
+                          <Icon class="h-4 w-4" />
+                          {/* Phone: the count rides on the icon. */}
+                          <Show when={badge() > 0}>
+                            <span class="absolute -right-2.5 -top-1.5 rounded-full bg-primary px-1 text-[11px] font-bold leading-4 text-primary-foreground sm:hidden">
+                              {badge() > 99 ? "99+" : badge()}
+                            </span>
+                          </Show>
+                        </span>
+                        <span class="max-w-full truncate">{t(entry.labelKey)}</span>
+                        <Show when={badge() > 0}>
+                          <span class="hidden rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground sm:inline">
+                            {badge()}
+                          </span>
+                        </Show>
+                      </button>
+                    );
+                  }}
+                </For>
               </nav>
               <Button
                 size="sm"
-                class="shrink-0 rounded-lg"
+                class="w-full shrink-0 rounded-lg sm:w-auto"
                 onClick={() => setComposeOpen(true)}
               >
                 <IconPlus class="h-4 w-4" />

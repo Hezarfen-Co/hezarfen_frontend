@@ -10,7 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { Badge } from "@/components/ui/badge";
-import { IconDownload, IconSparkles } from "@/components/ui/icons";
+import { IconSparkles } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { createFlash } from "@/lib/flash";
 import { loadInsightStudents } from "@/lib/insight-students";
@@ -135,10 +135,6 @@ function AiInsightStudentContent() {
                     </div>
                   </div>
                   <div class="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" size="sm" class="rounded-lg" disabled title={t("comingSoon.title")}>
-                      <IconDownload class="h-4 w-4" />
-                      {t("common.export")}
-                    </Button>
                     <Show when={canRecompute()}>
                       <Button size="sm" class="rounded-lg" disabled={queuing()} onClick={() => void recompute()}>
                         <IconSparkles class="h-4 w-4" />

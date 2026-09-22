@@ -8,6 +8,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Badge } from "@/components/ui/badge";
 import { getAttendanceStatusMeta } from "@/lib/attendance-status";
 import { cn } from "@/lib/cn";
+import { eventStatusLabelKey } from "@/lib/event-roll-call";
 import { personId, personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
@@ -30,11 +31,13 @@ export function AttendanceTable(props: {
       accessorKey: "status",
       header: t("events.status"),
       cell: (cell) => {
-        const meta = getAttendanceStatusMeta(cell.row.original.status);
+        const status = cell.row.original.status;
+        const meta = getAttendanceStatusMeta(status);
+        // Event wording ("Katıldı"), not the lesson one ("Var · Derste").
+        const key = eventStatusLabelKey(status) ?? meta?.key;
         return (
           <Badge variant="outline" class={cn("gap-1 rounded-full border px-2.5 py-1 normal-case", meta?.class)}>
-            <span>{meta ? t(meta.key) : cell.row.original.status}</span>
-            <Show when={meta}>{(known) => <span class="font-normal opacity-75">· {t(known().detailKey)}</span>}</Show>
+            {key ? t(key) : status}
           </Badge>
         );
       },

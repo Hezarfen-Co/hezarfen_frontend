@@ -15,6 +15,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconCheck, IconEdit, IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
@@ -29,6 +30,7 @@ import { examKindLabel } from "@/lib/exam-labels";
 import { examDisplayStatus, examStatusMessageKey, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
 import { LIST_CAP, loadCappedList } from "@/lib/capped-list";
 import { createFlash } from "@/lib/flash";
+import { countExamQuestions } from "@/lib/exam-publish";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { matchesSearch } from "@/lib/search-text";
@@ -92,6 +94,8 @@ function ExamsContent() {
   const [flash, setFlash] = createFlash();
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
+  /** A draft exam with no questions, waiting on "publish anyway". */
+  const [emptyPublishTarget, setEmptyPublishTarget] = createSignal<Exam | null>(null);
 
   const [createStep, setCreateStep] = createSignal<"details" | "questions">("details");
   const [createdExam, setCreatedExam] = createSignal<Exam | null>(null);
@@ -302,10 +306,15 @@ function ExamsContent() {
     setFlash(t("common.saved"));
   };
 
-  const publishExam = async (exam: Exam) => {
+  const publishExam = async (exam: Exam, force = false) => {
     setPending(true);
     setError("");
     try {
+      // An exam with no questions is almost always a mistake — ask first.
+      if (!force && (await countExamQuestions(exam.id)) === 0) {
+        setEmptyPublishTarget(exam);
+        return;
+      }
       await patchExamById(exam.id, { draft: false });
       await refetchExams();
       setFlash(t("exams.published"));
@@ -482,7 +491,10 @@ function ExamsContent() {
               courseId={examCourseId(createdExam()!)}
               embedded
             />
-            <div class="flex justify-end border-t pt-3">
+            <div class="flex flex-wrap items-center justify-end gap-3 border-t pt-3">
+              <Show when={createdExam()!.draft}>
+                <p class="mr-auto text-xs text-muted-foreground">{t("exams.savedAsDraftHint")}</p>
+              </Show>
               <Button type="button" variant="default" onClick={() => setCreateOpen(false)}>
                 {t("exams.finishAndClose")}
               </Button>
@@ -490,6 +502,20 @@ function ExamsContent() {
           </div>
         </Show>
       </SidePanel>
+
+      <ConfirmDialog
+        open={emptyPublishTarget() != null}
+        onOpenChange={(open) => {
+          if (!open) setEmptyPublishTarget(null);
+        }}
+        title={t("exams.publishEmptyTitle")}
+        summary={t("exams.publishEmptyWarning")}
+        confirmLabel={t("exams.publishAnyway")}
+        onConfirm={async () => {
+          const exam = emptyPublishTarget();
+          if (exam) await publishExam(exam, true);
+        }}
+      />
 
       <SidePanel
         open={editingExam() != null}

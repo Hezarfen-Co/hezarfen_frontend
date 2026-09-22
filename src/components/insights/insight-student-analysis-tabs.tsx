@@ -7,6 +7,7 @@ import { ChartProgressRing, type ProgressRingSegment } from "@/components/ui/cha
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconAlert, IconChevronDown } from "@/components/ui/icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatNumber } from "@/lib/format";
 import { isRecord, type UnknownRecord } from "@/lib/is-record";
 import { usePreferences } from "@/stores/preferences-context";
 
@@ -38,6 +39,7 @@ function AttendanceChart(props: { value: unknown; t: (key: string) => string }) 
 }
 
 function MarksChart(props: { value: unknown; t: (key: string) => string }) {
+  const { locale } = usePreferences();
   const courses = () => Object.entries(obj(obj(props.value).courses));
   const items = (): ChartBarItem[] => courses().flatMap(([id, raw]) => {
     const stat = obj(raw);
@@ -47,7 +49,7 @@ function MarksChart(props: { value: unknown; t: (key: string) => string }) {
       label: String(stat.course_title ?? id).slice(0, 32),
       value,
       max: 100,
-      formattedValue: value.toLocaleString("tr-TR", { maximumFractionDigits: 1 }),
+      formattedValue: formatNumber(value, locale()),
     }];
   });
   return (
@@ -62,6 +64,7 @@ function MarksChart(props: { value: unknown; t: (key: string) => string }) {
 }
 
 function StudyChart(props: { value: unknown; t: (key: string) => string }) {
+  const { locale } = usePreferences();
   const recent = () => obj(obj(props.value).recent_28d);
   const hours = () => {
     const milliseconds = num(recent().total_focus_ms);
@@ -78,7 +81,7 @@ function StudyChart(props: { value: unknown; t: (key: string) => string }) {
         id: "current",
         label: props.t("insights.analysis.currentPeriod"),
         value: currentHours,
-        formattedValue: currentHours.toLocaleString("tr-TR", { maximumFractionDigits: 1 }),
+        formattedValue: formatNumber(currentHours, locale()),
         colorClass: "bg-primary",
       });
     }
@@ -87,7 +90,7 @@ function StudyChart(props: { value: unknown; t: (key: string) => string }) {
         id: "previous",
         label: props.t("insights.analysis.previousPeriod"),
         value: previousHours,
-        formattedValue: previousHours.toLocaleString("tr-TR", { maximumFractionDigits: 1 }),
+        formattedValue: formatNumber(previousHours, locale()),
         colorClass: "bg-info",
       });
     }

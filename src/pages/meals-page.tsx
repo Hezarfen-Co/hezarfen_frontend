@@ -114,7 +114,7 @@ function MealsContent() {
         <Suspense fallback={<PageSpinner />}>
           <Show when={menus.error}><ErrorAlert message={formatApiError(menus.error)} onRetry={() => void refetch()} /></Show>
           <Show when={visible().length > 0} fallback={<EmptyState kind="meals" title={t("meals.empty")} />}>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"><For each={visible()}>{(menu) => <MealMenuCard menu={menu} locale={locale() === "tr" ? "tr-TR" : "en-US"} labels={{ dishes: t("meals.dishes"), capacity: t("meals.capacity"), conflict: t("meals.conflict"), reservations: t("meals.reservations"), topPick: t("meals.topPick") }} reservationCount={reservationCounts()?.get(menu.id) ?? undefined} />}</For></div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"><For each={visible()}>{(menu) => <MealMenuCard menu={menu} locale={locale() === "tr" ? "tr-TR" : "en-US"} labels={{ dishes: t("meals.dishes"), capacity: t("meals.capacity"), conflict: t("meals.conflict"), reservations: t("meals.reservations") }} reservationCount={reservationCounts()?.get(menu.id) ?? undefined} />}</For></div>
             <TablePagination pageIndex={page()} pageCount={totalPages()} onPageChange={setPage} />
           </Show>
         </Suspense>

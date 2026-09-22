@@ -70,10 +70,18 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
     else handleClose();
   };
 
+  // The backend needs a recipient and a subject (the body is optional), so
+  // "Gönder" stays off until both are there and says which one is missing.
+  const sendBlocker = () => {
+    if (!recipient()) return t("messages.sendHintRecipient");
+    if (!subject().trim()) return t("messages.sendHintSubject");
+    return "";
+  };
+
   const handleSend = async (e: SubmitEvent) => {
     e.preventDefault();
-    if (!recipient()) {
-      setError(t("messages.selectRecipient"));
+    if (sendBlocker()) {
+      setError(sendBlocker());
       return;
     }
     setError("");
@@ -154,12 +162,13 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
             {/* Subject Line */}
             <div class="flex items-center border-b border-border-hairline px-3 py-1 gap-2 text-xs">
               <span class="w-12 font-medium text-muted-foreground shrink-0">
-                {t("form.title")}:
+                {t("messages.subject")}:
               </span>
               <Input
                 required
                 maxlength={200}
-                placeholder="Konu"
+                aria-label={t("messages.subject")}
+                placeholder={t("messages.subjectPlaceholder")}
                 class="h-8 border-none bg-transparent shadow-none focus-visible:ring-0 text-xs flex-1"
                 value={subject()}
                 onInput={(e) => setSubject(e.currentTarget.value)}
@@ -169,10 +178,11 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
             {/* Optional Label Tag Line */}
             <div class="flex items-center border-b border-border-hairline px-3 py-1 gap-2 text-xs">
               <span class="w-12 font-medium text-muted-foreground shrink-0">
-                Etiket:
+                {t("messages.label")}:
               </span>
               <Input
                 maxlength={50}
+                aria-label={t("messages.label")}
                 placeholder={t("messages.labelsPlaceholder")}
                 class="h-8 border-none bg-transparent shadow-none focus-visible:ring-0 text-xs flex-1"
                 value={label()}
@@ -195,16 +205,24 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
             </Show>
 
             {/* Gmail Bottom Action Toolbar */}
-            <div class="flex items-center justify-between border-t border-border-hairline bg-surface-tint px-3 py-2.5">
-              <Button
-                type="submit"
-                size="sm"
-                class="h-9 rounded-lg px-5 font-semibold"
-                disabled={pending()}
-              >
-                <IconSend class="mr-2 h-4 w-4" />
-                {t("messages.send")}
-              </Button>
+            <div class="flex items-center justify-between gap-3 border-t border-border-hairline bg-surface-tint px-3 py-2.5">
+              <div class="flex min-w-0 items-center gap-3">
+                <Button
+                  type="submit"
+                  size="sm"
+                  class="h-9 shrink-0 rounded-lg px-5 font-semibold"
+                  disabled={pending() || !!sendBlocker()}
+                  aria-describedby={sendBlocker() ? "gmail-compose-send-hint" : undefined}
+                >
+                  <IconSend class="mr-2 h-4 w-4" />
+                  {t("messages.send")}
+                </Button>
+                <Show when={sendBlocker() && !error()}>
+                  <p id="gmail-compose-send-hint" class="min-w-0 text-[11px] leading-snug text-muted-foreground">
+                    {sendBlocker()}
+                  </p>
+                </Show>
+              </div>
 
               <button
                 type="button"

@@ -1,21 +1,18 @@
 import { For, Show, Suspense, createSignal } from "solid-js";
 import { Button } from "@/components/ui/button";
-import { ComingSoonPanel } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   IconBell,
   IconCalendar,
   IconChevronLeft,
   IconExam,
-  IconExternalLink,
   IconHomework,
   IconMessage,
   IconTrash,
   IconX,
 } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import type { NotificationItem, NotificationType } from "@/lib/notifications";
+import { formatUnreadCount, type NotificationItem, type NotificationType } from "@/lib/notifications";
 import type { NotificationFeed } from "@/components/layout/notification-feed";
 import { useT } from "@/stores/preferences-context";
 
@@ -63,16 +60,12 @@ export function NotificationList(props: {
     props.feed.dismiss(id);
   };
 
-  const select = async (item: NotificationItem) => {
-    await props.feed.markRead(item);
-    setPreviewNotification(item);
-  };
-
-  const goTo = () => {
-    const item = previewNotification();
-    if (!item) return;
-    setPreviewNotification(null);
-    props.onNavigate(item.targetUrl);
+  // A row with a target page goes straight there (marked read on the way);
+  // only a row with nowhere to go opens the in-list preview.
+  const select = (item: NotificationItem) => {
+    void props.feed.markRead(item);
+    if (item.targetUrl) props.onNavigate(item.targetUrl);
+    else setPreviewNotification(item);
   };
 
   return (
@@ -86,8 +79,11 @@ export function NotificationList(props: {
               <h3 class="text-sm font-semibold text-text-strong">{t("notifications.title")}</h3>
             </Show>
             <Show when={props.feed.unreadCount() > 0}>
-              <span class="rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[11px] font-bold text-primary-text">
-                {props.feed.unreadCount()}
+              <span
+                class="rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[11px] font-bold text-primary-text"
+                aria-label={t("notifications.unreadCount", { count: props.feed.unreadCount() })}
+              >
+                {formatUnreadCount(props.feed.unreadCount())}
               </span>
             </Show>
           </div>
@@ -111,13 +107,8 @@ export function NotificationList(props: {
       <Show
         when={previewNotification()}
         fallback={
-          <Tabs defaultValue="all" class="p-2">
-        <TabsList class="mx-auto mb-2 h-8 w-fit min-w-[180px] p-0.5">
-          <TabsTrigger value="all" class="h-7 flex-1 px-3 text-[11px]">{t("notifications.tabAll")}</TabsTrigger>
-          <TabsTrigger value="system" class="h-7 flex-1 px-3 text-[11px]">{t("notifications.tabSystem")}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" class={cn("mt-0 space-y-1 overflow-y-auto", props.scrollClass ?? "max-h-80")}>
+          <div class="p-2">
+        <div class={cn("mt-0 space-y-1 overflow-y-auto", props.scrollClass ?? "max-h-80")}>
           <Suspense
             fallback={
               <div class="p-8 text-center text-xs text-text-subtle">
@@ -171,7 +162,16 @@ export function NotificationList(props: {
                         <For each={group.items}>
                           {(item) => (
                             <div
+                              role="button"
+                              tabIndex={0}
                               onClick={() => select(item)}
+                              onKeyDown={(event) => {
+                                if (event.target !== event.currentTarget) return;
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  select(item);
+                                }
+                              }}
                               class="group relative flex cursor-pointer select-none items-start gap-3 rounded-lg p-2 text-xs transition-colors hover:bg-background/70"
                             >
                               <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background/75 text-text-subtle transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
@@ -219,12 +219,8 @@ export function NotificationList(props: {
               </div>
             </Show>
           </Suspense>
-        </TabsContent>
-
-            <TabsContent value="system" class="mt-0">
-              <ComingSoonPanel title={t("notifications.tabSystem")} class="border-0 p-3" />
-            </TabsContent>
-          </Tabs>
+        </div>
+          </div>
         }
       >
         {(item) => (
@@ -267,10 +263,6 @@ export function NotificationList(props: {
               </div>
             </div>
 
-            <Button type="button" size="sm" class="w-full rounded-lg" onClick={goTo}>
-              <IconExternalLink class="mr-1.5 h-3.5 w-3.5" />
-              {t("notifications.goToPage")}
-            </Button>
           </div>
         )}
       </Show>

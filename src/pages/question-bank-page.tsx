@@ -12,7 +12,6 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconEdit, IconEye, IconEyeOff, IconPlus, IconTrash, IconUsers } from "@/components/ui/icons";
@@ -288,19 +287,6 @@ function QuestionBankContent() {
                       }}
                       options={subjectOptions()}
                     />
-                    <DropdownSelect
-                      labelPrefix={t("bank.source")}
-                      value="all"
-                      disabled
-                      onChange={() => {}}
-                      options={[
-                        { value: "all", label: t("common.all") },
-                        { value: "institution", label: t("bank.source.institution") },
-                        { value: "publisher", label: t("bank.source.publisher") },
-                        { value: "ai", label: t("bank.source.ai") },
-                      ]}
-                    />
-                    <ComingSoonBadge />
                   </div>
                 }
               />

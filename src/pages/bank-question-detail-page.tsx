@@ -16,7 +16,6 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComingSoonValue } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DetailField } from "@/components/ui/detail-field";
 import { IconEdit, IconTrash } from "@/components/ui/icons";
@@ -126,18 +125,6 @@ function BankQuestionDetailContent() {
                 <DetailField label={t("bank.whoCanSee")} value={current().visibility === "school" ? t("bank.sharedWithSchool") : t("bank.onlyMe")} />
                 <DetailField label={t("exams.title")} value={current().source_exam || "—"} mono />
                 <DetailField label={t("admin.id")} value={current().id} mono />
-                <div class="min-w-0 space-y-1">
-                  <p class="text-xs font-medium text-muted-foreground">{t("bank.difficulty")}</p>
-                  <ComingSoonValue />
-                </div>
-                <div class="min-w-0 space-y-1">
-                  <p class="text-xs font-medium text-muted-foreground">{t("bank.correctRate")}</p>
-                  <ComingSoonValue />
-                </div>
-                <div class="min-w-0 space-y-1">
-                  <p class="text-xs font-medium text-muted-foreground">{t("bank.objective")}</p>
-                  <ComingSoonValue />
-                </div>
               </div>
 
               <Show when={current().image}>

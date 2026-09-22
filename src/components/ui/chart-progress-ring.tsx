@@ -2,7 +2,8 @@ import { For, Show, createEffect, createMemo, createSignal, type Component } fro
 import { cn } from "@/lib/cn";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { useT } from "@/stores/preferences-context";
+import { formatNumber } from "@/lib/format";
+import { usePreferences, useT } from "@/stores/preferences-context";
 
 export type ProgressRingSegment = {
   id: string;
@@ -25,6 +26,8 @@ export type ChartProgressRingProps = {
 
 export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
   const t = useT();
+  const { locale } = usePreferences();
+  const num = (value: number) => formatNumber(value, locale());
   const [pageIndex, setPageIndex] = createSignal(0);
   // The gauge bar above always renders every segment's share of the total —
   // only the legend cards below it are paged.
@@ -65,7 +68,7 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
           {/* Total Stat Highlight */}
           <div class="flex items-baseline gap-2">
             <span class="font-mono text-3xl font-bold tracking-tight text-foreground">
-              {props.valueText ?? calculatedTotal()}
+              {props.valueText ?? num(calculatedTotal())}
             </span>
             <Show when={props.subtext}>
               <span class="text-xs font-medium text-muted-foreground">{props.subtext}</span>
@@ -82,7 +85,7 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
                     <div
                       class={cn("h-full rounded-full transition-all duration-500 ease-out", segment.colorClass)}
                       style={{ width: `${pct()}%` }}
-                      title={`${segment.label}: ${segment.value} (${Math.round(pct())}%)`}
+                      title={`${segment.label}: ${num(segment.value)} (${Math.round(pct())}%)`}
                     />
                   </Show>
                 );
@@ -99,7 +102,7 @@ export const ChartProgressRing: Component<ChartProgressRingProps> = (props) => {
                     <span class={cn("h-2.5 w-2.5 shrink-0 rounded-full", segment.colorClass)} />
                     <span class="truncate font-medium text-muted-foreground">{segment.label}</span>
                   </div>
-                  <span class="font-mono font-semibold text-foreground ml-2">{segment.value}</span>
+                  <span class="font-mono font-semibold text-foreground ml-2">{num(segment.value)}</span>
                 </div>
               )}
             </For>

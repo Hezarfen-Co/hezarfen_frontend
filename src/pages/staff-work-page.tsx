@@ -15,7 +15,6 @@ import { DataToolbar } from "@/components/ui/data-toolbar";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -296,18 +295,6 @@ function StaffWorkContent() {
             searchPlaceholder={t("work.searchPlaceholder")}
             searchHint={t("search.hint.people")}
             onSearchInput={setStaffSearch}
-            actions={
-              <>
-                <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-                  {t("work.addEntry")}
-                  <ComingSoonBadge class="ml-1.5" />
-                </Button>
-                <Button type="button" size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-                  {t("work.planShift")}
-                  <ComingSoonBadge class="ml-1.5" />
-                </Button>
-              </>
-            }
           />
         </div>
 

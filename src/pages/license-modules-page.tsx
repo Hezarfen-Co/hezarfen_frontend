@@ -1,16 +1,13 @@
 import type { ColumnDef } from "@tanstack/solid-table";
-import { For, Show, Suspense, createMemo } from "solid-js";
+import { Show, Suspense, createMemo } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getModules, getModulesCatalog } from "@/api/modules";
 import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ComingSoonBadge, ComingSoonPanel } from "@/components/ui/coming-soon";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconDownload, IconPackage, IconPlus } from "@/components/ui/icons";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { IconPackage } from "@/components/ui/icons";
 import { moduleLabel, packageLabel } from "@/lib/module-labels";
 import { useT } from "@/stores/preferences-context";
 
@@ -86,20 +83,6 @@ function LicenseModulesContent() {
 
   return (
     <div class="space-y-5">
-      <Tabs value="overview">
-        <TabsList>
-          <TabsTrigger value="overview">{t("modules.tabOverview")}</TabsTrigger>
-          <For each={["modules.tabUsage", "modules.tabInvoices", "modules.tabContract"] as const}>
-            {(key) => (
-              <TabsTrigger value={key} disabled title={t("comingSoon.title")}>
-                {t(key)}
-                <ComingSoonBadge class="ml-1.5" />
-              </TabsTrigger>
-            )}
-          </For>
-        </TabsList>
-      </Tabs>
-
       <Suspense fallback={<DataTableSkeleton columns={2} rows={8} />}>
         <Show when={data.error}>
           <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
@@ -132,16 +115,6 @@ function LicenseModulesContent() {
                   urlState
                   title={t("nav.licenseModules")}
                   description={t("modules.subtitle")}
-                  actions={<><Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
-            <IconDownload class="h-4 w-4" />
-            {t("modules.downloadInvoices")}
-            <ComingSoonBadge class="ml-1.5" />
-          </Button>
-          <Button size="sm" class="min-w-[7.5rem] rounded-lg" disabled title={t("modules.readOnlyHint")}>
-            <IconPlus class="h-4 w-4" />
-            {t("modules.addLicense")}
-            <ComingSoonBadge class="ml-1.5" />
-          </Button></>}
                   columns={columns()}
                   data={value().rows}
                   tableClass="min-w-md"
@@ -149,8 +122,6 @@ function LicenseModulesContent() {
                   storageKey="license-modules"
                 />
               </section>
-
-              <ComingSoonPanel title={t("modules.recentInvoices")} />
             </>
           )}
         </Show>

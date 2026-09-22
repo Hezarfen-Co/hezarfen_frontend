@@ -242,6 +242,19 @@
   box-shadow: -4px 0 6px -6px color-mix(in srgb, hsl(var(--foreground)) 12%, transparent);
 }
 
+/* Frozen columns only cast their seam when something can slide under them.
+ * On a table that fits, the shadow and heavier rule read as "more content to
+ * the side" and invite a scroll that goes nowhere. */
+.data-table-wrap:not([data-scrollable]) :is(.table-sticky-left, .table-sticky-right, .table-sticky-head-left, .table-sticky-head-right) {
+  box-shadow: none;
+}
+.data-table-wrap:not([data-scrollable]) :is(.table-sticky-right, .table-sticky-head-right) {
+  border-left-color: transparent;
+}
+.data-table-wrap:not([data-scrollable]) :is(.table-sticky-left, .table-sticky-head-left) {
+  border-right-color: var(--color-border-hairline);
+}
+
 /* İşlemler sütunu: sabit 110x45. */
 .data-table td.table-action-cell,
 .data-table th.table-action-cell {
@@ -259,6 +272,11 @@
 .insight-grid-table td {
   border-right: 1px solid hsl(var(--border));
   text-align: center;
+}
+
+/* Headers centred, values from the left edge, as on every other table. */
+.insight-grid-table td:not(.table-action-cell) {
+  text-align: left;
 }
 
 .insight-grid-table th:last-child,

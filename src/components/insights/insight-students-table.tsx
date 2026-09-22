@@ -63,7 +63,7 @@ export function InsightStudentsTable(props: {
       id: "student",
       accessorFn: (row) => row.name,
       header: rt("student"),
-      size: 130,
+      size: 120,
       meta: { align: "center" },
       cell: (cell) => (
         <Link to="/ai/insights/$userId" params={{ userId: cell.row.original.id }} class="font-medium text-text-default hover:text-primary-text hover:underline">
@@ -73,7 +73,7 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "status",
-      size: 110,
+      size: 108,
       accessorFn: (row) => row.state,
       header: rt("status" as never),
       meta: { align: "center" },
@@ -117,7 +117,7 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "marks",
-      size: 135,
+      size: 148,
       accessorFn: (row) => row.marks.average ?? -1,
       header: rt("marksAverage"),
       meta: { align: "center" },
@@ -125,7 +125,7 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "attendance",
-      size: 125,
+      size: 133,
       accessorFn: (row) => (row.attendance.observed > 0 ? row.attendance.rate ?? -1 : -1),
       header: rt("attendanceRate"),
       meta: { align: "center" },
@@ -145,7 +145,7 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "confidence",
-      size: 105,
+      size: 97,
       accessorFn: (row) => row.confidence ?? "",
       header: rt("confidence"),
       meta: { align: "center" },
@@ -153,7 +153,7 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "computedAt",
-      size: 95,
+      size: 100,
       accessorFn: (row) => row.computed_at ?? 0,
       header: t("insights.computedAt"),
       meta: { align: "center", cellClass: "text-xs text-muted-foreground whitespace-nowrap" },

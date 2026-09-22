@@ -2,7 +2,6 @@ import { For, Show } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import type { MealMenu } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
-import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
 import { IconAlert, IconUtensils } from "@/components/ui/icons";
 import { dietaryTagLabel, formatTry, mealSlotLabel } from "@/lib/meals";
 import { useT } from "@/stores/preferences-context";
@@ -10,7 +9,7 @@ import { useT } from "@/stores/preferences-context";
 export function MealMenuCard(props: {
   menu: MealMenu;
   locale: string;
-  labels: { dishes: string; capacity: string; conflict: string; reservations?: string; topPick: string };
+  labels: { dishes: string; capacity: string; conflict: string; reservations?: string };
   /**
    * Confirmed booking count for this menu (`getMealMenuBookings(...).total`),
    * manager+ only per the backend's booking-audit scope. Undefined for
@@ -37,7 +36,6 @@ export function MealMenuCard(props: {
         </div>
         <span class="shrink-0 font-semibold tabular-nums">{formatTry(total(), props.locale)}</span>
       </div>
-      <div class="mt-2 flex justify-end"><ComingSoonBadge /></div>
       <div class="mt-4 flex flex-wrap gap-1.5"><For each={props.menu.dishes}>{(dish) => <Badge variant="outline">{dish.name}</Badge>}</For></div>
       <Show when={conflicts().length > 0}>
         <div class="mt-3 flex items-start gap-2 rounded-xl border border-warning/50 bg-warning/10 p-2 text-xs text-warning-text">
@@ -58,10 +56,6 @@ export function MealMenuCard(props: {
       <div class="mt-auto flex justify-between border-t border-border-hairline pt-3 text-xs text-text-subtle">
         <span>{props.menu.dishes.length} {props.labels.dishes}</span>
         <span>{props.labels.capacity}: <span>{props.menu.capacity ?? "∞"}</span></span>
-      </div>
-      <div class="mt-2 flex items-center justify-between text-xs text-text-subtle">
-        <span>{props.labels.topPick}</span>
-        <ComingSoonValue />
       </div>
     </Link>
   );

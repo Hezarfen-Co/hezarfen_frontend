@@ -28,11 +28,27 @@ function RegisterForm() {
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [showPassword, setShowPassword] = createSignal(false);
+  const [showConfirm, setShowConfirm] = createSignal(false);
+  const [passwordTouched, setPasswordTouched] = createSignal(false);
+  const [confirmTouched, setConfirmTouched] = createSignal(false);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [limits] = createResource(() => getLimits().catch(() => null));
   const minSchoolSlugLength = () => limits()?.user.min_slug_len ?? 2;
   const maxSchoolSlugLength = () => limits()?.user.max_slug_len ?? 32;
+  const minPasswordLength = () => limits()?.user.min_password_len ?? 6;
+  // Inline checks wait until the reader has left the field (or, for the
+  // confirmation, typed as many characters as the password) so they never
+  // shout at a half-typed value.
+  const passwordError = () =>
+    passwordTouched() && password().length > 0 && password().length < minPasswordLength()
+      ? t("auth.passwordTooShort", { min: minPasswordLength() })
+      : undefined;
+  const confirmError = () => {
+    const cp = confirmPassword();
+    if (!cp || cp === password()) return undefined;
+    return confirmTouched() || cp.length >= password().length ? t("auth.passwordMismatch") : undefined;
+  };
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -49,12 +65,19 @@ function RegisterForm() {
       setError(t("auth.usernameHint"));
       return;
     }
-    if (userLimits && (p.length < userLimits.min_password_len || p.length > userLimits.max_password_len)) {
+    if (p.length < minPasswordLength()) {
+      // Shown inline under the field, not in the form-level banner.
+      setError("");
+      setPasswordTouched(true);
+      return;
+    }
+    if (userLimits && p.length > userLimits.max_password_len) {
       setError(t("auth.passwordHint"));
       return;
     }
     if (p !== cp) {
-      setError(t("auth.passwordMismatch"));
+      setError("");
+      setConfirmTouched(true);
       return;
     }
     setError("");
@@ -77,12 +100,21 @@ function RegisterForm() {
             <Input
               id="register-school"
               class="h-9"
+              autocapitalize="none"
+              autocomplete="off"
+              spellcheck={false}
               minlength={minSchoolSlugLength()}
               maxlength={maxSchoolSlugLength()}
               required
+              aria-describedby="register-school-hint"
               value={school()}
-              onInput={(e) => setSchool(e.currentTarget.value)}
+              // A school code (slug) is lowercase; folding here saves a
+              // round trip for "Ata-Koleji".
+              onInput={(e) => setSchool(e.currentTarget.value.toLowerCase())}
             />
+            <p id="register-school-hint" class="text-xs text-text-subtle">
+              {t("auth.schoolCodeHint", { min: minSchoolSlugLength(), max: maxSchoolSlugLength() })}
+            </p>
           </div>
 
           <div class="space-y-2">
@@ -107,11 +139,14 @@ function RegisterForm() {
                 class="h-9 pr-10"
                 type={showPassword() ? "text" : "password"}
                 autocomplete="new-password"
-                minlength={limits()?.user.min_password_len}
+                minlength={minPasswordLength()}
                 maxlength={limits()?.user.max_password_len}
                 required
+                aria-invalid={passwordError() ? true : undefined}
+                aria-describedby="register-password-hint"
                 value={password()}
                 onInput={(e) => setPassword(e.currentTarget.value)}
+                onBlur={() => setPasswordTouched(true)}
               />
               <button
                 type="button"
@@ -124,21 +159,47 @@ function RegisterForm() {
                 </Show>
               </button>
             </div>
+            <p
+              id="register-password-hint"
+              class={passwordError() ? "text-xs font-medium text-destructive-text" : "text-xs text-text-subtle"}
+            >
+              {passwordError() ?? t("auth.passwordMinHint", { min: minPasswordLength() })}
+            </p>
           </div>
 
           <div class="space-y-2">
             <Label for="register-confirm">{t("auth.confirmPassword")}</Label>
-            <Input
-              id="register-confirm"
-              class="h-9"
-              type={showPassword() ? "text" : "password"}
-              autocomplete="new-password"
-              minlength={limits()?.user.min_password_len}
-              maxlength={limits()?.user.max_password_len}
-              required
-              value={confirmPassword()}
-              onInput={(e) => setConfirmPassword(e.currentTarget.value)}
-            />
+            <div class="relative">
+              <Input
+                id="register-confirm"
+                class="h-9 pr-10"
+                type={showConfirm() ? "text" : "password"}
+                autocomplete="new-password"
+                minlength={minPasswordLength()}
+                maxlength={limits()?.user.max_password_len}
+                required
+                aria-invalid={confirmError() ? true : undefined}
+                aria-describedby={confirmError() ? "register-confirm-error" : undefined}
+                value={confirmPassword()}
+                onInput={(e) => setConfirmPassword(e.currentTarget.value)}
+                onBlur={() => setConfirmTouched(true)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm())}
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label={showConfirm() ? t("auth.hideConfirmPassword") : t("auth.showConfirmPassword")}
+              >
+                <Show when={showConfirm()} fallback={<IconEye class="h-4 w-4" />}>
+                  <IconEyeOff class="h-4 w-4" />
+                </Show>
+              </button>
+            </div>
+            <Show when={confirmError()}>
+              {(message) => (
+                <p id="register-confirm-error" role="alert" class="text-xs font-medium text-destructive-text">{message()}</p>
+              )}
+            </Show>
           </div>
 
           {error() && (

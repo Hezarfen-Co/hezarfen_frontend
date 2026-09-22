@@ -9,9 +9,18 @@ import {
   type Point,
   type Stroke,
 } from "@/lib/draw-stroke";
+import type { MessageKey } from "@/i18n/messages";
 import { useT } from "@/stores/preferences-context";
 
 const COLORS = ["#1f2937", "#dc2626", "#2563eb", "#16a34a", "#ca8a04"];
+/** Spoken name of each swatch — a hex code is no accessible name. */
+const COLOR_NAMES: Record<string, MessageKey> = {
+  "#1f2937": "draw.colorName.black",
+  "#dc2626": "draw.colorName.red",
+  "#2563eb": "draw.colorName.blue",
+  "#16a34a": "draw.colorName.green",
+  "#ca8a04": "draw.colorName.yellow",
+};
 const WIDTHS = [2, 6, 14];
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 4;
@@ -55,7 +64,10 @@ export function WhiteboardCanvas(props: {
   const [color, setColor] = createSignal(COLORS[0]);
   const [width, setWidth] = createSignal(WIDTHS[1]);
   const [erasing, setErasing] = createSignal(false);
-  const [hand, setHand] = createSignal(false);
+  // The board opens on the hand tool: it is a shared live canvas, so a stray
+  // tap or scroll must not leave a mark for everyone — drawing starts only
+  // once the pen (or a colour) is picked.
+  const [hand, setHand] = createSignal(true);
   const [override, setOverride] = createSignal<null | "pan" | "erase">(null);
   const [pan, setPan] = createSignal({ x: 0, y: 0 });
   const [panning, setPanning] = createSignal(false);
@@ -238,6 +250,7 @@ export function WhiteboardCanvas(props: {
         type="button"
         class={toolClass(activeTool() === "pen")}
         title={t("draw.pen")}
+        aria-pressed={activeTool() === "pen"}
         onClick={() => {
           setErasing(false);
           setHand(false);
@@ -250,6 +263,7 @@ export function WhiteboardCanvas(props: {
         type="button"
         class={toolClass(activeTool() === "erase")}
         title={t("draw.eraser")}
+        aria-pressed={activeTool() === "erase"}
         onClick={() => {
           setErasing(true);
           setHand(false);
@@ -262,6 +276,7 @@ export function WhiteboardCanvas(props: {
         type="button"
         class={toolClass(activeTool() === "pan")}
         title={t("draw.pan")}
+        aria-pressed={activeTool() === "pan"}
         onClick={() => setHand(true)}
       >
         <IconMove class="h-5 w-5" />
@@ -275,7 +290,9 @@ export function WhiteboardCanvas(props: {
       {(swatch) => (
         <button
           type="button"
-          title={t("draw.color")}
+          title={`${t("draw.color")}: ${t(COLOR_NAMES[swatch])}`}
+          aria-label={`${t("draw.color")}: ${t(COLOR_NAMES[swatch])}`}
+          aria-pressed={color() === swatch && activeTool() === "pen"}
           class={cn(
             "h-9 w-9 sm:h-11 sm:w-11 rounded-lg border-2 transition-transform",
             color() === swatch && activeTool() === "pen"
@@ -288,9 +305,7 @@ export function WhiteboardCanvas(props: {
             setErasing(false);
             setHand(false);
           }}
-        >
-          <span class="sr-only">{swatch}</span>
-        </button>
+        />
       )}
     </For>
   );
@@ -300,12 +315,13 @@ export function WhiteboardCanvas(props: {
       {(size) => (
         <button
           type="button"
-          title={t("draw.width")}
+          title={`${t("draw.width")}: ${size}`}
+          aria-label={`${t("draw.width")}: ${size}`}
+          aria-pressed={width() === size}
           class={toolClass(width() === size)}
           onClick={() => setWidth(size)}
         >
           <span class="rounded-full bg-current" style={{ width: `${size + 2}px`, height: `${size + 2}px` }} />
-          <span class="sr-only">{size}</span>
         </button>
       )}
     </For>
@@ -347,7 +363,7 @@ export function WhiteboardCanvas(props: {
         />
         <Show when={empty() && !current}>
           <p class="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-slate-400">
-            {t("whiteboard.canvasHint")}
+            {activeTool() === "pan" && !props.disabled ? t("whiteboard.canvasHintPickPen") : t("whiteboard.canvasHint")}
           </p>
         </Show>
 

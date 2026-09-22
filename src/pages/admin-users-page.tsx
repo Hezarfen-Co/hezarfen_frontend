@@ -11,7 +11,6 @@ import { CreateUserPanel } from "@/components/users/create-user-panel";
 import { ParentStudentsPanel } from "@/components/users/parent-students-panel";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { IconPlus } from "@/components/ui/icons";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -83,10 +82,6 @@ function AdminUsersContent() {
           <TabsTrigger value="teacher">{t("admin.tabTeachers")}</TabsTrigger>
           <TabsTrigger value="parent">{t("admin.tabParents")}</TabsTrigger>
           <TabsTrigger value="student">{t("admin.tabStudents")}</TabsTrigger>
-          <TabsTrigger value="invites" disabled title={t("comingSoon.title")}>
-            {t("admin.tabInvites")}
-            <ComingSoonBadge class="ml-1.5" />
-          </TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -103,16 +98,10 @@ function AdminUsersContent() {
               title={t("admin.title")}
               description={t("admin.subtitle")}
               actions={
-                <>
-                  <Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
-                    {t("admin.inviteUser")}
-                    <ComingSoonBadge class="ml-1.5" />
-                  </Button>
-                  <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreating(true)}>
-                    <IconPlus class="mr-1.5 h-4 w-4" />
-                    {t("admin.createUser")}
-                  </Button>
-                </>
+                <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreating(true)}>
+                  <IconPlus class="mr-1.5 h-4 w-4" />
+                  {t("admin.createUser")}
+                </Button>
               }
               users={visibleUsers() as User[]}
               currentUserId={auth.user()!.id}

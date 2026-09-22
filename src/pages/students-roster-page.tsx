@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { matchesSearch } from "@/lib/search-text";
 import { createUrlString } from "@/lib/url-state";
@@ -12,15 +12,14 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { CreateUserPanel } from "@/components/users/create-user-panel";
 import { RosterPersonCell } from "@/components/users/roster-person-cell";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconEye, IconPlus, IconUploadCloud } from "@/components/ui/icons";
+import { IconEye, IconPlus } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useT } from "@/stores/preferences-context";
 import { useAuth } from "@/stores/auth-context";
+import { sortByClass } from "@/lib/student-directory";
 
 const ROSTER_PAGE_SIZE = 10;
 
@@ -61,7 +60,7 @@ function StudentsRosterContent() {
     for (const { cls, members } of memberships) {
       for (const member of members) byStudent.set(member.user.id, [...(byStudent.get(member.user.id) ?? []), cls]);
     }
-    const rows: StudentRow[] = students.items.map((person) => ({ person, classes: byStudent.get(person.id) ?? [] }));
+    const rows: StudentRow[] = sortByClass(students.items.map((person) => ({ person, classes: byStudent.get(person.id) ?? [] })));
     return { rows, classes: classes.items, years: years.items };
   });
 
@@ -104,21 +103,6 @@ function StudentsRosterContent() {
 
   return (
     <div class="space-y-5">
-      <Tabs value="all">
-        <TabsList>
-          <TabsTrigger value="all">{t("roster.tabAll")}</TabsTrigger>
-          <For each={["roster.tabActive", "roster.tabNew", "roster.tabAtRisk", "roster.tabLeft"] as const}>
-            {(key) => (
-              <TabsTrigger value={key} disabled title={t("comingSoon.title")}>
-                {t(key)}
-                <ComingSoonBadge class="ml-1.5" />
-              </TabsTrigger>
-            )}
-          </For>
-        </TabsList>
-      </Tabs>
-
-
       <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={3} rows={8} />}>
           <Show when={data.error}>
@@ -137,12 +121,7 @@ function StudentsRosterContent() {
                 surfaceSections
                 title={t("nav.studentsRoster")}
                 description={t("roster.studentsSubtitle")}
-                actions={<><Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
-            <IconUploadCloud class="h-4 w-4" />
-            {t("roster.import")}
-            <ComingSoonBadge class="ml-1.5" />
-          </Button>
-          <Show when={auth.user()?.role === "admin"}>
+                actions={<><Show when={auth.user()?.role === "admin"}>
             <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreating(true)}>
               <IconPlus class="h-4 w-4" />
               {t("roster.addStudent")}

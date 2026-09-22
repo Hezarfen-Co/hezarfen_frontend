@@ -27,7 +27,6 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -634,12 +633,6 @@ function PaymentsContent() {
                     title={t("payments.title")}
                     description={t("payments.subtitle")}
                     empty={t("form.noStudents")}
-                    actions={
-                      <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
-                        {t("payments.exportStatement")}
-                        <ComingSoonBadge class="ml-1.5" />
-                      </Button>
-                    }
                     filters={
                       <Select value={planFilter()} onChange={(e) => { setPlanFilter(e.currentTarget.value); setStudentPage(0); }} wrapperClass="w-56">
                         <option value="">{t("payments.allPlans")}</option>

@@ -6,8 +6,21 @@ export interface NotificationItem {
   title: string;
   description: string;
   preview?: string;
-  targetUrl: string;
+  /** Where a click goes; a row without one opens the in-list preview instead. */
+  targetUrl?: string;
   timestamp: number;
+}
+
+/**
+ * An unread count as every shell surface shows it — the bell and messages
+ * badges, the phone action button and the notification list header share one
+ * cap, so a badge never reads "9+" over a header that says "20". The exact
+ * number goes in the accessible label.
+ */
+export const UNREAD_DISPLAY_CAP = 9;
+
+export function formatUnreadCount(count: number): string {
+  return count > UNREAD_DISPLAY_CAP ? `${UNREAD_DISPLAY_CAP}+` : String(Math.max(0, count));
 }
 
 const STORAGE_KEY = "hezarfen.dismissedNotifications";

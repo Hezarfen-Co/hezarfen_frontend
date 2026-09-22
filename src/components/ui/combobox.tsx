@@ -5,7 +5,30 @@ import { IconCheck, IconChevronDown } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
 
-export const Combobox = ComboboxPrimitive;
+/**
+ * Kobalte's Combobox root with its screen-reader strings (listbox name,
+ * trigger name, focus/selection/count announcements) in the app language —
+ * Kobalte ships them in English only. A call site can still pass its own
+ * `translations`, which wins.
+ */
+function ComboboxRoot(props: ComponentProps<typeof ComboboxPrimitive>) {
+  const t = useT();
+  const translations = () => ({
+    focusAnnouncement: (optionText: string, isSelected: boolean) =>
+      isSelected ? t("combobox.optionSelected", { option: optionText }) : optionText,
+    // Kobalte's type narrows this to its own English literal; the runtime
+    // only needs a string (or undefined for "say nothing").
+    countAnnouncement: ((optionCount: number) => t("combobox.optionCount", { count: optionCount })) as unknown as (
+      optionCount: number,
+    ) => "one option available" | undefined,
+    selectedAnnouncement: (optionText: string) => t("combobox.optionSelected", { option: optionText }),
+    triggerLabel: t("combobox.showSuggestions"),
+    listboxLabel: t("combobox.suggestions"),
+  });
+  return <ComboboxPrimitive translations={translations()} {...props} />;
+}
+
+export const Combobox = Object.assign(ComboboxRoot, ComboboxPrimitive) as unknown as typeof ComboboxPrimitive;
 export const ComboboxItemLabel = ComboboxPrimitive.ItemLabel;
 export const ComboboxHiddenSelect = ComboboxPrimitive.HiddenSelect;
 
