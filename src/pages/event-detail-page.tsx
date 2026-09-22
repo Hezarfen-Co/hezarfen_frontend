@@ -193,10 +193,16 @@ function EventDetailContent() {
                         <IconEdit class="h-4 w-4" />
                         {t("common.edit")}
                       </Button>
-                      <Button type="button" variant="destructive" size="sm" class="flex-1 rounded-xl sm:flex-none" disabled={pending()} onClick={() => setDeleteOpen(true)}>
-                        <IconTrash class="h-4 w-4" />
-                        {t("common.delete")}
-                      </Button>
+                      <TableRowActions
+                        label={t("common.actions")}
+                        actions={[{
+                          label: t("common.delete"),
+                          icon: <IconTrash class="h-4 w-4" />,
+                          destructive: true,
+                          disabled: pending(),
+                          onSelect: () => setDeleteOpen(true),
+                        }]}
+                      />
                     </div>
                   ) : undefined
                 }

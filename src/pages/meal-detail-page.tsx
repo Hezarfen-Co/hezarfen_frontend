@@ -52,6 +52,7 @@ import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 
 export default function MealDetailPage() {
   return <RouteGuard><MealDetailContent /></RouteGuard>;
@@ -190,7 +191,7 @@ function MealDetailContent() {
               <PageHeader
                 title={t("meals.menu")}
                 description={t("meals.detailHelp")}
-                actions={canManage() ? <div class="detail-action-group"><Button variant="outline" size="sm" onClick={() => { setCapacity(current().capacity == null ? "" : String(current().capacity)); setShowMenuEdit(true); }}><IconEdit class="h-4 w-4" />{t("common.edit")}</Button><Button variant="destructive" size="sm" onClick={() => setDeleteMenuOpen(true)}><IconTrash class="h-4 w-4" />{t("common.delete")}</Button></div> : undefined}
+                actions={canManage() ? <div class="detail-action-group"><Button variant="outline" size="sm" onClick={() => { setCapacity(current().capacity == null ? "" : String(current().capacity)); setShowMenuEdit(true); }}><IconEdit class="h-4 w-4" />{t("common.edit")}</Button><TableRowActions label={t("common.actions")} actions={[{ label: t("common.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteMenuOpen(true) }]} /></div> : undefined}
               />
             </div>
             <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>

@@ -34,6 +34,7 @@ import { formatDateTime } from "@/lib/format";
 import { useAuth } from "@/stores/auth-context";
 import { BuilderProvider } from "@/stores/builder-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 
 export default function BuilderSchoolDetailPage() {
   return (
@@ -142,10 +143,15 @@ function BuilderSchoolDetailContent() {
                       <IconExternalLink class="h-4 w-4" />
                       {t("builder.enterSchool")}
                     </Button>
-                    <Button type="button" variant="destructive" size="sm" class="rounded-lg" onClick={() => setDeleteOpen(true)}>
-                      <IconTrash class="h-4 w-4" />
-                      {t("common.delete")}
-                    </Button>
+                    <TableRowActions
+                      label={t("common.actions")}
+                      actions={[{
+                        label: t("common.delete"),
+                        icon: <IconTrash class="h-4 w-4" />,
+                        destructive: true,
+                        onSelect: () => setDeleteOpen(true),
+                      }]}
+                    />
                   </div>
                 }
               />

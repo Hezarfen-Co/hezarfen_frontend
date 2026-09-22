@@ -4,6 +4,7 @@ import type { Board } from "@/api/boards";
 import { BoardBulkInvite } from "@/components/whiteboard/board-bulk-invite";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +38,7 @@ export function BoardSettingsPanel(props: {
   const t = useT();
   const [title, setTitle] = createSignal("");
   const [personId, setPersonId] = createSignal("");
+  const [removeTarget, setRemoveTarget] = createSignal<ParticipantRow | null>(null);
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
 
@@ -105,14 +107,13 @@ export function BoardSettingsPanel(props: {
           fallback={<span class="text-xs text-muted-foreground">{cell.row.original.creator ? t("whiteboard.creator") : "—"}</span>}
         >
           <TableRowActions
-            compact
             label={t("common.actions")}
             actions={[{
               label: t("whiteboard.removeParticipant"),
               icon: <span class="text-base leading-none">×</span>,
               destructive: true,
               disabled: pending(),
-              onSelect: () => void saveParticipants(props.participants().filter((id) => id !== cell.row.original.id)),
+              onSelect: () => setRemoveTarget(cell.row.original),
             }]}
           />
         </Show>
@@ -172,6 +173,20 @@ export function BoardSettingsPanel(props: {
             pageSize={8}
           />
         </section>
+
+        <ConfirmDialog
+          open={removeTarget() != null}
+          onOpenChange={(open) => !open && setRemoveTarget(null)}
+          title={t("whiteboard.removeParticipant")}
+          variant="destructive"
+          summary={removeTarget()?.name ?? ""}
+          onConfirm={async () => {
+            const target = removeTarget();
+            if (!target) return;
+            await saveParticipants(props.participants().filter((id) => id !== target.id));
+            setRemoveTarget(null);
+          }}
+        />
 
         {/* Inviting a whole group is the creator's alone, exactly like the
             roster edits above. */}

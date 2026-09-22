@@ -179,8 +179,9 @@ describe("RagOutputDrawer", () => {
     expect(screen.getByText("Preview")).toBeTruthy();
     expect(screen.getByText("hücre zarı")).toBeTruthy();
     expect(screen.getByText("organel")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Actions" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Delete" })).toBeTruthy();
+    // Delete sits inside the shared actions menu, never as a bare icon button.
+    expect(screen.getByRole("button", { name: "Actions" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
     expect(screen.getByRole("button", { name: "Export" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "View" })).toBeNull();
   });

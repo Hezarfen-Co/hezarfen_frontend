@@ -477,21 +477,15 @@ function PaymentsContent() {
         cellClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
       },
       cell: (cell) => (
-        <div class="flex items-center justify-center gap-1">
-          <Button size="sm" variant="outline" class="h-8 gap-1 rounded-lg px-2 text-xs" onClick={() => openAssign(cell.row.original)}>
-            <IconPlus class="h-4 w-4" />
-            {t("payments.assign")}
-          </Button>
-          <TableRowActions
-            label={t("common.actions")}
-            compact
-            actions={[
-              { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setViewPlan(cell.row.original) },
-              { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => startEdit(cell.row.original) },
-              { label: t("common.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
-            ]}
-          />
-        </div>
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+            { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setViewPlan(cell.row.original) },
+            { label: t("payments.assign"), icon: <IconPlus class="h-4 w-4" />, onSelect: () => openAssign(cell.row.original) },
+            { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => startEdit(cell.row.original) },
+            { label: t("common.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
+          ]}
+        />
       ),
     },
   ]);

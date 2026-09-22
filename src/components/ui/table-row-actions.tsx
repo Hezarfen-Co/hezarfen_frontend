@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { IconDotsVertical } from "@/components/ui/icons";
@@ -17,19 +18,37 @@ type TableRowAction = {
   disabled?: boolean;
 };
 
+/**
+ * The one row/header actions control: always a dropdown behind the same
+ * action-menu trigger, even for a single action, so every table reads the same.
+ * Order is normalised here — view/edit/other items first in the order given,
+ * then a separator and the destructive items last. Callers put "view" first
+ * and route destructive items through a ConfirmDialog.
+ */
 export function TableRowActions(props: { label: string; actions: TableRowAction[]; compact?: boolean; triggerLabel?: string }) {
   const t = useT();
-  const singleAction = () => props.actions.length === 1 ? props.actions[0] : undefined;
-  const run = (action: TableRowAction) => {
-    if (action.disabled) return;
-    setTimeout(action.onSelect, 0);
-  };
+  const safeActions = () => props.actions.filter((action) => !action.destructive);
+  const destructiveActions = () => props.actions.filter((action) => action.destructive);
+
+  const item = (action: TableRowAction) => (
+    <DropdownMenuItem
+      class="flex items-center gap-2.5 text-xs"
+      destructive={action.destructive}
+      disabled={action.disabled}
+      // Defer to the next macrotask so the menu fully closes (and
+      // restores focus to its trigger) before the action opens a
+      // panel/dialog — otherwise the non-modal SidePanel reads that
+      // focus-restore as an outside interaction and instantly closes.
+      onSelect={() => setTimeout(action.onSelect, 0)}
+    >
+      {action.icon}
+      <span>{action.label}</span>
+    </DropdownMenuItem>
+  );
 
   return (
     <div class="flex justify-center">
-      <Show
-        when={singleAction()}
-        fallback={<DropdownMenu placement="bottom-end" gutter={6}>
+      <DropdownMenu placement="bottom-end" gutter={6}>
         <DropdownMenuTrigger
           class={props.compact
             ? "inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-muted data-expanded:text-foreground"
@@ -42,43 +61,13 @@ export function TableRowActions(props: { label: string; actions: TableRowAction[
           <IconDotsVertical class="h-3.5 w-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent class="w-48">
-          <For each={props.actions}>
-            {(action) => (
-              <DropdownMenuItem
-                class="flex items-center gap-2.5 text-xs"
-                destructive={action.destructive}
-                disabled={action.disabled}
-                // Defer to the next macrotask so the menu fully closes (and
-                // restores focus to its trigger) before the action opens a
-                // panel/dialog — otherwise the non-modal SidePanel reads that
-                // focus-restore as an outside interaction and instantly closes.
-                onSelect={() => setTimeout(action.onSelect, 0)}
-              >
-                {action.icon}
-                <span>{action.label}</span>
-              </DropdownMenuItem>
-            )}
-          </For>
+          <For each={safeActions()}>{item}</For>
+          <Show when={safeActions().length > 0 && destructiveActions().length > 0}>
+            <DropdownMenuSeparator />
+          </Show>
+          <For each={destructiveActions()}>{item}</For>
         </DropdownMenuContent>
-      </DropdownMenu>}
-      >
-        {(action) => (
-          <button
-            type="button"
-            data-row-actions-trigger
-            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-muted-foreground outline-hidden transition-colors hover:border-primary/20 hover:bg-primary/8 hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-            aria-label={action().label}
-            title={action().label}
-            disabled={action().disabled}
-            onClick={(event) => {
-              event.stopPropagation();
-              run(action());
-            }}
-          >
-            {action().icon}
-          </button>
-        )}
-      </Show>
+      </DropdownMenu>
     </div>
   );
 }

@@ -265,7 +265,16 @@ function ClassDetailContent() {
                       {t("classBlueprints.apply")}
                     </Button>
                     <Button size="sm" variant="outline" class="rounded-lg" onClick={() => { setName(c().name); setGrade(c().grade ?? ""); setYearId(c().year ?? ""); setTeacherId(c().teacher?.id ?? ""); setEditing(true); }}>{t("common.edit")}</Button>
-                    <Button size="sm" variant="outline" class="rounded-lg text-destructive-text" onClick={() => setDeleteOpen(true)}>{t("classGroups.deleteClass")}</Button>
+                    <TableRowActions
+                      label={t("common.actions")}
+                      actions={[{
+                        label: t("classGroups.deleteClass"),
+                        icon: <IconTrash class="h-4 w-4" />,
+                        destructive: true,
+                        disabled: pending(),
+                        onSelect: () => setDeleteOpen(true),
+                      }]}
+                    />
                   </div>
                 </Show>
               </header>

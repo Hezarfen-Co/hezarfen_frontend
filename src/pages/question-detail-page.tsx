@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { IconTrash, IconCheck, IconX, IconEdit, IconMessage, IconPhoto } from "@/components/ui/icons";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { ReplayableImage } from "@/components/ui/replayable-image";
 import { personLabel } from "@/lib/person";
 
@@ -138,10 +139,15 @@ function QuestionDetailContent() {
                     </Button>
                   </Show>
                   <Show when={q().asker.id === auth.user()?.id || isModerator()}>
-                    <Button variant="destructive" onClick={() => setDeleteConfirmQ(true)}>
-                      <IconTrash class="mr-2 h-4 w-4" />
-                      {q().status === "pending" && isModerator() ? t("common.reject") : t("common.delete")}
-                    </Button>
+                    <TableRowActions
+                      label={t("common.actions")}
+                      actions={[{
+                        label: q().status === "pending" && isModerator() ? t("common.reject") : t("common.delete"),
+                        icon: <IconTrash class="h-4 w-4" />,
+                        destructive: true,
+                        onSelect: () => setDeleteConfirmQ(true),
+                      }]}
+                    />
                   </Show>
                 </div>
               </div>

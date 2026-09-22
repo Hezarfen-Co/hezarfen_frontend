@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconTrash } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
 import { useT } from "@/stores/preferences-context";
@@ -48,15 +49,15 @@ export function CourseTeachersPanel(props: {
             header: t("common.actions"),
             meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
             cell: (cell: { row: { original: PersonRef } }) => (
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-8 w-8 rounded-lg p-0 text-destructive-text hover:bg-destructive/10"
-                onClick={() => setRemoveTarget(cell.row.original)}
-              >
-                <IconTrash class="h-4 w-4" />
-                <span class="sr-only">{t("courses.unassignTeacher")}</span>
-              </Button>
+              <TableRowActions
+                label={t("common.actions")}
+                actions={[{
+                  label: t("courses.unassignTeacher"),
+                  icon: <IconTrash class="h-4 w-4" />,
+                  destructive: true,
+                  onSelect: () => setRemoveTarget(cell.row.original),
+                }]}
+              />
             ),
           },
         ]

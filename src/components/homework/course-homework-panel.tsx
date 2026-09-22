@@ -15,7 +15,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconEdit, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -193,6 +193,7 @@ export function CourseHomeworkPanel(props: {
             <TableRowActions
               label={t("common.actions")}
               actions={[
+                { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => void navigate({ to: "/homework/$id", params: { id: cell.row.original.id } }) },
                 { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => openEdit(cell.row.original) },
                 { label: t("common.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
               ]}

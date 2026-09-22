@@ -210,6 +210,11 @@ export function NoteFilesPanel(props: {
                         <TableRowActions
                           label={t("common.actions")}
                           actions={[
+                            {
+                              label: t("common.view"),
+                              icon: <IconEye class="h-4 w-4" />,
+                              onSelect: () => setPreviewFile(file),
+                            },
                             ...(canManage() && isDrawing(file)
                               ? [
                                   {
@@ -219,11 +224,6 @@ export function NoteFilesPanel(props: {
                                   },
                                 ]
                               : []),
-                            {
-                              label: t("common.view"),
-                              icon: <IconEye class="h-4 w-4" />,
-                              onSelect: () => setPreviewFile(file),
-                            },
                             {
                               label: t("notes.downloadFile"),
                               icon: <IconDownload class="h-4 w-4" />,

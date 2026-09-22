@@ -25,6 +25,7 @@ import { formatDate } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 
 export default function BankQuestionDetailPage() {
   return (
@@ -105,10 +106,15 @@ function BankQuestionDetailContent() {
                       <IconEdit class="h-4 w-4" />
                       {t("common.edit")}
                     </Button>
-                    <Button variant="destructive" size="sm" class="rounded-lg" onClick={() => setDeleteOpen(true)}>
-                      <IconTrash class="h-4 w-4" />
-                      {t("common.delete")}
-                    </Button>
+                    <TableRowActions
+                      label={t("common.actions")}
+                      actions={[{
+                        label: t("common.delete"),
+                        icon: <IconTrash class="h-4 w-4" />,
+                        destructive: true,
+                        onSelect: () => setDeleteOpen(true),
+                      }]}
+                    />
                   </Show>
                 </>
               }
