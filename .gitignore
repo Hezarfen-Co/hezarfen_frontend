@@ -46,3 +46,6 @@ stack.env
 # The CI deploy bundle (image tarball + compose files + tag) is assembled into
 # stage/ by .github/workflows/main.yml; a local rehearsal must not commit it.
 stage/
+
+# graphify knowledge graph output
+graphify-out/
