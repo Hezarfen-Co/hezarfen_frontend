@@ -19,6 +19,7 @@ export function NotificationCenter() {
   });
 
   const unreadCount = feed.unreadCount;
+  let panel: HTMLDivElement | undefined;
 
   return (
     <Popover
@@ -43,7 +44,20 @@ export function NotificationCenter() {
         </Show>
       </PopoverTrigger>
 
-      <PopoverContent class="w-80 sm:w-96 rounded-xl border border-border-line bg-surface-base p-0 shadow-2xl overflow-hidden">
+      {/* Focus lands on the popover itself, not its first control: that is
+          "Tümünü sil", and one Enter would clear the whole list. */}
+      <PopoverContent
+        class="w-80 sm:w-96 rounded-xl border border-border-line bg-surface-base p-0 shadow-2xl overflow-hidden"
+        ref={(el: HTMLDivElement) => {
+          panel = el;
+        }}
+        tabIndex={-1}
+        aria-label={t("notifications.title")}
+        onOpenAutoFocus={(event: Event) => {
+          event.preventDefault();
+          panel?.focus();
+        }}
+      >
         <NotificationList
           feed={feed}
           onNavigate={(url) => {

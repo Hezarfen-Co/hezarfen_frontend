@@ -116,7 +116,9 @@ function QuestionBankContent() {
       cell: (cell) => (
         <div class="min-w-0">
           <p class="max-w-[30rem] truncate font-medium">{cell.row.original.text}</p>
-          <p class="truncate text-xs text-muted-foreground">{cell.row.original.subject_name || "—"}</p>
+          <Show when={cell.row.original.subject_name}>
+            <p class="truncate text-xs text-muted-foreground">{cell.row.original.subject_name}</p>
+          </Show>
         </div>
       ),
     },

@@ -4,6 +4,19 @@
 
 @custom-variant dark (&:is([data-kb-theme="dark"] *));
 
+/* Touch sizing: a phone-width screen or any coarse pointer. Width alone let a
+   phone turned to landscape (or a tablet) fall back to desktop density —
+   13px fields iOS zooms into and 26px buttons. Put `touch:` after the `sm:`
+   compact size it overrides; custom variants sort after the breakpoints. */
+@custom-variant touch {
+  @media (pointer: coarse) {
+    @slot;
+  }
+  @media (width < 40rem) {
+    @slot;
+  }
+}
+
 @utility container {
   margin-inline: auto;
   padding-inline: 1.25rem;
@@ -157,7 +170,9 @@
 }
 
 @utility data-table-wrap {
-  @apply isolate max-h-[65vh] overflow-auto rounded-xl border border-border-line bg-surface-base;
+  /* Scrolls sideways only. A height cap gave the table its own vertical
+   * scroller inside the page, clipping the last rows of a page that fit. */
+  @apply isolate overflow-x-auto overflow-y-hidden rounded-xl border border-border-line bg-surface-base;
 }
 
 @utility data-table {
@@ -645,5 +660,16 @@
     color: hsl(var(--muted-foreground) / 0.7);
     pointer-events: none;
     position: absolute;
+  }
+}
+
+/* iOS Safari zooms the page into any focused field under 16px. Unlayered, so
+   it outranks every text-* utility on a field, shared or one-off, without
+   each form having to remember a phone size. */
+@media (pointer: coarse), (width < 40rem) {
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']),
+  textarea,
+  select {
+    font-size: 16px;
   }
 }

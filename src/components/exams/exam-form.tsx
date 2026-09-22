@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { examKindLabel } from "@/lib/exam-labels";
+import { pickCurrentTerm } from "@/lib/terms";
 import { useT } from "@/stores/preferences-context";
 
 function dateInputFromMs(ms: number | null | undefined): string {
@@ -112,8 +113,8 @@ export function ExamForm(props: {
   createEffect(() => {
     const list = terms();
     if (!list || list.length === 0 || term()) return;
-    // Newest first from the backend — the open dönem is what a teacher means.
-    setTerm((list.find((item) => item.archived_at == null) ?? list[0]).id);
+    // The dönem running today is what a teacher means; list order is newest first.
+    setTerm(pickCurrentTerm(list, Date.now())?.id ?? list[0].id);
   });
   const examKinds = createMemo(() => {
     const names = settings()?.exam_kinds.map((item) => item.name) ?? EXAM_KINDS;
@@ -225,7 +226,7 @@ export function ExamForm(props: {
         <div class="space-y-3 rounded-xl border border-border-line bg-surface-overlay p-4">
           <h3 class="text-xs font-semibold text-text-subtle">{t("exams.sectionBasic")}</h3>
           <div class="space-y-1.5">
-            <Label for="exam-title">{t("form.title")}</Label>
+            <Label for="exam-title">{t("form.title")}<span class="ml-0.5 text-destructive-text">*</span></Label>
             <Input
               id="exam-title"
               value={title()}

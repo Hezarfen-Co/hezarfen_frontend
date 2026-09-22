@@ -34,6 +34,7 @@ import { hasMinRole } from "@/lib/roles";
 import { matchesSearch } from "@/lib/search-text";
 import { scheduleStatusClass, scheduleStatusDotClass } from "@/lib/schedule-status";
 import { cn } from "@/lib/cn";
+import { createUrlEnum, createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -62,9 +63,24 @@ function ExamsContent() {
     if (status === "upcoming" || status === "active" || status === "unscheduled") return "upcoming";
     return "completed";
   };
-  const [tab, setTab] = createSignal<ExamTab>("all");
-  const [courseFilter, setCourseFilter] = createSignal("all");
-  const [kindFilter, setKindFilter] = createSignal("all");
+  // Tab and filters live in the URL beside the table's own search/page/sort,
+  // so Back from an exam lands on the same slice of the list.
+  const [tab, setTab] = createUrlEnum<ExamTab>("tab", ["all", "upcoming", "completed", "draft"], "all");
+  const [courseFilter, setCourseFilter] = createUrlString("course", "all");
+  const [kindFilter, setKindFilter] = createUrlString("kind", "all");
+  const filtersActive = () => courseFilter() !== "all" || kindFilter() !== "all";
+  const clearFilters = () => {
+    setCourseFilter("all");
+    setKindFilter("all");
+  };
+  const emptyMessage = () =>
+    tab() === "upcoming"
+      ? t("exams.emptyUpcoming")
+      : tab() === "completed"
+        ? t("exams.emptyCompleted")
+        : tab() === "draft"
+          ? t("exams.emptyDraft")
+          : t("exams.empty");
   const [createOpen, setCreateOpen] = createSignal(location().searchStr.includes("action=new"));
   createEffect(() => {
     if (location().searchStr.includes("action=new")) {
@@ -172,13 +188,15 @@ function ExamsContent() {
   const statusLabel = (status: ExamDisplayStatus) => {
     return t(examStatusMessageKey(status));
   };
-  const rows = (): ExamRow[] => filterExams(list()?.items ?? []).map((exam) => ({ ...exam, displayStatus: examStatus(exam) }));
+  // A memo, not a function: the table must see one array per change, not a
+  // fresh one on every read.
+  const rows = createMemo((): ExamRow[] => filterExams(list()?.items ?? []).map((exam) => ({ ...exam, displayStatus: examStatus(exam) })));
   const columns = createMemo<ColumnDef<ExamRow>[]>(() => [
     {
       accessorKey: "title",
       header: t("exams.title"),
       size: 220,
-      minSize: 180,
+      minSize: 160,
       cell: (cell) => (
         <div class="min-w-0">
           <p class="truncate font-medium">{cell.row.original.title}</p>
@@ -206,13 +224,14 @@ function ExamsContent() {
       id: "status",
       accessorFn: (exam) => statusLabel(exam.displayStatus),
       header: t("attempt.status"),
-      size: 130,
-      minSize: 110,
+      // The pill is min-w-24 plus cell padding: narrower clips it.
+      size: 140,
+      minSize: 120,
       meta: { headerClass: "text-center", cellClass: "text-center" },
       cell: (cell) => {
         const status = cell.row.original.displayStatus;
         return (
-          <Badge variant="outline" class={cn("min-w-28 justify-center whitespace-nowrap", scheduleStatusClass(examStatusTone(status)))}>
+          <Badge variant="outline" class={cn("min-w-24 max-w-full justify-center whitespace-nowrap", scheduleStatusClass(examStatusTone(status)))}>
             <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", scheduleStatusDotClass(examStatusTone(status)))} />
             {statusLabel(status)}
           </Badge>
@@ -339,13 +358,16 @@ function ExamsContent() {
                 }
                 columns={columns()}
                 data={rows()}
-                tableClass="table-fixed min-w-[46rem]"
                 filterPlaceholder={t("exams.searchPlaceholder")}
                 filterHint={t("search.hint.exams")}
                 searchPredicate={searchExam}
                 enablePagination
                 pageSize={EXAM_PAGE_SIZE}
-                empty={t("exams.empty")}
+                empty={emptyMessage()}
+                urlState
+                pageResetKey={`${tab()}|${courseFilter()}|${kindFilter()}`}
+                filtersActive={filtersActive()}
+                onClearFilters={clearFilters}
                 storageKey="exams"
                 onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
                 filters={
@@ -370,16 +392,13 @@ function ExamsContent() {
                       ]}
                     />
 
-                    <Show when={courseFilter() !== "all" || kindFilter() !== "all"}>
+                    <Show when={filtersActive()}>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         class="h-8 rounded-lg px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground"
-                        onClick={() => {
-                          setCourseFilter("all");
-                          setKindFilter("all");
-                        }}
+                        onClick={clearFilters}
                       >
                         <IconRotateCcw class="h-3.5 w-3.5 mr-1" />
                         {t("common.resetFilters")}
@@ -406,7 +425,7 @@ function ExamsContent() {
           }
         }}
         title={createdExam() ? createdExam()!.title : t("exams.create")}
-        description={createdExam() ? t("exams.step2Questions") : t("exams.subtitle")}
+        description={createdExam() ? t("exams.step2Questions") : t("exams.createSubtitle")}
         size={createStep() === "questions" ? "wide" : "default"}
       >
         <div class="mb-4 flex rounded-md border border-border-line bg-surface-overlay p-1">

@@ -22,6 +22,7 @@ import { formatDateTime } from "@/lib/format";
 import { formatBytes } from "@/lib/upload-limits";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { sanitizeRichText } from "@/lib/rich-text";
+import { defaultGradeStatus } from "@/lib/homework-grade";
 
 export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId: string }) {
   const t = useT();
@@ -50,7 +51,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
 
   const openGrade = (row: HomeworkRosterEntry) => {
     setGradeTarget(row);
-    setStatus(row.result?.status ?? (row.missing ? "missing" : "done"));
+    setStatus(defaultGradeStatus(row));
     setMark(row.result?.mark == null ? "" : String(row.result.mark));
     setError("");
   };
@@ -68,6 +69,10 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
     event.preventDefault();
     const target = gradeTarget();
     if (!target) return;
+    if (!status()) {
+      setError(t("homework.gradeStatusRequired"));
+      return;
+    }
     const numericMark = mark().trim() === "" ? null : Number(mark());
     if (numericMark != null && (!Number.isFinite(numericMark) || numericMark < 0 || numericMark > 100)) {
       setError(t("form.markRange"));
@@ -165,6 +170,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
           <div class="space-y-1.5">
             <Label for="homework-grade-status">{t("events.status")}</Label>
             <Select id="homework-grade-status" value={status()} onChange={(event) => setStatus(event.currentTarget.value)}>
+              <option value="" disabled>{t("homework.gradeStatusPlaceholder")}</option>
               <option value="done">{t("homework.status.done")}</option>
               <option value="incomplete">{t("homework.status.incomplete")}</option>
               <option value="missing">{t("homework.status.missing")}</option>

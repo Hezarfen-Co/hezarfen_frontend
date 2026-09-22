@@ -63,9 +63,11 @@ vi.mock("@/api/modules", () => ({ getModulesCatalog: async () => ({ modules: [],
 vi.mock("@/api/time/getTime", () => ({ getTime: async () => ({ now }) }));
 vi.mock("@/api/courses", () => ({
   getCourses: async () => page([course]),
+  getCourseById: async () => course,
 }));
 vi.mock("@/api/instances", () => ({
   getMyInstances: async () => page([instance]),
+  getInstanceById: async () => instance,
   getInstanceEnrollments: async () => page([]),
   getInstanceSessions: async () => page([
     { id: "session-today", class_course: "instance-1", teacher: { id: "u-1", username: "demo", display_name: null }, topic: "Fractions", starts_at: now, ends_at: now + 40 * 60 * 1000 },
@@ -129,6 +131,15 @@ vi.mock("@/api/exams", async () => {
       draft: false,
       starts_at: now - 10 * DAY,
       ends_at: now - 10 * DAY + 3_000,
+    },
+    // Never scheduled, yet graded: it still belongs on the trend.
+    {
+      id: "exam-paper",
+      title: "Paper quiz",
+      class_course: "instance-1",
+      draft: false,
+      starts_at: null,
+      ends_at: null,
     },
   ]);
   },
@@ -204,6 +215,8 @@ vi.mock("@/api/classes", () => ({
   getMyClasses: async () => page([{ id: "class-1", name: "9-A" }]),
   getClassesByUserId: async () => page([]),
   getClasses: async () => page([]),
+  getClassById: async () => ({ id: "class-1", name: "9-A" }),
+  getClassMembers: async () => page([]),
 }));
 vi.mock("@/api/academic-years", () => ({
   getAcademicYears: async () => page([{ id: "y-1", name: "2026-2027" }]),
@@ -284,7 +297,9 @@ test("teacher sees real exam averages instead of capacities and resource links",
   expect(screen.getByText("Success trend")).toBeTruthy();
   expect(screen.getByText("Average of recent exams, by course.")).toBeTruthy();
   // The trend point and the per-course bar carry the backend's average.
-  expect(await screen.findByRole("img", { name: /Algebra: Midterm.*74\.5/ })).toBeTruthy();
+  expect(await screen.findByRole("img", { name: /Algebra — 9-A: Midterm.*74\.5/ })).toBeTruthy();
+  // An unscheduled exam with marks is charted too (it used to empty the panel).
+  expect(screen.getByRole("img", { name: /Algebra — 9-A: Paper quiz/ })).toBeTruthy();
   expect((await screen.findAllByText("74.5")).length).toBeGreaterThanOrEqual(2);
   expect(screen.queryByText("Course capacities")).toBeNull();
   expect(screen.queryByText("Workload split")).toBeNull();

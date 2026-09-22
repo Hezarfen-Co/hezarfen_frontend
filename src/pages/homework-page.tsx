@@ -2,9 +2,10 @@ import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js
 import { createResource } from "@/lib/create-resource";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getCourseById, getCourseSubjects } from "@/api/courses";
-import { getInstanceById, postInstanceHomework } from "@/api/instances";
+import { getCourseSubjects } from "@/api/courses";
+import { postInstanceHomework } from "@/api/instances";
 import { loadInstanceOptions } from "@/lib/instance-options";
+import { loadInstanceLabels } from "@/lib/instance-labels";
 import { getHomework } from "@/api/homework";
 import { getTime } from "@/api/time";
 import { formatApiError } from "@/api/client";
@@ -71,23 +72,14 @@ function HomeworkContent() {
   const [dueTime, setDueTime] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
-  // Homework is filed against an instance (şube × ders), so a row's label is
-  // the catalog course's title, resolved one hop through the instance.
+  // Homework is filed against an instance (şube × ders): the same ders taught
+  // in two şubeler yields rows with the same title, so a row's label names
+  // both — "<ders> — <şube>", as the exams list does.
   const [courseNames, setCourseNames] = createSignal<Record<string, string>>({});
   const [list, { refetch }] = createResource(async () => {
     const items = (await getHomework({ limit: 100 })).items;
-    const instanceIds = [...new Set(items.map((item) => item.class_course))];
-    await Promise.all(
-      instanceIds.map(async (instanceId) => {
-        try {
-          const instance = await getInstanceById(instanceId);
-          const course = await getCourseById(instance.course);
-          setCourseNames((current) => ({ ...current, [instanceId]: course.title }));
-        } catch {
-          // An unreadable section just keeps its id as the label.
-        }
-      }),
-    );
+    const labels = await loadInstanceLabels(items.map((item) => item.class_course), auth.user()?.role);
+    setCourseNames(Object.fromEntries([...labels].map(([id, entry]) => [id, entry.label])));
     return items;
   });
   // The sections a teacher may assign work in, labelled "<ders> — <şube>".
@@ -102,7 +94,7 @@ function HomeworkContent() {
     async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
   );
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
-  const courseName = (id: string) => courseNames()[id] ?? id;
+  const courseName = (id: string) => courseNames()[id] ?? "—";
   const canCreate = () => manageableCourses().length > 0;
   const pageTitle = () => auth.user()?.role === "student" ? t("homework.mineTitle") : t("homework.title");
   type DueTab = "all" | "open" | "past";
@@ -265,6 +257,7 @@ function HomeworkContent() {
               <Alert variant="destructive">{formatApiError(list.error)}</Alert>
             </Show>
             <DataTable
+              urlState
               columns={columns()}
               data={dueFilteredList()}
               tableClass="table-fixed min-w-[44rem]"

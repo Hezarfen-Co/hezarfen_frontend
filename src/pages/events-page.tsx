@@ -18,6 +18,7 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { TruncationNotice } from "@/components/ui/truncation-notice";
 import { cn } from "@/lib/cn";
+import { createUrlEnum } from "@/lib/url-state";
 import { createNow } from "@/lib/create-now";
 import { LIST_CAP, loadCappedList } from "@/lib/capped-list";
 import { createFlash } from "@/lib/flash";
@@ -52,18 +53,34 @@ function EventsContent() {
       setShowForm(true);
     }
   });
-  const [timeFilter, setTimeFilter] = createSignal("all");
+  const [timeFilter, setTimeFilter] = createUrlEnum("when", ["all", "upcoming", "past"] as const, "all");
   const now = createNow();
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
 
   const filterEvents = (items: Event[]) => {
     const scope = timeFilter();
     const nowMs = now();
-    return items.filter((event) => {
-      if (scope === "upcoming" && event.ends_at != null && event.ends_at < nowMs) return false;
-      if (scope === "past" && (event.ends_at == null || event.ends_at >= nowMs)) return false;
-      return true;
-    });
+    const isPast = (event: Event) => event.ends_at != null && event.ends_at < nowMs;
+    const at = (event: Event) => event.starts_at ?? event.ends_at ?? null;
+    // Default order, before any header sort: what is still ahead comes first,
+    // soonest first; what is over follows, most recent first. The API lists
+    // newest first, which put a far-off event above next week's.
+    const byDefault = (a: Event, b: Event) => {
+      const pastA = isPast(a);
+      const pastB = isPast(b);
+      if (pastA !== pastB) return pastA ? 1 : -1;
+      const atA = at(a);
+      const atB = at(b);
+      if (atA == null || atB == null) return atA == null ? (atB == null ? 0 : 1) : -1;
+      return pastA ? atB - atA : atA - atB;
+    };
+    return items
+      .filter((event) => {
+        if (scope === "upcoming" && isPast(event)) return false;
+        if (scope === "past" && !isPast(event)) return false;
+        return true;
+      })
+      .sort(byDefault);
   };
 
   const [loadAll, setLoadAll] = createSignal(false);
@@ -71,7 +88,7 @@ function EventsContent() {
     () => (loadAll() ? "all" : "capped"),
     (scope) => loadCappedList(getEvents, LIST_CAP, scope === "all"),
   );
-  const rows = () => filterEvents(list()?.items ?? []);
+  const rows = createMemo(() => filterEvents(list()?.items ?? []));
   const eventStatus = (event: Event) => {
     const nowMs = now();
     if (event.ends_at != null && event.ends_at < nowMs) return "past";
@@ -214,6 +231,7 @@ function EventsContent() {
             onLoadAll={() => setLoadAll(true)}
           />
           <DataTable
+            urlState
             title={t("events.title")}
             description={t("events.subtitle")}
             actions={
@@ -232,13 +250,16 @@ function EventsContent() {
             enablePagination
             pageSize={EVENT_PAGE_SIZE}
             empty={t("events.empty")}
+            pageResetKey={timeFilter()}
+            filtersActive={timeFilter() !== "all"}
+            onClearFilters={() => setTimeFilter("all")}
             storageKey="events"
             onRowClick={(event) => void navigate({ to: "/events/$id", params: { id: event.id } })}
             filters={
               <DropdownSelect
                 labelPrefix={t("attempt.status")}
                 value={timeFilter()}
-                onChange={(val) => setTimeFilter(val)}
+                onChange={(val) => setTimeFilter(val === "upcoming" || val === "past" ? val : "all")}
                 options={[
                   { value: "all", label: t("common.all") },
                   { value: "upcoming", label: t("events.upcoming") },

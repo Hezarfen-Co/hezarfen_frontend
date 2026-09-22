@@ -47,7 +47,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { formatDateTime } from "@/lib/format";
-import { formatTry, mealCutoffAt } from "@/lib/meals";
+import { dietaryTagLabel, formatTry, mealCutoffAt, mealSlotLabel } from "@/lib/meals";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -186,7 +186,7 @@ function MealDetailContent() {
         {(current) => (
           <div class="space-y-5">
             <div class="space-y-2">
-              <Breadcrumbs items={[{ label: t("meals.title"), to: "/meals" }, { label: `${current().date} · ${current().slot}` }]} />
+              <Breadcrumbs items={[{ label: t("meals.title"), to: "/meals" }, { label: `${current().date} · ${mealSlotLabel(current().slot, t)}` }]} />
               <PageHeader
                 title={t("meals.menu")}
                 description={t("meals.detailHelp")}
@@ -226,7 +226,7 @@ function MealDetailContent() {
                     <article class="rounded-xl border border-border-line bg-surface-base p-4">
                       <div class="flex justify-between gap-3"><h2 class="font-semibold text-text-strong">{dish.name}</h2><span class="font-semibold">{formatTry(dish.price_minor, moneyLocale())}</span></div>
                       <p class="mt-2 text-sm text-text-subtle">{dish.description || "—"}</p>
-                      <div class="mt-3 flex flex-wrap gap-1"><For each={dish.tags}>{(tag) => <Badge variant="outline" class={dish.conflicts.includes(tag) ? "border-warning/50 bg-warning/10 text-warning-text" : ""}>{dish.conflicts.includes(tag) ? `⚠ ${tag}` : tag}</Badge>}</For></div>
+                      <div class="mt-3 flex flex-wrap gap-1"><For each={dish.tags}>{(tag) => <Badge variant="outline" class={dish.conflicts.includes(tag) ? "border-warning/50 bg-warning/10 text-warning-text" : ""}>{dish.conflicts.includes(tag) ? `⚠ ${dietaryTagLabel(tag, t)}` : dietaryTagLabel(tag, t)}</Badge>}</For></div>
                       <Show when={canManage()}><div class="mt-3 flex gap-2 border-t border-border-hairline pt-3"><Button variant="outline" size="sm" onClick={() => openDish(dish)}>{t("common.edit")}</Button><Button variant="ghost" size="sm" class="text-destructive-text" onClick={() => setDeleteDish(dish)}>{t("common.delete")}</Button></div></Show>
                     </article>
                   )}</For>
@@ -242,7 +242,7 @@ function MealDetailContent() {
 
               <TabsContent value="account" class="space-y-4">
                 <div class="grid gap-4 lg:grid-cols-2">
-                  <section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.dietaryProfile")}</h2><div class="mt-3 flex flex-wrap gap-1.5"><For each={profile()?.tags ?? []}>{(tag) => <Badge variant="outline" class="border-warning/50 bg-warning/10 text-warning-text">⚠ {tag}</Badge>}</For></div><p class="mt-3 text-sm text-text-subtle">{profile()?.note || t("meals.noDietaryNotes")}</p></section>
+                  <section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.dietaryProfile")}</h2><div class="mt-3 flex flex-wrap gap-1.5"><For each={profile()?.tags ?? []}>{(tag) => <Badge variant="outline" class="border-warning/50 bg-warning/10 text-warning-text">⚠ {dietaryTagLabel(tag, t)}</Badge>}</For></div><p class="mt-3 text-sm text-text-subtle">{profile()?.note || t("meals.noDietaryNotes")}</p></section>
                   <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.balance")}</h2><p class="mt-3 text-2xl font-semibold tabular-nums">{formatTry(balance()?.balance_minor ?? 0, moneyLocale())}</p></section></Show>
                 </div>
                 <Show when={canReadMoney()}><section class="data-shell p-4"><h2 class="font-semibold text-text-strong">{t("meals.ledger")}</h2><div class="mt-3 divide-y divide-border-hairline"><For each={ledger()?.items ?? []}>{(line) => <div class="flex justify-between gap-3 py-3 text-sm"><div><p class="font-medium">{t(`meals.ledger.${line.kind}` as never)}</p><p class="text-xs text-text-subtle">{line.note || line.method || "—"} · {formatDateTime(line.created_at, locale())}</p></div><span class="font-semibold tabular-nums">{line.kind === "charge" ? "−" : "+"}{formatTry(line.amount_minor, moneyLocale())}</span></div>}</For></div><Show when={(ledger()?.items.length ?? 0) === 0}><p class="mt-3 text-sm text-text-subtle">{t("meals.noLedger")}</p></Show></section></Show>
@@ -267,7 +267,7 @@ function MealDetailContent() {
                   <UserSearchSelect id="meal-record-user" role="student" value={lookupStudent()} onChange={setLookupStudent} label={t("meals.student")} />
                   <Show when={lookupStudent()}>
                     <div class="space-y-3">
-                      <div class="flex flex-wrap gap-2"><For each={settings()?.dietary_tags ?? []}>{(tag) => <label class="flex items-center gap-2 rounded-lg border border-border-line px-3 py-2 text-sm"><input type="checkbox" checked={profileTags().includes(tag)} onChange={() => toggleTag(tag, profileTags(), setProfileTags)} />{tag}</label>}</For></div>
+                      <div class="flex flex-wrap gap-2"><For each={settings()?.dietary_tags ?? []}>{(tag) => <label class="flex items-center gap-2 rounded-lg border border-border-line px-3 py-2 text-sm"><input type="checkbox" checked={profileTags().includes(tag)} onChange={() => toggleTag(tag, profileTags(), setProfileTags)} />{dietaryTagLabel(tag, t)}</label>}</For></div>
                       <Textarea maxlength={limits()?.meal.max_dietary_note_len} value={profileNote()} placeholder={t("meals.dietaryNote")} onInput={(e) => setProfileNote(e.currentTarget.value)} />
                       <Button disabled={pending()} onClick={() => void run(async () => { await patchDietaryProfileByUserId(lookupStudent(), { tags: profileTags(), note: profileNote().trim() || null }); await refetchProfile(); })}>{t("common.save")}</Button>
                     </div>
@@ -282,18 +282,18 @@ function MealDetailContent() {
 
             <ConfirmDialog open={cancelOpen()} onOpenChange={setCancelOpen} title={t("meals.cancelBooking")} variant="destructive" summary={t("meals.cancelSummary")} onConfirm={() => run(async () => { const booking = activeBooking(); if (!booking) return; await deleteMealBookingById(booking.id); await Promise.all([refetchBookings(), refetchBalance(), refetchLedger()]); }, t("meals.cancelled"))} />
             <ConfirmDialog open={cancelBooking() !== null} onOpenChange={(open) => !open && setCancelBooking(null)} title={t("meals.cancelBooking")} variant="destructive" summary={cancelBooking() ? `${t("meals.cancelSummary")} · ${personLabel(cancelBooking()!.student)}` : ""} onConfirm={() => run(async () => { const booking = cancelBooking(); if (!booking) return; await deleteMealBookingById(booking.id); setCancelBooking(null); await Promise.all([refetchService(), refetchServiceBookings()]); }, t("meals.cancelled"))} />
-            <ConfirmDialog open={deleteMenuOpen()} onOpenChange={setDeleteMenuOpen} title={t("meals.deleteMenu")} variant="destructive" summary={`${current().date} · ${current().slot}`} onConfirm={() => run(async () => { await deleteMealMenuById(id()); void navigate({ to: "/meals" }); }, t("common.deleted"))} />
+            <ConfirmDialog open={deleteMenuOpen()} onOpenChange={setDeleteMenuOpen} title={t("meals.deleteMenu")} variant="destructive" summary={`${current().date} · ${mealSlotLabel(current().slot, t)}`} onConfirm={() => run(async () => { await deleteMealMenuById(id()); void navigate({ to: "/meals" }); }, t("common.deleted"))} />
             <ConfirmDialog open={deleteDish() !== null} onOpenChange={(open) => !open && setDeleteDish(null)} title={t("meals.deleteDish")} variant="destructive" summary={deleteDish()?.name ?? ""} onConfirm={() => run(async () => { if (!deleteDish()) return; await deleteMealDishById(deleteDish()!.id); setDeleteDish(null); await refetchMenu(); }, t("common.deleted"))} />
 
-            <SidePanel guardUnsaved open={showMenuEdit()} onOpenChange={setShowMenuEdit} title={t("meals.editMenu")} description={`${current().date} · ${current().slot}`}>
+            <SidePanel guardUnsaved open={showMenuEdit()} onOpenChange={setShowMenuEdit} title={t("meals.editMenu")} description={`${current().date} · ${mealSlotLabel(current().slot, t)}`}>
               <form class="space-y-4" onSubmit={(e) => { e.preventDefault(); void run(async () => { await patchMealMenuById(id(), { capacity: capacity() ? Number(capacity()) : null }); setShowMenuEdit(false); await refetchMenu(); }); }}><div class="space-y-1.5"><Label for="menu-capacity">{t("meals.capacity")}</Label><Input id="menu-capacity" type="number" min={0} max={limits()?.meal.max_menu_capacity} value={capacity()} onInput={(e) => setCapacity(e.currentTarget.value)} /></div><Button type="submit" disabled={pending()}>{t("common.save")}</Button></form>
             </SidePanel>
-            <SidePanel guardUnsaved open={showDishForm()} onOpenChange={setShowDishForm} title={editingDish() ? t("meals.editDish") : t("meals.addDish")} description={`${current().date} · ${current().slot}`}>
+            <SidePanel guardUnsaved open={showDishForm()} onOpenChange={setShowDishForm} title={editingDish() ? t("meals.editDish") : t("meals.addDish")} description={`${current().date} · ${mealSlotLabel(current().slot, t)}`}>
               <form class="space-y-4" onSubmit={(e) => { e.preventDefault(); void run(async () => { const body = { name: dishName().trim(), description: dishDescription().trim() || null, price_minor: Math.round(Number(dishPrice()) * 100), tags: dishTags() }; if (editingDish()) await patchMealDishById(editingDish()!.id, body); else await postMealDish(id(), body); setShowDishForm(false); await refetchMenu(); }); }}>
                 <div class="space-y-1.5"><Label for="dish-name">{t("meals.dishName")}</Label><Input id="dish-name" required maxlength={limits()?.meal.max_dish_name_len} value={dishName()} onInput={(e) => setDishName(e.currentTarget.value)} /></div>
                 <div class="space-y-1.5"><Label for="dish-description">{t("form.description")}</Label><Textarea id="dish-description" maxlength={limits()?.meal.max_dish_description_len} value={dishDescription()} onInput={(e) => setDishDescription(e.currentTarget.value)} /></div>
                 <div class="space-y-1.5"><Label for="dish-price">{t("meals.priceTry")}</Label><Input id="dish-price" required type="number" min={0} step={0.01} value={dishPrice()} onInput={(e) => setDishPrice(e.currentTarget.value)} /></div>
-                <div class="flex flex-wrap gap-2"><For each={settings()?.dietary_tags ?? []}>{(tag) => <label class="flex items-center gap-2 rounded-lg border border-border-line px-3 py-2 text-sm"><input type="checkbox" checked={dishTags().includes(tag)} onChange={() => toggleTag(tag, dishTags(), setDishTags)} />{tag}</label>}</For></div>
+                <div class="flex flex-wrap gap-2"><For each={settings()?.dietary_tags ?? []}>{(tag) => <label class="flex items-center gap-2 rounded-lg border border-border-line px-3 py-2 text-sm"><input type="checkbox" checked={dishTags().includes(tag)} onChange={() => toggleTag(tag, dishTags(), setDishTags)} />{dietaryTagLabel(tag, t)}</label>}</For></div>
                 <Button type="submit" disabled={pending()}>{t("common.save")}</Button>
               </form>
             </SidePanel>

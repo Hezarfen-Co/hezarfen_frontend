@@ -30,7 +30,7 @@ export type BadgeProps = ParentProps<
 export function Badge(props: BadgeProps) {
   const [local, rest] = splitProps(props, ["class", "variant", "children"]);
   return (
-    <div class={cn(badgeVariants({ variant: local.variant }), local.class)} {...rest}>
+    <div data-slot="badge" class={cn(badgeVariants({ variant: local.variant }), local.class)} {...rest}>
       {local.children}
     </div>
   );

@@ -5,7 +5,7 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import type { Role } from "@/api/client";
 import { formatApiError, isModuleDisabledError } from "@/api/client";
 import { getAppointments } from "@/api/appointments";
-import { getClasses, getClassesByUserId, getMyClasses } from "@/api/classes";
+import { getClasses, getClassesByUserId, getClassMembers, getMyClasses } from "@/api/classes";
 import { getCourses } from "@/api/courses";
 import { getInstanceEnrollments, getMyInstances } from "@/api/instances";
 import { getEvents } from "@/api/events";
@@ -51,12 +51,15 @@ import {
 import { PageSpinner } from "@/components/ui/page-spinner";
 import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatDecimal } from "@/lib/format";
+import { createInstanceLabels, loadInstanceLabels } from "@/lib/instance-labels";
+import { uuidV7Ms } from "@/lib/uuid-time";
 import { formatTry } from "@/lib/meals";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { packageLabel } from "@/lib/module-labels";
 import { hasMinRole } from "@/lib/roles";
+import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { getModulesCatalog } from "@/api/modules";
 import { useModules } from "@/stores/modules-context";
 import { useAuth } from "@/stores/auth-context";
@@ -74,6 +77,16 @@ const HEATMAP_WEEKS = 26;
 const TREND_EXAM_CAP = 20;
 /** Marks plotted in a student's own trend. */
 const TREND_MARK_CAP = 20;
+/** Classes whose roster size the admin "Şubeler" quick links read. */
+const CLASS_LINK_CAP = 12;
+
+/**
+ * Chronological key for an exam: its schedule when it has one, else when it
+ * was created (the id is a UUIDv7). Used only to order points, never shown.
+ */
+function examOrder(exam: { id: string; starts_at: number | null }): number {
+  return exam.starts_at ?? uuidV7Ms(exam.id) ?? 0;
+}
 
 type Status = "active" | "today" | "soon";
 type DeadlineKind = "exam" | "event" | "appointment" | "homework" | "payment";
@@ -84,6 +97,10 @@ type DeadlineRow = {
   title: string;
   at: number;
   status: Status;
+  /** The şube×ders an exam or homework belongs to. */
+  instance?: string;
+  /** Its "<ders> — <şube>" label, once read. */
+  section?: string;
 };
 
 type StatCardData = {
@@ -230,9 +247,12 @@ function DashboardContent() {
   const [examStats] = createResource(
     () => hasMinRole(role(), "teacher") ? exams.latest?.items ?? null : null,
     async (items) => {
+      // An exam with no schedule (an untimed, paper or imported one) still
+      // gets graded — skipping unscheduled exams left the charts empty while
+      // real marks existed. Only a scheduled exam still in the future is out.
       const recent = items
-        .filter((exam) => !exam.draft && exam.starts_at != null && exam.starts_at <= now())
-        .sort((a, b) => b.starts_at! - a.starts_at!)
+        .filter((exam) => !exam.draft && (exam.starts_at == null || exam.starts_at <= now()))
+        .sort((a, b) => examOrder(b) - examOrder(a))
         .slice(0, TREND_EXAM_CAP);
       const settled = await Promise.all(
         recent.map(async (exam) => {
@@ -246,8 +266,16 @@ function DashboardContent() {
       );
       return settled
         .filter((row) => row.stats?.average != null)
-        .sort((a, b) => a.exam.starts_at! - b.exam.starts_at!);
+        .sort((a, b) => examOrder(a.exam) - examOrder(b.exam));
     },
+  );
+  // Exams name an instance (şube × ders). The trend labels "<ders> — <şube>"
+  // and the course bars group by the catalog course behind it; `/instances/me`
+  // is empty for the office, so each charted instance is read by id (bounded
+  // by TREND_EXAM_CAP, cached for the tab).
+  const [trendSections] = createResource(
+    () => examStats.latest ?? null,
+    (rows) => loadInstanceLabels(rows.map((row) => row.exam.class_course), role()),
   );
   const myClass = () => myClasses.latest?.items[0] ?? null;
 
@@ -341,9 +369,26 @@ function DashboardContent() {
     () => (isAdminHome() ? true : null),
     () => getUsers({ limit: 30 }),
   );
+  // "Şubeler" quick links: the classes with the most students, each labelled
+  // with its roster size. A class carries no member count, so each one costs
+  // a `limit=1` roster read for its `total` — capped at CLASS_LINK_CAP classes
+  // (taken in name order) so a large school does not fan out on the homepage.
   const [recentClasses] = createResource(
     () => (isAdminHome() && on("classes") ? true : null),
-    () => quiet(getClasses({ limit: 2 })),
+    async () => {
+      const page = await quiet(getClasses({ limit: 200 }));
+      if (!page) return null;
+      const candidates = [...page.items]
+        .sort((a, b) => a.name.localeCompare(b.name, "tr", { numeric: true }))
+        .slice(0, CLASS_LINK_CAP);
+      const counted = await mapConcurrent(candidates, FAN_OUT_LIMIT, async (cls) => ({
+        cls,
+        students: await getClassMembers(cls.id, { limit: 1 }).then((members) => members.total, () => null),
+      }));
+      return counted
+        .sort((a, b) => (b.students ?? -1) - (a.students ?? -1) || a.cls.name.localeCompare(b.cls.name, "tr", { numeric: true }))
+        .slice(0, 2);
+    },
   );
   const studentQuickLinks = createMemo<QuickLinkRow[]>(() =>
     (recentStudents()?.items ?? [])
@@ -357,10 +402,10 @@ function DashboardContent() {
       })),
   );
   const classQuickLinks = createMemo<QuickLinkRow[]>(() =>
-    (recentClasses()?.items ?? []).slice(0, 2).map((cls) => ({
-      id: cls.id,
-      primary: cls.name,
-      secondary: cls.grade ?? undefined,
+    (recentClasses() ?? []).map((row) => ({
+      id: row.cls.id,
+      primary: row.cls.name,
+      secondary: row.students == null ? undefined : t("classGroups.studentsCount", { count: row.students }),
       Icon: IconBook,
     })),
   );
@@ -433,7 +478,7 @@ function DashboardContent() {
       return [
         { labelKey: "dashboard.stats.courses", module: "courses", value: courseCount(), Icon: IconBook },
         { labelKey: "dashboard.stats.exams", module: "exams", value: countOf(exams), Icon: IconExam },
-        { labelKey: "dashboard.stats.average", module: "marks", value: marks()?.overall_average == null ? "—" : marks()!.overall_average!.toFixed(1), Icon: IconChart },
+        { labelKey: "dashboard.stats.average", module: "marks", value: formatDecimal(marks()?.overall_average, locale()), Icon: IconChart },
         { labelKey: "dashboard.stats.attendance", module: "attendance", value: attendanceRate() == null ? "—" : `${attendanceRate()}%`, Icon: IconClipboardCheck },
       ];
     }
@@ -468,68 +513,70 @@ function DashboardContent() {
   const myMarkTrend = createMemo(() => {
     const report = marks();
     if (!report) return [];
+    // A mark's exam may have no schedule; it still belongs on the line,
+    // ordered by when the exam was created, just without a date caption.
     const examDates = new Map((exams()?.items ?? []).map((exam) => [exam.id, exam.starts_at]));
     return report.courses
       .flatMap((course) =>
-        course.results.map((result) => ({
-          id: `${course.course.id}:${result.exam}`,
-          label: `${course.course.title}: ${result.title}`,
-          value: result.mark,
-          at: examDates.get(result.exam) ?? null,
-        })),
+        course.results.map((result) => {
+          const at = examDates.get(result.exam) ?? null;
+          return {
+            id: `${course.course.id}:${result.exam}`,
+            label: `${course.course.title}: ${result.title}`,
+            value: result.mark,
+            at,
+            order: examOrder({ id: result.exam, starts_at: at }),
+          };
+        }),
       )
-      .filter((row): row is typeof row & { at: number } => row.at != null)
-      .sort((a, b) => a.at - b.at)
+      .sort((a, b) => a.order - b.order)
       .slice(-TREND_MARK_CAP)
       .map((row) => ({
         id: row.id,
         label: row.label,
         value: row.value,
-        formattedValue: row.value.toFixed(1),
-        caption: formatTrendDate(row.at),
+        formattedValue: formatDecimal(row.value, locale()),
+        caption: row.at == null ? undefined : formatTrendDate(row.at),
       }));
   });
 
-  // Exams name an instance; the catalog course behind it is what a chart label
-  // should read, and `/instances/me` already covers the teacher's own sections.
-  const [myInstances] = createResource(
-    () => (role() && role() !== "parent" ? true : null),
-    async () => (await getMyInstances({ limit: 200 })).items,
-  );
-  const instanceCourse = (instanceId: string) =>
-    (myInstances.latest ?? []).find((instance) => instance.id === instanceId)?.course ?? null;
+  const sectionOf = (instanceId: string) => trendSections.latest?.get(instanceId) ?? null;
 
   // Teacher+ trend — the backend's own per-exam average, oldest exam first.
-  const examAverageTrend = createMemo(() => {
-    const titles = new Map((courses()?.items ?? []).map((course) => [course.id, course.title]));
-    return (examStats() ?? []).map((row) => ({
-      id: row.exam.id,
-      label: `${titles.get(instanceCourse(row.exam.class_course) ?? "") ?? row.exam.class_course}: ${row.exam.title}`,
-      value: row.stats!.average!,
-      formattedValue: row.stats!.average!.toFixed(1),
-      caption: formatTrendDate(row.exam.starts_at!),
-    }));
-  });
+  const examAverageTrend = createMemo(() =>
+    (examStats() ?? []).map((row) => {
+      const section = sectionOf(row.exam.class_course);
+      return {
+        id: row.exam.id,
+        label: section ? `${section.label}: ${row.exam.title}` : row.exam.title,
+        value: row.stats!.average!,
+        formattedValue: formatDecimal(row.stats!.average!, locale()),
+        caption: row.exam.starts_at == null ? undefined : formatTrendDate(row.exam.starts_at),
+      };
+    }),
+  );
 
   // Teacher+ comparison — the same exam averages grouped by course, so a weak
   // subject stands out rather than being averaged into one school-wide number.
+  // An exam whose section could not be read has no course to go under and is
+  // left out of the bars rather than filed under a raw id.
   const courseAverageBars = createMemo(() => {
-    const titles = new Map((courses()?.items ?? []).map((course) => [course.id, course.title]));
-    const buckets = new Map<string, number[]>();
+    const buckets = new Map<string, { label: string; averages: number[] }>();
     for (const row of examStats() ?? []) {
-      const courseId = instanceCourse(row.exam.class_course) ?? row.exam.class_course;
-      const list = buckets.get(courseId) ?? [];
-      list.push(row.stats!.average!);
-      buckets.set(courseId, list);
+      const section = sectionOf(row.exam.class_course);
+      if (!section?.courseTitle) continue;
+      const bucket = buckets.get(section.course) ?? { label: section.courseTitle, averages: [] };
+      bucket.averages.push(row.stats!.average!);
+      buckets.set(section.course, bucket);
     }
     return [...buckets.entries()]
-      .map(([courseId, averages]) => {
-        const mean = averages.reduce((sum, value) => sum + value, 0) / averages.length;
+      .map(([courseId, bucket]) => {
+        const mean = bucket.averages.reduce((sum, value) => sum + value, 0) / bucket.averages.length;
         return {
           id: courseId,
-          label: titles.get(courseId) ?? courseId,
+          label: bucket.label,
           value: mean,
-          formattedValue: mean.toFixed(1),
+          formattedValue: formatDecimal(mean, locale()),
         };
       })
       .sort((a, b) => b.value - a.value);
@@ -539,7 +586,7 @@ function DashboardContent() {
   const courseAverages = createMemo(() =>
     (marks()?.courses ?? [])
       .filter((c) => c.average != null)
-      .map((c) => ({ id: c.course.id, label: c.course.title, value: c.average!, formattedValue: c.average!.toFixed(1) })),
+      .map((c) => ({ id: c.course.id, label: c.course.title, value: c.average!, formattedValue: formatDecimal(c.average!, locale()) })),
   );
 
   // Weekly activity split — student attendance breakdown (events + sessions).
@@ -589,11 +636,11 @@ function DashboardContent() {
       .reduce((sum, entry) => sum + entry.value, 0);
   });
 
-  const deadlines = createMemo<DeadlineRow[]>(() => {
+  const rawDeadlines = createMemo<DeadlineRow[]>(() => {
     const items: DeadlineRow[] = [];
     for (const exam of exams()?.items ?? []) {
       const status = scheduleStatus(exam.starts_at, exam.ends_at, now());
-      if (status) items.push({ id: exam.id, kind: "exam", title: exam.title, at: exam.starts_at!, status });
+      if (status) items.push({ id: exam.id, kind: "exam", title: exam.title, at: exam.starts_at!, status, instance: exam.class_course });
     }
     for (const event of events()?.items ?? []) {
       const status = scheduleStatus(event.starts_at, event.ends_at, now());
@@ -601,7 +648,7 @@ function DashboardContent() {
     }
     for (const hw of homework()?.items ?? []) {
       const status = scheduleStatus(hw.due_at, hw.due_at, now());
-      if (status) items.push({ id: hw.id, kind: "homework", title: hw.title, at: hw.due_at, status });
+      if (status) items.push({ id: hw.id, kind: "homework", title: hw.title, at: hw.due_at, status, instance: hw.class_course });
     }
     for (const appointment of appointments()?.items ?? []) {
       if (appointment.starts_at == null || !["pending", "approved"].includes(appointment.status)) continue;
@@ -622,6 +669,19 @@ function DashboardContent() {
     }
     return items.sort((a, b) => a.at - b.at);
   });
+  // One ders taught in two şubeler gives two rows with the same title, so a
+  // row names "<ders> — <şube>" under its title.
+  // The label is folded into the row (a new array) rather than read in the
+  // cell: the table caches cells by data identity and would not repaint.
+  const deadlineSections = createInstanceLabels(
+    () => rawDeadlines().flatMap((row) => (row.instance ? [row.instance] : [])),
+    role,
+  );
+  const deadlines = createMemo<DeadlineRow[]>(() => {
+    const labels = deadlineSections();
+    return rawDeadlines().map((row) => (row.instance && labels[row.instance] ? { ...row, section: labels[row.instance].label } : row));
+  });
+  const deadlineSection = (row: DeadlineRow) => row.section;
 
   const headerClass = "text-xs font-medium text-muted-foreground";
   const deadlineColumns = createMemo<ColumnDef<DeadlineRow>[]>(() => [
@@ -630,7 +690,14 @@ function DashboardContent() {
       header: t("dashboard.col.task"),
       enableSorting: false,
       meta: { headerClass },
-      cell: (info) => <span class="block truncate font-medium">{info.row.original.title}</span>,
+      cell: (info) => (
+        <div class="min-w-0">
+          <span class="block truncate font-medium">{info.row.original.title}</span>
+          <Show when={deadlineSection(info.row.original)}>
+            {(section) => <span class="block truncate text-xs text-text-subtle">{section()}</span>}
+          </Show>
+        </div>
+      ),
     },
     {
       accessorKey: "kind",
@@ -663,7 +730,7 @@ function DashboardContent() {
     },
   ]);
 
-  const deadlineSearch = (row: DeadlineRow, q: string) => matchesSearch(q, row.title);
+  const deadlineSearch = (row: DeadlineRow, q: string) => matchesSearch(q, row.title, deadlineSection(row));
   const openDeadline = (row: DeadlineRow) => {
     switch (row.kind) {
       case "exam":

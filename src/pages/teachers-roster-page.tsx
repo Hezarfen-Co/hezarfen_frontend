@@ -3,14 +3,17 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { matchesSearch } from "@/lib/search-text";
-import { getClasses } from "@/api/classes";
+import { getClassInstances, getClasses } from "@/api/classes";
+import { getCourses } from "@/api/courses";
 import { getUserSearch } from "@/api/users";
-import { formatApiError, type PersonRef } from "@/api/client";
+import { formatApiError, type Course, type PersonRef } from "@/api/client";
+import { formatInstanceLabel } from "@/lib/instance-labels";
+import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { CreateUserPanel } from "@/components/users/create-user-panel";
 import { RosterPersonCell } from "@/components/users/roster-person-cell";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
+import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye, IconPlus, IconUploadCloud } from "@/components/ui/icons";
@@ -21,7 +24,13 @@ import { useAuth } from "@/stores/auth-context";
 
 const ROSTER_PAGE_SIZE = 10;
 
-type TeacherRow = { person: PersonRef; homeroomClasses: number };
+type TeacherRow = {
+  person: PersonRef;
+  /** Classes this teacher is the homeroom teacher (sınıf öğretmeni) of. */
+  homeroom: string[];
+  /** The sections they teach, as "<ders> — <şube>". */
+  sections: string[];
+};
 
 export default function TeachersRosterPage() {
   return (
@@ -31,9 +40,11 @@ export default function TeachersRosterPage() {
   );
 }
 
-// ADM-08. "Sınıf" is the number of classes the teacher is homeroom teacher of
-// (ClassGroup.teacher); branch, weekly load, AI acceptance and employment
-// status have no field anywhere, so they stay "yakında".
+// ADM-08. Two real columns: the classes a teacher is homeroom teacher of
+// (ClassGroup.teacher) and the sections they teach (Instance.teachers, read
+// one `/classes/{id}/instances` page per class — bounded by the class count,
+// not the teacher count). Branch, weekly load, AI acceptance and employment
+// status have no field anywhere, so those design columns are left out.
 function TeachersRosterContent() {
   const t = useT();
   const auth = useAuth();
@@ -41,29 +52,57 @@ function TeachersRosterContent() {
   const [creating, setCreating] = createSignal(false);
 
   const [data, { refetch }] = createResource(async () => {
-    const [teachers, classes] = await Promise.all([getUserSearch("", undefined, "teacher"), getClasses()]);
-    const homeroom = new Map<string, number>();
-    for (const cls of classes.items) {
-      if (cls.teacher) homeroom.set(cls.teacher.id, (homeroom.get(cls.teacher.id) ?? 0) + 1);
+    const [teachers, classes, courses] = await Promise.all([
+      getUserSearch("", undefined, "teacher"),
+      getClasses(),
+      getCourses().catch(() => ({ items: [] as Course[] })),
+    ]);
+    const push = (map: Map<string, string[]>, id: string, value: string) => map.set(id, [...(map.get(id) ?? []), value]);
+    const byName = (a: string, b: string) => a.localeCompare(b, "tr", { numeric: true });
+    const homeroom = new Map<string, string[]>();
+    for (const cls of classes.items) if (cls.teacher) push(homeroom, cls.teacher.id, cls.name);
+    const titles = new Map(courses.items.map((course) => [course.id, course.title]));
+    const perClass = await mapConcurrent(classes.items, FAN_OUT_LIMIT, async (cls) => ({
+      cls,
+      // One unreadable class must not empty the whole column.
+      instances: await getClassInstances(cls.id).then((page) => page.items, () => []),
+    }));
+    const sections = new Map<string, string[]>();
+    for (const { cls, instances } of perClass) {
+      for (const instance of instances) {
+        const label = formatInstanceLabel(titles.get(instance.course) ?? null, cls.name);
+        for (const teacher of instance.teachers) push(sections, teacher.id, label);
+      }
     }
-    return teachers.items.map<TeacherRow>((person) => ({ person, homeroomClasses: homeroom.get(person.id) ?? 0 }));
+    return teachers.items.map<TeacherRow>((person) => ({
+      person,
+      homeroom: (homeroom.get(person.id) ?? []).sort(byName),
+      sections: [...new Set(sections.get(person.id) ?? [])].sort(byName),
+    }));
   });
 
   const open = (row: TeacherRow) => void navigate({ to: "/profile/$userId", params: { userId: row.person.id } });
 
   const columns = createMemo<ColumnDef<TeacherRow>[]>(() => [
     { id: "teacher", size: 220, header: t("roster.teacher"), cell: (cell) => <RosterPersonCell person={cell.row.original.person} /> },
-    { id: "branch", size: 130, header: t("roster.branch"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
     {
-      accessorKey: "homeroomClasses",
-      size: 90,
-      header: t("roster.class"),
-      meta: { cellClass: "tabular-nums" },
-      cell: (cell) => (cell.row.original.homeroomClasses > 0 ? cell.row.original.homeroomClasses : "—"),
+      id: "sections",
+      size: 260,
+      accessorFn: (row) => row.sections.length,
+      header: t("roster.taughtSections"),
+      meta: { cellClass: "max-w-0" },
+      cell: (cell) => {
+        const list = cell.row.original.sections;
+        return list.length ? <span class="block truncate text-sm" title={list.join("\n")}>{list.join(", ")}</span> : "—";
+      },
     },
-    { id: "weekly", size: 130, header: t("roster.weeklyLessons"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
-    { id: "acceptance", size: 130, header: t("roster.suggestionAcceptance"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
-    { id: "status", size: 130, header: t("roster.status"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
+    {
+      id: "homeroom",
+      size: 130,
+      accessorFn: (row) => row.homeroom.join(", "),
+      header: t("roster.homeroomOf"),
+      cell: (cell) => <span class="truncate text-sm">{cell.row.original.homeroom.join(", ") || "—"}</span>,
+    },
     {
       id: "actions",
       header: t("common.actions"),
@@ -95,13 +134,14 @@ function TeachersRosterContent() {
 
 
       <section class="space-y-4 p-0">
-        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+        <Suspense fallback={<DataTableSkeleton columns={4} rows={8} />}>
           <Show when={data.error}>
             <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
           </Show>
           <Show when={!data.error && data()}>
             {(rows) => (
               <DataTable
+                urlState
                 surfaceSections
                 title={t("nav.teachersRoster")}
                 description={t("roster.teachersSubtitle")}
@@ -118,7 +158,7 @@ function TeachersRosterContent() {
           </Show></>}
                 columns={columns()}
                 data={rows()}
-                tableClass="min-w-[52rem]"
+                tableClass="min-w-2xl"
                 empty={t("roster.noTeachers")}
                 filterPlaceholder={t("roster.searchTeachers")}
                 filterHint={t("search.hint.teachers")}

@@ -29,12 +29,14 @@ export function ThemeModeControl(props: ThemeModeControlProps) {
   }
 
   if (props.variant === "compact") {
+    // Icon-only, so each button carries its name; a thumb-sized target on
+    // touch screens.
     return (
       <div class="flex rounded-lg bg-muted p-0.5 dark:bg-white/8" role="group" aria-label={prefs.t("theme.toggle")}>
-        <button type="button" class={cn("rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground dark:text-white/60 dark:hover:text-white", !isDark() && "bg-background text-foreground shadow-xs dark:bg-white/12 dark:text-white")} onClick={() => selectTheme("light")} aria-pressed={!isDark()} title={lightLabel()}>
+        <button type="button" class={cn("rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground touch:p-3.5 dark:text-white/60 dark:hover:text-white", !isDark() && "bg-background text-foreground shadow-xs dark:bg-white/12 dark:text-white")} onClick={() => selectTheme("light")} aria-pressed={!isDark()} aria-label={lightLabel()} title={lightLabel()}>
           <IconSun class="h-4 w-4" />
         </button>
-        <button type="button" class={cn("rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground dark:text-white/60 dark:hover:text-white", isDark() && "bg-background text-foreground shadow-xs dark:bg-white/12 dark:text-white")} onClick={() => selectTheme("dark")} aria-pressed={isDark()} title={darkLabel()}>
+        <button type="button" class={cn("rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground touch:p-3.5 dark:text-white/60 dark:hover:text-white", isDark() && "bg-background text-foreground shadow-xs dark:bg-white/12 dark:text-white")} onClick={() => selectTheme("dark")} aria-pressed={isDark()} aria-label={darkLabel()} title={darkLabel()}>
           <IconMoon class="h-4 w-4" />
         </button>
       </div>

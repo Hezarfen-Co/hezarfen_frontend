@@ -12,12 +12,26 @@ const EXAM_KIND_LABELS: Record<KnownExamKind, MessageKey> = {
   oral: "exams.kind.oral",
 };
 
+// Kinds a school's settings commonly seed (Turkish ASCII keys). They are
+// ordinary school-defined kinds — renamable in settings — but a key like
+// "yazili" should still read as "Yazılı" wherever it is shown.
+const SEEDED_EXAM_KIND_LABELS: Record<string, MessageKey> = {
+  yazili: "exams.kind.yazili",
+  sozlu: "exams.kind.oral",
+  uygulama: "exams.kind.uygulama",
+  performans: "exams.kind.performans",
+  proje: "exams.kind.project",
+};
+
 export function isKnownExamKind(kind: string): kind is KnownExamKind {
-  return kind in EXAM_KIND_LABELS;
+  return Object.hasOwn(EXAM_KIND_LABELS, kind);
 }
 
+/** Display label for an exam kind key; unknown (custom) kinds show as typed. */
 export function examKindLabel(kind: string, t: T): string {
-  return kind in EXAM_KIND_LABELS ? t(EXAM_KIND_LABELS[kind as KnownExamKind]) : kind;
+  if (isKnownExamKind(kind)) return t(EXAM_KIND_LABELS[kind]);
+  const seeded = Object.hasOwn(SEEDED_EXAM_KIND_LABELS, kind) ? SEEDED_EXAM_KIND_LABELS[kind] : undefined;
+  return seeded ? t(seeded) : kind;
 }
 
 /** Attempts cell for the live monitor. `maxAttempts` comes from the monitored

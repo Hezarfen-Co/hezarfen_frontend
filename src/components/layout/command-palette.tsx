@@ -395,7 +395,7 @@ export function CommandPalette(props: CommandPaletteProps) {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent
-        class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover/95"
+        class="max-h-[min(85vh,38rem)] max-w-2xl overflow-hidden rounded-lg p-0 shadow-2xl border border-black/8 dark:border-white/12 bg-popover"
         // The dialog's focus trap parks focus on the panel itself when it
         // opens, which used to swallow a focus() queued from an effect — the
         // palette opened with nothing focused and the first keystroke went
@@ -416,7 +416,7 @@ export function CommandPalette(props: CommandPaletteProps) {
             type="text"
             value={query()}
             placeholder={t("common.searchPlaceholder")}
-            class="flex-1 h-9 w-full bg-transparent px-1 text-sm sm:text-base font-medium text-foreground outline-hidden border-none shadow-none focus:outline-hidden focus:ring-0 placeholder:text-muted-foreground/60"
+            class="flex-1 h-9 w-full bg-transparent px-1 text-base font-medium text-foreground outline-hidden border-none shadow-none focus:outline-hidden focus:ring-0 placeholder:text-muted-foreground/60"
             onInput={(event) => setQuery(event.currentTarget.value)}
             onKeyDown={handleKeyDown}
             // Combobox pattern: focus stays in the field while arrow keys move

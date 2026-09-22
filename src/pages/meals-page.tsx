@@ -22,6 +22,7 @@ import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { inputDateToIso, isoDateToInput } from "@/lib/datetime-input";
 import { createFlash } from "@/lib/flash";
+import { mealSlotLabel } from "@/lib/meals";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -98,7 +99,7 @@ function MealsContent() {
         <form class="space-y-4" onSubmit={publish}>
           <Show when={limits.error}><ErrorAlert message={formatApiError(limits.error)} onRetry={() => void refetchLimits()} /></Show>
           <div class="space-y-1.5"><Label for="meal-date">{t("meals.date")}</Label><DatePicker id="meal-date" required placeholder={t("form.datePlaceholder")} value={isoDateToInput(date())} onChange={(value) => setDate(inputDateToIso(value))} /></div>
-          <div class="space-y-1.5"><Label for="meal-slot">{t("meals.slot")}</Label><Select id="meal-slot" required value={newSlot()} onChange={(e) => setNewSlot(e.currentTarget.value)}><For each={settings()?.meal_slots ?? []}>{(item) => <option value={item.name}>{item.name}</option>}</For></Select></div>
+          <div class="space-y-1.5"><Label for="meal-slot">{t("meals.slot")}</Label><Select id="meal-slot" required value={newSlot()} onChange={(e) => setNewSlot(e.currentTarget.value)}><For each={settings()?.meal_slots ?? []}>{(item) => <option value={item.name}>{mealSlotLabel(item.name, t)}</option>}</For></Select></div>
           <div class="space-y-1.5"><Label for="meal-capacity">{t("meals.capacity")}</Label><Input id="meal-capacity" type="number" min={0} max={limits()?.meal.max_menu_capacity} value={capacity()} onInput={(e) => setCapacity(e.currentTarget.value)} /></div>
           <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
           <div class="flex gap-2 border-t border-border-hairline pt-4"><Button type="submit" disabled={pending()}>{t("common.create")}</Button><Button type="button" variant="outline" onClick={() => setShowCreate(false)}>{t("common.cancel")}</Button></div>
@@ -108,7 +109,7 @@ function MealsContent() {
       <DataSection title={t("meals.title")} description={t("meals.subtitle")} actions={<Show when={canManage()}><Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => { setNewSlot(settings()?.meal_slots[0]?.name ?? ""); setShowCreate(true); }}><IconPlus class="h-4 w-4" />{t("meals.publish")}</Button></Show>}>
         <div class="flex flex-wrap items-center gap-2">
           <DatePicker id="menus-from" class="h-8 w-44" placeholder={t("meals.from")} value={isoDateToInput(from())} onChange={(value) => { const iso = inputDateToIso(value); if (iso) { setFrom(iso); setPage(0); } }} />
-          <Select id="menus-slot" aria-label={t("meals.slot")} wrapperClass="w-auto" class="h-8 rounded-lg text-[13px]" value={slot()} onChange={(e) => setSlot(e.currentTarget.value)}><option value="all">{t("meals.slot")}: {t("common.all")}</option><For each={settings()?.meal_slots ?? []}>{(item) => <option value={item.name}>{item.name}</option>}</For></Select>
+          <Select id="menus-slot" aria-label={t("meals.slot")} wrapperClass="w-auto" class="h-8 rounded-lg text-[13px]" value={slot()} onChange={(e) => setSlot(e.currentTarget.value)}><option value="all">{t("meals.slot")}: {t("common.all")}</option><For each={settings()?.meal_slots ?? []}>{(item) => <option value={item.name}>{mealSlotLabel(item.name, t)}</option>}</For></Select>
         </div>
         <Suspense fallback={<PageSpinner />}>
           <Show when={menus.error}><ErrorAlert message={formatApiError(menus.error)} onRetry={() => void refetch()} /></Show>

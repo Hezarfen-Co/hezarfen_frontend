@@ -28,6 +28,7 @@ function UserRoleActions(props: {
   const [pendingRole, setPendingRole] = createSignal<Role>(props.user.role);
   const [confirmOpen, setConfirmOpen] = createSignal(false);
   const dirty = () => pendingRole() !== props.user.role;
+  const demotesAdmin = () => props.user.role === "admin" && pendingRole() !== "admin";
 
   return (
     <>
@@ -52,6 +53,9 @@ function UserRoleActions(props: {
         open={confirmOpen()}
         onOpenChange={setConfirmOpen}
         title={t("confirm.updateTitle")}
+        description={demotesAdmin() ? t("admin.demoteAdminWarning") : undefined}
+        variant={demotesAdmin() ? "destructive" : "default"}
+        confirmLabel={t("confirm.confirmUpdate")}
         summary={t("confirm.updateRole", {
           user: props.user.username,
           from: t(`role.${props.user.role}` as MessageKey),
@@ -168,7 +172,8 @@ export function UserTable(props: {
       filterHint={t("search.hint.users")}
       surfaceSections
       enablePagination
-      pageSize={20}
+      // The shared default (10, halved on phones), like every other list.
+      urlState
       onRowClick={props.onUserClick}
     />
   );

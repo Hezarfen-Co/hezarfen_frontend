@@ -27,7 +27,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
+import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -44,6 +44,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
+import { createUrlString } from "@/lib/url-state";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { formatTry } from "@/lib/meals";
 import { PAYMENT_METHOD_KEYS, sortStatementEntries, statementStatus } from "@/lib/payments";
@@ -93,7 +94,9 @@ function PaymentsContent() {
   const t = useT();
   const { locale } = usePreferences();
   const moneyLocale = () => (locale() === "tr" ? "tr-TR" : "en-US");
-  const [tab, setTab] = createSignal("collect");
+  // Tab, student search and plan filter ride in the URL: Back from a
+  // student's statement lands on the same filtered list.
+  const [tab, setTab] = createUrlString("tab", "collect");
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
@@ -106,10 +109,10 @@ function PaymentsContent() {
   });
   const student = () => selectedStudent()?.id ?? "";
 
-  const [planFilter, setPlanFilter] = createSignal("");
-  const [studentQuery, setStudentQuery] = createSignal("");
+  const [planFilter, setPlanFilter] = createUrlString("plan");
+  const [studentQuery, setStudentQuery] = createUrlString("q");
   // Debounced so typing doesn't fire a search request per keystroke.
-  const [debouncedQuery, setDebouncedQuery] = createSignal("");
+  const [debouncedQuery, setDebouncedQuery] = createSignal(studentQuery().trim());
   let queryTimer: ReturnType<typeof setTimeout> | undefined;
   createEffect(() => {
     const q = studentQuery();
@@ -610,12 +613,8 @@ function PaymentsContent() {
             when={selectedStudent()}
             fallback={
               <>
-              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodBilled")}</p><ComingSoonValue class="mt-1" /></div>
-                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodCollected")}</p><ComingSoonValue class="mt-1" /></div>
-                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodOverdue")}</p><ComingSoonValue class="mt-1" /></div>
-                <div class="detail-metric-card"><p class="text-xs font-medium text-text-subtle">{t("payments.periodExpected")}</p><ComingSoonValue class="mt-1" /></div>
-              </div>
+              {/* No endpoint totals billed / collected / overdue across the
+                  school, so the design's period KPI cards are left out. */}
               <section class="space-y-4 p-0">
               <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
                 <Show when={studentsPage.error}>
@@ -630,11 +629,11 @@ function PaymentsContent() {
                       setStudentQuery(value);
                       setStudentPage(0);
                     }}
-                    filterPlaceholder={t("payments.selectStudent")}
+                    filterPlaceholder={t("payments.searchStudents")}
                     filterHint={t("search.hint.paymentsStudents")}
                     title={t("payments.title")}
                     description={t("payments.subtitle")}
-                    empty={t("payments.selectStudent")}
+                    empty={t("form.noStudents")}
                     actions={
                       <Button size="sm" variant="outline" class="rounded-lg" disabled title={t("comingSoon.title")}>
                         {t("payments.exportStatement")}

@@ -118,6 +118,7 @@ function WorkLogContent() {
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
           </Show>
           <DataTable
+            urlState
             title={t("work.entries")}
             description={t("work.ready")}
             columns={columns()}

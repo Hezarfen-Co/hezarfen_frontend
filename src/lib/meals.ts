@@ -1,5 +1,37 @@
 import type { Exam, Homework, MealSlot, SchoolSettings } from "@/api/client";
 import type { PatchSettingsBody } from "@/api/settings";
+import type { MessageKey } from "@/i18n/messages";
+
+type T = (key: MessageKey) => string;
+
+// Meal slots and dietary tags are school-defined keys; these are the ones a
+// school is seeded with. A key outside the map is shown as the school typed it.
+const MEAL_SLOT_LABELS: Record<string, MessageKey> = {
+  breakfast: "meals.slotName.breakfast",
+  lunch: "meals.slotName.lunch",
+  dinner: "meals.slotName.dinner",
+  snack: "meals.slotName.snack",
+};
+
+const DIETARY_TAG_LABELS: Record<string, MessageKey> = {
+  vegetarian: "meals.tagName.vegetarian",
+  vegan: "meals.tagName.vegan",
+  gluten_free: "meals.tagName.gluten_free",
+  lactose_free: "meals.tagName.lactose_free",
+  nut_allergy: "meals.tagName.nut_allergy",
+};
+
+function lookup(map: Record<string, MessageKey>, key: string, t: T): string {
+  return Object.hasOwn(map, key) ? t(map[key]) : key;
+}
+
+export function mealSlotLabel(slot: string, t: T): string {
+  return lookup(MEAL_SLOT_LABELS, slot, t);
+}
+
+export function dietaryTagLabel(tag: string, t: T): string {
+  return lookup(DIETARY_TAG_LABELS, tag, t);
+}
 
 export function formatTry(minor: number, locale: string): string {
   return new Intl.NumberFormat(locale, { style: "currency", currency: "TRY" }).format(minor / 100);

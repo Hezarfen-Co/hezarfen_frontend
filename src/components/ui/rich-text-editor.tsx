@@ -64,6 +64,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           class="flex h-7 w-7 items-center justify-center rounded font-bold text-xs hover:bg-muted text-foreground"
           onClick={() => execCommand("bold")}
           title={t("editor.bold")}
+          aria-label={t("editor.bold")}
         >
           B
         </button>
@@ -72,6 +73,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           class="flex h-7 w-7 items-center justify-center rounded italic text-xs hover:bg-muted text-foreground"
           onClick={() => execCommand("italic")}
           title={t("editor.italic")}
+          aria-label={t("editor.italic")}
         >
           I
         </button>
@@ -80,6 +82,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           class="flex h-7 w-7 items-center justify-center rounded underline text-xs hover:bg-muted text-foreground"
           onClick={() => execCommand("underline")}
           title={t("editor.underline")}
+          aria-label={t("editor.underline")}
         >
           U
         </button>
@@ -88,6 +91,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           class="flex h-7 w-7 items-center justify-center rounded line-through text-xs hover:bg-muted text-foreground"
           onClick={() => execCommand("strikeThrough")}
           title={t("editor.strike")}
+          aria-label={t("editor.strike")}
         >
           S
         </button>
@@ -99,6 +103,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           class="flex h-7 px-2 items-center justify-center rounded text-xs font-mono hover:bg-muted text-foreground"
           onClick={() => execCommand("insertUnorderedList")}
           title={t("editor.bulletList")}
+          aria-label={t("editor.bulletList")}
         >
           • {t("editor.bulletListLabel")}
         </button>
@@ -107,6 +112,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           class="flex h-7 px-2 items-center justify-center rounded text-xs font-mono hover:bg-muted text-foreground"
           onClick={() => execCommand("insertOrderedList")}
           title={t("editor.numberedList")}
+          aria-label={t("editor.numberedList")}
         >
           {t("editor.numberedListLabel")}
         </button>
@@ -118,6 +124,7 @@ export function RichTextEditor(props: RichTextEditorProps) {
           class="flex h-7 px-2 items-center justify-center rounded text-xs hover:bg-muted text-muted-foreground"
           onClick={() => execCommand("removeFormat")}
           title={t("editor.clearFormatting")}
+          aria-label={t("editor.clearFormatting")}
         >
           {t("editor.clearFormattingLabel")}
         </button>

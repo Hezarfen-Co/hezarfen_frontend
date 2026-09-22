@@ -324,7 +324,7 @@ export function FloatingActionButton(props: {
             aria-label={t("fab.restore")}
             title={t("fab.restore")}
             class={cn(
-              "pointer-events-auto absolute flex h-14 w-8 items-center outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+              "pointer-events-auto absolute flex h-14 w-11 items-center outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
               parkedRight() ? "right-0 justify-end" : "left-0 justify-start",
             )}
             style={{ top: `${restTop()}px` }}

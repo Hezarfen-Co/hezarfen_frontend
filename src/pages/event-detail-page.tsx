@@ -40,6 +40,7 @@ import { formatDateTime } from "@/lib/format";
 import { personId, personLabel } from "@/lib/person";
 import { matchesSearch } from "@/lib/search-text";
 import { hasMinRole } from "@/lib/roles";
+import { createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -77,7 +78,7 @@ function EventDetailContent() {
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [registrationTarget, setRegistrationTarget] = createSignal<string | null>(null);
   const [rosterSearch, setRosterSearch] = createSignal("");
-  const [eventTab, setEventTab] = createSignal("studentAttendance");
+  const [eventTab, setEventTab] = createUrlString("tab", "studentAttendance");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
 

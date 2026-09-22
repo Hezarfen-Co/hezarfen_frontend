@@ -1,4 +1,5 @@
 import { For, Index, Show, Suspense, createEffect, createSignal } from "solid-js";
+import { useBlocker } from "@tanstack/solid-router";
 import { createResource } from "@/lib/create-resource";
 import { getSettings } from "@/api/settings";
 import { patchSettings } from "@/api/settings";
@@ -11,8 +12,9 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconAlert, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -21,7 +23,7 @@ import { examKindLabel, isKnownExamKind } from "@/lib/exam-labels";
 import { moduleLabel, packageLabel } from "@/lib/module-labels";
 import { getAttendanceStatusMeta } from "@/lib/attendance-status";
 import { cn } from "@/lib/cn";
-import { dirtySettingsPatch, minuteToUtcTime, utcTimeToMinute } from "@/lib/meals";
+import { dietaryTagLabel, dirtySettingsPatch, mealSlotLabel, minuteToUtcTime, utcTimeToMinute } from "@/lib/meals";
 import { useT } from "@/stores/preferences-context";
 
 const CORE_ATTENDANCE = new Set(["present", "absent", "late", "excused"]);
@@ -37,6 +39,10 @@ const BYTES_PER_MIB = 1024 * 1024;
 // Neutralize the Tabs.Content card so it is just a container — the sections
 // inside already carry their own `data-shell` surfaces.
 const TAB_PANEL = "border-0 bg-transparent p-0 shadow-none space-y-4";
+
+function mibText(bytes: number): string {
+  return String(Math.round((bytes / BYTES_PER_MIB) * 10) / 10);
+}
 
 function isCoreAttendance(status: string): status is keyof typeof CORE_ATTENDANCE_LABELS {
   return status in CORE_ATTENDANCE_LABELS;
@@ -106,7 +112,7 @@ function SettingsContent() {
     setExamKinds(next.exam_kinds.map((item) => ({ ...item })));
     setAttendanceStatuses([...next.attendance_statuses]);
     setGradeBands(next.grade_bands.map((item) => ({ ...item })));
-    setMaxFileMiB(String(Math.round((fileBytes / BYTES_PER_MIB) * 10) / 10));
+    setMaxFileMiB(mibText(fileBytes));
     setChatbotHistoryTurns(String(next.chatbot_history_turns));
     setMaxChatbotThreads(String(next.max_chatbot_threads));
     setMaxChatbotMessageLen(String(next.max_chatbot_message_len));
@@ -121,7 +127,38 @@ function SettingsContent() {
     setBaseline({ ...next, max_file_bytes: fileBytes });
   });
 
-  const dirty = () => baseline() !== null && JSON.stringify(snapshot()) !== JSON.stringify(baseline());
+  // The settings exactly as a save would send them: trimmed, numeric, and with
+  // the file-size field kept at the saved byte count while its rounded MiB
+  // text is untouched (5.3 MiB does not round-trip to the stored bytes).
+  const current = (): SchoolSettings => {
+    const before = baseline();
+    const fileBytes =
+      before && maxFileMiB() === mibText(before.max_file_bytes)
+        ? before.max_file_bytes
+        : Math.round(Number(maxFileMiB()) * BYTES_PER_MIB);
+    return {
+      ...snapshot(),
+      exam_kinds: examKinds().map((item) => ({ name: item.name.trim(), weight: Number(item.weight) })),
+      attendance_statuses: attendanceStatuses().map((status) => status.trim()),
+      grade_bands: gradeBands().map((band) => ({ min: Number(band.min), label: band.label.trim() })),
+      max_file_bytes: fileBytes,
+      meal_slots: mealSlots().map((slot) => ({ name: slot.name.trim(), serving_minute: slot.serving_minute })),
+      dietary_tags: dietaryTags().map((tag) => tag.trim()),
+      excuse_kinds: excuseKinds().map((kind) => kind.trim()).filter(Boolean),
+      branches: branches().map((branch) => branch.trim()).filter(Boolean),
+    };
+  };
+
+  // Field by field, the same comparison the PATCH body is built from. A whole-
+  // object JSON compare flagged a fresh load as dirty: the backend's key order
+  // differs from this form's.
+  const dirty = () => {
+    const before = baseline();
+    return before !== null && Object.keys(dirtySettingsPatch(before, current())).length > 0;
+  };
+
+  const blocker = useBlocker({ shouldBlockFn: () => dirty(), enableBeforeUnload: () => dirty(), withResolver: true });
+  let leaving = false;
 
   createEffect(() => {
     if (dirty() && saved()) setSaved(false);
@@ -130,7 +167,7 @@ function SettingsContent() {
   const save = async () => {
     setError("");
     setSaved(false);
-    const maxFileBytes = Math.round(Number(maxFileMiB()) * BYTES_PER_MIB);
+    const maxFileBytes = current().max_file_bytes;
     if (!Number.isFinite(maxFileBytes)) {
       setError(t("settings.maxFileSizeInvalid"));
       return;
@@ -151,18 +188,7 @@ function SettingsContent() {
     try {
       const before = baseline();
       if (!before) return;
-      const current = {
-        ...snapshot(),
-        exam_kinds: examKinds().map((item) => ({ name: item.name.trim(), weight: Number(item.weight) })),
-        attendance_statuses: attendanceStatuses().map((status) => status.trim()),
-        grade_bands: gradeBands().map((band) => ({ min: Number(band.min), label: band.label.trim() })),
-        max_file_bytes: maxFileBytes,
-        meal_slots: mealSlots().map((slot) => ({ ...slot, name: slot.name.trim() })),
-        dietary_tags: dietaryTags().map((tag) => tag.trim()),
-        excuse_kinds: excuseKinds().map((kind) => kind.trim()).filter(Boolean),
-        branches: branches().map((branch) => branch.trim()).filter(Boolean),
-      };
-      const next = await patchSettings(dirtySettingsPatch(before, current));
+      const next = await patchSettings(dirtySettingsPatch(before, current()));
       mutate(next);
       setBaseline(next);
       setSaved(true);
@@ -260,17 +286,20 @@ function SettingsContent() {
                                 </span>
                               }
                             >
-                              <Input
-                                aria-label={t("settings.name")}
-                                class="h-9 rounded-md border-0 bg-transparent shadow-none focus-visible:ring-1"
-                                value={item().name}
-                                placeholder={t("settings.name")}
-                                onInput={(e) =>
-                                  setExamKinds((rows) =>
-                                    rows.map((row, i) => (i === index ? { ...row, name: e.currentTarget.value } : row)),
-                                  )
-                                }
-                              />
+                              <div class="flex min-w-0 items-center gap-2">
+                                <Input
+                                  aria-label={t("settings.name")}
+                                  class="h-9 rounded-md border-0 bg-transparent shadow-none focus-visible:ring-1"
+                                  value={item().name}
+                                  placeholder={t("settings.name")}
+                                  onInput={(e) =>
+                                    setExamKinds((rows) =>
+                                      rows.map((row, i) => (i === index ? { ...row, name: e.currentTarget.value } : row)),
+                                    )
+                                  }
+                                />
+                                <KeyLabelHint value={item().name} label={examKindLabel(item().name.trim(), t)} />
+                              </div>
                             </Show>
                             <Input
                               aria-label={t("settings.weight")}
@@ -523,14 +552,17 @@ function SettingsContent() {
                       <Index each={mealSlots()}>
                         {(slot, index) => (
                           <div class="grid grid-cols-[minmax(0,1fr)_7rem_2.25rem] items-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-1.5 shadow-2xs">
-                            <Input
-                              aria-label={t("settings.mealSlot")}
-                              class="h-9 rounded-md border-0 bg-transparent shadow-none focus-visible:ring-1"
-                              maxlength={limits()?.settings.max_item_len}
-                              value={slot().name}
-                              placeholder={t("settings.name")}
-                              onInput={(e) => setMealSlots((rows) => rows.map((row, i) => i === index ? { ...row, name: e.currentTarget.value } : row))}
-                            />
+                            <div class="flex min-w-0 items-center gap-2">
+                              <Input
+                                aria-label={t("settings.mealSlot")}
+                                class="h-9 rounded-md border-0 bg-transparent shadow-none focus-visible:ring-1"
+                                maxlength={limits()?.settings.max_item_len}
+                                value={slot().name}
+                                placeholder={t("settings.name")}
+                                onInput={(e) => setMealSlots((rows) => rows.map((row, i) => i === index ? { ...row, name: e.currentTarget.value } : row))}
+                              />
+                              <KeyLabelHint value={slot().name} label={mealSlotLabel(slot().name.trim(), t)} />
+                            </div>
                             <Input
                               aria-label={t("settings.servingTimeUtc")}
                               class="h-9 rounded-md border-0 bg-muted/40 text-center font-mono shadow-none focus-visible:ring-1"
@@ -561,14 +593,17 @@ function SettingsContent() {
                       <Index each={dietaryTags()}>
                         {(tag, index) => (
                           <div class="grid grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-2 rounded-lg border border-border/60 bg-card px-2 py-1.5 shadow-2xs">
-                            <Input
-                              aria-label={t("settings.dietaryTags")}
-                              class="h-9 rounded-md border-0 bg-transparent shadow-none focus-visible:ring-1"
-                              maxlength={limits()?.settings.max_item_len}
-                              value={tag()}
-                              placeholder={t("settings.dietaryTags")}
-                              onInput={(e) => setDietaryTags((rows) => rows.map((row, i) => i === index ? e.currentTarget.value : row))}
-                            />
+                            <div class="flex min-w-0 items-center gap-2">
+                              <Input
+                                aria-label={t("settings.dietaryTags")}
+                                class="h-9 rounded-md border-0 bg-transparent shadow-none focus-visible:ring-1"
+                                maxlength={limits()?.settings.max_item_len}
+                                value={tag()}
+                                placeholder={t("settings.dietaryTags")}
+                                onInput={(e) => setDietaryTags((rows) => rows.map((row, i) => i === index ? e.currentTarget.value : row))}
+                              />
+                              <KeyLabelHint value={tag()} label={dietaryTagLabel(tag().trim(), t)} />
+                            </div>
                             <Button type="button" variant="ghost" size="icon" class="h-9 w-9 rounded-md text-muted-foreground hover:text-destructive-text" aria-label={t("common.delete")} onClick={() => setDietaryTags((rows) => rows.filter((_, i) => i !== index))}><IconTrash class="h-4 w-4" /></Button>
                           </div>
                         )}
@@ -704,7 +739,34 @@ function SettingsContent() {
           </TabsContent>
         </Suspense>
       </Tabs>
+
+      <ConfirmDialog
+        open={blocker().status === "blocked"}
+        onOpenChange={(open) => {
+          if (!open && !leaving && blocker().status === "blocked") blocker().reset?.();
+        }}
+        title={t("notes.leaveTitle")}
+        description={t("settings.leaveHint")}
+        summary={t("settings.title")}
+        variant="destructive"
+        icon={<IconAlert class="h-4 w-4" />}
+        confirmLabel={t("notes.leaveConfirm")}
+        onConfirm={() => {
+          leaving = true;
+          blocker().proceed?.();
+        }}
+      />
     </div>
+  );
+}
+
+/** The display name of a seeded key (e.g. "breakfast" → "Kahvaltı"), shown
+ * beside the editable key; nothing for a key that has no separate label. */
+function KeyLabelHint(props: { value: string; label: string }) {
+  return (
+    <Show when={props.label !== props.value.trim()}>
+      <span class="max-w-[45%] shrink-0 truncate text-xs text-muted-foreground">{props.label}</span>
+    </Show>
   );
 }
 

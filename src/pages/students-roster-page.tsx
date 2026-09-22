@@ -3,6 +3,7 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { matchesSearch } from "@/lib/search-text";
+import { createUrlString } from "@/lib/url-state";
 import { getClassMembers, getClasses } from "@/api/classes";
 import { getAcademicYears } from "@/api/academic-years";
 import { getUserSearch } from "@/api/users";
@@ -11,7 +12,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { CreateUserPanel } from "@/components/users/create-user-panel";
 import { RosterPersonCell } from "@/components/users/roster-person-cell";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge, ComingSoonValue } from "@/components/ui/coming-soon";
+import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEye, IconPlus, IconUploadCloud } from "@/components/ui/icons";
@@ -33,15 +34,16 @@ export default function StudentsRosterPage() {
   );
 }
 
-// ADM-02. The roster, class and term are real; topic mastery, plan adherence
-// and the risk status are AI/analytics fields no endpoint serves, so their
-// columns keep the design's slot and say "yakında" instead of a number.
+// ADM-02. The roster, class and term are real. Topic mastery, plan adherence
+// and the risk status are AI/analytics fields no endpoint serves, and a
+// per-student attendance rate would cost one report read per row, so those
+// design columns are left out rather than filled with "yakında".
 function StudentsRosterContent() {
   const t = useT();
   const auth = useAuth();
   const navigate = useNavigate();
-  const [classFilter, setClassFilter] = createSignal("");
-  const [yearFilter, setYearFilter] = createSignal("");
+  const [classFilter, setClassFilter] = createUrlString("class");
+  const [yearFilter, setYearFilter] = createUrlString("year");
   const [creating, setCreating] = createSignal(false);
 
   const [data, { refetch }] = createResource(async () => {
@@ -87,10 +89,6 @@ function StudentsRosterContent() {
         <span class="truncate text-sm">{cell.row.original.classes.map((cls) => cls.name).join(", ") || "—"}</span>
       ),
     },
-    { id: "mastery", size: 130, header: t("roster.mastery"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
-    { id: "attendance", size: 130, header: t("roster.attendance"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
-    { id: "plan", size: 130, header: t("roster.planAdherence"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
-    { id: "status", size: 130, header: t("roster.status"), enableSorting: false, meta: { hideInCards: true }, cell: () => <ComingSoonValue /> },
     {
       id: "actions",
       header: t("common.actions"),
@@ -122,13 +120,20 @@ function StudentsRosterContent() {
 
 
       <section class="space-y-4 p-0">
-        <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+        <Suspense fallback={<DataTableSkeleton columns={3} rows={8} />}>
           <Show when={data.error}>
             <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
           </Show>
           <Show when={!data.error && data()}>
             {(value) => (
               <DataTable
+                urlState
+                pageResetKey={`${classFilter()}|${yearFilter()}`}
+                filtersActive={classFilter() !== "" || yearFilter() !== ""}
+                onClearFilters={() => {
+                  setClassFilter("");
+                  setYearFilter("");
+                }}
                 surfaceSections
                 title={t("nav.studentsRoster")}
                 description={t("roster.studentsSubtitle")}
@@ -145,7 +150,7 @@ function StudentsRosterContent() {
           </Show></>}
                 columns={columns()}
                 data={rows()}
-            tableClass="min-w-[52rem]"
+            tableClass="min-w-xl"
                 empty={t("form.noStudents")}
                 filterPlaceholder={t("roster.searchStudents")}
                 filterHint={t("search.hint.students")}

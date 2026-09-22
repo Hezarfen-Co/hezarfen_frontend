@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { For, Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
 import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Select } from "@/components/ui/select";
+import { DropdownSelect } from "@/components/ui/select";
 import { courseKindLabel } from "@/lib/course-kind";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +27,7 @@ import { createFlash } from "@/lib/flash";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
+import { createUrlEnum, createUrlPageIndex, createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -55,10 +56,17 @@ function CoursesContent() {
   // Catalog rows carry no term, capacity or staff any more — a şube decides
   // all three when it attaches the course. `taughtFilter` narrows by whether
   // any şube has.
-  const [taughtFilter, setTaughtFilter] = createSignal("all");
-  const [page, setPage] = createSignal(0);
+  // Search, filter and page ride in the URL so Back from a course and a
+  // reload land where the list was left.
+  const [taughtFilter, setTaughtFilter] = createUrlEnum("taught", ["all", "taught", "untaught"] as const, "all");
+  const [page, setPage] = createUrlPageIndex();
   const pageSize = createResponsivePageSize(PAGE_SIZE);
-  const [search, setSearch] = createSignal("");
+  const [search, setSearch] = createUrlString("q");
+  const narrowed = () => search().trim() !== "" || taughtFilter() !== "all";
+  const clearNarrowing = () => {
+    setSearch("");
+    setTaughtFilter("all");
+  };
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [flash, setFlash] = createFlash();
@@ -69,9 +77,8 @@ function CoursesContent() {
   createEffect(() => {
     setPageKind(routeSearch().kind);
   });
-  createEffect(() => {
-    pageKind(); taughtFilter(); search(); pageSize(); setPage(0);
-  });
+  // Deferred: the page restored from the URL must survive the first run.
+  createEffect(on(() => [pageKind(), taughtFilter(), search(), pageSize()], () => setPage(0), { defer: true }));
 
   const [limits, { refetch: refetchLimits }] = createResource(() => canCreate() ? getLimits() : null);
   const [list, { refetch }] = createResource(
@@ -90,6 +97,10 @@ function CoursesContent() {
     });
   });
   const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredCourses().length / pageSize())));
+  // A stale `?page=` past the end slides back to the last page.
+  createEffect(() => {
+    if (filteredCourses().length > 0 && page() > totalPages() - 1) setPage(totalPages() - 1);
+  });
   const visibleCourses = createMemo(() => filteredCourses().slice(page() * pageSize(), (page() + 1) * pageSize()));
 
   const createCourse = async (event: SubmitEvent) => {
@@ -140,7 +151,7 @@ function CoursesContent() {
           setPageKind(kind);
           void navigate({
             to: "/courses",
-            search: { action: undefined, kind },
+            search: (prev) => ({ q: prev.q, taught: prev.taught, action: undefined, kind, page: undefined }),
             replace: true,
           });
         }}
@@ -161,11 +172,16 @@ function CoursesContent() {
               searchHint={t("search.hint.courses")}
               onSearchInput={setSearch}
               filters={
-                <Select wrapperClass="w-40 shrink-0 sm:w-52" class="h-8 rounded-lg" aria-label={t("instances.taughtIn")} value={taughtFilter()} onChange={(e) => setTaughtFilter(e.currentTarget.value)}>
-                  <option value="all">{t("common.all")}</option>
-                  <option value="taught">{t("instances.taughtIn")}</option>
-                  <option value="untaught">{t("instances.empty")}</option>
-                </Select>
+                <DropdownSelect
+                  labelPrefix={t("courses.sectionsFilter")}
+                  value={taughtFilter()}
+                  onChange={(value) => setTaughtFilter(value === "taught" || value === "untaught" ? value : "all")}
+                  options={[
+                    { value: "all", label: t("common.all") },
+                    { value: "taught", label: t("courses.withSections") },
+                    { value: "untaught", label: t("courses.withoutSections") },
+                  ]}
+                />
               }
               actions={
                 <Show when={canCreate()}>
@@ -185,7 +201,22 @@ function CoursesContent() {
             >
               <Show
                 when={filteredCourses().length > 0}
-                fallback={<EmptyState kind="courses" title={t("courses.empty", { item: kindInSentence() })} />}
+                fallback={
+                  <Show
+                    when={narrowed()}
+                    fallback={<EmptyState kind="courses" title={t("courses.empty", { item: kindInSentence() })} />}
+                  >
+                    <EmptyState
+                      kind="search"
+                      title={search().trim() ? t("common.noMatchesFor", { query: search().trim() }) : t("common.noFilterMatches")}
+                      action={
+                        <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={clearNarrowing}>
+                          {taughtFilter() !== "all" ? t("common.clearFilters") : t("common.clearSearch")}
+                        </Button>
+                      }
+                    />
+                  </Show>
+                }
               >
                 <div class={list.loading ? "grid grid-cols-1 gap-3 opacity-60 transition-opacity sm:grid-cols-2 xl:grid-cols-3" : "grid grid-cols-1 gap-3 transition-opacity sm:grid-cols-2 xl:grid-cols-3"}>
                   <For each={visibleCourses()}>

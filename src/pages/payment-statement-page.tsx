@@ -156,6 +156,7 @@ function StatementContent() {
             <ErrorAlert message={formatApiError(statement.error)} onRetry={() => void refetch()} />
           </Show>
           <DataTable
+              urlState
               title={t("payments.statementTitle")}
               description={t("payments.statementSubtitle")}
               empty={t("payments.noStatement")}

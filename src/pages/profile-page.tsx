@@ -56,10 +56,16 @@ function ProfileContent() {
 
   // The five counters that fit the profile owner's role: a student's own
   // work, or a teacher's / manager's teaching work.
+  // Focus time reads in minutes below an hour: flooring 50 minutes to hours
+  // showed "0 Odak saati" beside "5 Odak oturumu".
+  const focusStat = (ms: number): { label: string; value: number } =>
+    ms < 3_600_000
+      ? { label: t("profile.statFocusMinutes"), value: Math.floor(ms / 60_000) }
+      : { label: t("profile.statFocusHours"), value: Math.floor(ms / 3_600_000) };
   const profileStats = (p: Profile): { icon: PixelIconName; label: string; value: number }[] =>
     p.role === "student" || p.role === "parent"
       ? [
-          { icon: "hourglass", label: t("profile.statFocusHours"), value: Math.floor(p.stats.pomodoro_focus_ms_total / 3_600_000) },
+          { icon: "hourglass", ...focusStat(p.stats.pomodoro_focus_ms_total) },
           { icon: "zap", label: t("profile.statSessions"), value: p.stats.pomodoro_finished_total },
           { icon: "notes", label: t("profile.statHomework"), value: p.stats.homework_submitted_total },
           { icon: "check-double", label: t("profile.statOnTime"), value: p.stats.homework_on_time_total },

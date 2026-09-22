@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { UserSearchSelect } from "@/components/users/user-search-select";
-import { IconSend, IconTrash, IconX } from "@/components/ui/icons";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { IconAlert, IconSend, IconTrash, IconX } from "@/components/ui/icons";
 import { postMessage } from "@/api/messages";
 import { formatApiError } from "@/api/client";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+import { suppressQuickActions } from "@/stores/quick-actions";
 
 interface GmailComposeBoxProps {
   open: boolean;
@@ -25,6 +27,12 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
   const [isMinimized, setIsMinimized] = createSignal(false);
   const [pending, setPending] = createSignal(false);
   const [error, setError] = createSignal("");
+
+  // The sheet docks at the bottom of a phone; the quick-action button would
+  // float over its editor.
+  createEffect(() => {
+    if (props.open) suppressQuickActions();
+  });
 
   createEffect(() => {
     if (props.open) {
@@ -48,6 +56,18 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
   const handleClose = () => {
     reset();
     props.onClose();
+  };
+
+  // Closing throws the draft away, so anything typed is confirmed first.
+  const [confirmDiscard, setConfirmDiscard] = createSignal(false);
+  const hasDraft = () =>
+    !!recipient() ||
+    subject().trim() !== "" ||
+    label().trim() !== "" ||
+    body().replace(/<[^>]*>|&nbsp;/g, "").trim() !== "";
+  const requestClose = () => {
+    if (hasDraft()) setConfirmDiscard(true);
+    else handleClose();
   };
 
   const handleSend = async (e: SubmitEvent) => {
@@ -95,14 +115,17 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
               class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => setIsMinimized(!isMinimized())}
               title={isMinimized() ? t("messages.expand") : t("messages.minimize")}
+              aria-label={isMinimized() ? t("messages.expand") : t("messages.minimize")}
+              aria-expanded={!isMinimized()}
             >
-              <span class="text-xs font-bold">{isMinimized() ? "□" : "—"}</span>
+              <span class="text-xs font-bold" aria-hidden="true">{isMinimized() ? "□" : "—"}</span>
             </button>
             <button
               type="button"
               class="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text"
-              onClick={handleClose}
+              onClick={requestClose}
               title={t("common.cancel")}
+              aria-label={t("common.cancel")}
             >
               <IconX class="h-4 w-4" />
             </button>
@@ -186,8 +209,9 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
               <button
                 type="button"
                 class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text transition-colors"
-                onClick={handleClose}
+                onClick={requestClose}
                 title={t("messages.deleteDraft")}
+                aria-label={t("messages.deleteDraft")}
               >
                 <IconTrash class="h-4 w-4" />
               </button>
@@ -195,6 +219,18 @@ export function GmailComposeBox(props: GmailComposeBoxProps) {
           </form>
         </Show>
       </div>
+      <ConfirmDialog
+        open={confirmDiscard()}
+        onOpenChange={setConfirmDiscard}
+        title={t("messages.discardDraftTitle")}
+        summary={subject().trim() || t("messages.newMessage")}
+        description={t("messages.discardDraftHint")}
+        confirmLabel={t("sidePanel.discard")}
+        cancelLabel={t("sidePanel.keepEditing")}
+        variant="destructive"
+        icon={<IconAlert class="h-4 w-4" />}
+        onConfirm={handleClose}
+      />
     </Show>
   );
 }

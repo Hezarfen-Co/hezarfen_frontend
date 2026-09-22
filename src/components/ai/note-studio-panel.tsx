@@ -126,7 +126,7 @@ export function NoteStudioPanel() {
                       <p class="truncate text-xs text-muted-foreground">{note().courseTitle}</p>
                     </div>
                   </div>
-                  <div class="grid gap-4 xl:grid-cols-2">
+                  <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
                     <RagOutputsPanel
                       noteId={note().id}
                       source={courseNoteFiles}

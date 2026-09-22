@@ -336,7 +336,7 @@ function PomodoroContent() {
           </div>
         </div>
         <Suspense fallback={<DataTableSkeleton />}>
-          <DataTable columns={columns()} data={log()?.items ?? []} empty={t("pomodoro.empty")} enablePagination pageSize={10} />
+          <DataTable columns={columns()} data={log()?.items ?? []} empty={t("pomodoro.empty")} enablePagination pageSize={10} urlState />
         </Suspense>
       </section>
     </div>

@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { fireEvent, render, screen } from "@solidjs/testing-library";
+import { fireEvent, render, screen, within } from "@solidjs/testing-library";
 import { NotificationCenter } from "@/components/layout/notification-center";
 import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
 import { PreferencesProvider } from "@/stores/preferences-context";
@@ -49,7 +49,7 @@ function mountFeed(inbox: unknown[], unread: { items: unknown[]; total: number }
   return { setMessages, setUnreadMessages };
 }
 
-const badges = () => Array.from(document.querySelectorAll(".bg-destructive")).map((n) => n.textContent);
+const badges = () => Array.from(document.querySelectorAll("span.bg-destructive")).map((n) => n.textContent);
 
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
@@ -72,7 +72,7 @@ test("both shell badges report the same unread count", () => {
 
 // DEFECT 2: unlisted unread ignored dismissal, so dismiss-all left the badge
 // stuck at (total - listed) over an empty popover.
-test("dismiss all clears the badge, a later message raises it again", () => {
+test("dismiss all clears the badge, a later message raises it again", async () => {
   const listed = Array.from({ length: 10 }, (_, i) => msg(`m${i}`));
   const { setUnreadMessages } = mountFeed([], { items: listed, total: 11 });
 
@@ -84,8 +84,12 @@ test("dismiss all clears the badge, a later message raises it again", () => {
 
   expect(badges()).toEqual(["9+"]);
 
+  // Clearing everything asks first; nothing is cleared until it is confirmed.
   fireEvent.click(screen.getByTitle("Clear all"));
-  expect(badges()).toEqual([]);
+  expect(badges()).toEqual(["9+"]);
+  const dialog = await screen.findByRole("alertdialog");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Clear all" }));
+  await vi.waitFor(() => expect(badges()).toEqual([]));
 
   // A genuinely new message pushes the oldest listed one off the page.
   setUnreadMessages({ ...emptyPage, items: [msg("new"), ...listed.slice(0, 9)], total: 12 });

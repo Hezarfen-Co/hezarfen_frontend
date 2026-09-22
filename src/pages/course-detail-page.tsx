@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
@@ -40,6 +40,7 @@ import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
 import { useT } from "@/stores/preferences-context";
 import { hasMinRole } from "@/lib/roles";
+import { createUrlString } from "@/lib/url-state";
 import { cn } from "@/lib/cn";
 import { matchesSearch } from "@/lib/search-text";
 
@@ -79,17 +80,20 @@ function CourseDetailContent() {
     sections: () => modules.isEnabled("classes"),
     notes: () => modules.isEnabled("course_notes"),
   };
-  const [courseTab, setCourseTab] = createSignal("subjects");
+  // `?tab=` is the open tab, so Back from a şube lands on "Şubeler" again.
+  const [requestedTab, setCourseTab] = createUrlString("tab", "subjects");
   const availableTabs = () => [
     ...(tabOn.subjects() ? ["subjects"] : []),
     ...(tabOn.sections() ? ["sections"] : []),
     ...(tabOn.notes() ? ["notes"] : []),
     ...(hasMembers() ? ["members"] : []),
   ];
-  createEffect(() => {
+  // A tab not on offer falls back to the first one that is, without
+  // rewriting the URL: "members" only appears once the course has loaded.
+  const courseTab = () => {
     const tabs = availableTabs();
-    if (tabs.length > 0 && !tabs.includes(courseTab())) setCourseTab(tabs[0]);
-  });
+    return tabs.length === 0 || tabs.includes(requestedTab()) ? requestedTab() : tabs[0];
+  };
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
@@ -154,7 +158,7 @@ function CourseDetailContent() {
   const [showNoteForm, setShowNoteForm] = createSignal(false);
   const [showMemberForm, setShowMemberForm] = createSignal(false);
   const [noteCount, setNoteCount] = createSignal<number | null>(null);
-  const [sectionSearch, setSectionSearch] = createSignal("");
+  const [sectionSearch, setSectionSearch] = createUrlString("sections.q");
   const [memberUserId, setMemberUserId] = createSignal("");
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);

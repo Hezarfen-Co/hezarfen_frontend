@@ -1,6 +1,7 @@
-import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { For, Show, Suspense, createMemo } from "solid-js";
 import { createBoardResources } from "@/lib/board-resources";
 import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
+import { createInstanceLabels } from "@/lib/instance-labels";
 import { getEvents } from "@/api/events";
 import { getExams } from "@/api/exams";
 import { getHomework } from "@/api/homework";
@@ -17,6 +18,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { IconCalendarDays, IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import type { MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/cn";
+import { createUrlEnum, createUrlParam, readString } from "@/lib/url-state";
 import { createNow } from "@/lib/create-now";
 import { appointmentCounterpart } from "@/lib/person";
 import { useAuth } from "@/stores/auth-context";
@@ -43,6 +45,8 @@ type CalendarItem = {
   at: number;
   endsAt: number | null;
   href: string;
+  /** The şube×ders an exam or homework belongs to, for its "<ders> — <şube>" line. */
+  instance?: string;
   /** Appointments carry their own badge instead of the plain category one. */
   status?: AppointmentStatus;
 };
@@ -128,6 +132,20 @@ const VIEWS: { id: CalendarView; labelKey: MessageKey }[] = [
   { id: "month", labelKey: "calendar.viewMonth" },
 ];
 
+/** `?date=2026-09-24` → a day key; null when the text is not a real date. */
+function isoToDateKey(raw: unknown): string | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(readString(raw));
+  if (!match) return null;
+  const d = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return d.getDate() === Number(match[3]) ? dateKey(d) : null;
+}
+
+/** A day key (zero-based month) → `2026-09-24` for the URL. */
+function dateKeyToIso(key: string): string {
+  const [y, m, d] = key.split("-").map(Number);
+  return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
 function dateKey(d: Date) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
@@ -146,10 +164,34 @@ function CalendarContent() {
   const { locale } = usePreferences();
   const now = createNow();
   const nowDate = () => new Date(now());
-  const [viewYear, setViewYear] = createSignal(nowDate().getFullYear());
-  const [viewMonth, setViewMonth] = createSignal(nowDate().getMonth());
-  const [selected, setSelected] = createSignal(dateKey(nowDate()));
-  const [view, setView] = createSignal<CalendarView>("month");
+  // View, selected day and shown month live in the URL (`?view=week&date=
+  // 2026-09-24&month=2026-10`), so Back from an item returns to the same
+  // view and day instead of this month's grid. Today is the bare URL.
+  const [view, setView] = createUrlEnum<CalendarView>("view", ["day", "week", "month"], "month");
+  const [selected, setSelected] = createUrlParam("date", {
+    parse: (raw) => isoToDateKey(raw) ?? dateKey(nowDate()),
+    serialize: (key: string) => (key === dateKey(nowDate()) ? undefined : dateKeyToIso(key)),
+  });
+  // The month grid follows the selected day unless paged away from it.
+  const selectedMonth = () => {
+    const [y, m] = selected().split("-").map(Number);
+    return { year: y, month: m };
+  };
+  const [shownMonth, setShownMonth] = createUrlParam("month", {
+    parse: (raw) => {
+      const match = /^(\d{4})-(\d{2})$/.exec(readString(raw));
+      return match ? { year: Number(match[1]), month: Number(match[2]) - 1 } : selectedMonth();
+    },
+    serialize: (value: { year: number; month: number }) => {
+      const base = selectedMonth();
+      return value.year === base.year && value.month === base.month
+        ? undefined
+        : `${value.year}-${String(value.month + 1).padStart(2, "0")}`;
+    },
+  });
+  const viewYear = () => shownMonth().year;
+  const viewMonth = () => shownMonth().month;
+  const showMonthOf = (d: Date) => setShownMonth({ year: d.getFullYear(), month: d.getMonth() });
 
   // Each feed stands alone: a failed one reads as empty and is named in the
   // notice above the grid, instead of blanking the whole calendar.
@@ -224,10 +266,10 @@ function CalendarContent() {
     }
     for (const exam of exams() ?? []) {
       if (!exam.starts_at || exam.draft) continue;
-      rows.push({ id: exam.id, kind: "exam", title: exam.title, at: exam.starts_at, endsAt: exam.ends_at, href: `/exams/${exam.id}` });
+      rows.push({ id: exam.id, kind: "exam", title: exam.title, at: exam.starts_at, endsAt: exam.ends_at, href: `/exams/${exam.id}`, instance: exam.class_course });
     }
     for (const hw of homework() ?? []) {
-      rows.push({ id: hw.id, kind: "homework", title: hw.title, at: hw.due_at, endsAt: null, href: `/homework/${hw.id}` });
+      rows.push({ id: hw.id, kind: "homework", title: hw.title, at: hw.due_at, endsAt: null, href: `/homework/${hw.id}`, instance: hw.class_course });
     }
     for (const event of events() ?? []) {
       if (!event.starts_at) continue;
@@ -247,6 +289,18 @@ function CalendarContent() {
     }
     return rows;
   });
+
+  // The same ders runs in several şubeler and their exams/homework share
+  // titles, so a chip leads with the şube and the agenda names "<ders> — <şube>".
+  const sectionLabels = createInstanceLabels(
+    () => items().flatMap((item) => (item.instance ? [item.instance] : [])),
+    () => auth.user()?.role,
+  );
+  const sectionOf = (item: CalendarItem) => (item.instance ? sectionLabels()[item.instance] : undefined);
+  const chipTitle = (item: CalendarItem) => {
+    const klass = sectionOf(item)?.className;
+    return klass ? `${klass} · ${item.title}` : item.title;
+  };
 
   const itemsByDay = createMemo(() => {
     const map = new Map<string, CalendarItem[]>();
@@ -305,8 +359,7 @@ function CalendarContent() {
     const d = selectedDay();
     d.setDate(d.getDate() + days);
     setSelected(dateKey(d));
-    setViewYear(d.getFullYear());
-    setViewMonth(d.getMonth());
+    showMonthOf(d);
   };
 
   // Monday-first, like the month grid.
@@ -335,20 +388,11 @@ function CalendarContent() {
 
   const goToday = () => {
     const n = nowDate();
-    setViewYear(n.getFullYear());
-    setViewMonth(n.getMonth());
     setSelected(dateKey(n));
+    showMonthOf(n);
   };
-  const prevMonth = () => {
-    const m = viewMonth();
-    if (m === 0) { setViewYear((y: number) => y - 1); setViewMonth(11); }
-    else setViewMonth(m - 1);
-  };
-  const nextMonth = () => {
-    const m = viewMonth();
-    if (m === 11) { setViewYear((y: number) => y + 1); setViewMonth(0); }
-    else setViewMonth(m + 1);
-  };
+  const prevMonth = () => showMonthOf(new Date(viewYear(), viewMonth() - 1, 1));
+  const nextMonth = () => showMonthOf(new Date(viewYear(), viewMonth() + 1, 1));
 
   return (
     <div class="space-y-4">
@@ -456,7 +500,7 @@ function CalendarContent() {
                                 class={cn("block min-w-0 rounded px-1.5 py-1 text-[11px] leading-tight font-medium", KIND_STYLES[item.kind].chip)}
                               >
                                 <span class="block truncate">{clock(item.at)}</span>
-                                <span class="block truncate">{item.title}</span>
+                                <span class="block truncate" title={sectionOf(item)?.label}>{chipTitle(item)}</span>
                               </a>
                             )}
                           </For>
@@ -520,7 +564,7 @@ function CalendarContent() {
                               {(item) => (
                                 <span class={cn("inline-flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-[11px] font-medium leading-none", KIND_STYLES[item.kind].chip)}>
                                   <span class={cn("h-1.5 w-1.5 shrink-0 rounded-full", KIND_STYLES[item.kind].dot)} />
-                                  <span class="truncate">{item.title}</span>
+                                  <span class="truncate" title={sectionOf(item)?.label}>{chipTitle(item)}</span>
                                 </span>
                               )}
                             </For>
@@ -568,6 +612,9 @@ function CalendarContent() {
                             >
                               <div class="min-w-0">
                                 <p class={cn("truncate text-xs font-semibold", KIND_STYLES[item.kind].titleHover)}>{item.title}</p>
+                                <Show when={sectionOf(item)}>
+                                  {(section) => <p class="mt-0.5 truncate text-[11px] text-text-default">{section().label}</p>}
+                                </Show>
                                 <p class="mt-0.5 text-[11px] text-muted-foreground">{timeRange(item)}</p>
                               </div>
                               <Show

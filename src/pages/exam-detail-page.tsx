@@ -39,6 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { hasMinRole } from "@/lib/roles";
+import { createUrlString } from "@/lib/url-state";
 import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDisplayStatus, examStatusMessageKey, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
@@ -123,7 +124,9 @@ function ExamDetailContent() {
   const [answerMark, setAnswerMark] = createSignal("0");
   const [answerError, setAnswerError] = createSignal("");
   const [answerPending, setAnswerPending] = createSignal(false);
-  const [examTab, setExamTab] = createSignal("questions");
+  // `?tab=` when the user picked one, so Back from an answer sheet or a
+  // student lands on the same tab; otherwise the exam's own default below.
+  const [pickedTab, setExamTab] = createUrlString("tab");
   const isSittable = () => {
     const e = exam();
     return e ? isSittableExam(e) : false;
@@ -210,13 +213,13 @@ function ExamDetailContent() {
   };
   const isFinished = () => examStatus().finished;
   const isUpcoming = () => examStatus().upcoming;
-  let defaultTabExamId = "";
-  createEffect(() => {
+  // A finished exam opens on its results, any other on its questions. Fixed
+  // per exam when it loads, so the clock passing ends_at does not switch tabs.
+  const defaultTab = createMemo(on(() => exam()?.id, () => {
     const current = exam();
-    if (!current || current.id === defaultTabExamId) return;
-    defaultTabExamId = current.id;
-    setExamTab(current.ends_at != null && current.ends_at < now() ? "results" : "questions");
-  });
+    return current && current.ends_at != null && current.ends_at < now() ? "results" : "questions";
+  }));
+  const examTab = () => pickedTab() || defaultTab();
   const ownAttemptSummary = (): ExamAttemptSummary | null => {
     const attempt = ownAttempt();
     return attempt ? { status: attempt.status, attempts_used: attempt.attempts_used, max_attempts: attempt.max_attempts } : null;
@@ -399,7 +402,7 @@ function ExamDetailContent() {
               <Breadcrumbs items={[{ label: t("exams.title"), to: "/exams" }, { label: ex().title }]} />
               <PageHeader
                 title={ex().title}
-                description={ex().description || "—"}
+                description={ex().description || undefined}
                 actions={
                   <div class="flex flex-wrap items-center gap-2">
                     <Show when={isStudent() && !isDraft() && isSittable()}>

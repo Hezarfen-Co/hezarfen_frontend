@@ -25,6 +25,7 @@ import { cn } from "@/lib/cn";
 import { createMediaQuery } from "@/lib/create-media-query";
 import { COMPACT_SCREEN_QUERY, createResponsivePageSize } from "@/lib/create-page-size";
 import { createTablePreferences } from "@/lib/table-preferences";
+import { createUrlPageIndex, createUrlParam, createUrlString, decodeSort, encodeSort, listParamKeys } from "@/lib/url-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useT } from "@/stores/preferences-context";
 
@@ -89,6 +90,22 @@ export type DataTableProps<TData, TValue = unknown> = {
   storageKey?: string;
   /** Split the title/toolbar and table into the same inner surfaces as detail pages. */
   surfaceSections?: boolean;
+  /**
+   * Keep search, page and sort in the URL (`?q=`, `?page=`, `?sort=`) so Back
+   * and a reload restore them. A string prefixes the keys (`?roster.q=`) for
+   * a page with more than one list. Needs a router; only the search the table
+   * owns (`searchPredicate` / `filterColumn`) is stored — a caller passing
+   * `searchValue` / `onSearchInput` keeps its own.
+   */
+  urlState?: boolean | string;
+  /** Back to page one whenever this changes — pass the caller's own filters. */
+  pageResetKey?: unknown;
+  /**
+   * The caller's own filters narrow the list. An empty result then offers
+   * `onClearFilters` instead of the "nothing here yet" message.
+   */
+  filtersActive?: boolean;
+  onClearFilters?: () => void;
 };
 
 const resolveUpdater = <T,>(updater: Updater<T>, old: T): T =>
@@ -100,16 +117,52 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const t = useT();
   const paginationEnabled = props.enablePagination ?? true;
   const prefs = createTablePreferences(props.storageKey);
-  const [sorting, setSorting] = createSignal<SortingState>([]);
-  const [columnFilters, setColumnFilters] = createSignal<ColumnFiltersState>([]);
+  // Read once: a table either keeps its state in the URL or it does not.
+  const urlKeys = props.urlState
+    ? listParamKeys(typeof props.urlState === "string" ? props.urlState : undefined)
+    : null;
+  const [sorting, setSortingState] = urlKeys
+    ? createUrlParam<SortingState>(urlKeys.sort, { parse: decodeSort, serialize: encodeSort })
+    : createSignal<SortingState>([]);
+  const [otherColumnFilters, setOtherColumnFilters] = createSignal<ColumnFiltersState>([]);
   const clientPageSize = createResponsivePageSize(props.pageSize ?? 10);
-  const [clientPageIndex, setClientPageIndex] = createSignal(0);
+  const [clientPageIndex, setClientPageIndex] = urlKeys && !props.manualPagination
+    ? createUrlPageIndex(urlKeys.page)
+    : createSignal(0);
   const pagination = (): PaginationState => ({ pageIndex: clientPageIndex(), pageSize: clientPageSize() });
   // A page index means nothing once the page size changes under it (a phone
   // rotated, a window narrowed): start over rather than land mid-list.
   createEffect(on(clientPageSize, () => setClientPageIndex(0), { defer: true }));
-  const [search, setSearch] = createSignal("");
+  createEffect(on(() => props.pageResetKey, () => setClientPageIndex(0), { defer: true }));
+  // The search box's text when the table owns it — the `searchPredicate`
+  // query, or the `filterColumn` filter value.
+  const [search, setSearch] = urlKeys && props.searchValue === undefined && !props.onSearchInput
+    ? createUrlString(urlKeys.q)
+    : createSignal("");
   const searchValue = () => props.searchValue ?? search();
+  // The filterColumn filter is the search signal; any other column filter
+  // stays local.
+  const columnFilters = (): ColumnFiltersState => {
+    const column = props.filterColumn;
+    const query = search();
+    if (!column || props.searchPredicate || props.onSearchInput || !query) return otherColumnFilters();
+    return [...otherColumnFilters().filter((filter) => filter.id !== column), { id: column, value: query }];
+  };
+  const setColumnFilters = (next: ColumnFiltersState) => {
+    const column = props.filterColumn;
+    if (!column || props.searchPredicate || props.onSearchInput) {
+      setOtherColumnFilters(next);
+      return;
+    }
+    const own = next.find((filter) => filter.id === column);
+    setSearch(typeof own?.value === "string" ? own.value : "");
+    setOtherColumnFilters(next.filter((filter) => filter.id !== column));
+  };
+  // A sort order reshuffles every page: start from the first one.
+  const setSorting = (next: SortingState) => {
+    setSortingState(next);
+    setClientPageIndex(0);
+  };
   // Sorting is client-side only, and the backend takes no sort parameter: on
   // a server-paged table it would reorder the visible page alone while the
   // header claimed the whole list. Off there unless a caller opts in.
@@ -136,8 +189,13 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     ...(paginationEnabled && !props.manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    // The page index is ours, not the table's: an automatic reset on every
+    // new `data` array sent a page that rebuilds its rows on each read (a
+    // clock tick, a fresh map) straight back to page one on "Sonraki", and
+    // would wipe a page restored from the URL on the first refetch.
+    autoResetPageIndex: false,
+    onSortingChange: (updater) => setSorting(resolveUpdater(updater, sorting())),
+    onColumnFiltersChange: (updater) => setColumnFilters(resolveUpdater(updater, columnFilters())),
     onColumnVisibilityChange: (updater) =>
       prefs.setVisibility(resolveUpdater(updater, prefs.preferences().visibility)),
     onPaginationChange: (updater) => setClientPageIndex(resolveUpdater(updater, pagination()).pageIndex),
@@ -198,12 +256,17 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       (total, column) => total + (stickyRightLocked(column.id) ? 0 : column.getSize()),
       0,
     );
-  const actionColumnsWidth = () =>
+  // The table scrolls sideways only once the frame is narrower than every
+  // column at its floor: a column that declares `minSize` may shrink to it,
+  // one that does not keeps its `size`. Sizing the table by `size` alone
+  // made a tablet scroll a table that fit, and slid the last data column
+  // under the sticky action column.
+  const minTableWidth = () =>
     table.getVisibleLeafColumns().reduce(
-      (total, column) => total + (stickyRightLocked(column.id) ? 110 : 0),
+      (total, column) =>
+        total + (stickyRightLocked(column.id) ? 110 : Math.min(column.getSize(), column.columnDef.minSize ?? column.getSize())),
       0,
     );
-  const tableWidth = () => dataColumnsWidth() + actionColumnsWidth();
   const columnWidth = (column: Column<TData, unknown>) => {
     if (stickyRightLocked(column.id)) return "110px";
     const total = dataColumnsWidth();
@@ -223,23 +286,35 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const sectioned = () => props.surfaceSections !== false;
   const showHeader = () => false;
   const showToolbar = () => showSearch() || props.filters != null || showColumnMenu() || props.actions != null;
+  // A lone "Sütunlar" button does not need a card of its own: a full-width
+  // box with one button at its far end only adds a layer (a third nested box
+  // inside a detail tab). It sits bare at the right edge instead.
+  const columnMenuOnly = () => showColumnMenu() && !showSearch() && props.filters == null && props.actions == null;
   const pageCount = () => props.manualPagination ? Math.max(1, Math.ceil(props.manualPagination.total / props.manualPagination.pageSize)) : table.getPageCount();
   const pageIndex = () => props.manualPagination?.pageIndex ?? table.getState().pagination.pageIndex;
   const pageSize = () => props.manualPagination?.pageSize ?? table.getState().pagination.pageSize;
   const totalRows = () => props.manualPagination?.total ?? table.getFilteredRowModel().rows.length;
   const setPageIndex = (next: number) => {
     if (props.manualPagination) props.manualPagination.onPageChange(next);
-    else table.setPageIndex(next);
+    else setClientPageIndex(next);
   };
+  // A page past the end — rows deleted, a filter narrowed the list, a stale
+  // `?page=` — slides back to the last page there is. Only once rows exist:
+  // before the data arrives every page is "past the end".
+  createEffect(() => {
+    if (props.manualPagination || !paginationEnabled) return;
+    const rows = table.getFilteredRowModel().rows.length;
+    if (rows === 0) return;
+    const last = Math.max(0, Math.ceil(rows / clientPageSize()) - 1);
+    if (clientPageIndex() > last) setClientPageIndex(last);
+  });
   const searchFieldValue = () => {
-    if (props.onSearchInput || props.searchPredicate) return searchValue();
-    if (props.filterColumn) return (table.getColumn(props.filterColumn)?.getFilterValue() as string) ?? "";
+    if (props.onSearchInput || props.searchPredicate || props.filterColumn) return searchValue();
     return "";
   };
   const handleSearch = (value: string) => {
     if (props.onSearchInput) props.onSearchInput(value);
-    else if (props.searchPredicate) setSearch(value);
-    else if (props.filterColumn) table.getColumn(props.filterColumn)?.setFilterValue(value);
+    else setSearch(value);
     setPageIndex(0);
   };
   const isInteractiveTarget = (target: EventTarget | null, row: EventTarget | null) => {
@@ -247,10 +322,17 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     const interactive = target.closest("button,a,input,select,textarea,[role='button']");
     return interactive != null && interactive !== row;
   };
-  // A search that matches nothing is not an empty list: say so and offer the way back.
+  // A search or filter that matches nothing is not an empty list: say what
+  // was asked for and offer the way back, instead of "nothing here yet".
+  const activeQuery = () => searchFieldValue().trim();
+  const narrowed = () => activeQuery() !== "" || props.filtersActive === true;
+  const clearNarrowing = () => {
+    if (activeQuery()) handleSearch("");
+    if (props.filtersActive) props.onClearFilters?.();
+  };
   const emptyContent = () => (
     <Show
-      when={searchFieldValue().trim()}
+      when={narrowed()}
       fallback={
         <div class="flex flex-col items-center gap-3">
           <Illustration name={props.emptyIllustration ?? "empty"} class="h-20 w-32" />
@@ -260,16 +342,26 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     >
       <div class="flex flex-col items-center gap-3">
         <Illustration name="no-results" class="h-20 w-32" />
-        <span>{t("common.noMatches")}</span>
-        <Button type="button" size="sm" variant="outline" onClick={() => handleSearch("")}>
-          {t("common.clearSearch")}
-        </Button>
+        <span class="max-w-full break-words">
+          {activeQuery() ? t("common.noMatchesFor", { query: activeQuery() }) : t("common.noFilterMatches")}
+        </span>
+        <Show when={activeQuery() || props.onClearFilters}>
+          <Button type="button" size="sm" variant="outline" onClick={clearNarrowing}>
+            {props.filtersActive && props.onClearFilters ? t("common.clearFilters") : t("common.clearSearch")}
+          </Button>
+        </Show>
       </div>
     </Show>
   );
   const headerLabel = (columnId: string) => {
     const header = table.getFlatHeaders().find((candidate) => candidate.column.id === columnId);
     return header ? flexRender(header.column.columnDef.header, header.getContext()) : columnId;
+  };
+  // Screen readers hear the order only through aria-sort on the header cell.
+  const ariaSort = (column: Column<TData, unknown>) => {
+    if (!sortingEnabled() || !column.getCanSort()) return undefined;
+    const sorted = column.getIsSorted();
+    return sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : "none";
   };
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
@@ -326,7 +418,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             sideways instead of stacking one control per line. From `lg`:
             search, filters, then actions pushed to the right edge. Controls
             are touch-sized (h-10) below `sm` and compact (h-8) above it. */}
-        <div class={cn("flex flex-wrap items-center gap-2", sectioned() && "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs")}>
+        <div class={cn("flex flex-wrap items-center gap-2", sectioned() && !columnMenuOnly() && "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs")}>
           <Show when={showSearch()}>
             <DataTableSearch
               class="order-1 w-auto min-w-40 flex-1 grow-[100] sm:max-w-xs"
@@ -337,7 +429,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             />
           </Show>
           <Show when={props.filters}>
-            <div class="order-3 -my-1 flex w-full items-center gap-2 overflow-x-auto py-1 [scrollbar-width:none] sm:my-0 sm:py-0 sm:flex-wrap sm:overflow-visible lg:order-2 lg:w-auto [&_button]:h-10 [&_button]:shrink-0 [&_button]:rounded-lg [&_button]:text-[13px] sm:[&_button]:h-8 [&_select]:h-10 [&_select]:rounded-lg [&_select]:text-[13px] sm:[&_select]:h-8 max-sm:[&>*]:flex-nowrap max-sm:[&>*]:shrink-0">{props.filters}</div>
+            <div class="order-3 -my-1 flex w-full items-center gap-2 overflow-x-auto py-1 [scrollbar-width:none] sm:my-0 sm:py-0 sm:flex-wrap sm:overflow-visible lg:order-2 lg:w-auto [&_button]:h-10 [&_button]:shrink-0 [&_button]:rounded-lg [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10 [&_select]:h-10 [&_select]:rounded-lg [&_select]:text-[13px] sm:[&_select]:h-8 touch:[&_select]:h-10 max-sm:[&>*]:flex-nowrap max-sm:[&>*]:shrink-0">{props.filters}</div>
           </Show>
           <Show when={props.actions || showColumnMenu()}>
             {/* Beside the search the actions keep their own width (the search
@@ -348,7 +440,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
               <Show when={props.actions}>
                 {/* A "yakında" button does nothing yet; on a phone it only
                     pushes the working action off the search row. */}
-                <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md max-sm:flex-1 max-sm:[&_button]:h-10 max-sm:[&_button]:flex-1 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
+                <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md max-sm:flex-1 touch:[&_button]:h-10 max-sm:[&_button]:flex-1 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
               </Show>
               <Show when={showColumnMenu()}>
                 <DataTableViewMenu columns={viewMenuColumns()} />
@@ -405,13 +497,15 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                       {/* Two fields per line, label over value: a label/value
                           row per field made every card as tall as its column
                           count. Cells are written for a centred table column,
-                          so the card pulls their content back to the left. */}
+                          so the card pulls their content back to the left, and
+                          a status pill sized for that column's width shrinks
+                          back to its own label. */}
                       <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
                         <For each={details()}>
                           {(cell) => (
                             <div class="min-w-0">
                               <dt class="truncate text-[11px] leading-4 text-muted-foreground">{headerLabel(cell.column.id)}</dt>
-                              <dd class="mt-0.5 min-w-0 break-words text-[13px] leading-5 text-foreground text-left [&_*]:text-left [&_.items-center]:items-start [&_.justify-center]:justify-start [&_.justify-end]:justify-start [&_.mx-auto]:mx-0">
+                              <dd class="mt-0.5 min-w-0 break-words text-[13px] leading-5 text-foreground text-left [&_*]:text-left [&_.items-center]:items-start [&_.justify-center]:justify-start [&_.justify-end]:justify-start [&_.mx-auto]:mx-0 [&_[data-slot=badge]]:w-auto [&_[data-slot=badge]]:min-w-0 [&_[data-slot=badge]]:max-w-full [&_[data-slot=badge]]:items-center!">
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                               </dd>
                             </div>
@@ -435,7 +529,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       <DataTableFrame class={sectioned() ? "shadow-xs" : undefined}>
         <Table
           class={cn("data-table table-fixed", props.tableClass)}
-          style={{ width: `max(100%, ${tableWidth()}px)` }}
+          style={{ width: `max(100%, ${minTableWidth()}px)` }}
         >
           <colgroup>
             <For each={table.getVisibleLeafColumns()}>
@@ -458,6 +552,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                           actionColumnClass(header.column.id),
                         )}
                         style={{ width: columnWidth(header.column) }}
+                        aria-sort={ariaSort(header.column)}
                       >
                         <Show when={!header.isPlaceholder}>{renderHeader(header)}</Show>
                       </TableHead>
@@ -563,13 +658,17 @@ export function DataTableFrame(props: ParentProps<{ class?: string }>) {
     observer.observe(frame);
     onCleanup(() => observer.disconnect());
   });
+  // The hint sits under the frame, not floated inside it: pinned to the
+  // frame's bottom edge it covered the last row's action button.
   return (
-    <div ref={frame} class={cn("data-table-wrap relative", props.class)}>
-      {props.children}
+    <div class="space-y-1">
+      <div ref={frame} class={cn("data-table-wrap relative", props.class)}>
+        {props.children}
+      </div>
       <Show when={scrollable()}>
-        <span class="pointer-events-none sticky bottom-2 left-[calc(100%-6rem)] z-30 ml-[calc(100%-6.5rem)] inline-flex w-fit items-center gap-1 rounded-full border border-border/70 bg-surface-base/95 px-2 py-1 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur" aria-hidden="true">
+        <p class="flex justify-end text-[11px] font-medium text-muted-foreground" aria-hidden="true">
           ↔ {t("common.scrollHint")}
-        </span>
+        </p>
       </Show>
     </div>
   );

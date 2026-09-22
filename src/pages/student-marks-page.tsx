@@ -18,10 +18,10 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { getStudentDirectory, type StudentDirectoryRow } from "@/lib/student-directory";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
+import { formatDecimal } from "@/lib/format";
 
 const PAGE_SIZE = 10;
-const round = (n: number) => (Math.round(n * 100) / 100).toString();
 // ponytail: display-only color tiers (70/40 on a 0-100 scale), not a pass/fail rule
 const avgTone = (v: number) => (v >= 70 ? "text-success-text" : v >= 40 ? "text-warning-text" : "text-destructive-text");
 
@@ -37,6 +37,7 @@ const MARKS_FETCH_CAP = 200;
 
 function StudentMarksContent() {
   const t = useT();
+  const { locale } = usePreferences();
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
   const [error, setError] = createSignal("");
 
@@ -72,6 +73,10 @@ function StudentMarksContent() {
   );
   const marksCapped = () => list().length > MARKS_FETCH_CAP;
   const marksOf = (id: string) => marksMapRes()?.[id];
+  const examCountOf = (id: string) => {
+    const rep = marksOf(id);
+    return rep ? rep.courses.reduce((sum, course) => sum + course.results.length, 0) : null;
+  };
 
   const [report, { refetch: refetchReport }] = createResource(
     () => viewUser()?.id ?? null,
@@ -110,17 +115,27 @@ function StudentMarksContent() {
       accessorFn: (row) => marksOf(row.person.id)?.overall_average ?? -1,
       meta: { align: "right" },
       cell: (cell) => {
-        const rep = marksOf(cell.row.original.person.id);
-        if (rep == null) return <span class="text-sm text-muted-foreground">—</span>;
-        if (rep.overall_average == null)
-          return <span class="text-sm text-muted-foreground">{rep.overall_grade ?? "—"}</span>;
-        return (
-          <span class={cn("font-semibold tabular-nums", avgTone(rep.overall_average))}>
-            {round(rep.overall_average)}
-            <Show when={rep.overall_grade}>{(g) => <span class="ml-1 font-medium text-muted-foreground">/ {g()}</span>}</Show>
-          </span>
-        );
+        const average = marksOf(cell.row.original.person.id)?.overall_average;
+        if (average == null) return <span class="text-sm text-muted-foreground">—</span>;
+        return <span class={cn("font-semibold tabular-nums", avgTone(average))}>{formatDecimal(average, locale())}</span>;
       },
+    },
+    // The school's grade-band label for that average — its own column, since
+    // "68,19 / 3" beside the average read as a score out of 3.
+    {
+      id: "grade",
+      header: t("marks.band"),
+      accessorFn: (row) => marksOf(row.person.id)?.overall_grade ?? "",
+      meta: { align: "right" },
+      cell: (cell) => <span class="tabular-nums text-muted-foreground">{marksOf(cell.row.original.person.id)?.overall_grade ?? "—"}</span>,
+    },
+    // Graded exams behind the average, counted from the same report.
+    {
+      id: "exams",
+      header: t("marks.examCount"),
+      accessorFn: (row) => examCountOf(row.person.id) ?? -1,
+      meta: { align: "right" },
+      cell: (cell) => <span class="tabular-nums text-muted-foreground">{examCountOf(cell.row.original.person.id) ?? "—"}</span>,
     },
     {
       id: "actions",
@@ -158,8 +173,9 @@ function StudentMarksContent() {
           <Alert role="status">{t("marks.averageCapped", { cap: MARKS_FETCH_CAP })}</Alert>
         </Show>
 
-        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
+        <Show when={!listLoading()} fallback={<DataTableSkeleton columns={7} rows={6} />}>
           <DataTable
+            urlState
             title={t("nav.studentMarks")}
             description={t("marks.lookup")}
             columns={columns()}

@@ -1,6 +1,7 @@
 import { For, Show, Suspense, createSignal } from "solid-js";
 import { Button } from "@/components/ui/button";
 import { ComingSoonPanel } from "@/components/ui/coming-soon";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   IconBell,
@@ -34,6 +35,9 @@ export function NotificationList(props: {
 }) {
   const t = useT();
   const [previewNotification, setPreviewNotification] = createSignal<NotificationItem | null>(null);
+  // Clearing everything cannot be undone, so it asks first.
+  const [confirmClear, setConfirmClear] = createSignal(false);
+  const totalCount = () => props.feed.groups().reduce((count, group) => count + group.items.length, 0);
 
   const notificationGroupLabel = (type: NotificationType) => {
     if (type === "message") return t("nav.messages");
@@ -94,7 +98,7 @@ export function NotificationList(props: {
               variant="ghost"
               size="sm"
               class="h-7 rounded-lg px-2 text-[11px] font-semibold text-text-subtle hover:bg-destructive/10 hover:text-destructive-text"
-              onClick={() => props.feed.dismissAll()}
+              onClick={() => setConfirmClear(true)}
               title={t("notifications.clearAll")}
             >
               <IconTrash class="mr-1 h-3 w-3" />
@@ -185,7 +189,7 @@ export function NotificationList(props: {
                                 </Show>
                               </div>
 
-                              <div class="min-w-0 flex-1 space-y-0.5 pr-6">
+                              <div class="min-w-0 flex-1 space-y-0.5 pr-6 touch:pr-10">
                                 <span class="block truncate font-semibold text-text-strong">
                                   {item.title}
                                 </span>
@@ -196,8 +200,11 @@ export function NotificationList(props: {
 
                               <button
                                 type="button"
-                                class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md text-text-subtle/70 opacity-80 transition-all hover:bg-destructive/10 hover:text-destructive-text sm:opacity-0 sm:group-hover:opacity-100"
+                                // A thumb-sized target on touch screens, where
+                                // there is no hover to reveal it either.
+                                class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md text-text-subtle/70 opacity-80 transition-all hover:bg-destructive/10 hover:text-destructive-text sm:opacity-0 sm:group-hover:opacity-100 touch:right-0 touch:top-0 touch:h-11 touch:w-11 touch:opacity-80"
                                 title={t("notifications.dismiss")}
+                                aria-label={t("notifications.dismiss")}
                                 onClick={(e) => dismissOne(e, item.id)}
                               >
                                 <IconX class="h-3.5 w-3.5" />
@@ -267,6 +274,16 @@ export function NotificationList(props: {
           </div>
         )}
       </Show>
+
+      <ConfirmDialog
+        open={confirmClear()}
+        onOpenChange={setConfirmClear}
+        title={t("notifications.clearAllConfirmTitle")}
+        summary={t("notifications.clearAllConfirmSummary", { count: totalCount() })}
+        confirmLabel={t("notifications.clearAll")}
+        variant="destructive"
+        onConfirm={() => props.feed.dismissAll()}
+      />
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
-import { getUserSearch } from "@/api/users";
+import { getUserById, getUserSearch } from "@/api/users";
 import type { PersonRef, Role } from "@/api/client";
 import type { PersonLike } from "@/lib/person";
 import {
@@ -38,6 +38,12 @@ export function UserSearchSelect(props: {
   /** Overrides the default "what can I type here" line under the field. */
   hint?: string;
   role?: Role;
+  /**
+   * The person behind a preset `value` (e.g. the class's current teacher), so
+   * the field names them instead of showing the placeholder. Without it a
+   * preset id is resolved with one `/users/{id}` read.
+   */
+  initialUser?: PersonRef | null;
 }) {
   const t = useT();
   const auth = useAuth();
@@ -79,6 +85,37 @@ export function UserSearchSelect(props: {
   // Drop our local selection when the parent clears the bound value.
   createEffect(() => {
     if (!props.value && selected()) setSelected(null);
+  });
+
+  // A value set by the parent (an edit form opening on a saved record) has no
+  // picked option behind it, so the input would read as empty. Show the
+  // person it points at: from `initialUser` when given, else one lookup.
+  let resolving: string | null = null;
+  createEffect(() => {
+    const id = props.value;
+    if (!id || selected()?.id === id) return;
+    const preset = props.initialUser;
+    if (preset && preset.id === id) {
+      setSelected(preset);
+      return;
+    }
+    if (!canSearch() || resolving === id) return;
+    resolving = id;
+    void getUserById(id)
+      .then((user) => {
+        if (props.value !== id) return;
+        setSelected({
+          id: user.id,
+          username: user.username,
+          display_name: user.display_name || [user.name, user.surname].filter(Boolean).join(" ") || null,
+        });
+      })
+      .catch(() => {
+        // Unreadable account: leave the field empty rather than show the uuid.
+      })
+      .finally(() => {
+        if (resolving === id) resolving = null;
+      });
   });
 
   let controller: AbortController | null = null;
@@ -132,7 +169,10 @@ export function UserSearchSelect(props: {
     <div class="space-y-2">
       <Show when={props.label}>{(label) => <Label for={props.id}>{label()}</Label>}</Show>
       <Combobox<PersonRef>
-        options={options()}
+        // Kobalte writes the picked person's name into the input only when
+        // that person is among the options, so a preset one rides along
+        // while nothing is being searched.
+        options={query().trim() === "" && selected() ? [selected()!] : options()}
         // Results arrive async, so options is empty at input time. Kobalte
         // refuses to open an empty collection by default (and would close on
         // input) — allow it, and control open so the panel stays up while
@@ -147,6 +187,15 @@ export function UserSearchSelect(props: {
           props.onSelect?.(user ?? null);
         }}
         onInputChange={(value) => {
+          // Kobalte echoes the picked person's label into the input; that is
+          // not a search, and treating it as one drops the preset person from
+          // the options, which makes Kobalte clear the field again.
+          const current = selected();
+          if (current && value === pickedLabel(current)) {
+            setQuery("");
+            setOpen(false);
+            return;
+          }
           setQuery(value);
           runSearch(value);
           if (value.trim().length > 0) setOpen(true);

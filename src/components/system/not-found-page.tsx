@@ -15,7 +15,7 @@ export function NotFoundPage() {
         </div>
         <div class="space-y-2">
           <p class="text-4xl font-semibold tracking-tight text-text-strong">404</p>
-          <p class="text-base font-semibold text-text-strong">{t("common.notFound")}</p>
+          <h1 class="text-base font-semibold text-text-strong">{t("common.notFound")}</h1>
           <p class="text-sm leading-[21px] text-text-subtle">{t("errors.notFoundDescription")}</p>
         </div>
         <div class="flex items-center justify-center gap-2 pt-1">

@@ -17,6 +17,7 @@ import { loadInsightStudents } from "@/lib/insight-students";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
+import { formatDate } from "@/lib/format";
 import { usePreferences } from "@/stores/preferences-context";
 
 function confidenceVariant(confidence: InsightConfidence) {
@@ -66,14 +67,8 @@ function AiInsightStudentContent() {
     confidence === "none" || confidence === "exploratory" || confidence === "stable"
       ? t(`insights.confidence.${confidence}`)
       : confidence;
-  const numericDate = (value: number | null | undefined) => {
-    if (value == null) return "—";
-    return new Intl.DateTimeFormat(prefs.locale() === "tr" ? "tr-TR" : "en-US", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(new Date(value));
-  };
+  // The app-wide "18 Eyl 2026" date, not a numeric 18.09.2026.
+  const numericDate = (value: number | null | undefined) => formatDate(value, prefs.locale());
 
   const recompute = async () => {
     const current = person();

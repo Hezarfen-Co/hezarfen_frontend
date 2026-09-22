@@ -2,6 +2,8 @@ import type { ErrorComponentProps } from "@tanstack/solid-router";
 import { currentLocale, formatApiError } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { IconAlert } from "@/components/ui/icons";
+import { RecordNotFound } from "@/components/layout/record-not-found";
+import { isNotFoundError } from "@/lib/record-list-path";
 
 /**
  * The router's default error component: a page that throws while rendering
@@ -15,6 +17,8 @@ import { IconAlert } from "@/components/ui/icons";
  */
 export function RouteErrorFallback(props: ErrorComponentProps) {
   const tr = () => currentLocale() === "tr";
+  // A missing record is an answer, not a failure: retrying a 404 changes nothing.
+  if (isNotFoundError(props.error)) return <RecordNotFound />;
   console.error("Route render error:", props.error);
   return (
     <div role="alert" class="mx-auto flex w-full max-w-[520px] flex-col items-center gap-4 rounded-xl border border-border-line bg-surface-base px-6 py-10 text-center">

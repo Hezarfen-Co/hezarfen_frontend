@@ -15,15 +15,10 @@ import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
 import { useAuth } from "@/stores/auth-context";
-import { useT } from "@/stores/preferences-context";
+import { usePreferences, useT } from "@/stores/preferences-context";
+import { formatDecimal } from "@/lib/format";
 
-const round = (n: number) => (Math.round(n * 100) / 100).toString();
 type MarkRow = MarksReport["courses"][number]["results"][number];
-
-function markWithGrade(mark: number | null, grade?: string | null) {
-  if (mark == null) return grade ?? "—";
-  return grade ? `${round(mark)} / ${grade}` : round(mark);
-}
 
 function scoreWidth(mark: number | null): string {
   return `${Math.max(0, Math.min(100, Math.round(mark ?? 0)))}%`;
@@ -34,6 +29,15 @@ const MAX_SECTIONS = 3;
 
 export function MarksReportView(props: { report: MarksReport; compact?: boolean }) {
   const t = useT();
+  const { locale } = usePreferences();
+  // "68,2 · Bant 3": the grade is the school's band label, and "68,2 / 3"
+  // read as a score out of 3.
+  const markWithGrade = (mark: number | null, grade?: string | null) => {
+    const band = grade ? t("marks.bandLabel", { grade }) : null;
+    if (mark == null) return band ?? "—";
+    const value = formatDecimal(mark, locale());
+    return band ? `${value} · ${band}` : value;
+  };
   const auth = useAuth();
   // The report names each block only by its instance id, so the section's own
   // name has to be read separately: `/classes/me` for the student reading their

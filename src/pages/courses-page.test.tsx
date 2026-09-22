@@ -14,6 +14,7 @@ vi.mock("@tanstack/solid-router", () => ({
   Navigate: () => null,
   useNavigate: () => navigate,
   useSearch: () => () => ({ kind: undefined, action: undefined }),
+  useLocation: () => () => ({ pathname: "/courses", search: {}, searchStr: "", hash: "" }),
 }));
 vi.mock("@/stores/auth-context", () => ({
   useAuth: () => ({
@@ -81,11 +82,11 @@ test("student class directory uses only enrolled-course data", async () => {
   expect(await screen.findByRole("link", { name: /Study Lab/ })).toBeTruthy();
   expect(screen.queryByRole("link", { name: /Algebra/ })).toBeNull();
   expect(getMyCourses).toHaveBeenCalledTimes(1);
-  expect(navigate).toHaveBeenCalledWith({
-    to: "/courses",
-    search: { action: undefined, kind: "study" },
-    replace: true,
-  });
+  const tabNavigation = navigate.mock.calls.at(-1)?.[0] as { to: string; replace: boolean; search: (prev: Record<string, unknown>) => Record<string, unknown> };
+  expect(tabNavigation.to).toBe("/courses");
+  expect(tabNavigation.replace).toBe(true);
+  // The kind tab keeps the search text and restarts paging.
+  expect(tabNavigation.search({ q: "alg", page: 3, action: "new" })).toEqual({ q: "alg", taught: undefined, action: undefined, kind: "study", page: undefined });
 
   fireEvent.click(screen.getByRole("tab", { name: "Club" }));
   expect(await screen.findByRole("link", { name: /Robotics/ })).toBeTruthy();
@@ -101,7 +102,11 @@ test("student class directory uses only enrolled-course data", async () => {
   expect(screen.queryByRole("link", { name: /Algebra/ })).toBeNull();
 
   fireEvent.input(screen.getByPlaceholderText("Search…"), { target: { value: "" } });
-  fireEvent.change(screen.getByLabelText("Taught in", { selector: "select" }), { target: { value: "untaught" } });
+  fireEvent.pointerDown(screen.getByRole("button", { name: /Section:/ }), { button: 0, pointerType: "mouse" });
+  const untaught = await screen.findByRole("menuitem", { name: "No sections" });
+  fireEvent.pointerDown(untaught, { button: 0, pointerType: "mouse" });
+  fireEvent.pointerUp(untaught, { button: 0, pointerType: "mouse" });
+  fireEvent.click(untaught);
   expect(await screen.findByRole("link", { name: /Study Lab/ })).toBeTruthy();
   expect(screen.queryByRole("link", { name: /Robotics/ })).toBeNull();
 });

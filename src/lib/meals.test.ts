@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import type { SchoolSettings } from "@/api/client";
 import { dirtySettingsPatch, formatTry, mealCutoffAt, minuteToUtcTime, nextCourseWork, utcTimeToMinute } from "./meals";
 
@@ -46,4 +46,13 @@ describe("meal helpers", () => {
     } satisfies SchoolSettings;
     expect(dirtySettingsPatch(before, { ...before, max_chatbot_threads: 2 })).toEqual({ max_chatbot_threads: 2 });
   });
+});
+
+test("meal slot and dietary tag labels map seeded keys and keep custom ones", async () => {
+  const { mealSlotLabel, dietaryTagLabel } = await import("./meals");
+  const t = (key: string) => `<${key}>`;
+  expect(mealSlotLabel("breakfast", t)).toBe("<meals.slotName.breakfast>");
+  expect(mealSlotLabel("ikindi", t)).toBe("ikindi");
+  expect(dietaryTagLabel("gluten_free", t)).toBe("<meals.tagName.gluten_free>");
+  expect(dietaryTagLabel("constructor", t)).toBe("constructor");
 });

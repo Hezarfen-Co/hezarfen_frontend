@@ -27,7 +27,7 @@ import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
-import { formatDateTime } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 const YEAR_PAGE_SIZE = 10;
@@ -164,7 +164,7 @@ function AcademicYearsContent() {
       size: 150,
       minSize: 145,
       meta: { cellClass: "whitespace-nowrap" },
-      cell: (cell) => <span class="whitespace-nowrap text-sm">{formatDateTime(cell.row.original.starts_at, locale())}</span>,
+      cell: (cell) => <span class="whitespace-nowrap text-sm">{formatDate(cell.row.original.starts_at, locale())}</span>,
     },
     {
       accessorKey: "ends_at",
@@ -172,7 +172,7 @@ function AcademicYearsContent() {
       size: 150,
       minSize: 145,
       meta: { cellClass: "whitespace-nowrap" },
-      cell: (cell) => <span class="whitespace-nowrap text-sm">{formatDateTime(cell.row.original.ends_at, locale())}</span>,
+      cell: (cell) => <span class="whitespace-nowrap text-sm">{formatDate(cell.row.original.ends_at, locale())}</span>,
     },
     {
       id: "classes",
@@ -249,6 +249,7 @@ function AcademicYearsContent() {
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
           </Show>
           <DataTable
+            urlState
             title={t("academicYears.title")}
             description={t("academicYears.subtitle")}
             actions={

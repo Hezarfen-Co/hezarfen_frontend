@@ -199,7 +199,7 @@ export function RagOutputsPanel(props: {
   };
 
   return (
-    <section class="space-y-3 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4">
+    <section class="min-w-0 space-y-3 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 class="text-sm font-semibold">{t("courseNotes.ragTitle")}</h3>

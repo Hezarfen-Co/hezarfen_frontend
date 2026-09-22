@@ -43,7 +43,7 @@ test("a dirty panel asks before discarding, and stays open on Keep editing", asy
   expect(screen.getByTestId("state").textContent).toBe("open");
 
   fireEvent.click(closeButton());
-  fireEvent.click(await screen.findByRole("button", { name: /^(Discard|Sil ve kapat)$/ }));
+  fireEvent.click(await screen.findByRole("button", { name: /^(Discard changes|Değişiklikleri at)$/ }));
   await waitFor(() => expect(screen.getByTestId("state").textContent).toBe("closed"));
 });
 

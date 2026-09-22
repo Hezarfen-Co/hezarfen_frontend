@@ -36,7 +36,7 @@ export function DataToolbar(props: {
         <div class="order-3 flex w-full flex-wrap items-center gap-2 sm:order-2 sm:w-auto">{props.filters}</div>
       </Show>
       <Show when={props.actions}>
-        <div class="order-2 ml-auto flex shrink-0 grow items-center justify-end gap-2 sm:order-3 sm:grow-0 max-sm:[&_button]:h-10 max-sm:[&_button]:flex-1 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
+        <div class="order-2 ml-auto flex shrink-0 grow items-center justify-end gap-2 sm:order-3 sm:grow-0 touch:[&_button]:h-10 max-sm:[&_button]:flex-1 max-sm:[&_button:has([data-coming-soon])]:hidden">{props.actions}</div>
       </Show>
     </div>
   );

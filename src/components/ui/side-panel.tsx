@@ -1,7 +1,7 @@
 import { Dialog as DialogPrimitive } from "@kobalte/core/dialog";
 import { createEffect, createSignal, onCleanup, type ParentProps } from "solid-js";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconX } from "@/components/ui/icons";
+import { IconAlert, IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
 
@@ -135,6 +135,8 @@ export function SidePanel(
       confirmLabel={t("sidePanel.discard")}
       cancelLabel={t("sidePanel.keepEditing")}
       variant="destructive"
+      // Discarding a draft is not deleting a record: no trash can.
+      icon={<IconAlert class="h-4 w-4" />}
       onConfirm={() => props.onOpenChange(false)}
     />
     </>

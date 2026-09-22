@@ -23,6 +23,7 @@ import { IconChevronDown, IconMenu, IconPlus, IconX } from "@/components/ui/icon
 import { cn } from "@/lib/cn";
 import { scopeFromCitations } from "@/lib/rag-study-scope";
 import { usePreferences } from "@/stores/preferences-context";
+import { suppressQuickActions } from "@/stores/quick-actions";
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -33,6 +34,9 @@ const POLL_INTERVAL_MS = 2000;
  * own general chat on `/chatbot`; this is the grounded one.
  */
 export function RagStudyPanel() {
+  // The page is a docked composer; the phone quick-action button would sit
+  // on its send button.
+  suppressQuickActions();
   const { locale } = usePreferences();
   const copy = () => ragCopy(locale());
   const [threadId, setThreadId] = createSignal<string | undefined>();

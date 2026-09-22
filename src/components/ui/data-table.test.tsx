@@ -1,3 +1,4 @@
+import { createSignal } from "solid-js";
 import { fireEvent, render, screen, within } from "@solidjs/testing-library";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { DataTable } from "@/components/ui/data-table";
@@ -190,7 +191,7 @@ test("a search that matches nothing says so and clears back to the list", () => 
 
   fireEvent.input(screen.getByRole("textbox"), { target: { value: "zzz" } });
   expect(screen.queryByText("No people yet.")).toBeNull();
-  expect(screen.getByText(/Nothing matches|eşleşen kayıt yok/)).toBeTruthy();
+  expect(screen.getByText(/No results for “zzz”|“zzz” için sonuç yok/)).toBeTruthy();
 
   fireEvent.click(within(screen.getByRole("table")).getByRole("button", { name: /Clear search|Aramayı temizle/ }));
   expect(screen.getByText("Ada")).toBeTruthy();
@@ -248,4 +249,61 @@ test("on a phone-width screen rows render as labelled cards instead of a sideway
   fireEvent.click(within(card).getByText("teacher"));
   expect(onRowClick).toHaveBeenCalledOnce();
   vi.unstubAllGlobals();
+});
+
+test("sortable headers expose their order through aria-sort", () => {
+  const sortable: ColumnDef<Row>[] = [
+    { accessorKey: "name", header: "Name" },
+    { accessorKey: "role", header: "Role", enableSorting: false },
+  ];
+  render(() => (
+    <PreferencesProvider>
+      <DataTable columns={sortable} data={[{ name: "Ada", role: "a" }, { name: "Bo", role: "b" }]} enableColumnVisibility={false} />
+    </PreferencesProvider>
+  ));
+  const [nameHeader, roleHeader] = screen.getAllByRole("columnheader");
+  expect(nameHeader?.getAttribute("aria-sort")).toBe("none");
+  expect(roleHeader?.hasAttribute("aria-sort")).toBe(false);
+  fireEvent.click(within(nameHeader!).getByRole("button"));
+  expect(nameHeader?.getAttribute("aria-sort")).toBe("ascending");
+  fireEvent.click(within(nameHeader!).getByRole("button"));
+  expect(nameHeader?.getAttribute("aria-sort")).toBe("descending");
+});
+
+test("an empty list narrowed by the caller's filters offers to clear them", () => {
+  const onClearFilters = vi.fn();
+  render(() => (
+    <PreferencesProvider>
+      <DataTable columns={columns} data={[]} empty="No people yet." enableColumnVisibility={false} filtersActive onClearFilters={onClearFilters} />
+    </PreferencesProvider>
+  ));
+  expect(screen.queryByText("No people yet.")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: /Clear filters|Filtreleri temizle/ }));
+  expect(onClearFilters).toHaveBeenCalledOnce();
+});
+
+test("the next page holds when the caller hands over a fresh data array", async () => {
+  const [tick, setTick] = createSignal(0);
+  const people = Array.from({ length: 12 }, (_, i) => ({ name: `P${String(i).padStart(2, "0")}` }));
+  render(() => (
+    <PreferencesProvider>
+      {/* A new array on every read, like a page that maps rows inline. */}
+      <DataTable columns={[{ accessorKey: "name", header: "Name" }]} data={(tick(), people.map((row) => ({ ...row })))} enableColumnVisibility={false} />
+    </PreferencesProvider>
+  ));
+  fireEvent.click(screen.getByRole("button", { name: /Next|Sonraki/ }));
+  expect(screen.getByText("P10")).toBeTruthy();
+  setTick(1);
+  expect(screen.getByText("P10")).toBeTruthy();
+  expect(screen.queryByText("P00")).toBeNull();
+});
+
+test("a toolbar holding only the column menu is not boxed", () => {
+  const { container } = render(() => (
+    <PreferencesProvider>
+      <DataTable columns={[{ accessorKey: "name", header: "Name" }, { accessorKey: "role", header: "Role" }]} data={[{ name: "Ada", role: "a" }]} />
+    </PreferencesProvider>
+  ));
+  const toolbar = container.querySelector(".space-y-3 > div");
+  expect(toolbar?.className).not.toContain("rounded-xl");
 });

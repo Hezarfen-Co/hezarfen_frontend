@@ -81,7 +81,8 @@ export function CelebiComposer(props: {
           <IconSend class="h-4 w-4" />
         </Button>
       </div>
-      <p class="mt-1.5 px-1 text-[11px] leading-4 text-muted-foreground">{t("ai.hint")}</p>
+      {/* Enter / Shift+Enter means nothing on a touch keyboard. */}
+      <p class="mt-1.5 px-1 text-[11px] leading-4 text-muted-foreground [@media(pointer:coarse)]:hidden">{t("ai.hint")}</p>
     </form>
   );
 }

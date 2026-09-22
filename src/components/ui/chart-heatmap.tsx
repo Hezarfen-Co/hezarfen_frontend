@@ -1,4 +1,4 @@
-import { For, Show, createMemo, type Component } from "solid-js";
+import { For, Show, createMemo, onCleanup, type Component } from "solid-js";
 import { cn } from "@/lib/cn";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { EmptyInline } from "@/components/ui/empty-inline";
@@ -29,6 +29,8 @@ export type ChartHeatmapProps = {
 };
 
 const DEFAULT_WEEKS = 26;
+/** Columns a month label needs clear of the next one. */
+const MONTH_LABEL_SPAN = 3;
 
 /** Local midnight for the day containing `ms` — DST-safe, unlike `ms - ms % DAY_MS`. */
 function startOfDay(ms: number): number {
@@ -114,16 +116,26 @@ export const ChartHeatmap: Component<ChartHeatmapProps> = (props) => {
   );
 
   // A month label sits above the first column whose Monday opens a new month.
-  const monthLabels = createMemo(() =>
-    columns().map((week, index) => {
+  // A label runs wider than its column, so one whose next label starts within
+  // MONTH_LABEL_SPAN columns is dropped — otherwise the range's opening month
+  // and the next one print over each other ("MaNis").
+  const monthLabels = createMemo(() => {
+    const labels = columns().map((week, index) => {
       const monday = new Date(week[0]);
       if (index > 0) {
         const previous = new Date(columns()[index - 1][0]);
         if (previous.getMonth() === monday.getMonth()) return "";
       }
       return monthFormat().format(monday);
-    }),
-  );
+    });
+    let next = Number.POSITIVE_INFINITY;
+    for (let index = labels.length - 1; index >= 0; index -= 1) {
+      if (!labels[index]) continue;
+      if (next - index < MONTH_LABEL_SPAN) labels[index] = "";
+      else next = index;
+    }
+    return labels;
+  });
 
   // Monday / Wednesday / Friday only — the full seven would not fit the gutter.
   const weekdayLabels = createMemo(() => {
@@ -156,15 +168,37 @@ export const ChartHeatmap: Component<ChartHeatmapProps> = (props) => {
             it scrolls instead of shrinking cells past legibility. */}
         {/* `px-1` keeps today's focus ring off the scroll container's clip
             edge, which otherwise shaves the last column's cells in half. */}
+        {/* Where it scrolls (a phone), it opens on the newest weeks — the
+            right edge — rather than on the oldest. */}
         <div class="overflow-x-auto px-1 pb-1">
           <div
+            ref={(grid) => {
+              // Re-pinned on every resize while the page settles (under
+              // Suspense the node is built detached, and the card widens as
+              // the layout fills in), until the user scrolls it themselves.
+              if (typeof ResizeObserver === "undefined") return;
+              let pinned = true;
+              const release = () => {
+                pinned = false;
+              };
+              const observer = new ResizeObserver(() => {
+                const scroller = grid.parentElement;
+                if (pinned && scroller) scroller.scrollLeft = scroller.scrollWidth;
+              });
+              observer.observe(grid);
+              // The grid holds its min-width while the card around it shrinks,
+              // so the scroller's own size matters as much.
+              queueMicrotask(() => grid.parentElement && observer.observe(grid.parentElement));
+              for (const type of ["pointerdown", "wheel", "keydown"]) grid.addEventListener(type, release, { passive: true });
+              onCleanup(() => observer.disconnect());
+            }}
             class="grid min-w-[460px] gap-1"
             style={{ "grid-template-columns": `auto repeat(${weeks()}, minmax(0, 1fr))` }}
           >
             <span aria-hidden="true" />
             <For each={monthLabels()}>
               {(label) => (
-                <span class="text-[11px] leading-none text-muted-foreground">{label}</span>
+                <span class="whitespace-nowrap text-[11px] leading-none text-muted-foreground">{label}</span>
               )}
             </For>
 

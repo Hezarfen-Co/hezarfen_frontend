@@ -1,4 +1,4 @@
-import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconCalendarDays, IconExam, IconHomework, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
+import { IconAlert, IconCalendarDays, IconExam, IconHomework, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -44,6 +44,7 @@ import { createFlash } from "@/lib/flash";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examWeight } from "@/lib/exam-weight";
 import { hasMinRole } from "@/lib/roles";
+import { createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
 import { useT } from "@/stores/preferences-context";
@@ -70,9 +71,10 @@ function InstanceDetailContent() {
   // `?tab=sessions&rollCall=<session id>` opens straight on a lesson's roll
   // call — the dashboard's "today's lessons" panel links here.
   const linkedSearch = () => location().search as { tab?: unknown; rollCall?: unknown };
-  const linkedTab = () => (typeof linkedSearch().tab === "string" ? (linkedSearch().tab as string) : null);
   const linkedRollCall = () => (typeof linkedSearch().rollCall === "string" ? (linkedSearch().rollCall as string) : undefined);
-  const [tab, setTab] = createSignal(linkedTab() ?? "exams");
+  // The open tab is `?tab=` itself, so Back from an exam or a homework lands
+  // on the tab it was opened from.
+  const [requestedTab, setTab] = createUrlString("tab", "exams");
   // Exams, homework and sessions are separately sold modules; a tab for one the
   // school switched off would only ever answer 403, so it is left out and the
   // page falls back to the first tab still there.
@@ -82,7 +84,10 @@ function InstanceDetailContent() {
     homework: () => modules.isEnabled("homework"),
     sessions: () => modules.isEnabled("sessions"),
   };
-  createEffect(() => {
+  // A tab that is not on offer (module off, no rights yet) shows the first
+  // one that is, without rewriting the URL: rights settle after the instance
+  // loads, and the requested tab must still be there when they do.
+  const tab = () => {
     const tabs = [
       ...(tabOn.exams() ? ["exams"] : []),
       ...(tabOn.homework() ? ["homework"] : []),
@@ -90,8 +95,8 @@ function InstanceDetailContent() {
       "teachers",
       ...(canManage() ? ["students"] : []),
     ];
-    if (!tabs.includes(tab())) setTab(tabs[0]);
-  });
+    return tabs.includes(requestedTab()) ? requestedTab() : tabs[0];
+  };
   const [instance, { refetch: refetchInstance }] = createResource(id, (instanceId) => getInstanceById(instanceId));
   const [course] = createResource(() => instance()?.course ?? null, (courseId) => getCourseById(courseId));
   const [klass] = createResource(() => instance()?.class ?? null, (classId) => getClassById(classId).catch(() => null));
@@ -133,16 +138,31 @@ function InstanceDetailContent() {
   const [flash, setFlash] = createFlash();
 
   // Policy edits are two inline writes on a shared resource, so they keep local
-  // signals and PATCH optimistically instead of refetching the instance.
+  // signals and PATCH optimistically instead of refetching the instance. Both
+  // write only on an explicit act — Enter or the save button for ders saati, a
+  // confirmation for the karne switch — so a stray tap while scrolling on a
+  // phone never changes the record.
   const [countsTowardKarne, setCountsTowardKarne] = createSignal(true);
   const [dersSaati, setDersSaati] = createSignal("");
+  const [savedDersSaati, setSavedDersSaati] = createSignal<number | null>(null);
   const [savingPolicy, setSavingPolicy] = createSignal(false);
+  const [karneConfirm, setKarneConfirm] = createSignal<boolean | null>(null);
+  const [policySaved, setPolicySaved] = createSignal<"dersSaati" | "karne" | null>(null);
+  let policySavedTimer: number | undefined;
+  onCleanup(() => window.clearTimeout(policySavedTimer));
+  const flashPolicySaved = (which: "dersSaati" | "karne") => {
+    setPolicySaved(which);
+    window.clearTimeout(policySavedTimer);
+    policySavedTimer = window.setTimeout(() => setPolicySaved(null), 2500);
+  };
   createEffect(() => {
     const i = instance();
     if (!i) return;
     setCountsTowardKarne(i.counts_toward_karne);
     setDersSaati(String(i.ders_saati));
+    setSavedDersSaati(i.ders_saati);
   });
+  const dersSaatiDirty = () => dersSaati().trim() !== String(savedDersSaati() ?? "");
 
   const toggleKarne = async (next: boolean) => {
     if (savingPolicy()) return;
@@ -150,6 +170,7 @@ function InstanceDetailContent() {
     setSavingPolicy(true);
     try {
       await patchInstanceById(id(), { counts_toward_karne: next });
+      flashPolicySaved("karne");
     } catch (err) {
       setCountsTowardKarne(!next);
       setError(formatApiError(err));
@@ -159,18 +180,22 @@ function InstanceDetailContent() {
   };
 
   const saveDersSaati = async () => {
+    if (savingPolicy()) return;
     const value = Number(dersSaati().trim());
-    const current = instance()?.ders_saati;
-    if (!Number.isInteger(value) || value < 0 || value === current) {
-      setDersSaati(String(current ?? ""));
+    const current = savedDersSaati();
+    if (dersSaati().trim() === "" || !Number.isInteger(value) || value < 0) {
+      setError(t("instances.dersSaatiInvalid"));
       return;
     }
+    if (value === current) return;
+    setError("");
     setSavingPolicy(true);
     try {
       await patchInstanceById(id(), { ders_saati: value });
-      await refetchInstance();
+      setSavedDersSaati(value);
+      setDersSaati(String(value));
+      flashPolicySaved("dersSaati");
     } catch (err) {
-      setDersSaati(String(current ?? ""));
       setError(formatApiError(err));
     } finally {
       setSavingPolicy(false);
@@ -316,16 +341,38 @@ function InstanceDetailContent() {
                       when={canManage()}
                       fallback={<p class="truncate text-sm font-semibold text-text-default">{inst().ders_saati}</p>}
                     >
-                      <Input
-                        aria-label={t("instances.dersSaati")}
-                        class="h-7 w-20 px-2 py-0 text-sm"
-                        type="number"
-                        min={0}
-                        value={dersSaati()}
-                        disabled={savingPolicy()}
-                        onInput={(e) => setDersSaati(e.currentTarget.value)}
-                        onBlur={() => void saveDersSaati()}
-                      />
+                      <form
+                        class="flex items-center gap-1.5"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          void saveDersSaati();
+                        }}
+                      >
+                        <Input
+                          aria-label={t("instances.dersSaati")}
+                          class="h-7 w-20 px-2 py-0 text-base sm:text-sm"
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          value={dersSaati()}
+                          disabled={savingPolicy()}
+                          onInput={(e) => setDersSaati(e.currentTarget.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape" && dersSaatiDirty()) {
+                              e.preventDefault();
+                              setDersSaati(String(savedDersSaati() ?? ""));
+                            }
+                          }}
+                        />
+                        <Show when={dersSaatiDirty()}>
+                          <Button type="submit" size="sm" class="h-7 rounded-md px-2 text-xs" disabled={savingPolicy()}>
+                            {t("common.save")}
+                          </Button>
+                        </Show>
+                        <Show when={!dersSaatiDirty() && policySaved() === "dersSaati"}>
+                          <span class="text-xs text-success-text" role="status">{t("instances.policySaved")}</span>
+                        </Show>
+                      </form>
                     </Show>
                   </div>
                 </div>
@@ -351,11 +398,20 @@ function InstanceDetailContent() {
                             checked={countsTowardKarne()}
                             disabled={savingPolicy()}
                             aria-label={t("instances.countsTowardKarne")}
-                            onChange={(event) => void toggleKarne(event.currentTarget.checked)}
+                            onChange={(event) => {
+                              // Keep the switch where it is until the change is confirmed.
+                              const next = event.currentTarget.checked;
+                              event.currentTarget.checked = !next;
+                              setKarneConfirm(next);
+                            }}
                           />
                           <span class="block h-6 w-10 rounded-full bg-input ring-1 ring-inset ring-black/5 transition-colors peer-checked:bg-primary peer-disabled:opacity-60 peer-focus-visible:ring-2 peer-focus-visible:ring-ring dark:ring-white/10" />
                           <span class="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
                         </span>
+                        <span class="font-semibold text-text-default">{countsTowardKarne() ? t("common.yes") : t("common.no")}</span>
+                        <Show when={policySaved() === "karne"}>
+                          <span class="text-success-text" role="status">{t("instances.policySaved")}</span>
+                        </Show>
                       </label>
                     </Show>
                   </div>
@@ -384,11 +440,27 @@ function InstanceDetailContent() {
             </div>
 
             <ConfirmDialog
+              open={karneConfirm() !== null}
+              onOpenChange={(open) => !open && setKarneConfirm(null)}
+              title={t("instances.karneConfirmTitle")}
+              description={karneConfirm() ? t("instances.karneOnHint") : t("instances.karneOffHint")}
+              summary={`${course.latest?.title ?? ""} — ${klass.latest?.name ?? ""}`.replace(/^ — | — $/, "")}
+              confirmLabel={karneConfirm() ? t("instances.karneTurnOn") : t("instances.karneTurnOff")}
+              onConfirm={async () => {
+                const next = karneConfirm();
+                if (next !== null) await toggleKarne(next);
+              }}
+            />
+
+            <ConfirmDialog
               open={removeTarget() !== null}
               onOpenChange={() => setRemoveTarget(null)}
-              title={t("course.removeStudent")}
+              title={t("course.removeStudentTitle")}
+              description={t("course.removeStudentHint")}
               variant="destructive"
-              summary={`${t("course.removeStudentConfirm")} "${removeTarget()?.userName}"?`}
+              icon={<IconAlert class="h-4 w-4" />}
+              confirmLabel={t("course.removeStudentAction")}
+              summary={removeTarget()?.userName ?? ""}
               onConfirm={async () => {
                 const target = removeTarget();
                 if (!target) return;

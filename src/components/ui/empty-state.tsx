@@ -1,4 +1,5 @@
 import { Show } from "solid-js";
+import type { JSX } from "solid-js";
 import { Illustration } from "@/components/ui/illustration";
 import { cn } from "@/lib/cn";
 import type { IllustrationName } from "@/lib/illustrations";
@@ -43,6 +44,8 @@ export function EmptyState(props: {
   title: string;
   description?: string;
   kind?: EmptyStateKind;
+  /** A way out, e.g. "clear search" under a no-results panel. */
+  action?: JSX.Element;
   class?: string;
 }) {
   const kind = () => props.kind ?? "default";
@@ -62,6 +65,7 @@ export function EmptyState(props: {
           <p class="mx-auto max-w-[420px] text-sm leading-[21px] text-text-subtle">{props.description}</p>
         </Show>
       </div>
+      <Show when={props.action}>{props.action}</Show>
     </div>
   );
 }

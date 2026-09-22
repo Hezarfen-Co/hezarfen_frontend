@@ -118,6 +118,7 @@ function BuilderSchoolsContent() {
           </Show>
           <Show when={!list.error}>
             <DataTable
+              urlState
               title={t("builder.schools")}
               description={t("builder.schoolsSubtitle")}
               actions={

@@ -38,8 +38,11 @@ import { UserSearchSelect } from "@/components/users/user-search-select";
 import { createFlash } from "@/lib/flash";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
+import { createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+import { RecordNotFound } from "@/components/layout/record-not-found";
+import { isNotFoundError } from "@/lib/record-list-path";
 
 export default function ClassDetailPage() {
   return <RouteGuard minRole="teacher"><ClassDetailContent /></RouteGuard>;
@@ -54,7 +57,7 @@ function ClassDetailContent() {
   const id = createMemo(() => { location(); return params().id; });
   const canManage = () => hasMinRole(auth.user()?.role, "manager");
 
-  const [tab, setTab] = createSignal("members");
+  const [tab, setTab] = createUrlString("tab", "members");
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
@@ -229,7 +232,9 @@ function ClassDetailContent() {
       when={loadedClass()}
       fallback={
         <Show when={cls.error} fallback={<PageSpinner />}>
-          <Alert variant="destructive">{formatApiError(cls.error)}</Alert>
+          <Show when={!isNotFoundError(cls.error)} fallback={<RecordNotFound backTo="/management/classes" />}>
+            <Alert variant="destructive">{formatApiError(cls.error)}</Alert>
+          </Show>
         </Show>
       }
     >
@@ -318,7 +323,7 @@ function ClassDetailContent() {
                     <div class="space-y-1.5"><Label for="edit-class-name">{t("classGroups.className")}</Label><Input id="edit-class-name" maxlength={limits.latest?.course.max_class_name_len} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
                     <div class="space-y-1.5"><Label for="edit-class-grade">{t("classGroups.grade")}</Label><Input id="edit-class-grade" maxlength={limits.latest?.course.max_class_grade_len} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
                     <div class="space-y-1.5"><Label for="edit-class-year">{t("academicYears.year")}</Label><Select id="edit-class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={years.latest ?? []}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
-                    <UserSearchSelect id="edit-class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
+                    <UserSearchSelect id="edit-class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} initialUser={c().teacher} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
                   </div>
                   <div class="flex gap-2 border-t pt-4"><Button type="submit" disabled={pending()}>{t("common.save")}</Button><Button type="button" variant="outline" onClick={() => setEditing(false)}>{t("common.cancel")}</Button></div>
                 </form>

@@ -49,3 +49,15 @@ export function examDurationMs(durationMs: number | null | undefined, startsAt: 
   if (startsAt == null || endsAt == null || endsAt <= startsAt) return null;
   return endsAt - startsAt;
 }
+
+/**
+ * A mark or average with a fixed number of decimals in the reader's locale:
+ * "68,2" in Turkish, "68.2" in English.
+ */
+export function formatDecimal(value: number | null | undefined, locale: Locale = "en", digits = 1): string {
+  if (value == null || !Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(value);
+}

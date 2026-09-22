@@ -1,4 +1,5 @@
-import { Show, createEffect, createMemo, createSignal, type ParentProps } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, onCleanup, onMount, type ParentProps } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
 import { LogoMark } from "@/components/brand/logo-mark";
 import { AccountProfileDialog } from "@/components/users/account-profile-dialog";
@@ -20,6 +21,7 @@ import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
 import { celebiPanelOpen, openCelebiPanel, setCelebiPanelOpen } from "@/stores/celebi-panel";
 import { commandPaletteOpen, openCommandPalette, setCommandPaletteOpen } from "@/stores/command-palette";
+import { quickActionsSuppressed } from "@/stores/quick-actions";
 import { ShellFeedProvider } from "@/stores/shell-feed-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
@@ -48,12 +50,34 @@ export function AppShell(props: ParentProps) {
     const key = routeLabelKey(location().pathname, auth.user()?.role);
     return key ? t(key) : "";
   });
+  // The page's own h1, when it renders one (detail pages, the 404). Watched
+  // rather than declared per route: the shell names the page with an h1 of its
+  // own only where the page has none, so no screen ends up with two.
+  let content: HTMLDivElement | undefined;
+  const [pageHeading, setPageHeading] = createSignal<string | null>(null);
+  onMount(() => {
+    if (!content || typeof MutationObserver === "undefined") return;
+    const read = () => {
+      const heading = content?.querySelector("h1:not([data-shell-title])");
+      setPageHeading(heading ? (heading.textContent ?? "").trim() : null);
+    };
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(content, { childList: true, subtree: true, characterData: true });
+    onCleanup(() => observer.disconnect());
+  });
+  // Unlisted routes (an instance, the 404) borrow the page's own heading.
+  const pageTitle = () => routeLabel() || pageHeading() || "";
   // One place names the browser tab for every shell route, from the same
   // label the header shows.
   createEffect(() => {
-    const label = routeLabel();
+    const label = pageTitle();
     document.title = label ? `${label} · ${t("app.name")}` : t("app.name");
   });
+  const shellChrome = () => Boolean(auth.user()) && !fullScreen();
+  // Room below the last row for the quick-action button resting over the tab
+  // bar, so a pager or a last card's actions can scroll clear of it.
+  const fabClearance = () => shellChrome() && phone() && !quickActionsSuppressed();
   const logout = async () => {
     await auth.logout();
     void navigate({ to: "/login" });
@@ -135,11 +159,21 @@ export function AppShell(props: ParentProps) {
           />
         </Show>
 
-        <main id="main-content" tabIndex={-1} class="min-w-0 flex-1 outline-hidden">
+        {/* The menu sheet is modal: what it covers leaves the tab order and
+            the accessibility tree while it is up. */}
+        <main class="min-w-0 flex-1" inert={mobileOpen() || undefined}>
           <Show when={auth.user() && !fullScreen() && !phone()}>
             <header class="sticky top-[env(safe-area-inset-top)] z-30 flex h-[49px] items-center gap-3 border-b border-border/70 bg-background px-4 pt-1.5 sm:px-6 lg:px-4">
               <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-52 lg:w-[260px]">
-                <span class="hidden truncate text-sm font-semibold sm:block" title={routeLabel()}>{routeLabel()}</span>
+                {/* The page's h1 unless the page renders its own. */}
+                <Dynamic
+                  component={pageHeading() === null ? "h1" : "span"}
+                  data-shell-title=""
+                  class="hidden truncate text-sm font-semibold sm:block"
+                  title={pageTitle()}
+                >
+                  {pageTitle()}
+                </Dynamic>
               </div>
 
               <div class="min-w-0 flex-1" />
@@ -167,14 +201,28 @@ export function AppShell(props: ParentProps) {
           <Show when={auth.user() && !fullScreen()}>
             <NetworkStatusBanner />
           </Show>
+          {/* The skip link's target starts below the header, so it lands on
+              the page rather than on the header's controls. */}
           <div
+            id="main-content"
+            tabIndex={-1}
+            ref={(el) => {
+              content = el;
+            }}
             class={cn(
               // Every page fills the content column, as Messages always did: a
               // fixed 1180px cap left wide screens mostly empty margin.
-              "w-full px-4 py-6 sm:px-6 lg:px-10 lg:py-6",
-              auth.user() && !fullScreen() && "pb-[calc(3.5rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] lg:pb-6",
+              "w-full px-4 py-6 outline-hidden sm:px-6 lg:px-10 lg:py-6",
+              shellChrome() && "pb-[calc(3.5rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] lg:pb-6",
+              fabClearance() && "pb-[calc(9rem+max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))]",
             )}
           >
+            {/* No header below lg, so the page title opens the content. */}
+            <Show when={shellChrome() && phone() && pageHeading() === null && pageTitle()}>
+              <h1 data-shell-title="" class="-mt-2 mb-3 truncate text-lg font-semibold tracking-tight text-text-strong">
+                {pageTitle()}
+              </h1>
+            </Show>
             <Show when={auth.user()} fallback={props.children}>
               <ModuleGate>{props.children}</ModuleGate>
             </Show>
@@ -184,11 +232,13 @@ export function AppShell(props: ParentProps) {
       {/* MobileTabBar and the quick actions stay inside the provider — they are
           shell surfaces, so a useShellFeed() badge there must not throw. */}
       <Show when={auth.user() && !fullScreen()}>
-        <MobileTabBar onMenu={() => setMobileOpen(true)} onSearch={openCommandPalette} />
+        <div inert={mobileOpen() || undefined}>
+          <MobileTabBar onMenu={() => setMobileOpen(true)} onSearch={openCommandPalette} />
+        </div>
       </Show>
       <Show when={auth.user() && !fullScreen() && phone()}>
         <MobileQuickActions
-          hidden={mobileOpen() || celebiPanelOpen() || commandPaletteOpen() || profileOpen()}
+          hidden={mobileOpen() || celebiPanelOpen() || commandPaletteOpen() || profileOpen() || quickActionsSuppressed()}
         />
       </Show>
       </ShellFeedProvider>

@@ -9,6 +9,7 @@ import { PomodoroLogView } from "@/components/pomodoro/pomodoro-log-view";
 import { Alert } from "@/components/ui/alert";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
+import { DropdownSelect } from "@/components/ui/select";
 import { IconEye } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { studentDirectoryColumns } from "@/components/users/student-directory-columns";
@@ -60,7 +61,19 @@ function StudentPomodoroContent() {
     },
   );
 
-  const rows = () => list();
+  // No endpoint reports attendance or focus time for a list of students —
+  // only one student at a time — so the list stays a roster (a column per
+  // student would be one report read per row). The class filter narrows it
+  // with the memberships the directory already read.
+  const [classFilter, setClassFilter] = createSignal("");
+  const classOptions = createMemo(() => {
+    const seen = new Map<string, string>();
+    for (const row of list()) for (const cls of row.classes) seen.set(cls.id, cls.name);
+    return [...seen]
+      .sort((a, b) => a[1].localeCompare(b[1], "tr", { numeric: true }))
+      .map(([value, label]) => ({ value, label }));
+  });
+  const rows = () => (classFilter() ? list().filter((row) => row.classes.some((cls) => cls.id === classFilter())) : list());
   const listLoading = () => list.loading;
   const searchPerson = (row: StudentDirectoryRow, query: string) =>
     matchesSearch(query, row.person.display_name, row.person.student_number, ...row.classes.map((cls) => cls.name));
@@ -97,6 +110,7 @@ function StudentPomodoroContent() {
 
         <Show when={!listLoading()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
           <DataTable
+            urlState
             title={t("nav.studentPomodoro")}
             description={t("pomodoro.lookup")}
             columns={studentColumns()}
@@ -104,6 +118,17 @@ function StudentPomodoroContent() {
             tableClass="min-w-xl"
             empty={t("form.noStudents")}
             searchPredicate={searchPerson}
+            filters={
+              <DropdownSelect
+                labelPrefix={t("roster.class")}
+                value={classFilter()}
+                onChange={setClassFilter}
+                options={[{ value: "", label: t("common.all") }, ...classOptions()]}
+              />
+            }
+            filtersActive={classFilter() !== ""}
+            pageResetKey={classFilter()}
+            onClearFilters={() => setClassFilter("")}
             filterHint={t("search.hint.people")}
             enablePagination
             pageSize={PAGE_SIZE}

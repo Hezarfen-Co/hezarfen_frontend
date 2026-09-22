@@ -3,6 +3,7 @@ import type { ComponentProps, ValidComponent } from "solid-js";
 import { splitProps } from "solid-js";
 import { IconCheck, IconChevronDown } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { useT } from "@/stores/preferences-context";
 
 export const Combobox = ComboboxPrimitive;
 export const ComboboxItemLabel = ComboboxPrimitive.ItemLabel;
@@ -42,10 +43,13 @@ export function ComboboxInput<T extends ValidComponent = "input">(
 export function ComboboxTrigger<T extends ValidComponent = "button">(
   props: ComponentProps<typeof ComboboxPrimitive.Trigger<T>>,
 ) {
+  const t = useT();
   const [local, rest] = splitProps(props as ComponentProps<typeof ComboboxPrimitive.Trigger>, ["class"]);
   return (
     <ComboboxPrimitive.Trigger
       class={cn("flex h-full shrink-0 items-center pr-3 pl-1 text-muted-foreground/70 outline-hidden", local.class)}
+      // Kobalte's built-in name is an English "Show suggestions".
+      aria-label={t("combobox.showSuggestions")}
       {...rest}
     >
       <ComboboxPrimitive.Icon>
@@ -62,11 +66,14 @@ export function ComboboxContent<T extends ValidComponent = "div">(
     "class",
     "children",
   ]);
+  // Capped at the viewport: sized by its longest option, the list otherwise
+  // outgrows a phone screen and drags the whole page sideways. Long options
+  // wrap instead (ComboboxItem).
   return (
     <ComboboxPrimitive.Portal>
       <ComboboxPrimitive.Content
         class={cn(
-        "z-[70] mt-1.5 max-h-72 min-w-(--kb-popper-anchor-width) overflow-hidden rounded-md border border-border/80 bg-popover p-1 text-popover-foreground shadow-xl shadow-black/10 outline-hidden",
+        "z-[70] mt-1.5 max-h-72 min-w-(--kb-popper-anchor-width) max-w-[calc(100vw-1rem)] overflow-hidden rounded-md border border-border/80 bg-popover p-1 text-popover-foreground shadow-xl shadow-black/10 outline-hidden",
           "origin-(--kb-combobox-content-transform-origin) animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           local.class,
         )}
@@ -86,7 +93,7 @@ export function ComboboxItem<T extends ValidComponent = "li">(
   return (
     <ComboboxPrimitive.Item
       class={cn(
-        "relative flex cursor-pointer select-none items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors",
+        "relative flex cursor-pointer select-none items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors [&>:first-child]:min-w-0 [&>:first-child]:break-words",
         "data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
         local.class,
       )}

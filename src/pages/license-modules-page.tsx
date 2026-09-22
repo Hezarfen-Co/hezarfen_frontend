@@ -6,7 +6,7 @@ import { formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge, ComingSoonPanel, ComingSoonValue } from "@/components/ui/coming-soon";
+import { ComingSoonBadge, ComingSoonPanel } from "@/components/ui/coming-soon";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconDownload, IconPackage, IconPlus } from "@/components/ui/icons";
@@ -79,9 +79,9 @@ function LicenseModulesContent() {
         </Badge>
       ),
     },
-    { id: "unitPrice", header: t("modules.unitPrice"), meta: { align: "right", hideInCards: true }, enableSorting: false, cell: () => <ComingSoonValue /> },
-    { id: "seats", header: t("modules.activeSeats"), meta: { align: "right", hideInCards: true }, enableSorting: false, cell: () => <ComingSoonValue /> },
-    { id: "annual", header: t("modules.annualAmount"), meta: { align: "right", hideInCards: true }, enableSorting: false, cell: () => <ComingSoonValue /> },
+    // Unit price, seats and annual amount have no licensing/billing endpoint
+    // behind them, so those design columns are left out rather than filled
+    // with "yakında".
   ]);
 
   return (
@@ -100,7 +100,7 @@ function LicenseModulesContent() {
         </TabsList>
       </Tabs>
 
-      <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
+      <Suspense fallback={<DataTableSkeleton columns={2} rows={8} />}>
         <Show when={data.error}>
           <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
         </Show>
@@ -118,24 +118,18 @@ function LicenseModulesContent() {
                     </div>
                     <p class="text-sm text-text-subtle">{enabledPackages().join(" + ") || "—"}</p>
                   </div>
-                  <div class="text-right">
-                    <ComingSoonValue class="justify-end" />
-                    <p class="mt-1 text-xs text-text-subtle">{t("modules.annualTotal")}</p>
-                  </div>
                 </div>
                 <div class="h-2 overflow-hidden rounded-full bg-surface-tint" role="progressbar" aria-valuemin={0} aria-valuemax={totalCount()} aria-valuenow={enabledCount()}>
                   <div class="h-full rounded-full bg-primary" style={{ width: `${totalCount() ? (enabledCount() / totalCount()) * 100 : 0}%` }} />
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
                   <span class="text-text-subtle">{t("modules.enabledCount", { on: String(enabledCount()), total: String(totalCount()) })}</span>
-                  <span class="flex items-center gap-2 text-text-default">
-                    {t("modules.renewal")}: <ComingSoonValue />
-                  </span>
                 </div>
               </section>
 
               <section class="space-y-4 p-0">
                 <DataTable
+                  urlState
                   title={t("nav.licenseModules")}
                   description={t("modules.subtitle")}
                   actions={<><Button size="sm" variant="outline" class="min-w-[7.5rem] rounded-lg" disabled title={t("comingSoon.title")}>
@@ -150,7 +144,7 @@ function LicenseModulesContent() {
           </Button></>}
                   columns={columns()}
                   data={value().rows}
-                  tableClass="min-w-[760px]"
+                  tableClass="min-w-md"
                   enablePagination={false}
                   storageKey="license-modules"
                 />

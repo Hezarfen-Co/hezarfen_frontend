@@ -16,6 +16,7 @@ import {
 } from "@/lib/insight-run-report";
 import { cn } from "@/lib/cn";
 import { matchesSearch } from "@/lib/search-text";
+import { formatDate } from "@/lib/format";
 import { usePreferences } from "@/stores/preferences-context";
 
 type Filter = "all" | "attention" | "none";
@@ -51,14 +52,8 @@ export function InsightStudentsTable(props: {
   }));
   const loaded = (row: StudentSignal) => row.state === "ok";
   const muted = "text-muted-foreground";
-  const calculatedDate = (value: number | null | undefined) => {
-    if (value == null) return "—";
-    return new Intl.DateTimeFormat(locale() === "tr" ? "tr-TR" : "en-US", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(new Date(value));
-  };
+  // The app-wide "18 Eyl 2026" date, not a numeric 18.09.2026.
+  const calculatedDate = (value: number | null | undefined) => formatDate(value, locale());
 
   // Widths sum to ~1095px with the action column, so the grid fits a 1440px
   // screen beside the sidebar; at the 120px default every column got, the

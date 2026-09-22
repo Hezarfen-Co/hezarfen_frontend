@@ -18,8 +18,8 @@ export type TablePaginationProps = {
 
 /**
  * Footer: "a-b / total" + prev / "page / count" / next, on one row at every
- * width. The buttons are full touch targets on phones and compact from `sm`
- * up. A single page keeps the row count but drops the buttons — two disabled
+ * width. The buttons are full touch targets on phones and touch screens,
+ * compact otherwise. A single page keeps the row count but drops the buttons — two disabled
  * arrows around "1 / 1" only take room.
  */
 export function TablePagination(props: TablePaginationProps) {
@@ -27,7 +27,7 @@ export function TablePagination(props: TablePaginationProps) {
   const hasRange = () => props.total != null && props.pageSize != null;
   const start = () => (!props.total || !props.pageSize ? 0 : props.pageIndex * props.pageSize + 1);
   const end = () => Math.min((props.pageIndex + 1) * (props.pageSize ?? 0), props.total ?? 0);
-  const navButton = "h-10 w-10 gap-1 px-0 text-xs sm:h-7 sm:w-auto sm:px-1.5 sm:text-[11px]";
+  const navButton = "h-10 w-10 gap-1 px-0 text-xs sm:h-7 sm:w-auto sm:px-1.5 sm:text-[11px] touch:h-10 touch:min-w-10";
 
   return (
     // Nothing to count and nowhere to go: an empty frame would only take room.

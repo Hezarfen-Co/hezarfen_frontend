@@ -26,7 +26,7 @@ export function DataTableViewMenu(props: DataTableViewMenuProps) {
 
   return (
     <DropdownMenu placement="bottom-end" gutter={6}>
-      <DropdownMenuTrigger class="ml-auto inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border/70 bg-muted/40 px-3 text-[13px] font-medium transition-all hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+      <DropdownMenuTrigger class="ml-auto inline-flex h-8 touch:h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border/70 bg-muted/40 px-3 text-[13px] font-medium transition-all hover:bg-muted active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
         {t("common.columns")}
         <IconChevronDown class="h-3.5 w-3.5 opacity-60" />
       </DropdownMenuTrigger>

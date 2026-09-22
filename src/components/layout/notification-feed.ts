@@ -1,5 +1,6 @@
 import { createMemo, createSignal } from "solid-js";
 import { patchMessageById } from "@/api/messages";
+import { createInstanceLabels } from "@/lib/instance-labels";
 import { personLabel } from "@/lib/person";
 import {
   dismissAllNotificationIds,
@@ -10,6 +11,7 @@ import {
   type NotificationItem,
   type NotificationType,
 } from "@/lib/notifications";
+import { useAuth } from "@/stores/auth-context";
 import { usePreferences } from "@/stores/preferences-context";
 import { useShellFeed } from "@/stores/shell-feed-context";
 
@@ -36,6 +38,21 @@ export function createNotificationFeed() {
 
   // An item is still notifiable until it has ended (ends_at, else starts_at).
   const notEnded = (starts: number, ends?: number | null) => (ends ?? starts) >= nowMs();
+
+  // Exams and homework of one ders taught in two şubeler share titles; the
+  // row's description names "<ders> — <şube>" so they can be told apart.
+  const auth = useAuth();
+  const sectionLabels = createInstanceLabels(
+    () => [
+      ...feed.exams().items.filter((ex) => ex.starts_at && !ex.draft && notEnded(ex.starts_at, ex.ends_at)).map((ex) => ex.class_course),
+      ...feed.homework().items.filter((hw) => hw.due_at >= nowMs()).map((hw) => hw.class_course),
+    ],
+    () => auth.user()?.role,
+  );
+  const withSection = (instanceId: string, text: string) => {
+    const label = sectionLabels()[instanceId]?.label;
+    return label ? (text ? `${label} · ${text}` : label) : text;
+  };
 
   // Combine notification items
   const allNotifications = createMemo<NotificationItem[]>(() => {
@@ -92,14 +109,15 @@ export function createNotificationFeed() {
           id: `ex_${ex.id}`,
           type: "exam",
           title: ex.title,
-          description: ex.starts_at
-            ? new Date(ex.starts_at).toLocaleString(dateLocale(), {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "",
+          description: withSection(
+            ex.class_course,
+            new Date(ex.starts_at).toLocaleString(dateLocale(), {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          ),
           targetUrl: `/exams/${ex.id}`,
           timestamp: t,
         });
@@ -115,12 +133,13 @@ export function createNotificationFeed() {
           id: `hw_${hw.id}`,
           type: "homework",
           title: hw.title,
-          description: hw.due_at
-            ? `${t("homework.dueAt")}: ${new Date(hw.due_at).toLocaleDateString(dateLocale(), {
-                month: "short",
-                day: "numeric",
-              })}`
-            : "",
+          description: withSection(
+            hw.class_course,
+            `${t("homework.dueAt")}: ${new Date(hw.due_at).toLocaleDateString(dateLocale(), {
+              month: "short",
+              day: "numeric",
+            })}`,
+          ),
           targetUrl: `/homework/${hw.id}`,
           timestamp: hw.due_at,
         });

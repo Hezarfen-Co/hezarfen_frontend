@@ -174,6 +174,9 @@ function AdminUserDetailContent() {
               open={roleConfirmOpen()}
               onOpenChange={setRoleConfirmOpen}
               title={t("confirm.updateTitle")}
+              description={current().role === "admin" && pendingRole() !== "admin" ? t("admin.demoteAdminWarning") : undefined}
+              variant={current().role === "admin" && pendingRole() !== "admin" ? "destructive" : "default"}
+              confirmLabel={t("confirm.confirmUpdate")}
               summary={t("confirm.updateRole", {
                 user: current().username,
                 from: t(`role.${current().role}` as MessageKey),
