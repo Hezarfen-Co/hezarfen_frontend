@@ -2,7 +2,38 @@
 
 Source: `Hezarfen App Design` (`E8K670gsUx87yMOySGWrKf`)
 
-Last reviewed: 2026-09-13
+Last reviewed: 2026-09-22
+
+## Drift since the 2026-09-13 captures (2026-09-22 review)
+
+About 40 commits landed after the last capture pass, so "full app parity"
+below no longer holds. The 2026-09-22 pass captured from the deployed app
+(`https://hezarfen.dizey.sh`, demo school, admin account only):
+
+- New admin-page frames for routes that had none, starting at `ADM-30`
+  (`/ai/insights`) and `ADM-30a` (`/ai/insights/:userId`). Still without a
+  frame unless the Admin page shows them: `/ai/question-generation`,
+  `/ai/studio`, `/ai/study`, `/instances/:id`, `/management/academic-years`,
+  `/notes/new`.
+- Stale admin frames to recapture: ADM-02, ADM-05, ADM-08 (their "yakında"
+  columns and KPI cards were removed in `691fcf8`), ADM-04 and ADM-16 (AI hub
+  retired; `/ai/*` routes replaced them).
+- The `Web / Sidebar / *` components predate six nav restructures in
+  `nav-items.ts`; re-sync them before any recapture.
+- **Waiting on role accounts:** the Teacher, Student, Parent, Student Mobile,
+  Parent Mobile and Dark Mode pages are stale (row-actions menu `365bc38`,
+  phone quick-action button `ba7ff56`, phone tables `ee4b86b`, menu-sheet
+  account view `10d1fa4`, `/ai/study` and `/ai/studio` redesigns `dcf123a`).
+  The demo server has only an admin account; recapture these when teacher,
+  student and parent logins exist.
+- `/students/attendance`, `/students/exams` and `/students/study` are
+  student-only views; as staff they show the explanation state, so they need a
+  student login to capture.
+- Superseded by `691fcf8`: the "How a missing value is shown" rule below. Every
+  non-nav "Yakında" tab, button, panel and field was removed from the app; nav
+  entries are the only remaining "yakında" surface. The `/management/students`,
+  `/management/teachers` and `/management/modules` rows no longer carry
+  "yakında" columns.
 
 This document is the route-level source of truth for the Figma migration. A
 Figma example never replaces a working authorization rule, API contract,
