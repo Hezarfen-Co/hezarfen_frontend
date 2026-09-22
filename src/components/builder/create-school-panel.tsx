@@ -13,8 +13,6 @@ import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
 import { useT } from "@/stores/preferences-context";
 
-const SLUG_PATTERN = "[a-z0-9][a-z0-9-]+";
-
 /** Creates a school with its first admin and, optionally, a hand-picked module set. */
 export function CreateSchoolPanel(props: { open: boolean; onOpenChange: (open: boolean) => void; onCreated: (school: School) => void }) {
   const t = useT();
@@ -23,7 +21,6 @@ export function CreateSchoolPanel(props: { open: boolean; onOpenChange: (open: b
     () => props.open || undefined,
     () => getLimits().catch(() => null),
   );
-  const [slug, setSlug] = createSignal("");
   const [name, setName] = createSignal("");
   const [adminUsername, setAdminUsername] = createSignal("");
   const [adminPassword, setAdminPassword] = createSignal("");
@@ -33,7 +30,6 @@ export function CreateSchoolPanel(props: { open: boolean; onOpenChange: (open: b
   const [pending, setPending] = createSignal(false);
 
   const reset = () => {
-    setSlug("");
     setName("");
     setAdminUsername("");
     setAdminPassword("");
@@ -50,7 +46,6 @@ export function CreateSchoolPanel(props: { open: boolean; onOpenChange: (open: b
     setPending(true);
     try {
       const school = await postSchool({
-        slug: slug().trim(),
         name: name().trim(),
         admin_username: adminUsername().trim(),
         admin_password: adminPassword(),
@@ -83,11 +78,6 @@ export function CreateSchoolPanel(props: { open: boolean; onOpenChange: (open: b
           <Alert variant="destructive">{error()}</Alert>
         </Show>
         <div class="grid gap-4 sm:grid-cols-2">
-          <div class="space-y-1.5">
-            <Label for="school-slug">{t("builder.slug")}</Label>
-            <Input id="school-slug" class="rounded-lg" required pattern={SLUG_PATTERN} minlength={limits()?.user.min_slug_len ?? 2} maxlength={limits()?.user.max_slug_len ?? 32} value={slug()} onInput={(e) => setSlug(e.currentTarget.value.toLowerCase())} />
-            <p class="text-xs text-text-subtle">{t("builder.slugHint")}</p>
-          </div>
           <div class="space-y-1.5">
             <Label for="school-name">{t("builder.schoolName")}</Label>
             <Input id="school-name" class="rounded-lg" required maxlength={limits()?.user.max_school_name_len ?? 120} value={name()} onInput={(e) => setName(e.currentTarget.value)} />

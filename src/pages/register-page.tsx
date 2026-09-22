@@ -1,13 +1,14 @@
 import { Link, useNavigate } from "@tanstack/solid-router";
-import { createSignal, Show } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
-import { postRegister } from "@/api/auth";
+import { getRegisterSchools, postRegister } from "@/api/auth";
 import { getLimits } from "@/api/limits";
 import { formatApiError } from "@/api/client";
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { GuestGuard } from "@/components/layout/guest-guard";
 import { IconEye, IconEyeOff } from "@/components/ui/icons";
 import { useT } from "@/stores/preferences-context";
@@ -34,8 +35,8 @@ function RegisterForm() {
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [limits] = createResource(() => getLimits().catch(() => null));
-  const minSchoolSlugLength = () => limits()?.user.min_slug_len ?? 2;
-  const maxSchoolSlugLength = () => limits()?.user.max_slug_len ?? 32;
+  const [schools] = createResource(() => getRegisterSchools());
+  const noSchoolOpen = () => schools.state === "ready" && !schools.error && (schools() ?? []).length === 0;
   const minPasswordLength = () => limits()?.user.min_password_len ?? 6;
   // Inline checks wait until the reader has left the field (or, for the
   // confirmation, typed as many characters as the password) so they never
@@ -53,13 +54,10 @@ function RegisterForm() {
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     const s = school().trim();
+    if (!s) return;
     const u = username().trim();
     const p = password();
     const cp = confirmPassword();
-    if (s.length < minSchoolSlugLength() || s.length > maxSchoolSlugLength()) {
-      setError(t("auth.schoolHint", { min: minSchoolSlugLength(), max: maxSchoolSlugLength() }));
-      return;
-    }
     const userLimits = limits()?.user;
     if (userLimits && (u.length < userLimits.min_username_len || u.length > userLimits.max_username_len)) {
       setError(t("auth.usernameHint"));
@@ -97,24 +95,23 @@ function RegisterForm() {
         <form class="space-y-5" onSubmit={handleSubmit}>
           <div class="space-y-2">
             <Label for="register-school">{t("auth.school")}</Label>
-            <Input
+            <Select
               id="register-school"
               class="h-9"
-              autocapitalize="none"
-              autocomplete="off"
-              spellcheck={false}
-              minlength={minSchoolSlugLength()}
-              maxlength={maxSchoolSlugLength()}
               required
-              aria-describedby="register-school-hint"
+              disabled={schools.loading || noSchoolOpen() || Boolean(schools.error)}
               value={school()}
-              // A school code (slug) is lowercase; folding here saves a
-              // round trip for "Ata-Koleji".
-              onInput={(e) => setSchool(e.currentTarget.value.toLowerCase())}
-            />
-            <p id="register-school-hint" class="text-xs text-text-subtle">
-              {t("auth.schoolCodeHint", { min: minSchoolSlugLength(), max: maxSchoolSlugLength() })}
-            </p>
+              onChange={(e) => setSchool(e.currentTarget.value)}
+            >
+              <option value="">{t("auth.chooseSchoolTitle")}</option>
+              <For each={schools() ?? []}>{(item) => <option value={item.id}>{item.name}</option>}</For>
+            </Select>
+            <Show when={noSchoolOpen()}>
+              <p class="text-sm text-text-subtle">{t("auth.noSchoolOpen")}</p>
+            </Show>
+            <Show when={schools.error}>
+              <p class="text-sm text-destructive-text">{formatApiError(schools.error)}</p>
+            </Show>
           </div>
 
           <div class="space-y-2">
@@ -206,7 +203,7 @@ function RegisterForm() {
             <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>
           )}
 
-          <Button type="submit" class="h-9 w-full text-sm" disabled={pending()}>
+          <Button type="submit" class="h-9 w-full text-sm" disabled={pending() || schools.loading || noSchoolOpen() || Boolean(schools.error) || !school()}>
             {pending() ? t("common.loading") : t("auth.register")}
           </Button>
         </form>

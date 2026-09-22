@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { getRegisterSchools } from "../../auth";
 import { postLogin } from "../../auth";
 import { postLogout } from "../../auth";
 import { postRegister } from "../../auth";
@@ -27,13 +28,14 @@ describe("auth API", () => {
     const mockUser = { id: "u1", username: "test" };
     mockFetchSuccess(mockUser);
 
-    const result = await postSelectSchool({ school: "demo" });
+    const school = "019732e3-7b00-7000-8000-00000000dead";
+    const result = await postSelectSchool({ school });
     expect(result).toEqual(mockUser);
 
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/auth/school");
     expect(init?.method).toBe("POST");
-    expect(init?.body).toBe(JSON.stringify({ school: "demo" }));
+    expect(init?.body).toBe(JSON.stringify({ school }));
   });
 
   it("postLogout calls /auth/logout", async () => {
@@ -50,7 +52,7 @@ describe("auth API", () => {
     const mockResponse = { username: "newuser", role: "student" };
     mockFetchSuccess(mockResponse);
 
-    const data = { school: "demo", username: "newuser", password: "password" };
+    const data = { school: "019732e3-7b00-7000-8000-00000000dead", username: "newuser", password: "password" };
     const result = await postRegister(data);
     expect(result).toEqual(mockResponse);
 
@@ -58,5 +60,17 @@ describe("auth API", () => {
     expect(url).toBe("/api/auth/register");
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe(JSON.stringify(data));
+  });
+
+  it("getRegisterSchools reads active schools for the register picker", async () => {
+    const schools = [{ id: "019732e3-7b00-7000-8000-00000000dead", name: "Hezarfen" }];
+    mockFetchSuccess(schools);
+
+    const result = await getRegisterSchools();
+    expect(result).toEqual(schools);
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/auth/schools");
+    expect(init?.method).toBe("GET");
   });
 });

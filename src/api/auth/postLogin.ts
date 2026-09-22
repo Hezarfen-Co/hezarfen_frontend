@@ -7,7 +7,7 @@ export type LoginBody = {
 };
 
 export type SchoolChoice = {
-  slug: string;
+  id: string;
   name: string;
 };
 

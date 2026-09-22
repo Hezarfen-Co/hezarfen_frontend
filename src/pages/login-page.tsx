@@ -205,14 +205,14 @@ function LoginForm() {
                     variant="outline"
                     class="h-auto w-full justify-start px-4 py-3 text-left"
                     disabled={pending()}
-                    onClick={() => void handleSchoolSelect(school.slug)}
+                    onClick={() => void handleSchoolSelect(school.id)}
                   >
                     <IconSchool class="h-5 w-5 shrink-0 text-primary-text" />
                     <span class="min-w-0 flex-1">
                       <span class="block truncate font-semibold text-text-strong">{school.name}</span>
-                      <span class="block truncate text-xs font-normal text-text-subtle">{school.slug}</span>
+                      <span class="block truncate text-xs font-normal text-text-subtle">{school.id}</span>
                     </span>
-                    <Show when={selectingSchool() === school.slug}>
+                    <Show when={selectingSchool() === school.id}>
                       <span class="text-xs font-normal text-text-subtle">{t("common.loading")}</span>
                     </Show>
                   </Button>

@@ -188,7 +188,7 @@ export type SchoolStatus = "active" | "suspended";
 
 /** One school of the deployment, as the builder surface sees it. */
 export type School = {
-  slug: string;
+  id: string;
   name: string;
   /** A suspended school refuses every one of its own users, login included. */
   status: SchoolStatus;
@@ -831,11 +831,8 @@ export type Limits = {
   max_username_len: number;
   username_separators: string[];
   reserved_usernames: string[];
-  reserved_slugs: string[];
   min_password_len: number;
   max_password_len: number;
-  min_slug_len: number;
-  max_slug_len: number;
   max_school_name_len: number;
   max_name_len: number;
   max_display_name_len: number;

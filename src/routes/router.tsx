@@ -542,7 +542,7 @@ const builderSchoolsRoute = createRoute({
 
 const builderSchoolDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/builder/schools/$slug",
+  path: "/builder/schools/$id",
   component: BuilderSchoolDetailPage,
 });
 

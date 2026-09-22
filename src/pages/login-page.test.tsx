@@ -54,8 +54,8 @@ test("logs in without a school and completes the multi-school selection", async 
   postLogin.mockResolvedValue({
     username: "ada",
     schools: [
-      { slug: "alpha", name: "Alpha School" },
-      { slug: "beta", name: "Beta School" },
+      { id: "019732e3-7b00-7000-8000-00000000dead", name: "Alpha School" },
+      { id: "019732e3-7b00-7000-8000-00000000beef", name: "Beta School" },
     ],
   });
   postSelectSchool.mockResolvedValue({ id: "u1", username: "ada", role: "student" });
@@ -74,7 +74,7 @@ test("logs in without a school and completes the multi-school selection", async 
   fireEvent.click(screen.getByText("Alpha School").closest("button")!);
 
   await waitFor(() => {
-    expect(postSelectSchool).toHaveBeenCalledWith({ school: "alpha" });
+    expect(postSelectSchool).toHaveBeenCalledWith({ school: "019732e3-7b00-7000-8000-00000000dead" });
     expect(refresh).toHaveBeenCalledOnce();
     expect(navigate).toHaveBeenCalledWith({ to: "/" });
   });

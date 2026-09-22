@@ -133,10 +133,6 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     tr: "Tekrarlanan müsaitlikler birbiriyle çakışıyor.",
   },
   // Builder surface (web/builder.rs, tenant.rs) — byte-exact.
-  "school slug already taken": {
-    en: "That school code is already taken.",
-    tr: "Bu okul kodu zaten kullanılıyor.",
-  },
   "that account is not an admin of this school": {
     en: "That account exists but is not an admin of this school.",
     tr: "Bu hesap var ama bu okulun yöneticisi değil.",

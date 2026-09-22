@@ -2,7 +2,7 @@ import { Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { deleteSchoolBySlug, getSchools, patchSchoolBySlug } from "@/api/schools";
+import { deleteSchool, getSchools, patchSchool } from "@/api/schools";
 import { formatApiError, type School } from "@/api/client";
 import { BuilderGuard } from "@/components/builder/builder-guard";
 import { BuilderHeader } from "@/components/builder/builder-header";
@@ -42,12 +42,12 @@ function BuilderSchoolsContent() {
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
 
-  const open = (school: School) => void navigate({ to: "/builder/schools/$slug", params: { slug: school.slug } });
+  const open = (school: School) => void navigate({ to: "/builder/schools/$id", params: { id: school.id } });
 
   const setStatus = async (school: School, status: School["status"]) => {
     setError("");
     try {
-      await patchSchoolBySlug(school.slug, { status });
+      await patchSchool(school.id, { status });
       await refetch();
       setFlash(t("common.saved"));
     } catch (err) {
@@ -59,12 +59,14 @@ function BuilderSchoolsContent() {
     {
       accessorKey: "name",
       header: t("builder.schoolName"),
-      cell: (cell) => <span class="font-medium">{cell.row.original.name}</span>,
-    },
-    {
-      accessorKey: "slug",
-      header: t("builder.slug"),
-      cell: (cell) => <span class="mono text-sm">{cell.row.original.slug}</span>,
+      cell: (cell) => (
+        <span class="block min-w-0">
+          <span class="block font-medium">{cell.row.original.name}</span>
+          <span class="block truncate font-mono text-xs text-text-subtle" title={cell.row.original.id}>
+            {cell.row.original.id.slice(0, 8)}
+          </span>
+        </span>
+      ),
     },
     {
       accessorKey: "status",
@@ -157,12 +159,12 @@ function BuilderSchoolsContent() {
         title={t("builder.deleteSchool")}
         description={t("builder.deleteSchoolWarning")}
         variant="destructive"
-        summary={deleteTarget() ? `${deleteTarget()!.name} · ${deleteTarget()!.slug}` : ""}
+        summary={deleteTarget() ? `${deleteTarget()!.name} · ${deleteTarget()!.id}` : ""}
         onConfirm={async () => {
           const school = deleteTarget();
           if (!school) return;
           try {
-            await deleteSchoolBySlug(school.slug);
+            await deleteSchool(school.id);
             await refetch();
             setFlash(t("common.deleted"));
           } catch (err) {

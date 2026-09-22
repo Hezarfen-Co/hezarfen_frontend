@@ -3,11 +3,11 @@ import { createResource } from "@/lib/create-resource";
 import { useNavigate, useParams } from "@tanstack/solid-router";
 import { getModulesCatalog } from "@/api/modules";
 import {
-  deleteSchoolBySlug,
+  deleteSchool,
   deleteSchoolModule,
-  getSchoolBySlug,
+  getSchool,
   getSchoolModules,
-  patchSchoolBySlug,
+  patchSchool,
   patchSchoolModules,
   postSchoolModule,
 } from "@/api/schools";
@@ -51,12 +51,12 @@ function BuilderSchoolDetailContent() {
   const { locale } = usePreferences();
   const auth = useAuth();
   const navigate = useNavigate();
-  const params = useParams({ from: "/builder/schools/$slug" });
-  const slug = () => params().slug;
+  const params = useParams({ from: "/builder/schools/$id" });
+  const id = () => params().id;
 
-  const [school, { refetch: refetchSchool }] = createResource(slug, (value) => getSchoolBySlug(value));
+  const [school, { refetch: refetchSchool }] = createResource(id, (value) => getSchool(value));
   const [catalog] = createResource(() => getModulesCatalog());
-  const [modules] = createResource(slug, (value) => getSchoolModules(value));
+  const [modules] = createResource(id, (value) => getSchoolModules(value));
 
   // The switchboard owns a local copy: each switch is one write whose response
   // is the school's whole new set, so there is nothing to refetch.
@@ -105,7 +105,7 @@ function BuilderSchoolDetailContent() {
     event.preventDefault();
     setEditError("");
     try {
-      await patchSchoolBySlug(slug(), { name: name().trim(), status: status() });
+      await patchSchool(id(), { name: name().trim(), status: status() });
       setEditOpen(false);
       await refetchSchool();
       setFlash(t("common.saved"));
@@ -127,7 +127,7 @@ function BuilderSchoolDetailContent() {
               <PageHeader
                 eyebrow={t("builder.schools")}
                 title={current().name}
-                description={`${current().slug} · ${t("builder.createdAt")}: ${formatDateTime(current().created_at, locale())}`}
+                description={`${current().id} · ${t("builder.createdAt")}: ${formatDateTime(current().created_at, locale())}`}
                 actions={
                   <div class="flex flex-wrap items-center gap-2">
                     <SchoolStatusBadge status={current().status} />
@@ -180,10 +180,10 @@ function BuilderSchoolDetailContent() {
                       enabled={enabled()}
                       disabled={modulesSaving()}
                       onToggle={(module, next) =>
-                        void writeModules(() => (next ? postSchoolModule(slug(), module) : deleteSchoolModule(slug(), module)))
+                        void writeModules(() => (next ? postSchoolModule(id(), module) : deleteSchoolModule(id(), module)))
                       }
                       onTogglePackage={(pkg, next) =>
-                        void writeModules(() => patchSchoolModules(slug(), next ? { enable_packages: [pkg] } : { disable_packages: [pkg] }))
+                        void writeModules(() => patchSchoolModules(id(), next ? { enable_packages: [pkg] } : { disable_packages: [pkg] }))
                       }
                     />
                   )}
@@ -223,7 +223,7 @@ function BuilderSchoolDetailContent() {
       </SidePanel>
 
       <SchoolAdminAccessPanel
-        slug={slug()}
+        id={id()}
         mode={accessMode()}
         onClose={() => setAccessMode(null)}
         onPasswordReset={() => {
@@ -244,10 +244,10 @@ function BuilderSchoolDetailContent() {
         title={t("builder.deleteSchool")}
         description={t("builder.deleteSchoolWarning")}
         variant="destructive"
-        summary={school() ? `${school()!.name} · ${school()!.slug}` : ""}
+        summary={school() ? `${school()!.name} · ${school()!.id}` : ""}
         onConfirm={async () => {
           try {
-            await deleteSchoolBySlug(slug());
+            await deleteSchool(id());
             void navigate({ to: "/builder" });
           } catch (err) {
             setError(formatApiError(err));

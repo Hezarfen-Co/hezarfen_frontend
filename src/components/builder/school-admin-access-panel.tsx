@@ -16,7 +16,7 @@ export type AdminAccessMode = "enter" | "password";
  * re-keys the admin and revokes every session it held.
  */
 export function SchoolAdminAccessPanel(props: {
-  slug: string;
+  id: string;
   mode: AdminAccessMode | null;
   onClose: () => void;
   onEntered: () => void;
@@ -40,11 +40,11 @@ export function SchoolAdminAccessPanel(props: {
     setPending(true);
     try {
       if (props.mode === "enter") {
-        await postSchoolEnter(props.slug, { username: username().trim() });
+        await postSchoolEnter(props.id, { username: username().trim() });
         reset();
         props.onEntered();
       } else {
-        await postSchoolAdminPassword(props.slug, { username: username().trim(), password: password() });
+        await postSchoolAdminPassword(props.id, { username: username().trim(), password: password() });
         reset();
         props.onPasswordReset();
       }

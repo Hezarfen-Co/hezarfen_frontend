@@ -1,16 +1,23 @@
 import { expect, test } from "@playwright/test";
 
-const school = process.env.E2E_SCHOOL_SLUG ?? "demo";
+const schoolId = process.env.E2E_SCHOOL_ID;
 const username = process.env.E2E_ADMIN_USERNAME ?? "admin";
 const password = process.env.E2E_ADMIN_PASSWORD ?? "admin123";
 
 test("sign-in reaches the authenticated shell with keyboard-accessible navigation", async ({ page }) => {
   await page.goto("/login");
   await expect(page.locator("#login-username")).toBeVisible();
-  await page.locator("#login-school").fill(school);
   await page.locator("#login-username").fill(username);
   await page.locator("#login-password").fill(password);
   await page.locator("form").getByRole("button", { name: /log in|sign in|giriş yap/i }).click();
+
+  const chooser = page.getByRole("heading", { name: /choose your school|okulunu seç/i });
+  const shell = page.getByRole("main");
+  await expect(chooser.or(shell)).toBeVisible();
+  if (await chooser.isVisible()) {
+    if (!schoolId) throw new Error("login returned a school chooser; set E2E_SCHOOL_ID to the school uuid");
+    await page.getByRole("button", { name: schoolId }).click();
+  }
 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("main")).toBeVisible();

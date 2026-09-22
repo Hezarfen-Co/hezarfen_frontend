@@ -9,6 +9,6 @@ export type PatchSchoolModulesBody = {
 };
 
 // One atomic re-sell: a 409 names every broken dependency and nothing is written.
-export function patchSchoolModules(slug: string, body: PatchSchoolModulesBody): Promise<SchoolModules> {
-  return client<SchoolModules>(`/schools/${encodeURIComponent(slug)}/modules`, { method: "PATCH", body });
+export function patchSchoolModules(id: string, body: PatchSchoolModulesBody): Promise<SchoolModules> {
+  return client<SchoolModules>(`/schools/${encodeURIComponent(id)}/modules`, { method: "PATCH", body });
 }

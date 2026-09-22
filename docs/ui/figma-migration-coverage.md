@@ -162,7 +162,7 @@ Rules the captures follow:
 | `/profile/:userId` | ADM-29 Kullanıcı Profili | Captured from the running app |
 | `/builder/login` | BLD-01 Operatör Girişi | Builder session only; linked from the SYS-01/login footer |
 | `/builder` | BLD-02 Okullar, BLD-02a Yeni Okul | Create, suspend/activate, delete |
-| `/builder/schools/:slug` | BLD-03 Okul Detayı, BLD-03a Okula Gir | Module switchboard, password reset, enter as admin |
+| `/builder/schools/:id` | BLD-03 Okul Detayı, BLD-03a Okula Gir | Module switchboard, password reset, enter as admin |
 
 ## Figma features blocked by product or backend scope
 

@@ -6,7 +6,7 @@ const SKIP_KEY = "hezarfen:dev-auto-login-off";
 /**
  * Development-only sign-in with credentials from `.env.local`
  * (`VITE_DEV_AUTOLOGIN_USERNAME`, `VITE_DEV_AUTOLOGIN_PASSWORD`, optional
- * `VITE_DEV_AUTOLOGIN_SCHOOL`). `import.meta.env.DEV` is a build-time false in
+ * `VITE_DEV_AUTOLOGIN_SCHOOL`, a school uuid). `import.meta.env.DEV` is a build-time false in
  * `vite build`, so the whole body is dropped from production bundles.
  * An explicit logout turns it off for the rest of the tab.
  */
@@ -18,7 +18,7 @@ export async function devAutoLogin(): Promise<User | null> {
   try {
     const result = await postLogin({ username, password });
     if (!("schools" in result)) return result;
-    const school = import.meta.env.VITE_DEV_AUTOLOGIN_SCHOOL || result.schools[0]?.slug;
+    const school = import.meta.env.VITE_DEV_AUTOLOGIN_SCHOOL || result.schools[0]?.id;
     return school ? await postSelectSchool({ school }) : null;
   } catch (err) {
     console.warn("Dev auto-login failed:", err);

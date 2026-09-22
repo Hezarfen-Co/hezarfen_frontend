@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deleteSchoolBySlug } from "../../schools";
+import { deleteSchool } from "../../schools";
 import { deleteSchoolModule } from "../../schools";
-import { getSchoolBySlug } from "../../schools";
+import { getSchool } from "../../schools";
 import { getSchoolModules } from "../../schools";
 import { getSchools } from "../../schools";
-import { patchSchoolBySlug } from "../../schools";
+import { patchSchool } from "../../schools";
 import { patchSchoolModules } from "../../schools";
 import { postSchool } from "../../schools";
 import { postSchoolAdminPassword } from "../../schools";
@@ -12,7 +12,8 @@ import { postSchoolEnter } from "../../schools";
 import { postSchoolModule } from "../../schools";
 import { lastFetchCall, mockFetch204, mockFetchSuccess } from "../helpers/mock-fetch";
 
-const school = { slug: "ata-koleji", name: "Ata Koleji", status: "active", created_at: 1, modules: ["courses"] };
+const schoolId = "019732e3-7b00-7000-8000-00000000dead";
+const school = { id: schoolId, name: "Ata Koleji", status: "active", created_at: 1, modules: ["courses"] };
 const modules = { enabled: ["courses"], disabled: ["exams"] };
 
 describe("schools API", () => {
@@ -31,19 +32,19 @@ describe("schools API", () => {
     expect(init?.method).toBe("GET");
   });
 
-  it("getSchoolBySlug reads /schools/{slug}", async () => {
+  it("getSchool reads /schools/{id}", async () => {
     mockFetchSuccess(school);
 
-    await getSchoolBySlug("ata-koleji");
+    await getSchool(schoolId);
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/schools/ata-koleji");
+    expect(url).toBe(`/api/schools/${schoolId}`);
     expect(init?.method).toBe("GET");
   });
 
   it("postSchool posts the school and its first admin", async () => {
     mockFetchSuccess(school, 201);
-    const body = { slug: "ata-koleji", name: "Ata Koleji", admin_username: "admin", admin_password: "secret123", modules: ["courses"] };
+    const body = { name: "Ata Koleji", admin_username: "admin", admin_password: "secret123", modules: ["courses"] };
 
     await postSchool(body);
 
@@ -53,34 +54,34 @@ describe("schools API", () => {
     expect(init?.body).toBe(JSON.stringify(body));
   });
 
-  it("patchSchoolBySlug patches name and status", async () => {
+  it("patchSchool patches name and status", async () => {
     mockFetchSuccess({ ...school, status: "suspended" });
 
-    await patchSchoolBySlug("ata-koleji", { status: "suspended" });
+    await patchSchool(schoolId, { status: "suspended" });
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/schools/ata-koleji");
+    expect(url).toBe(`/api/schools/${schoolId}`);
     expect(init?.method).toBe("PATCH");
     expect(init?.body).toBe(JSON.stringify({ status: "suspended" }));
   });
 
-  it("deleteSchoolBySlug deletes /schools/{slug}", async () => {
+  it("deleteSchool deletes /schools/{id}", async () => {
     mockFetch204();
 
-    await deleteSchoolBySlug("ata-koleji");
+    await deleteSchool(schoolId);
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/schools/ata-koleji");
+    expect(url).toBe(`/api/schools/${schoolId}`);
     expect(init?.method).toBe("DELETE");
   });
 
   it("postSchoolAdminPassword re-keys an admin", async () => {
     mockFetch204();
 
-    await postSchoolAdminPassword("ata-koleji", { username: "admin", password: "newsecret" });
+    await postSchoolAdminPassword(schoolId, { username: "admin", password: "newsecret" });
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/schools/ata-koleji/admin-password");
+    expect(url).toBe(`/api/schools/${schoolId}/admin-password`);
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe(JSON.stringify({ username: "admin", password: "newsecret" }));
   });
@@ -88,10 +89,10 @@ describe("schools API", () => {
   it("postSchoolEnter enters as a named admin", async () => {
     mockFetchSuccess({ id: "u1", username: "admin", role: "admin" });
 
-    await postSchoolEnter("ata-koleji", { username: "admin" });
+    await postSchoolEnter(schoolId, { username: "admin" });
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/schools/ata-koleji/enter");
+    expect(url).toBe(`/api/schools/${schoolId}/enter`);
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe(JSON.stringify({ username: "admin" }));
   });
@@ -99,11 +100,11 @@ describe("schools API", () => {
   it("getSchoolModules reads both halves of the catalog", async () => {
     mockFetchSuccess(modules);
 
-    const result = await getSchoolModules("ata-koleji");
+    const result = await getSchoolModules(schoolId);
     expect(result).toEqual(modules);
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/schools/ata-koleji/modules");
+    expect(url).toBe(`/api/schools/${schoolId}/modules`);
     expect(init?.method).toBe("GET");
   });
 
@@ -111,10 +112,10 @@ describe("schools API", () => {
     mockFetchSuccess(modules);
     const body = { enable: ["exams"], disable_packages: ["ai"] };
 
-    await patchSchoolModules("ata-koleji", body);
+    await patchSchoolModules(schoolId, body);
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/schools/ata-koleji/modules");
+    expect(url).toBe(`/api/schools/${schoolId}/modules`);
     expect(init?.method).toBe("PATCH");
     expect(init?.body).toBe(JSON.stringify(body));
   });
@@ -122,20 +123,20 @@ describe("schools API", () => {
   it("postSchoolModule enables one module", async () => {
     mockFetchSuccess(modules);
 
-    await postSchoolModule("ata-koleji", "exams");
+    await postSchoolModule(schoolId, "exams");
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/schools/ata-koleji/modules/exams");
+    expect(url).toBe(`/api/schools/${schoolId}/modules/exams`);
     expect(init?.method).toBe("POST");
   });
 
   it("deleteSchoolModule disables one module", async () => {
     mockFetchSuccess(modules);
 
-    await deleteSchoolModule("ata-koleji", "exams");
+    await deleteSchoolModule(schoolId, "exams");
 
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/schools/ata-koleji/modules/exams");
+    expect(url).toBe(`/api/schools/${schoolId}/modules/exams`);
     expect(init?.method).toBe("DELETE");
   });
 });

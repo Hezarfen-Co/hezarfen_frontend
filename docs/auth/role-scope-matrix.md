@@ -47,7 +47,7 @@ route and a school session is 401 here, so these pages carry their own
 |---|---|
 | `/builder/login` | Operator sign-in (linked from the school login footer) |
 | `/builder` | School list: create (with first admin + module set), suspend/activate, delete |
-| `/builder/schools/:slug` | Rename/status, module switchboard (per module + per package), admin password reset, enter as admin |
+| `/builder/schools/:id` | Rename/status, module switchboard (per module + per package), admin password reset, enter as admin |
 
 ## Primary Navigation per Role
 

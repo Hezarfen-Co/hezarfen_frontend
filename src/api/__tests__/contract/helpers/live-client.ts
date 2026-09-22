@@ -21,6 +21,20 @@ const TIMEOUT_MS = 10_000;
 const MAX_RATE_LIMIT_RETRIES = 12;
 let cookie = "";
 
+const SCHOOL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** School cookie is `session=<uuid>.<token>`; operator cookie stays `session=builder.<token>`. */
+function sessionCookie(raw: string): string | null {
+  const pair = raw.split(";")[0] ?? "";
+  if (!pair.startsWith("session=")) return null;
+  const value = pair.slice("session=".length);
+  const dot = value.indexOf(".");
+  if (dot <= 0 || dot === value.length - 1) return null;
+  const prefix = value.slice(0, dot);
+  if (prefix === "builder" || SCHOOL_UUID.test(prefix)) return pair;
+  return null;
+}
+
 type Init = { method?: string; body?: unknown; headers?: Record<string, string> };
 
 function retryDelayMs(response: Response, attempt: number): number {
@@ -59,8 +73,8 @@ export async function api(path: string, init: Init = {}): Promise<Response> {
 
   const setCookies = res!.headers.getSetCookie?.() ?? [];
   for (const raw of setCookies) {
-    const pair = raw.split(";")[0];
-    if (pair.startsWith("session=")) cookie = pair;
+    const pair = sessionCookie(raw);
+    if (pair) cookie = pair;
   }
   return res!;
 }
@@ -77,7 +91,7 @@ export async function json<T>(path: string, init: Init = {}): Promise<T> {
 
 /** Log in as the seeded admin; the session cookie lands in the jar. */
 export async function loginAdmin(): Promise<void> {
-  const result = await json<{ id: string } | { schools: Array<{ slug: string }> }>("/auth/login", {
+  const result = await json<{ id: string } | { schools: Array<{ id: string }> }>("/auth/login", {
     method: "POST",
     body: {
       username: env.ADMIN_USERNAME ?? "admin",
@@ -85,7 +99,7 @@ export async function loginAdmin(): Promise<void> {
     },
   });
   if ("schools" in result) {
-    const school = env.SCHOOL_SLUG ?? result.schools[0]?.slug;
+    const school = env.SCHOOL_ID ?? result.schools[0]?.id;
     if (!school) throw new Error("POST /auth/login returned an empty school choice list");
     await json("/auth/school", { method: "POST", body: { school } });
   }
