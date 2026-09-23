@@ -1,6 +1,6 @@
 import { For, Show, createSignal } from "solid-js";
 import { patchMe } from "@/api/users";
-import type { ProfileUpdate, User } from "@/api/client";
+import type { Gender, ProfileUpdate, User } from "@/api/client";
 import { formatApiError } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createFlash } from "@/lib/flash";
+import { GENDER_LABEL_KEYS } from "@/lib/gender";
 import { hasMinRole } from "@/lib/roles";
 import { useT } from "@/stores/preferences-context";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^\+?[\d\s().-]{7,20}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+// The closed gender vocabulary the backend accepts (limits.user.genders).
+const GENDERS: Gender[] = ["female", "male", "other", "undisclosed"];
 
 function isFutureDate(iso: string) {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -54,6 +57,8 @@ export function ProfileForm(props: {
   branches?: string[];
   maxDisplayNameLen?: number;
   maxBioLen?: number;
+  /** Cap for the address field, from limits.user.max_address_len. */
+  maxAddressLen?: number;
   /**
    * Offer the school-issued student number. It is the office's field, not the
    * account holder's, so only the admin surface passes this; it stays hidden
@@ -71,6 +76,10 @@ export function ProfileForm(props: {
   const [email, setEmail] = createSignal(props.user.email ?? "");
   const [phone, setPhone] = createSignal(props.user.phone ?? "");
   const [birthDate, setBirthDate] = createSignal(dateInputFromIso(props.user.birth_date));
+  const [gender, setGender] = createSignal(props.user.gender ?? "");
+  const [address, setAddress] = createSignal(props.user.address ?? "");
+  const [emergencyName, setEmergencyName] = createSignal(props.user.emergency_contact_name ?? "");
+  const [emergencyPhone, setEmergencyPhone] = createSignal(props.user.emergency_contact_phone ?? "");
   const [displayName, setDisplayName] = createSignal(props.profile?.display_name ?? "");
   const [bio, setBio] = createSignal(props.profile?.bio ?? "");
   const [branch, setBranch] = createSignal(props.profile?.branch ?? "");
@@ -92,8 +101,10 @@ export function ProfileForm(props: {
     const e = email().trim();
     const p = phone().trim();
     const b = isoFromDateInput(birthDate());
+    const ep = emergencyPhone().trim();
     if (e && !EMAIL_RE.test(e)) return t("profile.emailInvalid");
     if (p && !PHONE_RE.test(p)) return t("profile.phoneInvalid");
+    if (ep && !PHONE_RE.test(ep)) return t("profile.phoneInvalid");
     if (b && (!DATE_RE.test(b) || isFutureDate(b))) return t("profile.dateInvalid");
     return null;
   };
@@ -110,6 +121,16 @@ export function ProfileForm(props: {
     if (e !== (props.user.email ?? "")) b.email = e;
     if (p !== (props.user.phone ?? "")) b.phone = p;
     if (d !== (props.user.birth_date ?? "")) b.birth_date = d;
+    // Same omitted=keep / ""=clear / value=set merge the backend applies. An
+    // empty gender select sends an explicit null (clear); a pick sends the enum.
+    const g = gender();
+    if (g !== (props.user.gender ?? "")) b.gender = g === "" ? null : (g as Gender);
+    const a = address().trim();
+    if (a !== (props.user.address ?? "")) b.address = a;
+    const em = emergencyName().trim();
+    if (em !== (props.user.emergency_contact_name ?? "")) b.emergency_contact_name = em;
+    const ep = emergencyPhone().trim();
+    if (ep !== (props.user.emergency_contact_phone ?? "")) b.emergency_contact_phone = ep;
     // Blank clears it server-side, which is how the office un-numbers a student.
     if (showStudentNumber() && studentNumber().trim() !== (props.user.student_number ?? "")) {
       b.student_number = studentNumber().trim();
@@ -221,6 +242,36 @@ export function ProfileForm(props: {
       <div class="space-y-1.5">
         <Label for="pf-birth">{t("profile.birthDate")}</Label>
         <DatePicker id="pf-birth" class="h-10" placeholder={t("form.datePlaceholder")} value={birthDate()} onChange={setBirthDate} />
+      </div>
+      <div class="space-y-1.5">
+        <Label for="pf-gender">{t("profile.gender")}</Label>
+        <Select id="pf-gender" class="h-10" value={gender()} onChange={(e) => setGender(e.currentTarget.value)}>
+          <option value="">{t("profile.genderNone")}</option>
+          <For each={GENDERS}>{(g) => <option value={g}>{t(GENDER_LABEL_KEYS[g])}</option>}</For>
+        </Select>
+      </div>
+      <div class="space-y-1.5">
+        <Label for="pf-address">{t("profile.address")}</Label>
+        <Textarea
+          id="pf-address"
+          rows={2}
+          maxlength={props.maxAddressLen}
+          value={address()}
+          onInput={(e) => setAddress(e.currentTarget.value)}
+        />
+        <Show when={props.maxAddressLen}>
+          {(max) => <p class="text-xs text-muted-foreground">{address().length} / {max()}</p>}
+        </Show>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div class="space-y-1.5">
+          <Label for="pf-emergency-name">{t("profile.emergencyContactName")}</Label>
+          <Input id="pf-emergency-name" class="h-10" value={emergencyName()} onInput={(e) => setEmergencyName(e.currentTarget.value)} />
+        </div>
+        <div class="space-y-1.5">
+          <Label for="pf-emergency-phone">{t("profile.emergencyContactPhone")}</Label>
+          <Input id="pf-emergency-phone" class="h-10" type="tel" value={emergencyPhone()} onInput={(e) => setEmergencyPhone(e.currentTarget.value)} />
+        </div>
       </div>
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
       <div class="!mt-auto sticky bottom-0 -mx-5 flex justify-end border-t border-border-hairline bg-surface-base px-5 pb-1 pt-4">

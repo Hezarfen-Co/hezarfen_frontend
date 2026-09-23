@@ -1,6 +1,7 @@
 export type { Page, PageParams } from "./page";
 
 export type Role = "student" | "parent" | "teacher" | "manager" | "admin";
+export type Gender = "female" | "male" | "other" | "undisclosed";
 export type UserTheme = "light" | "dark";
 export type UserLanguage = "tr" | "en";
 export type CourseKind = "course" | "study" | "club" | string;
@@ -21,6 +22,11 @@ export type User = {
  email: string | null;
  phone: string | null;
  birth_date: string | null;
+ gender: Gender | null;
+ // Trimmed; at most limits.user.max_address_len characters when set.
+ address: string | null;
+ emergency_contact_name: string | null;
+ emergency_contact_phone: string | null;
  display_name?: string | null;
  bio?: string | null;
  theme: UserTheme | null;
@@ -39,6 +45,12 @@ export type ProfileUpdate = {
  email?: string | null;
  phone?: string | null;
  birth_date?: string | null;
+ // Omitted = keep, "" = clear, a value = set. `gender` must be one of the
+ // limits.user.genders values; anything else is a 400.
+ gender?: Gender | null;
+ address?: string | null;
+ emergency_contact_name?: string | null;
+ emergency_contact_phone?: string | null;
  display_name?: string | null;
  bio?: string | null;
  // The teacher's branş, by name from settings.branches.
@@ -847,6 +859,10 @@ export type Limits = {
   max_email_len: number;
   min_phone_digits: number;
   max_phone_digits: number;
+  // Personal-data caps the profile form mirrors: address length and the
+  // accepted gender vocabulary.
+  max_address_len: number;
+  genders: Gender[];
   palette_color_len: number;
   palette_color_pattern: string;
   roles: Role[];

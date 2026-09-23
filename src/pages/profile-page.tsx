@@ -10,6 +10,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { RoleBadge } from "@/components/layout/role-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DetailField } from "@/components/ui/detail-field";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEdit, IconSchool, IconUserCircle } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -21,6 +22,7 @@ import { ProfileForm } from "@/components/users/profile-form";
 import { ProfileMemberships } from "@/components/users/profile-memberships";
 import { StudentInfoPanel } from "@/components/users/student-info-panel";
 import { UserAvatar } from "@/components/users/user-avatar";
+import { genderLabel } from "@/lib/gender";
 import { personLabel } from "@/lib/person";
 import { studentInfoSource } from "@/lib/student-info-access";
 import { useAuth } from "@/stores/auth-context";
@@ -218,6 +220,19 @@ function ProfileContent() {
                 </div>
               </section>
 
+              {/* Personal contact data lives on the User payload, not the
+                  public profile — rows render for the owner only. */}
+              <Show when={isSelf(p()) && auth.user()}>
+                {(u) => (
+                  <section class="data-shell grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <DetailField label={t("profile.gender")} value={genderLabel(u().gender, t)} />
+                    <DetailField label={t("profile.address")} value={u().address || "—"} />
+                    <DetailField label={t("profile.emergencyContactName")} value={u().emergency_contact_name || "—"} />
+                    <DetailField label={t("profile.emergencyContactPhone")} value={u().emergency_contact_phone || "—"} />
+                  </section>
+                )}
+              </Show>
+
               <section class="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 <For each={profileStats(p())}>
                   {(stat) => <StatCard icon={stat.icon} label={stat.label} value={stat.value} />}
@@ -259,6 +274,7 @@ function ProfileContent() {
                       branches={settings.latest?.branches}
                       maxDisplayNameLen={limits.latest?.user.max_display_name_len}
                       maxBioLen={limits.latest?.user.max_bio_len}
+                      maxAddressLen={limits.latest?.user.max_address_len}
                       onSaved={() => {
                         setEditing(false);
                         void auth.refresh();
