@@ -8,6 +8,7 @@ import { EmptyInline } from "@/components/ui/empty-inline";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
+import { genderLabel } from "@/lib/gender";
 import type { StudentInfoSource } from "@/lib/student-info-access";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -17,7 +18,7 @@ type Section = { title: string; hint?: string; fields: Field[] };
 
 /** What each source can actually read; fields no endpoint fills stay out. */
 type Loaded = {
-  student: Partial<Pick<User, "name" | "surname" | "email" | "phone" | "birth_date" | "student_number">> | null;
+  student: Partial<User> | null;
   guardian: User | null;
 };
 
@@ -25,17 +26,15 @@ const forbidden = (err: unknown) => err instanceof ApiError && err.status === 40
 
 /**
  * Record details about a student — and, for a linked parent, about the parent —
- * that the public profile never carries (legal name, student number, contact,
- * birth date). Each viewer only reads what the backend already grants them; see
+ * that the public profile never carries. Each viewer only reads what the backend
+ * already grants them; see
  * `studentInfoSource`.
  */
 export function StudentInfoPanel(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   source: StudentInfoSource;
-  /** `name` is what the profile heading already shows; a legal name equal to
-   *  it is not repeated here. */
-  student: { id: string; username: string; name: string };
+  student: { id: string; username: string; displayName?: string | null };
 }) {
   const t = useT();
   const prefs = usePreferences();
@@ -70,7 +69,7 @@ export function StudentInfoPanel(props: {
         case "parent": {
           let ref: PersonRef | undefined;
           try {
-            ref = (await getMyStudents({ limit: 100 })).items.find((p) => p.id === props.student.id);
+            ref = (await getMyStudents()).items.find((p) => p.id === props.student.id);
           } catch (err) {
             if (!forbidden(err)) throw err;
           }
@@ -79,9 +78,6 @@ export function StudentInfoPanel(props: {
       }
     },
   );
-
-  const fullName = (u: { name?: string | null; surname?: string | null } | null) =>
-    [u?.name, u?.surname].map((s) => s?.trim()).filter(Boolean).join(" ");
 
   // birth_date is a calendar date ("1990-01-02"); read it as local midnight so
   // no time zone shifts it a day.
@@ -93,35 +89,48 @@ export function StudentInfoPanel(props: {
     );
   };
 
-  const present = (fields: { label: string; value: string | null | undefined }[]): Field[] =>
-    fields
-      .map((f) => ({ label: f.label, value: f.value?.trim() ?? "" }))
-      .filter((f) => f.value !== "");
+  const field = (label: string, value: string | null | undefined): Field => ({
+    label,
+    value: value?.trim() || "—",
+  });
+
+  const personalFields = (u: Partial<User>): Field[] => [
+    field(t("admin.username"), u.username),
+    field(t("profile.name"), u.name),
+    field(t("profile.surname"), u.surname),
+    field(t("profile.displayName"), u.display_name),
+    field(t("profile.birthDate"), u.birth_date ? birthDate(u.birth_date) : null),
+    field(t("profile.gender"), genderLabel(u.gender ?? null, t)),
+    field(t("profile.email"), u.email),
+    field(t("profile.phone"), u.phone),
+    field(t("profile.address"), u.address),
+    field(t("profile.emergencyContactName"), u.emergency_contact_name),
+    field(t("profile.emergencyContactPhone"), u.emergency_contact_phone),
+    field(t("profile.bio"), u.bio),
+  ];
 
   const sections = (d: Loaded): Section[] => {
     const out: Section[] = [];
     const s = d.student;
-    if (s) {
-      const fields = present([
-        { label: t("profile.fullName"), value: fullName(s) === props.student.name ? null : fullName(s) },
-        { label: t("roster.studentNumber"), value: s.student_number },
-        { label: t("profile.birthDate"), value: s.birth_date ? birthDate(s.birth_date) : null },
-        { label: t("profile.email"), value: s.email },
-        { label: t("profile.phone"), value: s.phone },
-      ]);
-      if (fields.length) out.push({ title: t("profile.studentInfoStudent"), fields });
-    }
+    if (s) out.push({
+      title: t("profile.studentInfoStudent"),
+      fields: props.source === "self" || props.source === "admin"
+        ? [
+            ...personalFields(s),
+            field(t("roster.studentNumber"), s.student_number),
+          ]
+        : [
+            field(t("profile.displayName"), props.student.displayName),
+            field(t("admin.username"), props.student.username),
+            field(t("roster.studentNumber"), s.student_number),
+          ],
+    });
     const g = d.guardian;
-    if (g) {
-      const fields = present([
-        { label: t("profile.fullName"), value: fullName(g) || g.display_name },
-        { label: t("profile.email"), value: g.email },
-        { label: t("profile.phone"), value: g.phone },
-      ]);
-      if (fields.length) {
-        out.push({ title: t("profile.studentInfoGuardian"), hint: t("profile.studentInfoGuardianHint"), fields });
-      }
-    }
+    if (g) out.push({
+      title: t("profile.studentInfoGuardian"),
+      hint: t("profile.studentInfoGuardianHint"),
+      fields: personalFields(g),
+    });
     return out;
   };
 
@@ -160,7 +169,7 @@ export function StudentInfoPanel(props: {
                       </div>
                       <div class="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
                         <For each={section.fields}>
-                          {(f) => <DetailField label={f.label} value={f.value} />}
+                          {(f) => <DetailField label={f.label} value={f.value} wrap />}
                         </For>
                       </div>
                     </section>

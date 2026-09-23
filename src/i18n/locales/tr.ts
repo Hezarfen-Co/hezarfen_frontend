@@ -1951,7 +1951,7 @@ export const tr: Dict = {
   "profile.birthDate": "Doğum tarihi",
   "profile.fullName": "Ad soyad",
   "profile.studentInfo": "Öğrenci bilgileri",
-  "profile.studentInfoHint": "Profilde yer almayan kayıt bilgileri.",
+  "profile.studentInfoHint": "Erişebildiğiniz öğrenci ve veli kayıt bilgileri.",
   "profile.studentInfoStudent": "Öğrenci",
   "profile.studentInfoGuardian": "Veli",
   "profile.studentInfoGuardianHint": "Okulun kayıtlarındaki sizin bilgileriniz.",

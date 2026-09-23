@@ -1955,7 +1955,7 @@ export const en: Dict = {
   "profile.birthDate": "Birth date",
   "profile.fullName": "Full name",
   "profile.studentInfo": "Student info",
-  "profile.studentInfoHint": "Record details the profile does not show.",
+  "profile.studentInfoHint": "Student and parent record details available to you.",
   "profile.studentInfoStudent": "Student",
   "profile.studentInfoGuardian": "Parent",
   "profile.studentInfoGuardianHint": "Your details as the school has them.",

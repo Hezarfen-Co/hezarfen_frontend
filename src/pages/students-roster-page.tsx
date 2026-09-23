@@ -188,7 +188,7 @@ function StudentsRosterContent() {
                 open
                 onOpenChange={(open) => { if (!open) setInfoTarget(null); }}
                 source={source()}
-                student={{ id: person.id, username: person.username, name: person.display_name || person.username }}
+                student={{ id: person.id, username: person.username, displayName: person.display_name }}
               />
             )}
           </Show>

@@ -260,7 +260,7 @@ function ProfileContent() {
                     open={infoOpen()}
                     onOpenChange={setInfoOpen}
                     source={source()}
-                    student={{ id: p().id, username: p().username, name: name(p()) }}
+                    student={{ id: p().id, username: p().username, displayName: p().display_name }}
                   />
                 )}
               </Show>
