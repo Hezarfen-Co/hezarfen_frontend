@@ -34,13 +34,18 @@ export function TablePagination(props: TablePaginationProps) {
     <Show when={hasRange() || props.pageCount > 1}>
     <div
       class={cn(
-        "flex w-full items-center justify-between gap-2 rounded-lg border border-border-line bg-surface-overlay px-2.5 py-1.5",
+        "flex w-full items-center gap-2 rounded-lg border border-border-line bg-surface-overlay px-2.5 py-1.5",
+        // With no row count to show, the empty left slot pushed the buttons
+        // to the right edge; alone, they sit in the middle.
+        hasRange() ? "justify-between" : "justify-center",
         props.class,
       )}
     >
-      <span class="text-xs font-medium tabular-nums text-muted-foreground sm:text-[11px]">
-        <Show when={hasRange()}>{t("common.pageRange", { start: start(), end: end(), total: props.total ?? 0 })}</Show>
-      </span>
+      <Show when={hasRange()}>
+        <span class="text-xs font-medium tabular-nums text-muted-foreground sm:text-[11px]">
+          {t("common.pageRange", { start: start(), end: end(), total: props.total ?? 0 })}
+        </span>
+      </Show>
       <Show when={props.pageCount > 1}>
         <nav class="flex items-center gap-1" aria-label={t("common.pagination")}>
           <Button

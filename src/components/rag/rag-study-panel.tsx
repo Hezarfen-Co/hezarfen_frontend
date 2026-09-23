@@ -299,7 +299,9 @@ export function RagStudyPanel() {
       class={cn(
         "grid h-[calc(var(--app-viewport)-5.5rem-max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] gap-4 max-lg:-mt-2",
         "lg:-mx-10 lg:-my-6 lg:h-[calc(100dvh-49px-env(safe-area-inset-top))] lg:gap-0",
-        historyCollapsed() ? "lg:grid-cols-[minmax(0,1fr)]" : "lg:grid-cols-[260px_minmax(0,1fr)]",
+        // The history docks on the RIGHT on desktop: on the left it sat flush
+        // against the app's own sidebar and the two read as one tangled nav.
+        historyCollapsed() ? "lg:grid-cols-[minmax(0,1fr)]" : "lg:grid-cols-[minmax(0,1fr)_260px]",
       )}
     >
       <button
@@ -320,7 +322,7 @@ export function RagStudyPanel() {
           // slides out before it leaves the tab order.
           "fixed inset-y-0 left-0 z-[60] w-[min(20rem,85vw)] border-r border-border-line px-3 pb-[calc(max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-xl transition-[transform,visibility] duration-300 ease-out",
           historyOpen() ? "visible translate-x-0" : "invisible -translate-x-full",
-          "lg:visible lg:static lg:z-auto lg:h-full lg:w-auto lg:translate-x-0 lg:gap-2 lg:border-r lg:border-border-hairline lg:bg-surface-overlay/40 lg:px-2 lg:py-3 lg:shadow-none lg:transition-none",
+          "lg:visible lg:static lg:z-auto lg:h-full lg:w-auto lg:translate-x-0 lg:order-last lg:gap-2 lg:border-l lg:border-r-0 lg:border-border-hairline lg:bg-surface-overlay/40 lg:px-2 lg:py-3 lg:shadow-none lg:transition-none",
           historyCollapsed() && "lg:hidden",
         )}
       >
@@ -334,7 +336,7 @@ export function RagStudyPanel() {
             title={copy().collapseHistory}
             onClick={() => setHistoryCollapsed(true)}
           >
-            <IconPanelLeft class="h-4 w-4" />
+            <IconPanelLeft class="h-4 w-4 -scale-x-100" />
           </button>
           <button
             type="button"
@@ -408,26 +410,6 @@ export function RagStudyPanel() {
         {/* Desktop top bar: the open chat's title and its menu; with the
             sidebar folded away, the way back to it and a fresh chat. */}
         <div class="hidden h-12 shrink-0 items-center gap-1 px-3 lg:flex">
-          <Show when={historyCollapsed()}>
-            <button
-              type="button"
-              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={copy().expandHistory}
-              title={copy().expandHistory}
-              onClick={() => setHistoryCollapsed(false)}
-            >
-              <IconPanelLeft class="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={copy().newThread}
-              title={copy().newThread}
-              onClick={newThread}
-            >
-              <IconPlus class="h-4 w-4" />
-            </button>
-          </Show>
           <Show when={activeThread()}>
             {(thread) => (
               <div class="flex min-w-0 items-center gap-1 pl-1">
@@ -450,6 +432,28 @@ export function RagStudyPanel() {
                 </DropdownMenu>
               </div>
             )}
+          </Show>
+          <Show when={historyCollapsed()}>
+            <div class="ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={copy().expandHistory}
+              title={copy().expandHistory}
+              onClick={() => setHistoryCollapsed(false)}
+            >
+              <IconPanelLeft class="h-4 w-4 -scale-x-100" />
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={copy().newThread}
+              title={copy().newThread}
+              onClick={newThread}
+            >
+              <IconPlus class="h-4 w-4" />
+            </button>
+            </div>
           </Show>
         </div>
         <Show when={error()}>

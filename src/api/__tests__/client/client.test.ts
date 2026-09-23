@@ -278,13 +278,31 @@ describe("client", () => {
       ).toBe("Bu sınava yalnızca dersin öğretmenleri veya bir müdür soru ekleyebilir.");
     });
 
-    it("falls back to a clean localized message for unmapped errors (no raw leak)", () => {
+    it("names the failure and quotes the server's reason for unmapped errors", () => {
       expect(formatApiErrorMessage("custom error occurred", "en")).toBe(
-        "Something went wrong. Please check your input and try again.",
+        "The action could not be completed. Server said: “custom error occurred”.",
       );
       expect(formatApiErrorMessage("custom error occurred", "tr")).toBe(
-        "İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene.",
+        "İşlem tamamlanamadı. Sunucu yanıtı: “custom error occurred”.",
       );
+      expect(formatApiError(new ApiError(409, "slot taken by a later edit"), "tr")).toBe(
+        "İşlem kaydın şu anki durumuyla çakışıyor. Sunucu yanıtı: “slot taken by a later edit”.",
+      );
+      expect(formatApiError(new ApiError(400, ""), "tr")).toBe(
+        "Sunucu isteği geçersiz buldu. Bilgileri kontrol edip tekrar dene.",
+      );
+    });
+
+    it("translates request bodies the backend could not decode", () => {
+      expect(
+        formatApiError(new ApiError(422, "Failed to deserialize the JSON body into the target type: missing field `title` at line 1 column 2"), "tr"),
+      ).toBe("“Başlık” alanı eksik. Doldurup tekrar dene.");
+      expect(
+        formatApiError(new ApiError(422, "Failed to deserialize the JSON body into the target type: format: unknown variant `kisa`, expected `duz_okuma` or `tek_ogretici` at line 1 column 20"), "tr"),
+      ).toBe("“kisa” geçerli bir seçenek değil. Geçerli değerler: duz_okuma or tek_ogretici.");
+      expect(
+        formatApiError(new ApiError(422, "Failed to deserialize the JSON body into the target type: ders_saati: invalid type: string \"3\", expected u32 at line 1 column 18"), "tr"),
+      ).toBe("“Ders saati” alanının biçimi hatalı: u32 bekleniyordu, string \"3\" geldi.");
     });
 
     it("localizes backend max-length validation messages", () => {
@@ -370,8 +388,8 @@ describe("client", () => {
     });
 
     it("formats generic Error", () => {
-      expect(formatApiError(new Error("generic"), "en")).toBe("Something went wrong. Please check your input and try again.");
-      expect(formatApiError(new Error("generic"), "tr")).toBe("İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene.");
+      expect(formatApiError(new Error("generic"), "en")).toBe("The action could not be completed. Server said: “generic”.");
+      expect(formatApiError(new Error("generic"), "tr")).toBe("İşlem tamamlanamadı. Sunucu yanıtı: “generic”.");
     });
 
     it("does not expose network, runtime, or provider errors to users", () => {

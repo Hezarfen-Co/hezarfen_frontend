@@ -55,7 +55,7 @@ test("saves only changed rows and reports a failed row on that row", async () =>
   expect(postEventAttendance).toHaveBeenNthCalledWith(1, "event-1", { user_id: "s-2", status: "absent" });
   expect(postEventAttendance).toHaveBeenNthCalledWith(2, "event-1", { user_id: "s-3", status: "late" });
   // The failed row keeps its pick and carries its own error line.
-  expect(await screen.findByText(/İşlem tamamlanamadı|Something went wrong/)).toBeTruthy();
+  expect(await screen.findByText(/İşlem tamamlanamadı|could not be completed/)).toBeTruthy();
   expect(screen.getByText(/1 of 2 rows|2 satırdan 1/)).toBeTruthy();
   expect(onSaved).toHaveBeenCalledTimes(1);
 });

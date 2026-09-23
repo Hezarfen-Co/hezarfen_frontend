@@ -1,4 +1,4 @@
-import { Show, Suspense, createMemo } from "solid-js";
+import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { Link, useNavigate } from "@tanstack/solid-router";
 import { createResource } from "@/lib/create-resource";
 import { getCourseNotes } from "@/api/course-notes";
@@ -21,6 +21,17 @@ import { useT } from "@/stores/preferences-context";
 import { cn } from "@/lib/cn";
 import { courseNoteFiles } from "@/lib/note-source";
 import { hasMinRole } from "@/lib/roles";
+
+const RAIL_KEY = "hezarfen.studio.railWidth";
+const RAIL_MIN = 280;
+const RAIL_MAX = 720;
+const RAIL_DEFAULT = 352;
+
+function readRailWidth(): number {
+  if (typeof localStorage === "undefined") return RAIL_DEFAULT;
+  const value = Number(localStorage.getItem(RAIL_KEY));
+  return Number.isFinite(value) && value >= RAIL_MIN && value <= RAIL_MAX ? value : RAIL_DEFAULT;
+}
 
 type StudioNote = CourseNote & { courseTitle: string; courseCreatorId: string };
 
@@ -117,6 +128,32 @@ export function NoteStudioDetail(props: { noteId: string; episode?: string }) {
   const auth = useAuth();
   const [notes, { refetch }] = useStudioNotes();
   const note = createMemo(() => (notes() ?? []).find((row) => row.id === props.noteId) ?? null);
+  // The audio rail is resizable from its left edge, remembered on this device.
+  const [railWidth, setRailWidth] = createSignal(readRailWidth());
+  const clampRail = (value: number) => Math.round(Math.min(RAIL_MAX, Math.max(RAIL_MIN, value)));
+  createEffect(() => {
+    if (typeof localStorage !== "undefined") localStorage.setItem(RAIL_KEY, String(railWidth()));
+  });
+  const startResize = (event: PointerEvent) => {
+    event.preventDefault();
+    const handle = event.currentTarget as HTMLElement;
+    handle.setPointerCapture(event.pointerId);
+    const startX = event.clientX;
+    const startWidth = railWidth();
+    const move = (next: PointerEvent) => setRailWidth(clampRail(startWidth + (startX - next.clientX)));
+    const stop = () => {
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", stop);
+      handle.removeEventListener("pointercancel", stop);
+      document.body.style.removeProperty("cursor");
+      document.body.style.removeProperty("user-select");
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", stop);
+    handle.addEventListener("pointercancel", stop);
+  };
   const canManage = () => {
     const current = note();
     const user = auth.user();
@@ -147,7 +184,10 @@ export function NoteStudioDetail(props: { noteId: string; episode?: string }) {
                 <h1 class="min-w-0 truncate text-sm font-semibold text-text-strong">{current().title}</h1>
                 <span class="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary-text">{current().courseTitle}</span>
               </div>
-              <div class="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem]">
+              <div
+                class="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_var(--studio-rail)]"
+                style={{ "--studio-rail": `${railWidth()}px` }}
+              >
                 <div class="min-w-0 py-6 lg:overflow-y-auto lg:px-8">
                   <div class="mx-auto w-full max-w-3xl">
                     <RagOutputsPanel
@@ -160,7 +200,28 @@ export function NoteStudioDetail(props: { noteId: string; episode?: string }) {
                     />
                   </div>
                 </div>
-                <aside class="min-w-0 border-t border-border-hairline py-6 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:bg-surface-overlay/30 lg:px-5">
+                <aside class="relative min-w-0 border-t border-border-hairline py-6 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:bg-surface-overlay/30 lg:px-5">
+                  {/* Drag (or arrow keys) to widen the rail; double-click resets it. */}
+                  <div
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label={t("aiStudio.resizeRail")}
+                    aria-valuemin={RAIL_MIN}
+                    aria-valuemax={RAIL_MAX}
+                    aria-valuenow={railWidth()}
+                    tabIndex={0}
+                    class="group absolute inset-y-0 left-0 z-10 hidden w-2 cursor-col-resize touch-none outline-hidden lg:block"
+                    onPointerDown={startResize}
+                    onDblClick={() => setRailWidth(RAIL_DEFAULT)}
+                    onKeyDown={(event) => {
+                      if (event.key === "ArrowLeft") setRailWidth((w) => clampRail(w + 24));
+                      else if (event.key === "ArrowRight") setRailWidth((w) => clampRail(w - 24));
+                      else return;
+                      event.preventDefault();
+                    }}
+                  >
+                    <span class="block h-full w-px bg-transparent transition-colors group-hover:bg-primary/60 group-focus-visible:bg-primary group-active:bg-primary" />
+                  </div>
                   <PodcastPanel noteId={current().id} noteTitle={current().title} episode={props.episode} active flat />
                 </aside>
               </div>

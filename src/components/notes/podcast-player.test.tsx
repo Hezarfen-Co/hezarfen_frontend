@@ -33,8 +33,8 @@ describe("PodcastPlayer", () => {
     vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
     // Nor element scrolling, which the transcript's follow uses.
     Element.prototype.scrollTo ??= () => {};
-    // A stream the server lets the browser seek in, so no local copy is loaded.
-    vi.spyOn(HTMLMediaElement.prototype, "seekable", "get").mockReturnValue({
+    // Audio already buffered this far, so the seek needs no local copy.
+    vi.spyOn(HTMLMediaElement.prototype, "buffered", "get").mockReturnValue({
       length: 1,
       start: () => 0,
       end: () => 754,

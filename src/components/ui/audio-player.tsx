@@ -130,10 +130,15 @@ export function AudioPlayer(props: AudioPlayerProps) {
     }
     return localLoad;
   };
+  // A seek is instant only where the audio is actually here: the local copy,
+  // or a range the stream has already buffered. `seekable` is not trusted —
+  // Safari reports the whole file as seekable on a stream that ignores Range,
+  // then keeps playing from the old spot.
   const canSeekTo = (secs: number) => {
-    const ranges = audio.seekable;
+    if (objectUrl && source() === objectUrl) return true;
+    const ranges = audio.buffered;
     for (let i = 0; i < ranges.length; i += 1) {
-      if (ranges.end(i) > 0 && secs >= ranges.start(i) && secs <= ranges.end(i)) return true;
+      if (secs >= ranges.start(i) && secs <= ranges.end(i) - 0.5) return true;
     }
     return false;
   };
@@ -203,7 +208,8 @@ export function AudioPlayer(props: AudioPlayerProps) {
     else if (audio.paused) play();
     else audio.pause();
   };
-  const skip = (delta: number) => seek(audio.currentTime + delta);
+  // Skips stack on a pending seek's target, not on the stalled stream.
+  const skip = (delta: number) => seek((pendingSeek ?? audio.currentTime) + delta);
   const cycleRate = () => {
     const index = RATES.indexOf(rate() as (typeof RATES)[number]);
     setRate(RATES[(index + 1) % RATES.length]);
@@ -400,14 +406,22 @@ export function AudioPlayer(props: AudioPlayerProps) {
           <div
             aria-hidden="true"
             class={cn(
-              "pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary bg-background transition-transform peer-focus-visible:ring-2 peer-focus-visible:ring-ring",
-              playing() || current() > 0 ? "scale-100" : "scale-0 group-hover:scale-100 peer-focus-visible:scale-100",
+              "pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 transition-transform peer-focus-visible:ring-2 peer-focus-visible:ring-ring",
+              // While the target loads the thumb turns into a spinner right
+              // where playback will resume.
+              seeking() ? "scale-125 animate-spin border-primary border-t-transparent bg-background" : "border-primary bg-background",
+              seeking() || playing() || current() > 0 ? "" : "scale-0 group-hover:scale-100 peer-focus-visible:scale-100",
             )}
             style={{ left: `${fraction(current()) * 100}%` }}
           />
         </div>
         <div class="mt-1 flex justify-between text-[11px] tabular-nums text-muted-foreground">
-          <span>{formatDurationClock(current() * 1000)}</span>
+          <span class="flex items-center gap-1.5">
+            {formatDurationClock(current() * 1000)}
+            <Show when={seeking()}>
+              <span class="text-primary-text" role="status">{t("audio.loadingPosition")}</span>
+            </Show>
+          </span>
           <span>{formatDurationClock(duration() == null ? null : duration()! * 1000)}</span>
         </div>
       </div>

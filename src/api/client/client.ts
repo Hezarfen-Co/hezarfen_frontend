@@ -539,7 +539,62 @@ export async function blobClient(path: string, signal?: AbortSignal): Promise<Bl
   return res.blob();
 }
 
-export function formatApiErrorMessage(message: string, locale: Locale = currentLocale()): string {
+/**
+ * A request body the backend could not read (its JSON extractor, serde). The
+ * text names the field and what was wrong with it, which is exactly what a
+ * reader needs to fix the form — so it is translated instead of hidden.
+ */
+function formatDecodeMessage(message: string, locale: Locale): string | null {
+  const tr = locale === "tr";
+  const missing = message.match(/missing field `([^`]+)`/i);
+  if (missing) {
+    const label = fieldLabel(missing[1], locale);
+    return tr ? `“${label}” alanı eksik. Doldurup tekrar dene.` : `The “${label}” field is missing. Fill it in and try again.`;
+  }
+  const variant = message.match(/unknown variant `([^`]*)`, expected (.+?)(?: at line \d+.*)?$/i);
+  if (variant) {
+    return tr
+      ? `“${variant[1]}” geçerli bir seçenek değil. Geçerli değerler: ${variant[2].replace(/`/g, "")}.`
+      : `“${variant[1]}” is not a valid option. Valid values: ${variant[2].replace(/`/g, "")}.`;
+  }
+  const field = message.match(/([\w.[\]]+): invalid (?:type|value|length)/i)?.[1];
+  const typed = message.match(/invalid (?:type|value): (.+?), expected (.+?)(?: at line \d+.*)?$/i);
+  if (typed) {
+    const where = field ? (tr ? `“${fieldLabel(field, locale)}” alanının` : `The “${fieldLabel(field, locale)}” field has the`) : tr ? "Bir alanın" : "A field has the";
+    return tr
+      ? `${where} biçimi hatalı: ${typed[2]} bekleniyordu, ${typed[1]} geldi.`
+      : `${where} wrong format: expected ${typed[2]}, got ${typed[1]}.`;
+  }
+  if (/failed to (parse|deserialize) the (request )?(json )?body|expected value at line|eof while parsing/i.test(message)) {
+    return tr ? "Gönderilen veri okunamadı (biçim hatası). Alanları kontrol edip tekrar dene." : "The data sent could not be read (format error). Check the fields and try again.";
+  }
+  return null;
+}
+
+/** What kind of failure a status is, for when the backend's words are not mapped. */
+function statusLead(status: number | null, locale: Locale): string {
+  const tr = locale === "tr";
+  if (status === 400) return tr ? "Sunucu isteği geçersiz buldu." : "The server rejected the request as invalid.";
+  if (status === 408) return tr ? "Sunucu zamanında yanıt vermedi." : "The server did not answer in time.";
+  if (status === 409) return tr ? "İşlem kaydın şu anki durumuyla çakışıyor." : "The action conflicts with the record's current state.";
+  if (status === 422) return tr ? "Gönderilen bilgilerde eksik ya da hatalı bir alan var." : "A field is missing or has the wrong format.";
+  return tr ? "İşlem tamamlanamadı." : "The action could not be completed.";
+}
+
+/**
+ * The last resort: say what kind of failure it was and quote the backend's
+ * own reason, so the reader (and whoever they ask) can tell a format problem
+ * from a conflict. Raw text is labelled as the server's, not passed off as ours.
+ */
+function formatFallbackMessage(message: string, status: number | null, locale: Locale): string {
+  const lead = statusLead(status, locale);
+  const detail = message.trim().replace(/[.\s]+$/, "");
+  const generic = !detail || /^(request failed|bad request|unprocessable entity|conflict|error)$/i.test(detail);
+  if (generic) return `${lead} ${locale === "tr" ? "Bilgileri kontrol edip tekrar dene." : "Check your input and try again."}`;
+  return `${lead} ${locale === "tr" ? "Sunucu yanıtı" : "Server said"}: “${detail}”.`;
+}
+
+export function formatApiErrorMessage(message: string, locale: Locale = currentLocale(), status: number | null = null): string {
   const normalized = normalizeApiMessage(message);
   const known = API_ERROR_MESSAGES[normalized]?.[locale];
   if (known) return known;
@@ -547,12 +602,12 @@ export function formatApiErrorMessage(message: string, locale: Locale = currentL
   if (runtime) return runtime;
   const validation = formatValidationMessage(message, locale);
   if (validation) return validation;
-  // Unmapped backend text is raw English/technical — never surface it to the
-  // user. Fall back to a clean localized line; add a mapping in
-  // API_ERROR_MESSAGES when a specific message deserves its own wording.
-  return locale === "tr"
-    ? "İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene."
-    : "Something went wrong. Please check your input and try again.";
+  const decode = formatDecodeMessage(message, locale);
+  if (decode) return decode;
+  // Unmapped backend text: name the kind of failure and quote the server's
+  // reason instead of a bare "something went wrong" that hides it. Add a
+  // mapping in API_ERROR_MESSAGES when a message deserves its own wording.
+  return formatFallbackMessage(message, status, locale);
 }
 
 export function formatApiError(err: unknown, locale: Locale = currentLocale()): string {
@@ -574,7 +629,7 @@ export function formatApiError(err: unknown, locale: Locale = currentLocale()): 
     if (err.status === 404) return API_ERROR_MESSAGES["not found"][locale];
     if (err.status === 413) return API_ERROR_MESSAGES["payload too large"][locale];
     if (err.status >= 500) return locale === "tr" ? "Sunucuda bir sorun oluştu. Lütfen tekrar dene." : "Server error. Please try again.";
-    return formatApiErrorMessage(err.message, locale);
+    return formatApiErrorMessage(err.message, locale, err.status);
   }
   if (err instanceof TypeError) {
     return formatRuntimeErrorMessage(err.message, locale) ??
