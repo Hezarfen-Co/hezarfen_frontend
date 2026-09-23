@@ -488,10 +488,24 @@ const aiStudioNoteRoute = createRoute({
   component: AiStudioNotePage,
 });
 
+// The study chat is one persistent parent (sidebar + transcript) with the
+// open chat as a child in the URL, so switching chats never remounts it.
 const aiStudyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/ai/study",
   component: AiStudyPage,
+});
+
+const aiStudyIndexRoute = createRoute({
+  getParentRoute: () => aiStudyRoute,
+  path: "/",
+  component: () => null,
+});
+
+const aiStudyThreadRoute = createRoute({
+  getParentRoute: () => aiStudyRoute,
+  path: "$threadId",
+  component: () => null,
 });
 
 const aiInsightsRoute = createRoute({
@@ -636,7 +650,7 @@ const routeTree = rootRoute.addChildren([
   aiRoute,
   aiStudioRoute,
   aiStudioNoteRoute,
-  aiStudyRoute,
+  aiStudyRoute.addChildren([aiStudyIndexRoute, aiStudyThreadRoute]),
   aiInsightsRoute,
   aiInsightStudentRoute,
   questionGenerationRoute,

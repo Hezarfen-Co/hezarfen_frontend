@@ -1,4 +1,5 @@
 import { For, Show, createEffect, createSignal, on, onCleanup } from "solid-js";
+import { useNavigate, useParams } from "@tanstack/solid-router";
 import { formatApiError } from "@/api/client";
 import type { RagMessage, RagThread } from "@/api/client";
 import {
@@ -17,15 +18,17 @@ import { RagStudyActions } from "@/components/rag/rag-study-actions";
 import { RagStudyWelcome } from "@/components/rag/rag-study-welcome";
 import { RagThreadList } from "@/components/rag/rag-thread-list";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconChevronDown, IconMenu, IconPlus, IconX } from "@/components/ui/icons";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { IconChevronDown, IconEdit, IconMenu, IconPanelLeft, IconPlus, IconTrash, IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { scopeFromCitations } from "@/lib/rag-study-scope";
+import { useAuth } from "@/stores/auth-context";
 import { usePreferences } from "@/stores/preferences-context";
 import { suppressQuickActions } from "@/stores/quick-actions";
 
 const POLL_INTERVAL_MS = 2000;
+const COLLAPSED_KEY = "hezarfen.study.historyCollapsed";
 
 /**
  * The AI hub's Study tab: chat over the course material the account may
@@ -53,6 +56,30 @@ export function RagStudyPanel() {
   // on a phone keeps its conversations one tap away without spending the
   // screen on them. From lg it is the fixed column beside the transcript.
   const [historyOpen, setHistoryOpen] = createSignal(false);
+  // From lg the history is a sidebar the reader can fold away, remembered on
+  // this device the way a chat app remembers its sidebar.
+  const [historyCollapsed, setHistoryCollapsed] = createSignal(
+    typeof localStorage !== "undefined" && localStorage.getItem(COLLAPSED_KEY) === "1",
+  );
+  createEffect(() => {
+    if (typeof localStorage !== "undefined") localStorage.setItem(COLLAPSED_KEY, historyCollapsed() ? "1" : "0");
+  });
+  const auth = useAuth();
+  // A chat lives at /ai/study/$threadId, the way Vibe opens one at
+  // /chat/<id>. This panel is the persistent parent of that route, so moving
+  // between chats never remounts the sidebar or cuts a streaming answer.
+  const navigate = useNavigate();
+  const params = useParams({ strict: false });
+  const routeThreadId = () => (params() as { threadId?: string }).threadId;
+  // The API has no single-thread read; titles come from the sidebar's list.
+  const [knownThreads, setKnownThreads] = createSignal<RagThread[]>([]);
+  const greeting = () => {
+    const hour = new Date().getHours();
+    const base = hour < 12 ? copy().greetingMorning : hour < 18 ? copy().greetingAfternoon : copy().greetingEvening;
+    const user = auth.user();
+    const name = user?.display_name?.trim() || user?.name?.trim();
+    return name ? `${base}, ${name}` : base;
+  };
   createEffect(() => {
     if (!historyOpen()) return;
     const onKey = (event: KeyboardEvent) => {
@@ -126,25 +153,49 @@ export function RagStudyPanel() {
     };
   };
 
-  const openThread = async (thread: RagThread) => {
+  const loadThread = async (id: string) => {
     stopPolling();
     stopStream();
     setError("");
-    setThreadId(thread.id);
-    setActiveThread(thread);
+    setThreadId(id);
+    setActiveThread(knownThreads().find((thread) => thread.id === id));
+    setMessages([]);
     try {
-      setMessages((await getRagThreadMessages(thread.id, { limit: 500 })).items);
+      const page = await getRagThreadMessages(id, { limit: 500 });
+      if (threadId() === id) setMessages(page.items);
     } catch (err) {
-      setError(formatApiError(err));
+      if (threadId() === id) setError(formatApiError(err));
     }
   };
-  const newThread = () => {
+  const resetThread = () => {
     stopPolling();
     stopStream();
     setError("");
     setThreadId(undefined);
     setActiveThread(undefined);
     setMessages([]);
+  };
+  // The URL is the source of truth for which chat is open. A chat this panel
+  // just created is already open when its URL lands, so it is not reloaded.
+  createEffect(
+    on(routeThreadId, (id) => {
+      if (id === threadId()) return;
+      if (id) void loadThread(id);
+      else resetThread();
+    }),
+  );
+  createEffect(() => {
+    const id = threadId();
+    if (!id || activeThread()?.id === id) return;
+    const known = knownThreads().find((thread) => thread.id === id);
+    if (known) setActiveThread(known);
+  });
+  const openThread = (thread: RagThread) => {
+    setActiveThread(thread);
+    void navigate({ to: "/ai/study/$threadId", params: { threadId: thread.id } });
+  };
+  const newThread = () => {
+    void navigate({ to: "/ai/study" });
   };
 
   const send = async () => {
@@ -164,6 +215,7 @@ export function RagStudyPanel() {
       const resolvedThreadId = currentThread ?? createdThread!.id;
       if (createdThread) setActiveThread(createdThread);
       setThreadId(resolvedThreadId);
+      if (createdThread) void navigate({ to: "/ai/study/$threadId", params: { threadId: resolvedThreadId }, replace: true });
       const accepted = await postRagMessage(resolvedThreadId, content);
       setMessages((items) => [
         ...items,
@@ -241,7 +293,15 @@ export function RagStudyPanel() {
   return (
     // Phones: one screen-tall column — top bar, transcript, composer — so the
     // composer sits above the tab bar instead of scrolling away with the page.
-    <div class="grid h-[calc(var(--app-viewport)-5.5rem-max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] gap-4 max-lg:-mt-2 lg:h-[calc(100dvh-10rem)] lg:grid-cols-[18rem_minmax(0,1fr)]">
+    // From lg the page fills the content column edge to edge, below the shell
+    // header: a flush history sidebar and the conversation beside it.
+    <div
+      class={cn(
+        "grid h-[calc(var(--app-viewport)-5.5rem-max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] gap-4 max-lg:-mt-2",
+        "lg:-mx-10 lg:-my-6 lg:h-[calc(100dvh-49px-env(safe-area-inset-top))] lg:gap-0",
+        historyCollapsed() ? "lg:grid-cols-[minmax(0,1fr)]" : "lg:grid-cols-[16.5rem_minmax(0,1fr)]",
+      )}
+    >
       <button
         type="button"
         tabIndex={-1}
@@ -260,43 +320,56 @@ export function RagStudyPanel() {
           // slides out before it leaves the tab order.
           "fixed inset-y-0 left-0 z-[60] w-[min(20rem,85vw)] border-r border-border-line px-3 pb-[calc(max(env(safe-area-inset-bottom),var(--android-nav-inset,0px))+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] shadow-xl transition-[transform,visibility] duration-300 ease-out",
           historyOpen() ? "visible translate-x-0" : "invisible -translate-x-full",
-          "lg:visible lg:static lg:z-auto lg:h-full lg:w-auto lg:translate-x-0 lg:rounded-xl lg:border lg:p-3 lg:shadow-xs lg:transition-none",
+          "lg:visible lg:static lg:z-auto lg:h-full lg:w-auto lg:translate-x-0 lg:gap-2 lg:border-r lg:border-border-hairline lg:bg-surface-overlay/40 lg:px-2 lg:py-3 lg:shadow-none lg:transition-none",
+          historyCollapsed() && "lg:hidden",
         )}
       >
-        <div class="flex items-center justify-between gap-2">
-          <h2 class="text-sm font-semibold text-text-strong">{copy().history}</h2>
-          <div class="flex items-center gap-1">
-            <Button
-              type="button"
-              size="sm"
-              class="h-8 rounded-lg max-lg:h-10"
-              disabled={!threadId() && messages().length === 0}
-              onClick={() => {
-                setHistoryOpen(false);
-                newThread();
-              }}
-            >
-              <IconPlus class="h-4 w-4" />
-              {copy().newThread}
-            </Button>
-            <button
-              type="button"
-              class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
-              aria-label={copy().closeHistory}
-              onClick={() => setHistoryOpen(false)}
-            >
-              <IconX class="h-5 w-5" />
-            </button>
-          </div>
+        {/* Vibe's sidebar head: the page's name, then its fold-away control. */}
+        <div class="flex h-10 items-center gap-1 pl-2.5 lg:h-9">
+          <h2 class="min-w-0 flex-1 truncate text-sm font-semibold text-text-strong">{copy().title}</h2>
+          <button
+            type="button"
+            class="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring lg:inline-flex"
+            aria-label={copy().collapseHistory}
+            title={copy().collapseHistory}
+            onClick={() => setHistoryCollapsed(true)}
+          >
+            <IconPanelLeft class="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+            aria-label={copy().closeHistory}
+            onClick={() => setHistoryOpen(false)}
+          >
+            <IconX class="h-5 w-5" />
+          </button>
         </div>
+        {/* "New chat" is a nav row, filled while the new-chat screen is open. */}
+        <button
+          type="button"
+          class={cn(
+            "flex h-10 w-full items-center gap-2.5 rounded-lg px-2.5 text-sm text-foreground outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring lg:h-9",
+            threadId() ? "hover:bg-muted/60" : "bg-muted font-medium",
+          )}
+          onClick={() => {
+            setHistoryOpen(false);
+            newThread();
+          }}
+        >
+          <IconPlus class="h-4 w-4 shrink-0" />
+          <span class="truncate">{copy().newThread}</span>
+        </button>
+        <h3 class="px-2.5 pb-0.5 pt-4 text-xs font-medium text-muted-foreground">{copy().recents}</h3>
         <RagThreadList
           activeId={threadId()}
           version={threadsVersion()}
           locale={locale()}
           labels={copy()}
+          onThreads={setKnownThreads}
           onOpen={(thread) => {
             setHistoryOpen(false);
-            void openThread(thread);
+            openThread(thread);
           }}
           onRename={setRenaming}
           onRemove={setRemoving}
@@ -332,6 +405,53 @@ export function RagStudyPanel() {
             <IconPlus class="h-5 w-5" />
           </button>
         </div>
+        {/* Desktop top bar: the open chat's title and its menu; with the
+            sidebar folded away, the way back to it and a fresh chat. */}
+        <div class="hidden h-12 shrink-0 items-center gap-1 px-3 lg:flex">
+          <Show when={historyCollapsed()}>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={copy().expandHistory}
+              title={copy().expandHistory}
+              onClick={() => setHistoryCollapsed(false)}
+            >
+              <IconPanelLeft class="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={copy().newThread}
+              title={copy().newThread}
+              onClick={newThread}
+            >
+              <IconPlus class="h-4 w-4" />
+            </button>
+          </Show>
+          <Show when={activeThread()}>
+            {(thread) => (
+              <div class="flex min-w-0 items-center gap-1 pl-1">
+                <DropdownMenu placement="bottom-start" gutter={6}>
+                  <DropdownMenuTrigger class="flex min-w-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-text-strong outline-hidden transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-muted">
+                    <span class="truncate">{thread().title || copy().untitled}</span>
+                    <IconChevronDown class="h-3.5 w-3.5 shrink-0 opacity-60" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent class="w-48">
+                    <DropdownMenuItem class="gap-2.5" onSelect={() => setRenaming(thread())}>
+                      <IconEdit class="h-4 w-4" />
+                      {copy().rename}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem destructive class="gap-2.5" onSelect={() => setRemoving(thread())}>
+                      <IconTrash class="h-4 w-4" />
+                      {copy().delete}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+          </Show>
+        </div>
         <Show when={error()}>
           <div class="mx-auto w-full max-w-3xl px-4 pt-1 sm:px-6">
             <Alert variant="destructive">{error()}</Alert>
@@ -345,13 +465,13 @@ export function RagStudyPanel() {
             fallback={
               // The landing screen centres the mark and the composer instead of
               // stranding the composer at the bottom of an empty page.
-              <div class="flex min-h-[60vh] flex-col justify-center">
-                <RagStudyWelcome title={copy().emptyChat} hint={copy().emptyChatHint} />
+              <div class="flex min-h-[60vh] flex-col justify-center lg:min-h-[calc(100dvh-16rem)]">
+                <RagStudyWelcome title={greeting()} />
                 <RagComposer
                   value={draft()}
                   placeholder={copy().placeholder}
                   sendLabel={copy().send}
-                  hint={copy().composerHint}
+                  hint={copy().emptyChatHint}
                   disabled={sending()}
                   autofocus
                   class="px-0 sm:px-0"
@@ -418,7 +538,7 @@ export function RagStudyPanel() {
             value={draft()}
             placeholder={copy().placeholder}
             sendLabel={copy().send}
-            hint={copy().composerHint}
+            hint={copy().emptyChatHint}
             disabled={sending()}
             autofocus
             class="pb-4"

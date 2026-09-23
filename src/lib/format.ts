@@ -8,6 +8,12 @@ export function formatDateTime(ms: number | null | undefined, locale: Locale = "
   }).format(new Date(ms));
 }
 
+/** Time only (e.g. "07:33") — for a chat turn's stamp. */
+export function formatTime(ms: number | null | undefined, locale: Locale = "en"): string {
+  if (ms == null) return "—";
+  return new Intl.DateTimeFormat(locale === "tr" ? "tr-TR" : "en-US", { timeStyle: "short" }).format(new Date(ms));
+}
+
 /** Date only, no time — for stacked date/time cells. */
 export function formatDate(ms: number | null | undefined, locale: Locale = "en"): string {
   if (ms == null) return "—";

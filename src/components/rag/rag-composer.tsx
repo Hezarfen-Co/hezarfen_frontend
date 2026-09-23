@@ -1,6 +1,6 @@
 import { createEffect, onMount } from "solid-js";
 import { Button } from "@/components/ui/button";
-import { IconSend } from "@/components/ui/icons";
+import { IconArrowUp } from "@/components/ui/icons";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
 
@@ -44,7 +44,7 @@ export function RagComposer(props: {
         if (!props.disabled) props.onSubmit();
       }}
     >
-      <div class="mx-auto flex w-full max-w-3xl items-end gap-2 rounded-2xl border border-border bg-surface-overlay px-3.5 py-2.5 transition-colors focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring">
+      <div class="mx-auto flex w-full max-w-3xl items-end gap-2 rounded-2xl border border-border-line bg-surface-overlay py-2.5 pl-4 pr-2.5 shadow-xs transition-colors focus-within:border-border">
         <Textarea
           ref={field}
           rows={1}
@@ -64,16 +64,15 @@ export function RagComposer(props: {
         <Button
           type="submit"
           size="sm"
-          class="h-9 w-9 shrink-0 rounded-full p-0"
+          class="h-9 w-9 shrink-0 rounded-lg bg-foreground p-0 text-background hover:bg-foreground/85 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
           aria-label={props.sendLabel}
           title={props.sendLabel}
           disabled={props.disabled || !props.value.trim()}
         >
-          <IconSend class="h-4 w-4" />
+          <IconArrowUp class="h-4 w-4" />
         </Button>
       </div>
-      {/* Enter / Shift+Enter means nothing on a touch keyboard. */}
-      <p class="mx-auto mt-2 w-full max-w-3xl px-1 text-center text-[11px] leading-4 text-muted-foreground [@media(pointer:coarse)]:hidden">{props.hint}</p>
+      <p class="mx-auto mt-2 w-full max-w-3xl px-1 text-center text-xs leading-4 text-muted-foreground">{props.hint}</p>
     </form>
   );
 }

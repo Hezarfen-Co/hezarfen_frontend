@@ -4,7 +4,9 @@ import { CelebiMarkdown } from "@/components/layout/celebi-markdown";
 import { IconAlert, IconCopy, IconRefresh } from "@/components/ui/icons";
 import { RagCitations } from "@/components/rag/rag-citations";
 import { RagThinkingLabel } from "@/components/rag/rag-thinking-label";
-import { cn } from "@/lib/cn";
+import { LogoMark } from "@/components/brand/logo-mark";
+import { formatTime } from "@/lib/format";
+import { currentLocale } from "@/api/client";
 
 export function RagMessageRow(props: {
   message: RagMessage;
@@ -48,74 +50,88 @@ export function RagMessageRow(props: {
     window.setTimeout(() => setCopied(false), 1_500);
   };
 
+  const iconButton =
+    "inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring";
+
   return (
-    // The user's turn is a bubble; the answer is not. An answer is the page's
-    // content, not a message in a thread, so it runs the full reading column
-    // with no frame and no avatar competing with the first line of text.
-    <article class={cn("flex", assistant() ? "justify-start" : "justify-end")}>
-      <div
-        class={cn(
-          "text-sm",
-          assistant()
-            ? "w-full min-w-0 text-foreground"
-            : "max-w-[min(46rem,88%)] rounded-xl bg-primary px-4 py-3 text-primary-foreground",
-        )}
-      >
-        <Switch>
-          <Match when={props.message.status === "pending" && !props.message.content}>
-            <p class="animate-pulse text-muted-foreground" role="status">
-              <RagThinkingLabel phases={[props.labels.thinking, props.labels.thinking2, props.labels.thinking3]} />
-            </p>
-          </Match>
-          <Match when={props.message.status === "failed"}>
-            <div class="flex items-start gap-2 text-destructive-text">
-              <IconAlert class="mt-0.5 h-4 w-4 shrink-0" />
-              <p>{failure()}</p>
-            </div>
-          </Match>
-          <Match when={props.message.abstained}>
-            <div class="space-y-1 text-muted-foreground">
-              <p>{props.message.content || props.labels.abstained}</p>
-              <Show when={props.message.reason}>
-                <p class="text-xs">{props.labels.abstainedReason(props.message.reason)}</p>
-              </Show>
-            </div>
-          </Match>
-          <Match when={true}>
-            <CelebiMarkdown text={props.message.content} />
-          </Match>
-        </Switch>
-        <Show when={assistant()}>
+    // Vibe's turns: the question is a pill on the right; the answer runs the
+    // reading column beside a small brand mark, with no frame, and its
+    // actions sit on one quiet icon row under it with the time at the end.
+    <Show
+      when={assistant()}
+      fallback={
+        <article class="flex justify-end">
+          <div class="max-w-[min(36rem,85%)] whitespace-pre-wrap rounded-3xl bg-muted px-4 py-2.5 text-sm text-foreground">
+            {props.message.content}
+          </div>
+        </article>
+      }
+    >
+      <article class="flex gap-3">
+        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary-text" aria-hidden="true">
+          <LogoMark size={16} />
+        </span>
+        <div class="min-w-0 flex-1 text-sm text-foreground">
+          <Switch>
+            <Match when={props.message.status === "pending" && !props.message.content}>
+              <p class="animate-pulse pt-1 text-muted-foreground" role="status">
+                <RagThinkingLabel phases={[props.labels.thinking, props.labels.thinking2, props.labels.thinking3]} />
+              </p>
+            </Match>
+            <Match when={props.message.status === "failed"}>
+              <div class="flex items-start gap-2 pt-1 text-destructive-text">
+                <IconAlert class="mt-0.5 h-4 w-4 shrink-0" />
+                <p>{failure()}</p>
+              </div>
+            </Match>
+            <Match when={props.message.abstained}>
+              <div class="space-y-1 pt-1 text-muted-foreground">
+                <p>{props.message.content || props.labels.abstained}</p>
+                <Show when={props.message.reason}>
+                  <p class="text-xs">{props.labels.abstainedReason(props.message.reason)}</p>
+                </Show>
+              </div>
+            </Match>
+            <Match when={true}>
+              <CelebiMarkdown text={props.message.content} />
+            </Match>
+          </Switch>
           <RagCitations citations={props.message.citations} labels={props.labels} />
           {props.footer}
-          <Show when={settled() && (copyable() || props.onRetry)}>
-            <div class="mt-2 flex flex-wrap items-center gap-3">
+          <Show when={settled()}>
+            <div class="mt-2 flex items-center gap-1">
               <Show when={copyable()}>
                 <button
                   type="button"
-                  class="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                  class={iconButton}
+                  aria-label={copied() ? props.labels.copied : props.labels.copy}
+                  title={copied() ? props.labels.copied : props.labels.copy}
                   onClick={() => void copy()}
                 >
-                  <IconCopy class="h-3 w-3" />
-                  {copied() ? props.labels.copied : props.labels.copy}
+                  <IconCopy class="h-3.5 w-3.5" />
                 </button>
               </Show>
               <Show when={props.onRetry}>
                 {(retry) => (
                   <button
                     type="button"
-                    class="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    class={iconButton}
+                    aria-label={props.labels.retry}
+                    title={props.labels.retry}
                     onClick={() => retry()()}
                   >
-                    <IconRefresh class="h-3 w-3" />
-                    {props.labels.retry}
+                    <IconRefresh class="h-3.5 w-3.5" />
                   </button>
                 )}
               </Show>
+              <Show when={copied()}>
+                <span class="text-xs text-muted-foreground" role="status">{props.labels.copied}</span>
+              </Show>
+              <span class="ml-auto text-xs tabular-nums text-muted-foreground">{formatTime(props.message.created_at, currentLocale())}</span>
             </div>
           </Show>
-        </Show>
-      </div>
-    </article>
+        </div>
+      </article>
+    </Show>
   );
 }

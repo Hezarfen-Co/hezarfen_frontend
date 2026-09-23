@@ -1,19 +1,14 @@
-import { IconSparkles } from "@/components/ui/icons";
+import { LogoMark } from "@/components/brand/logo-mark";
 
 /**
- * The landing screen, which is really just the brand mark above the composer.
- * The old version was a bordered illustration block that pushed the composer to
- * the bottom edge; here the mark introduces the composer and nothing else
- * competes with it — the page's whole job is "start typing".
+ * The landing screen as Vibe draws it: the brand mark and one greeting line,
+ * left-aligned on the composer's own column, right above the composer.
  */
-export function RagStudyWelcome(props: { title: string; hint: string }) {
+export function RagStudyWelcome(props: { title: string }) {
   return (
-    <div class="flex flex-col items-center gap-3 pb-6 text-center">
-      <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary-text">
-        <IconSparkles class="h-5 w-5" />
-      </span>
-      <h2 class="text-2xl font-semibold tracking-tight text-text-strong">{props.title}</h2>
-      <p class="max-w-md text-sm leading-6 text-muted-foreground">{props.hint}</p>
+    <div class="flex flex-col items-start gap-4 pb-5">
+      <LogoMark size={40} />
+      <h2 class="text-3xl font-medium tracking-tight text-text-strong sm:text-[2.1rem]">{props.title}</h2>
     </div>
   );
 }
