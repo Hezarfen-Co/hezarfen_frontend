@@ -74,6 +74,7 @@ const PaymentStatementPage = lazyRoute(() => import("@/pages/payment-statement-p
 const WhiteboardsPage = lazyRoute(() => import("@/pages/whiteboards-page"));
 const WhiteboardPage = lazyRoute(() => import("@/pages/whiteboard-page"));
 const AiStudioPage = lazyRoute(() => import("@/pages/ai-studio-page"));
+const AiStudioNotePage = lazyRoute(() => import("@/pages/ai-studio-note-page"));
 const AiStudyPage = lazyRoute(() => import("@/pages/ai-study-page"));
 const AiInsightsPage = lazyRoute(() => import("@/pages/ai-insights-page"));
 const AiInsightStudentPage = lazyRoute(() => import("@/pages/ai-insight-student-page"));
@@ -477,6 +478,16 @@ const aiStudioRoute = createRoute({
   component: AiStudioPage,
 });
 
+// One note's studio page; `episode` preselects an episode from the library.
+const aiStudioNoteRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/ai/studio/$noteId",
+  validateSearch: (search: Record<string, unknown>) => ({
+    episode: typeof search.episode === "string" && search.episode ? search.episode : undefined,
+  }),
+  component: AiStudioNotePage,
+});
+
 const aiStudyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/ai/study",
@@ -624,6 +635,7 @@ const routeTree = rootRoute.addChildren([
   whiteboardRoute,
   aiRoute,
   aiStudioRoute,
+  aiStudioNoteRoute,
   aiStudyRoute,
   aiInsightsRoute,
   aiInsightStudentRoute,

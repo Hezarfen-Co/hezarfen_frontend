@@ -15,7 +15,7 @@ import { useT } from "@/stores/preferences-context";
 
 const POLL_MS = 2_000;
 
-export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitle?: string }) {
+export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitle?: string; episode?: string }) {
   const t = useT();
   const [format, setFormat] = createSignal<PodcastFormat>("duz_okuma");
   const [jobId, setJobId] = createSignal("");
@@ -241,6 +241,7 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
       <PodcastHistory
         noteId={props.noteId}
         active={active()}
+        episode={props.episode}
         refetchKey={status()?.state === "done" ? jobId() : ""}
         transcript={
           artifacts()?.transcript?.length ? { jobId: artifacts()!.job_id, segments: artifacts()!.transcript! } : null

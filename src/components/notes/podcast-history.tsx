@@ -40,6 +40,8 @@ export function PodcastHistory(props: {
   noteId?: string;
   active?: boolean;
   refetchKey?: string | number;
+  /** An episode to open with, e.g. one picked in the studio library. */
+  episode?: string;
   /** The transcript of the episode the panel just produced, if the service sent one. */
   transcript?: { jobId: string; segments: PodcastTranscriptSegment[] } | null;
 }) {
@@ -56,7 +58,7 @@ export function PodcastHistory(props: {
     props.noteId;
     pageSize();
     setPage(0);
-    setSelected("");
+    setSelected(props.episode ?? "");
     setAutoplay(false);
   });
 

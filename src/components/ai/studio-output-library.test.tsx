@@ -120,14 +120,13 @@ describe("StudioOutputLibrary", () => {
     expect(screen.queryByText("Bölüm 12")).toBeNull();
   });
 
-  it("opens the run inspector for an episode instead of selecting its note", async () => {
+  it("opens an episode's note page with that episode picked", async () => {
     const onSelect = renderLibrary();
 
     await waitFor(() => expect(screen.getAllByText("Hücre").length).toBe(2));
     fireEvent.click(screen.getAllByRole("button", { name: /Hücre/ })[0]!);
 
-    await waitFor(() => expect(screen.getByText("Üretim ayrıntısı")).toBeTruthy());
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledWith("note-1", expect.any(String));
   });
 
   it("opens the note for a summary row, which has no artifact of its own", async () => {
@@ -136,7 +135,6 @@ describe("StudioOutputLibrary", () => {
     await waitFor(() => expect(screen.getByText("Kuvvet")).toBeTruthy());
     fireEvent.click(screen.getByRole("button", { name: /Kuvvet/ }));
 
-    expect(onSelect).toHaveBeenCalledWith("note-2");
-    expect(screen.queryByText("Üretim ayrıntısı")).toBeNull();
+    expect(onSelect).toHaveBeenCalledWith("note-2", undefined);
   });
 });

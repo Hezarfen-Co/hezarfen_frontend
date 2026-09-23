@@ -3,7 +3,6 @@ import { createResource } from "@/lib/create-resource";
 import { getCourseNoteRag } from "@/api/course-notes";
 import { listPodcastJobs } from "@/api/podcast";
 import type { PodcastJobSummary } from "@/api/client";
-import { StudioRunInspector } from "@/components/ai/studio-run-inspector";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconSparkles, IconWaveform } from "@/components/ui/icons";
@@ -41,11 +40,11 @@ const LIBRARY_PAGE_SIZE = 10;
 export function StudioOutputLibrary(props: {
   notes: StudioLibraryNote[];
   selectedId: string;
-  onSelect: (noteId: string) => void;
+  /** Opens the row's own page: the note, with the episode picked for a podcast row. */
+  onSelect: (noteId: string, episodeId?: string) => void;
 }) {
   const t = useT();
   const { locale } = usePreferences();
-  const [inspecting, setInspecting] = createSignal<PodcastJobSummary | null>(null);
   const source = createMemo(() => props.notes.map((note) => note.id).join(","));
 
   const stateVariant = (state: string) => {
@@ -131,10 +130,9 @@ export function StudioOutputLibrary(props: {
   });
 
   const open = (item: StudioArtifact) => {
-    // A produced episode has an artifact of its own to inspect; a summary is
-    // rendered by the note's own producer panel, so that row opens the note.
-    if (item.job) setInspecting(item.job);
-    else props.onSelect(item.noteId);
+    // Every row opens a page of its own; an episode opens its note's page
+    // with that episode loaded in the player.
+    props.onSelect(item.noteId, item.job?.job_id);
   };
 
   return (
@@ -232,14 +230,6 @@ export function StudioOutputLibrary(props: {
         </Show>
       </Suspense>
 
-      <StudioRunInspector
-        job={inspecting()}
-        onOpenChange={(next) => { if (!next) setInspecting(null); }}
-        formatLabel={formatLabel}
-        stateLabel={stateLabel}
-        stateVariant={stateVariant}
-        title={t("aiStudio.run.title")}
-      />
     </section>
   );
 }
