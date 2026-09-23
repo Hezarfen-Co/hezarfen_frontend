@@ -147,15 +147,18 @@ export function PodcastHistory(props: {
               />
             }
           >
-            <Show when={current()} keyed>
-              {(row) => (
+            {/* Keyed on the episode id, not the row object: a list refresh
+                hands back new objects, and remounting the player on each one
+                cut the audio mid-load and stopped playback. */}
+            <Show when={current()?.job_id} keyed>
+              {(jobId) => (
                 <PodcastPlayer
-                  jobId={row.job_id}
-                  title={rowTitle(row)}
-                  subtitle={formatDateTime(row.created_at, locale())}
-                  downloadName={noteName(row)}
-                  durationSecs={row.duration_secs}
-                  transcript={props.transcript?.jobId === row.job_id ? props.transcript.segments : null}
+                  jobId={jobId}
+                  title={current() ? rowTitle(current()!) : ""}
+                  subtitle={formatDateTime(current()?.created_at, locale())}
+                  downloadName={current() ? noteName(current()!) : undefined}
+                  durationSecs={current()?.duration_secs}
+                  transcript={props.transcript?.jobId === jobId ? props.transcript.segments : null}
                   autoplay={autoplay()}
                 />
               )}

@@ -15,7 +15,14 @@ import { useT } from "@/stores/preferences-context";
 
 const POLL_MS = 2_000;
 
-export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitle?: string; episode?: string }) {
+export function PodcastPanel(props: {
+  noteId: string;
+  active?: boolean;
+  noteTitle?: string;
+  episode?: string;
+  /** Drop the card frame where the page itself is the frame (studio rail). */
+  flat?: boolean;
+}) {
   const t = useT();
   const [format, setFormat] = createSignal<PodcastFormat>("duz_okuma");
   const [jobId, setJobId] = createSignal("");
@@ -167,7 +174,7 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
         </section>
       }
     >
-    <section class="space-y-4 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4">
+    <section class={props.flat ? "space-y-4" : "space-y-4 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4"}>
       <div class="flex items-start gap-3">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-text">
           <IconWaveform class="h-5 w-5" />

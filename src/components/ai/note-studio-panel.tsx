@@ -131,8 +131,11 @@ export function NoteStudioDetail(props: { noteId: string; episode?: string }) {
       <Show when={!notes.error && notes()}>
         <Show when={note()} fallback={<RecordNotFound backTo="/ai/studio" />}>
           {(current) => (
-            <div class="w-full space-y-6">
-              <div class="space-y-3">
+            // Laid out like a Mistral Studio tool page (Text to Speech): a thin
+            // top bar with the way back and the note's name, the work on a
+            // wide canvas, and the audio controls on a rail at the right.
+            <div class="flex w-full flex-col lg:-mx-10 lg:-my-6 lg:h-[calc(100dvh-49px-env(safe-area-inset-top))] lg:w-auto">
+              <div class="flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-border-hairline pb-3 lg:px-6 lg:pb-0">
                 <Link
                   to="/ai/studio"
                   class={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-2 h-8 gap-1 rounded-lg text-muted-foreground")}
@@ -140,20 +143,26 @@ export function NoteStudioDetail(props: { noteId: string; episode?: string }) {
                   <IconChevronLeft class="h-4 w-4" />
                   {t("aiStudio.backToLibrary")}
                 </Link>
-                <header class="space-y-1">
-                  <h1 class="text-2xl font-semibold tracking-tight text-text-strong">{current().title}</h1>
-                  <p class="text-sm text-muted-foreground">{current().courseTitle}</p>
-                </header>
+                <span class="hidden h-4 w-px bg-border-line sm:block" aria-hidden="true" />
+                <h1 class="min-w-0 truncate text-sm font-semibold text-text-strong">{current().title}</h1>
+                <span class="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary-text">{current().courseTitle}</span>
               </div>
-              <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <RagOutputsPanel
-                  noteId={current().id}
-                  source={courseNoteFiles}
-                  canManage={canManage()}
-                  active
-                  noteTitle={current().title}
-                />
-                <PodcastPanel noteId={current().id} noteTitle={current().title} episode={props.episode} active />
+              <div class="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem]">
+                <div class="min-w-0 py-6 lg:overflow-y-auto lg:px-8">
+                  <div class="mx-auto w-full max-w-3xl">
+                    <RagOutputsPanel
+                      noteId={current().id}
+                      source={courseNoteFiles}
+                      canManage={canManage()}
+                      active
+                      flat
+                      noteTitle={current().title}
+                    />
+                  </div>
+                </div>
+                <aside class="min-w-0 border-t border-border-hairline py-6 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:bg-surface-overlay/30 lg:px-5">
+                  <PodcastPanel noteId={current().id} noteTitle={current().title} episode={props.episode} active flat />
+                </aside>
               </div>
             </div>
           )}

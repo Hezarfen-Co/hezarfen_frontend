@@ -299,7 +299,7 @@ export function RagStudyPanel() {
       class={cn(
         "grid h-[calc(var(--app-viewport)-5.5rem-max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] gap-4 max-lg:-mt-2",
         "lg:-mx-10 lg:-my-6 lg:h-[calc(100dvh-49px-env(safe-area-inset-top))] lg:gap-0",
-        historyCollapsed() ? "lg:grid-cols-[minmax(0,1fr)]" : "lg:grid-cols-[16.5rem_minmax(0,1fr)]",
+        historyCollapsed() ? "lg:grid-cols-[minmax(0,1fr)]" : "lg:grid-cols-[260px_minmax(0,1fr)]",
       )}
     >
       <button

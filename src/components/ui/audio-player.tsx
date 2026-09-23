@@ -85,7 +85,13 @@ export function AudioPlayer(props: AudioPlayerProps) {
   const [failed, setFailed] = createSignal(false);
   // Seeking waits on the local copy; the seek bar already shows the target.
   const [seeking, setSeeking] = createSignal(false);
-  const [source, setSource] = createSignal(props.src);
+  // No src until the element is in the live document. A <Suspense> boundary
+  // renders its children detached first, and Chromium refuses a media load
+  // that starts off-document ("Media load rejected by URL safety check").
+  const [source, setSource] = createSignal<string | undefined>();
+  let connected = false;
+  let retriedLoad = false;
+  let disposed = false;
 
   // The local copy of the file, loaded once per `src` on first play or on the
   // first seek the stream cannot serve.
@@ -212,10 +218,21 @@ export function AudioPlayer(props: AudioPlayerProps) {
   };
 
   onMount(() => {
+    const attach = () => {
+      if (disposed) return;
+      if (!audio.isConnected) {
+        requestAnimationFrame(attach);
+        return;
+      }
+      connected = true;
+      setSource(objectUrl ?? props.src);
+    };
+    attach();
     players.add(audio);
     props.controller?.({ seek, play });
   });
   onCleanup(() => {
+    disposed = true;
     players.delete(audio);
     audio?.pause();
     dropLocal();
@@ -239,7 +256,8 @@ export function AudioPlayer(props: AudioPlayerProps) {
     resumeAfterSeek = false;
     afterLoad = null;
     setSeeking(false);
-    setSource(src);
+    retriedLoad = false;
+    if (connected) setSource(src);
     setCurrent(0);
     setMediaDuration(null);
     setBuffered(0);
@@ -318,6 +336,13 @@ export function AudioPlayer(props: AudioPlayerProps) {
           props.onTimeUpdate?.(audio.currentTime);
         }}
         onError={() => {
+          // One quiet retry for a load that raced the element's attachment;
+          // a real failure (bad file, gone episode) fails again and shows.
+          if (!retriedLoad && audio.isConnected && source()) {
+            retriedLoad = true;
+            audio.load();
+            return;
+          }
           setFailed(true);
           setPlaying(false);
           setBuffering(false);

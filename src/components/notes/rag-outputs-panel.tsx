@@ -39,6 +39,8 @@ export function RagOutputsPanel(props: {
   noteTitle?: string;
   /** Delete control is teacher-only; readers see the list. Defaults to true. */
   canManage?: boolean;
+  /** Drop the card frame where the page itself is the frame (studio canvas). */
+  flat?: boolean;
 }) {
   const t = useT();
   const { locale } = usePreferences();
@@ -199,7 +201,7 @@ export function RagOutputsPanel(props: {
   };
 
   return (
-    <section class="min-w-0 space-y-3 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4">
+    <section class={props.flat ? "min-w-0 space-y-3" : "min-w-0 space-y-3 rounded-xl border border-border-line bg-surface-base p-3 sm:p-4"}>
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 class="text-sm font-semibold">{t("courseNotes.ragTitle")}</h3>
