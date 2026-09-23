@@ -51,6 +51,12 @@ export type AudioPlayerProps = {
   actions?: JSX.Element;
   /** Extra controls at the end of the transport row (transcript toggle, …). */
   extra?: JSX.Element;
+  /**
+   * Loads the whole file. Given, a seek the stream cannot serve (a server
+   * that ignores `Range` leaves `seekable` empty) switches the player to a
+   * local copy of it instead of snapping back to 0:00.
+   */
+  loadBlob?: (signal: AbortSignal) => Promise<Blob>;
   onTimeUpdate?: (secs: number) => void;
   controller?: (controller: AudioPlayerController) => void;
   class?: string;
@@ -77,6 +83,54 @@ export function AudioPlayer(props: AudioPlayerProps) {
   const [volume, setVolume] = createSignal(readStored(VOLUME_KEY, 1, (v) => v >= 0 && v <= 1));
   const [muted, setMuted] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
+  // Seeking waits on the local copy; the seek bar already shows the target.
+  const [seeking, setSeeking] = createSignal(false);
+  const [source, setSource] = createSignal(props.src);
+
+  // The local copy of the file, loaded once per `src` on first play or on the
+  // first seek the stream cannot serve.
+  let objectUrl: string | null = null;
+  let localLoad: Promise<string | null> | null = null;
+  let abort: AbortController | null = null;
+  let pendingSeek: number | null = null;
+  let resumeAfterSeek = false;
+  let seekToken = 0;
+  let afterLoad: (() => void) | null = null;
+
+  const dropLocal = () => {
+    abort?.abort();
+    abort = null;
+    localLoad = null;
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    objectUrl = null;
+  };
+  const loadLocal = (): Promise<string | null> => {
+    const load = props.loadBlob;
+    if (!load) return Promise.resolve(null);
+    if (!localLoad) {
+      const controller = new AbortController();
+      abort = controller;
+      localLoad = load(controller.signal).then(
+        (blob) => {
+          if (controller.signal.aborted) return null;
+          objectUrl = URL.createObjectURL(blob);
+          return objectUrl;
+        },
+        () => {
+          if (abort === controller) localLoad = null;
+          return null;
+        },
+      );
+    }
+    return localLoad;
+  };
+  const canSeekTo = (secs: number) => {
+    const ranges = audio.seekable;
+    for (let i = 0; i < ranges.length; i += 1) {
+      if (ranges.end(i) > 0 && secs >= ranges.start(i) && secs <= ranges.end(i)) return true;
+    }
+    return false;
+  };
 
   const duration = () => mediaDuration() ?? (props.durationHint && props.durationHint > 0 ? props.durationHint : null);
   const fraction = (value: number) => {
@@ -87,10 +141,50 @@ export function AudioPlayer(props: AudioPlayerProps) {
   const seek = (secs: number) => {
     const total = duration();
     const next = Math.max(0, total ? Math.min(total, secs) : secs);
-    audio.currentTime = next;
     setCurrent(next);
+    if (!props.loadBlob || canSeekTo(next)) {
+      audio.currentTime = next;
+      return;
+    }
+    // The stream cannot go there: hold the target, pause the stream at its
+    // wrong position, and resume from the target on the local copy.
+    const token = ++seekToken;
+    pendingSeek = next;
+    resumeAfterSeek ||= !audio.paused;
+    audio.pause();
+    setSeeking(true);
+    void loadLocal().then((url) => {
+      if (token !== seekToken) return;
+      const at = pendingSeek ?? next;
+      const resume = resumeAfterSeek;
+      pendingSeek = null;
+      resumeAfterSeek = false;
+      if (!url) {
+        setSeeking(false);
+        setCurrent(audio.currentTime);
+        setFailed(true);
+        return;
+      }
+      afterLoad = () => {
+        audio.currentTime = at;
+        setCurrent(at);
+        setSeeking(false);
+        if (resume) play();
+      };
+      if (source() === url) {
+        const run = afterLoad;
+        afterLoad = null;
+        run();
+      } else {
+        setSource(url);
+      }
+    });
   };
   const play = () => {
+    if (pendingSeek != null) {
+      resumeAfterSeek = true;
+      return;
+    }
     setFailed(false);
     void audio.play().catch(() => {
       // A refused autoplay or an aborted load is not a broken file; the
@@ -98,7 +192,11 @@ export function AudioPlayer(props: AudioPlayerProps) {
       setPlaying(false);
     });
   };
-  const toggle = () => (audio.paused ? play() : audio.pause());
+  const toggle = () => {
+    if (pendingSeek != null) resumeAfterSeek = !resumeAfterSeek;
+    else if (audio.paused) play();
+    else audio.pause();
+  };
   const skip = (delta: number) => seek(audio.currentTime + delta);
   const cycleRate = () => {
     const index = RATES.indexOf(rate() as (typeof RATES)[number]);
@@ -120,6 +218,7 @@ export function AudioPlayer(props: AudioPlayerProps) {
   onCleanup(() => {
     players.delete(audio);
     audio?.pause();
+    dropLocal();
   });
 
   createEffect(() => {
@@ -133,7 +232,14 @@ export function AudioPlayer(props: AudioPlayerProps) {
   });
   // A new episode in the same player starts from its own beginning.
   createEffect(() => {
-    void props.src;
+    const src = props.src;
+    dropLocal();
+    seekToken += 1;
+    pendingSeek = null;
+    resumeAfterSeek = false;
+    afterLoad = null;
+    setSeeking(false);
+    setSource(src);
     setCurrent(0);
     setMediaDuration(null);
     setBuffered(0);
@@ -184,22 +290,30 @@ export function AudioPlayer(props: AudioPlayerProps) {
     >
       <audio
         ref={audio}
-        src={props.src}
+        src={source()}
         preload="metadata"
         autoplay={props.autoplay}
         onPlay={() => {
           for (const other of players) if (other !== audio) other.pause();
           setPlaying(true);
+          // Fetched while the stream plays, so later skips are instant.
+          void loadLocal();
         }}
         onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
         onWaiting={() => setBuffering(true)}
         onPlaying={() => setBuffering(false)}
         onCanPlay={() => setBuffering(false)}
-        onLoadedMetadata={syncDuration}
+        onLoadedMetadata={() => {
+          syncDuration();
+          const run = afterLoad;
+          afterLoad = null;
+          run?.();
+        }}
         onDurationChange={syncDuration}
         onProgress={syncBuffered}
         onTimeUpdate={() => {
+          if (pendingSeek != null) return;
           setCurrent(audio.currentTime);
           props.onTimeUpdate?.(audio.currentTime);
         }}
@@ -215,12 +329,12 @@ export function AudioPlayer(props: AudioPlayerProps) {
           type="button"
           class={cn(
             "relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            buffering() && playing() && "animate-pulse",
+            (seeking() || (buffering() && playing())) && "animate-pulse",
           )}
-          aria-label={playing() ? t("audio.pause") : t("audio.play")}
+          aria-label={playing() || seeking() ? t("audio.pause") : t("audio.play")}
           onClick={toggle}
         >
-          <Show when={playing()} fallback={<IconPlay class="ml-0.5 h-5 w-5" />}>
+          <Show when={playing() || seeking()} fallback={<IconPlay class="ml-0.5 h-5 w-5" />}>
             <IconPause class="h-5 w-5" />
           </Show>
         </button>

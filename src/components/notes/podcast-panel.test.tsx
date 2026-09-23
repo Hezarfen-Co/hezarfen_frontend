@@ -10,6 +10,7 @@ const podcastApi = vi.hoisted(() => ({
   postPodcastJobCancel: vi.fn(),
   listPodcastJobs: vi.fn(async () => ({ items: [], total: 0, limit: 10, offset: 0 })),
   podcastAudioUrl: vi.fn((jobId: string) => `/api/podcast/jobs/${encodeURIComponent(jobId)}/audio`),
+  getPodcastJobAudioBlob: vi.fn(),
 }));
 
 vi.mock("@/api/podcast", () => podcastApi);
@@ -58,6 +59,24 @@ describe("PodcastPanel", () => {
     // stream by `job_id`. Handing it `audio_id` (the output-root path) composes
     // a URL the backend has no route for, and the player dies silently.
     sessionStorage.setItem("hezarfen.podcast.note-7", "pj1");
+    podcastApi.listPodcastJobs.mockResolvedValue({
+      items: [
+        {
+          job_id: "pj1",
+          state: "done",
+          format: "duz_okuma",
+          source_id: "note-7",
+          source_title: "Hücre ve Canlıların Ortak Özellikleri",
+          created_at: 1,
+          finished_at: 2,
+          duration_secs: 42,
+          error_code: null,
+        },
+      ],
+      total: 1,
+      limit: 10,
+      offset: 0,
+    });
     podcastApi.getPodcastJobById.mockResolvedValue({ job_id: "pj1", state: "done", stage: "done", progress: 1 });
     podcastApi.getPodcastJobResultById.mockResolvedValue({
       job_id: "pj1",
@@ -72,15 +91,33 @@ describe("PodcastPanel", () => {
       </PreferencesProvider>
     ));
 
+    // The finished job hands off to the episode list, which selects it.
     await waitFor(() => {
-      expect(screen.getByText("Your episode is ready.")).toBeTruthy();
+      expect(document.querySelector("audio")?.getAttribute("src")).toBe("/api/podcast/jobs/pj1/audio");
     });
     expect(podcastApi.podcastAudioUrl).toHaveBeenCalledWith("pj1");
-    expect(document.querySelector("audio")?.getAttribute("src")).toBe("/api/podcast/jobs/pj1/audio");
   });
 
   it("downloads the finished episode under the note's own title", async () => {
     sessionStorage.setItem("hezarfen.podcast.note-7", "pj1");
+    podcastApi.listPodcastJobs.mockResolvedValue({
+      items: [
+        {
+          job_id: "pj1",
+          state: "done",
+          format: "duz_okuma",
+          source_id: "note-7",
+          source_title: "Hücre ve Canlıların Ortak Özellikleri",
+          created_at: 1,
+          finished_at: 2,
+          duration_secs: 42,
+          error_code: null,
+        },
+      ],
+      total: 1,
+      limit: 10,
+      offset: 0,
+    });
     podcastApi.getPodcastJobById.mockResolvedValue({ job_id: "pj1", state: "done", stage: "done", progress: 1 });
     podcastApi.getPodcastJobResultById.mockResolvedValue({
       job_id: "pj1",
@@ -96,15 +133,16 @@ describe("PodcastPanel", () => {
     ));
 
     await waitFor(() => {
-      expect(screen.getByText("Your episode is ready.")).toBeTruthy();
+      expect(screen.getAllByRole("link", { name: "Download episode" }).length).toBeGreaterThan(0);
     });
-    const link = screen.getByRole("link", { name: "Download episode" }) as HTMLAnchorElement;
+    const link = screen.getAllByRole("link", { name: "Download episode" })[0] as HTMLAnchorElement;
     expect(link.getAttribute("href")).toBe("/api/podcast/jobs/pj1/audio");
     expect(link.getAttribute("download")).toBe("Hücre ve Canlıların Ortak Özellikleri.mp3");
   });
 
   it("shows no download control while the episode is still being made", async () => {
     sessionStorage.setItem("hezarfen.podcast.note-7", "pj2");
+    podcastApi.listPodcastJobs.mockResolvedValue({ items: [], total: 0, limit: 10, offset: 0 });
     podcastApi.getPodcastJobById.mockResolvedValue({ job_id: "pj2", state: "running", stage: "script", progress: 0.4 });
 
     render(() => (

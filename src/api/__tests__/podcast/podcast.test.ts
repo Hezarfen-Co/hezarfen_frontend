@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getPodcastJobAudioBlob,
   getPodcastJobById,
   getPodcastJobResultById,
   listPodcastJobs,
@@ -7,7 +8,7 @@ import {
   postPodcastJob,
   postPodcastJobCancel,
 } from "../../podcast";
-import { lastFetchCall, mockFetchSuccess } from "../helpers/mock-fetch";
+import { lastFetchCall, mockFetchBlob, mockFetchSuccess } from "../helpers/mock-fetch";
 
 describe("podcast API", () => {
   afterEach(() => {
@@ -84,6 +85,18 @@ describe("podcast API", () => {
 
   it("podcastAudioUrl addresses the job's own audio door, encoded", () => {
     expect(podcastAudioUrl("j 1")).toBe("/api/podcast/jobs/j%201/audio");
+  });
+
+  it("getPodcastJobAudioBlob loads the whole episode from the same door", async () => {
+    const blob = new Blob(["mp3"], { type: "audio/mpeg" });
+    mockFetchBlob(blob);
+
+    const result = await getPodcastJobAudioBlob("j 1");
+    expect(result.type).toBe("audio/mpeg");
+
+    const [url, init] = lastFetchCall();
+    expect(url).toBe("/api/podcast/jobs/j%201/audio");
+    expect(init?.method ?? "GET").toBe("GET");
   });
 
   it("listPodcastJobs asks for the whole history when no note is given", async () => {

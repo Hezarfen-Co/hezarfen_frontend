@@ -1,20 +1,19 @@
 import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
-import { formatApiError } from "@/api/client";
+import { formatApiError, type PodcastJobSummary, type PodcastTranscriptSegment } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { listPodcastJobs, podcastAudioUrl } from "@/api/podcast";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { IconDownload, IconPlay } from "@/components/ui/icons";
+import { IconDownload, IconPlay, IconWaveform } from "@/components/ui/icons";
 import { PodcastPlayer } from "@/components/notes/podcast-player";
 import { cn } from "@/lib/cn";
 import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
-import { formatDate, formatDurationClock } from "@/lib/format";
+import { formatDateTime, formatDurationClock } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 const HISTORY_PAGE_SIZE = 10;
@@ -29,18 +28,26 @@ const FORMAT_KEYS: Record<string, MessageKey> = {
 };
 
 /**
- * The caller's own episodes, under the Ses Atölyesi panel. One-directional:
- * the studio produces, this only reads. A finished episode plays through the
- * same job-id audio door the panel's own player uses.
+ * The note's episodes: one player on top for the selected episode, and a
+ * plain list under it — narration, when, how long. A row is picked, not
+ * expanded, so there is only ever one player and one set of controls.
  *
- * The list always follows the note selected in the studio. There is no second
- * global-history scope here: the podcast tab is about the current note.
+ * The newest finished episode is selected on load (not played); a generation
+ * the panel just finished is selected as it lands. Unfinished rows stay in
+ * the list, muted, with their state instead of a player.
  */
-export function PodcastHistory(props: { noteId?: string; active?: boolean; refetchKey?: string | number }) {
+export function PodcastHistory(props: {
+  noteId?: string;
+  active?: boolean;
+  refetchKey?: string | number;
+  /** The transcript of the episode the panel just produced, if the service sent one. */
+  transcript?: { jobId: string; segments: PodcastTranscriptSegment[] } | null;
+}) {
   const t = useT();
   const downloadT = usePodcastDownloadT();
   const { locale } = usePreferences();
-  const [playing, setPlaying] = createSignal("");
+  const [selected, setSelected] = createSignal("");
+  const [autoplay, setAutoplay] = createSignal(false);
   const [page, setPage] = createSignal(0);
   const pageSize = createResponsivePageSize(HISTORY_PAGE_SIZE);
   const active = () => props.active !== false;
@@ -49,6 +56,8 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
     props.noteId;
     pageSize();
     setPage(0);
+    setSelected("");
+    setAutoplay(false);
   });
 
   // The source is the scope string, not a fresh object: an identity-stable
@@ -60,10 +69,15 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
   );
 
   // The panel bumps the key ("", then the job id) when a generation finishes;
-  // pull a fresh page so the episode it just produced appears. The history
-  // never starts work itself.
+  // pull a fresh page so the episode it just produced appears, and select it.
   createEffect(() => {
-    if (props.refetchKey) void refetch();
+    const key = props.refetchKey;
+    if (!key) return;
+    void refetch();
+    if (typeof key === "string") {
+      setSelected(key);
+      setAutoplay(false);
+    }
   });
 
   const jobs = () => list()?.items ?? [];
@@ -74,12 +88,18 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
     if (page() > totalPages() - 1) setPage(totalPages() - 1);
   });
 
-  const stateVariant = (state: string) => {
-    if (state === "done") return "success" as const;
-    if (state === "failed") return "destructive" as const;
-    if (state === "cancelled") return "secondary" as const;
-    return "warning" as const;
-  };
+  // Nothing picked yet (or the pick left the page): fall back to the newest
+  // finished episode on screen.
+  createEffect(() => {
+    const rows = jobs();
+    if (rows.some((row) => row.job_id === selected() && row.state === "done")) return;
+    const first = rows.find((row) => row.state === "done");
+    // A just-finished job may not be on the refetched page yet; keep it picked.
+    const waitingForFresh = !!props.refetchKey && props.refetchKey === selected();
+    if (first && !waitingForFresh) setSelected(first.job_id);
+  });
+  const current = createMemo(() => jobs().find((row) => row.job_id === selected() && row.state === "done") ?? null);
+
   const formatLabel = (format: string | null) => {
     if (!format) return "";
     const key = FORMAT_KEYS[format];
@@ -91,12 +111,24 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
     if (state === "cancelled") return t("podcast.history.state.cancelled");
     return t("podcast.history.state.pending");
   };
+  const stateVariant = (state: string) => {
+    if (state === "failed") return "destructive" as const;
+    if (state === "cancelled") return "secondary" as const;
+    return "warning" as const;
+  };
+  // Scoped to one note, every row narrates the same note — its title would
+  // only repeat; the narration names the episode instead.
+  const rowTitle = (row: PodcastJobSummary) =>
+    props.noteId ? formatLabel(row.format) || t("podcast.history.episode") : row.source_title ?? row.source_id;
+  const noteName = (row: PodcastJobSummary) => row.source_title ?? row.source_id;
+  const pick = (row: PodcastJobSummary) => {
+    setSelected(row.job_id);
+    setAutoplay(true);
+  };
 
   return (
     <div class="space-y-3 border-t border-border-line pt-4">
-      <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <h3 class="text-sm font-semibold">{t("podcast.history.title")}</h3>
-      </div>
+      <h3 class="text-sm font-semibold">{t("podcast.history.title")}</h3>
 
       <Show when={list.error}>
         <Alert variant="destructive">{formatApiError(list.error)}</Alert>
@@ -108,78 +140,87 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
             when={jobs().length > 0}
             fallback={
               <EmptyInline
-                title={
-                  props.noteId
-                    ? t("podcast.history.emptyNote")
-                    : t("podcast.history.empty")
-                }
+                title={props.noteId ? t("podcast.history.emptyNote") : t("podcast.history.empty")}
                 hint={t("podcast.history.emptyHint")}
               />
             }
           >
-            <ul class="space-y-2">
+            <Show when={current()} keyed>
+              {(row) => (
+                <PodcastPlayer
+                  jobId={row.job_id}
+                  title={rowTitle(row)}
+                  subtitle={formatDateTime(row.created_at, locale())}
+                  downloadName={noteName(row)}
+                  durationSecs={row.duration_secs}
+                  transcript={props.transcript?.jobId === row.job_id ? props.transcript.segments : null}
+                  autoplay={autoplay()}
+                />
+              )}
+            </Show>
+
+            <ul class="divide-y divide-border-hairline overflow-hidden rounded-lg border border-border-hairline">
               <For each={jobs()}>
-                {(row) => (
-                  <li class="rounded-lg border border-border/60 p-3">
-                    <div class="flex items-center gap-3">
-                    <div class="min-w-0 flex-1">
-                      <p class="truncate text-sm font-medium">{row.source_title ?? row.source_id}</p>
-                      <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <Badge variant={stateVariant(row.state)}>{stateLabel(row.state)}</Badge>
-                        <Show when={formatLabel(row.format)}>
-                          {(label) => <Badge variant="outline">{label()}</Badge>}
-                        </Show>
-                        <Show when={row.state === "failed" && row.error_code}>
-                          <span class="mono">{row.error_code}</span>
-                        </Show>
-                        <span>{formatDate(row.created_at, locale())}</span>
-                        <Show when={row.duration_secs != null}>
-                          <span class="tabular-nums">{formatDurationClock((row.duration_secs ?? 0) * 1000)}</span>
-                        </Show>
-                      </div>
-                    </div>
-                    <Show when={row.state === "done"}>
-                      <div class="flex shrink-0 items-center gap-2">
-                        <Button
+                {(row) => {
+                  const isCurrent = () => current()?.job_id === row.job_id;
+                  return (
+                    <li class={cn("flex items-center gap-1 pr-1.5", isCurrent() && "bg-primary/5")}>
+                      <Show
+                        when={row.state === "done"}
+                        fallback={
+                          <div class="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-muted-foreground" title={row.error_code ?? undefined}>
+                            <span class="flex h-7 w-7 shrink-0 items-center justify-center" aria-hidden="true">
+                              <span class="h-1.5 w-1.5 rounded-full bg-current opacity-50" />
+                            </span>
+                            <span class="min-w-0 flex-1">
+                              <span class="block truncate text-sm">{rowTitle(row)}</span>
+                              <span class="block truncate text-xs">{formatDateTime(row.created_at, locale())}</span>
+                            </span>
+                            <Badge variant={stateVariant(row.state)}>{stateLabel(row.state)}</Badge>
+                          </div>
+                        }
+                      >
+                        <button
                           type="button"
-                          size="sm"
-                          variant="outline"
-                          class="shrink-0 rounded-lg"
-                          aria-label={t("podcast.history.play")}
-                          aria-expanded={playing() === row.job_id}
-                          onClick={() => setPlaying(playing() === row.job_id ? "" : row.job_id)}
+                          class="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                          aria-label={`${t("podcast.history.play")}: ${rowTitle(row)}, ${formatDateTime(row.created_at, locale())}`}
+                          aria-current={isCurrent() ? "true" : undefined}
+                          onClick={() => pick(row)}
                         >
-                          <IconPlay class="h-3.5 w-3.5" />
-                        </Button>
+                          <span
+                            class={cn(
+                              "flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+                              isCurrent() ? "bg-primary text-primary-foreground" : "bg-muted text-foreground/70",
+                            )}
+                            aria-hidden="true"
+                          >
+                            <Show when={isCurrent()} fallback={<IconPlay class="ml-px h-3 w-3" />}>
+                              <IconWaveform class="h-3.5 w-3.5" />
+                            </Show>
+                          </span>
+                          <span class="min-w-0 flex-1">
+                            <span class={cn("block truncate text-sm", isCurrent() ? "font-semibold" : "font-medium")}>{rowTitle(row)}</span>
+                            <span class="block truncate text-xs text-muted-foreground">{formatDateTime(row.created_at, locale())}</span>
+                          </span>
+                          <Show when={row.duration_secs != null}>
+                            <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
+                              {formatDurationClock((row.duration_secs ?? 0) * 1000)}
+                            </span>
+                          </Show>
+                        </button>
                         <a
                           href={podcastAudioUrl(row.job_id)}
-                          download={podcastDownloadFilename(
-                            row.source_title ?? row.source_id,
-                            downloadT("podcast.download.fallback"),
-                          )}
+                          download={podcastDownloadFilename(noteName(row), downloadT("podcast.download.fallback"))}
                           aria-label={downloadT("podcast.download.aria")}
-                          class={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0 rounded-lg")}
+                          title={downloadT("podcast.download.label")}
+                          class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <IconDownload class="h-4 w-4" />
-                          {downloadT("podcast.download.label")}
                         </a>
-                      </div>
-                    </Show>
-                    </div>
-                    {/* The player opens in the row the reader clicked. A single
-                        one under the whole list put it a screen away from the
-                        episode it belonged to. */}
-                    <Show when={playing() === row.job_id}>
-                      <PodcastPlayer
-                        class="mt-3"
-                        jobId={row.job_id}
-                        durationSecs={row.duration_secs}
-                        download={false}
-                        autoplay
-                      />
-                    </Show>
-                  </li>
-                )}
+                      </Show>
+                    </li>
+                  );
+                }}
               </For>
             </ul>
           </Show>
@@ -188,7 +229,6 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
           </Show>
         </Suspense>
       </Show>
-
     </div>
   );
 }

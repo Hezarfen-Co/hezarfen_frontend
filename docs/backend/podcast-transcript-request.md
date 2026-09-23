@@ -44,3 +44,15 @@ If the backend prefers a separate door (for example
 the studio inspector load it lazily), or different field names, the frontend
 changes in one place: the type above and the `transcript` prop passed to
 `PodcastPlayer`.
+
+## Related: the audio door cannot be seeked
+
+`GET /podcast/jobs/{id}/audio` answers `200` with `Transfer-Encoding: chunked`,
+no `Content-Length`, no `Accept-Ranges`, and ignores a `Range` header
+(checked 2026-09-23). Browsers then report `seekable` as `[0, 0]` and every
+seek snaps back to 0:00. The frontend works around it by loading the whole
+file once (`getPodcastJobAudioBlob`) and seeking in a local copy, which costs
+a full download before the first seek. Answering `Range` with `206 Partial
+Content` (plus `Accept-Ranges: bytes` and `Content-Length` on the full
+response) would make seeking instant; the player already prefers the stream
+whenever the browser says it can seek there.

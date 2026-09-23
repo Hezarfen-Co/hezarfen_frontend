@@ -8,10 +8,12 @@ import { ThemeModeControl } from "@/components/layout/theme-mode-control";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { IconMenu, IconX } from "@/components/ui/icons";
 import { useAuth } from "@/stores/auth-context";
+import { useSchool } from "@/stores/school-context";
 import { useT } from "@/stores/preferences-context";
 
 export function NavBar() {
   const auth = useAuth();
+  const school = useSchool();
   const t = useT();
   const [mobileOpen, setMobileOpen] = createSignal(false);
 
@@ -36,8 +38,11 @@ export function NavBar() {
             <span class="flex h-8 w-8 shrink-0 items-center justify-center text-foreground">
               <LogoMark size={28} />
             </span>
-            <span class="truncate text-base font-semibold tracking-tight sm:text-lg">
-              {t("app.name")}
+            <span class="flex min-w-0 flex-col leading-tight">
+              <span class="truncate text-base font-semibold tracking-tight sm:text-lg">{t("app.name")}</span>
+              <Show when={auth.user() && school.name()}>
+                <span class="truncate text-xs font-medium text-muted-foreground">{school.name()}</span>
+              </Show>
             </span>
           </Link>
 

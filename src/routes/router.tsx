@@ -12,6 +12,7 @@ import { NotFoundPage } from "@/components/system/not-found-page";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { AuthProvider } from "@/stores/auth-context";
 import { ModulesProvider } from "@/stores/modules-context";
+import { SchoolProvider } from "@/stores/school-context";
 import { AttendanceRedirect } from "@/components/layout/attendance-redirect";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
@@ -90,9 +91,11 @@ function RootComponent() {
     <PreferencesProvider>
       <AuthProvider>
         <ModulesProvider>
-          <AppShell>
-            <Outlet />
-          </AppShell>
+          <SchoolProvider>
+            <AppShell>
+              <Outlet />
+            </AppShell>
+          </SchoolProvider>
         </ModulesProvider>
       </AuthProvider>
     </PreferencesProvider>

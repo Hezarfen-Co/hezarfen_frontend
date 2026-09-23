@@ -8,6 +8,7 @@ import { PreferencesProvider } from "@/stores/preferences-context";
 const podcastApi = vi.hoisted(() => ({
   listPodcastJobs: vi.fn(),
   podcastAudioUrl: vi.fn((jobId: string) => `/api/podcast/jobs/${encodeURIComponent(jobId)}/audio`),
+  getPodcastJobAudioBlob: vi.fn(),
 }));
 
 vi.mock("@/api/podcast", () => podcastApi);
@@ -51,18 +52,27 @@ describe("PodcastHistory", () => {
       </PreferencesProvider>
     ));
 
-  it("renders a finished row's title, state and duration, and plays it by job id", async () => {
-    podcastApi.listPodcastJobs.mockResolvedValue(page([job({})]));
+  it("names rows by narration, selects the newest finished one and plays a picked row", async () => {
+    podcastApi.listPodcastJobs.mockResolvedValue(
+      page([job({ job_id: "job-2", format: "ogrenci_hoca" }), job({ job_id: "job-1" })]),
+    );
 
     renderHistory("note-1");
 
-    await waitFor(() => expect(screen.getByText("Hücre")).toBeTruthy());
-    expect(screen.getByText("Hazır")).toBeTruthy();
-    expect(screen.getByText("12:34")).toBeTruthy();
+    // Scoped to one note, the note's title is not repeated on every row.
+    await waitFor(() => expect(screen.getAllByText("Öğrenci ve öğretmen").length).toBeGreaterThan(0));
+    expect(screen.queryByText("Hücre")).toBeNull();
+    expect(screen.getAllByText("12:34").length).toBeGreaterThan(0);
+    // One player, on the newest finished episode, not playing on its own.
+    expect(document.querySelectorAll("audio")).toHaveLength(1);
+    expect(document.querySelector("audio")?.getAttribute("src")).toBe("/api/podcast/jobs/job-2/audio");
 
-    fireEvent.click(screen.getByRole("button", { name: "Bölümü oynat" }));
-    expect(podcastApi.podcastAudioUrl).toHaveBeenCalledWith("job-1");
-    expect(document.querySelector("audio")?.getAttribute("src")).toBe("/api/podcast/jobs/job-1/audio");
+    fireEvent.click(screen.getByRole("button", { name: /^Bölümü oynat: Düz okuma/ }));
+
+    await waitFor(() =>
+      expect(document.querySelector("audio")?.getAttribute("src")).toBe("/api/podcast/jobs/job-1/audio"),
+    );
+    expect(document.querySelectorAll("audio")).toHaveLength(1);
   });
 
   it("gives a non-done row no play control", async () => {
@@ -82,10 +92,11 @@ describe("PodcastHistory", () => {
 
     renderHistory("note-1");
 
-    await waitFor(() => expect(screen.getByText("Hücre")).toBeTruthy());
-    const link = screen.getByRole("link", { name: "Bölümü indir" }) as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe("/api/podcast/jobs/job-1/audio");
-    expect(link.getAttribute("download")).toBe("Hücre.mp3");
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "Bölümü indir" }).length).toBeGreaterThan(0));
+    for (const link of screen.getAllByRole("link", { name: "Bölümü indir" }) as HTMLAnchorElement[]) {
+      expect(link.getAttribute("href")).toBe("/api/podcast/jobs/job-1/audio");
+      expect(link.getAttribute("download")).toBe("Hücre.mp3");
+    }
   });
 
   it("gives a non-done row no download control", async () => {
@@ -140,12 +151,13 @@ describe("PodcastHistory", () => {
     expect(podcastApi.listPodcastJobs).not.toHaveBeenCalled();
   });
 
-  it("falls back to the note id when the note is gone", async () => {
+  it("falls back to the note id for a download when the note is gone", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(page([job({ source_id: "note-gone", source_title: null })]));
 
     renderHistory("note-1");
 
-    await waitFor(() => expect(screen.getByText("note-gone")).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "Bölümü indir" }).length).toBeGreaterThan(0));
+    expect(screen.getAllByRole("link", { name: "Bölümü indir" })[0].getAttribute("download")).toBe("note-gone.mp3");
   });
 
   it("refetches when the panel signals a finished generation", async () => {
@@ -164,46 +176,43 @@ describe("PodcastHistory", () => {
   });
 
   it("paginates the selected note's podcast history", async () => {
-    const first = job({ job_id: "job-1", source_title: "İlk bölüm" });
-    const second = job({ job_id: "job-2", source_title: "İkinci bölüm" });
+    const first = job({ job_id: "job-1", format: "duz_okuma" });
+    const second = job({ job_id: "job-2", format: "tek_ogretici" });
     podcastApi.listPodcastJobs
       .mockResolvedValueOnce(page([first], 11, 0))
       .mockResolvedValueOnce(page([second], 11, 10));
 
     renderHistory("note-1");
 
-    await waitFor(() => expect(screen.getByText("İlk bölüm")).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText("Düz okuma").length).toBeGreaterThan(0));
     expect(screen.getByText("1 / 2")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Sonraki" }));
 
-    await waitFor(() => expect(screen.getByText("İkinci bölüm")).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText("Tek öğretici").length).toBeGreaterThan(0));
     expect(podcastApi.listPodcastJobs).toHaveBeenLastCalledWith({ limit: 10, offset: 10, sourceId: "note-1" });
     expect(screen.getByText("2 / 2")).toBeTruthy();
   });
 
   it("marks each episode with the narration the service settled on", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(
-      page([
-        job({ job_id: "job-1", source_title: "Düz", format: "duz_okuma" }),
-        job({ job_id: "job-2", source_title: "İkili", format: "ogrenci_hoca" }),
-      ]),
+      page([job({ job_id: "job-1", format: "duz_okuma" }), job({ job_id: "job-2", format: "ogrenci_hoca" })]),
     );
 
     renderHistory("note-1");
 
-    await waitFor(() => expect(screen.getByText("Düz okuma")).toBeTruthy());
-    expect(screen.getByText("Öğrenci ve öğretmen")).toBeTruthy();
+    await waitFor(() => expect(screen.getAllByText("Düz okuma").length).toBeGreaterThan(0));
+    expect(screen.getAllByText("Öğrenci ve öğretmen").length).toBeGreaterThan(0);
   });
 
-  it("leaves a job the service has not settled a format for unmarked", async () => {
+  it("names an episode the service has not settled a format for plainly", async () => {
     podcastApi.listPodcastJobs.mockResolvedValue(
       page([job({ state: "queued", format: null, duration_secs: null, finished_at: null })]),
     );
 
     renderHistory("note-1");
 
-    await waitFor(() => expect(screen.getByText("Hücre")).toBeTruthy());
+    await waitFor(() => expect(screen.getByText("Bölüm")).toBeTruthy());
     expect(screen.queryByText("Düz okuma")).toBeNull();
   });
 });

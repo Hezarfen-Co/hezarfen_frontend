@@ -19,6 +19,7 @@ import { IconPanelLeft, IconSparkles } from "@/components/ui/icons";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
+import { useSchool } from "@/stores/school-context";
 import { celebiPanelOpen, openCelebiPanel, setCelebiPanelOpen } from "@/stores/celebi-panel";
 import { commandPaletteOpen, openCommandPalette, setCommandPaletteOpen } from "@/stores/command-palette";
 import { quickActionsSuppressed } from "@/stores/quick-actions";
@@ -35,6 +36,7 @@ export function AppShell(props: ParentProps) {
   const auth = useAuth();
   const prefs = usePreferences();
   const t = useT();
+  const school = useSchool();
   const modules = useModules();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = createSignal(false);
@@ -112,13 +114,18 @@ export function AppShell(props: ParentProps) {
               <Link
                 to="/"
                 class={cn("flex min-w-0 items-center gap-2.5", collapsed() ? "justify-center" : "flex-1")}
-                title={t("app.name")}
+                title={school.name() ? `${t("app.name")} · ${school.name()}` : t("app.name")}
               >
                 <span class="flex h-8 w-8 shrink-0 items-center justify-center text-foreground">
                   <LogoMark size={28} />
                 </span>
                 <Show when={!collapsed()}>
-                  <span class="truncate text-base font-semibold tracking-tight text-foreground dark:text-white 2xl:text-lg">{t("app.name")}</span>
+                  <span class="flex min-w-0 flex-col leading-tight">
+                    <span class="truncate text-base font-semibold tracking-tight text-foreground dark:text-white 2xl:text-lg">{t("app.name")}</span>
+                    <Show when={school.name()}>
+                      {(name) => <span class="truncate text-xs font-medium text-muted-foreground">{name()}</span>}
+                    </Show>
+                  </span>
                 </Show>
               </Link>
             </div>

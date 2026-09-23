@@ -1,5 +1,5 @@
 import { Show, createSignal } from "solid-js";
-import { podcastAudioUrl } from "@/api/podcast";
+import { getPodcastJobAudioBlob, podcastAudioUrl } from "@/api/podcast";
 import type { PodcastTranscriptSegment } from "@/api/client";
 import { AudioPlayer, type AudioPlayerController } from "@/components/ui/audio-player";
 import { IconDownload, IconTranscript } from "@/components/ui/icons";
@@ -22,6 +22,8 @@ export function PodcastPlayer(props: {
   autoplay?: boolean;
   /** Off where the surrounding row already offers the download. */
   download?: boolean;
+  /** The download's filename stem; defaults to the title. */
+  downloadName?: string;
   class?: string;
 }) {
   const t = useT();
@@ -38,6 +40,7 @@ export function PodcastPlayer(props: {
         title={props.title}
         subtitle={props.subtitle}
         durationHint={props.durationSecs}
+        loadBlob={(signal) => getPodcastJobAudioBlob(props.jobId, signal)}
         autoplay={props.autoplay}
         onTimeUpdate={setCurrentSecs}
         controller={(value) => (controller = value)}
@@ -45,7 +48,7 @@ export function PodcastPlayer(props: {
           <Show when={props.download !== false}>
             <a
               href={podcastAudioUrl(props.jobId)}
-              download={podcastDownloadFilename(props.title, downloadT("podcast.download.fallback"))}
+              download={podcastDownloadFilename(props.downloadName ?? props.title, downloadT("podcast.download.fallback"))}
               aria-label={downloadT("podcast.download.aria")}
               title={downloadT("podcast.download.label")}
               class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"

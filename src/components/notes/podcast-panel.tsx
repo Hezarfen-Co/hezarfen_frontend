@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { PodcastHistory } from "@/components/notes/podcast-history";
 import { PodcastStageTrail, type PodcastStageEntry } from "@/components/notes/podcast-stage-trail";
-import { PodcastPlayer } from "@/components/notes/podcast-player";
 import { createLivePoll } from "@/lib/create-live-poll";
 import { useT } from "@/stores/preferences-context";
 
@@ -205,7 +204,8 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
         </Button>
       </div>
 
-      <Show when={status()}>
+      {/* A finished job hands off to the episode list, which selects it. */}
+      <Show when={status()?.state === "done" ? null : status()}>
         {(current) => (
           <div class="space-y-3 rounded-lg border border-border-hairline bg-surface-overlay/40 p-3">
             {/* Compact textual metadata over a progress bar: the state, how far
@@ -238,25 +238,13 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
         )}
       </Show>
 
-      <Show when={artifacts()}>
-        {(result) => (
-          <div class="space-y-2 rounded-lg border border-success/25 bg-success/5 p-3">
-            <p class="text-sm font-medium">{t("podcast.ready")}</p>
-            <PodcastPlayer
-              jobId={result().job_id}
-              title={props.noteTitle}
-              subtitle={result().format ? formatOptions().find((option) => option.value === result().format)?.label : undefined}
-              durationSecs={result().duration_secs}
-              transcript={result().transcript}
-            />
-          </div>
-        )}
-      </Show>
-
       <PodcastHistory
         noteId={props.noteId}
         active={active()}
         refetchKey={status()?.state === "done" ? jobId() : ""}
+        transcript={
+          artifacts()?.transcript?.length ? { jobId: artifacts()!.job_id, segments: artifacts()!.transcript! } : null
+        }
       />
     </section>
     </Suspense>
