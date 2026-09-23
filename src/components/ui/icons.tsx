@@ -53,6 +53,14 @@ import uploadSimpleUrl from "@phosphor-icons/core/regular/upload-simple.svg?url"
 import usersUrl from "@phosphor-icons/core/regular/users.svg?url";
 import warningUrl from "@phosphor-icons/core/regular/warning.svg?url";
 import waveformUrl from "@phosphor-icons/core/regular/waveform.svg?url";
+import playFillUrl from "@phosphor-icons/core/fill/play-fill.svg?url";
+import pauseFillUrl from "@phosphor-icons/core/fill/pause-fill.svg?url";
+import arrowCounterClockwiseUrl from "@phosphor-icons/core/regular/arrow-counter-clockwise.svg?url";
+import arrowClockwiseUrl from "@phosphor-icons/core/regular/arrow-clockwise.svg?url";
+import speakerHighUrl from "@phosphor-icons/core/regular/speaker-high.svg?url";
+import speakerLowUrl from "@phosphor-icons/core/regular/speaker-low.svg?url";
+import speakerXUrl from "@phosphor-icons/core/regular/speaker-x.svg?url";
+import subtitlesUrl from "@phosphor-icons/core/regular/subtitles.svg?url";
 import wifiHighUrl from "@phosphor-icons/core/regular/wifi-high.svg?url";
 import wifiSlashUrl from "@phosphor-icons/core/regular/wifi-slash.svg?url";
 import xUrl from "@phosphor-icons/core/regular/x.svg?url";
@@ -686,6 +694,38 @@ export function IconTarget(props: IconProps) {
 
 export function IconWaveform(props: IconProps) {
   return <PhosphorIcon {...props} src={waveformUrl} />;
+}
+
+export function IconPlay(props: IconProps) {
+  return <PhosphorIcon {...props} src={playFillUrl} />;
+}
+
+export function IconPause(props: IconProps) {
+  return <PhosphorIcon {...props} src={pauseFillUrl} />;
+}
+
+export function IconSkipBack(props: IconProps) {
+  return <PhosphorIcon {...props} src={arrowCounterClockwiseUrl} />;
+}
+
+export function IconSkipForward(props: IconProps) {
+  return <PhosphorIcon {...props} src={arrowClockwiseUrl} />;
+}
+
+export function IconVolume(props: IconProps) {
+  return <PhosphorIcon {...props} src={speakerHighUrl} />;
+}
+
+export function IconVolumeLow(props: IconProps) {
+  return <PhosphorIcon {...props} src={speakerLowUrl} />;
+}
+
+export function IconVolumeMute(props: IconProps) {
+  return <PhosphorIcon {...props} src={speakerXUrl} />;
+}
+
+export function IconTranscript(props: IconProps) {
+  return <PhosphorIcon {...props} src={subtitlesUrl} />;
 }
 
 export function IconWifi(props: IconProps) {

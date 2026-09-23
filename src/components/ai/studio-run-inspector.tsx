@@ -1,13 +1,9 @@
 import { Show } from "solid-js";
 import type { PodcastJobSummary } from "@/api/client";
-import { podcastAudioUrl } from "@/api/podcast";
-import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
+import { PodcastPlayer } from "@/components/notes/podcast-player";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { IconDownload } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
-import { cn } from "@/lib/cn";
 import { formatDateTime, formatDurationClock } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -40,7 +36,6 @@ export function StudioRunInspector(props: {
 }) {
   const t = useT();
   const { locale } = usePreferences();
-  const downloadT = usePodcastDownloadT();
   const job = () => props.job;
   const sourceName = () => job()?.source_title ?? job()?.source_id ?? "";
 
@@ -84,20 +79,7 @@ export function StudioRunInspector(props: {
               when={row().state === "done"}
               fallback={<p class="text-sm text-muted-foreground">{t("podcast.history.emptyHint")}</p>}
             >
-              <div class="space-y-3">
-                <audio class="w-full" controls preload="metadata" src={podcastAudioUrl(row().job_id)}>
-                  {t("podcast.audioUnsupported")}
-                </audio>
-                <a
-                  href={podcastAudioUrl(row().job_id)}
-                  download={podcastDownloadFilename(sourceName(), downloadT("podcast.download.fallback"))}
-                  aria-label={downloadT("podcast.download.aria")}
-                  class={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-lg")}
-                >
-                  <IconDownload class="h-4 w-4" />
-                  {downloadT("podcast.download.label")}
-                </a>
-              </div>
+              <PodcastPlayer jobId={row().job_id} title={sourceName()} durationSecs={row().duration_secs} />
             </Show>
           </div>
         )}

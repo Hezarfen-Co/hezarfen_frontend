@@ -1,23 +1,16 @@
 import { For, Show, Suspense, createEffect, createSignal, onCleanup } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getAiCapabilities } from "@/api/ai";
-import {
-  getPodcastJobById,
-  getPodcastJobResultById,
-  podcastAudioUrl,
-  postPodcastJob,
-  postPodcastJobCancel,
-} from "@/api/podcast";
+import { getPodcastJobById, getPodcastJobResultById, postPodcastJob, postPodcastJobCancel } from "@/api/podcast";
 import { formatApiError, type PodcastFormat, type PodcastJobArtifacts, type PodcastJobStatus } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { IconDownload, IconWaveform, IconX } from "@/components/ui/icons";
+import { Button } from "@/components/ui/button";
+import { IconWaveform, IconX } from "@/components/ui/icons";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { PodcastHistory } from "@/components/notes/podcast-history";
 import { PodcastStageTrail, type PodcastStageEntry } from "@/components/notes/podcast-stage-trail";
-import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
-import { cn } from "@/lib/cn";
+import { PodcastPlayer } from "@/components/notes/podcast-player";
 import { createLivePoll } from "@/lib/create-live-poll";
 import { useT } from "@/stores/preferences-context";
 
@@ -25,7 +18,6 @@ const POLL_MS = 2_000;
 
 export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitle?: string }) {
   const t = useT();
-  const downloadT = usePodcastDownloadT();
   const [format, setFormat] = createSignal<PodcastFormat>("duz_okuma");
   const [jobId, setJobId] = createSignal("");
   const [status, setStatus] = createSignal<PodcastJobStatus | null>(null);
@@ -250,18 +242,13 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
         {(result) => (
           <div class="space-y-2 rounded-lg border border-success/25 bg-success/5 p-3">
             <p class="text-sm font-medium">{t("podcast.ready")}</p>
-            <audio class="w-full" controls preload="metadata" src={podcastAudioUrl(result().job_id)}>
-              {t("podcast.audioUnsupported")}
-            </audio>
-            <a
-              href={podcastAudioUrl(result().job_id)}
-              download={podcastDownloadFilename(props.noteTitle, downloadT("podcast.download.fallback"))}
-              aria-label={downloadT("podcast.download.aria")}
-              class={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-lg")}
-            >
-              <IconDownload class="h-4 w-4" />
-              {downloadT("podcast.download.label")}
-            </a>
+            <PodcastPlayer
+              jobId={result().job_id}
+              title={props.noteTitle}
+              subtitle={result().format ? formatOptions().find((option) => option.value === result().format)?.label : undefined}
+              durationSecs={result().duration_secs}
+              transcript={result().transcript}
+            />
           </div>
         )}
       </Show>

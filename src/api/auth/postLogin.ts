@@ -6,6 +6,7 @@ export type LoginBody = {
   password: string;
 };
 
+/** One school on offer: its registry uuid (what `POST /auth/school` takes) and display name. */
 export type SchoolChoice = {
   id: string;
   name: string;

@@ -10,7 +10,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { IconDownload, IconWaveform } from "@/components/ui/icons";
+import { IconDownload, IconPlay } from "@/components/ui/icons";
+import { PodcastPlayer } from "@/components/notes/podcast-player";
 import { cn } from "@/lib/cn";
 import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
 import { formatDate, formatDurationClock } from "@/lib/format";
@@ -145,9 +146,10 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
                           variant="outline"
                           class="shrink-0 rounded-lg"
                           aria-label={t("podcast.history.play")}
-                          onClick={() => setPlaying(row.job_id)}
+                          aria-expanded={playing() === row.job_id}
+                          onClick={() => setPlaying(playing() === row.job_id ? "" : row.job_id)}
                         >
-                          <IconWaveform class="h-4 w-4" />
+                          <IconPlay class="h-3.5 w-3.5" />
                         </Button>
                         <a
                           href={podcastAudioUrl(row.job_id)}
@@ -168,9 +170,13 @@ export function PodcastHistory(props: { noteId?: string; active?: boolean; refet
                         one under the whole list put it a screen away from the
                         episode it belonged to. */}
                     <Show when={playing() === row.job_id}>
-                      <audio class="mt-3 w-full" controls autoplay preload="metadata" src={podcastAudioUrl(row.job_id)}>
-                        {t("podcast.audioUnsupported")}
-                      </audio>
+                      <PodcastPlayer
+                        class="mt-3"
+                        jobId={row.job_id}
+                        durationSecs={row.duration_secs}
+                        download={false}
+                        autoplay
+                      />
                     </Show>
                   </li>
                 )}
