@@ -233,8 +233,7 @@ export function PodcastPanel(props: { noteId: string; active?: boolean; noteTitl
                 </Show>
               </span>
             </div>
-            {/* The stage names itself in the service's own vocabulary and is not
-                an enumerated set, so the values are shown as they came. */}
+            {/* Known stage keys are labeled; a stage newer than the map shows as sent. */}
             <Show when={stages().length > 0}>
               <PodcastStageTrail entries={stages()} live={working()} label={t("podcast.stageLabel")} />
             </Show>

@@ -49,7 +49,8 @@ describe("PodcastPanel", () => {
       expect(podcastApi.postPodcastJob).toHaveBeenCalledWith({ source_id: "note-7", format: "tek_ogretici" });
     });
     expect(sessionStorage.getItem("hezarfen.podcast.note-7")).toBe("j1");
-    expect(screen.getByText("Waiting in queue")).toBeTruthy();
+    expect(screen.getAllByText("Waiting in queue")).toHaveLength(2);
+    expect(screen.queryByText("queued")).toBeNull();
   });
 
   it("points the audio element at the job's audio door, not the artifact path", async () => {

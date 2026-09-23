@@ -1,6 +1,8 @@
 import { For, createSignal, onCleanup } from "solid-js";
 import { cn } from "@/lib/cn";
 import { formatDurationClock } from "@/lib/format";
+import { podcastStageLabel } from "@/lib/podcast-stage-labels";
+import { useT } from "@/stores/preferences-context";
 
 export type PodcastStageEntry = {
   /** The service's own stage name, stored as it came. */
@@ -21,6 +23,7 @@ const TICK_MS = 1_000;
  * inventing the steps before that would be making up a history we never saw.
  */
 export function PodcastStageTrail(props: { entries: PodcastStageEntry[]; live: boolean; label: string }) {
+  const t = useT();
   const [now, setNow] = createSignal(Date.now());
   const timer = window.setInterval(() => setNow(Date.now()), TICK_MS);
   onCleanup(() => window.clearInterval(timer));
@@ -51,7 +54,7 @@ export function PodcastStageTrail(props: { entries: PodcastStageEntry[]; live: b
                   )}
                 />
                 <span class={cn("min-w-0 flex-1 truncate", running() ? "font-medium text-foreground" : "text-muted-foreground")}>
-                  {entry.stage}
+                  {podcastStageLabel(entry.stage, t)}
                 </span>
                 <span class="shrink-0 tabular-nums text-muted-foreground">
                   {spanOf(index()) == null ? "—" : formatDurationClock(spanOf(index())!)}
