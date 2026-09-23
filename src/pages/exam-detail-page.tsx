@@ -119,6 +119,11 @@ function ExamDetailContent() {
   const resultPageSize = createResponsivePageSize(RESULT_PAGE_SIZE);
   createEffect(on(resultPageSize, () => setResultPage(0), { defer: true }));
   const [answerSheetUserId, setAnswerSheetUserId] = createSignal<string | null>(null);
+  const [answerSheetUserLabel, setAnswerSheetUserLabel] = createSignal("");
+  const openAnswerSheet = (userId: string, label: string) => {
+    setAnswerSheetUserLabel(label);
+    setAnswerSheetUserId(userId);
+  };
   const answerSheetOpen = () => answerSheetUserId() != null;
   const [answerMark, setAnswerMark] = createSignal("0");
   const [answerError, setAnswerError] = createSignal("");
@@ -348,12 +353,12 @@ function ExamDetailContent() {
             {
               label: t("exams.answerSheet"),
               icon: <IconEye class="h-4 w-4" />,
-              onSelect: () => setAnswerSheetUserId(personId(cell.row.original.user)),
+              onSelect: () => openAnswerSheet(personId(cell.row.original.user), personLabel(cell.row.original.user)),
             },
             {
               label: t("common.update"),
               icon: <IconEdit class="h-4 w-4" />,
-              onSelect: () => setAnswerSheetUserId(personId(cell.row.original.user)),
+              onSelect: () => openAnswerSheet(personId(cell.row.original.user), personLabel(cell.row.original.user)),
             },
             ...(!isFinished()
               ? [{
@@ -521,7 +526,12 @@ function ExamDetailContent() {
 
             <SidePanel
               open={answerSheetOpen()}
-              onOpenChange={(open) => { if (!open) setAnswerSheetUserId(null); }}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setAnswerSheetUserId(null);
+                  setAnswerSheetUserLabel("");
+                }
+              }}
               title={t("exams.answerSheet")}
               size="wide"
             >
@@ -590,7 +600,7 @@ function ExamDetailContent() {
                         </ul>
                       </div>
                     </Show>
-                    <AnswerSheetView examId={id()} userId={userId()} />
+                    <AnswerSheetView examId={id()} userId={userId()} userLabel={answerSheetUserLabel()} />
                   </div>
                   );
                 }}
@@ -774,8 +784,9 @@ function ExamDetailContent() {
                 <GradeForm
                   students={gradeStudents()}
                   onViewAnswers={(userId) => {
+                    const label = gradeStudents().find((student) => student.id === userId)?.label ?? "";
                     setGradeOpen(false);
-                    setAnswerSheetUserId(userId);
+                    openAnswerSheet(userId, label);
                   }}
                   onSubmit={async (values) => {
                     await postExamResult(id(), values);

@@ -21,7 +21,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-test("an answer sheet without an attempt never displays the student UUID", async () => {
+test("an answer sheet without an attempt displays the known student name, not the UUID", async () => {
   const userId = "123e4567-e89b-42d3-a456-426614174000";
   getExamQuestions.mockResolvedValue({ items: [] });
   getStudentAttempts.mockResolvedValue([]);
@@ -29,12 +29,12 @@ test("an answer sheet without an attempt never displays the student UUID", async
 
   render(() => (
     <PreferencesProvider>
-      <AnswerSheetView examId="exam-1" userId={userId} />
+      <AnswerSheetView examId="exam-1" userId={userId} userLabel="Elif Yıldız" />
     </PreferencesProvider>
   ));
 
   await waitFor(() => expect(getStudentAnswers).toHaveBeenCalledWith("exam-1", userId));
   await screen.findByText(/Not started|Başlamadı/);
-  expect(screen.getByText("—")).toBeTruthy();
+  expect(screen.getByText("Elif Yıldız")).toBeTruthy();
   expect(document.body.textContent).not.toContain(userId);
 });

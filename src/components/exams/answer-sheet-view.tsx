@@ -17,7 +17,7 @@ import { joinAnswerSheet } from "@/lib/answer-sheet";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
-export function AnswerSheetView(props: { examId: string; userId: string; mode?: "grader" | "self" }) {
+export function AnswerSheetView(props: { examId: string; userId: string; userLabel?: string; mode?: "grader" | "self" }) {
   const t = useT();
   // "grader" hits the teacher, userId-scoped routes; "self" hits the self-scoped
   // /review routes (no userId in path). Everything below is identical either way.
@@ -172,7 +172,7 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
               <p class="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">{t("exams.pastAttemptReadOnly")}</p>
             </Show>
             <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-4 py-3">
-              <p class="text-sm font-medium">{d().hasSheet ? personLabel(d().sheet.user) : "—"}</p>
+              <p class="text-sm font-medium">{props.userLabel || (d().hasSheet ? personLabel(d().sheet.user) : "—")}</p>
               <Show when={d().sheet.answers.length > 0} fallback={<Badge variant="outline">{t("exams.notStarted")}</Badge>}>
                 <div class="flex flex-wrap items-center gap-1.5">
                   <Badge variant="outline" class="border-success/50 bg-success/10 text-success-text">

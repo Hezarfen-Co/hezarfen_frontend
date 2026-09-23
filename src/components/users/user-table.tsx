@@ -14,7 +14,7 @@ import { matchesSearch } from "@/lib/search-text";
 import { useT } from "@/stores/preferences-context";
 
 function displayName(user: User): string {
-  return [user.name, user.surname].filter(Boolean).join(" ") || "—";
+  return [user.name, user.surname].filter(Boolean).join(" ") || user.username;
 }
 
 function UserRoleActions(props: {
