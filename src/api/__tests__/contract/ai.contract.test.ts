@@ -42,9 +42,10 @@ describe.skipIf(!isLive)(`ai contract @ ${contractBaseUrl}`, () => {
     const response = await api("/insights/refresh", { method: "POST", body: {} });
     expect([202, 503]).toContain(response.status);
     if (response.status === 202) {
+      // Documented receipt is `{status: "accepted"}` only: the work's own
+      // record is ZEKA's (zeka_run), so no message row id is minted here.
       const receipt = (await response.json()) as Record<string, unknown>;
-      expect(typeof receipt.message_id).toBe("string");
-      expect(receipt.status).toBe("pending");
+      expect(receipt.status).toBe("accepted");
     }
   });
 
@@ -53,9 +54,11 @@ describe.skipIf(!isLive)(`ai contract @ ${contractBaseUrl}`, () => {
       method: "POST",
       body: { source_id: "00000000-0000-0000-0000-000000000000" },
     });
-    // 503 with no service, 400/404 for the missing course note once there is
-    // one. A 202 here would mean the backend minted a job for nothing.
-    expect([400, 404, 503]).toContain(response.status);
+    // 503 with no service, 400/404 for a malformed or unresolvable id, and the
+    // backend's documented 409 `source_missing` when the note has no narratable
+    // PDF on this host (a nonexistent note lands there too, by design). A 202
+    // here would mean the backend minted a job for nothing.
+    expect([400, 404, 409, 503]).toContain(response.status);
   });
 
   it("answers nothing for an audio job id that is not the caller's", async () => {
