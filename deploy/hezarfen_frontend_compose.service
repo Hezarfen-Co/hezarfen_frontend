@@ -26,7 +26,8 @@
 #   systemctl --user restart hezarfen_frontend_compose
 #
 # Reboots heal themselves: the user session lingers (`loginctl enable-linger`)
-# and this unit runs compose again at boot.
+# and this unit runs compose again at boot. A failed compose-up is retried
+# (Restart=on-failure, RestartSec=1500s) so it does not wait for a hand restart.
 
 [Unit]
 Description=Hezarfen frontend compose stack (Bun static server + /api proxy)
@@ -36,6 +37,8 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+Restart=on-failure
+RestartSec=1500s
 WorkingDirectory=%h/hezarfen_frontend
 # Later --env-file wins for duplicate keys: the operator's knobs file first,
 # the deploy-owned stack.env (HEZARFEN_TAG) second.
