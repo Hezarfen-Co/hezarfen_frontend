@@ -46,6 +46,7 @@ export function AdminUserEditPanel(props: {
               branches={settings.latest?.branches}
               editStudentNumber
               maxStudentNumberLen={limits.latest?.user.max_student_number_len}
+              maxAddressLen={limits.latest?.user.max_address_len}
               onSave={(body) => patchUserProfile(user.id, body)}
               onSaved={() => void props.onSaved()}
             />

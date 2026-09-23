@@ -17,6 +17,7 @@ import { IconEdit, IconExternalLink, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
 import { ROLES, hasMinRole } from "@/lib/roles";
+import { genderLabel } from "@/lib/gender";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
@@ -104,6 +105,10 @@ function AdminUserDetailContent() {
               <DetailField label={t("profile.email")} value={current().email || "—"} />
               <DetailField label={t("profile.phone")} value={current().phone || "—"} />
               <DetailField label={t("profile.birthDate")} value={current().birth_date || "—"} />
+              <DetailField label={t("profile.gender")} value={genderLabel(current().gender, t)} />
+              <DetailField label={t("profile.address")} value={current().address || "—"} />
+              <DetailField label={t("profile.emergencyContactName")} value={current().emergency_contact_name || "—"} />
+              <DetailField label={t("profile.emergencyContactPhone")} value={current().emergency_contact_phone || "—"} />
               <Show when={current().role === "student"}>
                 <DetailField label={t("roster.studentNumber")} value={current().student_number || "—"} />
               </Show>
