@@ -133,12 +133,8 @@ export function UserSearchSelect(props: {
       setOpen(false);
       return;
     }
-    if (q.length === 0) {
-      setUsers([]);
-      setLoading(false);
-      setOpen(false);
-      return;
-    }
+    // An empty query is a request for suggestions: `/users/search?q=` lists
+    // the role's people, so the field works as a dropdown before any typing.
     // Mark pending now, not after the debounce fires — otherwise the empty
     // "no students" message flashes during the wait before the request starts.
     setLoading(true);
@@ -153,7 +149,14 @@ export function UserSearchSelect(props: {
         .finally(() => {
           if (!ctrl.signal.aborted) setLoading(false);
         });
-    }, 300);
+    }, q.length === 0 ? 0 : 300);
+  };
+  // Opening the list (focus, the chevron) with nothing typed yet loads the
+  // suggestions once; typing narrows them through the search.
+  const openSuggestions = () => {
+    if (!canSearch() || props.disabled) return;
+    setOpen(true);
+    if (query().trim() === "" && users().length === 0 && !loading()) runSearch("");
   };
   onCleanup(() => {
     controller?.abort();
@@ -161,7 +164,7 @@ export function UserSearchSelect(props: {
   });
 
   const emptyText = createMemo(() => {
-    if (query().trim().length === 0 || loading() || options().length > 0) return "";
+    if (loading() || options().length > 0 || (query().trim() === "" && selected())) return "";
     return props.emptyMessage ?? (props.role === "teacher" ? t("form.noTeachers") : t("form.noStudents"));
   });
 
@@ -172,14 +175,18 @@ export function UserSearchSelect(props: {
         // Kobalte writes the picked person's name into the input only when
         // that person is among the options, so a preset one rides along
         // while nothing is being searched.
-        options={query().trim() === "" && selected() ? [selected()!] : options()}
+        options={
+          query().trim() === "" && selected() && !options().some((user) => user.id === selected()!.id)
+            ? [selected()!, ...options()]
+            : options()
+        }
         // Results arrive async, so options is empty at input time. Kobalte
         // refuses to open an empty collection by default (and would close on
         // input) — allow it, and control open so the panel stays up while
         // loading, then results pop in.
         allowsEmptyCollection
-        open={open() && query().trim().length > 0}
-        onOpenChange={(nextOpen) => setOpen(nextOpen && query().trim().length > 0)}
+        open={open()}
+        onOpenChange={(nextOpen) => (nextOpen ? openSuggestions() : setOpen(false))}
         value={selected()}
         onChange={(user) => {
           setSelected(user);
@@ -197,8 +204,15 @@ export function UserSearchSelect(props: {
             return;
           }
           setQuery(value);
+          // Erasing the field clears the pick — the only way to leave an
+          // optional person (a class's homeroom teacher) unassigned again.
+          if (value.trim() === "" && current) {
+            setSelected(null);
+            props.onChange("");
+            props.onSelect?.(null);
+          }
           runSearch(value);
-          if (value.trim().length > 0) setOpen(true);
+          setOpen(true);
         }}
         optionValue="id"
         optionLabel={(user) => pickedLabel(user)}
@@ -216,7 +230,17 @@ export function UserSearchSelect(props: {
         )}
       >
         <ComboboxControl>
-          <ComboboxInput id={props.id} autocomplete="off" />
+          <ComboboxInput
+            id={props.id}
+            autocomplete="off"
+            // Typing into a field that already names someone used to append
+            // to the name ("Ayşe Yılmaz (ayse.yilmaz)Mehmet") and find no one,
+            // so a class's teacher could not be changed. Select it instead.
+            onFocus={(event: FocusEvent) => {
+              (event.currentTarget as HTMLInputElement).select();
+              openSuggestions();
+            }}
+          />
           <ComboboxTrigger />
         </ComboboxControl>
         <ComboboxContent>

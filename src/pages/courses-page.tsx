@@ -1,33 +1,33 @@
-import { For, Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
-import { createResponsivePageSize } from "@/lib/create-page-size";
+import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
-import { getCourses, postCourse } from "@/api/courses";
+import type { ColumnDef } from "@tanstack/solid-table";
+import { deleteCourseById, getCourses, postCourse } from "@/api/courses";
 import { getMyCourses } from "@/api/reports";
 import { getLimits } from "@/api/limits";
-import { formatApiError, type CourseKind } from "@/api/client";
-import { CourseCard } from "@/components/courses/course-card";
+import { formatApiError, type Course, type CourseKind } from "@/api/client";
+import { CourseEditPanel } from "@/components/courses/course-edit-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataToolbar } from "@/components/ui/data-toolbar";
-import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconPlus } from "@/components/ui/icons";
+import { IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageSpinner } from "@/components/ui/page-spinner";
-import { TablePagination } from "@/components/ui/table-pagination";
 import { DropdownSelect } from "@/components/ui/select";
 import { courseKindLabel } from "@/lib/course-kind";
 import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { createFlash } from "@/lib/flash";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
-import { createUrlEnum, createUrlPageIndex, createUrlString } from "@/lib/url-state";
+import { createUrlEnum } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -55,18 +55,9 @@ function CoursesContent() {
   const [description, setDescription] = createSignal("");
   // Catalog rows carry no term, capacity or staff any more — a şube decides
   // all three when it attaches the course. `taughtFilter` narrows by whether
-  // any şube has.
-  // Search, filter and page ride in the URL so Back from a course and a
-  // reload land where the list was left.
+  // any şube has. It rides in the URL beside the table's own search, sort and
+  // page, so Back from a course and a reload land where the list was left.
   const [taughtFilter, setTaughtFilter] = createUrlEnum("taught", ["all", "taught", "untaught"] as const, "all");
-  const [page, setPage] = createUrlPageIndex();
-  const pageSize = createResponsivePageSize(PAGE_SIZE);
-  const [search, setSearch] = createUrlString("q");
-  const narrowed = () => search().trim() !== "" || taughtFilter() !== "all";
-  const clearNarrowing = () => {
-    setSearch("");
-    setTaughtFilter("all");
-  };
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
   const [flash, setFlash] = createFlash();
@@ -77,8 +68,6 @@ function CoursesContent() {
   createEffect(() => {
     setPageKind(routeSearch().kind);
   });
-  // Deferred: the page restored from the URL must survive the first run.
-  createEffect(on(() => [pageKind(), taughtFilter(), search(), pageSize()], () => setPage(0), { defer: true }));
 
   const [limits, { refetch: refetchLimits }] = createResource(() => canCreate() ? getLimits() : null);
   const [list, { refetch }] = createResource(
@@ -86,22 +75,96 @@ function CoursesContent() {
     async (role) => role === "student" ? getMyCourses() : getCourses(),
   );
   const listData = () => list.latest ?? list();
-  const filteredCourses = createMemo(() => {
-    const query = search().trim();
-    return (listData()?.items ?? []).filter((course) => {
+  // A memo: the table must see one array per change, not a fresh one per read.
+  const filteredCourses = createMemo(() =>
+    (listData()?.items ?? []).filter((course) => {
       if (pageKind() && course.kind !== pageKind()) return false;
       if (taughtFilter() === "untaught" && course.class_course_count > 0) return false;
       if (taughtFilter() === "taught" && course.class_course_count === 0) return false;
-      if (!query) return true;
-      return matchesSearch(query, course.title, course.description, personLabel(course.creator));
-    });
-  });
-  const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredCourses().length / pageSize())));
-  // A stale `?page=` past the end slides back to the last page.
-  createEffect(() => {
-    if (filteredCourses().length > 0 && page() > totalPages() - 1) setPage(totalPages() - 1);
-  });
-  const visibleCourses = createMemo(() => filteredCourses().slice(page() * pageSize(), (page() + 1) * pageSize()));
+      return true;
+    }),
+  );
+  const openCourse = (course: Course) => void navigate({ to: "/courses/$id", params: { id: course.id } });
+  // Catalog rights, as on the detail page: the creator or a manager+.
+  const canManageCatalog = (course: Course) => {
+    const u = auth.user();
+    return !!u && (course.creator?.id === u.id || hasMinRole(u.role, "manager"));
+  };
+  const [editTarget, setEditTarget] = createSignal<Course | null>(null);
+  const [deleteTarget, setDeleteTarget] = createSignal<Course | null>(null);
+  const [rowError, setRowError] = createSignal("");
+  const refreshList = async () => {
+    try { await refetch(); } catch { /* stale rows until the next load */ }
+  };
+  const columns = createMemo<ColumnDef<Course>[]>(() => [
+    {
+      accessorKey: "title",
+      header: t("form.title"),
+      size: 280,
+      minSize: 200,
+      meta: { cellClass: "max-w-0" },
+      cell: (cell) => (
+        // Always two lines, description or not, so every row is the same height.
+        <div class="min-w-0">
+          <p class="truncate font-medium" title={cell.row.original.title}>{cell.row.original.title}</p>
+          <p class="truncate text-xs text-text-subtle" title={cell.row.original.description || undefined}>
+            {cell.row.original.description || "—"}
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "kind",
+      accessorFn: (row) => courseKindLabel(row.kind, t),
+      header: t("exams.kind"),
+      size: 120,
+      minSize: 100,
+      meta: { cellClass: "whitespace-nowrap" },
+      cell: (cell) => (
+        <div class="flex w-full items-center justify-center gap-1.5">
+          <Badge variant="outline" class="rounded-md text-[11px] font-medium">{courseKindLabel(cell.row.original.kind, t)}</Badge>
+          <Show when={auth.user()?.role === "student"}>
+            <Badge variant="secondary" class="rounded-md text-[11px]">{t("courses.enrolled")}</Badge>
+          </Show>
+        </div>
+      ),
+    },
+    {
+      id: "sections",
+      accessorFn: (row) => row.class_course_count,
+      header: t("courses.sectionsFilter"),
+      size: 90,
+      minSize: 80,
+      meta: { cellClass: "text-center", align: "center" },
+    },
+    {
+      id: "creator",
+      accessorFn: (row) => personLabel(row.creator),
+      header: t("common.creator"),
+      size: 170,
+      minSize: 130,
+      meta: { cellClass: "max-w-0 truncate text-text-subtle" },
+    },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap", cellClass: "px-1 text-center" },
+      cell: (cell) => (
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+            { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => openCourse(cell.row.original) },
+            ...(canManageCatalog(cell.row.original)
+              ? [
+                  { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => setEditTarget(cell.row.original) },
+                  { label: t("courses.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
+                ]
+              : []),
+          ]}
+        />
+      ),
+    },
+  ]);
 
   const createCourse = async (event: SubmitEvent) => {
     event.preventDefault();
@@ -142,7 +205,37 @@ function CoursesContent() {
         </form>
       </SidePanel>
 
+      <CourseEditPanel
+        course={editTarget()}
+        open={editTarget() !== null}
+        onOpenChange={(open) => { if (!open) setEditTarget(null); }}
+        onSaved={async () => { setFlash(t("common.saved")); await refreshList(); }}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget() !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title={t("confirm.deleteTitle")}
+        variant="destructive"
+        summary={t("courses.delete") + `: “${deleteTarget()?.title ?? ""}”`}
+        onConfirm={async () => {
+          const target = deleteTarget();
+          if (!target) return;
+          setRowError("");
+          try {
+            await deleteCourseById(target.id);
+            setDeleteTarget(null);
+            setFlash(t("common.deleted"));
+            await refreshList();
+          } catch (err) {
+            setDeleteTarget(null);
+            setRowError(formatApiError(err));
+          }
+        }}
+      />
+
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
+      <Show when={rowError()}><Alert variant="destructive">{rowError()}</Alert></Show>
 
       <Tabs
         value={pageKind() ?? "all"}
@@ -151,7 +244,7 @@ function CoursesContent() {
           setPageKind(kind);
           void navigate({
             to: "/courses",
-            search: (prev) => ({ q: prev.q, taught: prev.taught, action: undefined, kind, page: undefined }),
+            search: (prev) => ({ q: prev.q, taught: prev.taught, sort: prev.sort, action: undefined, kind, page: undefined }),
             replace: true,
           });
         }}
@@ -164,13 +257,26 @@ function CoursesContent() {
         </TabsList>
 
         <TabsContent value={pageKind() ?? "all"} class="mt-4 space-y-4 border-0 bg-transparent p-0 shadow-none">
-          <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs" aria-label={t("common.search")}>
-            <DataToolbar
-              inline
-              searchValue={search()}
-              searchPlaceholder={t("common.searchPlaceholder")}
-              searchHint={t("search.hint.courses")}
-              onSearchInput={setSearch}
+          <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
+            <Show when={list.error}>
+              <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
+            </Show>
+            <DataTable
+              urlState
+              columns={columns()}
+              data={filteredCourses()}
+              tableClass="table-fixed min-w-[44rem]"
+              searchPredicate={(course, query) => matchesSearch(query, course.title, course.description, personLabel(course.creator))}
+              filterPlaceholder={t("common.searchPlaceholder")}
+              filterHint={t("search.hint.courses")}
+              enablePagination
+              pageSize={PAGE_SIZE}
+              storageKey="courses"
+              pageResetKey={`${pageKind() ?? "all"}|${taughtFilter()}`}
+              filtersActive={taughtFilter() !== "all"}
+              onClearFilters={() => setTaughtFilter("all")}
+              empty={t("courses.empty", { item: kindInSentence() })}
+              onRowClick={openCourse}
               filters={
                 <DropdownSelect
                   labelPrefix={t("courses.sectionsFilter")}
@@ -192,52 +298,7 @@ function CoursesContent() {
                 </Show>
               }
             />
-          </div>
-
-          <Suspense fallback={<PageSpinner />}>
-            <Show
-              when={!list.error}
-              fallback={<ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />}
-            >
-              <Show
-                when={filteredCourses().length > 0}
-                fallback={
-                  <Show
-                    when={narrowed()}
-                    fallback={<EmptyState kind="courses" title={t("courses.empty", { item: kindInSentence() })} />}
-                  >
-                    <EmptyState
-                      kind="search"
-                      title={search().trim() ? t("common.noMatchesFor", { query: search().trim() }) : t("common.noFilterMatches")}
-                      action={
-                        <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={clearNarrowing}>
-                          {taughtFilter() !== "all" ? t("common.clearFilters") : t("common.clearSearch")}
-                        </Button>
-                      }
-                    />
-                  </Show>
-                }
-              >
-                <div class={list.loading ? "grid grid-cols-1 gap-3 opacity-60 transition-opacity sm:grid-cols-2 xl:grid-cols-3" : "grid grid-cols-1 gap-3 transition-opacity sm:grid-cols-2 xl:grid-cols-3"}>
-                  <For each={visibleCourses()}>
-                    {(course) => (
-                      <CourseCard
-                        course={course}
-                        sections={t("common.countItem", { count: course.class_course_count, item: t("instances.item") })}
-                        enrolled={auth.user()?.role === "student"}
-                        labels={{
-                          kind: courseKindLabel(course.kind, t),
-                          enrolled: t("courses.enrolled"),
-                        }}
-                      />
-                    )}
-                  </For>
-                </div>
-                <TablePagination pageIndex={page()} pageCount={totalPages()} onPageChange={setPage} />
-              </Show>
-            </Show>
           </Suspense>
-
         </TabsContent>
       </Tabs>
     </div>

@@ -223,13 +223,21 @@ function StaffWorkContent() {
               label: t("common.edit"),
               icon: <IconEdit class="h-4 w-4" />,
               disabled: cell.row.original.check_out == null,
-              onSelect: () => startEdit(cell.row.original),
+              // The entries panel hands off to the edit form / delete
+              // confirm: it closes first rather than staying behind them.
+              onSelect: () => {
+                setViewUser(null);
+                startEdit(cell.row.original);
+              },
             },
             {
               label: t("common.delete"),
               icon: <IconTrash class="h-4 w-4" />,
               destructive: true,
-              onSelect: () => setDeleteTarget(cell.row.original),
+              onSelect: () => {
+                setViewUser(null);
+                setDeleteTarget(cell.row.original);
+              },
             },
           ]}
         />

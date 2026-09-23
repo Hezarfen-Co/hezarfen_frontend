@@ -329,6 +329,10 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   };
   const isInteractiveTarget = (target: EventTarget | null, row: EventTarget | null) => {
     if (!(target instanceof Element)) return false;
+    // Solid bubbles a portalled element's events through its owner, so a pick
+    // in a row's action menu (rendered in a portal) reaches the row too; it is
+    // not a click on the row.
+    if (row instanceof Node && !row.contains(target)) return true;
     const interactive = target.closest("button,a,input,select,textarea,[role='button']");
     return interactive != null && interactive !== row;
   };

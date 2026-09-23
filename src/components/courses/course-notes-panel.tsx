@@ -83,7 +83,7 @@ export function CourseNotesPanel(props: {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <div class="space-y-3 rounded-lg border border-border-line bg-surface-base p-3">
+      <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
         <DataToolbar
           inline
           searchValue={search()}

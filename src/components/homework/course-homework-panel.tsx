@@ -14,8 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
-import { EmptyState } from "@/components/ui/empty-state";
-import { IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -213,9 +212,23 @@ export function CourseHomeworkPanel(props: {
       </Show>
 
       <Suspense fallback={<DataTableSkeleton />}>
-        <Show when={(homework() ?? []).length > 0} fallback={<EmptyState kind="homework" title={t("homework.empty")} />}>
-          <DataTable columns={columns()} data={homework() ?? []} filterColumn="title" enablePagination pageSize={10} empty={t("homework.empty")} onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })} />
-        </Show>
+        {/* The add button rides in the table's toolbar card, so it stays
+            reachable on an empty list too. */}
+        <DataTable
+          columns={columns()}
+          data={homework() ?? []}
+          filterColumn="title"
+          enablePagination
+          pageSize={10}
+          empty={t("homework.empty")}
+          emptyIllustration="homework"
+          onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
+          actions={props.canManage ? (
+            <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
+              <IconPlus class="h-4 w-4" />{t("homework.add")}
+            </Button>
+          ) : undefined}
+        />
       </Suspense>
 
       <SidePanel guardUnsaved open={props.createOpen} onOpenChange={setPanelOpen} title={editing() ? t("homework.edit") : t("homework.add")} description={t("homework.help")}>

@@ -15,16 +15,18 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
-import { IconEye, IconPlus } from "@/components/ui/icons";
+import { IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
+import { createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -82,12 +84,26 @@ function HomeworkContent() {
     setCourseNames(Object.fromEntries([...labels].map(([id, entry]) => [id, entry.label])));
     return items;
   });
-  // The sections a teacher may assign work in, labelled "<ders> — <şube>".
+  // The caller's sections, labelled "<ders> — <şube>" and ordered class by
+  // class: the şube filter lists them all, the create form only for teachers.
   const [instances] = createResource(
-    () => (hasMinRole(auth.user()?.role, "teacher") ? auth.user()?.role : null),
+    () => auth.user()?.role ?? null,
     (role) => loadInstanceOptions(role ?? undefined),
   );
-  const manageableCourses = createMemo(() => instances() ?? []);
+  const manageableCourses = createMemo(() => (hasMinRole(auth.user()?.role, "teacher") ? instances() ?? [] : []));
+  // The şube filter, as on /exams; it lives in the URL beside the table's own
+  // search and page.
+  const [courseFilter, setCourseFilter] = createUrlString("course", "all");
+  const courseFilterOptions = createMemo(() => {
+    const known = instances() ?? [];
+    const knownIds = new Set(known.map((row) => row.id));
+    // Homework in a şube the picker does not list (e.g. one the caller only
+    // sees through an assignment) still gets its own entry, after the rest.
+    const extra = [...new Set((list() ?? []).map((item) => item.class_course))]
+      .filter((id) => !knownIds.has(id) && courseNames()[id])
+      .map((id) => ({ value: id, label: courseNames()[id] }));
+    return [{ value: "all", label: t("common.all") }, ...known.map((row) => ({ value: row.id, label: row.label })), ...extra];
+  });
   const selectedCourse = createMemo(() => manageableCourses().find((row) => row.id === selectedCourseId())?.course ?? null);
   const [subjects] = createResource(
     () => selectedCourse(),
@@ -101,7 +117,7 @@ function HomeworkContent() {
   const [dueTab, setDueTab] = createSignal<DueTab>("all");
   const dueFilteredList = createMemo(() => {
     const now = serverTime()?.now ?? Date.now();
-    const items = list() ?? [];
+    const items = (list() ?? []).filter((item) => courseFilter() === "all" || item.class_course === courseFilter());
     if (dueTab() === "open") return items.filter((item) => item.due_at >= now);
     if (dueTab() === "past") return items.filter((item) => item.due_at < now);
     return items;
@@ -267,6 +283,31 @@ function HomeworkContent() {
               pageSize={10}
               empty={t("homework.empty")}
               storageKey="homework"
+              pageResetKey={`${dueTab()}|${courseFilter()}`}
+              filtersActive={courseFilter() !== "all"}
+              onClearFilters={() => setCourseFilter("all")}
+              filters={
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <DropdownSelect
+                    labelPrefix={t("nav.courses")}
+                    value={courseFilter()}
+                    onChange={(val) => setCourseFilter(val)}
+                    options={courseFilterOptions()}
+                  />
+                  <Show when={courseFilter() !== "all"}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      class="h-8 rounded-lg px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground"
+                      onClick={() => setCourseFilter("all")}
+                    >
+                      <IconRotateCcw class="mr-1 h-3.5 w-3.5" />
+                      {t("common.resetFilters")}
+                    </Button>
+                  </Show>
+                </div>
+              }
               actions={
                 <Show when={canCreate()}>
                   <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>

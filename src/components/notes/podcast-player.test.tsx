@@ -1,27 +1,28 @@
 import { cleanup, fireEvent, render, screen } from "@solidjs/testing-library";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PodcastTranscriptSegment } from "@/api/client";
 import { PodcastPlayer } from "@/components/notes/podcast-player";
-import { activeSegmentIndex } from "@/components/notes/podcast-transcript";
+import { transcriptChapters } from "@/components/notes/podcast-transcript";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
-const segments: PodcastTranscriptSegment[] = [
-  { start_secs: 0, end_secs: 4, text: "Hücre canlının en küçük birimidir.", speaker: null },
-  { start_secs: 4, end_secs: 9, text: "Zarı seçici geçirgendir.", speaker: null },
-  { start_secs: 9, end_secs: 15, text: "Çekirdek genetik bilgiyi taşır.", speaker: null },
-];
+const getPodcastJobResultById = vi.hoisted(() => vi.fn());
+vi.mock("@/api/podcast", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/podcast")>()),
+  getPodcastJobResultById,
+}));
 
-describe("activeSegmentIndex", () => {
-  it("finds the line being spoken", () => {
-    expect(activeSegmentIndex(segments, 0)).toBe(0);
-    expect(activeSegmentIndex(segments, 5.2)).toBe(1);
-    expect(activeSegmentIndex(segments, 9)).toBe(2);
-    expect(activeSegmentIndex(segments, 99)).toBe(2);
+describe("transcriptChapters", () => {
+  it("splits the backend's text on blank lines", () => {
+    expect(transcriptChapters("Hücre canlının en küçük birimidir.\n\n  Zarı seçici geçirgendir.\r\n\r\nÇekirdek\nbilgiyi taşır.")).toEqual([
+      "Hücre canlının en küçük birimidir.",
+      "Zarı seçici geçirgendir.",
+      "Çekirdek\nbilgiyi taşır.",
+    ]);
   });
 
-  it("is -1 before the first line and on an empty transcript", () => {
-    expect(activeSegmentIndex([{ ...segments[0], start_secs: 2 }], 1)).toBe(-1);
-    expect(activeSegmentIndex([], 3)).toBe(-1);
+  it("is empty for a missing or blank transcript", () => {
+    expect(transcriptChapters(null)).toEqual([]);
+    expect(transcriptChapters(undefined)).toEqual([]);
+    expect(transcriptChapters(" \n\n ")).toEqual([]);
   });
 });
 
@@ -31,8 +32,7 @@ describe("PodcastPlayer", () => {
     // jsdom has no media pipeline; the player only needs these to not throw.
     vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
     vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
-    // Nor element scrolling, which the transcript's follow uses.
-    Element.prototype.scrollTo ??= () => {};
+    getPodcastJobResultById.mockResolvedValue({ job_id: "job 1", audio_id: "a.mp3", transcript: null });
     // Audio already buffered this far, so the seek needs no local copy.
     vi.spyOn(HTMLMediaElement.prototype, "buffered", "get").mockReturnValue({
       length: 1,
@@ -47,10 +47,10 @@ describe("PodcastPlayer", () => {
     vi.restoreAllMocks();
   });
 
-  const renderPlayer = (transcript?: PodcastTranscriptSegment[] | null) =>
+  const renderPlayer = () =>
     render(() => (
       <PreferencesProvider>
-        <PodcastPlayer jobId="job 1" title="Hücre" durationSecs={754} transcript={transcript} />
+        <PodcastPlayer jobId="job 1" title="Hücre" durationSecs={754} />
       </PreferencesProvider>
     ));
 
@@ -75,21 +75,25 @@ describe("PodcastPlayer", () => {
     expect(localStorage.getItem("hezarfen.audio.rate")).toBe("1.25");
   });
 
-  it("offers no transcript control while the backend sends none", () => {
-    renderPlayer(null);
+  it("offers no transcript control while the result carries none", async () => {
+    renderPlayer();
 
+    await vi.waitFor(() => expect(getPodcastJobResultById).toHaveBeenCalledWith("job 1", expect.any(AbortSignal)));
     expect(screen.queryByRole("button", { name: "Transkripti göster" })).toBeNull();
   });
 
-  it("opens the transcript and plays from a clicked line", async () => {
-    const { container } = renderPlayer(segments);
+  it("opens the job's transcript, one paragraph per chapter", async () => {
+    getPodcastJobResultById.mockResolvedValue({
+      job_id: "job 1",
+      audio_id: "a.mp3",
+      transcript: "Hücre canlının en küçük birimidir.\n\nZarı seçici geçirgendir.",
+    });
+    renderPlayer();
 
-    await fireEvent.click(screen.getByRole("button", { name: "Transkripti göster" }));
+    await fireEvent.click(await screen.findByRole("button", { name: "Transkripti göster" }));
+
+    const region = screen.getByRole("region", { name: "Transkript" });
+    expect(region.querySelectorAll("p")).toHaveLength(2);
     expect(screen.getByText("Zarı seçici geçirgendir.")).toBeTruthy();
-
-    await fireEvent.click(screen.getByRole("button", { name: "00:04 konumundan dinle" }));
-
-    expect(container.querySelector("audio")!.currentTime).toBe(4);
-    expect(HTMLMediaElement.prototype.play).toHaveBeenCalled();
   });
 });

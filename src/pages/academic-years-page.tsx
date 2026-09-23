@@ -17,9 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DetailField } from "@/components/ui/detail-field";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconArchive, IconEdit, IconPlus, IconRotateCcw, IconTrash } from "@/components/ui/icons";
+import { IconArchive, IconEdit, IconEye, IconPlus, IconRotateCcw, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/layout/page-header";
@@ -72,6 +73,7 @@ function AcademicYearsContent() {
   const [promotions, setPromotions] = createSignal<GradePromotion[]>([]);
   const [editing, setEditing] = createSignal<AcademicYear | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<AcademicYear | null>(null);
+  const [detail, setDetail] = createSignal<AcademicYear | null>(null);
   const [archiveTarget, setArchiveTarget] = createSignal<AcademicYear | null>(null);
   const [rolloverTarget, setRolloverTarget] = createSignal<AcademicYear | null>(null);
   const [rolloverFrom, setRolloverFrom] = createSignal("");
@@ -148,10 +150,12 @@ function AcademicYearsContent() {
       header: t("settings.name"),
       size: 190,
       minSize: 170,
-      meta: { cellClass: "min-w-0" },
+      // One line: a long name ends in "…" beside its badge rather than
+      // wrapping; the full name is on hover and in the detail panel.
+      meta: { cellClass: "max-w-0" },
       cell: (cell) => (
-        <span class="flex min-w-0 flex-wrap items-center justify-center gap-2 font-medium">
-          <span class="min-w-0 truncate">{cell.row.original.name}</span>
+        <span class="flex min-w-0 items-center justify-center gap-2 font-medium">
+          <span class="min-w-0 truncate" title={cell.row.original.name}>{cell.row.original.name}</span>
           <Show when={cell.row.original.archived_at != null}>
             <Badge variant="secondary" class="shrink-0 whitespace-nowrap rounded-full">{t("academicYears.archived")}</Badge>
           </Show>
@@ -201,6 +205,7 @@ function AcademicYearsContent() {
           <TableRowActions
             label={t("common.actions")}
             actions={[
+              { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => setDetail(year) },
               ...(archived
                 ? []
                 : [
@@ -265,9 +270,44 @@ function AcademicYearsContent() {
             enablePagination
             pageSize={YEAR_PAGE_SIZE}
             empty={t("academicYears.empty")}
+            onRowClick={(year) => setDetail(year)}
           />
         </Suspense>
       </section>
+
+      <SidePanel open={detail() != null} onOpenChange={(open) => !open && setDetail(null)} title={detail()?.name ?? ""} description={t("academicYears.year")}>
+        <Show when={detail()} keyed>
+          {(year) => (
+            <div class="space-y-5">
+              <div class="rounded-xl border border-border-hairline bg-surface-tint px-4 py-3">
+                <p class="text-xs font-medium text-muted-foreground">{t("settings.name")}</p>
+                <p class="mt-1 break-words text-sm font-medium">{year.name}</p>
+              </div>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <DetailField label={t("events.starts")} value={formatDate(year.starts_at, locale())} />
+                <DetailField label={t("events.ends")} value={formatDate(year.ends_at, locale())} />
+                <DetailField label={t("academicYears.classCount")} value={String(year.class_count)} />
+                <DetailField label={t("academicYears.termCount")} value={String(year.term_count)} />
+                <DetailField label={t("academicYears.archived")} value={year.archived_at != null ? formatDate(year.archived_at, locale()) : "—"} />
+              </div>
+              <Show when={year.archived_at == null}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  class="rounded-lg"
+                  onClick={() => {
+                    setDetail(null);
+                    startEdit(year);
+                  }}
+                >
+                  <IconEdit class="h-4 w-4" />
+                  {t("common.edit")}
+                </Button>
+              </Show>
+            </div>
+          )}
+        </Show>
+      </SidePanel>
 
       <SidePanel guardUnsaved
         open={panelOpen()}

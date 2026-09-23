@@ -377,6 +377,62 @@ describe("client", () => {
       );
     });
 
+    it("localizes still-linked and archived conflicts instead of quoting them", () => {
+      const yearLinked = new ApiError(409, "classes and terms are still linked to this academic year — unlink them first");
+      expect(formatApiError(yearLinked, "tr")).toBe(
+        "Bu eğitim yılına bağlı şubeler ve dönemler var. Silmeden önce onları başka bir yıla taşı veya sil.",
+      );
+      expect(formatApiError(yearLinked, "en")).toBe(
+        "Classes and terms are still linked to this academic year. Move them to another year or delete them before deleting this one.",
+      );
+      // a reworded tail or a curly apostrophe still lands on the same wording
+      expect(formatApiError(new ApiError(409, "Terms are still linked to this year."), "tr")).toMatch(/^Bu eğitim yılına bağlı/);
+
+      const cases: Array<[string, RegExp]> = [
+        ["this class’s academic year is archived — past years are read-only", /^Bu eğitim yılı arşivlendi\./],
+        ["students or instances are still on this class", /^Bu şubede hâlâ öğrenci veya ders var\./],
+        ["a class still teaches this course", /^Bu ders hâlâ bir şubede okutuluyor/],
+        ["exams or frozen karnes still belong to this term", /^Bu döneme bağlı sınavlar/],
+        ["exam questions or homework still reference this subject", /^Sınav soruları veya ödevler/],
+        ["the menu still has live bookings", /^Bu menüde hâlâ rezervasyonlar var\./],
+        ["the slot has a pending or approved booking", /^Bu saatte bekleyen veya onaylanmış/],
+        ["the plan is already assigned to a student", /^Bu ödeme planı bir öğrenciye atanmış/],
+        ["that account is the school's last admin", /^Bu hesap okulun son yöneticisi\./],
+        ["a blueprint already exists for that grade", /^Bu seviye için zaten bir şablon var\./],
+        ["the year changed under concurrent edits (re-read and retry)", /^Bu kayıt sen düzenlerken değişti\./],
+      ];
+      for (const [backend, turkish] of cases) {
+        expect(formatApiError(new ApiError(409, backend), "tr")).toMatch(turkish);
+        expect(formatApiError(new ApiError(409, backend), "en")).not.toMatch(/Server said/);
+      }
+      // the exact table still wins over a looser pattern
+      expect(formatApiError(new ApiError(409, "bank questions still reference this subject — re-tag or delete them first"), "en")).toBe(
+        "Question bank templates still use this subject. Re-tag or delete them first.",
+      );
+    });
+
+    it("prefers the machine code over the prose when the backend sends one", () => {
+      expect(formatApiError(new ApiError(409, "class is at its course ceiling (12)", null, null, "class_at_course_ceiling"), "tr")).toBe(
+        "Bu şube en fazla ders sayısına ulaştı. Yeni ders eklemeden önce şubeden bir ders çıkar.",
+      );
+      expect(formatApiError(new ApiError(409, "some reworded text", null, null, "student_number_taken"), "en")).toBe(
+        "Another student already has this student number. Enter a different number.",
+      );
+      expect(formatApiError(new ApiError(409, "whatever", null, null, "academic_year_archived"), "tr")).toMatch(/^Bu eğitim yılı arşivlendi\./);
+      // an unknown code falls through to the prose and then the quoted fallback
+      expect(formatApiError(new ApiError(409, "slot taken by a later edit", null, null, "brand_new_code"), "tr")).toBe(
+        "İşlem kaydın şu anki durumuyla çakışıyor. Sunucu yanıtı: “slot taken by a later edit”.",
+      );
+    });
+
+    it("carries the payload code onto the ApiError", async () => {
+      mockFetchError(409, { error: "already attached", code: "class_at_course_ceiling" });
+      const err = await client("/classes/1/instances", { method: "POST", body: {} }).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ApiError);
+      expect((err as ApiError).code).toBe("class_at_course_ceiling");
+      expect(formatApiError(err, "en")).toMatch(/^This class already has the maximum number of courses\./);
+    });
+
     it("formats 500+", () => {
       expect(formatApiError(new ApiError(500, ""), "en")).toBe("Server error. Please try again.");
       expect(formatApiError(new ApiError(503, ""), "tr")).toBe("Sunucuda bir sorun oluştu. Lütfen tekrar dene.");

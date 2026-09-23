@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { Link, useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
@@ -10,9 +10,9 @@ import { postCourseMember } from "@/api/courses";
 import { getClasses, getClassInstances, getMyClasses } from "@/api/classes";
 import { getMyInstances } from "@/api/instances";
 import { getMyCourses } from "@/api/reports";
-import { patchCourseById } from "@/api/courses";
 import { formatApiError } from "@/api/client";
 import type { ClassCourse, ClassGroup, CourseKind, CourseMembership, Instance } from "@/api/client";
+import { CourseEditPanel } from "@/components/courses/course-edit-panel";
 import { CourseNotesPanel } from "@/components/courses/course-notes-panel";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -23,18 +23,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { DataToolbar } from "@/components/ui/data-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconBook, IconEdit, IconNote, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
 import { createFlash } from "@/lib/flash";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { Select } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { Textarea } from "@/components/ui/textarea";
 import { UserSearchSelect } from "@/components/users/user-search-select";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
@@ -43,8 +38,6 @@ import { hasMinRole } from "@/lib/roles";
 import { createUrlString } from "@/lib/url-state";
 import { cn } from "@/lib/cn";
 import { matchesSearch } from "@/lib/search-text";
-
-const COURSE_KINDS: CourseKind[] = ["course", "study", "club"];
 
 /** One row of the "taught in" list: an instance plus the şube's name. */
 type SectionRow = { instance: Instance | ClassCourse; className: string };
@@ -151,9 +144,6 @@ function CourseDetailContent() {
   );
 
   const [editing, setEditing] = createSignal(false);
-  const [title, setTitle] = createSignal("");
-  const [description, setDescription] = createSignal("");
-  const [kind, setKind] = createSignal<CourseKind>("course");
   const [showSubjectForm, setShowSubjectForm] = createSignal(false);
   const [showNoteForm, setShowNoteForm] = createSignal(false);
   const [showMemberForm, setShowMemberForm] = createSignal(false);
@@ -181,7 +171,6 @@ function CourseDetailContent() {
     const query = sectionSearch().trim();
     return query ? (sections() ?? []).filter((section) => matchesSearch(query, section.className)) : sections() ?? [];
   });
-  const memberCount = createMemo(() => members()?.length ?? 0);
   const memberUserIds = () => (members() ?? []).map((row) => row.user.id);
 
   const sectionColumns = createMemo<ColumnDef<SectionRow>[]>(() => [
@@ -270,12 +259,7 @@ function CourseDetailContent() {
   };
 
   const startEdit = () => {
-    const c = course();
-    if (!c) return;
-    setTitle(c.title);
-    setDescription(c.description);
-    setKind(c.kind ?? "course");
-    setEditing(true);
+    if (course()) setEditing(true);
   };
 
   return (
@@ -358,60 +342,15 @@ function CourseDetailContent() {
                   }}
                 />
 
-                <SidePanel guardUnsaved open={editing()} onOpenChange={setEditing} title={t("common.edit")} description={c().title}>
-                  <form
-                    class="space-y-4"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      void wrap(async () => {
-                        await patchCourseById(id(), {
-                          title: title().trim(),
-                          description: description(),
-                          kind: kind(),
-                        });
-                        setEditing(false);
-                        await refetchCourse();
-                      }, t("common.saved"));
-                    }}
-                  >
-                    <div class="space-y-3 rounded-xl border border-border-line bg-surface-tint p-4">
-                      <div class="space-y-1.5">
-                        <Label for="edit-course-title">{t("form.title")}</Label>
-                        <Input
-                          id="edit-course-title"
-                          value={title()}
-                          required
-                          maxlength={200}
-                          onInput={(e) => setTitle(e.currentTarget.value)}
-                        />
-                      </div>
-                      <div class="space-y-1.5">
-                        <Label for="edit-course-desc">{t("form.description")}</Label>
-                        <Textarea
-                          id="edit-course-desc"
-                          value={description()}
-                          rows={3}
-                          maxlength={2000}
-                          onInput={(e) => setDescription(e.currentTarget.value)}
-                        />
-                      </div>
-                      <div class="space-y-1.5">
-                        <Label for="edit-course-kind">{t("courses.kind")}</Label>
-                        <Select id="edit-course-kind" value={kind()} onChange={(e) => setKind(e.currentTarget.value as CourseKind)}>
-                          <For each={COURSE_KINDS}>{(item) => <option value={item}>{courseKindLabel(item)}</option>}</For>
-                        </Select>
-                      </div>
-                    </div>
-                    <div class="sticky bottom-0 -mx-5 flex flex-wrap gap-2 border-t border-border-line bg-surface-base px-5 pb-6 pt-4 sm:-mx-6 sm:px-6 sm:pb-6">
-                      <Button type="submit" class="flex-1 rounded-xl sm:flex-none" disabled={pending()}>
-                        {t("common.update")}
-                      </Button>
-                      <Button type="button" variant="outline" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(false)}>
-                        {t("common.cancel")}
-                      </Button>
-                    </div>
-                  </form>
-                </SidePanel>
+                <CourseEditPanel
+                  course={c()}
+                  open={editing()}
+                  onOpenChange={setEditing}
+                  onSaved={async () => {
+                    setFlash(t("common.saved"));
+                    try { await refetchCourse(); } catch { /* the next load picks the change up */ }
+                  }}
+                />
 
                 <SidePanel open={showMemberForm()} onOpenChange={setShowMemberForm} title={t("courses.addMember")} description={c().title}>
                   <form
@@ -484,31 +423,26 @@ function CourseDetailContent() {
 
                   <Show when={tabOn.sections()}>
                   <TabsContent value="sections" forceMount class="space-y-3">
-                    <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
-                      <DataToolbar
-                        inline
-                        searchValue={sectionSearch()}
-                        searchPlaceholder={t("common.searchPlaceholder")}
-                        onSearchInput={setSectionSearch}
-                      />
-                    </div>
-                    <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
-                      <Suspense fallback={<DataTableSkeleton />}>
-                        <Show
-                          when={sectionCount() > 0}
-                          fallback={<EmptyState kind="people" title={t("instances.empty")} description={t("instances.emptyHelp")} />}
-                        >
-                          <DataTable
-                            columns={sectionColumns()}
-                            data={visibleSections()}
-                            enablePagination
-                            pageSize={10}
-                            empty={t("common.noMatches")}
-                            onRowClick={(row) => void navigate({ to: "/instances/$id", params: { id: row.instance.id } })}
-                          />
-                        </Show>
-                      </Suspense>
-                    </div>
+                    {/* The table draws its toolbar (search + columns) and grid
+                        as two sibling cards, like the list pages. */}
+                    <Suspense fallback={<DataTableSkeleton />}>
+                      <Show
+                        when={sectionCount() > 0}
+                        fallback={<EmptyState kind="people" title={t("instances.empty")} description={t("instances.emptyHelp")} />}
+                      >
+                        <DataTable
+                          columns={sectionColumns()}
+                          data={visibleSections()}
+                          searchValue={sectionSearch()}
+                          onSearchInput={setSectionSearch}
+                          filterPlaceholder={t("common.searchPlaceholder")}
+                          enablePagination
+                          pageSize={10}
+                          empty={t("common.noMatches")}
+                          onRowClick={(row) => void navigate({ to: "/instances/$id", params: { id: row.instance.id } })}
+                        />
+                      </Show>
+                    </Suspense>
                   </TabsContent>
                   </Show>
 
@@ -518,22 +452,24 @@ function CourseDetailContent() {
 
                   <Show when={hasMembers()}>
                   <TabsContent value="members" forceMount class="space-y-3">
-                      <Show when={canManageCatalog()}>
-                        <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
-                          <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowMemberForm(true)}>
-                            <IconPlus class="h-4 w-4" />{t("courses.addMember")}
-                          </Button>
-                        </div>
+                      <Show when={canManageCatalog()} fallback={<EmptyState kind="people" title={t("common.accessDenied")} />}>
+                        <Suspense fallback={<DataTableSkeleton />}>
+                          <DataTable
+                            columns={memberColumns()}
+                            data={members() ?? []}
+                            filterColumn="username"
+                            enablePagination
+                            pageSize={10}
+                            empty={t("exams.emptyRoster")}
+                            emptyIllustration="people"
+                            actions={
+                              <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowMemberForm(true)}>
+                                <IconPlus class="h-4 w-4" />{t("courses.addMember")}
+                              </Button>
+                            }
+                          />
+                        </Suspense>
                       </Show>
-                      <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
-                        <Show when={canManageCatalog()} fallback={<EmptyState kind="people" title={t("common.accessDenied")} />}>
-                          <Suspense fallback={<DataTableSkeleton />}>
-                            <Show when={memberCount() > 0} fallback={<EmptyState kind="people" title={t("exams.emptyRoster")} />}>
-                              <DataTable columns={memberColumns()} data={members() ?? []} filterColumn="username" enablePagination pageSize={10} />
-                            </Show>
-                          </Suspense>
-                        </Show>
-                      </div>
                     </TabsContent>
                   </Show>
                 </Tabs>

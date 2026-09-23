@@ -3,7 +3,7 @@ import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import { getCourseById } from "@/api/courses";
-import { getExams } from "@/api/exams";
+import { deleteExamById, getExams } from "@/api/exams";
 import { patchExamById } from "@/api/exams";
 import { getInstanceById, postInstanceExam } from "@/api/instances";
 import { loadInstanceOptions } from "@/lib/instance-options";
@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconCheck, IconEdit, IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
+import { IconChart, IconCheck, IconEdit, IconEye, IconPlus, IconRotateCcw, IconTrash } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -27,7 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createNow } from "@/lib/create-now";
 import { EXAM_KINDS } from "@/api/client";
 import { examKindLabel } from "@/lib/exam-labels";
-import { examDisplayStatus, examStatusMessageKey, examStatusTone, type ExamDisplayStatus } from "@/lib/exam-status";
+import { examDisplayStatus, examStatusMessageKey, examStatusTone, isSittableExam, type ExamDisplayStatus } from "@/lib/exam-status";
 import { LIST_CAP, loadCappedList } from "@/lib/capped-list";
 import { createFlash } from "@/lib/flash";
 import { countExamQuestions } from "@/lib/exam-publish";
@@ -100,6 +100,7 @@ function ExamsContent() {
   const [createStep, setCreateStep] = createSignal<"details" | "questions">("details");
   const [createdExam, setCreatedExam] = createSignal<Exam | null>(null);
   const [editTab, setEditTab] = createSignal<"details" | "questions">("details");
+  const [deleteTarget, setDeleteTarget] = createSignal<Exam | null>(null);
 
   // An exam is set inside an instance (şube × ders), so everything on this page
   // — the filter, the picker, the section column — keys on the instance and
@@ -122,7 +123,7 @@ function ExamsContent() {
   const courseTitle = (instanceId: string) => {
     const cached = visibleCourses().find((row) => row.id === instanceId);
     if (cached) return cached.label;
-    return courseMap()[instanceId] ?? instanceId;
+    return courseMap()[instanceId] ?? "—";
   };
 
   const examStatus = (exam: Exam) => examDisplayStatus(exam, now());
@@ -168,7 +169,7 @@ function ExamsContent() {
               const instance = await getInstanceById(instanceId);
               known.set(instanceId, (await getCourseById(instance.course)).title);
             } catch {
-              // The id stays as the label.
+              // Left unnamed; the row shows a dash, not the id.
             }
           }),
         );
@@ -266,6 +267,19 @@ function ExamsContent() {
                   { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => { setEditingExam(cell.row.original); setEditTab("details"); } },
                 ]
               : []),
+            // The detail header's live monitor link: a published, sittable exam
+            // that has opened, for the exam's creator or a manager+.
+            ...(canEditExam(cell.row.original) && !cell.row.original.draft && isSittableExam(cell.row.original) && !(cell.row.original.starts_at != null && cell.row.original.starts_at > now())
+              ? [{
+                  label: cell.row.original.ends_at != null && cell.row.original.ends_at < now() ? t("exams.finalState") : t("exams.liveMonitor"),
+                  icon: <IconChart class="h-4 w-4" />,
+                  onSelect: () => void navigate({ to: "/exams/$id/live", params: { id: cell.row.original.id } }),
+                }]
+              : []),
+            // Delete, as in the detail header: not once the exam has finished.
+            ...(canEditExam(cell.row.original) && !(cell.row.original.ends_at != null && cell.row.original.ends_at < now())
+              ? [{ label: t("common.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) }]
+              : []),
           ]}
         />
       ),
@@ -300,8 +314,11 @@ function ExamsContent() {
     const exam = editingExam();
     if (!exam) return;
     const { term: _term, ...patch } = values;
-    const updated = await patchExamById(exam.id, patch);
-    setEditingExam(updated);
+    await patchExamById(exam.id, patch);
+    // A saved edit closes the panel, like every other edit form; the
+    // questions tab saves as you go and is closed by hand.
+    setEditingExam(null);
+    setEditTab("details");
     await refetchExams();
     setFlash(t("common.saved"));
   };
@@ -327,6 +344,27 @@ function ExamsContent() {
 
   return (
     <div class="space-y-6">
+      <ConfirmDialog
+        open={deleteTarget() !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title={t("confirm.deleteTitle")}
+        variant="destructive"
+        summary={t("confirm.deleteExam", { title: deleteTarget()?.title ?? "" })}
+        onConfirm={async () => {
+          const target = deleteTarget();
+          if (!target) return;
+          setError("");
+          try {
+            await deleteExamById(target.id);
+            setDeleteTarget(null);
+            setFlash(t("common.deleted"));
+            try { await refetchExams(); } catch { /* stale rows until the next load */ }
+          } catch (err) {
+            setDeleteTarget(null);
+            setError(formatApiError(err));
+          }
+        }}
+      />
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>

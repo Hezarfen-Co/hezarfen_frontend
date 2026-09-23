@@ -8,6 +8,7 @@ import {
   getBankQuestionById,
 } from "@/api/bank-questions";
 import { getCourses } from "@/api/courses";
+import { getExamById } from "@/api/exams";
 import { formatApiError } from "@/api/client";
 import { BankQuestionForm } from "@/components/exams/bank-question-form";
 import { PageHeader } from "@/components/layout/page-header";
@@ -48,6 +49,12 @@ function BankQuestionDetailContent() {
   });
   const [question, { refetch }] = createResource(id, (questionId) => getBankQuestionById(questionId));
   const [courses] = createResource(async () => (await getCourses({ limit: 100 })).items);
+  // The exam a question was lifted from is named by its title; an exam the
+  // viewer cannot read (or one since deleted) shows as a dash, not its id.
+  const [sourceExam] = createResource(
+    () => question()?.source_exam || null,
+    (examId) => getExamById(examId).then((exam) => exam.title).catch(() => null),
+  );
   const manageableCourses = createMemo(() =>
     (courses() ?? []).filter((course) => {
       const current = auth.user();
@@ -98,7 +105,7 @@ function BankQuestionDetailContent() {
             <Breadcrumbs items={[{ label: t("bank.title"), to: "/question-bank" }, { label: current().text }]} />
             <PageHeader
               title={current().text}
-              description={current().subject_name || t("bank.subtitle")}
+              description={current().subject_name || undefined}
               actions={
                 <>
                   <Show when={canEdit()}>
@@ -129,8 +136,7 @@ function BankQuestionDetailContent() {
                 <DetailField label={t("bank.created")} value={formatDate(current().created_at, locale())} />
                 <DetailField label={t("subjects.subject")} value={current().subject_name || "—"} />
                 <DetailField label={t("bank.whoCanSee")} value={current().visibility === "school" ? t("bank.sharedWithSchool") : t("bank.onlyMe")} />
-                <DetailField label={t("exams.title")} value={current().source_exam || "—"} mono />
-                <DetailField label={t("admin.id")} value={current().id} mono />
+                <DetailField label={t("exams.title")} value={(current().source_exam && sourceExam()) || "—"} />
               </div>
 
               <Show when={current().image}>

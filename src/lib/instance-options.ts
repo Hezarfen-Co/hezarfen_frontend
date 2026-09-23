@@ -3,6 +3,7 @@ import { getCourseById } from "@/api/courses";
 import { getMyInstances } from "@/api/instances";
 import type { ClassGroup, Role } from "@/api/client";
 import { hasMinRole } from "@/lib/roles";
+import { compareClasses } from "@/lib/student-directory";
 
 /** One pickable section: "<ders> — <şube>", plus the ids behind the label. */
 export type InstanceOption = {
@@ -25,13 +26,13 @@ export async function loadInstanceOptions(role: Role | undefined): Promise<Insta
   const office = hasMinRole(role, "manager");
 
   const rows: { id: string; course: string; class: string }[] = [];
-  const classNames = new Map<string, string>();
+  const classesById = new Map<string, ClassGroup>();
 
   if (office) {
     const classes = (await getClasses({ limit: 200 })).items;
     const perClass = await Promise.all(
       classes.map(async (klass) => {
-        classNames.set(klass.id, klass.name);
+        classesById.set(klass.id, klass);
         try {
           return (await getClassInstances(klass.id, { limit: 200 })).items;
         } catch {
@@ -50,7 +51,7 @@ export async function loadInstanceOptions(role: Role | undefined): Promise<Insta
         () => ({ items: [] as ClassGroup[] }),
       ),
     ]);
-    for (const klass of classes.items) classNames.set(klass.id, klass.name);
+    for (const klass of classes.items) classesById.set(klass.id, klass);
     for (const instance of mine.items) {
       rows.push({ id: instance.id, course: instance.course, class: instance.class });
     }
@@ -62,13 +63,29 @@ export async function loadInstanceOptions(role: Role | undefined): Promise<Insta
       try {
         titles.set(courseId, (await getCourseById(courseId)).title);
       } catch {
-        // Falls back to the id in the label below.
+        // Shows as a dash in the label below, never the raw id.
       }
     }),
   );
 
-  return rows.map((row) => ({
-    ...row,
-    label: `${titles.get(row.course) ?? row.course} — ${classNames.get(row.class) ?? "—"}`,
-  }));
+  // Class by class (9-A, 9-B, 10-A…), then by ders inside a class, the order a
+  // school reads its timetable in; a şube this caller cannot name goes last.
+  const collator = new Intl.Collator("tr", { numeric: true, sensitivity: "base" });
+  const courseTitle = (row: { course: string }) => titles.get(row.course) ?? "—";
+  return rows
+    .sort((a, b) => {
+      const classA = classesById.get(a.class);
+      const classB = classesById.get(b.class);
+      if (classA && !classB) return -1;
+      if (!classA && classB) return 1;
+      if (classA && classB) {
+        const byClass = compareClasses(classA, classB);
+        if (byClass !== 0) return byClass;
+      }
+      return collator.compare(courseTitle(a), courseTitle(b));
+    })
+    .map((row) => ({
+      ...row,
+      label: `${courseTitle(row)} — ${classesById.get(row.class)?.name ?? "—"}`,
+    }));
 }

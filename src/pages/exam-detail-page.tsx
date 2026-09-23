@@ -31,7 +31,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
 import { IconCalendarDays, IconChart, IconChevronDown, IconClipboardCheck, IconClock, IconEdit, IconExam, IconEye, IconRefresh, IconSchool, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -44,7 +43,7 @@ import { createNow } from "@/lib/create-now";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDisplayStatus, examStatusMessageKey, examStatusTone, isSittableExam, type ExamAttemptSummary, type ExamDisplayStatus } from "@/lib/exam-status";
 import { examDurationMs, formatDateTime, formatDurationMinutes } from "@/lib/format";
-import { personId, personLabel, personLabelWithId } from "@/lib/person";
+import { personId, personLabel, personPickerLabel } from "@/lib/person";
 import { cn } from "@/lib/cn";
 import { createFlash } from "@/lib/flash";
 import { scheduleStatusClass } from "@/lib/schedule-status";
@@ -305,14 +304,14 @@ function ExamDetailContent() {
         .filter((row) => (row.status === "submitted" || row.status === "expired") && !graded.has(personId(row.user)))
         .map((row) => ({
           id: personId(row.user),
-          label: personLabelWithId(row.user),
+          label: personPickerLabel(row.user),
         }));
     }
     return (roster() ?? [])
       .filter((row) => !graded.has(row.user.id))
       .map((row) => ({
         id: row.user.id,
-        label: personLabelWithId(row.user),
+        label: personPickerLabel(row.user),
       }));
   };
   const resultColumns = createMemo<ColumnDef<ExamResult>[]>(() => [
@@ -703,62 +702,61 @@ function ExamDetailContent() {
                   <ExamQuestionsPanel examId={id()} courseId={instance()?.course ?? null} readOnly={isFinished()} embedded />
                 </TabsContent>
 
-                <TabsContent value="results" forceMount class="data-shell space-y-4 p-4">
-                  <div class="flex flex-wrap items-center justify-between gap-3">
-                    <Badge variant="secondary">{`${resultTotal()} ${t("exams.studentResults")}`}</Badge>
-                    <div class="flex flex-wrap items-center gap-2">
-                      <Show when={isFinished()}>
-                        <label
-                          class={cn(
-                            "inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-muted/50",
-                            reviewOn() && "text-primary-text",
-                          )}
-                          title={t("exams.allowReviewHelp")}
-                        >
-                          <span class="font-medium">{t("exams.allowReview")}</span>
-                          <span class="relative shrink-0">
-                            <input
-                              type="checkbox"
-                              class="peer sr-only"
-                              checked={reviewOn()}
-                              disabled={reviewSaving()}
-                              onChange={(event) => toggleReview(event.currentTarget.checked)}
-                            />
-                            <span class="block h-6 w-10 rounded-full bg-input ring-1 ring-inset ring-black/5 transition-colors peer-checked:bg-primary peer-disabled:opacity-60 peer-focus-visible:ring-2 peer-focus-visible:ring-ring dark:ring-white/10" />
-                            <span class="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
-                          </span>
-                        </label>
-                      </Show>
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
-                        <IconEdit class="h-4 w-4" />
-                        {t("exams.gradeStudent")}
-                      </Button>
-                    </div>
-                  </div>
+                {/* No frame around the tab: the table draws its toolbar (search,
+                    review switch, grade button, columns) and grid as two sibling
+                    cards, like the list pages. The pager shows the count. */}
+                <TabsContent value="results" forceMount class="space-y-3">
                   <Suspense fallback={<DataTableSkeleton />}>
-                    <Show
-                      when={(results()?.items ?? []).length > 0}
-                      fallback={<EmptyState kind="exams" title={t("exams.noResults")} />}
-                    >
-                      {/* Server-paged: the table's own pager drives the fetch, so a
-                          phone's smaller page never shows up as a second pager
-                          slicing the fetched page again. */}
-                      <DataTable
-                        columns={resultColumns()}
-                        data={results()?.items ?? []}
-                        filterColumn="user"
-                        manualPagination={{
-                          pageIndex: Math.min(resultPage(), resultTotalPages() - 1),
-                          pageSize: resultPageSize(),
-                          total: resultTotal(),
-                          onPageChange: setResultPage,
-                        }}
-                      />
-                    </Show>
+                    {/* Server-paged: the table's own pager drives the fetch, so a
+                        phone's smaller page never shows up as a second pager
+                        slicing the fetched page again. */}
+                    <DataTable
+                      columns={resultColumns()}
+                      data={results()?.items ?? []}
+                      filterColumn="user"
+                      empty={t("exams.noResults")}
+                      emptyIllustration="exams"
+                      manualPagination={{
+                        pageIndex: Math.min(resultPage(), resultTotalPages() - 1),
+                        pageSize: resultPageSize(),
+                        total: resultTotal(),
+                        onPageChange: setResultPage,
+                      }}
+                      actions={
+                        <>
+                          <Show when={isFinished()}>
+                            <label
+                              class={cn(
+                                "inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-muted/50",
+                                reviewOn() && "text-primary-text",
+                              )}
+                              title={t("exams.allowReviewHelp")}
+                            >
+                              <span class="font-medium">{t("exams.allowReview")}</span>
+                              <span class="relative shrink-0">
+                                <input
+                                  type="checkbox"
+                                  class="peer sr-only"
+                                  checked={reviewOn()}
+                                  disabled={reviewSaving()}
+                                  onChange={(event) => toggleReview(event.currentTarget.checked)}
+                                />
+                                <span class="block h-6 w-10 rounded-full bg-input ring-1 ring-inset ring-black/5 transition-colors peer-checked:bg-primary peer-disabled:opacity-60 peer-focus-visible:ring-2 peer-focus-visible:ring-ring dark:ring-white/10" />
+                                <span class="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+                              </span>
+                            </label>
+                          </Show>
+                          <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
+                            <IconEdit class="h-4 w-4" />
+                            {t("exams.gradeStudent")}
+                          </Button>
+                        </>
+                      }
+                    />
                   </Suspense>
                 </TabsContent>
 
-                <TabsContent value="audience" class="data-shell p-4">
+                <TabsContent value="audience" class="space-y-3">
                   <ExamAudiencePanel
                     examId={id()}
                     ownerInstanceId={ex().class_course}

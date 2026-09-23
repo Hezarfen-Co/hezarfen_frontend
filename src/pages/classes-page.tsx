@@ -1,25 +1,26 @@
 import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import type { ColumnDef } from "@tanstack/solid-table";
 import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
-import { getClasses, getClassMembers, postClass } from "@/api/classes";
+import { deleteClassById, getClasses, getClassMembers, postClass, postClassBlueprintApply } from "@/api/classes";
 import { getAcademicYears } from "@/api/academic-years";
 import { getCourses } from "@/api/courses";
 import { getLimits } from "@/api/limits";
-import { formatApiError, type BlueprintSkip, type ClassGroup } from "@/api/client";
+import { ApiError, formatApiError, type BlueprintSkip, type ClassGroup } from "@/api/client";
 import { BlueprintSkippedReport } from "@/components/classes/blueprint-skipped-report";
+import { ClassEditPanel } from "@/components/classes/class-edit-panel";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { DataToolbar } from "@/components/ui/data-toolbar";
 import { DropdownSelect, Select } from "@/components/ui/select";
 import { Alert } from "@/components/ui/alert";
 import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTableSkeleton } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
-import { IconChevronRight, IconPlus } from "@/components/ui/icons";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { IconEdit, IconEye, IconListChecks, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BlueprintsTab } from "@/components/classes/blueprints-tab";
 import { UserSearchSelect } from "@/components/users/user-search-select";
@@ -27,6 +28,8 @@ import { createFlash } from "@/lib/flash";
 import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
+import { compareClasses } from "@/lib/student-directory";
+import { createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
@@ -48,8 +51,7 @@ function ClassesContent() {
   const canManage = () => hasMinRole(auth.user()?.role, "manager");
 
   const [tab, setTab] = createSignal("classes");
-  const [gradeFilter, setGradeFilter] = createSignal("all");
-  const [query, setQuery] = createSignal("");
+  const [gradeFilter, setGradeFilter] = createUrlString("grade", "all");
   const [showForm, setShowForm] = createSignal(false);
   const [name, setName] = createSignal("");
   const [grade, setGrade] = createSignal("");
@@ -69,9 +71,9 @@ function ClassesContent() {
   const [years] = createResource(async () => (await getAcademicYears({ limit: 100 })).items);
   const [limits] = createResource(() => canManage() ? getLimits() : null);
   const [list, { refetch }] = createResource(async () => (await getClasses()).items);
-  const courseTitle = (id: string) => skippedCourseTitles()[id] ?? id;
+  const courseTitle = (id: string) => skippedCourseTitles()[id] ?? "—";
   const listData = () => list.latest ?? list() ?? [];
-  const yearName = (id: string | null) => years.latest?.find((year) => year.id === id)?.name ?? (id || t("academicYears.unassigned"));
+  const yearName = (id: string | null) => (id ? years.latest?.find((year) => year.id === id)?.name ?? "—" : t("academicYears.unassigned"));
 
   // Grade tabs mirror Figma's Tümü/Lise/Ortaokul row structurally, but the
   // labels are read from whatever `grade` values this school actually uses
@@ -81,19 +83,6 @@ function ClassesContent() {
     const seen = new Set<string>();
     for (const cls of listData()) if (cls.grade) seen.add(cls.grade);
     return [...seen].sort((a, b) => a.localeCompare(b, "tr"));
-  });
-
-  const gradeFiltered = createMemo(() => {
-    const g = gradeFilter();
-    return g === "all" ? listData() : listData().filter((cls) => cls.grade === g);
-  });
-
-  const searched = createMemo(() => {
-    const needle = query().trim();
-    if (!needle) return gradeFiltered();
-    return gradeFiltered().filter((cls) =>
-      matchesSearch(needle, cls.name, cls.grade, cls.teacher ? personLabel(cls.teacher) : null),
-    );
   });
 
   const memberCountIds = createMemo(() => {
@@ -111,6 +100,131 @@ function ClassesContent() {
     return new Map(entries);
   });
   const memberCountsCapped = () => listData().length > MEMBER_COUNT_FETCH_CAP;
+
+  // Class by class (9-A, 9-B, 10-A…) until a column header re-sorts it.
+  const gradeFiltered = createMemo(() => {
+    const g = gradeFilter();
+    return (g === "all" ? listData() : listData().filter((cls) => cls.grade === g)).slice().sort(compareClasses);
+  });
+  // A fresh array once the member counts land: the table redraws a row only
+  // when its data changes, so the counts would otherwise stay "—".
+  const rows = createMemo(() => {
+    memberCounts();
+    return gradeFiltered().slice();
+  });
+  const openClass = (cls: ClassGroup) => void navigate({ to: "/management/classes/$id", params: { id: cls.id } });
+
+  // The detail page's header actions, from the row menu: edit, apply the
+  // grade's blueprint and delete — all manager+, as there.
+  const [editTarget, setEditTarget] = createSignal<ClassGroup | null>(null);
+  const [deleteTarget, setDeleteTarget] = createSignal<ClassGroup | null>(null);
+  const [rowError, setRowError] = createSignal("");
+  const refreshList = async () => {
+    try { await refetch(); } catch { /* stale rows until the next load */ }
+  };
+  // Applying is best-effort: the request succeeds and reports the pairs it
+  // could not attach, so a shortfall opens the same report the create uses.
+  const applyBlueprint = async (cls: ClassGroup) => {
+    if (pending()) return;
+    setRowError("");
+    setPending(true);
+    try {
+      const result = await postClassBlueprintApply(cls.id);
+      if (result.skipped.length === 0) {
+        setFlash(t("classBlueprints.applied"));
+        return;
+      }
+      try {
+        const courses = (await getCourses({ limit: 200 })).items;
+        setSkippedCourseTitles(Object.fromEntries(courses.map((course) => [course.id, course.title])));
+      } catch {
+        // The report still opens; the rows fall back to "—".
+      }
+      setSkipped(result.skipped);
+      setReportOpen(true);
+    } catch (err) {
+      // A 404 here means no blueprint covers this grade, not a missing class.
+      setRowError(err instanceof ApiError && err.status === 404
+        ? t("classBlueprints.noBlueprintForGrade", { grade: cls.grade ?? "" })
+        : formatApiError(err));
+    } finally {
+      setPending(false);
+    }
+  };
+  const columns = createMemo<ColumnDef<ClassGroup>[]>(() => [
+    {
+      accessorKey: "name",
+      header: t("classGroups.className"),
+      size: 150,
+      minSize: 120,
+      meta: { cellClass: "max-w-0" },
+      cell: (cell) => <span class="block truncate font-medium" title={cell.row.original.name}>{cell.row.original.name}</span>,
+    },
+    {
+      id: "grade",
+      accessorFn: (row) => row.grade ?? "",
+      header: t("classGroups.grade"),
+      size: 90,
+      minSize: 80,
+      meta: { cellClass: "whitespace-nowrap text-center", align: "center" },
+      cell: (cell) => cell.row.original.grade || "—",
+    },
+    {
+      id: "year",
+      accessorFn: (row) => yearName(row.year),
+      header: t("academicYears.year"),
+      size: 190,
+      minSize: 150,
+      meta: { cellClass: "max-w-0 truncate text-text-subtle" },
+    },
+    {
+      id: "teacher",
+      accessorFn: (row) => (row.teacher ? personLabel(row.teacher) : t("classGroups.noTeacher")),
+      header: t("classGroups.homeroomTeacher"),
+      size: 180,
+      minSize: 140,
+      meta: { cellClass: "max-w-0 truncate" },
+      cell: (cell) => cell.row.original.teacher ? personLabel(cell.row.original.teacher) : <span class="text-text-subtle">{t("classGroups.noTeacher")}</span>,
+    },
+    {
+      id: "students",
+      accessorFn: (row) => memberCounts()?.get(row.id) ?? -1,
+      header: t("nav.studentsRoster"),
+      size: 110,
+      minSize: 90,
+      meta: { cellClass: "whitespace-nowrap text-center", align: "center" },
+      cell: (cell) => {
+        const count = memberCounts()?.get(cell.row.original.id);
+        return count == null ? <span class="text-text-subtle">—</span> : t("classGroups.studentsCount", { count: String(count) });
+      },
+    },
+    {
+      id: "actions",
+      header: t("common.actions"),
+      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap", cellClass: "px-1 text-center" },
+      cell: (cell) => (
+        <TableRowActions
+          label={t("common.actions")}
+          actions={[
+            { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => openClass(cell.row.original) },
+            ...(canManage()
+              ? [
+                  { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => setEditTarget(cell.row.original) },
+                  {
+                    label: t("classBlueprints.apply"),
+                    icon: <IconListChecks class="h-4 w-4" />,
+                    disabled: pending() || !cell.row.original.grade,
+                    onSelect: () => void applyBlueprint(cell.row.original),
+                  },
+                  { label: t("classGroups.deleteClass"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
+                ]
+              : []),
+          ]}
+        />
+      ),
+    },
+  ]);
+
 
   const createClass = async (event: SubmitEvent) => {
     event.preventDefault();
@@ -192,7 +306,41 @@ function ClassesContent() {
         </form>
       </SidePanel>
 
+      <ClassEditPanel
+        cls={editTarget()}
+        open={editTarget() !== null}
+        onOpenChange={(open) => { if (!open) setEditTarget(null); }}
+        years={years.latest ?? []}
+        maxNameLen={limits.latest?.course.max_class_name_len}
+        maxGradeLen={limits.latest?.course.max_class_grade_len}
+        onSaved={async () => { setFlash(t("common.saved")); await refreshList(); }}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget() !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title={t("classGroups.deleteClass")}
+        variant="destructive"
+        description={t("classGroups.deleteConfirm")}
+        summary={deleteTarget()?.name ?? ""}
+        onConfirm={async () => {
+          const target = deleteTarget();
+          if (!target) return;
+          setRowError("");
+          try {
+            await deleteClassById(target.id);
+            setDeleteTarget(null);
+            setFlash(t("common.deleted"));
+            await refreshList();
+          } catch (err) {
+            setDeleteTarget(null);
+            setRowError(formatApiError(err));
+          }
+        }}
+      />
+
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
+      <Show when={rowError()}><Alert variant="destructive">{rowError()}</Alert></Show>
 
       <Show when={skipped().length > 0}>
         <Alert class="flex flex-wrap items-center justify-between gap-3 border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
@@ -222,12 +370,27 @@ function ClassesContent() {
 
         <TabsContent value="classes">
           <div class="space-y-4">
-            <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
-              <DataToolbar
-                searchValue={query()}
-                searchPlaceholder={t("classGroups.searchPlaceholder")}
-                searchHint={t("search.hint.classes")}
-                onSearchInput={setQuery}
+            <Show when={memberCountsCapped()}>
+              <Alert role="status">{t("classGroups.memberCountCapped", { cap: MEMBER_COUNT_FETCH_CAP })}</Alert>
+            </Show>
+
+            <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
+              <DataTable
+                urlState
+                columns={columns()}
+                data={rows()}
+                tableClass="table-fixed min-w-[48rem]"
+                searchPredicate={(cls, needle) => matchesSearch(needle, cls.name, cls.grade, cls.teacher ? personLabel(cls.teacher) : null)}
+                filterPlaceholder={t("classGroups.searchPlaceholder")}
+                filterHint={t("search.hint.classes")}
+                enablePagination
+                pageSize={20}
+                storageKey="classes"
+                pageResetKey={gradeFilter()}
+                filtersActive={gradeFilter() !== "all"}
+                onClearFilters={() => setGradeFilter("all")}
+                empty={t("classGroups.empty")}
+                onRowClick={openClass}
                 filters={
                   <Show when={grades().length > 0}>
                     <DropdownSelect
@@ -247,27 +410,6 @@ function ClassesContent() {
                   </Show>
                 }
               />
-            </div>
-
-            <Show when={memberCountsCapped()}>
-              <Alert role="status">{t("classGroups.memberCountCapped", { cap: MEMBER_COUNT_FETCH_CAP })}</Alert>
-            </Show>
-
-            <Suspense fallback={<DataTableSkeleton />}>
-              <Show when={searched().length > 0} fallback={<EmptyState kind="people" title={t("classGroups.empty")} />}>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  <For each={searched()}>
-                    {(cls) => (
-                      <ClassCard
-                        cls={cls}
-                        yearName={yearName(cls.year)}
-                        memberCount={memberCounts()?.get(cls.id) ?? null}
-                        onClick={() => void navigate({ to: "/management/classes/$id", params: { id: cls.id } })}
-                      />
-                    )}
-                  </For>
-                </div>
-              </Show>
             </Suspense>
           </div>
         </TabsContent>
@@ -277,35 +419,5 @@ function ClassesContent() {
         </TabsContent>
       </Tabs>
     </div>
-  );
-}
-
-function ClassCard(props: { cls: ClassGroup; yearName: string; memberCount: number | null; onClick: () => void }) {
-  const t = useT();
-  return (
-    <button
-      type="button"
-      onClick={props.onClick}
-      class="group flex flex-col gap-4 rounded-2xl border border-border-line/80 bg-surface-base p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <div class="flex items-start gap-3">
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary-text">
-          {props.cls.grade || "—"}
-        </span>
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-base font-semibold text-text-strong">{props.cls.name}</p>
-          <p class="mt-1 truncate text-xs text-text-subtle">{props.cls.teacher ? personLabel(props.cls.teacher) : t("classGroups.noTeacher")}</p>
-        </div>
-        <IconChevronRight class="h-4 w-4 shrink-0 text-text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-primary-text" />
-      </div>
-      <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-xs text-text-subtle">
-        <Badge variant="outline" class="min-w-0 max-w-full justify-start rounded-full bg-transparent" title={props.yearName}>
-          <span class="min-w-0 truncate">{props.yearName}</span>
-        </Badge>
-        <Show when={props.memberCount != null} fallback={<span class="shrink-0 text-xs text-text-subtle">—</span>}>
-          <span class="shrink-0">{t("classGroups.studentsCount", { count: String(props.memberCount) })}</span>
-        </Show>
-      </div>
-    </button>
   );
 }

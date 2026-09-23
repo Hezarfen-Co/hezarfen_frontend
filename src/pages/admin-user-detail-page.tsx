@@ -1,16 +1,14 @@
 import { Link, useLocation, useParams } from "@tanstack/solid-router";
 import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
-import { getLimits } from "@/api/limits";
-import { getSettings } from "@/api/settings";
-import { getUserById, getUserProfile, patchUserProfile, patchUserRole } from "@/api/users";
+import { getUserById, getUserProfile, patchUserRole } from "@/api/users";
 import { formatApiError, type Role } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { PageHeader } from "@/components/layout/page-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { ParentStudentsPanel } from "@/components/users/parent-students-panel";
-import { ProfileForm } from "@/components/users/profile-form";
+import { AdminUserEditPanel } from "@/components/users/admin-user-edit-panel";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -18,7 +16,6 @@ import { DetailField } from "@/components/ui/detail-field";
 import { IconEdit, IconExternalLink, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Select } from "@/components/ui/select";
-import { SidePanel } from "@/components/ui/side-panel";
 import { ROLES, hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -43,8 +40,6 @@ function AdminUserDetailContent() {
   const [user, { refetch }] = createResource(id, (userId) => getUserById(userId));
   // Branş (and display name/bio) live only on the profile read, not on User.
   const [profile, { refetch: refetchProfile }] = createResource(id, (userId) => getUserProfile(userId).catch(() => null));
-  const [settings] = createResource(() => getSettings().catch(() => null));
-  const [limits] = createResource(() => getLimits().catch(() => null));
   const [editing, setEditing] = createSignal(false);
   const [studentsOpen, setStudentsOpen] = createSignal(false);
   const [pendingRole, setPendingRole] = createSignal<Role>("student");
@@ -138,26 +133,16 @@ function AdminUserDetailContent() {
               </div>
             </section>
 
-            <SidePanel guardUnsaved
+            <AdminUserEditPanel
+              user={current()}
               open={editing()}
               onOpenChange={setEditing}
-              title={t("profile.edit")}
-              description={current().username}
-            >
-              <ProfileForm
-                user={current()}
-                profile={profile.latest ? { display_name: profile.latest.display_name, bio: profile.latest.bio, branch: profile.latest.branch } : undefined}
-                branches={settings.latest?.branches}
-                editStudentNumber
-                maxStudentNumberLen={limits.latest?.user.max_student_number_len}
-                onSave={(body) => patchUserProfile(current().id, body)}
-                onSaved={async () => {
-                  setEditing(false);
-                  void refetchProfile();
-                  await refetch();
-                }}
-              />
-            </SidePanel>
+              onSaved={async () => {
+                setEditing(false);
+                void refetchProfile();
+                await refetch();
+              }}
+            />
 
             <ParentStudentsPanel
               parent={{

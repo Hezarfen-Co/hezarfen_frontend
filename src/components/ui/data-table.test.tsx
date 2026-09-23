@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import { Portal } from "solid-js/web";
 import { fireEvent, render, screen, within } from "@solidjs/testing-library";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { DataTable } from "@/components/ui/data-table";
@@ -249,6 +250,32 @@ test("on a phone-width screen rows render as labelled cards instead of a sideway
   fireEvent.click(within(card).getByText("teacher"));
   expect(onRowClick).toHaveBeenCalledOnce();
   vi.unstubAllGlobals();
+});
+
+test("a pick in a row's portalled menu does not also open the row", () => {
+  const portalColumns: ColumnDef<Row>[] = [
+    { accessorKey: "name", header: "Name" },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: () => (
+        <Portal>
+          <div role="menuitem">Edit</div>
+        </Portal>
+      ),
+    },
+  ];
+  const onRowClick = vi.fn();
+  render(() => (
+    <PreferencesProvider>
+      <DataTable columns={portalColumns} data={[{ name: "Ada" }]} enableColumnVisibility={false} onRowClick={onRowClick} />
+    </PreferencesProvider>
+  ));
+
+  fireEvent.click(screen.getAllByRole("menuitem", { name: "Edit" })[0]!);
+  expect(onRowClick).not.toHaveBeenCalled();
+  fireEvent.click(screen.getAllByText("Ada")[0]!);
+  expect(onRowClick).toHaveBeenCalledOnce();
 });
 
 test("sortable headers expose their order through aria-sort", () => {

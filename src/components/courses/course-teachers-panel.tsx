@@ -7,8 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
-import { IconTrash } from "@/components/ui/icons";
+import { IconPlus, IconTrash } from "@/components/ui/icons";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { UserSearchSelect } from "@/components/users/user-search-select";
@@ -113,17 +112,20 @@ export function CourseTeachersPanel(props: {
         <Alert variant="destructive">{error()}</Alert>
       </Show>
 
-      <Show
-        when={props.teachers.length > 0}
-        fallback={
-          <EmptyState
-            kind="people"
-            title={t("courses.noTeachers")}
-          />
-        }
-      >
-        <DataTable columns={columns()} data={props.teachers} storageKey="course-teachers" />
-      </Show>
+      {/* The assign button rides in the table's toolbar card, so it stays
+          reachable while the list is empty. */}
+      <DataTable
+        columns={columns()}
+        data={props.teachers}
+        storageKey="course-teachers"
+        empty={t("courses.noTeachers")}
+        emptyIllustration="people"
+        actions={props.canStaff ? (
+          <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => props.onAssignOpenChange(true)}>
+            <IconPlus class="h-4 w-4" />{t("courses.assignTeacher")}
+          </Button>
+        ) : undefined}
+      />
 
       <SidePanel
         open={props.assignOpen}

@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@solidjs/testing-li
 import { createSignal } from "solid-js";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { SidePanel } from "@/components/ui/side-panel";
+import { TableRowActions } from "@/components/ui/table-row-actions";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
 beforeEach(() => vi.spyOn(window, "scrollTo").mockImplementation(() => {}));
@@ -68,4 +69,29 @@ test("guardUnsaved asks only once something was typed", async () => {
   fireEvent.click(closeButton());
   expect(await screen.findByText(confirmTitle)).toBeTruthy();
   expect(screen.getByTestId("state").textContent).toBe("open");
+});
+
+test.each(["Grade", "View"])("a row action keeps the %s panel open after menu focus returns", async (action) => {
+  const [selected, setSelected] = createSignal("");
+  render(() => (
+    <PreferencesProvider>
+      <div id="root">
+        <TableRowActions
+          label="Actions"
+          actions={[
+            { label: "Grade", icon: <span />, onSelect: () => setSelected("Grade") },
+            { label: "View", icon: <span />, onSelect: () => setSelected("View") },
+          ]}
+        />
+      </div>
+      <SidePanel open={selected() !== ""} onOpenChange={(open) => { if (!open) setSelected(""); }} title={selected()}>
+        <p>Panel content</p>
+      </SidePanel>
+    </PreferencesProvider>
+  ));
+
+  fireEvent.pointerDown(screen.getByRole("button", { name: "Actions" }), { button: 0, pointerType: "mouse" });
+  fireEvent.keyDown(await screen.findByRole("menuitem", { name: action }), { key: "Enter" });
+  await waitFor(() => expect(screen.getByRole("dialog", { name: action })).toBeTruthy());
+  expect(screen.getByText("Panel content")).toBeTruthy();
 });

@@ -610,8 +610,7 @@ function AppointmentsContent() {
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <DetailField label={t("appointments.teacher")} value={personLabel(slot.teacher)} />
                 <DetailField label={t("appointments.time")} value={timeWindow(slot.starts_at, slot.ends_at)} />
-                <DetailField label={t("appointments.series")} value={slot.series || "—"} mono />
-                <DetailField label={t("admin.id")} value={slot.id} mono />
+                <DetailField label={t("appointments.series")} value={slot.series ? t("appointments.series.weekly") : t("appointments.series.once")} />
               </div>
               <div class="space-y-1">
                 <p class="text-xs font-medium text-muted-foreground">{t("appointments.note")}</p>

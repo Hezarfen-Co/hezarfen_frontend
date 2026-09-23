@@ -353,12 +353,35 @@
     @apply h-9 rounded-md;
   }
 
+  /* The action bar sits flush on the panel's bottom edge: the body and the
+     form drop their bottom padding, which otherwise left an empty strip under
+     Kaydet / Vazgeç on every panel. */
+  &:has(form > .flex:last-child) {
+    @apply pb-0;
+  }
+
+  & form:has(> .flex:last-child) {
+    @apply pb-0;
+  }
+
+  /* A form wrapped in a div (a help line above it) still fills the panel, so
+     its bar lands on the bottom edge instead of just above it. */
+  & > div:has(> form:last-child > .flex:last-child) {
+    @apply flex min-h-full flex-col;
+  }
+
+  & > div > form:last-child:has(> .flex:last-child) {
+    @apply flex-1;
+  }
+
+  /* mb-0 overrides a bar's own -mb-5, which (with bottom-0 here) pulled it
+     over the last field. */
   & form > .flex:last-child {
-    @apply sticky bottom-0 -mx-5 justify-end border-t border-border bg-background px-5 py-3;
+    @apply sticky bottom-0 -mx-5 mb-0 justify-end border-t border-border bg-background px-5 py-3;
   }
 
   & form > .flex.flex-wrap:last-child {
-    @apply sticky bottom-0 -mx-5 justify-end border-t border-border bg-background px-5 py-3;
+    @apply sticky bottom-0 -mx-5 mb-0 justify-end border-t border-border bg-background px-5 py-3;
   }
 
   & form > .flex:last-child button {

@@ -9,6 +9,7 @@ const podcastApi = vi.hoisted(() => ({
   listPodcastJobs: vi.fn(),
   podcastAudioUrl: vi.fn((jobId: string) => `/api/podcast/jobs/${encodeURIComponent(jobId)}/audio`),
   getPodcastJobAudioBlob: vi.fn(),
+  getPodcastJobResultById: vi.fn(() => Promise.resolve({ job_id: "", audio_id: "", transcript: null })),
 }));
 
 vi.mock("@/api/podcast", () => podcastApi);

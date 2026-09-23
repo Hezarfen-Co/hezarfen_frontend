@@ -11,8 +11,6 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { DataToolbar } from "@/components/ui/data-toolbar";
-import { EmptyState } from "@/components/ui/empty-state";
 import { IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -165,29 +163,26 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
 
       {error() && <p class="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
 
-      <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
-        <DataToolbar
-          inline
+      {/* The table draws its toolbar (search, add, columns) and grid as two
+          sibling cards, like the list pages; no frame around them. */}
+      <Suspense fallback={<DataTableSkeleton />}>
+        <DataTable
+          columns={columns()}
+          data={visibleSubjects()}
           searchValue={search()}
-          searchPlaceholder={t("common.searchPlaceholder")}
           onSearchInput={setSearch}
-          actions={
-            <Show when={props.canManage}>
-              <Button type="button" size="sm" class="rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
-                <IconPlus class="h-4 w-4" />{t("subjects.add")}
-              </Button>
-            </Show>
-          }
+          filterPlaceholder={t("common.searchPlaceholder")}
+          enablePagination
+          pageSize={10}
+          empty={t("subjects.empty")}
+          emptyIllustration="courses"
+          actions={props.canManage ? (
+            <Button type="button" size="sm" class="rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
+              <IconPlus class="h-4 w-4" />{t("subjects.add")}
+            </Button>
+          ) : undefined}
         />
-      </div>
-
-      <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
-        <Suspense fallback={<DataTableSkeleton />}>
-          <Show when={visibleSubjects().length > 0} fallback={<EmptyState kind="courses" title={t("subjects.empty")} />}>
-            <DataTable columns={columns()} data={visibleSubjects()} enablePagination pageSize={10} />
-          </Show>
-        </Suspense>
-      </div>
+      </Suspense>
     </div>
   );
 }

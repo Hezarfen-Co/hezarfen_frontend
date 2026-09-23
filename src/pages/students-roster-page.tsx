@@ -11,15 +11,17 @@ import { formatApiError, type ClassGroup, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { CreateUserPanel } from "@/components/users/create-user-panel";
 import { RosterPersonCell } from "@/components/users/roster-person-cell";
+import { StudentInfoPanel } from "@/components/users/student-info-panel";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconEye, IconPlus } from "@/components/ui/icons";
+import { IconEye, IconPlus, IconUserCircle } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { useT } from "@/stores/preferences-context";
 import { useAuth } from "@/stores/auth-context";
 import { sortByClass } from "@/lib/student-directory";
+import { studentInfoSource } from "@/lib/student-info-access";
 
 const ROSTER_PAGE_SIZE = 10;
 
@@ -44,6 +46,10 @@ function StudentsRosterContent() {
   const [classFilter, setClassFilter] = createUrlString("class");
   const [yearFilter, setYearFilter] = createUrlString("year");
   const [creating, setCreating] = createSignal(false);
+  // The profile header's "Öğrenci bilgileri", from the row menu. The same
+  // access rule the profile uses decides whether it is offered.
+  const [infoTarget, setInfoTarget] = createSignal<PersonRef | null>(null);
+  const infoSource = (person: PersonRef) => studentInfoSource(auth.user(), { id: person.id, role: "student" });
 
   const [data, { refetch }] = createResource(async () => {
     const [students, classes, years] = await Promise.all([
@@ -76,6 +82,14 @@ function StudentsRosterContent() {
 
   const columns = createMemo<ColumnDef<StudentRow>[]>(() => [
     {
+      id: "student_number",
+      accessorFn: (row) => row.person.student_number ?? "",
+      size: 110,
+      header: t("roster.studentNumber"),
+      meta: { cellClass: "whitespace-nowrap" },
+      cell: (cell) => <span class="mono text-sm">{cell.row.original.person.student_number?.trim() || "—"}</span>,
+    },
+    {
       id: "student", size: 220,
       header: t("roster.student"),
       cell: (cell) => <RosterPersonCell person={cell.row.original.person} />,
@@ -95,7 +109,12 @@ function StudentsRosterContent() {
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
-          actions={[{ label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => open(cell.row.original) }]}
+          actions={[
+            { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => open(cell.row.original) },
+            ...(infoSource(cell.row.original.person)
+              ? [{ label: t("profile.studentInfo"), icon: <IconUserCircle class="h-4 w-4" />, onSelect: () => setInfoTarget(cell.row.original.person) }]
+              : []),
+          ]}
         />
       ),
     },
@@ -104,7 +123,7 @@ function StudentsRosterContent() {
   return (
     <div class="space-y-5">
       <section class="space-y-4 p-0">
-        <Suspense fallback={<DataTableSkeleton columns={3} rows={8} />}>
+        <Suspense fallback={<DataTableSkeleton columns={4} rows={8} />}>
           <Show when={data.error}>
             <ErrorAlert message={formatApiError(data.error)} onRetry={() => void refetch()} />
           </Show>
@@ -134,7 +153,7 @@ function StudentsRosterContent() {
                 filterPlaceholder={t("roster.searchStudents")}
                 filterHint={t("search.hint.students")}
                 searchPredicate={(row, query) =>
-                  matchesSearch(query, row.person.username, row.person.display_name)
+                  matchesSearch(query, row.person.username, row.person.display_name, row.person.student_number)
                 }
                 filters={
                   <>
@@ -161,6 +180,20 @@ function StudentsRosterContent() {
           </Show>
         </Suspense>
       </section>
+      <Show when={infoTarget()} keyed>
+        {(person) => (
+          <Show when={infoSource(person)}>
+            {(source) => (
+              <StudentInfoPanel
+                open
+                onOpenChange={(open) => { if (!open) setInfoTarget(null); }}
+                source={source()}
+                student={{ id: person.id, username: person.username, name: person.display_name || person.username }}
+              />
+            )}
+          </Show>
+        )}
+      </Show>
       <CreateUserPanel
         open={creating()}
         onOpenChange={setCreating}

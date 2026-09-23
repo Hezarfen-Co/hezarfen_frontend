@@ -11,7 +11,7 @@ import { RoleBadge } from "@/components/layout/role-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconEdit, IconSchool } from "@/components/ui/icons";
+import { IconEdit, IconSchool, IconUserCircle } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { PixelIcon, type PixelIconName } from "@/components/ui/pixel-icon";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -19,8 +19,10 @@ import { AvatarUpload } from "@/components/users/avatar-upload";
 import { BadgeGrid } from "@/components/users/badge-grid";
 import { ProfileForm } from "@/components/users/profile-form";
 import { ProfileMemberships } from "@/components/users/profile-memberships";
+import { StudentInfoPanel } from "@/components/users/student-info-panel";
 import { UserAvatar } from "@/components/users/user-avatar";
 import { personLabel } from "@/lib/person";
+import { studentInfoSource } from "@/lib/student-info-access";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
@@ -53,6 +55,7 @@ function ProfileContent() {
   const [limits] = createResource(() => getLimits());
   const [settings] = createResource(() => getSettings().catch(() => null));
   const [editing, setEditing] = createSignal(false);
+  const [infoOpen, setInfoOpen] = createSignal(false);
 
   // The five counters that fit the profile owner's role: a student's own
   // work, or a teacher's / manager's teaching work.
@@ -80,6 +83,8 @@ function ProfileContent() {
         ];
 
   const isSelf = (p: Profile) => target() === "me" || p.id === auth.user()?.id;
+  // Staff, the student themself or their parent; never another student.
+  const infoSource = (p: Profile) => studentInfoSource(auth.user(), p);
   const name = (p: Profile) => p.display_name || p.username;
 
   // The profile payload's class refs carry no homeroom teacher, so read the
@@ -196,12 +201,20 @@ function ProfileContent() {
                     </Show>
                   </div>
                   </div>
-                  <Show when={isSelf(p()) && auth.user()}>
-                    <Button type="button" size="sm" variant="outline" class="mt-3 rounded-lg" onClick={() => setEditing(true)}>
-                      <IconEdit class="mr-1.5 h-4 w-4" />
-                      {t("profile.edit")}
-                    </Button>
-                  </Show>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    <Show when={infoSource(p())}>
+                      <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setInfoOpen(true)}>
+                        <IconUserCircle class="mr-1.5 h-4 w-4" />
+                        {t("profile.studentInfo")}
+                      </Button>
+                    </Show>
+                    <Show when={isSelf(p()) && auth.user()}>
+                      <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setEditing(true)}>
+                        <IconEdit class="mr-1.5 h-4 w-4" />
+                        {t("profile.edit")}
+                      </Button>
+                    </Show>
+                  </div>
                 </div>
               </section>
 
@@ -225,6 +238,17 @@ function ProfileContent() {
                 classTotal={p().stats.classes}
                 courseTotal={p().stats.courses}
               />
+
+              <Show when={infoSource(p())}>
+                {(source) => (
+                  <StudentInfoPanel
+                    open={infoOpen()}
+                    onOpenChange={setInfoOpen}
+                    source={source()}
+                    student={{ id: p().id, username: p().username, name: name(p()) }}
+                  />
+                )}
+              </Show>
 
               <SidePanel guardUnsaved open={editing()} onOpenChange={setEditing} title={t("profile.edit")}>
                 <Show when={auth.user()}>

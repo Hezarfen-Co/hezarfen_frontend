@@ -5,13 +5,22 @@ export class ApiError extends Error {
   readonly retryAfter: number | null;
   /** Set when the school has this route's module switched off (`403 {error, module}`). */
   readonly module: string | null;
+  /** Machine refusal code (`{error, code}`), sent only where a route documents one. */
+  readonly code: string | null;
 
-  constructor(status: number, message: string, retryAfter: number | null = null, module: string | null = null) {
+  constructor(
+    status: number,
+    message: string,
+    retryAfter: number | null = null,
+    module: string | null = null,
+    code: string | null = null,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.retryAfter = retryAfter;
     this.module = module;
+    this.code = code;
   }
 }
 
@@ -300,6 +309,252 @@ const API_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
   },
 };
 
+type LocalizedMessage = Record<Locale, string>;
+
+const ARCHIVED_YEAR: LocalizedMessage = {
+  en: "This academic year is archived. Past years are read-only, so records in it can no longer change.",
+  tr: "Bu eğitim yılı arşivlendi. Geçmiş yıllar salt okunur, bu yüzden içindeki kayıtlar artık değiştirilemez.",
+};
+
+const STUDENT_NUMBER_TAKEN: LocalizedMessage = {
+  en: "Another student already has this student number. Enter a different number.",
+  tr: "Bu öğrenci numarası başka bir öğrencide kayıtlı. Farklı bir numara gir.",
+};
+
+const STALE_RECORD: LocalizedMessage = {
+  en: "This record changed while you were editing it. Reload the page and try again.",
+  tr: "Bu kayıt sen düzenlerken değişti. Sayfayı yenileyip tekrar dene.",
+};
+
+/**
+ * Machine refusal codes (`{error, code}`). The backend sends one only where a
+ * route documents its vocabulary (class attach/add-member, podcast, insight
+ * report, student numbers), so these win over the prose whenever present.
+ * `duplicate` is left out on purpose: it means a course on one route and a
+ * student on another, so the prose patterns below tell them apart.
+ */
+const API_ERROR_CODE_MESSAGES: Record<string, LocalizedMessage> = {
+  academic_year_archived: ARCHIVED_YEAR,
+  class_at_course_ceiling: {
+    en: "This class already has the maximum number of courses. Remove a course from it before adding another.",
+    tr: "Bu şube en fazla ders sayısına ulaştı. Yeni ders eklemeden önce şubeden bir ders çıkar.",
+  },
+  class_roster_too_large: {
+    en: "This class has too many students to enroll in a course in one step. Contact your system administrator.",
+    tr: "Bu şubede bir derse tek seferde kaydedilemeyecek kadar çok öğrenci var. Sistem yöneticine başvur.",
+  },
+  class_at_roster_ceiling: {
+    en: "This class is full. Remove a student from it before adding another.",
+    tr: "Bu şube dolu. Yeni öğrenci eklemeden önce şubeden bir öğrenci çıkar.",
+  },
+  class_course_list_too_large: {
+    en: "This class has too many courses to enroll a student in one step. Contact your system administrator.",
+    tr: "Bu şubede bir öğrenciyi tek seferde kaydetmek için çok fazla ders var. Sistem yöneticine başvur.",
+  },
+  linked_course_missing: {
+    en: "One of this class's courses was removed while the student was being added. Reload the page and try again.",
+    tr: "Öğrenci eklenirken şubenin derslerinden biri kaldırıldı. Sayfayı yenileyip tekrar dene.",
+  },
+  student_number_taken: STUDENT_NUMBER_TAKEN,
+  not_ready: {
+    en: "This audio is not ready yet. Wait for it to finish and try again.",
+    tr: "Bu ses kaydı henüz hazır değil. Tamamlanmasını bekleyip tekrar dene.",
+  },
+  audio_missing: {
+    en: "This audio file could not be found on the server. Generate the episode again.",
+    tr: "Bu ses dosyası sunucuda bulunamadı. Bölümü yeniden oluştur.",
+  },
+  source_missing: {
+    en: "This note has no PDF to narrate. Attach a PDF to the note and try again.",
+    tr: "Bu notta seslendirilecek bir PDF yok. Nota bir PDF ekleyip tekrar dene.",
+  },
+  report_missing: {
+    en: "No report has been generated for this day yet.",
+    tr: "Bu gün için henüz rapor oluşturulmadı.",
+  },
+  report_empty: {
+    en: "There is no data for this day to build a report from.",
+    tr: "Bu gün için rapor oluşturacak veri yok.",
+  },
+  report_refused: {
+    en: "The AI service declined to write this report. Try again later.",
+    tr: "Yapay zekâ servisi bu raporu hazırlamayı reddetti. Daha sonra tekrar dene.",
+  },
+};
+
+/**
+ * Backend refusals that carry no code, matched on the stable part of their
+ * prose (the nouns and the "still linked / in use / already" verb) rather than
+ * byte-exact, so a reworded tail or a different em dash still lands. Checked
+ * in order after the exact table; keep each pattern specific enough that it
+ * cannot swallow an unrelated reason.
+ */
+const API_ERROR_PATTERNS: ReadonlyArray<readonly [RegExp, LocalizedMessage]> = [
+  [
+    /\b(classes|terms)\b.*\bstill linked to this (academic )?year\b/,
+    {
+      en: "Classes and terms are still linked to this academic year. Move them to another year or delete them before deleting this one.",
+      tr: "Bu eğitim yılına bağlı şubeler ve dönemler var. Silmeden önce onları başka bir yıla taşı veya sil.",
+    },
+  ],
+  [/\bacademic year is archived\b|\bin an archived academic year\b/, ARCHIVED_YEAR],
+  [
+    /\btarget year already (holds|has) classes\b/,
+    {
+      en: "The target year already has classes. Choose an empty year to carry the classes into.",
+      tr: "Hedef eğitim yılında zaten şubeler var. Şubeleri aktarmak için boş bir yıl seç.",
+    },
+  ],
+  [
+    /\b(academic )?year (with|named) (that|this) name already exists\b|\bacademic year .*already exists\b/,
+    {
+      en: "An academic year with this name already exists. Choose a different name.",
+      tr: "Bu adla bir eğitim yılı zaten var. Farklı bir ad seç.",
+    },
+  ],
+  [
+    /\b(students|instances|courses)\b.*\bstill (on|in|attached to) this class\b/,
+    {
+      en: "This class still has students or courses. Remove its students and detach its courses before deleting it.",
+      tr: "Bu şubede hâlâ öğrenci veya ders var. Silmeden önce öğrencileri şubeden çıkar ve dersleri şubeden kaldır.",
+    },
+  ],
+  [
+    /\bclass(es)? still teach(es)? this course\b|\bstudents still hold an individual membership\b/,
+    {
+      en: "A class still teaches this course, or students are still enrolled in it directly. Detach it from its classes and remove those students before deleting it.",
+      tr: "Bu ders hâlâ bir şubede okutuluyor ya da derse doğrudan kayıtlı öğrenciler var. Silmeden önce dersi şubelerden çıkar ve bu öğrencileri dersten kaldır.",
+    },
+  ],
+  [
+    /\b(exams|karnes?)\b.*\bstill belong to this term\b/,
+    {
+      en: "Exams or finalized report cards still belong to this term, so it cannot be deleted. Archive it instead.",
+      tr: "Bu döneme bağlı sınavlar veya kesinleşmiş karneler var, bu yüzden dönem silinemez. Bunun yerine dönemi arşivle.",
+    },
+  ],
+  [
+    /\b(exam questions|questions|homework)\b.*\bstill reference this subject\b/,
+    {
+      en: "Exam questions or homework still use this subject. Move them to another subject or delete them first.",
+      tr: "Sınav soruları veya ödevler hâlâ bu konuyu kullanıyor. Önce onları başka bir konuya taşı veya sil.",
+    },
+  ],
+  [
+    /\bmenu still has (live |active )?bookings\b/,
+    {
+      en: "This menu still has bookings. Cancel them before deleting the menu.",
+      tr: "Bu menüde hâlâ rezervasyonlar var. Menüyü silmeden önce rezervasyonları iptal et.",
+    },
+  ],
+  [
+    /\b(slot|occurrence) has an? (pending or approved )?(booking|appointment)\b/,
+    {
+      en: "This time already has a pending or approved appointment. Cancel or decline it before removing the time.",
+      tr: "Bu saatte bekleyen veya onaylanmış bir randevu var. Saati kaldırmadan önce randevuyu iptal et ya da reddet.",
+    },
+  ],
+  [
+    /\bplan is already assigned\b/,
+    {
+      en: "This payment plan is already assigned to a student, so it can no longer be changed or deleted.",
+      tr: "Bu ödeme planı bir öğrenciye atanmış, bu yüzden artık değiştirilemez veya silinemez.",
+    },
+  ],
+  [
+    /\bschool's last admin\b|\blast admin (of|in) (this|the) school\b/,
+    {
+      en: "This account is the school's last admin. Make someone else an admin before changing its role.",
+      tr: "Bu hesap okulun son yöneticisi. Rolünü değiştirmeden önce başka birini yönetici yap.",
+    },
+  ],
+  [
+    /\bblueprint already exists\b/,
+    {
+      en: "A template already exists for this grade. Edit the existing template instead.",
+      tr: "Bu seviye için zaten bir şablon var. Bunun yerine mevcut şablonu düzenle.",
+    },
+  ],
+  [
+    /\bmenu already exists\b/,
+    {
+      en: "A menu already exists for this date and meal. Edit the existing menu instead.",
+      tr: "Bu tarih ve öğün için zaten bir menü var. Bunun yerine mevcut menüyü düzenle.",
+    },
+  ],
+  [/\bstudent number is already taken\b|\bstudent number already (exists|taken|in use)\b/, STUDENT_NUMBER_TAKEN],
+  [
+    /\balready attached\b/,
+    {
+      en: "This course is already attached to this class.",
+      tr: "Bu ders bu şubeye zaten eklenmiş.",
+    },
+  ],
+  [
+    /\balready in this class\b/,
+    {
+      en: "This student is already in this class.",
+      tr: "Bu öğrenci zaten bu şubede.",
+    },
+  ],
+  [
+    /\bhomework (has been|is) graded\b/,
+    {
+      en: "This homework has been graded, so the submission is locked until the grade is removed.",
+      tr: "Bu ödev notlandırıldı. Not kaldırılana kadar teslim değiştirilemez.",
+    },
+  ],
+  [
+    /\bquestion is approved\b/,
+    {
+      en: "This question is approved, so its content can no longer change.",
+      tr: "Bu soru onaylandığı için içeriği artık değiştirilemez.",
+    },
+  ],
+  [
+    /\battempts have started\b/,
+    {
+      en: "Students have already started this exam, so its questions can no longer change.",
+      tr: "Öğrenciler bu sınava başladığı için soruları artık değiştirilemez.",
+    },
+  ],
+  [
+    /\bremoved exam kind still has\b/,
+    {
+      en: "An exam kind you removed still has graded exams. Keep it in the list, or move those exams to another kind first.",
+      tr: "Kaldırdığın sınav türüne ait notlandırılmış sınavlar var. Türü listede bırak ya da önce bu sınavları başka bir türe taşı.",
+    },
+  ],
+  [
+    /\bremoved meal slot still has\b/,
+    {
+      en: "A meal you removed still has published menus. Keep it in the list, or delete those menus first.",
+      tr: "Kaldırdığın öğüne ait yayınlanmış menüler var. Öğünü listede bırak ya da önce bu menüleri sil.",
+    },
+  ],
+  [
+    /\bmaximum number of boards\b/,
+    {
+      en: "You already have the maximum number of boards. Delete one before creating another.",
+      tr: "En fazla tahta sayısına ulaştın. Yenisini oluşturmadan önce birini sil.",
+    },
+  ],
+  [/\bre-read (it )?and retry\b|\bunder concurrent edits\b|\bkept changing\b/, STALE_RECORD],
+];
+
+/** A specific wording for this backend refusal, or null when only the generic fallback fits. */
+function knownApiErrorMessage(message: string, code: string | null, locale: Locale): string | null {
+  const normalized = normalizeApiMessage(message);
+  const exact = API_ERROR_MESSAGES[normalized]?.[locale];
+  if (exact) return exact;
+  const byCode = code ? API_ERROR_CODE_MESSAGES[code]?.[locale] : undefined;
+  if (byCode) return byCode;
+  for (const [pattern, messages] of API_ERROR_PATTERNS) {
+    if (pattern.test(normalized)) return messages[locale];
+  }
+  return null;
+}
+
 const FIELD_LABELS: Record<string, Record<Locale, string>> = {
   content: { en: "Content", tr: "İçerik" },
   description: { en: "Description", tr: "Açıklama" },
@@ -373,6 +628,12 @@ function formatValidationMessage(message: string, locale: Locale): string | null
 
   if (locale === "tr") return `${label} en fazla ${max} karakter olmalı. Şu an ${got} karakter.`;
   return `${label} must be at most ${max} characters. Currently ${got} characters.`;
+}
+
+function errorCodeFromPayload(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const code = (data as { code?: unknown }).code;
+  return typeof code === "string" && code ? code : null;
 }
 
 function errorMessageFromPayload(data: unknown, fallback: string): string {
@@ -465,7 +726,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       }
     }
 
-    throw new ApiError(res.status, message, retryAfter, disabledModuleOf(res.status, data));
+    throw new ApiError(res.status, message, retryAfter, disabledModuleOf(res.status, data), errorCodeFromPayload(data));
   }
 
   return data as T;
@@ -509,7 +770,7 @@ export async function formClient<T>(path: string, body: FormData, signal?: Abort
 
   if (!res.ok) {
     const message = errorMessageFromPayload(data, res.statusText || "Request failed");
-    throw new ApiError(res.status, message, null, disabledModuleOf(res.status, data));
+    throw new ApiError(res.status, message, null, disabledModuleOf(res.status, data), errorCodeFromPayload(data));
   }
 
   return data as T;
@@ -533,7 +794,7 @@ export async function blobClient(path: string, signal?: AbortSignal): Promise<Bl
         message = text;
       }
     }
-    throw new ApiError(res.status, message, null, disabledModuleOf(res.status, payload));
+    throw new ApiError(res.status, message, null, disabledModuleOf(res.status, payload), errorCodeFromPayload(payload));
   }
 
   return res.blob();
@@ -595,8 +856,7 @@ function formatFallbackMessage(message: string, status: number | null, locale: L
 }
 
 export function formatApiErrorMessage(message: string, locale: Locale = currentLocale(), status: number | null = null): string {
-  const normalized = normalizeApiMessage(message);
-  const known = API_ERROR_MESSAGES[normalized]?.[locale];
+  const known = knownApiErrorMessage(message, null, locale);
   if (known) return known;
   const runtime = formatRuntimeErrorMessage(message, locale);
   if (runtime) return runtime;
@@ -606,7 +866,8 @@ export function formatApiErrorMessage(message: string, locale: Locale = currentL
   if (decode) return decode;
   // Unmapped backend text: name the kind of failure and quote the server's
   // reason instead of a bare "something went wrong" that hides it. Add a
-  // mapping in API_ERROR_MESSAGES when a message deserves its own wording.
+  // mapping in API_ERROR_MESSAGES (exact), API_ERROR_CODE_MESSAGES or
+  // API_ERROR_PATTERNS when a message deserves its own wording.
   return formatFallbackMessage(message, status, locale);
 }
 
@@ -622,7 +883,7 @@ export function formatApiError(err: unknown, locale: Locale = currentLocale()): 
     if (err.module != null && err.status === 403) {
       return locale === "tr" ? "Bu özellik okulunuzda şu an kapalı." : "This feature is currently switched off for your school.";
     }
-    const known = API_ERROR_MESSAGES[normalizeApiMessage(err.message)]?.[locale];
+    const known = knownApiErrorMessage(err.message, err.code, locale);
     if (known) return known;
     if (err.status === 401) return API_ERROR_MESSAGES.unauthorized[locale];
     if (err.status === 403) return API_ERROR_MESSAGES.forbidden[locale];

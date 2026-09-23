@@ -17,8 +17,9 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
+import { DetailField } from "@/components/ui/detail-field";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconArchive, IconEdit, IconPlus, IconTrash } from "@/components/ui/icons";
+import { IconArchive, IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -64,7 +65,7 @@ function TermsContent() {
   // ones — so the create form cannot be filled without this list.
   const [years] = createResource(async () => (await getAcademicYears({ limit: 100 })).items);
   const openYears = createMemo(() => (years.latest ?? []).filter((year) => year.archived_at == null));
-  const yearName = (id: string) => years.latest?.find((year) => year.id === id)?.name ?? id;
+  const yearName = (id: string) => years.latest?.find((year) => year.id === id)?.name ?? "—";
   const terms = () => list() ?? [];
   const [panelOpen, setPanelOpen] = createSignal(false);
   const [name, setName] = createSignal("");
@@ -73,6 +74,7 @@ function TermsContent() {
   const [ends, setEnds] = createSignal("");
   const [editing, setEditing] = createSignal<Term | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<Term | null>(null);
+  const [detail, setDetail] = createSignal<Term | null>(null);
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
   const [pending, setPending] = createSignal(false);
@@ -82,8 +84,10 @@ function TermsContent() {
       header: t("settings.name"),
       size: 170,
       minSize: 150,
-      meta: { cellClass: "min-w-0" },
-      cell: (cell) => <span class="font-medium">{cell.row.original.name}</span>,
+      // One line: a long name ends in "…" (full name on hover and in the
+      // detail panel) instead of wrapping the row onto two.
+      meta: { cellClass: "max-w-0" },
+      cell: (cell) => <span class="block truncate font-medium" title={cell.row.original.name}>{cell.row.original.name}</span>,
     },
     {
       id: "year",
@@ -130,6 +134,11 @@ function TermsContent() {
         <TableRowActions
           label={t("common.actions")}
           actions={[
+            {
+              label: t("common.view"),
+              icon: <IconEye class="h-4 w-4" />,
+              onSelect: () => setDetail(cell.row.original),
+            },
             {
               label: t("common.edit"),
               icon: <IconEdit class="h-4 w-4" />,
@@ -263,6 +272,7 @@ function TermsContent() {
             enablePagination
             pageSize={TERM_PAGE_SIZE}
             empty={t("terms.empty")}
+            onRowClick={(term) => setDetail(term)}
           />
         </Suspense>
       </section>
@@ -310,6 +320,39 @@ function TermsContent() {
             </Button>
           </div>
         </form>
+      </SidePanel>
+
+      <SidePanel open={detail() != null} onOpenChange={(open) => !open && setDetail(null)} title={detail()?.name ?? ""} description={t("terms.term")}>
+        <Show when={detail()} keyed>
+          {(term) => (
+            <div class="space-y-5">
+              <div class="rounded-xl border border-border-hairline bg-surface-tint px-4 py-3">
+                <p class="text-xs font-medium text-muted-foreground">{t("settings.name")}</p>
+                <p class="mt-1 break-words text-sm font-medium">{term.name}</p>
+              </div>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <DetailField label={t("academicYears.year")} value={yearName(term.year)} />
+                <DetailField label={t("terms.archived")} value={term.archived_at != null ? formatDate(term.archived_at, locale()) : "—"} />
+                <DetailField label={t("events.starts")} value={formatDate(term.starts_at, locale())} />
+                <DetailField label={t("events.ends")} value={formatDate(term.ends_at, locale())} />
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  class="rounded-lg"
+                  onClick={() => {
+                    setDetail(null);
+                    startEdit(term);
+                  }}
+                >
+                  <IconEdit class="h-4 w-4" />
+                  {t("common.edit")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </Show>
       </SidePanel>
 
       <ConfirmDialog

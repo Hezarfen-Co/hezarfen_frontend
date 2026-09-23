@@ -1,7 +1,7 @@
 import { For, Show, Suspense, createEffect, createMemo, createSignal } from "solid-js";
 import { createResponsivePageSize } from "@/lib/create-page-size";
 import { createResource } from "@/lib/create-resource";
-import { formatApiError, type PodcastJobSummary, type PodcastTranscriptSegment } from "@/api/client";
+import { formatApiError, type PodcastJobSummary } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { listPodcastJobs, podcastAudioUrl } from "@/api/podcast";
 import { Alert } from "@/components/ui/alert";
@@ -42,8 +42,6 @@ export function PodcastHistory(props: {
   refetchKey?: string | number;
   /** An episode to open with, e.g. one picked in the studio library. */
   episode?: string;
-  /** The transcript of the episode the panel just produced, if the service sent one. */
-  transcript?: { jobId: string; segments: PodcastTranscriptSegment[] } | null;
 }) {
   const t = useT();
   const downloadT = usePodcastDownloadT();
@@ -158,7 +156,6 @@ export function PodcastHistory(props: {
                   subtitle={formatDateTime(current()?.created_at, locale())}
                   downloadName={current() ? noteName(current()!) : undefined}
                   durationSecs={current()?.duration_secs}
-                  transcript={props.transcript?.jobId === jobId ? props.transcript.segments : null}
                   autoplay={autoplay()}
                 />
               )}

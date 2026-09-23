@@ -14,7 +14,7 @@ import { ReplayableImage } from "@/components/ui/replayable-image";
 import { DropdownSelect } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { joinAnswerSheet } from "@/lib/answer-sheet";
-import { personLabelWithId } from "@/lib/person";
+import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
 export function AnswerSheetView(props: { examId: string; userId: string; mode?: "grader" | "self" }) {
@@ -95,6 +95,7 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
     async ([examId, userId, seq, latest]) => {
       const questions = mode() === "self" ? await getExamReviewQuestions(examId) : await getExamQuestions(examId);
       let sheet: StudentAnswerSheet;
+      let hasSheet = true;
       try {
         if (mode() === "self") {
           if (seq == null) throw new ApiError(404, "no attempts");
@@ -107,9 +108,10 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
       } catch (err) {
         if (err instanceof ApiError && (err.status === 404 || (mode() === "self" && err.status === 409))) {
           if (mode() === "self" && err instanceof ApiError && err.status === 409) setReviewInProgress(true);
+          hasSheet = false;
           sheet = {
             exam: examId,
-            user: { id: userId, username: userId, display_name: null },
+            user: { id: userId, username: "", display_name: null },
             answers: [],
             auto_score: { earned: 0, possible: 0 },
           };
@@ -117,7 +119,7 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
           throw err;
         }
       }
-      return { sheet, rows: joinAnswerSheet(questions.items, sheet.answers) };
+      return { sheet, hasSheet, rows: joinAnswerSheet(questions.items, sheet.answers) };
     },
   );
 
@@ -170,7 +172,7 @@ export function AnswerSheetView(props: { examId: string; userId: string; mode?: 
               <p class="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">{t("exams.pastAttemptReadOnly")}</p>
             </Show>
             <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/30 px-4 py-3">
-              <p class="text-sm font-medium">{personLabelWithId(d().sheet.user)}</p>
+              <p class="text-sm font-medium">{d().hasSheet ? personLabel(d().sheet.user) : "—"}</p>
               <Show when={d().sheet.answers.length > 0} fallback={<Badge variant="outline">{t("exams.notStarted")}</Badge>}>
                 <div class="flex flex-wrap items-center gap-1.5">
                   <Badge variant="outline" class="border-success/50 bg-success/10 text-success-text">

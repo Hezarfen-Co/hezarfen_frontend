@@ -46,7 +46,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
   const enrollmentUsers = createMemo(() => new Map((enrollments() ?? []).map((row) => [row.user.id, row.user])));
   const studentLabel = (userId: string) => {
     const user = enrollmentUsers().get(userId);
-    return user?.display_name?.trim() || user?.username || userId;
+    return user?.display_name?.trim() || user?.username || "—";
   };
 
   const openGrade = (row: HomeworkRosterEntry) => {
@@ -153,7 +153,7 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
   });
 
   return (
-    <section class="data-shell space-y-4 p-5">
+    <section class="space-y-3">
       <div>
         <h2 class="text-lg font-semibold">{t("homework.submissions")}</h2>
         <p class="mt-1 text-sm text-text-subtle">{t("homework.submissionsHelp")}</p>

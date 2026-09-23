@@ -81,6 +81,17 @@ export function SidePanel(
           // Explicit: with any AlertDialog in the tree (the discard confirm
           // below), Kobalte hands plain dialogs its "alertdialog" role too.
           role="dialog"
+          // A row-actions menu that opened this panel is still animating out
+          // when the panel mounts, and focus passing through it (or back to
+          // its trigger in the inert app) read as leaving the panel, which
+          // closed it at once — "Notlandır"/"Görüntüle" seemed to do nothing.
+          // Focus moving to another dialog still closes the panel, which the
+          // edit/delete flows opened from inside a panel rely on.
+          onFocusOutside={(event) => {
+            const target = (event as CustomEvent<{ originalEvent?: FocusEvent }>).detail?.originalEvent?.target;
+            if (!(target instanceof Element)) return;
+            if (target.closest('[role="menu"]') || document.getElementById("root")?.contains(target)) event.preventDefault();
+          }}
           class={cn(
             "fixed inset-y-0 right-0 z-[70] flex h-full w-full flex-col border-l border-border-line bg-surface-base text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.16)] outline-hidden",
             // The panel spans the whole display, so it has to keep its own

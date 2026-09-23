@@ -7,16 +7,19 @@ import { formatApiError, type School } from "@/api/client";
 import { BuilderGuard } from "@/components/builder/builder-guard";
 import { BuilderHeader } from "@/components/builder/builder-header";
 import { CreateSchoolPanel } from "@/components/builder/create-school-panel";
+import { SchoolAdminAccessPanel, type AdminAccessMode } from "@/components/builder/school-admin-access-panel";
+import { SchoolEditPanel } from "@/components/builder/school-edit-panel";
 import { SchoolStatusBadge } from "@/components/builder/school-status-badge";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconEye, IconLock, IconPlus, IconRotateCcw, IconTrash } from "@/components/ui/icons";
+import { IconEdit, IconExternalLink, IconEye, IconLock, IconPlus, IconRotateCcw, IconTrash } from "@/components/ui/icons";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
+import { useAuth } from "@/stores/auth-context";
 import { BuilderProvider } from "@/stores/builder-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -39,6 +42,10 @@ function BuilderSchoolsContent() {
   const [list, { refetch }] = createResource(async () => (await getSchools()).items);
   const [createOpen, setCreateOpen] = createSignal(false);
   const [deleteTarget, setDeleteTarget] = createSignal<School | null>(null);
+  const [editTarget, setEditTarget] = createSignal<School | null>(null);
+  // The detail header's admin access (reset password / enter the school).
+  const [access, setAccess] = createSignal<{ id: string; mode: AdminAccessMode } | null>(null);
+  const auth = useAuth();
   const [error, setError] = createSignal("");
   const [flash, setFlash] = createFlash();
 
@@ -93,6 +100,14 @@ function BuilderSchoolsContent() {
           label={t("common.actions")}
           actions={[
             { label: t("common.view"), icon: <IconEye class="h-4 w-4" />, onSelect: () => open(cell.row.original) },
+            { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => setEditTarget(cell.row.original) },
+            { label: t("builder.resetAdminPassword"), icon: <IconLock class="h-4 w-4" />, onSelect: () => setAccess({ id: cell.row.original.id, mode: "password" }) },
+            {
+              label: t("builder.enterSchool"),
+              icon: <IconExternalLink class="h-4 w-4" />,
+              disabled: cell.row.original.status === "suspended",
+              onSelect: () => setAccess({ id: cell.row.original.id, mode: "enter" }),
+            },
             cell.row.original.status === "active"
               ? { label: t("builder.suspend"), icon: <IconLock class="h-4 w-4" />, onSelect: () => void setStatus(cell.row.original, "suspended") }
               : { label: t("builder.activate"), icon: <IconRotateCcw class="h-4 w-4" />, onSelect: () => void setStatus(cell.row.original, "active") },
@@ -152,6 +167,36 @@ function BuilderSchoolsContent() {
           open(school);
         }}
       />
+
+      <SchoolEditPanel
+        school={editTarget()}
+        open={editTarget() !== null}
+        onOpenChange={(value) => { if (!value) setEditTarget(null); }}
+        onSaved={async () => {
+          try { await refetch(); } catch { /* stale rows until the next load */ }
+          setFlash(t("common.saved"));
+        }}
+      />
+
+      <Show when={access()} keyed>
+        {(target) => (
+          <SchoolAdminAccessPanel
+            id={target.id}
+            mode={target.mode}
+            onClose={() => setAccess(null)}
+            onPasswordReset={() => {
+              setAccess(null);
+              setFlash(t("builder.passwordResetDone"));
+            }}
+            onEntered={async () => {
+              setAccess(null);
+              // The builder cookie is gone; this browser is now that admin.
+              await auth.refresh();
+              void navigate({ to: "/" });
+            }}
+          />
+        )}
+      </Show>
 
       <ConfirmDialog
         open={deleteTarget() != null}

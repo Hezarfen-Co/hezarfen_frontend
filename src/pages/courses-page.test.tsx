@@ -73,33 +73,33 @@ test("student class directory uses only enrolled-course data", async () => {
 
   render(() => <PreferencesProvider><CoursesPage /></PreferencesProvider>);
 
-  expect(await screen.findByRole("link", { name: /Algebra/ })).toBeTruthy();
+  expect(await screen.findByRole("button", { name: /^Algebra/ })).toBeTruthy();
   expect(screen.getAllByText("Enrolled")).toHaveLength(3);
   expect(getMyCourses).toHaveBeenCalledWith();
   expect(getCourses).not.toHaveBeenCalled();
 
   fireEvent.click(screen.getByRole("tab", { name: "Study" }));
-  expect(await screen.findByRole("link", { name: /Study Lab/ })).toBeTruthy();
-  expect(screen.queryByRole("link", { name: /Algebra/ })).toBeNull();
+  expect(await screen.findByRole("button", { name: /^Study Lab/ })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /^Algebra/ })).toBeNull();
   expect(getMyCourses).toHaveBeenCalledTimes(1);
   const tabNavigation = navigate.mock.calls.at(-1)?.[0] as { to: string; replace: boolean; search: (prev: Record<string, unknown>) => Record<string, unknown> };
   expect(tabNavigation.to).toBe("/courses");
   expect(tabNavigation.replace).toBe(true);
   // The kind tab keeps the search text and restarts paging.
-  expect(tabNavigation.search({ q: "alg", page: 3, action: "new" })).toEqual({ q: "alg", taught: undefined, action: undefined, kind: "study", page: undefined });
+  expect(tabNavigation.search({ q: "alg", page: 3, action: "new" })).toEqual({ q: "alg", taught: undefined, sort: undefined, action: undefined, kind: "study", page: undefined });
 
   fireEvent.click(screen.getByRole("tab", { name: "Club" }));
-  expect(await screen.findByRole("link", { name: /Robotics/ })).toBeTruthy();
-  expect(screen.queryByRole("link", { name: /Study Lab/ })).toBeNull();
+  expect(await screen.findByRole("button", { name: /^Robotics/ })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /^Study Lab/ })).toBeNull();
 
   fireEvent.click(screen.getByRole("tab", { name: "Classes" }));
-  expect(await screen.findByRole("link", { name: /Algebra/ })).toBeTruthy();
-  expect(screen.queryByRole("link", { name: /Robotics/ })).toBeNull();
+  expect(await screen.findByRole("button", { name: /^Algebra/ })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /^Robotics/ })).toBeNull();
 
   fireEvent.click(screen.getByRole("tab", { name: "All" }));
   fireEvent.input(screen.getByPlaceholderText("Search…"), { target: { value: "robot" } });
-  await waitFor(() => expect(screen.getByRole("link", { name: /Robotics/ })).toBeTruthy());
-  expect(screen.queryByRole("link", { name: /Algebra/ })).toBeNull();
+  await waitFor(() => expect(screen.getByRole("button", { name: /^Robotics/ })).toBeTruthy());
+  expect(screen.queryByRole("button", { name: /^Algebra/ })).toBeNull();
 
   fireEvent.input(screen.getByPlaceholderText("Search…"), { target: { value: "" } });
   fireEvent.pointerDown(screen.getByRole("button", { name: /Section:/ }), { button: 0, pointerType: "mouse" });
@@ -107,6 +107,6 @@ test("student class directory uses only enrolled-course data", async () => {
   fireEvent.pointerDown(untaught, { button: 0, pointerType: "mouse" });
   fireEvent.pointerUp(untaught, { button: 0, pointerType: "mouse" });
   fireEvent.click(untaught);
-  expect(await screen.findByRole("link", { name: /Study Lab/ })).toBeTruthy();
-  expect(screen.queryByRole("link", { name: /Robotics/ })).toBeNull();
+  expect(await screen.findByRole("button", { name: /^Study Lab/ })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /^Robotics/ })).toBeNull();
 });

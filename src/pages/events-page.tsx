@@ -2,17 +2,19 @@ import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js
 import { createResource } from "@/lib/create-resource";
 import { Link, useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getEvents } from "@/api/events";
+import { deleteEventById, getEvents } from "@/api/events";
 import { postEvent } from "@/api/events";
 import { formatApiError } from "@/api/client";
 import type { Event, EventAudience } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EventEditPanel } from "@/components/events/event-edit-panel";
 import { EventForm } from "@/components/events/event-form";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconEye, IconPlus } from "@/components/ui/icons";
+import { IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
@@ -89,6 +91,18 @@ function EventsContent() {
     (scope) => loadCappedList(getEvents, LIST_CAP, scope === "all"),
   );
   const rows = createMemo(() => filterEvents(list()?.items ?? []));
+
+  // The detail page's header actions, from the row menu. Same rights as there:
+  // the event's creator or a manager+.
+  const canManage = (event: Event) => {
+    const u = auth.user();
+    return !!u && (event.creator === u.id || hasMinRole(u.role, "manager"));
+  };
+  const [editTarget, setEditTarget] = createSignal<Event | null>(null);
+  const [deleteTarget, setDeleteTarget] = createSignal<Event | null>(null);
+  const refreshList = async () => {
+    try { await refetch(); } catch { /* stale rows until the next load */ }
+  };
   const eventStatus = (event: Event) => {
     const nowMs = now();
     if (event.ends_at != null && event.ends_at < nowMs) return "past";
@@ -170,11 +184,19 @@ function EventsContent() {
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
-          actions={[{
-            label: t("common.view"),
-            icon: <IconEye class="h-4 w-4" />,
-            onSelect: () => void navigate({ to: "/events/$id", params: { id: cell.row.original.id } }),
-          }]}
+          actions={[
+            {
+              label: t("common.view"),
+              icon: <IconEye class="h-4 w-4" />,
+              onSelect: () => void navigate({ to: "/events/$id", params: { id: cell.row.original.id } }),
+            },
+            ...(canManage(cell.row.original)
+              ? [
+                  { label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => setEditTarget(cell.row.original) },
+                  { label: t("common.delete"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
+                ]
+              : []),
+          ]}
         />
       ),
     },
@@ -211,6 +233,35 @@ function EventsContent() {
           }}
         />
       </SidePanel>
+
+      <EventEditPanel
+        event={editTarget()}
+        open={editTarget() !== null}
+        onOpenChange={(open) => { if (!open) setEditTarget(null); }}
+        onSaved={async () => { await refreshList(); setFlash(t("common.saved")); }}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget() !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title={t("confirm.deleteTitle")}
+        variant="destructive"
+        summary={t("confirm.deleteEvent", { title: deleteTarget()?.title ?? "" })}
+        onConfirm={async () => {
+          const target = deleteTarget();
+          if (!target) return;
+          setError("");
+          try {
+            await deleteEventById(target.id);
+            setDeleteTarget(null);
+            setFlash(t("common.deleted"));
+            await refreshList();
+          } catch (err) {
+            setDeleteTarget(null);
+            setError(formatApiError(err));
+          }
+        }}
+      />
 
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>

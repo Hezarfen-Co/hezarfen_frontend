@@ -9,6 +9,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { UserTable } from "@/components/users/user-table";
 import { CreateUserPanel } from "@/components/users/create-user-panel";
 import { ParentStudentsPanel } from "@/components/users/parent-students-panel";
+import { AdminUserEditPanel } from "@/components/users/admin-user-edit-panel";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataTableSkeleton } from "@/components/ui/data-table";
@@ -41,6 +42,7 @@ function AdminUsersContent() {
   const [selectedParent, setSelectedParent] = createSignal<User | null>(null);
   const [roleTab, setRoleTab] = createSignal<RoleTab>("all");
   const [creating, setCreating] = createSignal(false);
+  const [editTarget, setEditTarget] = createSignal<User | null>(null);
 
   const [loadAll, setLoadAll] = createSignal(false);
   const [list, { refetch }] = createResource(
@@ -108,10 +110,21 @@ function AdminUsersContent() {
               onRoleChange={onRoleChange}
               onUserClick={(user) => navigate({ to: "/admin/users/$id", params: { id: user.id } })}
               onParentClick={setSelectedParent}
+              onEditClick={setEditTarget}
             />
           </Show>
         </Suspense>
       </section>
+      <AdminUserEditPanel
+        user={editTarget()}
+        open={editTarget() !== null}
+        onOpenChange={(open) => { if (!open) setEditTarget(null); }}
+        onSaved={async () => {
+          // ProfileForm shows its own "saved" toast.
+          setEditTarget(null);
+          try { await refetch(); } catch { /* stale rows until the next load */ }
+        }}
+      />
       <CreateUserPanel
         open={creating()}
         onOpenChange={setCreating}

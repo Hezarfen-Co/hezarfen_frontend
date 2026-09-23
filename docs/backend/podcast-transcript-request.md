@@ -1,36 +1,27 @@
 # Feature request: timed transcript for podcast episodes
 
-Status: requested by frontend · Date: 2026-09-23
-Contract checked: live OpenAPI at `https://hezarfen-backend.dizey.sh/api-docs/openapi.json`
-(fetched 2026-09-23) — no transcript field or route under `/podcast/*`.
+Status: partly shipped · Updated: 2026-09-23
+Contract checked: live OpenAPI at `https://hezarfen-backend.dizey.sh/api-docs/openapi.json`.
 
-## What the frontend already does
+## What the backend ships now
 
-The podcast player (`src/components/notes/podcast-player.tsx`) renders a
-timed transcript under the audio when one is present: the line being spoken
-is highlighted and kept in view, and clicking a line plays from its start
-(`src/components/notes/podcast-transcript.tsx`). Until the backend sends a
-transcript, the player shows no transcript control at all.
+`GET /podcast/jobs/{id}/result` carries `transcript: string | null` on
+`JobArtifacts` — the episode's narration as plain text, chapters joined by
+blank lines, with no timings. `null` for jobs that finished before the column
+existed.
 
-It reads the transcript from `GET /podcast/jobs/{id}/result`, as an optional
-field of `PodcastJobArtifacts` (`src/api/client/types.ts`):
+## What the frontend does with it
 
-```jsonc
-{
-  "job_id": "…",
-  "audio_id": "…",
-  "duration_secs": 754,
-  "format": "ogrenci_hoca",
-  "transcript": [
-    { "start_secs": 0.0, "end_secs": 4.2, "text": "Bugün hücreyi konuşalım.", "speaker": "Öğretmen" },
-    { "start_secs": 4.2, "end_secs": 7.9, "text": "Hücre neden bu kadar önemli?", "speaker": "Öğrenci" }
-  ]
-}
-```
+The podcast player (`src/components/notes/podcast-player.tsx`) reads the
+result of whichever episode is selected and, when the transcript is present,
+offers a "Transkript" toggle that shows it one paragraph per chapter
+(`src/components/notes/podcast-transcript.tsx`). With no transcript there is
+no toggle. Without timings the text cannot follow playback or seek, so the
+request below still stands.
 
-## Requested shape
+## Still requested: timings
 
-- `transcript`: array, ordered by `start_secs`, or `null`/absent when the
+- `transcript_segments` (new field beside the plain `transcript`): array, ordered by `start_secs`, or `null`/absent when the
   service produced none. Only on a `done` job.
 - `start_secs` / `end_secs`: offsets into the produced audio, in seconds
   (fractions allowed). The pipeline already knows these when it stitches the
@@ -42,8 +33,8 @@ field of `PodcastJobArtifacts` (`src/api/client/types.ts`):
 If the backend prefers a separate door (for example
 `GET /podcast/jobs/{id}/transcript`, which would also let the history list and
 the studio inspector load it lazily), or different field names, the frontend
-changes in one place: the type above and the `transcript` prop passed to
-`PodcastPlayer`.
+changes in one place: `PodcastJobArtifacts` in `src/api/client/types.ts` and
+the fetch in `PodcastPlayer`.
 
 ## Related: the audio door cannot be seeked
 

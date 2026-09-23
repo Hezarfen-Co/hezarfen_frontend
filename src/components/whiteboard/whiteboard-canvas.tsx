@@ -1,6 +1,8 @@
 import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
+import { FullscreenToggle } from "@/components/ui/fullscreen-toggle";
 import { IconEdit, IconEraser, IconMove, IconZoomIn, IconZoomOut } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { FULLSCREEN_ROOT_CLASS, createFullscreen } from "@/lib/fullscreen";
 import {
   PAPER_CELL,
   PAPER_LINE,
@@ -55,7 +57,11 @@ export function WhiteboardCanvas(props: {
   const t = useT();
   let canvas: HTMLCanvasElement | undefined;
   let wrap: HTMLDivElement | undefined;
+  let root: HTMLDivElement | undefined;
   let current: Stroke | undefined;
+  // The ResizeObserver on `wrap` re-sizes the backing store on enter/exit and
+  // redraw() repaints `committed`, so no stroke is lost.
+  const fullscreen = createFullscreen(() => root);
   let panStart: { x: number; y: number; px: number; py: number } | undefined;
   // Every committed mark (local + remote), in draw order. Plain array, not a
   // signal: it can grow into the thousands and only pan/zoom/resize repaints it.
@@ -338,10 +344,13 @@ export function WhiteboardCanvas(props: {
   };
 
   return (
-    <div class={cn("space-y-3", props.class)}>
+    <div ref={root} class={cn("space-y-3", props.class, fullscreen.active() && FULLSCREEN_ROOT_CLASS)}>
       <div
         ref={wrap}
-        class="relative h-104 overflow-hidden rounded-lg border bg-white shadow-inner sm:h-[70vh]"
+        class={cn(
+          "relative h-104 overflow-hidden rounded-lg border bg-white shadow-inner sm:h-[70vh]",
+          fullscreen.active() && "h-auto min-h-0 flex-1 sm:h-auto",
+        )}
         style={paperStyle()}
       >
         <canvas
@@ -403,6 +412,7 @@ export function WhiteboardCanvas(props: {
 
         {/* Bottom-right zoom */}
         <div class="absolute bottom-2 right-2 z-10 flex flex-col divide-y divide-border overflow-hidden rounded-lg border bg-card/90 shadow-xs backdrop-blur-xs">
+          <FullscreenToggle active={fullscreen.active()} onToggle={fullscreen.toggle} />
           <button
             type="button"
             class="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

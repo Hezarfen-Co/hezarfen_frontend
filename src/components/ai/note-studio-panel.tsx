@@ -210,6 +210,7 @@ export function NoteStudioDetail(props: { noteId: string; episode?: string }) {
                     aria-valuemax={RAIL_MAX}
                     aria-valuenow={railWidth()}
                     tabIndex={0}
+                    title={t("aiStudio.resizeHint")}
                     class="group absolute inset-y-0 left-0 z-10 hidden w-2 cursor-col-resize touch-none outline-hidden lg:block"
                     onPointerDown={startResize}
                     onDblClick={() => setRailWidth(RAIL_DEFAULT)}
@@ -221,6 +222,14 @@ export function NoteStudioDetail(props: { noteId: string; episode?: string }) {
                     }}
                   >
                     <span class="block h-full w-px bg-transparent transition-colors group-hover:bg-primary/60 group-focus-visible:bg-primary group-active:bg-primary" />
+                    {/* A grip on the border, always visible, so the rail reads as
+                        draggable before anyone hovers the hairline. */}
+                    <span
+                      aria-hidden="true"
+                      class="absolute left-0 top-[45vh] flex h-9 w-3.5 -translate-x-1/2 items-center justify-center gap-[3px] rounded-full border border-border-line bg-surface-base text-text-subtle shadow-xs transition-colors group-hover:border-primary/60 group-hover:text-primary-text group-focus-visible:border-primary group-active:border-primary"
+                    >
+                      <span class="flex flex-col gap-[3px]"><span class="h-[3px] w-[3px] rounded-full bg-current" /><span class="h-[3px] w-[3px] rounded-full bg-current" /><span class="h-[3px] w-[3px] rounded-full bg-current" /></span>
+                    </span>
                   </div>
                   <PodcastPanel noteId={current().id} noteTitle={current().title} episode={props.episode} active flat />
                 </aside>

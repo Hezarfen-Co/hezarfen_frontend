@@ -31,7 +31,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/empty-state";
 import { IconAlert, IconCalendarDays, IconExam, IconHomework, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -208,7 +207,6 @@ function InstanceDetailContent() {
     if (mode === "open") return t("exams.mode.open");
     return t("exams.unscheduled");
   };
-  const countDescription = (count: number, item: string) => t("common.countItem", { count, item });
   const examCount = createMemo(() => exams()?.length ?? 0);
   const rosterCount = createMemo(() => roster()?.length ?? 0);
   const enrolledUserIds = () => (roster() ?? []).map((row) => row.user.id);
@@ -629,14 +627,9 @@ function InstanceDetailContent() {
 
               <Show when={tabOn.exams()}>
               <TabsContent value="exams" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(examCount(), t("courses.examItem"))}</Badge>
-                  <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowExamForm(true)}>
-                      <IconPlus class="h-4 w-4" />{t("courses.addExam")}
-                    </Button>
-                  </Show>
-                </div>
+                {/* Each tab's add button rides in its table's toolbar card
+                    (search, add, columns), like the list pages; the tab label
+                    and the pager already carry the count. */}
                 <Suspense fallback={<DataTableSkeleton />}>
                   <DataTable
                     columns={examColumns()}
@@ -645,6 +638,11 @@ function InstanceDetailContent() {
                     enablePagination
                     pageSize={10}
                     empty={t("exams.empty")}
+                    actions={canManage() ? (
+                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
+                        <IconPlus class="h-4 w-4" />{t("courses.addExam")}
+                      </Button>
+                    ) : undefined}
                     onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
                   />
                 </Suspense>
@@ -653,14 +651,6 @@ function InstanceDetailContent() {
 
               <Show when={tabOn.homework()}>
               <TabsContent value="homework" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(homeworkCount(), t("homework.item"))}</Badge>
-                  <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowHomeworkForm(true)}>
-                      <IconPlus class="h-4 w-4" />{t("homework.add")}
-                    </Button>
-                  </Show>
-                </div>
                 <CourseHomeworkPanel
                   instanceId={id()}
                   courseId={inst().course}
@@ -675,14 +665,6 @@ function InstanceDetailContent() {
 
               <Show when={tabOn.sessions()}>
               <TabsContent value="sessions" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(sessionCount(), t("sessions.item"))}</Badge>
-                  <Show when={canManage()}>
-                    <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowSessionForm(true)}>
-                      <IconPlus class="h-4 w-4" />{t("sessions.add")}
-                    </Button>
-                  </Show>
-                </div>
                 <CourseSessionsPanel
                   instanceId={id()}
                   roster={roster() ?? []}
@@ -699,14 +681,6 @@ function InstanceDetailContent() {
               </Show>
 
               <TabsContent value="teachers" class="space-y-3">
-                <div class="flex flex-wrap items-center gap-2 text-sm">
-                  <Badge variant="secondary" class="rounded-full">{countDescription(inst().teachers.length, t("courses.teachers"))}</Badge>
-                  <Show when={canStaff()}>
-                    <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowTeacherForm(true)}>
-                      <IconPlus class="h-4 w-4" />{t("courses.assignTeacher")}
-                    </Button>
-                  </Show>
-                </div>
                 <CourseTeachersPanel
                   instanceId={id()}
                   teachers={inst().teachers}
@@ -719,16 +693,21 @@ function InstanceDetailContent() {
 
               <Show when={canManage()}>
                 <TabsContent value="students" class="space-y-3">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" class="rounded-full">{countDescription(rosterCount(), t("courses.rosterItem"))}</Badge>
-                    <Button type="button" variant="outline" size="sm" class="ml-auto rounded-lg" onClick={() => setShowEnrollPanel(true)}>
-                      <IconPlus class="h-4 w-4" />{t("courses.enroll")}
-                    </Button>
-                  </div>
                   <Suspense fallback={<DataTableSkeleton />}>
-                    <Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="people" title={t("exams.emptyRoster")} />}>
-                      <DataTable columns={rosterColumns()} data={roster() ?? []} filterColumn="student" enablePagination pageSize={10} />
-                    </Show>
+                    <DataTable
+                      columns={rosterColumns()}
+                      data={roster() ?? []}
+                      filterColumn="student"
+                      enablePagination
+                      pageSize={10}
+                      empty={t("exams.emptyRoster")}
+                      emptyIllustration="people"
+                      actions={
+                        <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
+                          <IconPlus class="h-4 w-4" />{t("courses.enroll")}
+                        </Button>
+                      }
+                    />
                   </Suspense>
                 </TabsContent>
               </Show>

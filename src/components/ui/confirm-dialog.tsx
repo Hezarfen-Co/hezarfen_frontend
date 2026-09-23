@@ -1,12 +1,9 @@
 import { type JSX, createEffect, createSignal, Show } from "solid-js";
 import {
   AlertDialog,
-  AlertDialogBody,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -20,8 +17,14 @@ import { cn } from "@/lib/cn";
 export type ConfirmDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Short question or action name, shown bold at the top. */
   title: string;
+  /**
+   * One plain sentence about what happens. Defaults to "this cannot be undone"
+   * for the destructive variant and to nothing for the default variant.
+   */
   description?: string;
+  /** The target (item name, or a one-line recap), shown in a box under the title. */
   summary: JSX.Element | string;
   confirmLabel?: string;
   cancelLabel?: string;
@@ -40,11 +43,24 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
   const [pending, setPending] = createSignal(false);
   const [promptValue, setPromptValue] = createSignal("");
   const destructive = () => props.variant === "destructive";
+  let cancelRef: HTMLButtonElement | undefined;
 
   // Reset the field each time the dialog opens so a prior entry never leaks over.
   createEffect(() => {
     if (props.open) setPromptValue(props.prompt?.initialValue ?? "");
   });
+
+  const description = () => props.description ?? (destructive() ? t("confirm.irreversible") : undefined);
+  const summaryText = () => (typeof props.summary === "string" ? props.summary : undefined);
+  const hasSummary = () => (typeof props.summary === "string" ? props.summary.trim() !== "" : props.summary != null);
+  const cancelLabel = () => props.cancelLabel ?? t("common.cancel");
+
+  // While onConfirm runs the dialog stays put: Escape/outside clicks are ignored
+  // so a half-finished request never loses its only visible state.
+  const requestOpenChange = (open: boolean) => {
+    if (!open && pending()) return;
+    props.onOpenChange(open);
+  };
 
   const run = async () => {
     if (pending()) return;
@@ -58,100 +74,137 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
   };
 
   return (
-    <AlertDialog open={props.open} onOpenChange={props.onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
+    <AlertDialog open={props.open} onOpenChange={requestOpenChange}>
+      <AlertDialogContent
+        class="max-w-[440px] rounded-xl border-border-line bg-surface-base"
+        onOpenAutoFocus={(e: Event) => {
+          // Destructive confirmations land on Cancel so a stray Enter never
+          // deletes; a prompt keeps the default (its field comes first).
+          if (destructive() && !props.prompt && cancelRef) {
+            e.preventDefault();
+            cancelRef.focus();
+          }
+        }}
+      >
+        <div class="flex items-start gap-4 px-5 pb-5 pt-5 sm:px-6">
           <span
+            aria-hidden="true"
             class={cn(
-              "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border",
-              props.iconClass ?? (destructive() ? "border-destructive/20 bg-destructive/10 text-destructive-text" : "border-primary/20 bg-primary/10 text-primary-text"),
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border [&_svg]:h-5 [&_svg]:w-5",
+              props.iconClass ??
+                (destructive()
+                  ? "border-destructive/20 bg-destructive/10 text-destructive-text"
+                  : "border-primary/20 bg-primary/10 text-primary-text"),
             )}
           >
-            <Show when={props.icon} fallback={
-              <Show when={destructive()} fallback={<IconAlert class="h-4 w-4" />}>
-                <IconTrash class="h-4 w-4" />
-              </Show>
-            }>
+            <Show
+              when={props.icon}
+              fallback={
+                <Show when={destructive()} fallback={<IconAlert />}>
+                  <IconTrash />
+                </Show>
+              }
+            >
               {props.icon}
             </Show>
           </span>
-          <div class="min-w-0 space-y-1">
-            <AlertDialogTitle>{props.title}</AlertDialogTitle>
-            <AlertDialogDescription>{props.description ?? t("confirm.review")}</AlertDialogDescription>
-          </div>
-        </AlertDialogHeader>
 
-        <AlertDialogBody>
-          <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("confirm.summary")}
-          </p>
-          <div class="rounded-md border border-border bg-muted/40 px-3 py-3 text-sm leading-relaxed">
-            {props.summary}
-          </div>
-          <Show when={props.prompt}>
-            {(prompt) => (
-              <div class="mt-3 space-y-1.5">
-                <Label for="confirm-prompt">{prompt().label}</Label>
-                <Show
-                  when={prompt().singleLine}
-                  fallback={
-                    <Textarea
+          <div class="min-w-0 flex-1 space-y-3 pt-0.5">
+            <AlertDialogTitle class="text-base font-semibold leading-snug">{props.title}</AlertDialogTitle>
+
+            <Show when={hasSummary()}>
+              <div
+                data-slot="confirm-summary"
+                class="rounded-lg border border-border-line bg-muted/40 px-3 py-2 text-sm font-medium leading-relaxed text-foreground"
+                title={summaryText()}
+              >
+                <Show when={summaryText() !== undefined} fallback={props.summary}>
+                  <span class="line-clamp-3 break-words">{summaryText()}</span>
+                </Show>
+              </div>
+            </Show>
+
+            <Show when={description()}>
+              {(text) => (
+                <AlertDialogDescription class="text-[13px] leading-relaxed text-muted-foreground">
+                  {text()}
+                </AlertDialogDescription>
+              )}
+            </Show>
+
+            <Show when={props.prompt}>
+              {(prompt) => (
+                <div class="space-y-1.5 pt-1">
+                  <Label for="confirm-prompt">{prompt().label}</Label>
+                  <Show
+                    when={prompt().singleLine}
+                    fallback={
+                      <Textarea
+                        id="confirm-prompt"
+                        class="min-h-20"
+                        rows={2}
+                        maxlength={prompt().maxLength}
+                        placeholder={prompt().placeholder}
+                        value={promptValue()}
+                        disabled={pending()}
+                        onInput={(e) => setPromptValue(e.currentTarget.value)}
+                      />
+                    }
+                  >
+                    <Input
                       id="confirm-prompt"
-                      class="min-h-20"
-                      rows={2}
                       maxlength={prompt().maxLength}
                       placeholder={prompt().placeholder}
                       value={promptValue()}
                       disabled={pending()}
                       onInput={(e) => setPromptValue(e.currentTarget.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void run();
+                        }
+                      }}
                     />
-                  }
-                >
-                  <Input
-                    id="confirm-prompt"
-                    maxlength={prompt().maxLength}
-                    placeholder={prompt().placeholder}
-                    value={promptValue()}
-                    disabled={pending()}
-                    onInput={(e) => setPromptValue(e.currentTarget.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        void run();
-                      }
-                    }}
-                  />
-                </Show>
-              </div>
-            )}
-          </Show>
-        </AlertDialogBody>
+                  </Show>
+                </div>
+              )}
+            </Show>
+          </div>
+        </div>
 
-        <AlertDialogFooter>
+        <div class="flex flex-col-reverse gap-2 border-t border-border-line bg-muted/30 px-5 py-3 sm:flex-row sm:justify-end sm:px-6">
           <AlertDialogCancel
+            ref={cancelRef}
             class={cn(
-              "inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-xs font-semibold shadow-sm",
-              "hover:bg-accent hover:text-accent-foreground disabled:opacity-50",
+              "inline-flex h-9 w-full cursor-pointer items-center justify-center rounded-lg border border-border/70 bg-background px-4 text-sm font-medium transition-colors sm:w-auto",
+              "hover:border-border hover:bg-muted/60 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+              "disabled:pointer-events-none disabled:opacity-50",
             )}
             disabled={pending()}
             // Kobalte's close button defaults its accessible name to an English
             // "Dismiss", which overrides the visible text.
-            aria-label={props.cancelLabel ?? t("common.cancel")}
+            aria-label={cancelLabel()}
           >
-            {props.cancelLabel ?? t("common.cancel")}
+            {cancelLabel()}
           </AlertDialogCancel>
           <Button
             type="button"
-            size="sm"
-            class="h-8 rounded-md px-3 text-xs font-semibold"
+            class="h-9 w-full rounded-lg px-4 font-semibold sm:w-auto sm:min-w-[7.5rem]"
             variant={destructive() ? "destructive" : "default"}
             disabled={pending()}
+            aria-busy={pending()}
             onClick={() => void run()}
           >
-            {props.confirmLabel ??
-              (destructive() ? t("confirm.confirmDelete") : t("confirm.confirmUpdate"))}
+            <Show when={pending()}>
+              <span
+                aria-hidden="true"
+                data-slot="confirm-spinner"
+                class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+              />
+            </Show>
+            {props.confirmLabel ?? (destructive() ? t("confirm.confirmDelete") : t("confirm.confirmUpdate"))}
           </Button>
-        </AlertDialogFooter>
+        </div>
       </AlertDialogContent>
     </AlertDialog>
   );

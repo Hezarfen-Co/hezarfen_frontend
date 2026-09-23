@@ -147,7 +147,7 @@ export function NoteFilesPanel(props: {
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
-      <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="space-y-3">
         <div>
           <h3 class="text-sm font-semibold">{t("notes.files")}</h3>
           <Show when={canManage()}>
@@ -164,12 +164,14 @@ export function NoteFilesPanel(props: {
           onChange={(event) => void upload(event.currentTarget.files?.[0])}
         />
         <Show when={canManage()}>
-          <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <Button type="button" variant="outline" size="sm" class="w-full sm:w-32 rounded-lg" disabled={pending() || atLimit()} onClick={openNewDrawing}>
+          {/* Two equal halves spanning the panel, the same width as the drop
+              area and file list under them. */}
+          <div class="grid w-full grid-cols-2 gap-2">
+            <Button type="button" variant="outline" size="sm" class="w-full rounded-lg" disabled={pending() || atLimit()} onClick={openNewDrawing}>
               <IconEdit class="h-4 w-4 shrink-0" />
               <span class="truncate">{t("notes.draw")}</span>
             </Button>
-            <Button type="button" size="sm" class="w-full sm:w-32 rounded-lg" disabled={pending() || atLimit()} onClick={() => input?.click()}>
+            <Button type="button" size="sm" class="w-full rounded-lg" disabled={pending() || atLimit()} onClick={() => input?.click()}>
               <IconPlus class="h-4 w-4 shrink-0" />
               <span class="truncate">{t("notes.addFile")}</span>
             </Button>

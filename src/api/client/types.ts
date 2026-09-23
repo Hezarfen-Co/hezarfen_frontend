@@ -1458,22 +1458,11 @@ export type PodcastJobArtifacts = {
  /** The resolved narration format. */
  format?: PodcastFormat | null;
  /**
-  * Not in the live contract yet (checked 2026-09-23) — the shape proposed in
-  * docs/backend/podcast-transcript-request.md. Absent or empty until the
-  * backend ships it, and the player shows no transcript control until then.
+  * The episode's narration as plain text, chapters joined by blank lines —
+  * no timings. `null` when the service did not report one (every job that
+  * finished before the backend stored it).
   */
- transcript?: PodcastTranscriptSegment[] | null;
-};
-
-/** One timed line of an episode's narration. */
-export type PodcastTranscriptSegment = {
- /** Offset into the audio where the line starts, in seconds. */
- start_secs: number;
- /** Where it ends, in seconds. */
- end_secs: number;
- text: string;
- /** Who speaks it — set on the two-voice `ogrenci_hoca` format, else null. */
- speaker?: string | null;
+ transcript?: string | null;
 };
 
 /** The verdict on a cancel. `false` is not an error — see `postPodcastJobCancel`. */

@@ -27,8 +27,12 @@ export function appointmentCounterpart(a: Appointment, viewerId: string | undefi
   return personLabel(a.requester.id === viewerId ? a.teacher ?? a.requester : a.requester);
 }
 
-export function personLabelWithId(person: PersonLike): string {
+// Two students can share a name, so a picker adds the student number, else
+// the username — never the raw id, which means nothing to a person reading it.
+export function personPickerLabel(person: PersonLike): string {
   if (!person) return "—";
   if (typeof person === "string") return person;
-  return `${personLabel(person)} - ${person.id}`;
+  const label = personLabel(person);
+  const handle = person.student_number?.trim() || person.username;
+  return handle && handle !== label ? `${label} (${handle})` : label;
 }

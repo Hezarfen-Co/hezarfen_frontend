@@ -7,15 +7,15 @@ import {
   deleteSchoolModule,
   getSchool,
   getSchoolModules,
-  patchSchool,
   patchSchoolModules,
   postSchoolModule,
 } from "@/api/schools";
-import { formatApiError, type SchoolStatus } from "@/api/client";
+import { formatApiError } from "@/api/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { BuilderGuard } from "@/components/builder/builder-guard";
 import { BuilderHeader } from "@/components/builder/builder-header";
 import { SchoolAdminAccessPanel, type AdminAccessMode } from "@/components/builder/school-admin-access-panel";
+import { SchoolEditPanel } from "@/components/builder/school-edit-panel";
 import { SchoolStatusBadge } from "@/components/builder/school-status-badge";
 import { ModuleCatalogGrid } from "@/components/modules/module-catalog-grid";
 import { formatModuleError } from "@/lib/module-labels";
@@ -24,11 +24,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEdit, IconExternalLink, IconLock, IconTrash } from "@/components/ui/icons";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { Select } from "@/components/ui/select";
-import { SidePanel } from "@/components/ui/side-panel";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { useAuth } from "@/stores/auth-context";
@@ -69,9 +65,6 @@ function BuilderSchoolDetailContent() {
   const [modulesError, setModulesError] = createSignal("");
 
   const [editOpen, setEditOpen] = createSignal(false);
-  const [name, setName] = createSignal("");
-  const [status, setStatus] = createSignal<SchoolStatus>("active");
-  const [editError, setEditError] = createSignal("");
   const [accessMode, setAccessMode] = createSignal<AdminAccessMode | null>(null);
   const [deleteOpen, setDeleteOpen] = createSignal(false);
   const [error, setError] = createSignal("");
@@ -93,25 +86,7 @@ function BuilderSchoolDetailContent() {
   };
 
   const openEdit = () => {
-    const current = school();
-    if (!current) return;
-    setName(current.name);
-    setStatus(current.status);
-    setEditError("");
-    setEditOpen(true);
-  };
-
-  const saveEdit = async (event: SubmitEvent) => {
-    event.preventDefault();
-    setEditError("");
-    try {
-      await patchSchool(id(), { name: name().trim(), status: status() });
-      setEditOpen(false);
-      await refetchSchool();
-      setFlash(t("common.saved"));
-    } catch (err) {
-      setEditError(formatApiError(err));
-    }
+    if (school()) setEditOpen(true);
   };
 
   return (
@@ -194,33 +169,15 @@ function BuilderSchoolDetailContent() {
         </Show>
       </Suspense>
 
-      <SidePanel guardUnsaved open={editOpen()} onOpenChange={setEditOpen} title={t("builder.editSchool")} description={t("builder.editSchoolHint")}>
-        <form class="space-y-4" onSubmit={saveEdit}>
-          <Show when={editError()}>
-            <Alert variant="destructive">{editError()}</Alert>
-          </Show>
-          <div class="space-y-1.5">
-            <Label for="school-edit-name">{t("builder.schoolName")}</Label>
-            <Input id="school-edit-name" class="rounded-lg" required maxlength={120} value={name()} onInput={(e) => setName(e.currentTarget.value)} />
-          </div>
-          <div class="space-y-1.5">
-            <Label for="school-edit-status">{t("builder.status")}</Label>
-            <Select id="school-edit-status" value={status()} onChange={(e) => setStatus(e.currentTarget.value as SchoolStatus)}>
-              <option value="active">{t("builder.statusActive")}</option>
-              <option value="suspended">{t("builder.statusSuspended")}</option>
-            </Select>
-            <p class="text-xs text-text-subtle">{t("builder.suspendHint")}</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" class="h-10 rounded-lg" onClick={() => setEditOpen(false)}>
-              {t("common.cancel")}
-            </Button>
-            <Button type="submit" class="h-10 rounded-lg">
-              {t("common.save")}
-            </Button>
-          </div>
-        </form>
-      </SidePanel>
+      <SchoolEditPanel
+        school={school() ?? null}
+        open={editOpen()}
+        onOpenChange={setEditOpen}
+        onSaved={async () => {
+          await refetchSchool();
+          setFlash(t("common.saved"));
+        }}
+      />
 
       <SchoolAdminAccessPanel
         id={id()}

@@ -1,9 +1,11 @@
 import { For, Match, Show, Switch, createEffect, createSignal, onCleanup, onMount, untrack } from "solid-js";
 import { Button } from "@/components/ui/button";
+import { FullscreenToggle } from "@/components/ui/fullscreen-toggle";
 import { IconDownload, IconEdit, IconEraser, IconGrid, IconMove, IconRuled, IconSquareOff, IconTrash, IconUndo, IconZoomIn, IconZoomOut } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { PAPER_CELL, PAPER_LINE, canvasPx, paintStroke, paintTip, strokesBounds, type BgKind, type DrawScene, type Point, type Stroke } from "@/lib/draw-stroke";
 import { canvasToImageBlob, sceneToPngFile } from "@/lib/drawing-file";
+import { FULLSCREEN_ROOT_CLASS, createFullscreen } from "@/lib/fullscreen";
 import { useT } from "@/stores/preferences-context";
 
 const COLORS = ["#1f2937", "#dc2626", "#2563eb", "#16a34a", "#ca8a04"];
@@ -52,7 +54,11 @@ export function DrawCanvas(props: {
   const t = useT();
   let canvas: HTMLCanvasElement | undefined;
   let wrap: HTMLDivElement | undefined;
+  let root: HTMLDivElement | undefined;
   let current: Stroke | undefined;
+  // Full screen covers the pad, its islands and the save row; the ResizeObserver
+  // on `wrap` re-sizes the backing store and redraw() repaints every stroke.
+  const fullscreen = createFullscreen(() => root);
   // Live pan drag: pointer origin + pan value at grab, so the pad follows the finger.
   let panStart: { x: number; y: number; px: number; py: number } | undefined;
 
@@ -394,8 +400,12 @@ export function DrawCanvas(props: {
   );
 
   return (
-    <div class={cn("space-y-3", props.class)}>
-      <div ref={wrap} class="relative h-104 overflow-hidden rounded-lg border bg-white shadow-inner sm:h-120" style={paperStyle()}>
+    <div ref={root} class={cn("space-y-3", props.class, fullscreen.active() && FULLSCREEN_ROOT_CLASS)}>
+      <div
+        ref={wrap}
+        class={cn("relative h-104 overflow-hidden rounded-lg border bg-white shadow-inner sm:h-120", fullscreen.active() && "min-h-0 flex-1 sm:h-auto h-auto")}
+        style={paperStyle()}
+      >
         <canvas
           ref={canvas}
           class="h-full w-full touch-none"
@@ -622,6 +632,7 @@ export function DrawCanvas(props: {
         </div>
 
         <div class="absolute bottom-2 right-2 z-10 flex flex-col divide-y divide-border overflow-hidden rounded-lg border bg-card/90 shadow-xs backdrop-blur-xs">
+          <FullscreenToggle active={fullscreen.active()} onToggle={fullscreen.toggle} />
           <button
             type="button"
             class="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -651,7 +662,7 @@ export function DrawCanvas(props: {
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex shrink-0 flex-wrap items-center gap-2">
         <Button type="button" class="h-10 px-5" disabled={props.pending || !canSave()} onClick={() => void save()}>
           {t("draw.save")}
         </Button>

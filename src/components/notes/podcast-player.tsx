@@ -1,24 +1,22 @@
-import { Show, createSignal } from "solid-js";
-import { getPodcastJobAudioBlob, podcastAudioUrl } from "@/api/podcast";
-import type { PodcastTranscriptSegment } from "@/api/client";
-import { AudioPlayer, type AudioPlayerController } from "@/components/ui/audio-player";
+import { Show, createEffect, createSignal, onCleanup } from "solid-js";
+import { getPodcastJobAudioBlob, getPodcastJobResultById, podcastAudioUrl } from "@/api/podcast";
+import { AudioPlayer } from "@/components/ui/audio-player";
 import { IconDownload, IconTranscript } from "@/components/ui/icons";
 import { podcastDownloadFilename, usePodcastDownloadT } from "@/components/notes/podcast-download";
-import { PodcastTranscript } from "@/components/notes/podcast-transcript";
+import { PodcastTranscript, transcriptChapters } from "@/components/notes/podcast-transcript";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
 
 /**
  * One produced episode: the app's audio player on the job's stream, its
- * download, and — once the backend sends one — the timed transcript under
- * it. With no transcript there is no toggle at all rather than an empty one.
+ * download, and the transcript under it when the job's result carries one.
+ * With no transcript there is no toggle at all rather than an empty one.
  */
 export function PodcastPlayer(props: {
   jobId: string;
   title?: string;
   subtitle?: string;
   durationSecs?: number | null;
-  transcript?: PodcastTranscriptSegment[] | null;
   autoplay?: boolean;
   /** Off where the surrounding row already offers the download. */
   download?: boolean;
@@ -28,10 +26,21 @@ export function PodcastPlayer(props: {
 }) {
   const t = useT();
   const downloadT = usePodcastDownloadT();
-  const [currentSecs, setCurrentSecs] = createSignal(0);
   const [transcriptOpen, setTranscriptOpen] = createSignal(false);
-  let controller: AudioPlayerController | undefined;
-  const segments = () => props.transcript ?? [];
+  const [chapters, setChapters] = createSignal<string[]>([]);
+  // Read from the job's result rather than a resource: the player sits inside
+  // the history's <Suspense>, and a missing transcript must not hold the audio
+  // back. A failed read only means no transcript control.
+  createEffect(() => {
+    const jobId = props.jobId;
+    const controller = new AbortController();
+    setChapters([]);
+    setTranscriptOpen(false);
+    getPodcastJobResultById(jobId, controller.signal)
+      .then((result) => setChapters(transcriptChapters(result.transcript)))
+      .catch(() => {});
+    onCleanup(() => controller.abort());
+  });
 
   return (
     <div class={cn("space-y-2", props.class)}>
@@ -42,8 +51,6 @@ export function PodcastPlayer(props: {
         durationHint={props.durationSecs}
         loadBlob={(signal) => getPodcastJobAudioBlob(props.jobId, signal)}
         autoplay={props.autoplay}
-        onTimeUpdate={setCurrentSecs}
-        controller={(value) => (controller = value)}
         actions={
           <Show when={props.download !== false}>
             <a
@@ -58,7 +65,7 @@ export function PodcastPlayer(props: {
           </Show>
         }
         extra={
-          <Show when={segments().length > 0}>
+          <Show when={chapters().length > 0}>
             <button
               type="button"
               class={cn(
@@ -75,15 +82,8 @@ export function PodcastPlayer(props: {
           </Show>
         }
       />
-      <Show when={transcriptOpen() && segments().length > 0}>
-        <PodcastTranscript
-          segments={segments()}
-          currentSecs={currentSecs()}
-          onSeek={(secs) => {
-            controller?.seek(secs);
-            controller?.play();
-          }}
-        />
+      <Show when={transcriptOpen() && chapters().length > 0}>
+        <PodcastTranscript chapters={chapters()} />
       </Show>
     </div>
   );

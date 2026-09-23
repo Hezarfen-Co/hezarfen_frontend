@@ -8,13 +8,12 @@ import { deleteEventById } from "@/api/events";
 import { getEventAttendance } from "@/api/events";
 import { getEventById } from "@/api/events";
 import { getEventRoster } from "@/api/events";
-import { patchEventById } from "@/api/events";
 import { postEventRegister } from "@/api/events";
 import { formatApiError } from "@/api/client";
 import type { EventAudience, EventRosterEntry } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
 import { AttendanceTable } from "@/components/events/attendance-table";
-import { EventForm } from "@/components/events/event-form";
+import { EventEditPanel } from "@/components/events/event-edit-panel";
 import { EventRollCall } from "@/components/events/event-roll-call";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -24,11 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { DataToolbar } from "@/components/ui/data-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { IconEdit, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
-import { SidePanel } from "@/components/ui/side-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { UserSearchSelect } from "@/components/users/user-search-select";
@@ -237,31 +234,15 @@ function EventDetailContent() {
               }}
             />
 
-            <SidePanel guardUnsaved
+            <EventEditPanel
+              event={ev()}
               open={editing()}
               onOpenChange={setEditing}
-              title={t("common.edit")}
-              description={ev().title}
-            >
-              <EventForm
-                initial={ev()}
-                submitLabel={t("common.update")}
-                onCancel={() => setEditing(false)}
-                onSubmit={async (values) => {
-                  const body: Record<string, unknown> = {
-                    title: values.title,
-                    description: values.description,
-                    audience: values.audience,
-                  };
-                  if (values.starts_at !== undefined) body.starts_at = values.starts_at;
-                  if (values.ends_at !== undefined) body.ends_at = values.ends_at;
-                  await patchEventById(id(), body);
-                  setEditing(false);
-                  await refetchEvent();
-                  setFlash(t("common.saved"));
-                }}
-              />
-            </SidePanel>
+              onSaved={async () => {
+                await refetchEvent();
+                setFlash(t("common.saved"));
+              }}
+            />
 
             <ConfirmDialog
               open={registrationTarget() != null}
@@ -319,13 +300,18 @@ function EventDetailContent() {
                       </Button>
                       </div>
                     </div>
-                    <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
-                      <DataToolbar searchValue={rosterSearch()} searchPlaceholder={t("common.searchPlaceholder")} onSearchInput={setRosterSearch} />
-                    </div>
                     <Suspense fallback={<DataTableSkeleton columns={4} />}>
                       <Show when={roster()}>
-                        <Show when={visibleRoster().length > 0} fallback={<EmptyState kind="events" title={t("events.noRoster")} />}>
-                          <DataTable columns={rosterColumns()} data={visibleRoster()} enablePagination pageSize={10} />
+                        <Show when={(roster() ?? []).length > 0} fallback={<EmptyState kind="events" title={t("events.noRoster")} />}>
+                          <DataTable
+                            columns={rosterColumns()}
+                            data={visibleRoster()}
+                            searchValue={rosterSearch()}
+                            onSearchInput={setRosterSearch}
+                            filterPlaceholder={t("common.searchPlaceholder")}
+                            enablePagination
+                            pageSize={10}
+                          />
                         </Show>
                       </Show>
                     </Suspense>

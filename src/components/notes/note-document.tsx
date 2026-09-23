@@ -1,19 +1,56 @@
 import { Link, useBlocker, useNavigate } from "@tanstack/solid-router";
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
+import { getSettings } from "@/api/settings";
 import { formatApiError, type Note } from "@/api/client";
-import { deleteNoteById, patchNoteById, postNote } from "@/api/notes";
+import { deleteNoteById, patchNoteById, postNote, postNoteFile } from "@/api/notes";
 import { NoteFilesPanel } from "@/components/notes/note-files-panel";
 import { NoteRichEditor } from "@/components/notes/note-rich-editor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconAlert, IconChevronLeft, IconTrash } from "@/components/ui/icons";
+import { IconAlert, IconChevronLeft, IconPlus, IconTrash } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { createResource } from "@/lib/create-resource";
 import { personalNoteFiles } from "@/lib/note-source";
+import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
+import { showToast } from "@/components/ui/toast";
 import { useT } from "@/stores/preferences-context";
 
 const MAX_TITLE = 200;
 const MAX_CONTENT = 10_000;
+
+export function stageFiles(current: File[], selected: File[], maxFiles: number, maxBytes: number) {
+  const files = [...current];
+  let tooLarge = false;
+  let atLimit = false;
+  for (const file of selected) {
+    if (file.size > maxBytes) {
+      tooLarge = true;
+      continue;
+    }
+    if (files.length >= maxFiles) {
+      atLimit = true;
+      continue;
+    }
+    files.push(file);
+  }
+  return { files, tooLarge, atLimit };
+}
+
+export async function uploadStagedFiles(noteId: string, files: File[], uploadFile = postNoteFile) {
+  const failed: string[] = [];
+  for (const file of files) {
+    try {
+      await uploadFile(noteId, file);
+    } catch {
+      failed.push(file.name);
+    }
+  }
+  return failed;
+}
+
+const fileSnapshot = (files: File[]) => files.map((file) => [file.name, file.size, file.lastModified]);
+const documentSnapshot = (title: string, content: string, files: File[]) => JSON.stringify([title, content, fileSnapshot(files)]);
 
 /**
  * A personal note as a full-page document: title, editor, attachments. A new
@@ -25,15 +62,36 @@ export function NoteDocument(props: { note?: Note }) {
   const navigate = useNavigate();
   const [title, setTitle] = createSignal(props.note?.title ?? "");
   const [content, setContent] = createSignal(props.note?.content ?? "");
-  const [baseline, setBaseline] = createSignal(JSON.stringify([props.note?.title ?? "", props.note?.content ?? ""]));
+  const [stagedFiles, setStagedFiles] = createSignal<File[]>([]);
+  const [baseline, setBaseline] = createSignal(documentSnapshot(props.note?.title ?? "", props.note?.content ?? "", []));
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal("");
   const [deleteOpen, setDeleteOpen] = createSignal(false);
-  const dirty = () => JSON.stringify([title(), content()]) !== baseline();
+  const [settings] = createResource(async () => {
+    try {
+      return await getSettings();
+    } catch {
+      return null;
+    }
+  });
+  const maxFileBytes = () => maxUploadBytes(settings());
+  const atFileLimit = () => stagedFiles().length >= personalNoteFiles.maxFiles;
+  const dirty = () => documentSnapshot(title(), content(), stagedFiles()) !== baseline();
   const isNew = () => !props.note;
+  let fileInput: HTMLInputElement | undefined;
 
   let leaving = false;
   const blocker = useBlocker({ shouldBlockFn: () => dirty(), enableBeforeUnload: () => dirty(), withResolver: true });
+
+  const addFiles = (selected: FileList | null) => {
+    if (!selected) return;
+    const result = stageFiles(stagedFiles(), Array.from(selected), personalNoteFiles.maxFiles, maxFileBytes());
+    setStagedFiles(result.files);
+    if (result.tooLarge) setError(t("notes.fileTooLarge", { size: formatBytes(maxFileBytes()) }));
+    else if (result.atLimit) setError(t("notes.fileLimit"));
+    else setError("");
+    if (fileInput) fileInput.value = "";
+  };
 
   const save = async () => {
     if (saving()) return;
@@ -50,12 +108,15 @@ export function NoteDocument(props: { note?: Note }) {
       if (props.note) {
         await patchNoteById(props.note.id, { title: trimmed, content: body });
         if (title().trim() === trimmed) setTitle(trimmed);
-        setBaseline(JSON.stringify([trimmed, body]));
+        setBaseline(documentSnapshot(trimmed, body, []));
       } else {
         const created = await postNote({ title: trimmed, content: body || undefined });
+        const failedFiles = await uploadStagedFiles(created.id, stagedFiles());
+        setStagedFiles([]);
         // Settle the baseline first so the move to the note's URL is not blocked.
-        setBaseline(JSON.stringify([title(), content()]));
+        setBaseline(documentSnapshot(title(), content(), []));
         await navigate({ to: "/notes/$id", params: { id: created.id }, replace: true });
+        if (failedFiles.length > 0) showToast({ title: t("notes.fileUploadFailed", { files: failedFiles.join(", ") }) });
       }
     } catch (err) {
       setError(formatApiError(err));
@@ -132,9 +193,56 @@ export function NoteDocument(props: { note?: Note }) {
           <Show
             when={props.note}
             fallback={
-              <section class="rounded-xl border border-dashed border-border bg-card/60 p-4">
-                <h3 class="text-sm font-semibold">{t("notes.files")}</h3>
-                <p class="mt-1 text-sm text-muted-foreground">{t("notes.filesAfterSave")}</p>
+              <section class="space-y-3 rounded-lg border border-border/80 bg-card p-4 shadow-xs dark:border-white/8">
+                <div>
+                  <h3 class="text-sm font-semibold">{t("notes.files")}</h3>
+                  <p class="mt-1 text-xs text-muted-foreground">{t("notes.filesHelp", { size: formatBytes(maxFileBytes()) })}</p>
+                </div>
+                <input
+                  ref={(element) => {
+                    fileInput = element;
+                  }}
+                  type="file"
+                  multiple
+                  class="hidden"
+                  disabled={saving() || atFileLimit()}
+                  onChange={(event) => addFiles(event.currentTarget.files)}
+                />
+                <div class="grid w-full grid-cols-2 gap-2">
+                  <Button type="button" size="sm" class="col-span-2 w-full rounded-lg" disabled={saving() || atFileLimit()} onClick={() => fileInput?.click()}>
+                    <IconPlus class="h-4 w-4 shrink-0" />
+                    <span class="truncate">{t("notes.addFile")}</span>
+                  </Button>
+                </div>
+                <p class="text-xs text-muted-foreground">{t("notes.filesUploadOnSave")}</p>
+                <Show when={atFileLimit()}>
+                  <p class="text-xs text-muted-foreground">{t("notes.fileLimit")}</p>
+                </Show>
+                <Show
+                  when={stagedFiles().length > 0}
+                  fallback={<p class="rounded-md border border-dashed border-border/80 bg-muted/20 px-3 py-6 text-center text-sm text-muted-foreground">{t("notes.noFiles")}</p>}
+                >
+                  <ul class="space-y-2 rounded-md border border-border/70 bg-background/70 p-2">
+                    <For each={stagedFiles()}>
+                      {(file, index) => (
+                        <li class="flex min-w-0 items-center gap-2 rounded-md border border-border/70 bg-card px-2.5 py-2 text-sm">
+                          <span class="min-w-0 flex-1 truncate" title={file.name}>{file.name}</span>
+                          <span class="shrink-0 text-xs text-muted-foreground">{formatBytes(file.size)}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            class="h-7 w-7 shrink-0 rounded-md text-muted-foreground hover:text-destructive-text"
+                            aria-label={`${t("notes.removeFile")}: ${file.name}`}
+                            onClick={() => setStagedFiles((files) => files.filter((_, fileIndex) => fileIndex !== index()))}
+                          >
+                            <IconTrash class="h-4 w-4" />
+                          </Button>
+                        </li>
+                      )}
+                    </For>
+                  </ul>
+                </Show>
               </section>
             }
           >
@@ -152,7 +260,7 @@ export function NoteDocument(props: { note?: Note }) {
         onConfirm={async () => {
           if (!props.note) return;
           await deleteNoteById(props.note.id);
-          setBaseline(JSON.stringify([title(), content()]));
+          setBaseline(documentSnapshot(title(), content(), []));
           await navigate({ to: "/notes" });
         }}
       />

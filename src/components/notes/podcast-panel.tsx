@@ -1,8 +1,8 @@
 import { For, Show, Suspense, createEffect, createSignal, onCleanup } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getAiCapabilities } from "@/api/ai";
-import { getPodcastJobById, getPodcastJobResultById, postPodcastJob, postPodcastJobCancel } from "@/api/podcast";
-import { formatApiError, type PodcastFormat, type PodcastJobArtifacts, type PodcastJobStatus } from "@/api/client";
+import { getPodcastJobById, postPodcastJob, postPodcastJobCancel } from "@/api/podcast";
+import { formatApiError, type PodcastFormat, type PodcastJobStatus } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { IconWaveform, IconX } from "@/components/ui/icons";
@@ -27,7 +27,6 @@ export function PodcastPanel(props: {
   const [format, setFormat] = createSignal<PodcastFormat>("duz_okuma");
   const [jobId, setJobId] = createSignal("");
   const [status, setStatus] = createSignal<PodcastJobStatus | null>(null);
-  const [artifacts, setArtifacts] = createSignal<PodcastJobArtifacts | null>(null);
   const [error, setError] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [cancelling, setCancelling] = createSignal(false);
@@ -62,11 +61,7 @@ export function PodcastPanel(props: {
       if (token !== generation || !active()) return;
       setStatus(next);
       recordStage(next.stage);
-      if (next.state === "done") {
-        const result = await getPodcastJobResultById(id);
-        if (token === generation) setArtifacts(result);
-        return;
-      }
+      if (next.state === "done") return;
       if (next.state === "failed") {
         setError(t("podcast.failed"));
       }
@@ -82,7 +77,6 @@ export function PodcastPanel(props: {
     const token = generation;
     setJobId("");
     setStatus(null);
-    setArtifacts(null);
     setEtaSecs(null);
     setStages([]);
     setError("");
@@ -104,7 +98,6 @@ export function PodcastPanel(props: {
     const token = generation;
     setSubmitting(true);
     setError("");
-    setArtifacts(null);
     try {
       const receipt = await postPodcastJob({ source_id: props.noteId, format: format() });
       if (token !== generation) return;
@@ -250,9 +243,6 @@ export function PodcastPanel(props: {
         active={active()}
         episode={props.episode}
         refetchKey={status()?.state === "done" ? jobId() : ""}
-        transcript={
-          artifacts()?.transcript?.length ? { jobId: artifacts()!.job_id, segments: artifacts()!.transcript! } : null
-        }
       />
     </section>
     </Suspense>

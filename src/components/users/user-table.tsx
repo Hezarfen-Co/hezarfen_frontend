@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { IconCheck, IconExternalLink, IconEye, IconUsers } from "@/components/ui/icons";
+import { IconCheck, IconEdit, IconExternalLink, IconEye, IconUsers } from "@/components/ui/icons";
 import { ROLES } from "@/lib/roles";
 import { matchesSearch } from "@/lib/search-text";
 import { useT } from "@/stores/preferences-context";
@@ -75,6 +75,8 @@ export function UserTable(props: {
   onRoleChange: (userId: string, role: Role) => Promise<void>;
   onUserClick?: (user: User) => void;
   onParentClick?: (user: User) => void;
+  /** The detail page's "Düzenle" (profile edit), offered in the row menu when given. */
+  onEditClick?: (user: User) => void;
   title?: string;
   description?: string;
   actions?: JSX.Element;
@@ -139,6 +141,9 @@ export function UserTable(props: {
               icon: <IconEye class="h-4 w-4" />,
               onSelect: () => props.onUserClick?.(cell.row.original),
             },
+            ...(props.onEditClick
+              ? [{ label: t("common.edit"), icon: <IconEdit class="h-4 w-4" />, onSelect: () => props.onEditClick?.(cell.row.original) }]
+              : []),
             {
               label: t("profile.viewProfile"),
               icon: <IconExternalLink class="h-4 w-4" />,

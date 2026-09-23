@@ -207,6 +207,7 @@ const coursesRoute = createRoute({
     // List state (see src/lib/url-state.ts); declared so validation keeps it.
     q: typeof search.q === "string" || typeof search.q === "number" ? String(search.q) : undefined,
     page: typeof search.page === "number" && search.page > 1 ? search.page : undefined,
+    sort: typeof search.sort === "string" ? search.sort : undefined,
     taught: search.taught === "taught" || search.taught === "untaught" ? search.taught : undefined,
   }),
   component: CoursesPage,

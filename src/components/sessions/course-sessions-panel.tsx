@@ -16,7 +16,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { DetailField } from "@/components/ui/detail-field";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { IconClipboardCheck, IconEdit, IconEye, IconTrash } from "@/components/ui/icons";
+import { IconClipboardCheck, IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -275,6 +275,11 @@ export function CourseSessionsPanel(props: {
           pageSize={10}
           empty={t("sessions.empty")}
           onRowClick={setDetailSession}
+          actions={props.canManage ? (
+            <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
+              <IconPlus class="h-4 w-4" />{t("sessions.add")}
+            </Button>
+          ) : undefined}
         />
       </Suspense>
 
@@ -416,6 +421,7 @@ export function CourseSessionsPanel(props: {
           try {
             await deleteSessionById(session.id);
             if (selectedSession()?.id === session.id) setSelectedSession(null);
+            if (detailSession()?.id === session.id) setDetailSession(null);
             await refetch();
             setFlash(t("common.deleted"));
           } catch (err) {

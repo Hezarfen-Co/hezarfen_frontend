@@ -16,6 +16,7 @@ vi.mock("@tanstack/solid-router", () => ({
   Link: (props: { to: string; children: JSX.Element; class?: string }) => <a href={props.to} class={props.class}>{props.children}</a>,
   Navigate: () => null,
   useNavigate: () => navigate,
+  useLocation: () => () => ({ pathname: "/management/classes", search: {}, searchStr: "", hash: "" }),
 }));
 vi.mock("@/stores/auth-context", () => ({
   useAuth: () => ({
