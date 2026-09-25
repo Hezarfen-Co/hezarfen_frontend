@@ -60,6 +60,7 @@ const AdminUsersPage = lazyRoute(() => import("@/pages/admin-users-page"));
 const AdminUserDetailPage = lazyRoute(() => import("@/pages/admin-user-detail-page"));
 const SettingsPage = lazyRoute(() => import("@/pages/settings-page"));
 const TermsPage = lazyRoute(() => import("@/pages/terms-page"));
+const HolidaysPage = lazyRoute(() => import("@/pages/holidays-page"));
 const GuidePage = lazyRoute(() => import("@/pages/guide-page"));
 const MyStudentsPage = lazyRoute(() => import("@/pages/my-students-page"));
 const QuestionsPage = lazyRoute(() => import("@/pages/questions-page"));
@@ -327,6 +328,12 @@ const termsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/management/terms",
   component: TermsPage,
+});
+
+const holidaysRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/management/holidays",
+  component: HolidaysPage,
 });
 
 const academicYearsRoute = createRoute({
@@ -629,6 +636,7 @@ const routeTree = rootRoute.addChildren([
   classesRoute,
   classDetailRoute,
   termsRoute,
+  holidaysRoute,
   academicYearsRoute,
   adminUsersRoute,
   adminUserDetailRoute,

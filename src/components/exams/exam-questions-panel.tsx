@@ -4,6 +4,7 @@ import { deleteExamChoiceImage } from "@/api/exams";
 import { deleteExamQuestionImage } from "@/api/exams";
 import { deleteExamQuestionById } from "@/api/exams";
 import { getCourseSubjects } from "@/api/courses";
+import { getInstanceSubjects } from "@/api/instances";
 import { getExamQuestionImageBlob } from "@/api/exams";
 import { getExamQuestions } from "@/api/exams";
 import { postExamQuestionFromBank } from "@/api/exams";
@@ -40,6 +41,12 @@ export function ExamQuestionsPanel(props: {
   examId: string;
   /** The exam's catalog course; null until the instance behind the exam resolves. */
   courseId: string | null;
+  /**
+   * The exam's instance. A question's subject must sit in the instance's
+   * resolved subject set (the offering's, or the section's own override), so
+   * the picker offers that set; the catalog list only names older questions.
+   */
+  instanceId?: string | null;
   readOnly?: boolean;
   embedded?: boolean;
   createOpen?: boolean;
@@ -53,7 +60,7 @@ export function ExamQuestionsPanel(props: {
   // Solid only skips a fetch on null/undefined/false — an empty string would
   // still ask for `/courses//subjects`. A subject list that cannot load only
   // costs the name lookup (ids stay readable), so it must not throw into the page.
-  const [subjects] = createResource(
+  const [catalogSubjects] = createResource(
     () => props.courseId || null,
     async (courseId) => {
       try {
@@ -62,6 +69,22 @@ export function ExamQuestionsPanel(props: {
         return [];
       }
     },
+  );
+  const [sectionSubjects] = createResource(
+    () => props.instanceId || null,
+    async (instanceId) => {
+      try {
+        return (await getInstanceSubjects(instanceId)).subjects;
+      } catch {
+        return null;
+      }
+    },
+  );
+  // What a new or edited question may pick: the section's resolved set once it
+  // loads, the catalog list when no instance is known.
+  const subjects = Object.assign(
+    () => (props.instanceId ? sectionSubjects() ?? catalogSubjects() : catalogSubjects()),
+    { get loading() { return catalogSubjects.loading || sectionSubjects.loading; } },
   );
   const [questions, { refetch }] = createResource(() => props.examId, async (examId) => {
     try {
@@ -102,7 +125,7 @@ export function ExamQuestionsPanel(props: {
   // has not been saved to it, so it must not offer "save another copy".
   const isSavedToBank = (question: ExamQuestion) => Boolean(question.banked_as) || bankedIds().includes(question.id);
   const isFromBank = (question: ExamQuestion) => Boolean(question.from_bank);
-  const subjectName = (subjectId: string) => subjects()?.find((subject) => subject.id === subjectId)?.name ?? subjectId;
+  const subjectName = (subjectId: string) => catalogSubjects()?.find((subject) => subject.id === subjectId)?.name ?? subjectId;
   const totalPages = createMemo(() => Math.max(1, Math.ceil(questionList().length / QUESTION_PAGE_SIZE)));
   const safePage = createMemo(() => Math.min(page(), totalPages() - 1));
   const pageItems = createMemo(() => {

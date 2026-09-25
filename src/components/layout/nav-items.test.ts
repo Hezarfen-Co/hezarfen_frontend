@@ -35,7 +35,7 @@ test("admin's sidebar splits into short labelled sections with the soon shelf la
     })),
   ).toEqual([
     { id: "ai", items: ["ai-studio", "ai-study", "ai-insights", "ai-celebi"] },
-    { id: "school", items: ["students-roster", "teachers-roster", "class-groups", "academic-years", "terms", "schedule"] },
+    { id: "school", items: ["students-roster", "teachers-roster", "class-groups", "academic-years", "terms", "holidays", "schedule"] },
     { id: "teaching", items: ["courses", "homework", "exams", "question-bank", "questions", "notes", "whiteboards"] },
     { id: "tracking", items: ["student-attendance", "student-marks", "student-pomodoros"] },
     { id: "services", items: ["events", "appointments", "school-meals"] },

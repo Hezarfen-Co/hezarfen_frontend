@@ -3,7 +3,8 @@ import { createResource } from "@/lib/create-resource";
 import { useLocation, useNavigate, useParams } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getClassById } from "@/api/classes";
-import { getCourseById } from "@/api/courses";
+import { getCourseById, getCourseSubjects } from "@/api/courses";
+import { getLimits } from "@/api/limits";
 import {
   deleteInstanceEnrollmentByUserId,
   getInstanceById,
@@ -15,7 +16,7 @@ import {
 } from "@/api/instances";
 import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
-import type { Enrollment, Exam } from "@/api/client";
+import type { Enrollment, Exam, MaterializeReport } from "@/api/client";
 import { patchExamById } from "@/api/exams";
 import { ExamLink } from "@/components/exams/exam-link";
 import { ExamForm, type ExamFormValues } from "@/components/exams/exam-form";
@@ -23,6 +24,8 @@ import { ExamQuestionsPanel } from "@/components/exams/exam-questions-panel";
 import { CourseTeachersPanel } from "@/components/courses/course-teachers-panel";
 import { CourseHomeworkPanel } from "@/components/homework/course-homework-panel";
 import { CourseSessionsPanel } from "@/components/sessions/course-sessions-panel";
+import { InstanceSettingsPanel } from "@/components/instances/instance-settings-panel";
+import { InstanceWeeklyPlanPanel } from "@/components/instances/instance-weekly-plan-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
@@ -31,7 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
-import { IconAlert, IconCalendarDays, IconExam, IconHomework, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
+import { IconAlert, IconCalendarDays, IconClock, IconExam, IconHomework, IconPlus, IconSchool, IconSettings, IconTrash, IconUsers } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -91,8 +94,9 @@ function InstanceDetailContent() {
       ...(tabOn.exams() ? ["exams"] : []),
       ...(tabOn.homework() ? ["homework"] : []),
       ...(tabOn.sessions() ? ["sessions"] : []),
+      "plan",
       "teachers",
-      ...(canManage() ? ["students"] : []),
+      ...(canManage() ? ["students", "settings"] : []),
     ];
     return tabs.includes(requestedTab()) ? requestedTab() : tabs[0];
   };
@@ -100,6 +104,14 @@ function InstanceDetailContent() {
   const [course] = createResource(() => instance()?.course ?? null, (courseId) => getCourseById(courseId));
   const [klass] = createResource(() => instance()?.class ?? null, (classId) => getClassById(classId).catch(() => null));
   const [settings] = createResource(() => getSettings());
+  const [limits] = createResource(() => (canManage() ? true : null), () => getLimits());
+  // Only the settings tab edits the topic set, so only it loads the catalog's.
+  const [courseSubjects] = createResource(
+    () => (canManage() && tab() === "settings" ? instance()?.course ?? null : null),
+    async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
+  );
+  // The section's resolved weight map, in the shape examWeight() reads.
+  const sectionWeights = () => instance()?.exam_weights.map((entry) => ({ name: entry.kind, weight: entry.weight })) ?? settings()?.exam_kinds;
 
   // Manager+, an assigned teacher, or the şube's homeroom teacher may run it.
   const canManage = () => {
@@ -147,6 +159,10 @@ function InstanceDetailContent() {
   const [savingPolicy, setSavingPolicy] = createSignal(false);
   const [karneConfirm, setKarneConfirm] = createSignal<boolean | null>(null);
   const [policySaved, setPolicySaved] = createSignal<"dersSaati" | "karne" | null>(null);
+  // A header edit sets the section's own override without refetching the
+  // instance; the settings tab reads these so its badges stay truthful.
+  const [dersSaatiOwn, setDersSaatiOwn] = createSignal(false);
+  const [karneOwn, setKarneOwn] = createSignal(false);
   let policySavedTimer: number | undefined;
   onCleanup(() => window.clearTimeout(policySavedTimer));
   const flashPolicySaved = (which: "dersSaati" | "karne") => {
@@ -160,6 +176,8 @@ function InstanceDetailContent() {
     setCountsTowardKarne(i.counts_toward_karne);
     setDersSaati(String(i.ders_saati));
     setSavedDersSaati(i.ders_saati);
+    setDersSaatiOwn(i.ders_saati_overridden);
+    setKarneOwn(i.counts_toward_karne_overridden);
   });
   const dersSaatiDirty = () => dersSaati().trim() !== String(savedDersSaati() ?? "");
 
@@ -169,6 +187,7 @@ function InstanceDetailContent() {
     setSavingPolicy(true);
     try {
       await patchInstanceById(id(), { counts_toward_karne: next });
+      setKarneOwn(true);
       flashPolicySaved("karne");
     } catch (err) {
       setCountsTowardKarne(!next);
@@ -193,6 +212,7 @@ function InstanceDetailContent() {
       await patchInstanceById(id(), { ders_saati: value });
       setSavedDersSaati(value);
       setDersSaati(String(value));
+      setDersSaatiOwn(true);
       flashPolicySaved("dersSaati");
     } catch (err) {
       setError(formatApiError(err));
@@ -279,7 +299,7 @@ function InstanceDetailContent() {
       cell: (cell) => (
         <Badge variant="outline" class="rounded-full capitalize">
           {examKindLabel(String(cell.row.original.kind), t)}
-          <Show when={examWeight(cell.row.original, settings()?.exam_kinds)}>
+          <Show when={examWeight(cell.row.original, sectionWeights())}>
             {(weight) => <span class="ml-1 text-text-subtle">({t("courses.weight")}: {weight()})</span>}
           </Show>
         </Badge>
@@ -324,8 +344,8 @@ function InstanceDetailContent() {
                 ]}
               />
               <PageHeader
-                title={`${course.latest?.title ?? ""} — ${klass.latest?.name ?? ""}`.replace(/^ — | — $/, "")}
-                description={t("instances.selectSectionHelp")}
+                title={`${inst().title} — ${klass.latest?.name ?? ""}`.replace(/^ — | — $/, "")}
+                description={inst().description || t("instances.selectSectionHelp")}
                 class="border-border-line"
               />
               <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -442,7 +462,7 @@ function InstanceDetailContent() {
               onOpenChange={(open) => !open && setKarneConfirm(null)}
               title={t("instances.karneConfirmTitle")}
               description={karneConfirm() ? t("instances.karneOnHint") : t("instances.karneOffHint")}
-              summary={`${course.latest?.title ?? ""} — ${klass.latest?.name ?? ""}`.replace(/^ — | — $/, "")}
+              summary={`${inst().title} — ${klass.latest?.name ?? ""}`.replace(/^ — | — $/, "")}
               confirmLabel={karneConfirm() ? t("instances.karneTurnOn") : t("instances.karneTurnOff")}
               onConfirm={async () => {
                 const next = karneConfirm();
@@ -548,7 +568,7 @@ function InstanceDetailContent() {
 
               <Show when={examCreateStep() === "questions" && createdExam()}>
                 <div class="space-y-4">
-                  <ExamQuestionsPanel examId={createdExam()!.id} courseId={inst().course} embedded />
+                  <ExamQuestionsPanel examId={createdExam()!.id} courseId={inst().course} instanceId={inst().id} embedded />
                   <div class="flex justify-end border-t pt-3">
                     <Button type="button" variant="default" onClick={() => setShowExamForm(false)}>
                       {t("exams.finishAndClose")}
@@ -609,7 +629,7 @@ function InstanceDetailContent() {
             </Show>
 
             <Tabs value={tab()} onChange={setTab} class="space-y-4">
-              <TabsList class="flex w-full justify-start overflow-x-auto sm:grid sm:grid-cols-3 xl:grid-cols-5" aria-label={course.latest?.title ?? ""}>
+              <TabsList class="flex w-full justify-start overflow-x-auto sm:grid sm:grid-cols-4 xl:grid-cols-7" aria-label={inst().title}>
                 <Show when={tabOn.exams()}>
                   <TabsTrigger value="exams" class="min-w-0"><IconExam class="h-4 w-4" />{t("courses.exams")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{examCount()}</Badge></TabsTrigger>
                 </Show>
@@ -619,9 +639,11 @@ function InstanceDetailContent() {
                 <Show when={tabOn.sessions()}>
                   <TabsTrigger value="sessions" class="min-w-0"><IconCalendarDays class="h-4 w-4" />{t("sessions.title")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{sessionCount()}</Badge></TabsTrigger>
                 </Show>
+                <TabsTrigger value="plan" class="min-w-0"><IconClock class="h-4 w-4" />{t("weeklyPlan.tab")}</TabsTrigger>
                 <TabsTrigger value="teachers" class="min-w-0"><IconSchool class="h-4 w-4" />{t("courses.teachers")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{inst().teachers.length}</Badge></TabsTrigger>
                 <Show when={canManage()}>
                   <TabsTrigger value="students" class="min-w-0"><IconUsers class="h-4 w-4" />{t("courses.roster")}<Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">{rosterCount()}</Badge></TabsTrigger>
+                  <TabsTrigger value="settings" class="min-w-0"><IconSettings class="h-4 w-4" />{t("instances.settingsTab")}</TabsTrigger>
                 </Show>
               </TabsList>
 
@@ -680,6 +702,21 @@ function InstanceDetailContent() {
               </TabsContent>
               </Show>
 
+              <TabsContent value="plan" class="space-y-3">
+                <InstanceWeeklyPlanPanel
+                  instance={inst()}
+                  canManage={canManage()}
+                  canGenerate={tabOn.sessions()}
+                  limits={limits.latest?.weekly_plan}
+                  maxTopicLen={limits.latest?.course.max_session_topic_len}
+                  onChanged={refetchInstance}
+                  onLessonsCreated={(report: MaterializeReport) => {
+                    setFlash(t("weeklyPlan.appliedSummary", { count: report.created.length }));
+                    setTab("sessions");
+                  }}
+                />
+              </TabsContent>
+
               <TabsContent value="teachers" class="space-y-3">
                 <CourseTeachersPanel
                   instanceId={id()}
@@ -709,6 +746,23 @@ function InstanceDetailContent() {
                       }
                     />
                   </Suspense>
+                </TabsContent>
+                <TabsContent value="settings" class="space-y-3">
+                  <InstanceSettingsPanel
+                    instance={{
+                      ...inst(),
+                      ders_saati: savedDersSaati() ?? inst().ders_saati,
+                      ders_saati_overridden: dersSaatiOwn(),
+                      counts_toward_karne: countsTowardKarne(),
+                      counts_toward_karne_overridden: karneOwn(),
+                    }}
+                    canManage={canManage()}
+                    courseSubjects={courseSubjects() ?? []}
+                    examKinds={(settings()?.exam_kinds ?? []).map((kind) => kind.name)}
+                    maxTitleLen={limits.latest?.course.max_title_len}
+                    maxDescriptionLen={limits.latest?.course.max_description_len}
+                    onChanged={refetchInstance}
+                  />
                 </TabsContent>
               </Show>
             </Tabs>

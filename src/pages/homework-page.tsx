@@ -2,8 +2,7 @@ import { Show, Suspense, createEffect, createMemo, createSignal } from "solid-js
 import { createResource } from "@/lib/create-resource";
 import { useLocation, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
-import { getCourseSubjects } from "@/api/courses";
-import { postInstanceHomework } from "@/api/instances";
+import { getInstanceSubjects, postInstanceHomework } from "@/api/instances";
 import { loadInstanceOptions } from "@/lib/instance-options";
 import { loadInstanceLabels } from "@/lib/instance-labels";
 import { getHomework } from "@/api/homework";
@@ -104,10 +103,10 @@ function HomeworkContent() {
       .map((id) => ({ value: id, label: courseNames()[id] }));
     return [{ value: "all", label: t("common.all") }, ...known.map((row) => ({ value: row.id, label: row.label })), ...extra];
   });
-  const selectedCourse = createMemo(() => manageableCourses().find((row) => row.id === selectedCourseId())?.course ?? null);
+  // A homework subject must sit in the chosen section's resolved subject set.
   const [subjects] = createResource(
-    () => selectedCourse(),
-    async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
+    () => selectedCourseId() || null,
+    async (instanceId) => (instanceId ? (await getInstanceSubjects(instanceId)).subjects : []),
   );
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
   const courseName = (id: string) => courseNames()[id] ?? "—";

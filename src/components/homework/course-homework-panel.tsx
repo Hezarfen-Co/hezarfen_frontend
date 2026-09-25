@@ -3,8 +3,7 @@ import { createResource } from "@/lib/create-resource";
 import { useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteHomeworkById, patchHomeworkById } from "@/api/homework";
-import { getCourseSubjects } from "@/api/courses";
-import { getInstanceHomework, postInstanceHomework } from "@/api/instances";
+import { getInstanceHomework, getInstanceSubjects, postInstanceHomework } from "@/api/instances";
 import { getTime } from "@/api/time";
 import { formatApiError } from "@/api/client";
 import type { Homework, Subject } from "@/api/client";
@@ -71,9 +70,10 @@ export function CourseHomeworkPanel(props: {
     () => (props.active ? props.instanceId : null),
     async (instanceId) => (instanceId ? (await getInstanceHomework(instanceId)).items : []),
   );
+  // A homework subject must sit in the section's resolved subject set.
   const [subjects] = createResource(
-    () => (props.active ? props.courseId : null),
-    async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
+    () => (props.active ? props.instanceId : null),
+    async (instanceId) => (instanceId ? (await getInstanceSubjects(instanceId)).subjects : []),
   );
   const [serverTime] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
   const [editing, setEditing] = createSignal<Homework | null>(null);

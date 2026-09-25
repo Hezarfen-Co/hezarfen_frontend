@@ -709,7 +709,7 @@ function ExamDetailContent() {
                 </TabsContent>
 
                 <TabsContent value="questions" forceMount class="data-shell p-4">
-                  <ExamQuestionsPanel examId={id()} courseId={instance()?.course ?? null} readOnly={isFinished()} embedded />
+                  <ExamQuestionsPanel examId={id()} courseId={instance()?.course ?? null} instanceId={instance()?.id ?? null} readOnly={isFinished()} embedded />
                 </TabsContent>
 
                 {/* No frame around the tab: the table draws its toolbar (search,

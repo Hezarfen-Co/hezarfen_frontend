@@ -527,6 +527,7 @@ function ExamsContent() {
             <ExamQuestionsPanel
               examId={createdExam()!.id}
               courseId={examCourseId(createdExam()!)}
+              instanceId={createdExam()!.class_course}
               embedded
             />
             <div class="flex flex-wrap items-center justify-end gap-3 border-t pt-3">
@@ -610,6 +611,7 @@ function ExamsContent() {
                 <ExamQuestionsPanel
                   examId={exam().id}
                   courseId={examCourseId(exam())}
+                  instanceId={exam().class_course}
                   embedded
                 />
               </Show>

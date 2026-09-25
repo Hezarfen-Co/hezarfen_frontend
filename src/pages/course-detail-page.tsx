@@ -12,6 +12,7 @@ import { formatApiError } from "@/api/client";
 import type { CourseKind, CourseMembership, CourseSectionRef } from "@/api/client";
 import { CourseEditPanel } from "@/components/courses/course-edit-panel";
 import { CourseNotesPanel } from "@/components/courses/course-notes-panel";
+import { CourseOfferingsPanel } from "@/components/courses/course-offerings-panel";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
@@ -21,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconBook, IconEdit, IconNote, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
+import { IconBook, IconEdit, IconListChecks, IconNote, IconPlus, IconSchool, IconTrash, IconUsers } from "@/components/ui/icons";
 import { createFlash } from "@/lib/flash";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -76,6 +77,7 @@ function CourseDetailContent() {
     ...(tabOn.subjects() ? ["subjects"] : []),
     ...(tabOn.sections() ? ["sections"] : []),
     ...(tabOn.notes() ? ["notes"] : []),
+    ...(hasOfferings() ? ["offerings"] : []),
     ...(hasMembers() ? ["members"] : []),
   ];
   // A tab not on offer falls back to the first one that is, without
@@ -103,6 +105,9 @@ function CourseDetailContent() {
   // A club/etüt keeps its own school-wide member list; a regular ders does not
   // — its students come from the şube that attached it.
   const hasMembers = () => course()?.kind === "club" || course()?.kind === "study";
+  // Only a class-delivered ders has a grade axis, so only it has templates;
+  // staff read them, the office edits them.
+  const hasOfferings = () => course()?.kind === "course" && hasMinRole(auth.user()?.role ?? "student", "teacher");
 
   // The şubeler teaching this course ride the catalog row itself, already
   // narrowed to the sections this reader reaches and capped at
@@ -389,6 +394,9 @@ function CourseDetailContent() {
                     <Show when={tabOn.notes()}>
                       <TabsTrigger value="notes" onClick={(event) => { event.preventDefault(); setCourseTab("notes"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconNote class="h-4 w-4" />{t("courseNotes.title")}<Show when={noteCount() != null}><span class="ml-0.5 tabular-nums">{noteCount()}</span></Show></TabsTrigger>
                     </Show>
+                    <Show when={hasOfferings()}>
+                      <TabsTrigger value="offerings" onClick={(event) => { event.preventDefault(); setCourseTab("offerings"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconListChecks class="h-4 w-4" />{t("offerings.tab")}</TabsTrigger>
+                    </Show>
                     <Show when={hasMembers()}>
                       <TabsTrigger value="members" onClick={(event) => { event.preventDefault(); setCourseTab("members"); }} class="min-w-0 rounded-none border-r border-border-line last:border-r-0 data-selected:border-b-2 data-selected:border-b-primary data-selected:bg-surface-base data-selected:shadow-none"><IconUsers class="h-4 w-4" />{t("courses.members")}</TabsTrigger>
                     </Show>
@@ -437,6 +445,12 @@ function CourseDetailContent() {
 
                   <Show when={tabOn.notes()}>
                     <TabsContent value="notes" forceMount class="space-y-3" />
+                  </Show>
+
+                  <Show when={hasOfferings()}>
+                  <TabsContent value="offerings" class="space-y-3">
+                    <CourseOfferingsPanel courseId={id()} courseTitle={c().title} canEdit={isOffice()} active={courseTab() === "offerings"} />
+                  </TabsContent>
                   </Show>
 
                   <Show when={hasMembers()}>
