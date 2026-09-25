@@ -275,7 +275,7 @@ export function ProfileForm(props: {
       </div>
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
       <div class="!mt-auto sticky bottom-0 -mx-5 flex justify-end border-t border-border-hairline bg-surface-base px-5 pb-1 pt-4">
-        <Button type="submit" class="w-full sm:w-auto" disabled={pending()}>{t("common.save")}</Button>
+        <Button type="submit" class="h-10 w-full sm:w-auto" disabled={pending()}>{t("common.save")}</Button>
       </div>
     </form>
   );

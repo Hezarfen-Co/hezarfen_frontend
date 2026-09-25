@@ -1683,6 +1683,9 @@ export const tr: Dict = {
   "admin.username": "Kullanıcı adı",
   "admin.id": "Id",
   "admin.role": "Rol",
+  "admin.personalDetails": "Kişisel bilgiler",
+  "admin.contactDetails": "İletişim bilgileri",
+  "admin.accountAccess": "Hesap ve yetki",
   "admin.directory": "Kayıt listesi",
   "admin.helpTitle": "Rol hiyerarşisi",
   "admin.helpBody":

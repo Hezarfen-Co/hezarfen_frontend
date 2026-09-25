@@ -1687,6 +1687,9 @@ export const en: Dict = {
   "admin.username": "Username",
   "admin.id": "Id",
   "admin.role": "Role",
+  "admin.personalDetails": "Personal details",
+  "admin.contactDetails": "Contact details",
+  "admin.accountAccess": "Account and access",
   "admin.directory": "Directory",
   "admin.helpTitle": "Role hierarchy",
   "admin.helpBody":
