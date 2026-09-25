@@ -1,9 +1,7 @@
 import { Link, Navigate, useLocation } from "@tanstack/solid-router";
 import { type ParentProps, Show } from "solid-js";
 import type { Role } from "@/api/client";
-import { formatApiError } from "@/api/client";
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { PageLoadError } from "@/components/layout/page-load-error";
 import { IconHome, IconLock } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { hasExactRole, hasMinRole, roleInRange } from "@/lib/roles";
@@ -99,7 +97,6 @@ export function RouteGuard(
   }>,
 ) {
   const auth = useAuth();
-  const t = useT();
 
   const allowed = (role: Role) => {
     if (props.exactRole) return hasExactRole(role, props.exactRole);
@@ -109,16 +106,10 @@ export function RouteGuard(
 
   return (
     <Show when={!auth.loading()} fallback={<PageSpinner />}>
-      <Show when={!auth.error()} fallback={
-        <Alert variant="destructive">
-          <div class="space-y-3">
-            <p>{formatApiError(auth.error())}</p>
-            <Button variant="outline" size="sm" onClick={() => void auth.refresh()}>
-              {t("common.tryAgain")}
-            </Button>
-          </div>
-        </Alert>
-      }>
+      {/* A failed session read (often a rate limit) gets the same full-page
+          state as a failed page: the cause, a retry that waits out the
+          limit, and the details — not a bare red box. */}
+      <Show when={!auth.error()} fallback={<PageLoadError error={auth.error()} reset={() => void auth.refresh()} />}>
       <Show when={auth.user()} fallback={<Navigate to="/login" />}>
         {(u) => (
           <Show when={allowed(u().role)} fallback={<AccessDeniedCard exactRole={props.exactRole} userRole={u().role} />}>
