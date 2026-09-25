@@ -3,7 +3,7 @@ import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getUserMarks } from "@/api/reports";
 import { ApiError, formatApiError } from "@/api/client";
-import type { MarksReport, PersonRef } from "@/api/client";
+import type { MarksReport } from "@/api/client";
 import { cn } from "@/lib/cn";
 import { MarksReportView } from "@/components/marks/marks-report-view";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -16,7 +16,6 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { studentDirectoryColumns } from "@/components/users/student-directory-columns";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { matchesSearch } from "@/lib/search-text";
-import { personLabel } from "@/lib/person";
 import { getStudentDirectory, type StudentDirectoryRow } from "@/lib/student-directory";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { formatDecimal } from "@/lib/format";
@@ -38,7 +37,7 @@ const MARKS_FETCH_CAP = 200;
 function StudentMarksContent() {
   const t = useT();
   const { locale } = usePreferences();
-  const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
+  const [viewStudent, setViewStudent] = createSignal<StudentDirectoryRow | null>(null);
   const [error, setError] = createSignal("");
 
   const [list] = createResource(async () => {
@@ -80,7 +79,7 @@ function StudentMarksContent() {
   };
 
   const [report, { refetch: refetchReport }] = createResource(
-    () => viewUser()?.id ?? null,
+    () => viewStudent()?.person.id ?? null,
     async (id) => {
       if (!id) return null;
       try {
@@ -158,7 +157,7 @@ function StudentMarksContent() {
               icon: <IconEye class="h-4 w-4" />,
               onSelect: () => {
                 setError("");
-                setViewUser(cell.row.original.person);
+                setViewStudent(cell.row.original);
               },
             },
           ]}
@@ -170,7 +169,7 @@ function StudentMarksContent() {
   return (
     <div class="space-y-6">
       <section class="space-y-4 p-0">
-        <Show when={error() && !viewUser()}>
+        <Show when={error() && !viewStudent()}>
           <Alert variant="destructive">{error()}</Alert>
         </Show>
 
@@ -190,7 +189,7 @@ function StudentMarksContent() {
             storageKey="student-marks"
             onRowClick={(row) => {
               setError("");
-              setViewUser(row.person);
+              setViewStudent(row);
             }}
           />
         </Show>
@@ -198,15 +197,14 @@ function StudentMarksContent() {
 
       <SidePanel
         size="wide"
-        open={viewUser() != null}
+        open={viewStudent() != null}
         onOpenChange={(open) => {
           if (!open) {
-            setViewUser(null);
+            setViewStudent(null);
             setError("");
           }
         }}
-        title={t("marks.forUser", { user: personLabel(viewUser()) })}
-        description={t("marks.lookup")}
+        title={t("nav.studentMarks")}
       >
         <div class="min-w-0 space-y-3">
           <Show when={error()}>
@@ -215,7 +213,19 @@ function StudentMarksContent() {
           <Show when={report.loading}>
             <p class="text-sm text-muted-foreground">{t("common.loading")}</p>
           </Show>
-          <Show when={report()}>{(r) => <MarksReportView report={r()} compact />}</Show>
+          <Show when={report()?.user === viewStudent()?.person.id && viewStudent()} keyed>
+            {(student) => (
+              <MarksReportView
+                report={report()!}
+                compact
+                identity={{
+                  name: student.person.display_name || student.person.username,
+                  studentNumber: student.person.student_number,
+                  classes: student.classes.map((cls) => cls.name),
+                }}
+              />
+            )}
+          </Show>
         </div>
       </SidePanel>
     </div>

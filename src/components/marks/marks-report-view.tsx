@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { IconExternalLink } from "@/components/ui/icons";
 import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
+import { EmptyInline } from "@/components/ui/empty-inline";
 import { ExamLink } from "@/components/exams/exam-link";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/cn";
 import { examKindLabel } from "@/lib/exam-labels";
@@ -27,7 +29,11 @@ function scoreWidth(mark: number | null): string {
 /** How many sections we bother reading before giving up on naming one. */
 const MAX_SECTIONS = 3;
 
-export function MarksReportView(props: { report: MarksReport; compact?: boolean }) {
+export function MarksReportView(props: {
+  report: MarksReport;
+  compact?: boolean;
+  identity?: { name: string; studentNumber?: string | null; classes: string[] };
+}) {
   const t = useT();
   const { locale } = usePreferences();
   // "68,2 · Bant 3": the grade is the school's band label, and "68,2 / 3"
@@ -125,6 +131,10 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
     const courses = props.report.courses;
     return (id ? courses.find((c) => c.instance === id) : undefined) ?? courses[0];
   });
+  const courseOptions = createMemo(() => props.report.courses.map((block) => ({
+    value: block.instance,
+    label: block.course.title,
+  })));
   const columns = createMemo<ColumnDef<MarkRow>[]>(() => [
     {
       accessorKey: "title",
@@ -166,32 +176,58 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
   ]);
 
   return (
-    <div class="min-w-0 space-y-4">
-      <section class="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-xs sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <div>
-          <p class="text-xs font-medium text-muted-foreground">{t("marks.overall")}</p>
-          <p class={cn("mt-1 font-semibold tabular-nums", compact() ? "text-3xl" : "text-4xl")}>
-            {markWithGrade(props.report.overall_average, props.report.overall_grade)}
-          </p>
-          <div class="mt-3 h-2 max-w-xl overflow-hidden rounded-full bg-muted">
-            <div class="h-full rounded-full bg-primary" style={{ width: scoreWidth(props.report.overall_average) }} />
+    <div class="@container min-w-0 space-y-4">
+      <section class="overflow-hidden rounded-lg border border-border bg-card">
+        <Show when={props.identity}>
+          {(identity) => (
+            <div class="border-b border-border bg-muted/25 px-4 py-4">
+              <p class="truncate text-base font-semibold text-foreground">{identity().name}</p>
+              <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                <For each={identity().classes}>
+                  {(className) => <Badge variant="secondary">{className}</Badge>}
+                </For>
+                <Show when={identity().studentNumber}>
+                  <span class="text-xs tabular-nums text-muted-foreground">
+                    {t("roster.studentNumber")}: {identity().studentNumber}
+                  </span>
+                </Show>
+              </div>
+            </div>
+          )}
+        </Show>
+        <div class="grid gap-4 p-4 @lg:grid-cols-[minmax(0,1fr)_auto] @lg:items-center">
+          <div class="min-w-0">
+            <p class="text-xs font-medium text-muted-foreground">{t("marks.overall")}</p>
+            <div class="mt-1 flex flex-wrap items-center gap-2">
+              <p class={cn("font-semibold tabular-nums leading-none", compact() ? "text-3xl" : "text-4xl")}>
+                {props.report.overall_average == null ? "—" : formatDecimal(props.report.overall_average, locale())}
+              </p>
+              <Show when={props.report.overall_grade}>
+                <Badge variant="outline">{t("marks.bandLabel", { grade: props.report.overall_grade! })}</Badge>
+              </Show>
+            </div>
+            <Show when={props.report.overall_average != null}>
+              <div class="mt-3 h-2 max-w-xl overflow-hidden rounded-full bg-muted">
+                <div class="h-full rounded-full bg-primary" style={{ width: scoreWidth(props.report.overall_average) }} />
+              </div>
+            </Show>
           </div>
+          <dl class="grid grid-cols-2 gap-2 @lg:min-w-56">
+            <div class="rounded-lg bg-muted/45 p-3">
+              <dt class="text-xs text-muted-foreground">{t("nav.courses")}</dt>
+              <dd class="mt-1 text-2xl font-semibold tabular-nums">{props.report.courses.length}</dd>
+            </div>
+            <div class="rounded-lg bg-muted/45 p-3">
+              <dt class="text-xs text-muted-foreground">{t("marks.examCount")}</dt>
+              <dd class="mt-1 text-2xl font-semibold tabular-nums">{resultCount()}</dd>
+            </div>
+          </dl>
         </div>
-        <dl class="grid grid-cols-2 gap-2 sm:min-w-56">
-          <div class="rounded-xl bg-muted/45 p-3">
-            <dt class="text-[11px] text-muted-foreground">{t("nav.courses")}</dt>
-            <dd class="mt-1 text-2xl font-semibold tabular-nums">{props.report.courses.length}</dd>
-          </div>
-          <div class="rounded-xl bg-muted/45 p-3">
-            <dt class="text-[11px] text-muted-foreground">{t("exams.results")}</dt>
-            <dd class="mt-1 text-2xl font-semibold tabular-nums">{resultCount()}</dd>
-          </div>
-        </dl>
       </section>
 
-      <Show when={props.report.courses.length > 0} fallback={<DataTableEmpty class="rounded-lg border border-border bg-card py-10">{t("marks.empty")}</DataTableEmpty>}>
+      <Show when={props.report.courses.length > 0} fallback={<div class="rounded-lg border border-border bg-card p-4"><EmptyInline illustration="exams" title={t("marks.empty")} /></div>}>
         <Tabs value={tab()} onChange={(value) => setTab(value === "byCourse" ? "byCourse" : "general")}>
-          <TabsList class="w-full sm:w-fit">
+          <TabsList class="w-full @lg:w-fit">
             <TabsTrigger value="general" class="min-w-0">{t("marks.tabGeneral")}</TabsTrigger>
             <TabsTrigger value="byCourse" class="min-w-0">{t("marks.tabByCourse")}</TabsTrigger>
           </TabsList>
@@ -210,44 +246,36 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
 
         <Show when={tab() === "byCourse"}>
           <div class="space-y-3">
-            <div class="flex flex-wrap gap-1.5">
-              <For each={props.report.courses}>
-                {(block) => (
-                  <button
-                    type="button"
-                    class={cn(
-                      "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
-                      activeCourse()?.instance === block.instance
-                        ? "border-border bg-surface-base text-foreground shadow-xs"
-                        : "border-transparent text-muted-foreground hover:bg-muted/60",
-                    )}
-                    onClick={() => setActiveInstanceId(block.instance)}
-                  >
-                    {block.course.title}
-                  </button>
-                )}
-              </For>
+            <div class="max-w-md space-y-1.5">
+              <label for="marks-course-select" class="text-xs font-medium text-muted-foreground">{t("marks.selectCourse")}</label>
+              <SearchableSelect
+                id="marks-course-select"
+                value={activeCourse()?.instance ?? ""}
+                onChange={setActiveInstanceId}
+                options={courseOptions()}
+                placeholder={t("marks.selectCourse")}
+              />
             </div>
 
             <Show when={activeCourse()} keyed>
               {(block) => (
                 <div class="rounded-lg border border-border bg-card p-4 shadow-xs">
-                  <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="grid gap-3 @lg:grid-cols-[minmax(0,1fr)_auto] @lg:items-start">
                     <div class="min-w-0">
-                      <Link to="/courses/$id" params={{ id: block.course.id }} class="inline-flex truncate text-sm font-semibold text-primary-text hover:underline">
+                      <Link to="/courses/$id" params={{ id: block.course.id }} class="block truncate text-sm font-semibold text-primary-text hover:underline">
                         {block.course.title}
                       </Link>
                       <Link
                         to="/instances/$id"
                         params={{ id: block.instance }}
-                        class={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-1.5 h-8 max-w-full rounded-lg")}
+                        class="mt-1.5 inline-flex max-w-full items-center gap-1.5 text-xs text-muted-foreground hover:text-primary-text hover:underline"
                         aria-label={openAria()}
                       >
                         <IconExternalLink class="h-3.5 w-3.5 shrink-0" />
                         <span class="truncate">{openLabel()}</span>
                       </Link>
                     </div>
-                    <div class="text-right">
+                    <div class="@lg:text-right">
                       <p class="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t("marks.courseAvg")}</p>
                       <p class="mt-0.5 text-xl font-semibold tabular-nums">{markWithGrade(block.average, block.average_grade)}</p>
                     </div>
@@ -258,7 +286,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
                         class="min-w-0"
                         columns={columns()}
                         data={block.results}
-                        tableClass={cn("w-full", compact() ? "text-xs" : "table-fixed sm:min-w-xl")}
+                        tableClass={cn("w-full min-w-xl", compact() ? "text-xs" : "table-fixed")}
                         enableColumnVisibility={false}
                       />
                     </Show>
