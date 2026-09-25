@@ -104,15 +104,8 @@ function InstanceDetailContent() {
   const [course] = createResource(() => instance()?.course ?? null, (courseId) => getCourseById(courseId));
   const [klass] = createResource(() => instance()?.class ?? null, (classId) => getClassById(classId).catch(() => null));
   const [settings] = createResource(() => getSettings());
-  const [limits] = createResource(() => (canManage() ? true : null), () => getLimits());
-  // Only the settings tab edits the topic set, so only it loads the catalog's.
-  const [courseSubjects] = createResource(
-    () => (canManage() && tab() === "settings" ? instance()?.course ?? null : null),
-    async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
-  );
-  // The section's resolved weight map, in the shape examWeight() reads.
-  const sectionWeights = () => instance()?.exam_weights.map((entry) => ({ name: entry.kind, weight: entry.weight })) ?? settings()?.exam_kinds;
-
+  // Must sit above any createResource that reads it: the source runs now, and a
+  // later const is still in the temporal dead zone.
   // Manager+, an assigned teacher, or the şube's homeroom teacher may run it.
   const canManage = () => {
     const i = instance();
@@ -123,6 +116,14 @@ function InstanceDetailContent() {
     return klass.latest?.teacher?.id === u.id;
   };
   const canStaff = () => hasMinRole(auth.user()?.role ?? "student", "manager");
+  const [limits] = createResource(() => (canManage() ? true : null), () => getLimits());
+  // Only the settings tab edits the topic set, so only it loads the catalog's.
+  const [courseSubjects] = createResource(
+    () => (canManage() && tab() === "settings" ? instance()?.course ?? null : null),
+    async (courseId) => (courseId ? (await getCourseSubjects(courseId)).items : []),
+  );
+  // The section's resolved weight map, in the shape examWeight() reads.
+  const sectionWeights = () => instance()?.exam_weights.map((entry) => ({ name: entry.kind, weight: entry.weight })) ?? settings()?.exam_kinds;
 
   const [exams, { refetch: refetchExams }] = createResource(
     () => (tabOn.exams() ? id() : null),
