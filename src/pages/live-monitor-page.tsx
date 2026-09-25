@@ -211,7 +211,7 @@ function LiveMonitorContent() {
         header: t("attempt.progress"),
         meta: { headerClass: "text-center", cellClass: "min-w-32 tabular-nums" },
         cell: (cell) => (
-          <div class="flex items-center justify-center gap-2">
+          <div class="flex items-center gap-2">
             <span>{cell.row.original.answered}/{questionCount}</span>
             <div class="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
               <div class="h-full rounded-full bg-primary" style={{ width: `${progressPercent(cell.row.original, questionCount)}%` }} />

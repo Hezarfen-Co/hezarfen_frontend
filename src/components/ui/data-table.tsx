@@ -620,11 +620,15 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                         return (
                           <TableCell
                             class={cn(
-                              alignClass[alignOf(cell.column)],
                               leftCellClass(cell.column),
                               dividerClass(cell.column),
                               stickyCellClass(cell.column),
                               cell.column.columnDef.meta?.cellClass,
+                              // After cellClass on purpose: values start at the
+                              // left edge in every table, and a page-level
+                              // text-center left over from an older layout
+                              // must not pull one column into the middle.
+                              alignClass[alignOf(cell.column)],
                               actionColumnClass(cell.column.id),
                             )}
                             style={{ width: columnWidth(cell.column) }}
