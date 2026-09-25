@@ -401,7 +401,7 @@ function ExamDetailContent() {
         {(ex) => (
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewExam()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
-          <div class="mx-auto w-full max-w-[1100px] space-y-5">
+          <div class="w-full space-y-5">
             <section class="data-shell space-y-2 p-4 sm:p-5">
               <Breadcrumbs items={[{ label: t("exams.title"), to: "/exams" }, { label: ex().title }]} />
               <PageHeader

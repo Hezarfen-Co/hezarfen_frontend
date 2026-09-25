@@ -63,7 +63,7 @@ export default function HomeworkDetailPage() {
           fallback={<Show when={homework.error} fallback={<PageSpinner />}><Alert variant="destructive">{formatApiError(homework.error, locale())}</Alert></Show>}
         >
           {(item) => (
-            <div class="mx-auto w-full max-w-[1100px] space-y-5">
+            <div class="w-full space-y-5">
               <section class="data-shell space-y-2 p-4 sm:p-5">
                 <Breadcrumbs items={[{ label: t("homework.title"), to: "/homework" }, { label: item().title }]} />
                 <PageHeader title={item().title} description={item().description || undefined} />

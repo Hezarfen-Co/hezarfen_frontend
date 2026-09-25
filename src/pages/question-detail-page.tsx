@@ -114,7 +114,7 @@ function QuestionDetailContent() {
   };
 
   return (
-    <div class="space-y-6 max-w-4xl mx-auto">
+    <div class="w-full space-y-6">
       <Suspense fallback={<PageSpinner />}>
         <Show when={question()}>
           {(q) => (

@@ -148,7 +148,7 @@ function HolidaysContent() {
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
       <Show when={error() && !panelOpen()}><Alert variant="destructive">{error()}</Alert></Show>
 
-      <section class="data-shell space-y-4 p-0">
+      <section class="space-y-4">
         <Suspense fallback={<DataTableSkeleton columns={5} rows={6} />}>
           <Show when={list.error}>
             <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />

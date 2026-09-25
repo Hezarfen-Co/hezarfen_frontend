@@ -97,7 +97,7 @@ function BankQuestionDetailContent() {
         }
       >
         {(current) => (
-          <div class="mx-auto w-full max-w-[1100px] space-y-6">
+          <div class="w-full space-y-6">
             <Show when={error()}>
               <Alert variant="destructive">{error()}</Alert>
             </Show>

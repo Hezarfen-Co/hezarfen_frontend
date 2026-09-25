@@ -848,7 +848,7 @@ function DashboardContent() {
                 (this week's pomodoro minutes), so it gets the rail slot the
                 design reserves for that kind of card. */}
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-4">
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-3 lg:grid-cols-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-3">
                 <Show when={on("marks")}>
                   <ChartBar
                     title={t("dashboard.progressOverview")}
@@ -858,6 +858,7 @@ function DashboardContent() {
                     itemsPerPage={5}
                   />
                   <ChartLine
+                    class="sm:order-first sm:col-span-2"
                     title={t("dashboard.successTrend")}
                     subtitle={t("dashboard.successTrendMine")}
                     items={myMarkTrend()}
@@ -927,12 +928,14 @@ function DashboardContent() {
               <Show when={on("exams")}>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2">
                 <ChartLine
+                  class="sm:col-span-2"
                   title={t("dashboard.successTrend")}
                   subtitle={t("dashboard.successTrendSchool")}
                   items={examAverageTrend()}
                   maxScale={100}
                 />
                 <ChartBar
+                  class="sm:col-span-2"
                   title={t("dashboard.courseAverages")}
                   subtitle={t("dashboard.courseAveragesSchool")}
                   items={courseAverageBars()}

@@ -264,7 +264,7 @@ function CourseDetailContent() {
         {(c) => (
           <Show when={accessReady()} fallback={<PageSpinner />}>
             <Show when={canViewCourse()} fallback={<Alert variant="destructive">{t("common.accessDenied")}</Alert>}>
-              <div class="mx-auto w-full max-w-[1440px] space-y-4">
+              <div class="w-full space-y-4">
                 <section class="rounded-xl border border-border-line bg-surface-base px-4 py-3 shadow-xs sm:px-5">
                   <Breadcrumbs
                     items={[

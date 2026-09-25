@@ -283,7 +283,7 @@ function ClassDetailContent() {
       }
     >
       {(c) => (
-            <div class="mx-auto w-full max-w-[1440px] space-y-4">
+            <div class="w-full space-y-4">
               <section class="rounded-xl border border-border-line bg-surface-base px-4 py-3 shadow-xs sm:px-5">
                 <Breadcrumbs items={[{ label: t("classGroups.title"), to: "/management/classes" }, { label: c().name }]} />
                 <PageHeader

@@ -103,7 +103,7 @@ function QuestionGenerationContent() {
   };
 
   return (
-    <div class="mx-auto w-full max-w-[1100px] space-y-5">
+    <div class="w-full space-y-5">
       <section class="data-shell p-4 sm:p-5">
         <PageHeader title={t("nav.questionGeneration")} description={t("qgen.subtitle")} />
       </section>

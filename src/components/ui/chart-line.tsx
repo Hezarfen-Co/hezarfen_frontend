@@ -118,9 +118,11 @@ export const ChartLine: Component<ChartLineProps> = (props) => {
               </div>
             </dl>
 
+            {/* The floor only keeps axis text legible on a phone: at 640px it
+                forced a sideways scroller into the card on a 1280px screen. */}
             <div class="overflow-x-auto pb-1">
               <svg
-                class="h-60 min-w-[640px] w-full"
+                class="h-60 min-w-[480px] w-full"
                 viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
                 role="img"
                 aria-label={props.items.map((item) => `${item.label}${item.caption ? ` (${item.caption})` : ""}: ${item.formattedValue ?? item.value}`).join(", ")}
