@@ -34,7 +34,7 @@ describe.skipIf(!isLive)(`learning contract @ ${contractBaseUrl}`, () => {
     // `class` is the row, and `skipped` is the pair report (empty here).
     const created = await json<{ class: { id: string }; skipped: unknown[] }>("/classes", {
       method: "POST",
-      body: { name: tag, grade: "9", year: yearId },
+      body: { name: tag, grade_level: 9, year: yearId },
     });
     classId = created.class.id;
     expect(Array.isArray(created.skipped)).toBe(true);
