@@ -1,11 +1,37 @@
 import { Dialog as DialogPrimitive } from "@kobalte/core/dialog";
 import { createEffect, createSignal, onCleanup, type ParentProps } from "solid-js";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { IconAlert, IconX } from "@/components/ui/icons";
+import { IconAlert, IconMaximize, IconMinimize, IconX } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
 
 let openPanelCount = 0;
+
+/** Width the user dragged or expanded a panel to; one value for every panel. */
+const WIDTH_KEY = "hezarfen.sidePanel.width";
+const MIN_WIDTH = 360;
+/** Room kept free on the left so the page behind still reads as "behind". */
+const PAGE_GUTTER = 64;
+const EXPANDED_WIDTH = 1120;
+
+const maxPanelWidth = () => (typeof window === "undefined" ? EXPANDED_WIDTH : Math.max(MIN_WIDTH, window.innerWidth - PAGE_GUTTER));
+const clampWidth = (value: number) => Math.round(Math.min(Math.max(value, MIN_WIDTH), maxPanelWidth()));
+const readStoredWidth = (): number | null => {
+  try {
+    const value = Number(localStorage.getItem(WIDTH_KEY));
+    return Number.isFinite(value) && value > 0 ? value : null;
+  } catch {
+    return null;
+  }
+};
+const storeWidth = (value: number | null) => {
+  try {
+    if (value == null) localStorage.removeItem(WIDTH_KEY);
+    else localStorage.setItem(WIDTH_KEY, String(value));
+  } catch {
+    // Private mode: the width lasts for this page only.
+  }
+};
 
 export function SidePanel(
   props: ParentProps<{
@@ -71,6 +97,65 @@ export function SidePanel(
     return "max-w-[min(34rem,100vw)]";
   };
 
+  // A user-chosen width, dragged from the left edge or set by the expand
+  // button, overrides the size preset on screens wide enough to have a page
+  // beside the panel. Phones keep the full-screen panel.
+  const [customWidth, setCustomWidth] = createSignal<number | null>(readStoredWidth());
+  const roomyQuery = () =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 640px)") : null;
+  const [roomy, setRoomy] = createSignal(roomyQuery()?.matches ?? false);
+  createEffect(() => {
+    if (!props.open) return;
+    const query = roomyQuery();
+    if (!query) return;
+    const sync = () => setRoomy(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    onCleanup(() => query.removeEventListener("change", sync));
+  });
+  const appliedWidth = () => {
+    const value = customWidth();
+    return roomy() && value != null ? clampWidth(value) : null;
+  };
+  const expanded = () => (appliedWidth() ?? 0) >= clampWidth(EXPANDED_WIDTH) - 8;
+  const setWidth = (value: number | null) => {
+    setCustomWidth(value == null ? null : clampWidth(value));
+    storeWidth(value == null ? null : clampWidth(value));
+  };
+  const toggleExpanded = () => setWidth(expanded() ? null : EXPANDED_WIDTH);
+  const startResize = (event: PointerEvent) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    const handle = event.currentTarget as HTMLElement;
+    try {
+      handle.setPointerCapture(event.pointerId);
+    } catch {
+      // No active pointer to capture (synthetic events); moves still arrive.
+    }
+    const previousCursor = document.body.style.cursor;
+    document.body.style.cursor = "col-resize";
+    const move = (moveEvent: PointerEvent) => setCustomWidth(clampWidth(window.innerWidth - moveEvent.clientX));
+    const stop = () => {
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", stop);
+      handle.removeEventListener("pointercancel", stop);
+      document.body.style.cursor = previousCursor;
+      storeWidth(customWidth());
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", stop);
+    handle.addEventListener("pointercancel", stop);
+  };
+  const resizeByKey = (event: KeyboardEvent) => {
+    const step = event.shiftKey ? 80 : 24;
+    const current = appliedWidth() ?? (event.currentTarget as HTMLElement).parentElement?.getBoundingClientRect().width ?? MIN_WIDTH;
+    if (event.key === "ArrowLeft") setWidth(current + step);
+    else if (event.key === "ArrowRight") setWidth(current - step);
+    else if (event.key === "Home") setWidth(null);
+    else return;
+    event.preventDefault();
+  };
+
   return (
     <>
     <DialogPrimitive open={props.open} onOpenChange={requestOpenChange} modal={false} preventScroll>
@@ -102,8 +187,9 @@ export function SidePanel(
             width(),
             props.class,
           )}
+          style={appliedWidth() != null ? { width: `${appliedWidth()}px`, "max-width": "100vw" } : undefined}
         >
-          <div class="flex shrink-0 items-start justify-between gap-4 border-b border-border-hairline px-5 py-4">
+          <div class="flex shrink-0 items-start justify-between gap-2 border-b border-border-hairline px-5 py-4">
             <div class="min-w-0 flex-1 space-y-1">
               <DialogPrimitive.Title class="truncate text-base font-semibold leading-6 tracking-tight">
                 {props.title}
@@ -114,6 +200,15 @@ export function SidePanel(
                 </DialogPrimitive.Description>
               )}
             </div>
+            <button
+              type="button"
+              aria-label={expanded() ? t("sidePanel.collapse") : t("sidePanel.expand")}
+              title={expanded() ? t("sidePanel.collapse") : t("sidePanel.expand")}
+              class="hidden h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
+              onClick={toggleExpanded}
+            >
+              {expanded() ? <IconMinimize class="h-4 w-4" /> : <IconMaximize class="h-4 w-4" />}
+            </button>
             <DialogPrimitive.CloseButton
               type="button"
               aria-label={t("common.close")}
@@ -134,6 +229,23 @@ export function SidePanel(
             onChange={markTouched}
           >
             {props.children}
+          </div>
+          {/* Drag the left edge to resize; double-click or Home resets. Last in
+              the DOM so opening the panel does not focus it first. */}
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label={t("sidePanel.resize")}
+            aria-valuemin={MIN_WIDTH}
+            aria-valuemax={maxPanelWidth()}
+            aria-valuenow={appliedWidth() ?? undefined}
+            tabIndex={0}
+            class="group/resize absolute inset-y-0 -left-1.5 z-10 hidden w-3 cursor-col-resize touch-none outline-hidden sm:block"
+            onPointerDown={startResize}
+            onDblClick={() => setWidth(null)}
+            onKeyDown={resizeByKey}
+          >
+            <span class="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-transparent transition-colors group-hover/resize:bg-primary/60 group-focus-visible/resize:bg-primary" />
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
