@@ -1,4 +1,5 @@
 import { Show } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import type { JSX } from "solid-js";
 import { Illustration } from "@/components/ui/illustration";
 import { cn } from "@/lib/cn";
@@ -19,7 +20,8 @@ export type EmptyStateKind =
   | "schedule"
   | "whiteboard"
   | "work"
-  | "coming-soon";
+  | "coming-soon"
+  | "error";
 
 const KIND_ILLUSTRATION: Record<EmptyStateKind, IllustrationName> = {
   default: "empty",
@@ -37,11 +39,16 @@ const KIND_ILLUSTRATION: Record<EmptyStateKind, IllustrationName> = {
   whiteboard: "whiteboard",
   work: "work",
   "coming-soon": "coming-soon",
+  error: "server-down",
 };
 
 /** Empty panel with a theme-tinted illustration matching what is missing. */
 export function EmptyState(props: {
   title: string;
+  /** Small line above the title, e.g. the "404" of the not-found page. */
+  eyebrow?: string;
+  /** Render the title as the page's h1 (full-page states that own the page). */
+  pageHeading?: boolean;
   description?: string;
   kind?: EmptyStateKind;
   /** A way out, e.g. "clear search" under a no-results panel. */
@@ -60,7 +67,15 @@ export function EmptyState(props: {
       <Illustration name={KIND_ILLUSTRATION[kind()]} class="h-32 w-48 sm:h-36 sm:w-56" />
 
       <div class="space-y-1.5">
-        <p class="text-lg font-semibold leading-7 tracking-[-0.015em] text-text-strong">{props.title}</p>
+        <Show when={props.eyebrow}>
+          <p class="text-3xl font-semibold tracking-tight text-text-strong">{props.eyebrow}</p>
+        </Show>
+        <Dynamic
+          component={props.pageHeading ? "h1" : "p"}
+          class="text-lg font-semibold leading-7 tracking-[-0.015em] text-text-strong"
+        >
+          {props.title}
+        </Dynamic>
         <Show when={props.description}>
           <p class="mx-auto max-w-[420px] text-sm leading-[21px] text-text-subtle">{props.description}</p>
         </Show>

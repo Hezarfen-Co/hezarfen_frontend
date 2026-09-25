@@ -21,6 +21,7 @@ export type IllustrationName =
   | "payments"
   | "people"
   | "schedule"
+  | "server-down"
   | "whiteboard"
   | "work";
 

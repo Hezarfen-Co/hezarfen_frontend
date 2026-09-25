@@ -26,5 +26,6 @@ Files are kept exactly as downloaded (`https://cdn.undraw.co/illustrations/<slug
 | payments.svg | payments_nbqu |
 | people.svg | group-project_kow1 |
 | schedule.svg | schedule_ry1w |
+| server-down.svg | server-down_lxs9 |
 | whiteboard.svg | blank-canvas_a6x5 |
 | work.svg | time-management_4ss6 |
