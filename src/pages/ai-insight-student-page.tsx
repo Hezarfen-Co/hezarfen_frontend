@@ -16,6 +16,7 @@ import { createFlash } from "@/lib/flash";
 import { loadInsightStudents } from "@/lib/insight-students";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
+import { runReportText } from "@/i18n/insights-run-report";
 import { useAuth } from "@/stores/auth-context";
 import { formatDate } from "@/lib/format";
 import { usePreferences } from "@/stores/preferences-context";
@@ -53,11 +54,24 @@ function AiInsightStudentContent() {
   const [actionError, setActionError] = createSignal("");
   const [flash, setFlash] = createFlash();
 
-  const [students] = createResource(() => role() ?? null, (viewerRole) => loadInsightStudents(viewerRole).catch(() => []));
-  const person = createMemo(() => (students() ?? []).find((student) => student.id === userId()) ?? null);
+  // A failed roster read is kept apart from an empty one: swallowing it into
+  // `[]` told a rate-limited viewer the student was "not in your list" and
+  // put the raw account id where the name goes.
+  const [roster, { refetch: refetchRoster }] = createResource(
+    () => role() ?? null,
+    (viewerRole) => loadInsightStudents(viewerRole).then(
+      (list) => ({ list, error: null as unknown }),
+      (error: unknown) => ({ list: null, error }),
+    ),
+  );
+  const person = createMemo(() => roster()?.list?.find((student) => student.id === userId()) ?? null);
+  const notInList = () => roster()?.list != null && !person();
   const [insight, { refetch }] = createResource(userId, (id) => getInsightByUserId(id));
-  const studentName = () => person() ? personLabel(person()!) : userId();
-  const initials = () => studentName()
+  const studentName = () => {
+    const current = person();
+    return current ? personLabel(current) : null;
+  };
+  const initials = () => (studentName() ?? "")
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
@@ -77,7 +91,7 @@ function AiInsightStudentContent() {
     setActionError("");
     try {
       await postInsightComputeByUserId(userId());
-      setFlash(t("insights.recomputeQueued", { student: current ? personLabel(current) : userId() }));
+      setFlash(current ? t("insights.recomputeQueued", { student: personLabel(current) }) : t("insights.recomputeQueuedUnnamed"));
     } catch (error) {
       setActionError(formatApiError(error));
     } finally {
@@ -86,9 +100,9 @@ function AiInsightStudentContent() {
   };
 
   return (
-    <div class="mx-auto w-full max-w-[1240px] space-y-5">
+    <div class="w-full space-y-5">
       <div class="space-y-2">
-        <Breadcrumbs items={[{ label: t("insights.title"), to: "/ai/insights" }, { label: studentName() }]} />
+        <Breadcrumbs items={[{ label: t("insights.title"), to: "/ai/insights" }, { label: studentName() ?? t("insights.studentAnalysis") }]} />
       </div>
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
@@ -96,7 +110,15 @@ function AiInsightStudentContent() {
       <Show when={actionError()}>
         <Alert variant="destructive">{actionError()}</Alert>
       </Show>
-      <Show when={students() && !person()}>
+      <Show when={roster()?.error}>
+        {(error) => (
+          <ErrorAlert
+            message={runReportText(prefs.locale(), "rosterFailed", { message: formatApiError(error()) })}
+            onRetry={() => void refetchRoster()}
+          />
+        )}
+      </Show>
+      <Show when={notInList()}>
         <Alert variant="warning">{t("insights.notFound")}</Alert>
       </Show>
       <Show when={insight.error}>
@@ -115,7 +137,7 @@ function AiInsightStudentContent() {
                     <div class="min-w-0">
                       <p class="text-xs font-semibold uppercase tracking-[0.14em] text-primary-text">{t("insights.title")}</p>
                       <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <h1 class="truncate text-2xl font-semibold tracking-tight text-text-strong">{studentName()}</h1>
+                        <h1 class="truncate text-2xl font-semibold tracking-tight text-text-strong">{studentName() ?? t("insights.studentAnalysis")}</h1>
                         <Show
                           when={value().summary}
                           fallback={<span class="text-xs text-muted-foreground">{t("insights.noSummary")}</span>}
@@ -131,7 +153,9 @@ function AiInsightStudentContent() {
                           )}
                         </Show>
                       </div>
-                      <p class="mt-0.5 text-sm text-muted-foreground">{t("insights.studentAnalysis")}</p>
+                      <Show when={studentName()}>
+                        <p class="mt-0.5 text-sm text-muted-foreground">{t("insights.studentAnalysis")}</p>
+                      </Show>
                     </div>
                   </div>
                   <div class="flex flex-wrap items-center gap-2">

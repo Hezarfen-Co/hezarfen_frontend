@@ -54,8 +54,15 @@ export function InsightStudentsTable(props: {
   const muted = "text-muted-foreground";
   // The app-wide "18 Eyl 2026" date, not a numeric 18.09.2026.
   const calculatedDate = (value: number | null | undefined) => formatDate(value, locale());
+  // A cell with no value to show wears the same quiet pill as "Analiz yok",
+  // so the empty states read as one kind of thing across the row.
+  const emptyPill = (row: StudentSignal) => (
+    <Badge variant="outline" class={cn("max-w-full rounded-full text-muted-foreground", row.state === "not_loaded" && "animate-pulse")}>
+      <span class="truncate">{row.state === "not_loaded" ? rt("notLoaded") : t("insights.noData")}</span>
+    </Badge>
+  );
 
-  // Widths sum to ~1095px with the action column, so the grid fits a 1440px
+  // Widths sum to ~1105px with the action column, so the grid fits a 1440px
   // screen beside the sidebar; at the 120px default every column got, the
   // last one slid under the sticky actions and the table asked to scroll.
   const columns = createMemo<ColumnDef<StudentSignal>[]>(() => [
@@ -73,24 +80,30 @@ export function InsightStudentsTable(props: {
     },
     {
       id: "status",
-      size: 108,
+      size: 118,
       accessorFn: (row) => row.state,
       header: rt("status" as never),
       meta: { align: "center" },
       cell: (cell) => {
         const row = cell.row.original;
+        // The badge is one 20px line: the full "no analysis computed" sentence
+        // wrapped inside it and spilled over the rows above and below, so the
+        // cell shows a short label and the sentence rides in the tooltip.
+        const label = row.state === "error"
+          ? t("insights.readFailed")
+          : row.state === "no_summary" ? t("insights.noAnalysis") : studentStatusText(locale(), row);
         return (
           <Badge
             variant="outline"
             class={cn(
-              "rounded-full",
+              "max-w-full rounded-full",
               row.state === "ok" && "border-success/30 bg-success/10 text-success-text",
               row.state === "error" && "border-destructive/30 bg-destructive/10 text-destructive-text",
               row.state === "not_loaded" && "animate-pulse",
             )}
-            title={row.error ?? undefined}
+            title={row.error ?? (row.state === "no_summary" ? studentStatusText(locale(), row) : undefined)}
           >
-            {row.state === "error" ? t("insights.readFailed") : studentStatusText(locale(), row)}
+            <span class="truncate">{label}</span>
           </Badge>
         );
       },
@@ -121,7 +134,9 @@ export function InsightStudentsTable(props: {
       accessorFn: (row) => row.marks.average ?? -1,
       header: rt("marksAverage"),
       meta: { align: "center" },
-      cell: (cell) => <span class={cn("tabular-nums", !loaded(cell.row.original) && muted)}>{studentMarksText(locale(), cell.row.original)}</span>,
+      cell: (cell) => loaded(cell.row.original)
+        ? <span class="tabular-nums">{studentMarksText(locale(), cell.row.original)}</span>
+        : emptyPill(cell.row.original),
     },
     {
       id: "attendance",
@@ -131,8 +146,9 @@ export function InsightStudentsTable(props: {
       meta: { align: "center" },
       cell: (cell) => {
         const row = cell.row.original;
-        const low = loaded(row) && row.attendance.observed > 0 && (row.attendance.rate ?? 1) < 0.85;
-        return <span class={cn("tabular-nums", low && "font-semibold text-warning-text", !loaded(row) && muted)}>{studentAttendanceText(locale(), row)}</span>;
+        if (!loaded(row) || row.attendance.observed === 0) return emptyPill(row);
+        const low = (row.attendance.rate ?? 1) < 0.85;
+        return <span class={cn("tabular-nums", low && "font-semibold text-warning-text")}>{studentAttendanceText(locale(), row)}</span>;
       },
     },
     {
