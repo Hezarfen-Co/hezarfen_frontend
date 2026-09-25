@@ -1,8 +1,46 @@
 import { describe, expect, it, test } from "vitest";
 import type { SchoolSettings } from "@/api/client";
-import { dirtySettingsPatch, formatTry, mealCutoffAt, minuteToUtcTime, nextCourseWork, utcTimeToMinute } from "./meals";
+import {
+  addDaysIso,
+  dirtySettingsPatch,
+  formatMealDay,
+  formatTry,
+  groupMenusByDay,
+  localIsoDate,
+  mealCutoffAt,
+  minuteToUtcTime,
+  nextCourseWork,
+  utcTimeToMinute,
+  weekStartIso,
+} from "./meals";
 
 describe("meal helpers", () => {
+  it("walks calendar weeks from Monday", () => {
+    expect(weekStartIso("2026-09-25")).toBe("2026-09-21");
+    expect(weekStartIso("2026-09-21")).toBe("2026-09-21");
+    expect(weekStartIso("2026-09-27")).toBe("2026-09-21");
+    expect(addDaysIso("2026-09-28", 7)).toBe("2026-10-05");
+    expect(addDaysIso("2026-03-01", -1)).toBe("2026-02-28");
+    expect(localIsoDate(new Date(2026, 0, 5, 23, 30))).toBe("2026-01-05");
+  });
+
+  it("groups menus per day in the school's slot order", () => {
+    const menus = [
+      { date: "2026-10-21", slot: "lunch" },
+      { date: "2026-10-20", slot: "snack" },
+      { date: "2026-10-21", slot: "breakfast" },
+      { date: "2026-10-20", slot: "custom" },
+    ];
+    expect(groupMenusByDay(menus, ["breakfast", "lunch", "snack"])).toEqual([
+      { date: "2026-10-20", menus: [{ date: "2026-10-20", slot: "snack" }, { date: "2026-10-20", slot: "custom" }] },
+      { date: "2026-10-21", menus: [{ date: "2026-10-21", slot: "breakfast" }, { date: "2026-10-21", slot: "lunch" }] },
+    ]);
+  });
+
+  it("formats a menu date without shifting it", () => {
+    expect(formatMealDay("2026-10-21", "en-US")).toBe("Wednesday, October 21");
+  });
+
   it("formats minor units as TRY", () => {
     expect(formatTry(4550, "tr-TR")).toContain("45,50");
   });
