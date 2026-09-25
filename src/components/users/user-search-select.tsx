@@ -58,6 +58,8 @@ export function UserSearchSelect(props: {
   const [selected, setSelected] = createSignal<PersonRef | null>(null);
   const [loading, setLoading] = createSignal(false);
   const [open, setOpen] = createSignal(false);
+  let inputRef: HTMLInputElement | undefined;
+  let clearingForOpen = false;
 
   const options = createMemo(() => {
     const excluded = new Set(props.excludeIds ?? []);
@@ -151,12 +153,26 @@ export function UserSearchSelect(props: {
         });
     }, q.length === 0 ? 0 : 300);
   };
-  // Opening the list (focus, the chevron) with nothing typed yet loads the
-  // suggestions once; typing narrows them through the search.
+  // Opening the list starts a fresh search. Kobalte owns the displayed input
+  // value, so clear it through an input event while guarding the saved pick:
+  // an actual user erase still clears an optional selection below.
   const openSuggestions = () => {
     if (!canSearch() || props.disabled) return;
+    const needsReset = query().trim() !== "" || !!inputRef?.value;
     setOpen(true);
-    if (query().trim() === "" && users().length === 0 && !loading()) runSearch("");
+    if (needsReset) {
+      setQuery("");
+      setUsers([]);
+      if (inputRef) {
+        clearingForOpen = true;
+        inputRef.value = "";
+        inputRef.dispatchEvent(new Event("input", { bubbles: true }));
+        clearingForOpen = false;
+      }
+      runSearch("");
+    } else if (users().length === 0 && !loading()) {
+      runSearch("");
+    }
   };
   onCleanup(() => {
     controller?.abort();
@@ -186,7 +202,11 @@ export function UserSearchSelect(props: {
         // loading, then results pop in.
         allowsEmptyCollection
         open={open()}
-        onOpenChange={(nextOpen) => (nextOpen ? openSuggestions() : setOpen(false))}
+        onOpenChange={(nextOpen, triggerMode) => {
+          if (!nextOpen) setOpen(false);
+          else if (triggerMode === "input") setOpen(true);
+          else openSuggestions();
+        }}
         value={selected()}
         onChange={(user) => {
           setSelected(user);
@@ -194,6 +214,7 @@ export function UserSearchSelect(props: {
           props.onSelect?.(user ?? null);
         }}
         onInputChange={(value) => {
+          if (clearingForOpen) return;
           // Kobalte echoes the picked person's label into the input; that is
           // not a search, and treating it as one drops the preset person from
           // the options, which makes Kobalte clear the field again.
@@ -232,6 +253,7 @@ export function UserSearchSelect(props: {
         <ComboboxControl>
           <ComboboxInput
             id={props.id}
+            ref={inputRef}
             autocomplete="off"
             // Typing into a field that already names someone used to append
             // to the name ("Ayşe Yılmaz (ayse.yilmaz)Mehmet") and find no one,
@@ -240,6 +262,7 @@ export function UserSearchSelect(props: {
               (event.currentTarget as HTMLInputElement).select();
               openSuggestions();
             }}
+            onClick={openSuggestions}
           />
           <ComboboxTrigger />
         </ComboboxControl>

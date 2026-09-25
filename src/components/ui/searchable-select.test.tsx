@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
 import { afterEach, expect, it, vi } from "vitest";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { PreferencesProvider } from "@/stores/preferences-context";
@@ -125,4 +126,33 @@ it("says so when the search matches nothing", async () => {
   fireEvent.input(input, { target: { value: "fizik" } });
 
   await waitFor(() => expect(screen.getByText("No results.")).toBeTruthy());
+});
+
+it("clears the search on reopening while keeping the selected option", async () => {
+  const [value, setValue] = createSignal("m");
+  const onChange = vi.fn((next: string) => setValue(next));
+  render(() => (
+    <PreferencesProvider>
+      <SearchableSelect value={value()} onChange={onChange} options={OPTIONS} placeholder="Seç" />
+    </PreferencesProvider>
+  ));
+  const input = screen.getByRole("combobox") as HTMLInputElement;
+
+  expect(input.value).toBe("9-A · Matematik");
+  fireEvent.click(input);
+  expect(input.value).toBe("");
+  await screen.findByRole("option", { name: "10-B · Türkçe" });
+
+  fireEvent.input(input, { target: { value: "turkce" } });
+  await waitFor(() => expect(screen.queryByRole("option", { name: "9-A · Matematik" })).toBeNull());
+  fireEvent.click(screen.getByRole("option", { name: "10-B · Türkçe" }));
+  await waitFor(() => expect(value()).toBe("t"));
+  await waitFor(() => expect(input.value).toBe("10-B · Türkçe"));
+
+  fireEvent.click(input);
+  expect(input.value).toBe("");
+  await waitFor(() => expect(screen.getByRole("option", { name: "9-A · Matematik" })).toBeTruthy());
+  expect(screen.getByRole("option", { name: "10-B · Türkçe" })).toBeTruthy();
+  expect(value()).toBe("t");
+  expect(onChange).toHaveBeenCalledTimes(1);
 });

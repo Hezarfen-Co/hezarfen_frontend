@@ -34,8 +34,17 @@ export function SearchableSelect(props: {
   const t = useT();
   const [query, setQuery] = createSignal("");
   const [open, setOpen] = createSignal(false);
+  let inputRef: HTMLInputElement | undefined;
   const selected = createMemo(() => props.options.find((o) => o.value === props.value) ?? null);
   const filter = (option: SearchableOption, input: string) => matchesSearch(input, option.label);
+  const changeOpen = (nextOpen: boolean, fromTyping = false) => {
+    setOpen(nextOpen);
+    if (!nextOpen || fromTyping || !inputRef) return;
+    // Kobalte owns the displayed input value. An input event clears its
+    // internal filter as well as the field, without changing the selection.
+    inputRef.value = "";
+    inputRef.dispatchEvent(new Event("input", { bubbles: true }));
+  };
   // Kobalte renders nothing when its filter keeps no option, which reads as a
   // broken dropdown; this says the search came up empty instead.
   const empty = createMemo(() => {
@@ -54,7 +63,7 @@ export function SearchableSelect(props: {
       // picking an option leaves it closed. Everything else (typing, ArrowDown,
       // Escape, the chevron, click-outside) still drives this same signal.
       open={open()}
-      onOpenChange={setOpen}
+      onOpenChange={(nextOpen, triggerMode) => changeOpen(nextOpen, triggerMode === "input")}
       value={selected()}
       onChange={(option) => props.onChange(option?.value ?? "")}
       onInputChange={setQuery}
@@ -78,10 +87,11 @@ export function SearchableSelect(props: {
       <ComboboxControl class={props.class}>
         <ComboboxInput
           id={props.id}
+          ref={inputRef}
           // The field is the affordance: a plain click toggles the list. The
           // chevron is a sibling button, so its own pointerdown toggle never
           // reaches this handler.
-          onClick={() => setOpen((isOpen) => !isOpen)}
+          onClick={() => changeOpen(!open())}
         />
         <ComboboxTrigger />
       </ComboboxControl>
