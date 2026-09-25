@@ -1,10 +1,11 @@
-import { For, Show, Suspense, createMemo, createSignal } from "solid-js";
+import { Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getLimits } from "@/api/limits";
 import { getMealMenus, postMealMenu } from "@/api/meals";
 import { getSettings } from "@/api/settings";
 import { formatApiError } from "@/api/client";
 import { MealDayGroup } from "@/components/meals/meal-day-group";
+import { MealDayPicker } from "@/components/meals/meal-day-picker";
 import { MealPublishPanel, type MealPublishInput } from "@/components/meals/meal-publish-panel";
 import { MealWeekNav } from "@/components/meals/meal-week-nav";
 import { DataSection } from "@/components/ui/data-section";
@@ -38,6 +39,7 @@ function MealsContent() {
   const today = localIsoDate();
   const thisWeek = weekStartIso(today);
   const [weekStart, setWeekStart] = createSignal(thisWeek);
+  const [selectedDate, setSelectedDate] = createSignal(today);
   const [slot, setSlot] = createSignal("all");
   const [showCreate, setShowCreate] = createSignal(false);
   const [flash, setFlash] = createFlash();
@@ -61,6 +63,12 @@ function MealsContent() {
     );
     return groupMenusByDay(items, slots().map((item) => item.name));
   });
+  const selectedMenus = createMemo(() => days().find((day) => day.date === selectedDate())?.menus ?? []);
+
+  const changeWeek = (start: string, chosenDate?: string) => {
+    setWeekStart(start);
+    setSelectedDate(chosenDate ?? (start === thisWeek ? today : start));
+  };
 
   const publish = async (input: MealPublishInput) => {
     await postMealMenu(input);
@@ -100,19 +108,26 @@ function MealsContent() {
           locale={intlLocale()}
           slot={slot()}
           slots={slots()}
-          onWeekChange={setWeekStart}
+          onWeekChange={changeWeek}
           onSlotChange={setSlot}
         />
         <Suspense fallback={<PageSpinner />}>
           <Show when={menus.error}><ErrorAlert message={formatApiError(menus.error)} onRetry={() => void refetch()} /></Show>
-          <Show
-            when={days().length > 0}
-            fallback={<Show when={!menus.error}><EmptyState kind="meals" title={t("meals.emptyWeek")} description={t("meals.emptyWeekHint")} /></Show>}
-          >
+          <Show when={!menus.error}>
             <div class="space-y-5" aria-busy={menus.loading}>
-              <For each={days()}>
-                {(day) => <MealDayGroup date={day.date} menus={day.menus} locale={intlLocale()} isToday={day.date === today} />}
-              </For>
+              <MealDayPicker
+                weekStart={weekStart()}
+                selectedDate={selectedDate()}
+                locale={intlLocale()}
+                days={days()}
+                onSelect={setSelectedDate}
+              />
+              <Show
+                when={days().length > 0}
+                fallback={<EmptyState kind="meals" title={t("meals.emptyWeek")} description={t("meals.emptyWeekHint")} />}
+              >
+                <MealDayGroup date={selectedDate()} menus={selectedMenus()} locale={intlLocale()} isToday={selectedDate() === today} />
+              </Show>
             </div>
           </Show>
         </Suspense>

@@ -1,5 +1,6 @@
 import { Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
 import { createResponsivePageSize } from "@/lib/create-page-size";
+import { loadAllPages } from "@/lib/capped-list";
 import { createResource } from "@/lib/create-resource";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
@@ -27,6 +28,7 @@ import { createDebouncedSignal } from "@/lib/create-debounced-signal";
 import { createFlash } from "@/lib/flash";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
+import { matchesSearch } from "@/lib/search-text";
 import { createUrlEnum, readPageIndex, readString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -53,11 +55,9 @@ function CoursesContent() {
   const [showForm, setShowForm] = createSignal(routeSearch().action === "new");
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
-  // Filters and paging are server-side now: the kind tab is the `kind` param,
-  // the search box the `q` param, the sections dropdown the `taught` param,
-  // and the envelope's total is already the filtered one. `?kind=` tracks the
-  // tab; `?q=`, `?page=` and `?taught=` restore the list on a reload (Back
-  // from a course lands where the list was left).
+  // URL parameters restore the kind, search, taught filter and page on reload.
+  // Deployed backends can ignore list filters, so filtered results are checked
+  // locally after fetching the complete list.
   const [taughtFilter, setTaughtFilter] = createUrlEnum("taught", ["all", "taught", "untaught"] as const, "all");
   const taughtParam = () => (taughtFilter() === "taught" ? true : taughtFilter() === "untaught" ? false : undefined);
   const pageSize = createResponsivePageSize(PAGE_SIZE);
@@ -76,28 +76,44 @@ function CoursesContent() {
   });
 
   const [limits, { refetch: refetchLimits }] = createResource(() => canCreate() ? getLimits() : null);
+  const filtersActive = () => pageKind() != null || debouncedSearch().trim() !== "" || taughtParam() != null;
   // Scoped server-side: a student reads only the courses they take. The
-  // source carries every input the fetch reads, so each change refetches.
+  // source carries every input the fetch reads. Filtered lists are read in
+  // full and checked locally because the current deployment accepts filter
+  // query keys but can return the unfiltered page and total.
   const [list, { refetch }] = createResource(
     () => ({
       role: auth.user()?.role ?? null,
       kind: pageKind(),
       q: debouncedSearch().trim(),
       taught: taughtParam(),
-      page: page(),
+      page: filtersActive() ? 0 : page(),
       size: pageSize(),
     }),
-    (filters) =>
-      getCourses({
-        limit: filters.size,
-        offset: filters.page * filters.size,
+    async (filters) => {
+      const requested = {
         ...(filters.kind ? { kind: filters.kind } : {}),
         ...(filters.q ? { q: filters.q } : {}),
         ...(filters.taught != null ? { taught: filters.taught } : {}),
-      }),
+      };
+      if (!filters.kind && !filters.q && filters.taught == null) {
+        return getCourses({ limit: filters.size, offset: filters.page * filters.size });
+      }
+      const all = await loadAllPages((paging) => getCourses({ ...requested, ...paging }));
+      const items = all.filter((course) =>
+        (!filters.kind || course.kind === filters.kind) &&
+        (!filters.q || matchesSearch(filters.q, course.title, course.description)) &&
+        (filters.taught == null || (course.class_course_count > 0) === filters.taught),
+      );
+      return { items, total: items.length, limit: filters.size, offset: 0 };
+    },
   );
   const listData = () => list.latest ?? list();
   const total = () => listData()?.total ?? 0;
+  const visibleItems = () => {
+    const items = listData()?.items ?? [];
+    return filtersActive() ? items.slice(page() * pageSize(), (page() + 1) * pageSize()) : items;
+  };
   // Deleting the last row of the last page shrinks the page count under the
   // current page; clamp instead of stranding the user off the end.
   const pageCount = () => Math.max(1, Math.ceil(total() / pageSize()));
@@ -300,7 +316,7 @@ function CoursesContent() {
             </Show>
             <DataTable
               columns={columns()}
-              data={listData()?.items ?? []}
+              data={visibleItems()}
               tableClass="table-fixed min-w-[44rem]"
               filterPlaceholder={t("common.searchPlaceholder")}
               filterHint={t("search.hint.courses")}

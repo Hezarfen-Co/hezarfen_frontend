@@ -1,8 +1,7 @@
-import { For, type Component } from "solid-js";
+import { For, createEffect, createSignal, type Component } from "solid-js";
 import { Link } from "@tanstack/solid-router";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   IconSparkles,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/icons";
 import type { MessageKey } from "@/i18n/messages";
 import { useT } from "@/stores/preferences-context";
+import { useAuth } from "@/stores/auth-context";
 import { cn } from "@/lib/cn";
 
 // Everything on this page is copy, so the arrays below carry message keys and
@@ -34,18 +34,19 @@ type GuideStep = {
   icon: Component<{ class?: string }>;
   iconColor: string;
   to: string;
+  studentOnly?: boolean;
 };
 
 const CARD_TONE = "border-sky-500/40 dark:border-sky-500/30 hover:border-sky-500/70 ring-1 ring-sky-500/20";
 const BADGE_TONE = "border-sky-500/40 text-foreground bg-card";
 
 const STEPS: GuideStep[] = [
-  { id: "ai", stepNumber: "01", borderTone: CARD_TONE, icon: IconSparkles, iconColor: "text-sky-400", to: "/" },
+  { id: "ai", stepNumber: "01", borderTone: CARD_TONE, icon: IconSparkles, iconColor: "text-sky-400", to: "/ai/study" },
   { id: "notes", stepNumber: "02", borderTone: CARD_TONE, icon: IconNote, iconColor: "text-sky-400", to: "/notes" },
   { id: "questions", stepNumber: "03", borderTone: CARD_TONE, icon: IconBook, iconColor: "text-sky-400", to: "/questions" },
   { id: "courses", stepNumber: "04", borderTone: CARD_TONE, icon: IconCalendarDays, iconColor: "text-sky-400", to: "/courses" },
   { id: "exams", stepNumber: "05", borderTone: CARD_TONE, icon: IconExam, iconColor: "text-sky-400", to: "/exams" },
-  { id: "marks", stepNumber: "06", borderTone: CARD_TONE, icon: IconReportAnalytics, iconColor: "text-sky-400", to: "/marks" },
+  { id: "marks", stepNumber: "06", borderTone: CARD_TONE, icon: IconReportAnalytics, iconColor: "text-sky-400", to: "/marks", studentOnly: true },
 ];
 
 type RoleTab = {
@@ -81,7 +82,12 @@ export default function GuidePage() {
 
 function GuideContent() {
   const t = useT();
+  const auth = useAuth();
   const stepText = (id: string, field: string) => t(`guide.step.${id}.${field}` as MessageKey);
+  const role = () => auth.user()?.role ?? "student";
+  const visibleSteps = () => STEPS.filter((step) => !step.studentOnly || role() === "student");
+  const [selectedRole, setSelectedRole] = createSignal("student");
+  createEffect(() => setSelectedRole(role() === "manager" ? "admin" : role()));
 
   return (
     <div class="space-y-6">
@@ -93,7 +99,7 @@ function GuideContent() {
           <p class="mt-1 text-xs text-muted-foreground">{t("guide.roles.subtitle")}</p>
         </div>
 
-        <Tabs defaultValue="student" class="w-full">
+        <Tabs value={selectedRole()} onChange={setSelectedRole} class="w-full">
           <TabsList class="w-full justify-start">
             <For each={ROLE_TABS}>
               {(role) => (
@@ -136,11 +142,11 @@ function GuideContent() {
         </div>
 
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <For each={STEPS}>
+          <For each={visibleSteps()}>
             {(step) => (
               <article
                 class={cn(
-                  "group relative flex flex-col justify-between overflow-hidden rounded-lg border bg-card p-5 shadow-xs transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md",
+                  "group relative flex flex-col justify-between overflow-hidden rounded-xl border bg-card p-5 transition-colors hover:bg-muted/20",
                   step.borderTone,
                 )}
               >
@@ -174,11 +180,9 @@ function GuideContent() {
                 </div>
 
                 <div class="mt-5 border-t border-border/60 pt-3">
-                  <Link to={step.to}>
-                    <Button variant="default" size="sm" class="w-full justify-between rounded-lg text-xs">
-                      <span>{stepText(step.id, "cta")}</span>
-                      <span class="font-bold">→</span>
-                    </Button>
+                  <Link to={step.to} class="inline-flex h-9 w-full items-center justify-between rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                    <span>{stepText(step.id, "cta")}</span>
+                    <span aria-hidden="true" class="font-bold">→</span>
                   </Link>
                 </div>
               </article>

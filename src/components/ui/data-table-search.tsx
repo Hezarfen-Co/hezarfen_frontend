@@ -68,7 +68,7 @@ export function DataTableSearch(props: DataTableSearchProps) {
       <Show when={props.hint && focused()}>
         <p
           id={hintId}
-          class={cn("absolute left-0 top-full z-30 mt-1 w-full min-w-max max-w-[22rem] rounded-lg border border-border/80 bg-popover px-2.5 py-1.5 text-[11px] leading-snug text-muted-foreground shadow-md", props.hintClass)}
+          class={cn("pointer-events-none absolute bottom-full left-0 z-30 mb-1 w-full min-w-max max-w-[22rem] rounded-lg border border-border/80 bg-popover px-2.5 py-1.5 text-[11px] leading-snug text-muted-foreground shadow-md sm:bottom-auto sm:top-full sm:mb-0 sm:mt-1", props.hintClass)}
         >
           {props.hint}
         </p>

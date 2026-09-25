@@ -66,8 +66,13 @@ Active backend/class/meals alignment is tracked in:
 - Main lists use real server paging (`limit`/`offset` + `total`) when no client-only filter is active:
   - exams and events (hybrid: full fetch only while client-only filters need it)
   - notes, terms, work log, admin users (server page; admin metrics still load full list once)
-- Courses temporarily load the visible list once and filter/paginate locally because
-  backend course filters remain a documented prerequisite.
+- Courses now request server pages with `kind`, `q`, and `taught`; the current
+  deployment does not honor at least `q` and `taught=false`, so the list can
+  show unfiltered rows or misleading page counts until the backend is fixed.
+- Homework requests `due_after`, `due_before`, and `class_course` for its tabs
+  and section picker. The current deployment ignores at least `due_before`,
+  so the Past tab can include future deadlines. See
+  `docs/backend/live-list-filter-drift-2026-09-25.md` for observed requests.
 - Nested/deferred lists unwrap full `.items` (sessions, enrollments, attendance, exam results/questions).
 - `/exams/:id/live`: client-paginated roster over snapshot/SSE (not the list envelope).
 - Progress Report card and Attendance tabs: not paged; aggregate report shapes.
@@ -111,6 +116,14 @@ Active backend/class/meals alignment is tracked in:
   linked and included in deadlines for every role.
 - Terms page: SidePanel create/edit + dense table row actions; header create buttons use shared min-width/radius.
 - Settings: dirty-state save gate and auto-clearing success message.
+- Settings: comma-separated branch and excuse-kind fields round-trip as lists;
+  a fixed save bar appears while there are unsaved changes, with a leave guard.
+- Staff work: the staff card grid has a separated pagination row and record
+  range; opening a card keeps the selected person's work log in a side panel.
+- Meals: week and slot controls lead into a seven-day picker. Selecting a day
+  shows its menus or an explicit empty-day state; publish remains a side panel.
+- Homework: the section picker tolerates asynchronous option loading without
+  crashing while the list or panel mounts.
 - Nested breadcrumbs on exam room and live monitor.
 
 ### UX batch (2026-07, observation UI + feedback)

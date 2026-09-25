@@ -54,6 +54,9 @@ function WhiteboardsContent() {
   );
   const [createOpen, setCreateOpen] = createSignal(false);
   const pageCount = createMemo(() => Math.max(1, Math.ceil((boards.latest?.total ?? 0) / pageSize())));
+  createEffect(() => {
+    if (boards.latest && page() >= pageCount()) setPage(pageCount() - 1);
+  });
   // The server narrows by title via `q`; the page holds whatever the current
   // query matched, so totals and pagination already reflect the search.
   const visibleBoards = createMemo(() => boards()?.items ?? []);

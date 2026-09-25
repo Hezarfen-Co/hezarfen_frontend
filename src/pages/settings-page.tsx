@@ -48,6 +48,10 @@ function isCoreAttendance(status: string): status is keyof typeof CORE_ATTENDANC
   return status in CORE_ATTENDANCE_LABELS;
 }
 
+function parseCommaList(value: string): string[] {
+  return value.split(",").map((part) => part.trim()).filter(Boolean);
+}
+
 export default function SettingsPage() {
   return (
     <RouteGuard minRole="manager">
@@ -74,8 +78,8 @@ function SettingsContent() {
   const [dietaryTags, setDietaryTags] = createSignal<string[]>([]);
   const [mealCutoff, setMealCutoff] = createSignal("");
   // Devamsızlık policy and the branş vocabulary, both school-varying.
-  const [excuseKinds, setExcuseKinds] = createSignal<string[]>([]);
-  const [branches, setBranches] = createSignal<string[]>([]);
+  const [excuseKindsText, setExcuseKindsText] = createSignal("");
+  const [branchesText, setBranchesText] = createSignal("");
   const [maxExcusedDays, setMaxExcusedDays] = createSignal("");
   const [maxUnexcusedDays, setMaxUnexcusedDays] = createSignal("");
   const [timezone, setTimezone] = createSignal("");
@@ -98,8 +102,8 @@ function SettingsContent() {
       meal_slots: mealSlots(),
       dietary_tags: dietaryTags(),
       meal_cancel_cutoff_minutes: mealCutoff() === "" ? null : Number(mealCutoff()),
-      excuse_kinds: excuseKinds(),
-      branches: branches(),
+      excuse_kinds: parseCommaList(excuseKindsText()),
+      branches: parseCommaList(branchesText()),
       max_excused_absent_days: maxExcusedDays() === "" ? null : Number(maxExcusedDays()),
       max_unexcused_absent_days: maxUnexcusedDays() === "" ? null : Number(maxUnexcusedDays()),
       timezone: timezone().trim() === "" ? null : timezone().trim(),
@@ -119,8 +123,8 @@ function SettingsContent() {
     setMealSlots(next.meal_slots.map((slot) => ({ ...slot })));
     setDietaryTags([...next.dietary_tags]);
     setMealCutoff(next.meal_cancel_cutoff_minutes == null ? "" : String(next.meal_cancel_cutoff_minutes));
-    setExcuseKinds([...(next.excuse_kinds ?? [])]);
-    setBranches([...(next.branches ?? [])]);
+    setExcuseKindsText((next.excuse_kinds ?? []).join(", "));
+    setBranchesText((next.branches ?? []).join(", "));
     setMaxExcusedDays(next.max_excused_absent_days == null ? "" : String(next.max_excused_absent_days));
     setMaxUnexcusedDays(next.max_unexcused_absent_days == null ? "" : String(next.max_unexcused_absent_days));
     setTimezone(next.timezone ?? "");
@@ -144,8 +148,8 @@ function SettingsContent() {
       max_file_bytes: fileBytes,
       meal_slots: mealSlots().map((slot) => ({ name: slot.name.trim(), serving_minute: slot.serving_minute })),
       dietary_tags: dietaryTags().map((tag) => tag.trim()),
-      excuse_kinds: excuseKinds().map((kind) => kind.trim()).filter(Boolean),
-      branches: branches().map((branch) => branch.trim()).filter(Boolean),
+      excuse_kinds: parseCommaList(excuseKindsText()),
+      branches: parseCommaList(branchesText()),
     };
   };
 
@@ -203,7 +207,7 @@ function SettingsContent() {
   };
 
   return (
-    <div class="space-y-6">
+    <div class={dirty() ? "space-y-6 pb-28 md:pb-20" : "space-y-6"}>
       <PageHeader
         title={t("settings.title")}
         description={t("settings.subtitle")}
@@ -249,7 +253,7 @@ function SettingsContent() {
 
           <TabsContent value="assessment" class={TAB_PANEL}>
             <Show when={settings()}>
-              <div class="grid gap-4 xl:grid-cols-3">
+              <div class="grid gap-4 xl:grid-cols-2">
                 <section class="data-shell flex flex-col overflow-hidden">
                   <header class="border-b border-border/70 px-4 py-3">
                     <div class="flex items-start justify-between gap-3">
@@ -665,18 +669,18 @@ function SettingsContent() {
                     <Label for="excuse-kinds">{t("settings.excuseKinds")}</Label>
                     <Input
                       id="excuse-kinds"
-                      value={excuseKinds().join(", ")}
+                      value={excuseKindsText()}
                       placeholder="raporlu, izinli"
-                      onInput={(e) => setExcuseKinds(e.currentTarget.value.split(",").map((part) => part.trim()).filter(Boolean))}
+                      onInput={(e) => setExcuseKindsText(e.currentTarget.value)}
                     />
                   </div>
                   <div class="space-y-1.5">
                     <Label for="branches">{t("settings.branches")}</Label>
                     <Input
                       id="branches"
-                      value={branches().join(", ")}
+                      value={branchesText()}
                       placeholder="Matematik, Fizik"
-                      onInput={(e) => setBranches(e.currentTarget.value.split(",").map((part) => part.trim()).filter(Boolean))}
+                      onInput={(e) => setBranchesText(e.currentTarget.value)}
                     />
                   </div>
                 </div>
@@ -739,6 +743,20 @@ function SettingsContent() {
           </TabsContent>
         </Suspense>
       </Tabs>
+
+      <Show when={dirty()}>
+        <div class="fixed inset-x-4 bottom-20 z-40 flex items-center justify-between gap-3 rounded-xl border border-border-line bg-surface-base px-4 py-3 shadow-lg md:inset-x-auto md:bottom-4 md:left-1/2 md:min-w-80 md:-translate-x-1/2">
+          <div class="min-w-0">
+            <p class="text-sm font-medium">{t("settings.unsaved")}</p>
+            <Show when={error()}>
+              <p class="mt-1 max-w-64 text-xs text-destructive-text" role="alert">{error()}</p>
+            </Show>
+          </div>
+          <Button type="button" size="sm" class="shrink-0 rounded-lg" disabled={pending()} onClick={() => void save()}>
+            {t("common.save")}
+          </Button>
+        </div>
+      </Show>
 
       <ConfirmDialog
         open={blocker().status === "blocked"}

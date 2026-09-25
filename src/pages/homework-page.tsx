@@ -19,7 +19,6 @@ import { IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 
@@ -89,16 +88,6 @@ function HomeworkContent() {
   // The şube filter, as on /exams; it lives in the URL beside the table's own
   // search and page.
   const [courseFilter, setCourseFilter] = createUrlString("course", "all");
-  const courseFilterOptions = createMemo(() => {
-    const known = instances() ?? [];
-    const knownIds = new Set(known.map((row) => row.id));
-    // Homework in a şube the picker does not list (e.g. one the caller only
-    // sees through an assignment) still gets its own entry, after the rest.
-    const extra = [...new Set((list()?.items ?? []).map((item) => item.class_course))]
-      .filter((id) => !knownIds.has(id) && courseNames()[id])
-      .map((id) => ({ value: id, label: courseNames()[id] }));
-    return [{ value: "all", label: t("common.all") }, ...known.map((row) => ({ value: row.id, label: row.label })), ...extra];
-  });
   // A homework subject must sit in the chosen section's resolved subject set.
   const [subjects] = createResource(
     () => selectedCourseId() || null,
@@ -110,12 +99,9 @@ function HomeworkContent() {
   const pageTitle = () => auth.user()?.role === "student" ? t("homework.mineTitle") : t("homework.title");
   type DueTab = "all" | "open" | "past";
   const [dueTab, setDueTab] = createSignal<DueTab>("all");
-  // Tab and section filters are enforced server-side, at the moment of the
-  // request: Open keeps rows still due (`due_after`), Past keeps rows already
-  // due (`due_before`), a picked section narrows to it (`class_course`); `all`
-  // sends no bound. The window rides in the source key so switching tabs
-  // refetches with that tab's bound, and every page of the filtered set is
-  // read (no cap, no truncation notice).
+  // Tab and section filters go to the API and are checked again locally because
+  // the deployed backend currently ignores them. The source key refetches on
+  // filter changes, and the windowed list has a shared cap.
   const [list, { refetch }] = createResource(
     () => `${dueTab()}|${courseFilter()}`,
     async (key) => {
@@ -125,15 +111,35 @@ function HomeworkContent() {
       if (tab === "past") params.due_before = Date.now();
       if (course !== "all") params.class_course = course;
       const page = await loadWindowedList((paging) => getHomework({ ...params, ...paging }), LIST_CAP);
-      const labels = await loadInstanceLabels(page.items.map((item) => item.class_course), auth.user()?.role);
+      // Some deployed backends currently accept these query keys but ignore
+      // them. Recheck the complete response so the tabs never show wrong rows.
+      const items = page.items.filter((item) =>
+        (params.due_after == null || item.due_at >= params.due_after) &&
+        (params.due_before == null || item.due_at < params.due_before) &&
+        (params.class_course == null || item.class_course === params.class_course),
+      );
+      const labels = await loadInstanceLabels(items.map((item) => item.class_course), auth.user()?.role);
       setCourseNames(Object.fromEntries([...labels].map(([id, entry]) => [id, entry.label])));
-      return page;
+      return { items, total: items.length };
     },
   );
+  const courseFilterOptions = createMemo(() => {
+    const known = instances() ?? [];
+    const knownIds = new Set(known.map((row) => row.id));
+    // Homework in a şube the picker does not list (e.g. one the caller only
+    // sees through an assignment) still gets its own entry, after the rest.
+    const extra = [...new Set((list()?.items ?? []).map((item) => item.class_course))]
+      .filter((id) => !knownIds.has(id) && courseNames()[id])
+      .map((id) => ({ value: id, label: courseNames()[id] }));
+    return [{ value: "all", label: t("common.all") }, ...known.map((row) => ({ value: row.id, label: row.label })), ...extra];
+  });
+
+  const preferredCourseId = () =>
+    manageableCourses().find((row) => row.id === courseFilter())?.id ?? manageableCourses()[0]?.id ?? "";
 
   createEffect(() => {
     if (!createOpen()) return;
-    if (!selectedCourseId()) setSelectedCourseId(manageableCourses()[0]?.id ?? "");
+    if (!selectedCourseId()) setSelectedCourseId(preferredCourseId());
   });
 
   createEffect(() => {
@@ -143,7 +149,7 @@ function HomeworkContent() {
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setSelectedCourseId(manageableCourses()[0]?.id ?? "");
+    setSelectedCourseId(preferredCourseId());
     setSubjectId("");
     setDueDate("");
     setDueTime("");
@@ -295,8 +301,10 @@ function HomeworkContent() {
               onClearFilters={() => setCourseFilter("all")}
               filters={
                 <div class="flex flex-wrap items-center gap-2.5">
-                  <DropdownSelect
-                    labelPrefix={t("nav.courses")}
+                  <label for="homework-course-filter" class="text-xs font-semibold text-muted-foreground">{t("nav.courses")}:</label>
+                  <SearchableSelect
+                    id="homework-course-filter"
+                    class="h-8 min-w-[12rem] max-w-[18rem]"
                     value={courseFilter()}
                     onChange={(val) => setCourseFilter(val)}
                     options={courseFilterOptions()}
@@ -317,7 +325,7 @@ function HomeworkContent() {
               }
               actions={
                 <Show when={canCreate()}>
-                  <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
+                  <Button type="button" size="sm" class="rounded-lg" onClick={() => { setSelectedCourseId(preferredCourseId()); setCreateOpen(true); }}>
                     <IconPlus class="h-4 w-4" />
                     {t("homework.add")}
                   </Button>

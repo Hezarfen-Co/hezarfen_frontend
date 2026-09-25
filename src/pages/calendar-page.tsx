@@ -502,7 +502,9 @@ function CalendarContent() {
                   block — the closest real-data equivalent of a school's
                   printed weekly schedule, built from the same session/exam/
                   homework/event/appointment feed as the month grid. */}
-              <div class="grid min-h-0 flex-1 grid-cols-7 gap-1 overflow-hidden rounded-lg border bg-card p-1 shadow-xs">
+              <p class="text-xs text-muted-foreground sm:hidden">{t("calendar.weekScrollHint")}</p>
+              <div class="min-h-0 min-w-0 flex-1 overflow-x-auto rounded-lg border bg-card shadow-xs">
+                <div class="grid min-h-full min-w-[49rem] grid-cols-7 gap-1 p-1 sm:min-w-0">
                 <For each={weekDays()}>
                   {(day) => {
                     const key = dateKey(day);
@@ -545,6 +547,7 @@ function CalendarContent() {
                     );
                   }}
                 </For>
+                </div>
               </div>
             </Show>
 

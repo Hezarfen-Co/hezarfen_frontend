@@ -2,6 +2,7 @@ import {
   For,
   Show,
   createMemo,
+  createEffect,
   createSignal,
   Suspense,
   useTransition,
@@ -13,13 +14,12 @@ import { Button } from "@/components/ui/button";
 import {
   IconArchive,
   IconMessage,
-  IconSearch,
   IconSend,
   IconTrash,
   IconPlus,
   IconRefresh,
 } from "@/components/ui/icons";
-import { Input } from "@/components/ui/input";
+import { DataTableSearch } from "@/components/ui/data-table-search";
 import { GmailMailRow } from "@/components/messages/gmail-mail-row";
 import { GmailMailDetail } from "@/components/messages/gmail-mail-detail";
 import { GmailComposeBox } from "@/components/messages/gmail-compose-box";
@@ -67,6 +67,12 @@ export default function MessagesPage() {
         ...(args.q ? { q: args.q } : {}),
       })
   );
+  createEffect(() => {
+    const total = messagePage()?.total;
+    if (total === undefined) return;
+    const lastPage = Math.max(1, Math.ceil(total / limit));
+    if (page() > lastPage) setPage(lastPage);
+  });
 
   const [unreadCount, { refetch: refetchUnread }] = createResource(
     async () => (await getMessages("inbox", { read: false, limit: 1 })).total
@@ -162,7 +168,7 @@ export default function MessagesPage() {
       await Promise.all(trashItems.map((m) => deleteMessageById(m.id)));
       setFlash(t("messages.trashEmptiedToast"));
       setSelectedId("");
-      refetch();
+      await refetch();
     } catch (err: any) {
       console.error("Empty trash error:", err);
       setFlash(formatApiError(err));
@@ -265,19 +271,16 @@ export default function MessagesPage() {
                       {t("common.refresh")}
                     </Button>
 
-                    <div class="relative w-full">
-                      <IconSearch class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
-                      <Input
-                        class="h-8 rounded-lg bg-surface-tint pl-9 pr-4 text-[13px] border-none focus-visible:ring-1"
-                        placeholder={t("messages.search")}
-                        value={query()}
-                        onInput={(event) => {
-                          setQuery(event.currentTarget.value);
-                          // The server filters from the first row; offset restarts with each search.
-                          setPage(1);
-                        }}
-                      />
-                    </div>
+                    <DataTableSearch
+                      class="max-w-none"
+                      placeholder={t("messages.search")}
+                      value={query()}
+                      onChange={(value) => {
+                        setQuery(value);
+                        // The server filters from the first row; offset restarts with each search.
+                        setPage(1);
+                      }}
+                    />
                   </div>
 
                   <div class="flex items-center justify-end gap-3">
@@ -327,7 +330,7 @@ export default function MessagesPage() {
                           when={messages().length > 0}
                           fallback={
                             <div class="p-12 text-center text-xs text-muted-foreground">
-                              {t("messages.noMessages")}
+                              {query().trim() ? t("common.noResults") : t("messages.noMessages")}
                             </div>
                           }
                         >

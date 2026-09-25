@@ -419,8 +419,10 @@ function ExamsContent() {
                 onRowClick={(exam) => void navigate({ to: "/exams/$id", params: { id: exam.id } })}
                 filters={
                   <div class="flex flex-wrap items-center gap-2.5">
-                    <DropdownSelect
-                      labelPrefix={t("nav.courses")}
+                    <label for="exams-course-filter" class="text-xs font-semibold text-muted-foreground">{t("nav.courses")}:</label>
+                    <SearchableSelect
+                      id="exams-course-filter"
+                      class="h-8 min-w-[12rem] max-w-[18rem]"
                       value={courseFilter()}
                       onChange={(val) => setCourseFilter(val)}
                       options={[

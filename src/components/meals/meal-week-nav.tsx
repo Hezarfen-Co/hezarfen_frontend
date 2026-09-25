@@ -15,7 +15,7 @@ export function MealWeekNav(props: {
   locale: string;
   slot: string;
   slots: MealSlot[];
-  onWeekChange: (weekStart: string) => void;
+  onWeekChange: (weekStart: string, selectedDate?: string) => void;
   onSlotChange: (slot: string) => void;
 }) {
   const t = useT();
@@ -39,7 +39,7 @@ export function MealWeekNav(props: {
           class="h-8 w-40"
           placeholder={t("meals.goToDate")}
           value=""
-          onChange={(value) => { const iso = inputDateToIso(value); if (iso) props.onWeekChange(weekStartIso(iso)); }}
+          onChange={(value) => { const iso = inputDateToIso(value); if (iso) props.onWeekChange(weekStartIso(iso), iso); }}
         />
         <Select id="menus-slot" aria-label={t("meals.slot")} wrapperClass="w-auto" class="h-8 rounded-lg text-[13px]" value={props.slot} onChange={(e) => props.onSlotChange(e.currentTarget.value)}>
           <option value="all">{t("meals.slot")}: {t("common.all")}</option>

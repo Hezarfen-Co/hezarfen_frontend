@@ -1,6 +1,7 @@
 import { For, Show } from "solid-js";
 import type { MealMenu } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
+import { EmptyInline } from "@/components/ui/empty-inline";
 import { MealMenuRow } from "@/components/meals/meal-menu-row";
 import { formatMealDay } from "@/lib/meals";
 import { useT } from "@/stores/preferences-context";
@@ -19,11 +20,16 @@ export function MealDayGroup(props: {
         <span class="first-letter:uppercase">{formatMealDay(props.date, props.locale)}</span>
         <Show when={props.isToday}><Badge variant="info">{t("meals.today")}</Badge></Show>
       </h3>
-      <div class="divide-y divide-border-hairline overflow-hidden rounded-xl border border-border-line">
-        <For each={props.menus}>
-          {(menu) => <MealMenuRow menu={menu} locale={props.locale} />}
-        </For>
-      </div>
+      <Show
+        when={props.menus.length > 0}
+        fallback={<EmptyInline illustration="meals" title={t("meals.emptyDay")} hint={t("meals.emptyDayHint")} class="rounded-xl border border-border-line bg-surface-tint/40 py-8" />}
+      >
+        <div class="divide-y divide-border-hairline overflow-hidden rounded-xl border border-border-line">
+          <For each={props.menus}>
+            {(menu) => <MealMenuRow menu={menu} locale={props.locale} />}
+          </For>
+        </div>
+      </Show>
     </section>
   );
 }

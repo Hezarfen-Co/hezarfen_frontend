@@ -328,7 +328,15 @@ function StaffWorkContent() {
                   )}
                 </For>
               </div>
-              <TablePagination pageIndex={staffPage()} pageCount={staffPageCount()} onPageChange={setStaffPage} />
+              <div class="mt-5 border-t border-border-hairline pt-4">
+                <TablePagination
+                  pageIndex={staffPage()}
+                  pageCount={staffPageCount()}
+                  pageSize={peoplePageSize()}
+                  total={filteredPeople().length}
+                  onPageChange={setStaffPage}
+                />
+              </div>
             </Show>
           </Show>
         </div>

@@ -61,7 +61,7 @@ export function RescheduleForm(props: {
               placeholder="09:00"
               pattern="[0-2][0-9]:[0-5][0-9]"
               value={startsTime()}
-              aria-label={t("appointments.starts")}
+              aria-label={t("appointments.startTime")}
               onInput={(e) => setStartsTime(e.currentTarget.value)}
             />
           </div>
@@ -77,7 +77,7 @@ export function RescheduleForm(props: {
               placeholder="10:00"
               pattern="[0-2][0-9]:[0-5][0-9]"
               value={endsTime()}
-              aria-label={t("appointments.ends")}
+              aria-label={t("appointments.endTime")}
               onInput={(e) => setEndsTime(e.currentTarget.value)}
             />
           </div>

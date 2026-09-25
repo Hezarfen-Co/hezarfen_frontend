@@ -123,3 +123,15 @@ test("student course list filters on the server via kind, q and taught", async (
   await waitFor(() => expect(screen.queryByRole("button", { name: /^Algebra/ })).toBeNull());
   expect(screen.queryByRole("button", { name: /^Robotics/ })).toBeNull();
 });
+
+test("course search checks returned rows when the backend ignores q", async () => {
+  getCourses.mockResolvedValue({ items: catalog, total: catalog.length, limit: 100, offset: 0 });
+  render(() => <PreferencesProvider><CoursesPage /></PreferencesProvider>);
+
+  expect(await screen.findByRole("button", { name: /^Algebra/ })).toBeTruthy();
+  fireEvent.input(screen.getByPlaceholderText("Search…"), { target: { value: "no-such-course" } });
+
+  await waitFor(() => expect(getCourses.mock.calls.at(-1)[0].q).toBe("no-such-course"), { timeout: 2000 });
+  await waitFor(() => expect(screen.queryByRole("button", { name: /^Algebra/ })).toBeNull());
+  expect(screen.queryByRole("button", { name: /^Study Lab/ })).toBeNull();
+});
