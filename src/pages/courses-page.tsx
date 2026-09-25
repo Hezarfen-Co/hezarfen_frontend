@@ -100,35 +100,51 @@ function CoursesContent() {
     {
       accessorKey: "title",
       header: t("form.title"),
-      size: 280,
-      minSize: 200,
+      size: 200,
+      minSize: 160,
       meta: { cellClass: "max-w-0" },
+      cell: (cell) => <span class="block truncate font-medium" title={cell.row.original.title}>{cell.row.original.title}</span>,
+    },
+    {
+      // The description is its own column (one line, "…" + hover for the
+      // rest) rather than a caption under the title.
+      id: "description",
+      accessorFn: (row) => row.description ?? "",
+      header: t("form.description"),
+      size: 220,
+      minSize: 160,
+      enableSorting: false,
+      meta: { cellClass: "max-w-0 text-text-subtle" },
       cell: (cell) => (
-        // Always two lines, description or not, so every row is the same height.
-        <div class="min-w-0">
-          <p class="truncate font-medium" title={cell.row.original.title}>{cell.row.original.title}</p>
-          <p class="truncate text-xs text-text-subtle" title={cell.row.original.description || undefined}>
-            {cell.row.original.description || "—"}
-          </p>
-        </div>
+        <span class="block truncate" title={cell.row.original.description || undefined}>
+          {cell.row.original.description || "—"}
+        </span>
       ),
     },
     {
       id: "kind",
       accessorFn: (row) => courseKindLabel(row.kind, t),
       header: t("exams.kind"),
-      size: 120,
+      size: 110,
       minSize: 100,
-      meta: { cellClass: "whitespace-nowrap" },
+      meta: { cellClass: "whitespace-nowrap text-center" },
       cell: (cell) => (
-        <div class="flex w-full items-center justify-center gap-1.5">
-          <Badge variant="outline" class="rounded-md text-[11px] font-medium">{courseKindLabel(cell.row.original.kind, t)}</Badge>
-          <Show when={auth.user()?.role === "student"}>
-            <Badge variant="secondary" class="rounded-md text-[11px]">{t("courses.enrolled")}</Badge>
-          </Show>
-        </div>
+        <Badge variant="outline" class="rounded-md text-[11px] font-medium">{courseKindLabel(cell.row.original.kind, t)}</Badge>
       ),
     },
+    // A student sees only the courses they take: the "enrolled" marker is its
+    // own column for them rather than a second badge in the kind cell.
+    ...(auth.user()?.role === "student"
+      ? [{
+          id: "enrolled",
+          header: t("roster.status"),
+          size: 100,
+          minSize: 90,
+          enableSorting: false,
+          meta: { cellClass: "whitespace-nowrap text-center" },
+          cell: () => <Badge variant="secondary" class="rounded-md text-[11px]">{t("courses.enrolled")}</Badge>,
+        } satisfies ColumnDef<Course>]
+      : []),
     {
       id: "sections",
       accessorFn: (row) => row.class_course_count,
@@ -148,7 +164,7 @@ function CoursesContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap", cellClass: "px-1 text-center" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}

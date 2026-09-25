@@ -44,6 +44,7 @@ export function AttendanceReportView(props: { report: AttendanceReport; compact?
   const columns = createMemo<ColumnDef<CourseAttendanceRow>[]>(() => [
     {
       id: "course",
+      accessorFn: (row) => row.course.title,
       header: t("nav.courses"),
       meta: { stickyLeft: true },
       cell: (cell) => (

@@ -203,9 +203,7 @@ function ExamsContent() {
       size: 220,
       minSize: 160,
       cell: (cell) => (
-        <div class="min-w-0">
-          <p class="truncate font-medium">{cell.row.original.title}</p>
-        </div>
+        <span class="block truncate font-medium" title={cell.row.original.title}>{cell.row.original.title}</span>
       ),
     },
     {

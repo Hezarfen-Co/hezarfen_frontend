@@ -99,7 +99,8 @@ function TeachersRosterContent() {
       size: 130,
       accessorFn: (row) => row.homeroom.join(", "),
       header: t("roster.homeroomOf"),
-      cell: (cell) => <span class="truncate text-sm">{cell.row.original.homeroom.join(", ") || "—"}</span>,
+      meta: { cellClass: "max-w-0" },
+      cell: (cell) => <span class="block truncate text-sm" title={cell.row.original.homeroom.join(", ") || undefined}>{cell.row.original.homeroom.join(", ") || "—"}</span>,
     },
     {
       id: "actions",

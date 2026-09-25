@@ -66,12 +66,17 @@ function BuilderSchoolsContent() {
     {
       accessorKey: "name",
       header: t("builder.schoolName"),
+      meta: { cellClass: "max-w-0" },
+      cell: (cell) => <span class="block truncate font-medium" title={cell.row.original.name}>{cell.row.original.name}</span>,
+    },
+    {
+      // Short id in its own column (full id on hover) instead of a caption
+      // under the name, so every row stays one line tall.
+      accessorKey: "id",
+      header: t("builder.schoolId"),
       cell: (cell) => (
-        <span class="block min-w-0">
-          <span class="block font-medium">{cell.row.original.name}</span>
-          <span class="block truncate font-mono text-xs text-text-subtle" title={cell.row.original.id}>
-            {cell.row.original.id.slice(0, 8)}
-          </span>
+        <span class="font-mono text-xs text-text-subtle" title={cell.row.original.id}>
+          {cell.row.original.id.slice(0, 8)}
         </span>
       ),
     },

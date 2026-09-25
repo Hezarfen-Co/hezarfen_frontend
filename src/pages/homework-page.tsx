@@ -174,9 +174,7 @@ function HomeworkContent() {
       minSize: 180,
       meta: { cellClass: "font-medium" },
       cell: (cell) => (
-        <div class="min-w-0">
-          <p class="truncate font-medium">{cell.row.original.title}</p>
-        </div>
+        <span class="block truncate font-medium" title={cell.row.original.title}>{cell.row.original.title}</span>
       ),
     },
     {
@@ -186,7 +184,7 @@ function HomeworkContent() {
       size: 180,
       minSize: 140,
       meta: { cellClass: "max-w-0 truncate text-text-subtle" },
-      cell: (cell) => <span class="block truncate">{courseName(cell.row.original.class_course)}</span>,
+      cell: (cell) => <span class="block truncate" title={courseName(cell.row.original.class_course)}>{courseName(cell.row.original.class_course)}</span>,
     },
     {
       id: "due_at",
@@ -208,7 +206,7 @@ function HomeworkContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "px-1 text-center" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}

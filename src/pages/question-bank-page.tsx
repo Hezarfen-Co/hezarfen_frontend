@@ -111,14 +111,19 @@ function QuestionBankContent() {
     {
       accessorKey: "text",
       header: t("questions.text"),
-      cell: (cell) => (
-        <div class="min-w-0">
-          <p class="max-w-[30rem] truncate font-medium">{cell.row.original.text}</p>
-          <Show when={cell.row.original.subject_name}>
-            <p class="truncate text-xs text-muted-foreground">{cell.row.original.subject_name}</p>
-          </Show>
-        </div>
-      ),
+      meta: { cellClass: "max-w-0" },
+      cell: (cell) => <span class="block truncate font-medium" title={cell.row.original.text}>{cell.row.original.text}</span>,
+    },
+    {
+      // The subject is its own column, not a caption under the question.
+      id: "subject",
+      accessorFn: (row) => row.subject_name ?? "",
+      header: t("subjects.subject"),
+      meta: { cellClass: "max-w-0 text-muted-foreground" },
+      cell: (cell) => {
+        const subject = cell.row.original.subject_name;
+        return subject ? <span class="block truncate" title={subject}>{subject}</span> : "—";
+      },
     },
     {
       accessorKey: "kind",

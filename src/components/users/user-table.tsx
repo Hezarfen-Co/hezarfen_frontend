@@ -32,23 +32,34 @@ function UserRoleActions(props: {
 
   return (
     <>
-      <Select
-        class="h-9 rounded-md text-xs"
-        value={pendingRole()}
-        disabled={isSelf()}
-        onChange={(e) => setPendingRole(e.currentTarget.value as Role)}
-        aria-label={t("admin.role")}
-      >
-        {ROLES.map((r) => (
-          <option value={r}>{t(`role.${r}` as MessageKey)}</option>
-        ))}
-      </Select>
-      <Show when={!isSelf() && dirty()}>
-        <Button type="button" size="sm" class="mt-2" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}>
-          <IconCheck />
-          {t("common.update")}
-        </Button>
-      </Show>
+      {/* The confirm button sits beside the select, not under it, so a row
+          with a pending role change keeps the same height as the others. */}
+      <div class="flex min-w-0 items-center gap-1.5">
+        <Select
+          wrapperClass="min-w-0 flex-1"
+          class="h-8 rounded-md text-xs"
+          value={pendingRole()}
+          disabled={isSelf()}
+          onChange={(e) => setPendingRole(e.currentTarget.value as Role)}
+          aria-label={t("admin.role")}
+        >
+          {ROLES.map((r) => (
+            <option value={r}>{t(`role.${r}` as MessageKey)}</option>
+          ))}
+        </Select>
+        <Show when={!isSelf() && dirty()}>
+          <Button
+            type="button"
+            size="icon"
+            class="h-8 w-8 shrink-0 rounded-md"
+            aria-label={t("common.update")}
+            title={t("common.update")}
+            onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}
+          >
+            <IconCheck />
+          </Button>
+        </Show>
+      </div>
       <ConfirmDialog
         open={confirmOpen()}
         onOpenChange={setConfirmOpen}
@@ -97,6 +108,7 @@ export function UserTable(props: {
     },
     {
       id: "phone",
+      accessorFn: (row) => row.phone || undefined,
       header: t("profile.phone"),
       size: 180,
       minSize: 130,
@@ -129,8 +141,8 @@ export function UserTable(props: {
       minSize: 110,
       enableHiding: false,
       meta: {
-        headerClass: "w-[110px] min-w-[110px] max-w-[110px] text-center whitespace-nowrap",
-        cellClass: "w-[110px] min-w-[110px] max-w-[110px] text-center whitespace-nowrap",
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "text-center",
       },
       cell: (cell) => (
         <TableRowActions

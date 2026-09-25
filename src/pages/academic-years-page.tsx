@@ -150,19 +150,12 @@ function AcademicYearsContent() {
     {
       accessorKey: "name",
       header: t("settings.name"),
-      size: 190,
-      minSize: 170,
-      // One line: a long name ends in "…" beside its badge rather than
-      // wrapping; the full name is on hover and in the detail panel.
+      size: 170,
+      minSize: 150,
+      // One line: a long name ends in "…" (full name on hover and in the
+      // detail panel); the archived flag has its own column.
       meta: { cellClass: "max-w-0" },
-      cell: (cell) => (
-        <span class="flex min-w-0 items-center justify-center gap-2 font-medium">
-          <span class="min-w-0 truncate" title={cell.row.original.name}>{cell.row.original.name}</span>
-          <Show when={cell.row.original.archived_at != null}>
-            <Badge variant="secondary" class="shrink-0 whitespace-nowrap rounded-full">{t("academicYears.archived")}</Badge>
-          </Show>
-        </span>
-      ),
+      cell: (cell) => <span class="block truncate font-medium" title={cell.row.original.name}>{cell.row.original.name}</span>,
     },
     {
       accessorKey: "starts_at",
@@ -197,9 +190,21 @@ function AcademicYearsContent() {
       meta: { cellClass: "text-center", align: "center" },
     },
     {
+      accessorKey: "archived_at",
+      header: t("academicYears.archived"),
+      size: 115,
+      minSize: 105,
+      meta: { cellClass: "whitespace-nowrap" },
+      cell: (cell) => (
+        <Show when={cell.row.original.archived_at != null} fallback={<span class="text-muted-foreground">—</span>}>
+          <Badge variant="secondary" class="shrink-0 whitespace-nowrap rounded-full">{t("academicYears.archived")}</Badge>
+        </Show>
+      ),
+    },
+    {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => {
         const year = cell.row.original;
         const archived = year.archived_at != null;

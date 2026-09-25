@@ -39,34 +39,36 @@ export function HomeworkReportView(props: { userId: string }) {
     {
       accessorKey: "title",
       header: t("form.title"),
-      cell: (cell) => (
-        <div class="min-w-0">
-          <p class="truncate font-medium">{cell.row.original.title}</p>
-          <p class="truncate text-xs text-muted-foreground">{cell.row.original.subject || "—"}</p>
-        </div>
-      ),
+      meta: { cellClass: "font-medium" },
+    },
+    // One value per cell: the subject used to sit under the title as a
+    // caption, which made these rows taller than every other table's.
+    {
+      id: "subject",
+      accessorFn: (row) => row.subject || undefined,
+      header: t("subjects.subject"),
+      meta: { cellClass: "text-muted-foreground" },
     },
     {
       id: "due_at",
       accessorFn: (row) => row.due_at,
       header: t("homework.dueAt"),
-      meta: { cellClass: "whitespace-nowrap text-xs text-muted-foreground" },
+      meta: { cellClass: "text-muted-foreground" },
       cell: (cell) => formatDateTime(cell.row.original.due_at, locale()),
     },
     {
       id: "status",
+      accessorFn: (row) => statusLabel(row),
       header: t("events.status"),
-      cell: (cell) => (
-        <div class="space-y-1">
-          <Badge variant="outline" class="rounded-full">{statusLabel(cell.row.original)}</Badge>
-          <Show when={cell.row.original.late}>
-            <p class="text-[11px] text-destructive-text">{t("homework.late")}</p>
-          </Show>
-        </div>
-      ),
+      // "Late" rides inside the status badge instead of a second line.
+      cell: (cell) =>
+        cell.row.original.late
+          ? <Badge variant="warning" class="rounded-full">{statusLabel(cell.row.original)} · {t("homework.late")}</Badge>
+          : <Badge variant="outline" class="rounded-full">{statusLabel(cell.row.original)}</Badge>,
     },
     {
       id: "mark",
+      accessorFn: (row) => row.result?.mark ?? undefined,
       header: t("form.mark"),
       meta: { align: "right", cellClass: "font-medium tabular-nums" },
       cell: (cell) => cell.row.original.result?.mark ?? "—",
@@ -74,7 +76,7 @@ export function HomeworkReportView(props: { userId: string }) {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}

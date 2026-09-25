@@ -140,19 +140,45 @@ function AppointmentsContent() {
     sameDay(starts, ends)
       ? `${formatDateTime(starts, locale())} – ${timeOnly(ends)}`
       : `${formatDateTime(starts, locale())} — ${formatDateTime(ends, locale())}`;
-  // Stacked date/time cell: date on top, clock range below (tabular-nums so
-  // digits line up across rows). Same-day windows show one date; cross-day
-  // spells out the end date on the second line.
-  const timeCell = (starts: number | null, ends: number | null) => (
-    <div class="flex flex-col text-xs leading-tight tabular-nums">
-      <span class="text-foreground">{formatDate(starts, locale())}</span>
-      <span class="text-muted-foreground">
-        {sameDay(starts, ends)
-          ? `${timeOnly(starts)} – ${timeOnly(ends)}`
-          : `${timeOnly(starts)} → ${formatDate(ends, locale())} ${timeOnly(ends)}`}
-      </span>
-    </div>
-  );
+  // One value per cell: the date and the clock range are separate columns so
+  // every row stays one line tall. A cross-day window names the end date
+  // inside the (single-line) range.
+  const dateCell = (starts: number | null) => <span class="whitespace-nowrap tabular-nums">{formatDate(starts, locale())}</span>;
+  const rangeText = (starts: number | null, ends: number | null) =>
+    sameDay(starts, ends)
+      ? `${timeOnly(starts)} – ${timeOnly(ends)}`
+      : `${timeOnly(starts)} → ${formatDate(ends, locale())} ${timeOnly(ends)}`;
+  const rangeCell = (starts: number | null, ends: number | null) => {
+    const text = rangeText(starts, ends);
+    return <span class="block truncate tabular-nums text-muted-foreground" title={text}>{text}</span>;
+  };
+  const windowColumns = <T extends { starts_at: number | null; ends_at: number | null }>(): ColumnDef<T>[] => [
+    {
+      id: "date",
+      accessorFn: (row) => row.starts_at ?? 0,
+      header: t("appointments.date"),
+      meta: { cellClass: "whitespace-nowrap" },
+      cell: (cell) => dateCell(cell.row.original.starts_at),
+    },
+    {
+      id: "time",
+      header: t("appointments.time"),
+      meta: { cellClass: "max-w-0" },
+      cell: (cell) => rangeCell(cell.row.original.starts_at, cell.row.original.ends_at),
+    },
+  ];
+  // A standing reschedule proposal is its own flag column, not a caption
+  // under the time (the row's window already IS the proposed one).
+  const proposalColumn = (): ColumnDef<Appointment> => ({
+    id: "proposal",
+    accessorFn: (row) => (hasStandingProposal(row) ? 1 : 0),
+    header: t("appointments.proposal"),
+    meta: { headerClass: "text-center", cellClass: "text-center" },
+    cell: (cell) =>
+      hasStandingProposal(cell.row.original)
+        ? <Badge variant="info" class="rounded-full">{t("appointments.proposalPending")}</Badge>
+        : <span class="text-muted-foreground">—</span>,
+  });
   const statusBadge = (status: AppointmentStatus) => (
     <Badge variant="outline" class={cn("w-28 justify-center rounded-full", appointmentStatusClass(status))}>
       <span class={cn("mr-1.5 h-1.5 w-1.5 rounded-full", appointmentStatusDotClass(status))} />
@@ -176,25 +202,20 @@ function AppointmentsContent() {
   const slotBooking = (slotId: string) => (appts.latest ?? []).find((a) => a.slot === slotId && isLive(a.status));
 
   const slotColumns = createMemo<ColumnDef<AppointmentSlot>[]>(() => [
-    {
-      id: "time",
-      header: t("appointments.time"),
-      meta: { headerClass: "w-44", cellClass: "align-top pr-4" },
-      cell: (cell) => timeCell(cell.row.original.starts_at, cell.row.original.ends_at),
-    },
+    ...windowColumns<AppointmentSlot>(),
     {
       id: "status",
       header: t("appointments.status"),
       meta: { headerClass: "text-center", cellClass: "text-center" },
       cell: (cell) => {
         const booking = slotBooking(cell.row.original.id);
-        return booking ? statusBadge(booking.status) : <span class="text-xs text-muted-foreground">{t("appointments.availableSlots")}</span>;
+        return booking ? statusBadge(booking.status) : <span class="text-muted-foreground">{t("appointments.availableSlots")}</span>;
       },
     },
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => {
         const slot = cell.row.original;
         const actions = [{
@@ -237,19 +258,8 @@ function AppointmentsContent() {
       header: t("appointments.student"),
       cell: (cell) => <span class="block truncate font-medium">{personLabel(cell.row.original.requester)}</span>,
     },
-    {
-      id: "time",
-      header: t("appointments.time"),
-      meta: { headerClass: "w-44", cellClass: "align-top pr-4" },
-      cell: (cell) => (
-        <div class="flex flex-col gap-0.5">
-          {timeCell(cell.row.original.starts_at, cell.row.original.ends_at)}
-          <Show when={hasStandingProposal(cell.row.original)}>
-            <div class="text-info-text text-xs">{t("appointments.rescheduleProposed")}</div>
-          </Show>
-        </div>
-      ),
-    },
+    ...windowColumns<Appointment>(),
+    proposalColumn(),
     {
       id: "status",
       header: t("appointments.status"),
@@ -259,7 +269,7 @@ function AppointmentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => {
         const a = cell.row.original;
         const actions = [] as { label: string; icon: import("solid-js").JSX.Element; destructive?: boolean; onSelect: () => void }[];
@@ -291,16 +301,11 @@ function AppointmentsContent() {
       header: t("appointments.teacher"),
       cell: (cell) => <span class="block truncate font-medium">{personLabel(cell.row.original.teacher)}</span>,
     },
-    {
-      id: "time",
-      header: t("appointments.time"),
-      meta: { headerClass: "w-44", cellClass: "align-top pr-4" },
-      cell: (cell) => timeCell(cell.row.original.starts_at, cell.row.original.ends_at),
-    },
+    ...windowColumns<AppointmentSlot>(),
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-40 text-center", cellClass: "w-40 min-w-[10rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}
@@ -327,22 +332,8 @@ function AppointmentsContent() {
       header: t("appointments.teacher"),
       cell: (cell) => <span class="block truncate font-medium">{personLabel(cell.row.original.teacher)}</span>,
     },
-    {
-      id: "time",
-      header: t("appointments.time"),
-      meta: { headerClass: "w-44", cellClass: "align-top pr-4" },
-      cell: (cell) => (
-        <div class="flex flex-col gap-0.5">
-          {/* The effective window IS the proposal while one stands (backend
-              `Appointment::window`), so the row's own time already shows the
-              proposed one — label it instead of printing it twice. */}
-          <Show when={hasStandingProposal(cell.row.original)}>
-            <div class="text-info-text text-xs">{t("appointments.proposedTime")}:</div>
-          </Show>
-          {timeCell(cell.row.original.starts_at, cell.row.original.ends_at)}
-        </div>
-      ),
-    },
+    ...windowColumns<Appointment>(),
+    proposalColumn(),
     {
       id: "status",
       header: t("appointments.status"),
@@ -352,7 +343,7 @@ function AppointmentsContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "text-center", cellClass: "w-28 min-w-[7rem] text-center whitespace-nowrap" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => {
         const a = cell.row.original;
         const actions = [] as { label: string; icon: import("solid-js").JSX.Element; destructive?: boolean; onSelect: () => void }[];

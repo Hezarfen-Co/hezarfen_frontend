@@ -608,7 +608,6 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                     <For each={row.getVisibleCells()}>
                       {(cell) => {
                         const val = cell.getValue();
-                        const isText = typeof val === "string" || typeof val === "number";
                         const isSystemColumn = ["actions", "update", "select"].includes(cell.column.id);
                         // A display column (no accessorFn/accessorKey) has no
                         // value to be empty — getValue() is always undefined —
@@ -629,7 +628,17 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                               actionColumnClass(cell.column.id),
                             )}
                             style={{ width: columnWidth(cell.column) }}
-                            title={isText && !isEmpty ? String(val) : undefined}
+                            // The tooltip is what the cell shows, and only when
+                            // it is cut: the accessor value is a sort key (an
+                            // epoch, minutes, an unrounded mark), not the text.
+                            onMouseEnter={(event) => {
+                              if (isSystemColumn) return;
+                              const el = event.currentTarget;
+                              const clipped = [el, ...el.querySelectorAll<HTMLElement>("*")].some((node) => node.scrollWidth > node.clientWidth + 1);
+                              const text = el.textContent?.trim() ?? "";
+                              if (clipped && text) el.title = text;
+                              else el.removeAttribute("title");
+                            }}
                           >
                             <Show when={!isEmpty} fallback={<span class="text-muted-foreground/40">-</span>}>
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}

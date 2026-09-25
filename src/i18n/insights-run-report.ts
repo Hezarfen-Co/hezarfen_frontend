@@ -46,6 +46,10 @@ export type RunReportKey =
   | "noIssues"
   | "pendingStudents"
   | "failedModules"
+  | "pendingColumn"
+  | "failedModulesColumn"
+  | "budgetOver"
+  | "budgetOk"
   | "coverage"
   | "coverageNote"
   | "loadAll"
@@ -114,6 +118,10 @@ const tr: Record<RunReportKey, string> = {
   noIssues: "Sorun yok",
   pendingStudents: "{count} öğrenci sıradaki çalıştırmaya kaldı",
   failedModules: "Veri üretmeyen modüller: {modules}",
+  pendingColumn: "Sırada kalan",
+  failedModulesColumn: "Veri üretmeyen modüller",
+  budgetOver: "Aşıldı",
+  budgetOk: "İçinde",
   coverage: "Sinyalleri yüklenen öğrenci: {loaded}/{total}",
   coverageNote: "Okul geneli sayılar yalnızca sinyalleri yüklenmiş öğrencileri kapsar.",
   loadAll: "Kalan {count} öğrenciyi yükle",
@@ -183,6 +191,10 @@ const en: Record<RunReportKey, string> = {
   noIssues: "No issues",
   pendingStudents: "{count} students left for the next run",
   failedModules: "Modules that produced nothing: {modules}",
+  pendingColumn: "Left pending",
+  failedModulesColumn: "Modules without data",
+  budgetOver: "Exceeded",
+  budgetOk: "Within",
   coverage: "Students with signals loaded: {loaded}/{total}",
   coverageNote: "School overview numbers cover only the students whose signals are loaded.",
   loadAll: "Load the remaining {count} students",

@@ -407,9 +407,9 @@ function MarksView(props: { value: Rec; courseTitle: CourseTitle }) {
   const courseColumns: ColumnDef<{ id: string; stat: unknown; index: number }>[] = [
     {
       id: "course",
+      accessorFn: (row) => str(obj(row.stat).course_title) ?? courseLabel(row.id, props.courseTitle, row.index),
       header: detailText("marks.course"),
       meta: { cellClass: "font-medium text-text-strong" },
-      cell: (cell) => str(obj(cell.row.original.stat).course_title) ?? courseLabel(cell.row.original.id, props.courseTitle, cell.row.original.index),
     },
     { id: "average", header: detailText("marks.average"), meta: centered, cell: (cell) => nText(obj(cell.row.original.stat).average) ?? "—" },
     { id: "n_marks", header: detailText("marks.nMarks"), meta: centered, cell: (cell) => String(num(obj(cell.row.original.stat).n_marks) ?? 0) },

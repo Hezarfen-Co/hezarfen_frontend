@@ -90,17 +90,23 @@ export function BoardSettingsPanel(props: {
     {
       accessorKey: "name",
       header: t("whiteboard.participants"),
-      cell: (cell) => (
-        <div class="min-w-0">
-          <p class="truncate text-sm font-medium">{cell.row.original.name}</p>
-          <Show when={cell.row.original.role}><p class="text-xs text-muted-foreground">{cell.row.original.role}</p></Show>
-        </div>
-      ),
+      meta: { cellClass: "font-medium" },
+    },
+    // The role used to sit under the name as a second line; one value per cell.
+    {
+      id: "role",
+      accessorFn: (row) => row.role || undefined,
+      header: t("admin.role"),
+      meta: { cellClass: "text-muted-foreground" },
     },
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { align: "center", label: t("common.actions") },
+      meta: {
+        label: t("common.actions"),
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "text-center",
+      },
       cell: (cell) => (
         <Show
           when={props.canManageParticipants() && !cell.row.original.creator}

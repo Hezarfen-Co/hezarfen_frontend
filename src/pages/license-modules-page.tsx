@@ -50,22 +50,35 @@ function LicenseModulesContent() {
     {
       id: "module",
       header: t("modules.module"),
-      cell: (cell) => (
-        <div class="flex min-w-0 items-center gap-2.5">
-          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-surface-tint text-text-subtle">
-            <IconPackage class="h-4 w-4" />
+      meta: { cellClass: "max-w-0" },
+      cell: (cell) => {
+        const label = moduleLabel(cell.row.original.module, t);
+        return (
+          <span class="flex min-w-0 items-center gap-2 font-medium text-text-strong">
+            <IconPackage class="h-4 w-4 shrink-0 text-text-subtle" />
+            <span class="truncate" title={label}>{label}</span>
           </span>
-          <div class="min-w-0">
-            <p class="truncate text-sm font-medium text-text-strong">{moduleLabel(cell.row.original.module, t)}</p>
-            <p class="truncate text-xs text-text-subtle">
-              {packageLabel(cell.row.original.package, t)}
-              <Show when={cell.row.original.requires.length > 0}>
-                {` · ${t("modules.requires")}: ${cell.row.original.requires.map((name) => moduleLabel(name, t)).join(", ")}`}
-              </Show>
-            </p>
-          </div>
-        </div>
-      ),
+        );
+      },
+    },
+    // Package and prerequisites are their own columns rather than a caption
+    // line under the module name, so every row stays one line tall.
+    {
+      id: "package",
+      accessorFn: (row) => packageLabel(row.package, t),
+      header: t("modules.package"),
+      meta: { cellClass: "max-w-0 text-text-subtle" },
+    },
+    {
+      id: "requires",
+      accessorFn: (row) => row.requires.map((name) => moduleLabel(name, t)).join(", "),
+      header: t("modules.requires"),
+      enableSorting: false,
+      meta: { cellClass: "max-w-0 text-text-subtle" },
+      cell: (cell) => {
+        const text = cell.row.original.requires.map((name) => moduleLabel(name, t)).join(", ");
+        return text ? <span class="block truncate" title={text}>{text}</span> : "—";
+      },
     },
     {
       id: "status",

@@ -131,29 +131,32 @@ function EventsContent() {
       header: t("events.title"),
       size: 220,
       minSize: 180,
+      meta: { cellClass: "max-w-0" },
       cell: (cell) => (
-        <div class="min-w-0">
-          <Link to="/events/$id" params={{ id: cell.row.original.id }} class="truncate font-medium hover:text-primary-text hover:underline">
-            {cell.row.original.title}
-          </Link>
-        </div>
+        <Link to="/events/$id" params={{ id: cell.row.original.id }} class="block truncate font-medium hover:text-primary-text hover:underline" title={cell.row.original.title}>
+          {cell.row.original.title}
+        </Link>
       ),
     },
+    // Start and end are separate columns (one date-time each) so every row
+    // stays one line tall.
     {
       id: "time",
       accessorFn: (event) => event.starts_at ?? event.ends_at ?? 0,
       header: t("events.starts"),
-      size: 190,
-      minSize: 160,
-      meta: { cellClass: "text-xs text-muted-foreground" },
-      cell: (cell) => (
-        <div class="whitespace-nowrap">
-          <p>{formatDateTime(cell.row.original.starts_at, locale())}</p>
-          <Show when={cell.row.original.ends_at}>
-            <p class="text-[11px]">→ {formatDateTime(cell.row.original.ends_at, locale())}</p>
-          </Show>
-        </div>
-      ),
+      size: 160,
+      minSize: 140,
+      meta: { cellClass: "whitespace-nowrap text-muted-foreground" },
+      cell: (cell) => formatDateTime(cell.row.original.starts_at, locale()),
+    },
+    {
+      id: "ends",
+      accessorFn: (event) => event.ends_at ?? 0,
+      header: t("events.ends"),
+      size: 160,
+      minSize: 140,
+      meta: { cellClass: "whitespace-nowrap text-muted-foreground" },
+      cell: (cell) => (cell.row.original.ends_at ? formatDateTime(cell.row.original.ends_at, locale()) : "—"),
     },
     {
       id: "audience",
@@ -181,6 +184,7 @@ function EventsContent() {
     {
       id: "actions",
       header: t("common.actions"),
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}

@@ -98,8 +98,9 @@ function StudentsRosterContent() {
       id: "class",
       size: 90,
       header: t("roster.class"),
+      meta: { cellClass: "max-w-0" },
       cell: (cell) => (
-        <span class="truncate text-sm">{cell.row.original.classes.map((cls) => cls.name).join(", ") || "—"}</span>
+        <span class="block truncate text-sm" title={cell.row.original.classes.map((cls) => cls.name).join(", ") || undefined}>{cell.row.original.classes.map((cls) => cls.name).join(", ") || "—"}</span>
       ),
     },
     {

@@ -189,13 +189,17 @@ function StaffWorkContent() {
       id: "time",
       accessorFn: (row) => row.check_in,
       header: t("work.checkIn"),
-      meta: { cellClass: "text-xs" },
-      cell: (cell) => (
-        <div class="whitespace-nowrap">
-          <p>{formatDateTime(cell.row.original.check_in, locale())}</p>
-          <p class="text-[11px] text-muted-foreground">→ {formatDateTime(cell.row.original.check_out, locale())}</p>
-        </div>
-      ),
+      meta: { cellClass: "text-xs whitespace-nowrap" },
+      cell: (cell) => formatDateTime(cell.row.original.check_in, locale()),
+    },
+    // Check-out is its own column (as on the work-log page), not a second
+    // line under check-in.
+    {
+      id: "checkOut",
+      accessorFn: (row) => row.check_out ?? 0,
+      header: t("work.checkOut"),
+      meta: { cellClass: "text-xs whitespace-nowrap text-muted-foreground" },
+      cell: (cell) => formatDateTime(cell.row.original.check_out, locale()),
     },
     {
       accessorKey: "duration_ms",

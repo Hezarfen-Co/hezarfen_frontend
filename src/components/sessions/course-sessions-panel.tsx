@@ -213,19 +213,21 @@ export function CourseSessionsPanel(props: {
       meta: { cellClass: "font-medium" },
       cell: (cell) => cell.row.original.topic || t("sessions.untitled"),
     },
+    // Start and end are separate columns so each cell holds one value and
+    // every row keeps the same height.
     {
-      id: "time",
+      id: "starts",
       accessorFn: (row) => row.starts_at,
-      header: t("appointments.time"),
-      meta: { cellClass: "text-xs text-muted-foreground" },
-      cell: (cell) => (
-        <div class="whitespace-nowrap">
-          <p>{formatDateTime(cell.row.original.starts_at, locale())}</p>
-          <Show when={cell.row.original.ends_at}>
-            <p class="text-[11px]">→ {formatDateTime(cell.row.original.ends_at, locale())}</p>
-          </Show>
-        </div>
-      ),
+      header: t("appointments.starts"),
+      meta: { cellClass: "text-muted-foreground" },
+      cell: (cell) => formatDateTime(cell.row.original.starts_at, locale()),
+    },
+    {
+      id: "ends",
+      accessorFn: (row) => row.ends_at ?? undefined,
+      header: t("appointments.ends"),
+      meta: { cellClass: "text-muted-foreground" },
+      cell: (cell) => formatDateTime(cell.row.original.ends_at, locale()),
     },
     {
       id: "teacher",
@@ -237,7 +239,7 @@ export function CourseSessionsPanel(props: {
       ? [{
           id: "actions",
           header: t("common.actions"),
-          meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+          meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
           cell: (cell) => (
             <TableRowActions
               label={t("common.actions")}

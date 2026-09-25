@@ -67,8 +67,9 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
   const courseColumns = createMemo<ColumnDef<CourseBlock>[]>(() => [
     {
       id: "course",
+      accessorFn: (row) => row.course.title,
       header: t("nav.courses"),
-      meta: { headerClass: "w-[42%]" },
+      meta: { headerClass: "w-[36%]" },
       cell: (cell) => (
         <Link to="/courses/$id" params={{ id: cell.row.original.course.id }} class="block truncate font-medium hover:text-primary-text hover:underline">
           {cell.row.original.course.title}
@@ -78,7 +79,7 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
     {
       id: "instance",
       header: t("instances.title"),
-      meta: { headerClass: "w-[28%]", cellClass: "text-muted-foreground" },
+      meta: { headerClass: "w-[24%]", cellClass: "text-muted-foreground" },
       cell: (cell) => (
         <Link
           to="/instances/$id"
@@ -91,18 +92,27 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
         </Link>
       ),
     },
+    // The average and its band are two values, so two columns: "68,2 · Bant 3"
+    // in one cell was the one row taller and wider than its neighbours.
     {
       id: "average",
+      accessorFn: (row) => row.average ?? undefined,
       header: t("marks.courseAvg"),
-      meta: { headerClass: "w-[30%]" },
+      meta: { headerClass: "w-[22%]" },
       cell: (cell) => (
-        <div class="flex items-center gap-2">
+        <div class="flex min-w-0 items-center gap-2">
           <div class="h-1.5 w-12 min-w-8 shrink overflow-hidden rounded-full bg-muted">
             <div class="h-full rounded-full bg-primary" style={{ width: scoreWidth(cell.row.original.average) }} />
           </div>
-          <span class="shrink-0 text-xs font-semibold tabular-nums">{markWithGrade(cell.row.original.average, cell.row.original.average_grade)}</span>
+          <span class="shrink-0 font-semibold tabular-nums">{formatDecimal(cell.row.original.average!, locale())}</span>
         </div>
       ),
+    },
+    {
+      id: "band",
+      accessorFn: (row) => row.average_grade || undefined,
+      header: t("marks.band"),
+      meta: { headerClass: "w-[18%]" },
     },
   ]);
   const [settings] = createResource(() => getSettings());
@@ -121,22 +131,17 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
       header: t("marks.exam"),
       meta: { stickyLeft: true },
       cell: (cell) => (
-        <span class="min-w-0">
-          <ExamLink examId={cell.row.original.exam} class="block truncate font-medium hover:underline">
-            {cell.row.original.title}
-          </ExamLink>
-          <Show when={compact()}>
-            <p class="mt-0.5 truncate text-[11px] text-muted-foreground sm:hidden">
-              {examKindLabel(cell.row.original.kind, t)}
-            </p>
-          </Show>
-        </span>
+        <ExamLink examId={cell.row.original.exam} class="block truncate font-medium hover:underline">
+          {cell.row.original.title}
+        </ExamLink>
       ),
     },
+    // The kind is its own column at every width; the compact view used to hide
+    // it and stack it under the title as a second line instead.
     {
-      accessorKey: "kind",
+      id: "kind",
+      accessorFn: (row) => examKindLabel(row.kind, t),
       header: t("exams.kind"),
-      meta: { headerClass: compact() ? "hidden sm:table-cell" : undefined, cellClass: compact() ? "hidden sm:table-cell" : undefined },
       cell: (cell) => <Badge variant="outline" class="rounded-sm capitalize">{examKindLabel(cell.row.original.kind, t)}</Badge>,
     },
     {
@@ -146,10 +151,17 @@ export function MarksReportView(props: { report: MarksReport; compact?: boolean 
       cell: (cell) => examWeight(cell.row.original, settings()?.exam_kinds) ?? "—",
     },
     {
-      accessorKey: "mark",
+      id: "mark",
+      accessorFn: (row) => row.mark ?? undefined,
       header: t("marks.mark"),
       meta: { align: "right", cellClass: "font-semibold" },
-      cell: (cell) => markWithGrade(cell.row.original.mark, cell.row.original.grade),
+      cell: (cell) => formatDecimal(cell.row.original.mark!, locale()),
+    },
+    {
+      id: "grade",
+      accessorFn: (row) => row.grade || undefined,
+      header: t("marks.band"),
+      meta: { align: "right" },
     },
   ]);
 

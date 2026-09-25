@@ -688,15 +688,23 @@ function DashboardContent() {
       accessorKey: "title",
       header: t("dashboard.col.task"),
       enableSorting: false,
-      meta: { headerClass },
-      cell: (info) => (
-        <div class="min-w-0">
-          <span class="block truncate font-medium">{info.row.original.title}</span>
-          <Show when={deadlineSection(info.row.original)}>
-            {(section) => <span class="block truncate text-xs text-text-subtle">{section()}</span>}
-          </Show>
-        </div>
-      ),
+      meta: { headerClass, cellClass: "max-w-0" },
+      cell: (info) => <span class="block truncate font-medium" title={info.row.original.title}>{info.row.original.title}</span>,
+    },
+    {
+      // "<ders> — <şube>" in its own column, not a caption under the title,
+      // so every row stays one line tall.
+      id: "section",
+      accessorFn: (row) => deadlineSection(row) ?? "",
+      header: t("dashboard.col.section"),
+      enableSorting: false,
+      meta: { headerClass, cellClass: "max-w-0" },
+      cell: (info) => {
+        const section = deadlineSection(info.row.original);
+        return section
+          ? <span class="block truncate text-text-subtle" title={section}>{section}</span>
+          : <span class="text-muted-foreground">—</span>;
+      },
     },
     {
       accessorKey: "kind",

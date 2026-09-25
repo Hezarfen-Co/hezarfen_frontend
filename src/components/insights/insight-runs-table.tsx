@@ -26,17 +26,21 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
   const rtx = (key: RunReportKey, vars?: Record<string, string | number>) =>
     runReportText(prefs.locale(), key, vars);
   const [selectedRun, setSelectedRun] = createSignal<InsightRun | null>(null);
+  // One value per cell: the start time, the failed/skipped counts and each
+  // kind of issue used to stack under a headline value, so rows grew to
+  // different heights. Each now has its own column.
   const columns = createMemo<ColumnDef<InsightRun>[]>(() => [
     {
       accessorKey: "run_day",
       header: tx("insights.runDay"),
-      meta: { align: "center" },
-      cell: (cell) => (
-        <div>
-          <p class="font-medium text-text-strong">{cell.row.original.run_day}</p>
-          <p class="text-xs text-muted-foreground">{formatDateTime(cell.row.original.started_at, prefs.locale())}</p>
-        </div>
-      ),
+      meta: { align: "center", cellClass: "font-medium text-text-strong" },
+    },
+    {
+      id: "started_at",
+      accessorFn: (row) => row.started_at,
+      header: rtx("startedAt"),
+      meta: { align: "center", cellClass: "text-muted-foreground" },
+      cell: (cell) => formatDateTime(cell.row.original.started_at, prefs.locale()),
     },
     {
       accessorKey: "status",
@@ -52,16 +56,18 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
       id: "processed",
       header: tx("insights.processed"),
       accessorFn: (row) => row.students_ok,
-      meta: { align: "center" },
-      cell: (cell) => {
-        const run = cell.row.original;
-        return (
-          <div class="text-center">
-            <p class="font-medium tabular-nums">{run.students_ok}/{run.students_total}</p>
-            <p class="text-[11px] text-muted-foreground">{run.students_failed} / {run.students_skipped}</p>
-          </div>
-        );
-      },
+      meta: { align: "center", cellClass: "font-medium tabular-nums" },
+      cell: (cell) => `${cell.row.original.students_ok}/${cell.row.original.students_total}`,
+    },
+    {
+      accessorKey: "students_failed",
+      header: rtx("failed"),
+      meta: { align: "center", cellClass: "tabular-nums" },
+    },
+    {
+      accessorKey: "students_skipped",
+      header: rtx("skipped"),
+      meta: { align: "center", cellClass: "tabular-nums" },
     },
     {
       accessorKey: "rows_written",
@@ -75,42 +81,43 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
       cell: (cell) => <span class="tabular-nums">{formatDurationMinutes(cell.row.original.duration_ms, prefs.locale())}</span>,
     },
     {
-      id: "issues",
-      header: tx("insights.issues"),
-      enableSorting: false,
+      id: "budget",
+      accessorFn: (row) => (row.budget_exceeded ? 1 : 0),
+      header: rtx("budget"),
+      meta: { align: "center" },
+      cell: (cell) =>
+        cell.row.original.budget_exceeded
+          ? <Badge variant="warning" class="rounded-full">{rtx("budgetOver")}</Badge>
+          : <span class="text-muted-foreground">{rtx("budgetOk")}</span>,
+    },
+    {
+      id: "pending",
+      accessorFn: (row) => row.pending_students.length,
+      header: rtx("pendingColumn"),
       meta: { align: "center" },
       cell: (cell) => {
-        const run = cell.row.original;
-        const issueCount = run.pending_students.length + run.failed_modules.length;
+        const pending = cell.row.original.pending_students;
         return (
-          <div class="space-y-1 text-center">
-            <p class={cn("text-xs", issueCount > 0 || run.budget_exceeded ? "text-warning-text" : "text-muted-foreground")}>
-              {issueCount > 0 ? tx("insights.issueCount", { count: issueCount }) : tx("insights.noIssues")}
-            </p>
-            {run.budget_exceeded && <p class="text-[11px] text-warning-text">{tx("insights.budgetExceeded")}</p>}
-            {run.pending_students.length > 0 && (
-              <p class="max-w-56 truncate text-[11px] text-muted-foreground" title={run.pending_students.join(", ")}>
-                {tx("insights.pendingStudents", { count: run.pending_students.length })}
-              </p>
-            )}
-            {run.failed_modules.length > 0 && (
-              <p class="max-w-56 truncate text-[11px] text-muted-foreground" title={run.failed_modules.join(", ")}>
-                {tx("insights.failedModules", {
-                  modules: run.failed_modules.map((stage) => failedStageText(prefs.locale(), stage)).join(", "),
-                })}
-              </p>
-            )}
-          </div>
+          <span class={cn("tabular-nums", pending.length > 0 ? "text-warning-text" : "text-muted-foreground")} title={pending.join(", ") || undefined}>
+            {pending.length}
+          </span>
         );
       },
+    },
+    {
+      id: "failed_modules",
+      accessorFn: (row) => row.failed_modules.map((stage) => failedStageText(prefs.locale(), stage)).join(", "),
+      header: rtx("failedModulesColumn"),
+      enableSorting: false,
+      meta: { cellClass: "text-warning-text" },
     },
     {
       id: "actions",
       header: tx("common.actions"),
       enableSorting: false,
       meta: {
-        headerClass: "w-[150px] min-w-[150px] max-w-[150px] h-[45px] text-center whitespace-nowrap",
-        cellClass: "w-[150px] min-w-[150px] max-w-[150px] h-[45px] text-center whitespace-nowrap",
+        headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap",
+        cellClass: "text-center",
       },
       cell: (cell) => (
         <TableRowActions
@@ -135,7 +142,7 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
         columns={columns()}
         data={props.runs}
         empty={tx("insights.emptyRuns")}
-        tableClass="insight-grid-table min-w-[56rem]"
+        tableClass="insight-grid-table min-w-[76rem]"
         enablePagination
         pageSize={10}
         storageKey="insight-runs"

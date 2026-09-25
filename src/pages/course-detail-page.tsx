@@ -162,7 +162,7 @@ function CourseDetailContent() {
       header: t("classGroups.className"),
       meta: { cellClass: "font-medium" },
       cell: (cell) => (
-        <Link to="/instances/$id" params={{ id: cell.row.original.id }} class="hover:text-primary-text hover:underline">
+        <Link to="/instances/$id" params={{ id: cell.row.original.id }} class="block truncate hover:text-primary-text hover:underline" title={cell.row.original.class_name}>
           {cell.row.original.class_name}
         </Link>
       ),
@@ -209,7 +209,7 @@ function CourseDetailContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => (
         <Show when={canManageCatalog()}>
           <TableRowActions

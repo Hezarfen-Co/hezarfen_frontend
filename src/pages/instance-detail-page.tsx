@@ -236,17 +236,22 @@ function InstanceDetailContent() {
       id: "student",
       accessorFn: (row) => row.user.display_name || row.user.username,
       header: t("roster.studentName"),
-      meta: { cellClass: "font-medium" },
-      cell: (cell) => (
-        <span class="flex items-center gap-2">
-          {cell.row.original.user.display_name || t("exams.nameless")}
-          <Show when={cell.row.original.source}>
-            <Badge variant="secondary" class="rounded-full text-xs font-normal">
-              {t("course.fromClass", { name: klass.latest?.name ?? "—" })}
-            </Badge>
-          </Show>
-        </span>
-      ),
+      meta: { cellClass: "max-w-0 font-medium" },
+      cell: (cell) => {
+        const name = cell.row.original.user.display_name || t("exams.nameless");
+        return <span class="block truncate" title={name}>{name}</span>;
+      },
+    },
+    {
+      // How the student got here (through the şube vs. added directly) is its
+      // own column, not a badge beside the name.
+      id: "source",
+      accessorFn: (row) => (row.source ? 1 : 0),
+      header: t("roster.enrolledVia"),
+      cell: (cell) =>
+        cell.row.original.source
+          ? <Badge variant="secondary" class="rounded-full text-xs font-normal">{t("course.fromClass", { name: klass.latest?.name ?? "—" })}</Badge>
+          : <span class="text-muted-foreground">—</span>,
     },
     {
       id: "class",
@@ -258,7 +263,7 @@ function InstanceDetailContent() {
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-14 text-center", cellClass: "px-1 text-center" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => (
         <Show when={canManage()}>
           <TableRowActions
@@ -285,9 +290,9 @@ function InstanceDetailContent() {
     {
       accessorKey: "title",
       header: t("form.title"),
-      meta: { cellClass: "font-medium" },
+      meta: { cellClass: "max-w-0 font-medium" },
       cell: (cell) => (
-        <ExamLink examId={cell.row.original.id} class="hover:text-primary-text hover:underline">
+        <ExamLink examId={cell.row.original.id} class="block truncate hover:text-primary-text hover:underline" title={cell.row.original.title}>
           {cell.row.original.title}
         </ExamLink>
       ),
@@ -299,11 +304,17 @@ function InstanceDetailContent() {
       cell: (cell) => (
         <Badge variant="outline" class="rounded-full capitalize">
           {examKindLabel(String(cell.row.original.kind), t)}
-          <Show when={examWeight(cell.row.original, sectionWeights())}>
-            {(weight) => <span class="ml-1 text-text-subtle">({t("courses.weight")}: {weight()})</span>}
-          </Show>
         </Badge>
       ),
+    },
+    {
+      // The kind's weight in this şube's average: its own column, not a
+      // parenthesised suffix inside the kind badge.
+      id: "weight",
+      accessorFn: (row) => examWeight(row, sectionWeights()) ?? -1,
+      header: t("courses.weight"),
+      meta: { cellClass: "tabular-nums" },
+      cell: (cell) => examWeight(cell.row.original, sectionWeights()) ?? "—",
     },
     {
       id: "mode",

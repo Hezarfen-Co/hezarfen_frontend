@@ -187,7 +187,7 @@ export function CourseHomeworkPanel(props: {
       ? [{
           id: "actions",
           header: t("common.actions"),
-          meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap", cellClass: "px-1 text-center" },
+          meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
           cell: (cell) => (
             <TableRowActions
               label={t("common.actions")}
