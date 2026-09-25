@@ -1890,6 +1890,7 @@ export const en: Dict = {
   "marks.tabByCourse": "By course",
   "marks.selectCourse": "Course",
   "exams.mustBelongCourse": "Exams are created under a course. Open a course to add one.",
+  "homework.mark": "Mark",
   "exams.missingCourse": "Course unavailable",
   "exams.statistics": "Statistics",
   "exams.audience.tab": "Shared sections",

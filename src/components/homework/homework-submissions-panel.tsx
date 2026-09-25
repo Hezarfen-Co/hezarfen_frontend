@@ -101,39 +101,54 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
       meta: { cellClass: "font-medium" },
       cell: (cell) => studentLabel(cell.row.original.user),
     },
+    // One value per cell: status, time, result and mark each get a column,
+    // so every row keeps the same height instead of stacking a badge over
+    // a date or a mark.
     {
       id: "submitted",
+      accessorFn: (row) => (row.submission ? (row.submission.late ? 2 : 1) : 0),
       header: t("homework.submission"),
-      cell: (cell) => (
-        <Show when={cell.row.original.submission} fallback={<Badge variant="outline" class="rounded-full">{t("homework.notSubmitted")}</Badge>}>
-          {(submission) => (
-            <div class="space-y-1">
-              <Badge variant="secondary" class="rounded-full">{t("homework.submitted")}</Badge>
-              <p class="text-xs text-text-subtle">{formatDateTime(submission().updated_at, locale())}</p>
-              <Show when={submission().late}><p class="text-xs text-amber-600">{t("homework.late")}</p></Show>
-            </div>
-          )}
-        </Show>
-      ),
+      cell: (cell) => {
+        const submission = cell.row.original.submission;
+        if (!submission) return <Badge variant="outline" class="rounded-full">{t("homework.notSubmitted")}</Badge>;
+        return submission.late
+          ? <Badge variant="warning" class="rounded-full">{t("homework.submitted")} · {t("homework.late")}</Badge>
+          : <Badge variant="secondary" class="rounded-full">{t("homework.submitted")}</Badge>;
+      },
+    },
+    {
+      id: "submittedAt",
+      accessorFn: (row) => row.submission?.updated_at ?? 0,
+      header: t("homework.submittedAt"),
+      meta: { cellClass: "text-text-subtle" },
+      cell: (cell) => {
+        const submission = cell.row.original.submission;
+        return submission ? formatDateTime(submission.updated_at, locale()) : "—";
+      },
     },
     {
       id: "result",
+      accessorFn: (row) => row.result?.status ?? "",
       header: t("homework.result"),
-      cell: (cell) => (
-        <Show when={cell.row.original.result} fallback={<span class="text-text-subtle">—</span>}>
-          {(result) => (
-            <div class="space-y-1">
-              <Badge variant="outline" class="rounded-full">{statusLabel(result().status)}</Badge>
-              <Show when={result().mark != null}><p class="text-sm font-medium">{result().mark}/100</p></Show>
-            </div>
-          )}
-        </Show>
-      ),
+      cell: (cell) => {
+        const result = cell.row.original.result;
+        return result ? <Badge variant="outline" class="rounded-full">{statusLabel(result.status)}</Badge> : <span class="text-text-subtle">—</span>;
+      },
+    },
+    {
+      id: "mark",
+      accessorFn: (row) => row.result?.mark ?? -1,
+      header: t("homework.mark"),
+      meta: { cellClass: "tabular-nums" },
+      cell: (cell) => {
+        const mark = cell.row.original.result?.mark;
+        return mark != null ? `${mark}/100` : <span class="text-text-subtle">—</span>;
+      },
     },
     {
       id: "actions",
       header: t("common.actions"),
-      meta: { headerClass: "w-28 min-w-28 text-center whitespace-nowrap", cellClass: "px-1 text-center" },
+      meta: { headerClass: "w-[110px] min-w-[110px] max-w-[110px] h-[45px] text-center whitespace-nowrap", cellClass: "text-center" },
       cell: (cell) => (
         <TableRowActions
           label={t("common.actions")}

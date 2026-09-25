@@ -1886,6 +1886,7 @@ export const tr: Dict = {
   "marks.tabByCourse": "Derslere göre",
   "marks.selectCourse": "Ders",
   "exams.mustBelongCourse": "Sınavlar ders altında oluşturulur. Eklemek için bir ders aç.",
+  "homework.mark": "Puan",
   "exams.missingCourse": "Ders bilgisi yok",
   "exams.statistics": "İstatistikler",
   "exams.audience.tab": "Paylaşılan şubeler",

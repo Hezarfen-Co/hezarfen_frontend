@@ -193,8 +193,10 @@
   }
 
   & td {
-    /* tabular-nums: vertically aligned digits without a mono font. */
-    @apply whitespace-nowrap px-3 py-3 align-middle text-sm font-normal text-foreground tabular-nums first:pl-4 last:pr-4;
+    /* tabular-nums: vertically aligned digits without a mono font.
+     * One line per cell, cut with an ellipsis: a nowrap value longer than
+     * its fixed-layout column used to run over the next cell's text. */
+    @apply overflow-hidden text-ellipsis whitespace-nowrap px-3 py-3 align-middle text-sm font-normal text-foreground tabular-nums first:pl-4 last:pr-4;
   }
 
   & tbody tr {
@@ -334,6 +336,19 @@
   }
 
   & form > .grid {
+    @apply rounded-lg border border-border bg-card p-4;
+  }
+
+  /* Every field group is its own card, whatever its wrapper: a checkbox row,
+     a picker rendered straight into the form or a space-y-2 block used to
+     sit bare between carded siblings. Alerts, the sticky action bar and
+     blocks that already draw a border keep their own look. */
+  & form > :is(div, fieldset, label, section):not(.flex:last-child, [role="alert"], .sticky, [class*="mt-auto"], [class*="border"]) {
+    @apply rounded-lg border border-border bg-card p-4;
+  }
+
+  /* Read-only panels get the same cards: a block of detail fields. */
+  & :is(div, section):has(> [data-slot="detail-field"]):not([class*="border"]) {
     @apply rounded-lg border border-border bg-card p-4;
   }
 

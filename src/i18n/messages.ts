@@ -1782,6 +1782,7 @@ export type MessageKey =
   | "marks.tabByCourse"
   | "marks.selectCourse"
   | "exams.mustBelongCourse"
+  | "homework.mark"
   | "exams.missingCourse"
   | "exams.statistics"
   | "exams.audience.tab"
