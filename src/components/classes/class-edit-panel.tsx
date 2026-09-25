@@ -3,6 +3,7 @@ import { patchClassById } from "@/api/classes";
 import { formatApiError, type AcademicYear, type ClassGroup } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { GradeLevelSelect } from "@/components/classes/grade-level-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -23,11 +24,12 @@ export function ClassEditPanel(props: {
   onSaved: (cls: ClassGroup) => void | Promise<void>;
   years: AcademicYear[];
   maxNameLen?: number;
-  maxGradeLen?: number;
+  minGradeLevel?: number;
+  maxGradeLevel?: number;
 }) {
   const t = useT();
   const [name, setName] = createSignal("");
-  const [grade, setGrade] = createSignal("");
+  const [gradeLevel, setGradeLevel] = createSignal<number | null>(null);
   const [yearId, setYearId] = createSignal("");
   const [teacherId, setTeacherId] = createSignal("");
   const [error, setError] = createSignal("");
@@ -38,7 +40,7 @@ export function ClassEditPanel(props: {
     const c = props.cls;
     if (!props.open || !c) return;
     setName(c.name);
-    setGrade(c.grade ?? "");
+    setGradeLevel(c.grade_level);
     setYearId(c.year ?? "");
     setTeacherId(c.teacher?.id ?? "");
     setError("");
@@ -51,7 +53,7 @@ export function ClassEditPanel(props: {
     setError("");
     setPending(true);
     try {
-      const saved = await patchClassById(c.id, { name: name().trim(), grade: grade().trim() || null, year: yearId() || null, teacher_id: teacherId() || null });
+      const saved = await patchClassById(c.id, { name: name().trim(), ...(gradeLevel() !== null ? { grade_level: gradeLevel()! } : {}), year: yearId() || null, teacher_id: teacherId() || null });
       props.onOpenChange(false);
       await props.onSaved(saved);
     } catch (err) {
@@ -66,7 +68,7 @@ export function ClassEditPanel(props: {
       <form class="space-y-4" onSubmit={submit}>
         <div class="space-y-3">
           <div class="space-y-1.5"><Label for="edit-class-name">{t("classGroups.className")}</Label><Input id="edit-class-name" maxlength={props.maxNameLen} value={name()} onInput={(e) => setName(e.currentTarget.value)} /></div>
-          <div class="space-y-1.5"><Label for="edit-class-grade">{t("classGroups.grade")}</Label><Input id="edit-class-grade" maxlength={props.maxGradeLen} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
+          <div class="space-y-1.5"><Label for="edit-class-grade">{t("classGroups.grade")}</Label><GradeLevelSelect id="edit-class-grade" value={gradeLevel()} min={props.minGradeLevel} max={props.maxGradeLevel} onChange={setGradeLevel} /></div>
           <div class="space-y-1.5"><Label for="edit-class-year">{t("academicYears.year")}</Label><Select id="edit-class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={props.years}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
           <UserSearchSelect id="edit-class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} initialUser={props.cls?.teacher} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
         </div>

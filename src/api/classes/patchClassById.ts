@@ -1,10 +1,11 @@
 import { client } from "../client";
 import type { ClassGroup } from "../client";
 
-// Omit a field to keep it; send null on grade/year/teacher_id to clear/unlink it.
+// Omit a field to keep it; send null on year/teacher_id to clear/unlink it. The
+// grade is required on every class, so `grade_level` can be reset, never cleared.
 export type UpdateClassBody = {
   name?: string;
-  grade?: string | null;
+  grade_level?: number;
   /** The academic year (`getAcademicYears`) the şube sits in. */
   year?: string | null;
   teacher_id?: string | null;

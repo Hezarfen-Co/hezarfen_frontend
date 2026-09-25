@@ -29,9 +29,7 @@ const collator = new Intl.Collator("tr", { numeric: true, sensitivity: "base" })
 
 /** Class order a school reads rosters in: grade (9 before 10), then the şube name. */
 export function compareClasses(a: ClassGroup, b: ClassGroup): number {
-  const gradeA = Number.parseInt(a.grade ?? a.name, 10);
-  const gradeB = Number.parseInt(b.grade ?? b.name, 10);
-  if (Number.isFinite(gradeA) && Number.isFinite(gradeB) && gradeA !== gradeB) return gradeA - gradeB;
+  if (a.grade_level !== b.grade_level) return a.grade_level - b.grade_level;
   return collator.compare(a.name, b.name);
 }
 

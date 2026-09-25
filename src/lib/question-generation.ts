@@ -2,6 +2,7 @@ import { getClasses } from "@/api/classes";
 import type { ClassGroup, Course } from "@/api/client";
 import { getCourseById } from "@/api/courses";
 import { getMyInstances } from "@/api/instances";
+import { gradeLevelWireLabel } from "@/lib/grade-level";
 import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 
 /** Pages one request may name; a wider range is almost always a typo. */
@@ -54,7 +55,7 @@ export async function loadStudyScopes(): Promise<StudyScopeOption[]> {
     getMyInstances({ limit: 200 }),
     getClasses({ limit: 200 }).catch(() => ({ items: [] as ClassGroup[] })),
   ]);
-  const gradeOf = new Map(classes.items.map((klass) => [klass.id, klass.grade]));
+  const gradeOf = new Map(classes.items.map((klass) => [klass.id, gradeLevelWireLabel(klass.grade_level)]));
   const courseIds = [...new Set(instances.items.map((instance) => instance.course))];
   const courses = await mapConcurrent(courseIds, FAN_OUT_LIMIT, (id) => getCourseById(id).catch(() => null));
   const courseById = new Map(courses.filter((course): course is Course => course !== null).map((course) => [course.id, course]));
@@ -63,10 +64,12 @@ export async function loadStudyScopes(): Promise<StudyScopeOption[]> {
   for (const instance of instances.items) {
     const course = courseById.get(instance.course);
     if (!course) continue;
-    const sinif = course.kind === "course" ? gradeOf.get(instance.class)?.trim() || null : null;
-    const key = `${course.title}\u0000${sinif ?? ""}`;
+    const sinif = course.kind === "course" ? gradeOf.get(instance.class) ?? null : null;
+    // The backend names a section's pair by its resolved title, not the catalog's.
+    const ders = instance.title || course.title;
+    const key = `${ders}\u0000${sinif ?? ""}`;
     if (!options.has(key)) {
-      options.set(key, { key, ders: course.title, sinif, course, label: sinif ? `${course.title} · ${sinif}` : course.title });
+      options.set(key, { key, ders, sinif, course, label: sinif ? `${ders} · ${sinif}` : ders });
     }
   }
   return [...options.values()].sort((a, b) => a.label.localeCompare(b.label, "tr"));

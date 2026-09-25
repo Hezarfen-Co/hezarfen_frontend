@@ -1,7 +1,7 @@
 import { client } from "../client";
 import type { BlueprintResult } from "../client";
 
-export type CreateBlueprintBody = { grade: string; course_ids: string[] };
+export type CreateBlueprintBody = { grade_level: number; course_ids: string[] };
 
 // Manager+. Creates the blueprint and immediately applies it to every existing
 // class at that grade; pairs that could not land come back in `skipped`.

@@ -29,12 +29,12 @@ vi.mock("@/stores/auth-context", () => ({
 vi.mock("@/api/classes", () => ({ getClasses, getClassMembers, postClass }));
 vi.mock("@/api/academic-years", () => ({ getAcademicYears: vi.fn(async () => ({ items: [] })) }));
 vi.mock("@/api/limits", () => ({
-  getLimits: vi.fn(async () => ({ course: { max_class_name_len: 60, max_class_grade_len: 10 } })),
+  getLimits: vi.fn(async () => ({ course: { max_class_name_len: 60, min_grade_level: 0, max_grade_level: 12 } })),
 }));
 vi.mock("@/api/courses", () => ({ getCourses }));
 vi.mock("@/api/users", () => ({ getUserSearch: vi.fn(async () => ({ items: [] })) }));
 
-const createdClass = { id: "c-new", creator: null, name: "9-A", grade: "9", year: null, teacher: null };
+const createdClass = { id: "c-new", creator: null, name: "9-A", grade_level: 9, year: null, teacher: null };
 
 afterEach(() => {
   cleanup();
@@ -48,6 +48,7 @@ async function openCreateForm() {
 
   fireEvent.click(await screen.findByRole("button", { name: /New class/ }));
   fireEvent.input(await screen.findByLabelText(/^Name/), { target: { value: "9-A" } });
+  fireEvent.change(document.getElementById("class-grade")!, { target: { value: "9" } });
   fireEvent.click(screen.getByRole("button", { name: "Create" }));
 }
 
@@ -61,14 +62,14 @@ test("creating a class opens the class the server made", async () => {
   await waitFor(() =>
     expect(navigate).toHaveBeenCalledWith({ to: "/management/classes/$id", params: { id: "c-new" } }),
   );
-  expect(postClass).toHaveBeenCalledWith({ name: "9-A", grade: undefined, year: undefined, teacher_id: undefined });
+  expect(postClass).toHaveBeenCalledWith({ name: "9-A", grade_level: 9, year: undefined, teacher_id: undefined });
 });
 
 test("a create whose blueprint left pairs behind holds the page until the report closes", async () => {
   postClass.mockResolvedValue({
     class: createdClass,
     skipped: [{ class: "c-new", class_name: "9-A", course: "k1", reason: "the class is already at its course ceiling" }],
-    stocked_from: "9",
+    stocked_from: 9,
   });
   getCourses.mockResolvedValue({ items: [{ id: "k1", title: "Algebra" }] });
 

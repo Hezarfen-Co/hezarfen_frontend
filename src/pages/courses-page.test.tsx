@@ -3,9 +3,8 @@ import type { JSX } from "solid-js";
 import CoursesPage from "@/pages/courses-page";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
-const { getCourses, getMyCourses, navigate } = vi.hoisted(() => ({
+const { getCourses, navigate } = vi.hoisted(() => ({
   getCourses: vi.fn(),
-  getMyCourses: vi.fn(),
   navigate: vi.fn(),
 }));
 
@@ -27,7 +26,6 @@ vi.mock("@/api/courses", () => ({
   getCourses,
   postCourse: vi.fn(),
 }));
-vi.mock("@/api/reports", () => ({ getMyCourses }));
 vi.mock("@/api/limits", () => ({ getLimits: vi.fn() }));
 
 afterEach(() => {
@@ -35,8 +33,9 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+// GET /courses is scoped server-side: a student reads only what they take.
 test("student class directory uses only enrolled-course data", async () => {
-  getMyCourses.mockResolvedValue({
+  getCourses.mockResolvedValue({
     items: [
       {
         id: "course-1",
@@ -75,13 +74,12 @@ test("student class directory uses only enrolled-course data", async () => {
 
   expect(await screen.findByRole("button", { name: /^Algebra/ })).toBeTruthy();
   expect(screen.getAllByText("Enrolled")).toHaveLength(3);
-  expect(getMyCourses).toHaveBeenCalledWith();
-  expect(getCourses).not.toHaveBeenCalled();
+  expect(getCourses).toHaveBeenCalledWith();
 
   fireEvent.click(screen.getByRole("tab", { name: "Study" }));
   expect(await screen.findByRole("button", { name: /^Study Lab/ })).toBeTruthy();
   expect(screen.queryByRole("button", { name: /^Algebra/ })).toBeNull();
-  expect(getMyCourses).toHaveBeenCalledTimes(1);
+  expect(getCourses).toHaveBeenCalledTimes(1);
   const tabNavigation = navigate.mock.calls.at(-1)?.[0] as { to: string; replace: boolean; search: (prev: Record<string, unknown>) => Record<string, unknown> };
   expect(tabNavigation.to).toBe("/courses");
   expect(tabNavigation.replace).toBe(true);

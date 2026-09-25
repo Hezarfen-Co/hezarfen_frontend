@@ -78,7 +78,6 @@ vi.mock("@/api/sessions", () => ({
   getSessionAttendance: async () => ({ items: [], total: 0, limit: 1, offset: 0 }),
 }));
 vi.mock("@/api/reports", () => ({
-  getMyCourses: async () => page([course]),
   getMyMarks: async () => (calls.push("marks"), {
     overall_average: 82.5,
     courses: [{

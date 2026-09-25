@@ -15,6 +15,7 @@ import { IconClipboardCheck, IconEdit, IconPlus, IconTrash } from "@/components/
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
+import { gradeLevelLabel } from "@/lib/grade-level";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 
@@ -47,7 +48,8 @@ export function BlueprintsTab(props: {
   const columns = createMemo<ColumnDef<ClassBlueprint>[]>(() => [
     {
       id: "grade",
-      accessorFn: (row) => row.grade,
+      accessorFn: (row) => gradeLevelLabel(row.grade_level, t),
+      sortingFn: (a, b) => a.original.grade_level - b.original.grade_level,
       header: t("classBlueprints.grade"),
       meta: { cellClass: "font-medium" },
     },
@@ -97,7 +99,7 @@ export function BlueprintsTab(props: {
             {
               label: t("classBlueprints.status"),
               icon: <IconClipboardCheck class="h-4 w-4" />,
-              onSelect: () => void checkStatus(cell.row.original.grade),
+              onSelect: () => void checkStatus(cell.row.original.grade_level),
             },
           ]}
         />
@@ -113,10 +115,10 @@ export function BlueprintsTab(props: {
     setEditing(null);
     await refetch();
     setSkipped(result.skipped);
-    // A grade label nobody carries is saved just the same, so it must not
+    // A grade no class sits on is saved just the same, so it must not
     // read as "applied" — that is the one outcome the admin needs to fix.
     if (result.matched === 0) {
-      setUnmatchedGrade(result.blueprint.grade);
+      setUnmatchedGrade(gradeLevelLabel(result.blueprint.grade_level, t));
       return;
     }
     setUnmatchedGrade(null);
@@ -128,7 +130,7 @@ export function BlueprintsTab(props: {
     if (!bp) return;
     setError("");
     try {
-      await deleteClassBlueprintByGrade(bp.grade);
+      await deleteClassBlueprintByGrade(bp.grade_level);
       setDeleting(null);
       await refetch();
       setFlash(t("classBlueprints.deleted"));
@@ -136,10 +138,10 @@ export function BlueprintsTab(props: {
       setError(formatApiError(err));
     }
   };
-  const checkStatus = async (grade: string) => {
+  const checkStatus = async (gradeLevel: number) => {
     setError("");
     try {
-      setStatus(await getClassBlueprintStatus(grade));
+      setStatus(await getClassBlueprintStatus(gradeLevel));
     } catch (err) {
       setError(formatApiError(err));
     }
@@ -221,7 +223,8 @@ export function BlueprintsTab(props: {
         blueprint={editing()}
         courses={courses.latest ?? []}
         maxCourses={limits.latest?.course.max_class_courses ?? 50}
-        maxGradeLen={limits.latest?.course.max_class_grade_len ?? 20}
+        minGradeLevel={limits.latest?.course.min_grade_level}
+        maxGradeLevel={limits.latest?.course.max_grade_level}
         onSaved={(result) => void handleSaved(result)}
       />
 
@@ -235,7 +238,7 @@ export function BlueprintsTab(props: {
       <SidePanel
         open={status() != null}
         onOpenChange={(open) => !open && setStatus(null)}
-        title={t("classBlueprints.statusTitle", { grade: status()?.grade ?? "" })}
+        title={t("classBlueprints.statusTitle", { grade: status() ? gradeLevelLabel(status()!.grade_level, t) : "" })}
         size="wide"
       >
         <Show when={status()}>
@@ -256,7 +259,7 @@ export function BlueprintsTab(props: {
         open={deleting() !== null}
         onOpenChange={(open) => !open && setDeleting(null)}
         title={t("classBlueprints.delete")}
-        summary={t("classBlueprints.deleteConfirm", { grade: deleting()?.grade ?? "" })}
+        summary={t("classBlueprints.deleteConfirm", { grade: deleting() ? gradeLevelLabel(deleting()!.grade_level, t) : "" })}
         variant="destructive"
         onConfirm={remove}
       />

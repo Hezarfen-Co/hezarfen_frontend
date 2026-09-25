@@ -1,9 +1,11 @@
 import { client } from "../client";
-import { normalizePage, type Page } from "../client";
-import type { Course } from "../client";
-import { courseListQuery, type CourseListParams } from "../courses/getCourses";
+import { normalizePage, pageQuery, type Page, type PageParams } from "../client";
+import type { CourseSectionRef } from "../client";
 
-export async function getMyCourses(params?: CourseListParams, signal?: AbortSignal): Promise<Page<Course>> {
-  const data = await client<unknown>(`/courses/me${courseListQuery(params)}`, { signal });
-  return normalizePage<Course>(data);
+// One row per class section the caller reaches (şube roster, homeroom, taught,
+// or a hand-placed enrollment) — `id` is the instance id, never the catalog
+// course's; `course` names the catalog row.
+export async function getMyCourses(params?: PageParams, signal?: AbortSignal): Promise<Page<CourseSectionRef>> {
+  const data = await client<unknown>(`/courses/me${pageQuery(params)}`, { signal });
+  return normalizePage<CourseSectionRef>(data);
 }

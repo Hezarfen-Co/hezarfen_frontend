@@ -3,7 +3,6 @@ import { getExams } from "@/api/exams";
 import { getEvents } from "@/api/events";
 import { getHomework } from "@/api/homework";
 import { getMyInstances } from "@/api/instances";
-import { getMyCourses } from "@/api/reports";
 import type { Role } from "@/api/client";
 import { LIST_CAP, loadCappedList } from "@/lib/capped-list";
 import { loadInstanceLabels } from "@/lib/instance-labels";
@@ -71,9 +70,9 @@ export function filterCommandRecords(
   return out;
 }
 
-async function loadCourses(role: Role): Promise<CommandRecord[]> {
-  // As on /courses: a student's list is their own enrolments.
-  const page = role === "student" ? await getMyCourses() : await getCourses();
+async function loadCourses(): Promise<CommandRecord[]> {
+  // GET /courses is already scoped: a student's list is their own enrolments.
+  const page = await getCourses();
   return page.items.map((course) => ({
     kind: "course",
     id: course.id,

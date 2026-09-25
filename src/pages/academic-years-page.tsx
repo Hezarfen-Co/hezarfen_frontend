@@ -30,6 +30,7 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
 import { formatDate } from "@/lib/format";
 import { usePreferences, useT } from "@/stores/preferences-context";
+import { GradeLevelSelect } from "@/components/classes/grade-level-select";
 
 const YEAR_PAGE_SIZE = 10;
 
@@ -70,7 +71,8 @@ function AcademicYearsContent() {
   const [name, setName] = createSignal("");
   const [starts, setStarts] = createSignal("");
   const [ends, setEnds] = createSignal("");
-  const [promotions, setPromotions] = createSignal<GradePromotion[]>([]);
+  // A row being written may still have a half unpicked.
+  const [promotions, setPromotions] = createSignal<{ from_grade: number | null; to_grade: number | null }[]>([]);
   const [editing, setEditing] = createSignal<AcademicYear | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<AcademicYear | null>(null);
   const [detail, setDetail] = createSignal<AcademicYear | null>(null);
@@ -120,9 +122,9 @@ function AcademicYearsContent() {
     }
     // A blank half is a half-written rule, not a policy — drop it rather than
     // sending a promotion the rollover cannot act on.
-    const grade_promotions = promotions()
-      .map((pair) => ({ from_grade: pair.from_grade.trim(), to_grade: pair.to_grade.trim() }))
-      .filter((pair) => pair.from_grade && pair.to_grade);
+    const grade_promotions = promotions().filter(
+      (pair): pair is GradePromotion => pair.from_grade !== null && pair.to_grade !== null,
+    );
 
     setPending(true);
     try {
@@ -346,7 +348,7 @@ function AcademicYearsContent() {
                 size="sm"
                 variant="outline"
                 class="rounded-lg"
-                onClick={() => setPromotions((rows) => [...rows, { from_grade: "", to_grade: "" }])}
+                onClick={() => setPromotions((rows) => [...rows, { from_grade: null, to_grade: null }])}
               >
                 <IconPlus class="h-4 w-4" />
                 {t("academicYears.addPromotion")}
@@ -355,24 +357,18 @@ function AcademicYearsContent() {
             <For each={promotions()}>
               {(pair, index) => (
                 <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.25rem] items-center gap-2">
-                  <Input
-                    aria-label={t("academicYears.fromGrade")}
-                    class="h-9 rounded-md"
-                    maxlength={20}
+                  <GradeLevelSelect
+                    id={`promotion-from-${index()}`}
                     value={pair.from_grade}
-                    placeholder={t("academicYears.fromGrade")}
-                    onInput={(e) =>
-                      setPromotions((rows) => rows.map((row, i) => (i === index() ? { ...row, from_grade: e.currentTarget.value } : row)))
+                    onChange={(level) =>
+                      setPromotions((rows) => rows.map((row, i) => (i === index() ? { ...row, from_grade: level } : row)))
                     }
                   />
-                  <Input
-                    aria-label={t("academicYears.toGrade")}
-                    class="h-9 rounded-md"
-                    maxlength={20}
+                  <GradeLevelSelect
+                    id={`promotion-to-${index()}`}
                     value={pair.to_grade}
-                    placeholder={t("academicYears.toGrade")}
-                    onInput={(e) =>
-                      setPromotions((rows) => rows.map((row, i) => (i === index() ? { ...row, to_grade: e.currentTarget.value } : row)))
+                    onChange={(level) =>
+                      setPromotions((rows) => rows.map((row, i) => (i === index() ? { ...row, to_grade: level } : row)))
                     }
                   />
                   <Button

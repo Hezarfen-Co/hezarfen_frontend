@@ -356,6 +356,38 @@ const API_ERROR_CODE_MESSAGES: Record<string, LocalizedMessage> = {
     tr: "Öğrenci eklenirken şubenin derslerinden biri kaldırıldı. Sayfayı yenileyip tekrar dene.",
   },
   student_number_taken: STUDENT_NUMBER_TAKEN,
+  session_time_taken: {
+    en: "Another lesson of this section already starts at this time. Pick a different start time.",
+    tr: "Bu şubenin başka bir dersi zaten bu saatte başlıyor. Farklı bir başlangıç saati seç.",
+  },
+  offering_exists: {
+    en: "This course already has a template for this grade. Edit the existing template instead.",
+    tr: "Bu dersin bu seviye için zaten bir şablonu var. Bunun yerine mevcut şablonu düzenle.",
+  },
+  offering_in_use: {
+    en: "Classes still teach from this template. Detach the course from those classes first.",
+    tr: "Bu şablondan hâlâ ders işleyen şubeler var. Önce dersi o şubelerden çıkar.",
+  },
+  slot_overlap: {
+    en: "Another slot on this day overlaps this time window. Pick a different time.",
+    tr: "Bu gündeki başka bir ders saati bu zaman aralığıyla çakışıyor. Farklı bir saat seç.",
+  },
+  slot_cap: {
+    en: "This weekly plan already holds the maximum number of slots. Remove one before adding another.",
+    tr: "Bu haftalık plan en fazla ders saati sayısına ulaştı. Yenisini eklemeden önce birini kaldır.",
+  },
+  unknown_exam_kind: {
+    en: "This exam kind is not one the school uses. Pick a kind from the school settings.",
+    tr: "Bu sınav türü okulun kullandığı türlerden biri değil. Okul ayarlarındaki türlerden birini seç.",
+  },
+  instance_has_no_weekly_plan: {
+    en: "This section has no weekly plan yet. Add slots before generating lessons.",
+    tr: "Bu şubenin henüz haftalık planı yok. Ders üretmeden önce ders saati ekle.",
+  },
+  instance_has_no_teacher: {
+    en: "No teacher is assigned to this section. Assign a teacher before generating lessons.",
+    tr: "Bu şubeye atanmış öğretmen yok. Ders üretmeden önce bir öğretmen ata.",
+  },
   not_ready: {
     en: "This audio is not ready yet. Wait for it to finish and try again.",
     tr: "Bu ses kaydı henüz hazır değil. Tamamlanmasını bekleyip tekrar dene.",

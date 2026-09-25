@@ -32,6 +32,8 @@ import { compareClasses } from "@/lib/student-directory";
 import { createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+import { GradeLevelSelect } from "@/components/classes/grade-level-select";
+import { gradeLevelLabel } from "@/lib/grade-level";
 
 // A class's member count has no aggregate field on ClassGroup and no bulk
 // endpoint — each card's count is one `getClassMembers(id, {limit:1})` read
@@ -54,7 +56,8 @@ function ClassesContent() {
   const [gradeFilter, setGradeFilter] = createUrlString("grade", "all");
   const [showForm, setShowForm] = createSignal(false);
   const [name, setName] = createSignal("");
-  const [grade, setGrade] = createSignal("");
+  const [gradeLevel, setGradeLevel] = createSignal<number | null>(null);
+  const [gradeError, setGradeError] = createSignal("");
   const [yearId, setYearId] = createSignal("");
   const [teacherId, setTeacherId] = createSignal("");
   const [error, setError] = createSignal("");
@@ -75,15 +78,8 @@ function ClassesContent() {
   const listData = () => list.latest ?? list() ?? [];
   const yearName = (id: string | null) => (id ? years.latest?.find((year) => year.id === id)?.name ?? "—" : t("academicYears.unassigned"));
 
-  // Grade tabs mirror Figma's Tümü/Lise/Ortaokul row structurally, but the
-  // labels are read from whatever `grade` values this school actually uses
-  // (freeform text on ClassGroup) instead of assuming a Turkish lise/ortaokul
-  // split that may not hold for every institution.
-  const grades = createMemo(() => {
-    const seen = new Set<string>();
-    for (const cls of listData()) if (cls.grade) seen.add(cls.grade);
-    return [...seen].sort((a, b) => a.localeCompare(b, "tr"));
-  });
+  // The grade filter offers only the rungs this school's classes sit on.
+  const grades = createMemo(() => [...new Set(listData().map((cls) => cls.grade_level))].sort((a, b) => a - b));
 
   const memberCountIds = createMemo(() => {
     const ids = listData().map((cls) => cls.id);
@@ -104,7 +100,7 @@ function ClassesContent() {
   // Class by class (9-A, 9-B, 10-A…) until a column header re-sorts it.
   const gradeFiltered = createMemo(() => {
     const g = gradeFilter();
-    return (g === "all" ? listData() : listData().filter((cls) => cls.grade === g)).slice().sort(compareClasses);
+    return (g === "all" ? listData() : listData().filter((cls) => String(cls.grade_level) === g)).slice().sort(compareClasses);
   });
   // A fresh array once the member counts land: the table redraws a row only
   // when its data changes, so the counts would otherwise stay "—".
@@ -145,7 +141,7 @@ function ClassesContent() {
     } catch (err) {
       // A 404 here means no blueprint covers this grade, not a missing class.
       setRowError(err instanceof ApiError && err.status === 404
-        ? t("classBlueprints.noBlueprintForGrade", { grade: cls.grade ?? "" })
+        ? t("classBlueprints.noBlueprintForGrade", { grade: gradeLevelLabel(cls.grade_level, t) })
         : formatApiError(err));
     } finally {
       setPending(false);
@@ -162,12 +158,12 @@ function ClassesContent() {
     },
     {
       id: "grade",
-      accessorFn: (row) => row.grade ?? "",
+      accessorFn: (row) => row.grade_level,
       header: t("classGroups.grade"),
       size: 90,
       minSize: 80,
       meta: { cellClass: "whitespace-nowrap text-center", align: "center" },
-      cell: (cell) => cell.row.original.grade || "—",
+      cell: (cell) => gradeLevelLabel(cell.row.original.grade_level, t),
     },
     {
       id: "year",
@@ -213,7 +209,7 @@ function ClassesContent() {
                   {
                     label: t("classBlueprints.apply"),
                     icon: <IconListChecks class="h-4 w-4" />,
-                    disabled: pending() || !cell.row.original.grade,
+                    disabled: pending(),
                     onSelect: () => void applyBlueprint(cell.row.original),
                   },
                   { label: t("classGroups.deleteClass"), icon: <IconTrash class="h-4 w-4" />, destructive: true, onSelect: () => setDeleteTarget(cell.row.original) },
@@ -236,15 +232,20 @@ function ClassesContent() {
       document.getElementById("class-name")?.focus();
       return;
     }
+    const level = gradeLevel();
+    if (level === null) {
+      setGradeError(t("form.fieldRequired"));
+      return;
+    }
     setPending(true);
     try {
       const created = await postClass({
         name: name().trim(),
-        grade: grade().trim() || undefined,
+        grade_level: level,
         year: yearId() || undefined,
         teacher_id: teacherId() || undefined,
       });
-      setName(""); setGrade(""); setYearId(""); setTeacherId(""); setShowForm(false);
+      setName(""); setGradeLevel(null); setYearId(""); setTeacherId(""); setShowForm(false);
       // Reloading the list is housekeeping for a page we are leaving anyway: a
       // failure here used to be reported as if the class had not been created,
       // and it swallowed the navigation to the class that plainly existed.
@@ -297,7 +298,11 @@ function ClassesContent() {
         <form class="space-y-4" noValidate onSubmit={createClass}>
           <div class="space-y-3">
             <div class="space-y-1.5"><Label for="class-name">{t("classGroups.className")}<span class="ml-0.5 text-destructive-text">*</span></Label><Input id="class-name" required aria-required="true" maxlength={limits.latest?.course.max_class_name_len} value={name()} error={nameError()} onInput={(e) => { setName(e.currentTarget.value); setNameError(""); }} /></div>
-            <div class="space-y-1.5"><Label for="class-grade">{t("classGroups.grade")}</Label><Input id="class-grade" maxlength={limits.latest?.course.max_class_grade_len} value={grade()} onInput={(e) => setGrade(e.currentTarget.value)} /></div>
+            <div class="space-y-1.5">
+              <Label for="class-grade">{t("classGroups.grade")}<span class="ml-0.5 text-destructive-text">*</span></Label>
+              <GradeLevelSelect id="class-grade" value={gradeLevel()} error={!!gradeError()} min={limits.latest?.course.min_grade_level} max={limits.latest?.course.max_grade_level} onChange={(level) => { setGradeLevel(level); setGradeError(""); }} />
+              <Show when={gradeError()}><p class="text-xs font-medium text-destructive-text">{gradeError()}</p></Show>
+            </div>
             <div class="space-y-1.5"><Label for="class-year">{t("academicYears.year")}</Label><Select id="class-year" value={yearId()} onChange={(e) => setYearId(e.currentTarget.value)}><option value="">{t("academicYears.unassigned")}</option><For each={years.latest ?? []}>{(year) => <option value={year.id}>{year.name}</option>}</For></Select></div>
             <UserSearchSelect id="class-teacher" label={t("classGroups.homeroomTeacher")} value={teacherId()} onChange={setTeacherId} placeholder={t("classGroups.selectTeacher")} role="teacher" />
           </div>
@@ -312,7 +317,8 @@ function ClassesContent() {
         onOpenChange={(open) => { if (!open) setEditTarget(null); }}
         years={years.latest ?? []}
         maxNameLen={limits.latest?.course.max_class_name_len}
-        maxGradeLen={limits.latest?.course.max_class_grade_len}
+        minGradeLevel={limits.latest?.course.min_grade_level}
+        maxGradeLevel={limits.latest?.course.max_grade_level}
         onSaved={async () => { setFlash(t("common.saved")); await refreshList(); }}
       />
 
@@ -380,7 +386,7 @@ function ClassesContent() {
                 columns={columns()}
                 data={rows()}
                 tableClass="table-fixed min-w-[48rem]"
-                searchPredicate={(cls, needle) => matchesSearch(needle, cls.name, cls.grade, cls.teacher ? personLabel(cls.teacher) : null)}
+                searchPredicate={(cls, needle) => matchesSearch(needle, cls.name, gradeLevelLabel(cls.grade_level, t), cls.teacher ? personLabel(cls.teacher) : null)}
                 filterPlaceholder={t("classGroups.searchPlaceholder")}
                 filterHint={t("search.hint.classes")}
                 enablePagination
@@ -395,7 +401,7 @@ function ClassesContent() {
                   <Show when={grades().length > 0}>
                     <DropdownSelect
                       labelPrefix={t("classGroups.grade")}
-                      options={[{ value: "all", label: t("common.all") }, ...grades().map((g) => ({ value: g, label: g }))]}
+                      options={[{ value: "all", label: t("common.all") }, ...grades().map((g) => ({ value: String(g), label: gradeLevelLabel(g, t) }))]}
                       value={gradeFilter()}
                       onChange={setGradeFilter}
                     />

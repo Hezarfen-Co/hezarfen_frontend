@@ -3,7 +3,6 @@ import { createResource } from "@/lib/create-resource";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteCourseById, getCourses, postCourse } from "@/api/courses";
-import { getMyCourses } from "@/api/reports";
 import { getLimits } from "@/api/limits";
 import { formatApiError, type Course, type CourseKind } from "@/api/client";
 import { CourseEditPanel } from "@/components/courses/course-edit-panel";
@@ -72,7 +71,8 @@ function CoursesContent() {
   const [limits, { refetch: refetchLimits }] = createResource(() => canCreate() ? getLimits() : null);
   const [list, { refetch }] = createResource(
     () => auth.user()?.role ?? null,
-    async (role) => role === "student" ? getMyCourses() : getCourses(),
+    // Scoped server-side: a student reads only the courses they take.
+    () => getCourses(),
   );
   const listData = () => list.latest ?? list();
   // A memo: the table must see one array per change, not a fresh one per read.

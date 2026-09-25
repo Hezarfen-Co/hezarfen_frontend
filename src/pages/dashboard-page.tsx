@@ -15,7 +15,7 @@ import { getMealMenus } from "@/api/meals";
 import { getMyStudents } from "@/api/parents";
 import { getPaymentStatementByUserId } from "@/api/payments";
 import { getPomodoroMe } from "@/api/pomodoro";
-import { getMyAttendance, getMyCourses, getMyMarks, getUserAttendance } from "@/api/reports";
+import { getMyAttendance, getMyMarks, getUserAttendance } from "@/api/reports";
 import { getTime } from "@/api/time/getTime";
 import { getUsers } from "@/api/users";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -179,7 +179,7 @@ function DashboardContent() {
   // excludes studies and clubs has to be counted here over the whole list.
   const [courses] = createResource(
     () => role() === "parent" || !on("courses") ? null : role(),
-    (currentRole) => quiet(currentRole === "student" ? getMyCourses() : getCourses()),
+    () => quiet(getCourses()),
   );
   const courseTitleOf = (courseId: string) => courses()?.items.find((course) => course.id === courseId)?.title ?? "…";
   const courseCount = () => (courses.error ? "—" : String((courses()?.items ?? []).filter((course) => course.kind === "course").length));

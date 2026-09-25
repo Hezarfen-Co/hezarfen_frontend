@@ -7,11 +7,9 @@ import { deleteCourseMemberByUserId } from "@/api/courses";
 import { getCourseById } from "@/api/courses";
 import { getCourseMembers } from "@/api/courses";
 import { postCourseMember } from "@/api/courses";
-import { getClasses, getClassInstances, getMyClasses } from "@/api/classes";
-import { getMyInstances } from "@/api/instances";
-import { getMyCourses } from "@/api/reports";
+import { getCourses } from "@/api/courses";
 import { formatApiError } from "@/api/client";
-import type { ClassCourse, ClassGroup, CourseKind, CourseMembership, Instance } from "@/api/client";
+import type { CourseKind, CourseMembership, CourseSectionRef } from "@/api/client";
 import { CourseEditPanel } from "@/components/courses/course-edit-panel";
 import { CourseNotesPanel } from "@/components/courses/course-notes-panel";
 import { CourseSubjectsPanel } from "@/components/courses/course-subjects-panel";
@@ -19,7 +17,6 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
@@ -38,9 +35,9 @@ import { hasMinRole } from "@/lib/roles";
 import { createUrlString } from "@/lib/url-state";
 import { cn } from "@/lib/cn";
 import { matchesSearch } from "@/lib/search-text";
+import { gradeLevelLabel } from "@/lib/grade-level";
+import { personLabel } from "@/lib/person";
 
-/** One row of the "taught in" list: an instance plus the şube's name. */
-type SectionRow = { instance: Instance | ClassCourse; className: string };
 
 // Literal class names so Tailwind sees every column count the tab strip can take.
 const TAB_GRID_COLS: Record<number, string> = { 1: "sm:grid-cols-1", 2: "sm:grid-cols-2", 3: "sm:grid-cols-3", 4: "sm:grid-cols-4" };
@@ -88,9 +85,10 @@ function CourseDetailContent() {
     return tabs.length === 0 || tabs.includes(requestedTab()) ? requestedTab() : tabs[0];
   };
   const [course, { refetch: refetchCourse }] = createResource(id, (courseId) => getCourseById(courseId));
+  // GET /courses is already scoped to a student's own courses.
   const [mine] = createResource(
     () => (auth.user()?.role === "student" ? true : null),
-    async (enabled) => (enabled ? (await getMyCourses()).items : []),
+    async (enabled) => (enabled ? (await getCourses()).items : []),
   );
 
   // Catalog rights: the creator or a manager+. Teaching rights now live on the
@@ -106,37 +104,14 @@ function CourseDetailContent() {
   // — its students come from the şube that attached it.
   const hasMembers = () => course()?.kind === "club" || course()?.kind === "study";
 
-  // The şubeler teaching this course. A student or teacher reads their own set
-  // in one call; the office has no course-scoped instance route, so it walks
-  // the class list instead (one call per class, capped by the page limit).
-  const [sections] = createResource(
-    () => (course() && tabOn.sections() ? { courseId: id(), office: isOffice() } : null),
-    async (args): Promise<SectionRow[]> => {
-      if (!args) return [];
-      if (!args.office) {
-        // `/instances/me` is the one instance list a student or teacher can
-        // read; `/classes/me` names the şubeler behind it (one call each).
-        const [instances, classes] = await Promise.all([
-          getMyInstances({ limit: 200 }),
-          getMyClasses({ limit: 200 }).catch(() => ({ items: [] as ClassGroup[] })),
-        ]);
-        const names = new Map(classes.items.map((klass) => [klass.id, klass.name]));
-        return instances.items
-          .filter((instance) => instance.course === args.courseId)
-          .map((instance) => ({ instance, className: names.get(instance.class) ?? "—" }));
-      }
-      const classes = (await getClasses({ limit: 200 })).items;
-      const perClass = await Promise.all(
-        classes.map(async (klass) => {
-          const instances = (await getClassInstances(klass.id, { limit: 200 })).items;
-          return instances
-            .filter((instance) => instance.course === args.courseId)
-            .map((instance) => ({ instance, className: klass.name }));
-        }),
-      );
-      return perClass.flat();
-    },
-  );
+  // The şubeler teaching this course ride the catalog row itself, already
+  // narrowed to the sections this reader reaches and capped at
+  // limits.course.max_course_sections; class_course_count keeps the total.
+  const sections = () => course()?.sections ?? [];
+  const sectionsTruncated = () => {
+    const c = course();
+    return !!c && isOffice() && c.class_course_count > c.sections.length;
+  };
 
   const [members, { refetch: refetchMembers }] = createResource(
     () => (hasMembers() && canManageCatalog() ? id() : null),
@@ -166,46 +141,55 @@ function CourseDetailContent() {
   const courseKindLabel = (value: CourseKind | undefined) =>
     value === "study" ? t("courses.kind.study") : value === "club" ? t("courses.kind.club") : t("courses.kind.course");
   const courseListSearch = (value: CourseKind | undefined) => (value ? ({ kind: value } as never) : ({} as never));
-  const sectionCount = createMemo(() => sections()?.length ?? 0);
+  const sectionCount = createMemo(() => sections().length);
   const visibleSections = createMemo(() => {
     const query = sectionSearch().trim();
-    return query ? (sections() ?? []).filter((section) => matchesSearch(query, section.className)) : sections() ?? [];
+    return query
+      ? sections().filter((section) => matchesSearch(query, section.class_name, section.title, ...section.teachers.map(personLabel)))
+      : sections();
   });
   const memberUserIds = () => (members() ?? []).map((row) => row.user.id);
 
-  const sectionColumns = createMemo<ColumnDef<SectionRow>[]>(() => [
+  const sectionColumns = createMemo<ColumnDef<CourseSectionRef>[]>(() => [
     {
       id: "class",
-      accessorFn: (row) => row.className,
+      accessorFn: (row) => row.class_name,
       header: t("classGroups.className"),
       meta: { cellClass: "font-medium" },
       cell: (cell) => (
-        <Link to="/instances/$id" params={{ id: cell.row.original.instance.id }} class="hover:text-primary-text hover:underline">
-          {cell.row.original.className}
+        <Link to="/instances/$id" params={{ id: cell.row.original.id }} class="hover:text-primary-text hover:underline">
+          {cell.row.original.class_name}
         </Link>
       ),
     },
     {
+      id: "title",
+      accessorFn: (row) => row.title,
+      header: t("form.title"),
+    },
+    {
+      id: "grade",
+      accessorFn: (row) => row.grade_level,
+      header: t("classGroups.grade"),
+      cell: (cell) => gradeLevelLabel(cell.row.original.grade_level, t),
+    },
+    {
+      id: "teachers",
+      accessorFn: (row) => row.teachers.map(personLabel).join(", "),
+      header: t("instances.teachers"),
+      cell: (cell) => cell.row.original.teachers.map(personLabel).join(", ") || "—",
+    },
+    {
       id: "dersSaati",
-      accessorFn: (row) => row.instance.ders_saati,
+      accessorFn: (row) => row.ders_saati,
       header: t("instances.dersSaati"),
       meta: { cellClass: "" },
     },
     {
       id: "roster",
-      accessorFn: (row) => row.instance.enrollment_count,
+      accessorFn: (row) => row.enrollment_count,
       header: t("courses.roster"),
       meta: { cellClass: "" },
-    },
-    {
-      id: "karne",
-      accessorFn: (row) => (row.instance.counts_toward_karne ? t("common.yes") : t("common.no")),
-      header: t("instances.countsTowardKarne"),
-      cell: (cell) => (
-        <Badge variant={cell.row.original.instance.counts_toward_karne ? "secondary" : "outline"} class="rounded-full">
-          {cell.row.original.instance.counts_toward_karne ? t("common.yes") : t("common.no")}
-        </Badge>
-      ),
     },
   ]);
 
@@ -439,8 +423,13 @@ function CourseDetailContent() {
                           enablePagination
                           pageSize={10}
                           empty={t("common.noMatches")}
-                          onRowClick={(row) => void navigate({ to: "/instances/$id", params: { id: row.instance.id } })}
+                          onRowClick={(row) => void navigate({ to: "/instances/$id", params: { id: row.id } })}
                         />
+                        <Show when={sectionsTruncated()}>
+                          <p class="text-xs text-muted-foreground">
+                            {t("instances.sectionsTruncated", { shown: String(sections().length), total: String(course()?.class_course_count ?? 0) })}
+                          </p>
+                        </Show>
                       </Show>
                     </Suspense>
                   </TabsContent>

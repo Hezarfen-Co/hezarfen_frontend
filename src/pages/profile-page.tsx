@@ -26,6 +26,7 @@ import { genderLabel } from "@/lib/gender";
 import { personLabel } from "@/lib/person";
 import { studentInfoSource } from "@/lib/student-info-access";
 import { useAuth } from "@/stores/auth-context";
+import { gradeLevelLabel } from "@/lib/grade-level";
 import { useT } from "@/stores/preferences-context";
 
 export default function ProfilePage() {
@@ -189,9 +190,7 @@ function ProfileContent() {
                             <IconSchool class="h-4 w-4 text-muted-foreground" />
                             {c().name}
                           </span>
-                          <Show when={c().grade}>
-                            {(g) => <Badge variant="secondary" class="rounded-md">{g()}</Badge>}
-                          </Show>
+                          <Badge variant="secondary" class="rounded-md">{gradeLevelLabel(c().grade_level, t)}</Badge>
                           <span class="text-muted-foreground">
                             ·{" "}
                             {currentClass()?.teacher

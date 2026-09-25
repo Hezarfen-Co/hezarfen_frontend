@@ -33,7 +33,7 @@ describe("classes API", () => {
   it("postClass POSTs /classes and returns the create envelope", async () => {
     const envelope = { class: { id: "c1" }, skipped: [], stocked_from: null };
     mockFetchSuccess(envelope);
-    const body = { name: "9-A", grade: "9", year: "y1" };
+    const body = { name: "9-A", grade_level: 9, year: "y1" };
     const created = await postClass(body);
     expect(created).toEqual(envelope);
     expect(created.class.id).toBe("c1");
@@ -75,7 +75,7 @@ describe("classes API", () => {
 
   it("patchClassById PATCHes /classes/:id with the body", async () => {
     mockFetchSuccess({ id: "c1" });
-    const body = { name: "9-B", grade: null, term_id: null };
+    const body = { name: "9-B", grade_level: 10, year: null };
     await patchClassById("c1", body);
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/classes/c1");
@@ -144,8 +144,8 @@ describe("classes API", () => {
   });
 
   it("postClassBlueprint POSTs /classes/blueprints with the body", async () => {
-    mockFetchSuccess({ blueprint: { grade: "9", courses: [], creator: {} }, matched: 2, skipped: [] });
-    const body = { grade: "9", course_ids: ["co1", "co2"] };
+    mockFetchSuccess({ blueprint: { grade_level: 9, courses: [], creator: {} }, matched: 2, skipped: [] });
+    const body = { grade_level: 9, course_ids: ["co1", "co2"] };
     await postClassBlueprint(body);
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/classes/blueprints");
@@ -160,17 +160,17 @@ describe("classes API", () => {
     expect(url).toBe("/api/classes/blueprints?limit=20&offset=40");
   });
 
-  it("getClassBlueprintByGrade encodes the grade, which is the record key", async () => {
-    mockFetchSuccess({ grade: "9/A", courses: [], creator: {} });
-    await getClassBlueprintByGrade("9/A");
+  it("getClassBlueprintByGrade keys the blueprint by its grade level", async () => {
+    mockFetchSuccess({ grade_level: 0, courses: [], creator: {} });
+    await getClassBlueprintByGrade(0);
     const [url] = lastFetchCall();
-    expect(url).toBe("/api/classes/blueprints/9%2FA");
+    expect(url).toBe("/api/classes/blueprints/0");
   });
 
   it("patchClassBlueprintByGrade PATCHes the whole course set", async () => {
-    mockFetchSuccess({ blueprint: { grade: "9", courses: [], creator: {} }, matched: 2, skipped: [] });
+    mockFetchSuccess({ blueprint: { grade_level: 9, courses: [], creator: {} }, matched: 2, skipped: [] });
     const body = { course_ids: ["co1"] };
-    await patchClassBlueprintByGrade("9", body);
+    await patchClassBlueprintByGrade(9, body);
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/classes/blueprints/9");
     expect(init?.method).toBe("PATCH");
@@ -179,9 +179,9 @@ describe("classes API", () => {
 
   it("deleteClassBlueprintByGrade DELETEs /classes/blueprints/:grade", async () => {
     mockFetch204();
-    await deleteClassBlueprintByGrade("9/A");
+    await deleteClassBlueprintByGrade(11);
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/classes/blueprints/9%2FA");
+    expect(url).toBe("/api/classes/blueprints/11");
     expect(init?.method).toBe("DELETE");
   });
 
@@ -195,12 +195,12 @@ describe("classes API", () => {
   });
 
   it("getClassBlueprintStatus GETs /classes/blueprints/:grade/status", async () => {
-    const mockStatus = { grade: "9/A", courses: ["co1"], matched: 3, sections: [] };
+    const mockStatus = { grade_level: 9, courses: ["co1"], matched: 3, sections: [] };
     mockFetchSuccess(mockStatus);
-    const result = await getClassBlueprintStatus("9/A");
+    const result = await getClassBlueprintStatus(9);
     expect(result).toEqual(mockStatus);
     const [url, init] = lastFetchCall();
-    expect(url).toBe("/api/classes/blueprints/9%2FA/status");
+    expect(url).toBe("/api/classes/blueprints/9/status");
     expect(init?.method).toBe("GET");
   });
 });

@@ -8,7 +8,6 @@ import { getHomework } from "@/api/homework";
 import { getAppointments } from "@/api/appointments";
 import { getCourses } from "@/api/courses";
 import { getInstanceSessions, getMyInstances } from "@/api/instances";
-import { getMyCourses } from "@/api/reports";
 import type { Appointment, AppointmentStatus, Course } from "@/api/client";
 import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
 import { RouteGuard } from "@/components/layout/route-guard";
@@ -214,12 +213,12 @@ function CalendarContent() {
   // own `kind` is what separates them.
   const [sessions] = board.createResource(
     () => auth.user()?.role ?? null,
-    async (role) => {
+    async () => {
       // Sessions hang off the instance (şube × ders) now; the catalog course is
       // still what says whether a meeting is a ders, an etüt or a kulüp.
       const [instances, courses] = await Promise.all([
         getMyInstances({ limit: 200 }),
-        role === "student" ? getMyCourses() : getCourses(),
+        getCourses(),
       ]);
       const byId = new Map<string, Course>(courses.items.map((course) => [course.id, course]));
       const pages = await mapConcurrent(

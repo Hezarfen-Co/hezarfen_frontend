@@ -43,6 +43,7 @@ import { matchesSearch } from "@/lib/search-text";
 import { createUrlString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
+import { gradeLevelLabel } from "@/lib/grade-level";
 import { RecordNotFound } from "@/components/layout/record-not-found";
 import { isNotFoundError } from "@/lib/record-list-path";
 
@@ -297,9 +298,9 @@ function ClassDetailContent() {
                             size="sm"
                             variant="outline"
                             class={cn(ACTION_BUTTON, "w-full")}
-                            disabled={pending() || !c().grade}
-                            title={c().grade ? t("classBlueprints.applyHint") : t("classBlueprints.applyNoGrade")}
-                            onClick={() => void applyBlueprint(c().grade ?? "")}
+                            disabled={pending()}
+                            title={t("classBlueprints.applyHint")}
+                            onClick={() => void applyBlueprint(gradeLevelLabel(c().grade_level, t))}
                           >
                             <IconListChecks class="h-4 w-4" />
                             {t("classBlueprints.apply")}
@@ -332,7 +333,7 @@ function ClassDetailContent() {
                 <div class="grid gap-3 border-t border-border-hairline pt-3 pb-1 text-sm grid-cols-2 lg:grid-cols-5">
                   <div class={TILE}>
                     <p class={TILE_LABEL}>{t("classGroups.grade")}</p>
-                    <p class={TILE_VALUE}>{c().grade || "—"}</p>
+                    <p class={TILE_VALUE}>{gradeLevelLabel(c().grade_level, t)}</p>
                   </div>
                   <div class={TILE}>
                     <p class={TILE_LABEL}>{t("academicYears.year")}</p>
@@ -428,7 +429,8 @@ function ClassDetailContent() {
                 onOpenChange={setEditing}
                 years={years.latest ?? []}
                 maxNameLen={limits.latest?.course.max_class_name_len}
-                maxGradeLen={limits.latest?.course.max_class_grade_len}
+                minGradeLevel={limits.latest?.course.min_grade_level}
+                maxGradeLevel={limits.latest?.course.max_grade_level}
                 onSaved={async () => { setFlash(t("common.saved")); await refresh(refetchClass); }}
               />
 

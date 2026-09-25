@@ -2435,7 +2435,12 @@ export type MessageKey =
   | "errors.parentOnlyTitle"
   | "errors.audienceOnlyDescription"
   | "errors.audienceOnlyWithAlternative"
-  | "errors.openStaffView";
+  | "errors.openStaffView"
+  | "grade.kindergarten"
+  | "grade.level"
+  | "grade.select"
+  | "instances.teachers"
+  | "instances.sectionsTruncated";
 
 export type Dict = Record<MessageKey, string>;
 

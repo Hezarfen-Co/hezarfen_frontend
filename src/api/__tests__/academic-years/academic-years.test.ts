@@ -41,7 +41,7 @@ describe("academic years API", () => {
       name: "2026-2027",
       starts_at: 1780000000000,
       ends_at: 1810000000000,
-      grade_promotions: [{ from_grade: "5", to_grade: "6" }],
+      grade_promotions: [{ from_grade: 5, to_grade: 6 }],
     };
 
     await postAcademicYear(body);

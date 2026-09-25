@@ -25,7 +25,6 @@ vi.mock("@/api/exams", () => ({ getExams }));
 vi.mock("@/api/homework", () => ({ getHomework: vi.fn(async () => page([])) }));
 vi.mock("@/api/appointments", () => ({ getAppointments: vi.fn(async () => page([])) }));
 vi.mock("@/api/courses", () => ({ getCourses: vi.fn(async () => page([])) }));
-vi.mock("@/api/reports", () => ({ getMyCourses: vi.fn(async () => page([])) }));
 vi.mock("@/api/instances", () => ({
   getMyInstances: vi.fn(async () => page([])),
   getInstanceSessions: vi.fn(async () => page([])),

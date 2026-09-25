@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const api = vi.hoisted(() => ({
   getCourses: vi.fn(),
-  getMyCourses: vi.fn(),
   getExams: vi.fn(),
   getHomework: vi.fn(),
   getEvents: vi.fn(),
@@ -11,7 +10,6 @@ const api = vi.hoisted(() => ({
 }));
 
 vi.mock("@/api/courses", () => ({ getCourses: api.getCourses }));
-vi.mock("@/api/reports", () => ({ getMyCourses: api.getMyCourses }));
 vi.mock("@/api/exams", () => ({ getExams: api.getExams }));
 vi.mock("@/api/homework", () => ({ getHomework: api.getHomework }));
 vi.mock("@/api/events", () => ({ getEvents: api.getEvents }));
@@ -66,7 +64,6 @@ describe("loadCommandRecords", () => {
   beforeEach(() => {
     resetCommandRecordCache();
     api.getCourses.mockResolvedValue(page([{ id: "c1", title: "Biyoloji", description: "", kind: "course" }]));
-    api.getMyCourses.mockResolvedValue(page([{ id: "c9", title: "Fizik", description: "", kind: "course" }]));
     api.getExams.mockResolvedValue(
       page([
         { id: "e1", title: "Yazılı", description: "", class_course: "i1", starts_at: 5 },
@@ -81,10 +78,10 @@ describe("loadCommandRecords", () => {
   afterEach(() => vi.clearAllMocks());
 
   test("a student reads their own courses and only exams in their own sections", async () => {
+    // GET /courses is already scoped to the student's own courses.
     const out = await loadCommandRecords("student", ["course", "exam"]);
-    expect(api.getMyCourses).toHaveBeenCalled();
-    expect(api.getCourses).not.toHaveBeenCalled();
-    expect(out.map((r) => r.id)).toEqual(["c9", "e1"]);
+    expect(api.getCourses).toHaveBeenCalled();
+    expect(out.map((r) => r.id)).toEqual(["c1", "e1"]);
     expect(out[1].context).toBe("Biyoloji — 10-B");
   });
 

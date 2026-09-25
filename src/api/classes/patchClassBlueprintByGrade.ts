@@ -9,10 +9,10 @@ export type UpdateBlueprintBody = { course_ids: string[] };
 // A 409 means the blueprint changed since it was read — there is no version to
 // echo back, so re-read it and let the user resubmit from the fresh list.
 export function patchClassBlueprintByGrade(
-  grade: string,
+  gradeLevel: number,
   body: UpdateBlueprintBody,
 ): Promise<BlueprintResult> {
-  return client<BlueprintResult>(`/classes/blueprints/${encodeURIComponent(grade)}`, {
+  return client<BlueprintResult>(`/classes/blueprints/${gradeLevel}`, {
     method: "PATCH",
     body,
   });

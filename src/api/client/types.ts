@@ -110,9 +110,20 @@ export type EarnedBadge = { id: string; earned_at: number };
 
 export type AvatarMeta = { content_type: string; size: number };
 
-export type ProfileClassRef = { id: string; name: string; grade: string | null };
+export type ProfileClassRef = { id: string; name: string; grade_level: number };
 
-export type ProfileCourseRef = { id: string; title: string; kind: CourseKind };
+// One class section a profile lists, never the catalog row: `id` is the
+// instance id, `title` its resolved title. `class`, `class_name` and
+// `grade_level` read null for a viewer below the classes-block bar.
+export type ProfileCourseRef = {
+ id: string;
+ course: string;
+ class: string | null;
+ class_name: string | null;
+ title: string;
+ grade_level: number | null;
+ kind: CourseKind;
+};
 
 // Lifetime counters behind the badge ladders, plus the two live totals the
 // capped `classes`/`courses` lists would otherwise hide.
@@ -335,17 +346,80 @@ export type Course = {
  class_course_count: number;
  // Individual club/etut memberships on the catalog row itself.
  course_membership_count: number;
+ // The sections teaching it, capped at limits.course.max_course_sections
+ // (class_course_count keeps the true total) and filtered to what the
+ // reader reaches.
+ sections: CourseSectionRef[];
 };
+
+// One class section of a catalog course, as a course row or GET /courses/me
+// lists it: `id` is the instance id, `title` and `ders_saati` resolved.
+export type CourseSectionRef = {
+ id: string;
+ course: string;
+ class: string;
+ class_name: string;
+ title: string;
+ grade_level: number;
+ ders_saati: number;
+ teachers: PersonRef[];
+ enrollment_count: number;
+};
+
+/** One exam kind's effective weight. */
+export type ExamWeightEntry = { kind: string; weight: number };
+
+/**
+ * One slot of a weekly plan. `starts_at`/`ends_at` are minutes past midnight
+ * (540 = 09:00), `weekday` 1..7 (Monday first).
+ */
+export type WeeklySlot = {
+ id: string;
+ weekday: number;
+ starts_at: number;
+ ends_at: number;
+ topic?: string | null;
+};
+
+/** The override fields POST /instances/{id}/reset clears back to inherit. */
+export type InstanceOverrideField =
+ | "title"
+ | "description"
+ | "ders_saati"
+ | "counts_toward_karne"
+ | "subjects"
+ | "exam_weights"
+ | "weekly_plan";
 
 // One catalog course as one sube teaches it. This is what carries the roster,
 // the exams, the sessions and the karne weight.
+//
+// Every content field is resolved: a scalar runs section override -> the
+// grade-level offering -> catalog/constant, and `*_overridden` tells the
+// section's own value from an inherited one. The three sets (subjects, exam
+// weights, weekly plan) follow a flag: `*_inherited: false` means the
+// section's own rows are authoritative, even when empty.
 export type Instance = {
  id: string;
  class: string;
  course: string;
+ // The grade-level template (GET /offerings/{id}) unset fields inherit from.
+ offering: string;
+ title: string;
+ title_overridden: boolean;
+ description: string;
+ description_overridden: boolean;
  // Weekly lesson hours; the instance's weight in the year's karne average.
  ders_saati: number;
+ ders_saati_overridden: boolean;
  counts_toward_karne: boolean;
+ counts_toward_karne_overridden: boolean;
+ subjects_inherited: boolean;
+ subjects: Subject[];
+ exam_weights_inherited: boolean;
+ exam_weights: ExamWeightEntry[];
+ weekly_plan_inherited: boolean;
+ weekly_plan: WeeklySlot[];
  enrollment_count: number;
  teachers: PersonRef[];
 };
@@ -360,10 +434,10 @@ export type CourseMembership = {
  created_at: number;
 };
 
-/** One sınıf-geçme pair: the grade label students move to at rollover. */
+/** One sınıf-geçme pair: the grade level (0..12) students move to at rollover. */
 export type GradePromotion = {
- from_grade: string;
- to_grade: string;
+ from_grade: number;
+ to_grade: number;
 };
 
 // An academic year: the calendar structure dönemler and şubeler hang off.
@@ -423,7 +497,8 @@ export type ClassGroup = {
  // GET /classes/user/{user}).
  creator: PersonRef | null;
  name: string;
- grade: string | null;
+ // The class's rung on the grade ladder, 0 (anaokulu) .. 12. Required.
+ grade_level: number;
  // The academic year (AcademicYear id) the sube sits in; what binds it to a
  // karne and to the rollover. Null when none is set.
  year: string | null;
@@ -436,7 +511,7 @@ export type ClassGroup = {
 // that stocked it. `skipped` is empty when the template took every course, and
 // always empty when no template covered the grade; `stocked_from` is null in
 // that second case.
-export type CreateClassResponse = { class: ClassGroup; skipped: BlueprintSkip[]; stocked_from: string | null };
+export type CreateClassResponse = { class: ClassGroup; skipped: BlueprintSkip[]; stocked_from: number | null };
 
 export type ClassMember = {
  id: string;
@@ -451,9 +526,13 @@ export type ClassMember = {
  source_class_group: string | null;
 };
 
-// The instance as the class routes return it: an Instance plus who attached
-// the course to the sube.
-export type ClassCourse = Instance & {
+// The instance as the class routes return it: the resolved scalars plus who
+// attached the course to the sube. The override flags and the three resolved
+// sets live on GET /instances/{id} only.
+export type ClassCourse = Pick<
+ Instance,
+ "id" | "class" | "course" | "title" | "description" | "ders_saati" | "counts_toward_karne" | "enrollment_count" | "teachers"
+> & {
  attached_by: PersonRef;
 };
 
@@ -461,7 +540,7 @@ export type ClassCourse = Instance & {
 // grade label is the record's key, so there is at most one per grade. Creating
 // or editing one applies it to every existing class at that grade right away.
 export type ClassBlueprint = {
- grade: string;
+ grade_level: number;
  courses: string[];
  creator: PersonRef;
 };
@@ -493,11 +572,60 @@ export type BlueprintSectionStatus = {
 
 /** Every section at a grade with the template courses it is missing. */
 export type BlueprintStatus = {
- grade: string;
+ grade_level: number;
  /** The template every section below is measured against. */
  courses: string[];
  matched: number;
  sections: BlueprintSectionStatus[];
+};
+
+// A school-wide non-teaching day range. The materializer skips every day it
+// reaches into; lessons already on those days stay.
+export type Holiday = {
+ id: string;
+ name: string;
+ /** First blocked instant, UTC unix-millis. */
+ starts_at: number;
+ /** Last blocked instant, UTC unix-millis. */
+ ends_at: number;
+ /** One of limits.holiday.kinds. */
+ kind: string;
+ creator: PersonRef;
+ created_at: number;
+};
+
+// A grade-level template of a catalog course: what every section at that
+// grade inherits. Null fields inherit themselves (the catalog title/
+// description, 1 weekly hour, counted toward the karne).
+export type Offering = {
+ id: string;
+ course: string;
+ grade_level: number;
+ title: string | null;
+ description: string | null;
+ default_ders_saati: number | null;
+ default_counts_toward_karne: boolean | null;
+ created_by: PersonRef;
+ created_at: number;
+ updated_at: number;
+};
+
+/** One day the materializer left out because a holiday covers it. */
+export type BlockedDay = { date: string; holiday: string };
+
+// What POST /instances/{id}/weekly-plan/materialize answers. `created` is
+// empty on a dry run; `candidates` is what an apply would try to write.
+export type MaterializeReport = {
+ from: number;
+ to: number;
+ applied: boolean;
+ slots: number;
+ candidates: number;
+ created: CourseSession[];
+ skipped_existing: number;
+ skipped_holiday: number;
+ blocked: BlockedDay[];
+ range_days: number;
 };
 
 export type CourseSession = {
@@ -891,12 +1019,25 @@ export type Limits = {
   max_session_topic_len: number;
   max_term_name_len: number;
   max_class_name_len: number;
-  max_class_grade_len: number;
+  // The grade ladder: 0 (anaokulu) .. 12.
+  min_grade_level: number;
+  max_grade_level: number;
   max_class_members: number;
   max_class_courses: number;
   max_academic_year_name_len: number;
   min_ders_saati: number;
   max_ders_saati: number;
+  // How many sections a catalog course row embeds in `sections`.
+  max_course_sections: number;
+ };
+ holiday: { max_name_len: number; kinds: string[] };
+ weekly_plan: {
+  // Inclusive bounds for a slot's minutes past midnight.
+  min_slot_minute: number;
+  max_slot_minute: number;
+  max_weekly_slots: number;
+  max_materialize_days: number;
+  max_materialize_sessions: number;
  };
  exam: {
   max_title_len: number;

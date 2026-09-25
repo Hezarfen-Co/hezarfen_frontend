@@ -7,6 +7,7 @@ import {
 import { ApiError, formatApiError, type BlueprintResult, type ClassBlueprint, type Course } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { GradeLevelSelect } from "@/components/classes/grade-level-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidePanel } from "@/components/ui/side-panel";
@@ -21,11 +22,12 @@ export function BlueprintPanel(props: {
   blueprint: ClassBlueprint | null;
   courses: Course[];
   maxCourses: number;
-  maxGradeLen: number;
+  minGradeLevel?: number;
+  maxGradeLevel?: number;
   onSaved: (result: BlueprintResult) => void;
 }) {
   const t = useT();
-  const [grade, setGrade] = createSignal("");
+  const [gradeLevel, setGradeLevel] = createSignal<number | null>(null);
   const [selected, setSelected] = createSignal<string[]>([]);
   const [filter, setFilter] = createSignal("");
   const [error, setError] = createSignal("");
@@ -40,7 +42,7 @@ export function BlueprintPanel(props: {
   createEffect(() => {
     if (!props.open) return;
     const bp = props.blueprint;
-    setGrade(bp?.grade ?? "");
+    setGradeLevel(bp ? bp.grade_level : null);
     setSelected(bp?.courses ? [...bp.courses] : []);
     setFilter("");
     setError("");
@@ -62,7 +64,7 @@ export function BlueprintPanel(props: {
 
   // A losing race has no version token to retry with, so re-read the blueprint,
   // reseed the checkboxes from the server's list, and let the user resubmit.
-  const reseedFromServer = async (g: string) => {
+  const reseedFromServer = async (g: number) => {
     try {
       const fresh = await getClassBlueprintByGrade(g);
       setSelected([...fresh.courses]);
@@ -75,15 +77,15 @@ export function BlueprintPanel(props: {
 
   const submit = async (e: Event) => {
     e.preventDefault();
-    const g = grade().trim();
-    if (!g) return;
+    const g = gradeLevel();
+    if (g === null) return;
     setError("");
     setWarning("");
     setPending(true);
     try {
       const result = editing()
         ? await patchClassBlueprintByGrade(g, { course_ids: selected() })
-        : await postClassBlueprint({ grade: g, course_ids: selected() });
+        : await postClassBlueprint({ grade_level: g, course_ids: selected() });
       props.onSaved(result);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
@@ -115,13 +117,13 @@ export function BlueprintPanel(props: {
 
         <div class="space-y-1.5">
           <Label for="bp-grade">{t("classBlueprints.grade")}</Label>
-          <Input
+          <GradeLevelSelect
             id="bp-grade"
-            class="h-10"
-            maxlength={props.maxGradeLen}
-            value={grade()}
+            value={gradeLevel()}
+            min={props.minGradeLevel}
+            max={props.maxGradeLevel}
             disabled={editing()}
-            onInput={(e) => setGrade(e.currentTarget.value)}
+            onChange={setGradeLevel}
           />
           <p class="text-xs text-muted-foreground">{t("classBlueprints.gradeHint")}</p>
         </div>
@@ -170,7 +172,7 @@ export function BlueprintPanel(props: {
         </Show>
 
         <div class="flex justify-end">
-          <Button type="submit" class="w-full sm:w-auto" disabled={pending() || !grade().trim()}>
+          <Button type="submit" class="w-full sm:w-auto" disabled={pending() || gradeLevel() === null}>
             {t("common.save")}
           </Button>
         </div>

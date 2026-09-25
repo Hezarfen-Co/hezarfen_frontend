@@ -8,6 +8,7 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/cn";
 import { personLabel } from "@/lib/person";
+import { gradeLevelLabel } from "@/lib/grade-level";
 import { useT } from "@/stores/preferences-context";
 
 const PAGE_SIZE = 5;
@@ -78,13 +79,9 @@ export function ProfileMemberships(props: {
                         : t("classGroups.noTeacher")}
                     </span>
                   </span>
-                  <Show when={c.grade}>
-                    {(g) => (
-                      <Badge variant="secondary" class="shrink-0 rounded-md">
-                        {g()}
-                      </Badge>
-                    )}
-                  </Show>
+                  <Badge variant="secondary" class="shrink-0 rounded-md">
+                    {gradeLevelLabel(c.grade_level, t)}
+                  </Badge>
                 </li>
               )}
             </For>
@@ -112,7 +109,7 @@ export function ProfileMemberships(props: {
                 <li>
                   <Link
                     to="/courses/$id"
-                    params={{ id: c.id }}
+                    params={{ id: c.course }}
                     class="flex items-center gap-3 rounded-lg border border-border/60 px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-muted/40"
                   >
                     <span
@@ -123,7 +120,12 @@ export function ProfileMemberships(props: {
                     >
                       <IconBook class="h-4 w-4" />
                     </span>
-                    <span class="min-w-0 flex-1 truncate text-sm font-medium">{c.title}</span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate text-sm font-medium">{c.title}</span>
+                      <Show when={c.class_name}>
+                        {(name) => <span class="block truncate text-xs text-muted-foreground">{name()}</span>}
+                      </Show>
+                    </span>
                     <Badge variant="outline" class="shrink-0 rounded-md">{courseKindLabel(c.kind, t)}</Badge>
                   </Link>
                 </li>

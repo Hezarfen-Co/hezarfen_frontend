@@ -3,8 +3,7 @@ import { Link, useNavigate } from "@tanstack/solid-router";
 import { createResource } from "@/lib/create-resource";
 import { getCourseNotes } from "@/api/course-notes";
 import { getCourses } from "@/api/courses";
-import { getMyCourses } from "@/api/reports";
-import { formatApiError, type CourseNote, type Role } from "@/api/client";
+import { formatApiError, type CourseNote } from "@/api/client";
 import { PodcastPanel } from "@/components/notes/podcast-panel";
 import { RagOutputsPanel } from "@/components/notes/rag-outputs-panel";
 import { StudioOutputLibrary } from "@/components/ai/studio-output-library";
@@ -36,8 +35,9 @@ function readRailWidth(): number {
 type StudioNote = CourseNote & { courseTitle: string; courseCreatorId: string };
 
 /** Every lesson note the account can produce from, with its course. */
-async function loadStudioNotes(role: Role): Promise<StudioNote[]> {
-  const courses = role === "student" ? await getMyCourses({ limit: 100 }) : await getCourses({ limit: 100 });
+async function loadStudioNotes(): Promise<StudioNote[]> {
+  // GET /courses is already scoped to what the caller teaches or takes.
+  const courses = await getCourses({ limit: 100 });
   const rows = await Promise.all(
     courses.items.map(async (course) => {
       try {
@@ -57,7 +57,7 @@ async function loadStudioNotes(role: Role): Promise<StudioNote[]> {
 
 function useStudioNotes() {
   const auth = useAuth();
-  return createResource(() => auth.user()?.role ?? null, loadStudioNotes);
+  return createResource(() => auth.user()?.role ?? null, () => loadStudioNotes());
 }
 
 /**
