@@ -6,6 +6,7 @@ import { deleteHomeworkResultByUserId, getHomeworkSubmissionFileUrl, getHomework
 import { formatApiError } from "@/api/client";
 import type { HomeworkRosterEntry } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
+import { InfoTip } from "@/components/ui/info-tip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -169,9 +170,9 @@ export function HomeworkSubmissionsPanel(props: { homeworkId: string; instanceId
 
   return (
     <section class="space-y-3">
-      <div>
+      <div class="flex items-center gap-1.5">
         <h2 class="text-lg font-semibold">{t("homework.submissions")}</h2>
-        <p class="mt-1 text-sm text-text-subtle">{t("homework.submissionsHelp")}</p>
+        <InfoTip text={t("homework.submissionsHelp")} label={t("common.infoAbout", { item: t("homework.submissions") })} />
       </div>
       <Show when={flash()}><Alert variant="success">{flash()}</Alert></Show>
       <Show when={error() && !gradeTarget()}><Alert variant="destructive">{error()}</Alert></Show>

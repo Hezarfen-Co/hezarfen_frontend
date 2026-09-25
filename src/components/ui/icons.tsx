@@ -34,6 +34,7 @@ import gearUrl from "@phosphor-icons/core/regular/gear.svg?url";
 import userCircleUrl from "@phosphor-icons/core/regular/user-circle.svg?url";
 import graduationCapUrl from "@phosphor-icons/core/regular/graduation-cap.svg?url";
 import houseUrl from "@phosphor-icons/core/regular/house.svg?url";
+import infoUrl from "@phosphor-icons/core/regular/info.svg?url";
 import listUrl from "@phosphor-icons/core/regular/list.svg?url";
 import lockSimpleUrl from "@phosphor-icons/core/regular/lock-simple.svg?url";
 import magnifyingGlassUrl from "@phosphor-icons/core/regular/magnifying-glass.svg?url";
@@ -351,6 +352,11 @@ export function IconZoomOut(props: IconProps) {
 
 export function IconHelpCircle(props: IconProps) {
   return <PhosphorIcon {...props} src={questionUrl} />;
+}
+
+/** A circled "i": opens an explanatory note (see `InfoTip`). */
+export function IconInfo(props: IconProps) {
+  return <PhosphorIcon {...props} src={infoUrl} />;
 }
 
 export function IconMessagePlus(props: IconProps) {

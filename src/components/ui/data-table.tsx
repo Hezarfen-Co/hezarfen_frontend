@@ -21,6 +21,7 @@ import { DataTableSearch } from "@/components/ui/data-table-search";
 import { DataTableViewMenu, type ViewMenuColumn } from "@/components/ui/data-table-view-menu";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { IconArrowDown, IconArrowUp, IconChevronsUpDown } from "@/components/ui/icons";
+import { InfoTip } from "@/components/ui/info-tip";
 import { cn } from "@/lib/cn";
 import { createMediaQuery } from "@/lib/create-media-query";
 import { COMPACT_SCREEN_QUERY, createResponsivePageSize } from "@/lib/create-page-size";
@@ -42,6 +43,12 @@ declare module "@tanstack/solid-table" {
     divider?: "left" | "right";
     /** Leave this column out of the phone card layout (e.g. a column that only matters on a wide table). */
     hideInCards?: boolean;
+    /**
+     * A note that explains this column (what fills it, a limit behind it).
+     * Renders a circled "i" after the header label that shows the text on
+     * hover, focus and tap — instead of a line kept on screen above the table.
+     */
+    headerInfo?: string;
   }
 }
 
@@ -377,13 +384,27 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     const sorted = column.getIsSorted();
     return sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : "none";
   };
+  // The info icon sits beside the label, never inside the sort button: a
+  // button in a button is invalid, and opening the note must not sort.
+  const headerInfoTip = (column: Column<TData, unknown>) => (
+    <Show when={column.columnDef.meta?.headerInfo}>
+      {(text) => <InfoTip text={text()} label={t("common.infoAbout", { item: columnLabel(column) })} />}
+    </Show>
+  );
   const renderHeader = (header: ReturnType<typeof table.getHeaderGroups>[number]["headers"][number]) => {
     const content = flexRender(header.column.columnDef.header, header.getContext());
     if (!sortingEnabled() || !header.column.getCanSort()) {
-      return <span class="block truncate whitespace-nowrap text-center">{content}</span>;
+      return (
+        <Show when={header.column.columnDef.meta?.headerInfo} fallback={<span class="block truncate whitespace-nowrap text-center">{content}</span>}>
+          <span class="flex min-w-0 items-center justify-center gap-1 whitespace-nowrap">
+            <span class="min-w-0 truncate">{content}</span>
+            {headerInfoTip(header.column)}
+          </span>
+        </Show>
+      );
     }
     const sorted = () => header.column.getIsSorted();
-    return (
+    const sortButton = () => (
       <Button
         type="button"
         variant="ghost"
@@ -406,6 +427,14 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </Show>
         </Show>
       </Button>
+    );
+    return (
+      <Show when={header.column.columnDef.meta?.headerInfo} fallback={sortButton()}>
+        <span class="flex min-w-0 items-center justify-center whitespace-nowrap">
+          {sortButton()}
+          {headerInfoTip(header.column)}
+        </span>
+      </Show>
     );
   };
 
@@ -468,7 +497,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             fallback={<li class="rounded-lg border border-border-line bg-surface-base px-4 py-8 text-center text-sm text-muted-foreground">{emptyContent()}</li>}
           >
             <For each={table.getRowModel().rows}>
-              {(row) => {
+              {(row, rowIndex) => {
                 const cells = () =>
                   row.getVisibleCells().filter((cell) => cell.column.id !== "select" && !cell.column.columnDef.meta?.hideInCards);
                 const action = () => cells().find((cell) => cell.column.id === "actions");
@@ -516,7 +545,12 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                         <For each={details()}>
                           {(cell) => (
                             <div class="min-w-0">
-                              <dt class="truncate text-[11px] leading-4 text-muted-foreground">{headerLabel(cell.column.id)}</dt>
+                              {/* A column note shows on the first card only: once
+                                  per list, like the table header it stands in for. */}
+                              <dt class="flex min-w-0 items-center gap-1 text-[11px] leading-4 text-muted-foreground">
+                                <span class="min-w-0 truncate">{headerLabel(cell.column.id)}</span>
+                                <Show when={rowIndex() === 0}>{headerInfoTip(cell.column)}</Show>
+                              </dt>
                               <dd class="mt-0.5 min-w-0 break-words text-[13px] leading-5 text-foreground text-left [&_*]:text-left [&_.items-center]:items-start [&_.justify-center]:justify-start [&_.justify-end]:justify-start [&_.mx-auto]:mx-0 [&_[data-slot=badge]]:w-auto [&_[data-slot=badge]]:min-w-0 [&_[data-slot=badge]]:max-w-full [&_[data-slot=badge]]:items-center!">
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                               </dd>

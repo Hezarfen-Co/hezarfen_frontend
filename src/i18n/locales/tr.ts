@@ -692,6 +692,8 @@ export const tr: Dict = {
   "common.pagination": "Sayfalar",
   "common.noResults": "Sonuç yok.",
   "common.scrollHint": "Yatay kaydır",
+  "common.info": "Bilgi",
+  "common.infoAbout": "{item} hakkında bilgi",
   "common.noMatches": "Aramanızla eşleşen kayıt yok.",
   "common.noMatchesFor": "“{query}” için sonuç yok.",
   "common.noFilterMatches": "Seçili filtrelerle eşleşen kayıt yok.",

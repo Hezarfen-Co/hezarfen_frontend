@@ -95,7 +95,8 @@ function ClassesContent() {
     });
     return new Map(entries);
   });
-  const memberCountsCapped = () => listData().length > MEMBER_COUNT_FETCH_CAP;
+  // A memo: the columns read it, and must not rebuild on every list refetch.
+  const memberCountsCapped = createMemo(() => listData().length > MEMBER_COUNT_FETCH_CAP);
 
   // Class by class (9-A, 9-B, 10-A…) until a column header re-sorts it.
   const gradeFiltered = createMemo(() => {
@@ -186,9 +187,15 @@ function ClassesContent() {
       id: "students",
       accessorFn: (row) => memberCounts()?.get(row.id) ?? -1,
       header: t("nav.studentsRoster"),
-      size: 110,
-      minSize: 90,
-      meta: { cellClass: "whitespace-nowrap text-center", align: "center" },
+      size: 130,
+      minSize: 100,
+      // Why counts stop past the cap — behind the header's "i" rather than a
+      // notice kept above the table.
+      meta: {
+        cellClass: "whitespace-nowrap text-center",
+        align: "center",
+        headerInfo: memberCountsCapped() ? t("classGroups.memberCountCapped", { cap: MEMBER_COUNT_FETCH_CAP }) : undefined,
+      },
       cell: (cell) => {
         const count = memberCounts()?.get(cell.row.original.id);
         return count == null ? <span class="text-text-subtle">—</span> : t("classGroups.studentsCount", { count: String(count) });
@@ -376,10 +383,6 @@ function ClassesContent() {
 
         <TabsContent value="classes">
           <div class="space-y-4">
-            <Show when={memberCountsCapped()}>
-              <Alert role="status">{t("classGroups.memberCountCapped", { cap: MEMBER_COUNT_FETCH_CAP })}</Alert>
-            </Show>
-
             <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
               <DataTable
                 urlState

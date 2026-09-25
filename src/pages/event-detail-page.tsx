@@ -319,7 +319,6 @@ function EventDetailContent() {
                 </Show>
 
                 <TabsContent value="studentAttendance" forceMount class="space-y-3">
-                  <p class="text-sm text-muted-foreground">{t("events.studentAttendanceHelp")}</p>
                   <Suspense fallback={<DataTableSkeleton columns={2} />}>
                     <Show when={roster()} fallback={
                       <Show when={roster.error}>
@@ -332,6 +331,7 @@ function EventDetailContent() {
                           roster={rows()}
                           open={rollCallOpen()}
                           closedReason={t("events.rollCall.opensAt", { date: formatDateTime(ev().starts_at, locale()) })}
+                          help={t("events.studentAttendanceHelp")}
                           onSaved={() => Promise.all([refetchRoster(), refetchAttendance()])}
                         />
                       )}
@@ -344,11 +344,9 @@ function EventDetailContent() {
                     <Show when={attendance()}>
                       {(rows) => (
                         <div class="space-y-3">
-                          <div class="rounded-xl border border-border-line bg-surface-base p-3 text-sm text-muted-foreground shadow-xs">
-                            {t("events.attendanceRecordsHelp")}
-                          </div>
                           <AttendanceTable
                             rows={rows()}
+                            markedByInfo={t("events.attendanceRecordsHelp")}
                             emptyLabel={t("events.noAttendance")}
                             canRemove={isTeacherPlus()}
                             onRemove={async (userId) => {

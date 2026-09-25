@@ -71,7 +71,8 @@ function StudentMarksContent() {
       return Object.fromEntries(pairs) as Record<string, MarksReport | null>;
     },
   );
-  const marksCapped = () => list().length > MARKS_FETCH_CAP;
+  // A memo: the columns read it, and must not rebuild on every list refetch.
+  const marksCapped = createMemo(() => !list.loading && (list() ?? []).length > MARKS_FETCH_CAP);
   const marksOf = (id: string) => marksMapRes()?.[id];
   const examCountOf = (id: string) => {
     const rep = marksOf(id);
@@ -113,7 +114,11 @@ function StudentMarksContent() {
       id: "average",
       header: t("marks.overall"),
       accessorFn: (row) => marksOf(row.person.id)?.overall_average ?? -1,
-      meta: { align: "right" },
+      // Room for the label, the sort arrow and the info icon on one line.
+      size: 160,
+      // Why the column is blank on a large school — behind the header's "i"
+      // rather than a notice kept above the table.
+      meta: { align: "right", headerInfo: marksCapped() ? t("marks.averageCapped", { cap: MARKS_FETCH_CAP }) : undefined },
       cell: (cell) => {
         const average = marksOf(cell.row.original.person.id)?.overall_average;
         if (average == null) return <span class="text-sm text-muted-foreground">—</span>;
@@ -167,10 +172,6 @@ function StudentMarksContent() {
       <section class="space-y-4 p-0">
         <Show when={error() && !viewUser()}>
           <Alert variant="destructive">{error()}</Alert>
-        </Show>
-
-        <Show when={!listLoading() && marksCapped()}>
-          <Alert role="status">{t("marks.averageCapped", { cap: MARKS_FETCH_CAP })}</Alert>
         </Show>
 
         <Show when={!listLoading()} fallback={<DataTableSkeleton columns={7} rows={6} />}>

@@ -696,6 +696,8 @@ export const en: Dict = {
   "common.pagination": "Pagination",
   "common.noResults": "No results.",
   "common.scrollHint": "Scroll horizontally",
+  "common.info": "More info",
+  "common.infoAbout": "About {item}",
   "common.noMatches": "Nothing matches your search.",
   "common.noMatchesFor": "No results for “{query}”.",
   "common.noFilterMatches": "Nothing matches the selected filters.",

@@ -19,6 +19,7 @@ import { GradeLevelSelect } from "@/components/classes/grade-level-select";
 import { ExamWeightsEditor } from "@/components/instances/exam-weights-editor";
 import { SubjectSetEditor } from "@/components/instances/subject-set-editor";
 import { WeeklyPlanTable } from "@/components/instances/weekly-plan-table";
+import { InfoTip } from "@/components/ui/info-tip";
 import { WeeklySlotForm } from "@/components/instances/weekly-slot-form";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -184,9 +185,9 @@ export function OfferingPanel(props: {
               <Show when={sectionError()}><Alert variant="destructive">{sectionError()}</Alert></Show>
 
               <section class={SECTION}>
-                <div>
+                <div class="flex items-center gap-1">
                   <h3 class="text-sm font-semibold">{t("instances.subjectsTitle")}</h3>
-                  <p class="text-xs text-muted-foreground">{t("offerings.subjectsHelp")}</p>
+                  <InfoTip text={t("offerings.subjectsHelp")} label={t("common.infoAbout", { item: t("instances.subjectsTitle") })} />
                 </div>
                 <SubjectSetEditor
                   selected={subjects.latest ?? []}
@@ -199,9 +200,9 @@ export function OfferingPanel(props: {
 
               <section class={SECTION}>
                 <div class={SECTION_HEAD}>
-                  <div>
+                  <div class="flex items-center gap-1">
                     <h3 class="text-sm font-semibold">{t("weeklyPlan.title")}</h3>
-                    <p class="text-xs text-muted-foreground">{t("offerings.weeklyPlanHelp")}</p>
+                    <InfoTip text={t("offerings.weeklyPlanHelp")} label={t("common.infoAbout", { item: t("weeklyPlan.title") })} />
                   </div>
                   <Show when={props.canEdit}>
                     <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setAddingSlot(true)}>
@@ -218,9 +219,9 @@ export function OfferingPanel(props: {
 
               <section class={SECTION}>
                 <div class={SECTION_HEAD}>
-                  <div>
+                  <div class="flex items-center gap-1">
                     <h3 class="text-sm font-semibold">{t("instances.examWeightsTitle")}</h3>
-                    <p class="text-xs text-muted-foreground">{t("offerings.weightsHelp")}</p>
+                    <InfoTip text={t("offerings.weightsHelp")} label={t("common.infoAbout", { item: t("instances.examWeightsTitle") })} />
                   </div>
                   <Show when={props.canEdit}>
                     <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setWeightEditing("new")}>

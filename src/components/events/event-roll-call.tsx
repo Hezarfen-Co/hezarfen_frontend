@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataTableSearch } from "@/components/ui/data-table-search";
 import { EmptyState } from "@/components/ui/empty-state";
+import { InfoTip } from "@/components/ui/info-tip";
 import { IconCheck } from "@/components/ui/icons";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { ATTENDANCE_STATUSES, getAttendanceStatusMeta } from "@/lib/attendance-status";
@@ -37,6 +38,8 @@ export function EventRollCall(props: {
   /** False before the event starts: statuses show, nothing can be picked. */
   open: boolean;
   closedReason?: string;
+  /** How the roll call works, behind an info icon beside the progress line. */
+  help?: string;
   onSaved: () => void | Promise<unknown>;
 }) {
   const t = useT();
@@ -173,9 +176,12 @@ export function EventRollCall(props: {
       >
         <div class="space-y-2.5 rounded-xl border border-border-line bg-surface-base p-3 shadow-xs sm:p-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <p class="text-sm font-semibold text-text-strong" role="status">
-              {t("rollCall.progress", { marked: markedCount(), total: props.roster.length })}
-            </p>
+            <div class="flex min-w-0 items-center gap-1">
+              <p class="text-sm font-semibold text-text-strong" role="status">
+                {t("rollCall.progress", { marked: markedCount(), total: props.roster.length })}
+              </p>
+              <Show when={props.help}>{(help) => <InfoTip text={help()} />}</Show>
+            </div>
             <div class="flex flex-wrap justify-end gap-1.5">
               <For each={statuses()}>
                 {(status) => (

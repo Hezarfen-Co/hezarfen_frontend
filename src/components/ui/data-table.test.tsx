@@ -334,3 +334,28 @@ test("a toolbar holding only the column menu is not boxed", () => {
   const toolbar = container.querySelector(".space-y-3 > div");
   expect(toolbar?.className).not.toContain("rounded-xl");
 });
+
+test("meta.headerInfo puts a labelled info icon beside the header that opens without sorting", async () => {
+  const withInfo: ColumnDef<Row>[] = [
+    { accessorKey: "name", header: "Name" },
+    { accessorKey: "role", header: "Average", meta: { headerInfo: "Filled in for small schools only." } },
+  ];
+  render(() => (
+    <PreferencesProvider>
+      <DataTable columns={withInfo} data={[{ name: "Ada", role: "b" }, { name: "Bo", role: "a" }]} enableColumnVisibility={false} />
+    </PreferencesProvider>
+  ));
+  const info = screen.getByRole("button", { name: /About Average|Average hakkında bilgi/ });
+  const header = info.closest("th");
+  expect(header?.getAttribute("aria-sort")).toBe("none");
+  // Beside the sort button, never inside it: a button in a button is invalid.
+  expect(info.parentElement?.closest("button")).toBeNull();
+  expect(screen.getAllByRole("columnheader")).toHaveLength(2);
+  expect(screen.queryByText("Filled in for small schools only.")).toBeNull();
+
+  fireEvent.click(info);
+  expect(header?.getAttribute("aria-sort")).toBe("none");
+  expect(await screen.findByText("Filled in for small schools only.")).toBeTruthy();
+  // No always-visible copy of the note is left in the table.
+  expect(document.querySelector("table")?.textContent).not.toContain("Filled in for small schools only.");
+});

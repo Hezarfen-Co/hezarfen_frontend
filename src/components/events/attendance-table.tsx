@@ -15,6 +15,8 @@ import { useT } from "@/stores/preferences-context";
 export function AttendanceTable(props: {
   rows: Attendance[];
   emptyLabel?: string;
+  /** A note about the list, behind the "Kaydeden" header's info icon. */
+  markedByInfo?: string;
   canRemove?: boolean;
   onRemove?: (userId: string) => Promise<void>;
 }) {
@@ -46,6 +48,7 @@ export function AttendanceTable(props: {
       id: "marked_by",
       accessorFn: (row) => personLabel(row.marked_by),
       header: t("events.markedBy"),
+      meta: { headerInfo: props.markedByInfo },
       cell: (cell) => <span class="text-sm text-muted-foreground">{personLabel(cell.row.original.marked_by)}</span>,
     },
     ...(props.canRemove && props.onRemove

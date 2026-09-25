@@ -680,6 +680,8 @@ export type MessageKey =
   | "common.pagination"
   | "common.noResults"
   | "common.scrollHint"
+  | "common.info"
+  | "common.infoAbout"
   | "common.noMatches"
   | "common.noMatchesFor"
   | "common.noFilterMatches"
