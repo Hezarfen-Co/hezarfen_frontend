@@ -1,5 +1,5 @@
 import type { Page, PageParams } from "@/api/client";
-import { isTruncated, loadCappedList } from "./capped-list";
+import { isTruncated, loadAllPages, loadCappedList } from "./capped-list";
 
 const page = (items: number[], total: number): Page<number> => ({ items, total, limit: null, offset: 0 });
 
@@ -22,4 +22,21 @@ it("never reports a total below the rows it holds", async () => {
   const list = await loadCappedList(async () => page([1, 2, 3], 1), 10, false);
   expect(list.total).toBe(3);
   expect(isTruncated(undefined)).toBe(false);
+});
+
+it("reads every page of a paged list, in order", async () => {
+  const all = Array.from({ length: 7 }, (_, index) => index);
+  const fetch = vi.fn(async (params?: PageParams) => {
+    const offset = params?.offset ?? 0;
+    return page(all.slice(offset, offset + (params?.limit ?? all.length)), all.length);
+  });
+  expect(await loadAllPages(fetch, 3)).toEqual(all);
+  expect(fetch).toHaveBeenCalledTimes(3);
+  expect(fetch).toHaveBeenCalledWith({ limit: 3, offset: 6 });
+});
+
+it("stops after one request when the first page holds everything", async () => {
+  const fetch = vi.fn(async () => page([1, 2], 2));
+  expect(await loadAllPages(fetch, 100)).toEqual([1, 2]);
+  expect(fetch).toHaveBeenCalledTimes(1);
 });

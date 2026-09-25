@@ -15,8 +15,7 @@ import { Button } from "@/components/ui/button";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { IconPlus } from "@/components/ui/icons";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TruncationNotice } from "@/components/ui/truncation-notice";
-import { loadCappedList } from "@/lib/capped-list";
+import { loadAllPages } from "@/lib/capped-list";
 import { createFlash } from "@/lib/flash";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
@@ -32,7 +31,7 @@ export default function AdminUsersPage() {
 }
 
 /** Staff rosters run longer than other lists, so the first load holds more. */
-const USER_LIST_CAP = 200;
+const USER_PAGE_SIZE = 200;
 
 function AdminUsersContent() {
   const auth = useAuth();
@@ -44,10 +43,8 @@ function AdminUsersContent() {
   const [creating, setCreating] = createSignal(false);
   const [editTarget, setEditTarget] = createSignal<User | null>(null);
 
-  const [loadAll, setLoadAll] = createSignal(false);
   const [list, { refetch }] = createResource(
-    () => (loadAll() ? "all" : "capped"),
-    (scope) => loadCappedList(getUsers, USER_LIST_CAP, scope === "all"),
+    async () => ({ items: await loadAllPages(getUsers, USER_PAGE_SIZE) }),
   );
   const allUsers = () => list()?.items ?? [];
   const visibleUsers = createMemo(() => {
@@ -89,12 +86,6 @@ function AdminUsersContent() {
 
       <section class="space-y-4 p-0">
         <Suspense fallback={<DataTableSkeleton columns={6} rows={8} />}>
-          <TruncationNotice
-            shown={list()?.items.length ?? 0}
-            total={list()?.total ?? 0}
-            loading={list.loading}
-            onLoadAll={() => setLoadAll(true)}
-          />
           <Show when={list()}>
             <UserTable
               title={t("admin.title")}

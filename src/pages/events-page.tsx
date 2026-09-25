@@ -18,11 +18,10 @@ import { IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { TruncationNotice } from "@/components/ui/truncation-notice";
 import { cn } from "@/lib/cn";
 import { createUrlEnum } from "@/lib/url-state";
 import { createNow } from "@/lib/create-now";
-import { LIST_CAP, loadCappedList } from "@/lib/capped-list";
+import { loadAllPages } from "@/lib/capped-list";
 import { createFlash } from "@/lib/flash";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
@@ -85,10 +84,8 @@ function EventsContent() {
       .sort(byDefault);
   };
 
-  const [loadAll, setLoadAll] = createSignal(false);
   const [list, { refetch }] = createResource(
-    () => (loadAll() ? "all" : "capped"),
-    (scope) => loadCappedList(getEvents, LIST_CAP, scope === "all"),
+    async () => ({ items: await loadAllPages(getEvents) }),
   );
   const rows = createMemo(() => filterEvents(list()?.items ?? []));
 
@@ -279,12 +276,6 @@ function EventsContent() {
           <Show when={list.error}>
             <Alert variant="destructive">{formatApiError(list.error)}</Alert>
           </Show>
-          <TruncationNotice
-            shown={list()?.items.length ?? 0}
-            total={list()?.total ?? 0}
-            loading={list.loading}
-            onLoadAll={() => setLoadAll(true)}
-          />
           <DataTable
             urlState
             title={t("events.title")}

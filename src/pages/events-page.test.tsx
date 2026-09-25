@@ -37,11 +37,12 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-test("a capped event list says rows were left out and loads them on request", async () => {
-  getEvents.mockImplementation(async (params?: { limit?: number }) => {
-    const all = Array.from({ length: 3 }, (_, i) => event(i + 1));
-    const items = params?.limit ? all.slice(0, 2) : all;
-    return { items, total: all.length, limit: params?.limit ?? null, offset: 0 };
+test("the event list reads every page instead of stopping at the first 100", async () => {
+  const all = Array.from({ length: 150 }, (_, i) => event(i + 1));
+  getEvents.mockImplementation(async (params?: { limit?: number; offset?: number }) => {
+    const offset = params?.offset ?? 0;
+    const items = all.slice(offset, offset + (params?.limit ?? all.length));
+    return { items, total: all.length, limit: params?.limit ?? null, offset };
   });
 
   render(() => (
@@ -50,12 +51,7 @@ test("a capped event list says rows were left out and loads them on request", as
     </PreferencesProvider>
   ));
 
-  const notice = await screen.findByRole("status");
-  expect(getEvents).toHaveBeenCalledWith({ limit: 100 });
-  expect(notice.textContent).toContain("3");
-
-  fireEvent.click(await screen.findByRole("button", { name: /Tümünü yükle|Load all/ }));
-
-  await waitFor(() => expect(getEvents).toHaveBeenLastCalledWith(undefined));
-  await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
+  await waitFor(() => expect(getEvents).toHaveBeenCalledWith({ limit: 100, offset: 100 }));
+  expect(getEvents).toHaveBeenCalledWith({ limit: 100, offset: 0 });
+  expect(screen.queryByRole("button", { name: /Tümünü yükle|Load all/ })).toBeNull();
 });

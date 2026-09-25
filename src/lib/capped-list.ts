@@ -28,3 +28,31 @@ export async function loadCappedList<T>(
 export function isTruncated(list: CappedList<unknown> | undefined): boolean {
   return !!list && list.total > list.items.length;
 }
+
+/** Requests in flight at once while a list's later pages are read. */
+const PAGE_CONCURRENCY = 3;
+
+/**
+ * Every row of a list the backend can only page (`limit` / `offset`, no
+ * search or filter): the first page names the total, the rest are read in
+ * parallel, in order. The page then searches, filters and pages in memory
+ * over the whole list, so there is no "first 100 of 161" cut to explain.
+ */
+export async function loadAllPages<T>(
+  fetch: (params?: PageParams) => Promise<Page<T>>,
+  pageSize: number = LIST_CAP,
+): Promise<T[]> {
+  const first = await fetch({ limit: pageSize, offset: 0 });
+  const items = Array.isArray(first.items) ? [...first.items] : [];
+  const total = typeof first.total === "number" ? first.total : items.length;
+  if (items.length < pageSize || items.length >= total) return items;
+  const offsets: number[] = [];
+  for (let offset = items.length; offset < total; offset += pageSize) offsets.push(offset);
+  const pages: T[][] = new Array(offsets.length);
+  for (let start = 0; start < offsets.length; start += PAGE_CONCURRENCY) {
+    const batch = offsets.slice(start, start + PAGE_CONCURRENCY);
+    const results = await Promise.all(batch.map((offset) => fetch({ limit: pageSize, offset })));
+    results.forEach((page, index) => { pages[start + index] = Array.isArray(page.items) ? page.items : []; });
+  }
+  return items.concat(...pages);
+}

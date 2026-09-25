@@ -22,13 +22,12 @@ import { DropdownSelect } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
-import { TruncationNotice } from "@/components/ui/truncation-notice";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createNow } from "@/lib/create-now";
 import { EXAM_KINDS } from "@/api/client";
 import { examKindLabel } from "@/lib/exam-labels";
 import { examDisplayStatus, examStatusMessageKey, examStatusTone, isSittableExam, type ExamDisplayStatus } from "@/lib/exam-status";
-import { LIST_CAP, loadCappedList } from "@/lib/capped-list";
+import { loadAllPages } from "@/lib/capped-list";
 import { createFlash } from "@/lib/flash";
 import { countExamQuestions } from "@/lib/exam-publish";
 import { formatDateTime } from "@/lib/format";
@@ -151,15 +150,14 @@ function ExamsContent() {
       statusLabel(exam.displayStatus),
     );
 
-  const [loadAll, setLoadAll] = createSignal(false);
   const [list, { refetch: refetchExams }] = createResource(
     () => {
       if (sections() === undefined) return null;
-      return `${loadAll() ? "all" : "capped"}|${visibleCourses().map((row) => row.id).join(",")}`;
+      return `${visibleCourses().map((row) => row.id).join(",")}`;
     },
     async () => {
-      const page = await loadCappedList(getExams, LIST_CAP, loadAll());
-      const items = page.items;
+      const items = await loadAllPages(getExams);
+      const page = { items };
       const known = new Map(visibleCourses().map((row) => [row.id, row.label]));
       const missing = [...new Set(items.map((exam) => exam.class_course))].filter((instanceId) => !known.has(instanceId));
       if (missing.length > 0) {
@@ -384,12 +382,6 @@ function ExamsContent() {
               <Show when={list.error}>
                 <Alert variant="destructive">{formatApiError(list.error)}</Alert>
               </Show>
-              <TruncationNotice
-                shown={list()?.items.length ?? 0}
-                total={list()?.total ?? 0}
-                loading={list.loading}
-                onLoadAll={() => setLoadAll(true)}
-              />
               <DataTable
                 title={t("exams.title")}
                 description={t("exams.subtitle")}
