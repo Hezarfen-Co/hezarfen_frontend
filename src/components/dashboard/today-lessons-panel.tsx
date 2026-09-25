@@ -7,7 +7,8 @@ import { getSessionAttendance } from "@/api/sessions";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconChevronRight } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import { lessonNow, rollCallState, sessionsToday, type RollCallState, type TodayLesson } from "@/lib/today-lessons";
+import { lessonNow, rollCallState, sessionsToday, dayBounds, type RollCallState, type TodayLesson } from "@/lib/today-lessons";
+import { LIST_CAP, loadWindowedList } from "@/lib/capped-list";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import type { MessageKey } from "@/i18n/messages";
 
@@ -49,9 +50,15 @@ export function TodayLessonsPanel(props: {
         const instances = (await getMyInstances()).items.slice(0, INSTANCE_CAP);
         const perInstance = await Promise.all(
           instances.map(async (instance) => {
-            // No date filter on the route and newest first, so a year of
-            // pre-made future sessions would push today past any page size.
-            const sessions = await getInstanceSessions(instance.id).then((page) => page.items).catch(() => []);
+            // The route filters on the same half-open local-day bounds
+            // `sessionsToday` keeps, so the visible set is unchanged — but
+            // the read is now paged (offsets followed only while the
+            // envelope total exceeds the page) instead of every session ever.
+            const [dayStart, dayEnd] = dayBounds(now);
+            const sessions = await loadWindowedList(
+              (params) => getInstanceSessions(instance.id, { ...params, starts_after: dayStart, starts_before: dayEnd }),
+              LIST_CAP,
+            ).then((list) => list.items).catch(() => []);
             return sessionsToday(sessions, now).map((session) => ({ session, instance }));
           }),
         );

@@ -59,13 +59,12 @@ function EventsContent() {
   const canCreate = () => hasMinRole(auth.user()?.role, "teacher");
 
   const filterEvents = (items: Event[]) => {
-    const scope = timeFilter();
     const nowMs = now();
     const isPast = (event: Event) => event.ends_at != null && event.ends_at < nowMs;
     const at = (event: Event) => event.starts_at ?? event.ends_at ?? null;
     // Default order, before any header sort: what is still ahead comes first,
-    // soonest first; what is over follows, most recent first. The API lists
-    // newest first, which put a far-off event above next week's.
+    // soonest first; what is over follows, most recent first. Applied here
+    // whatever order the server chose — it differs per tab window.
     const byDefault = (a: Event, b: Event) => {
       const pastA = isPast(a);
       const pastB = isPast(b);
@@ -75,17 +74,24 @@ function EventsContent() {
       if (atA == null || atB == null) return atA == null ? (atB == null ? 0 : 1) : -1;
       return pastA ? atB - atA : atA - atB;
     };
-    return items
-      .filter((event) => {
-        if (scope === "upcoming" && isPast(event)) return false;
-        if (scope === "past" && !isPast(event)) return false;
-        return true;
-      })
-      .sort(byDefault);
+    // Tab membership is the server's job now (see the fetch bounds below);
+    // the client only orders what came back. Copy first: sorting in place
+    // would mutate the resource's array.
+    return [...items].sort(byDefault);
   };
 
+  // Tab windows are enforced server-side, at the moment of the request:
+  // upcoming keeps rows whose window has not finished (`ends_after`), past
+  // keeps rows that finished before now (`ends_before`); `all` sends nothing
+  // and stays unfiltered. The window rides in the source key so switching
+  // tabs refetches with that tab's bounds; every page of the filtered set is
+  // read (no cap, no truncation notice).
   const [list, { refetch }] = createResource(
-    async () => ({ items: await loadAllPages(getEvents) }),
+    () => timeFilter(),
+    async (scope) => {
+      const bounds = scope === "upcoming" ? { ends_after: now() } : scope === "past" ? { ends_before: now() } : undefined;
+      return { items: await loadAllPages((params) => getEvents(bounds ? { ...params, ...bounds } : params)) };
+    },
   );
   const rows = createMemo(() => filterEvents(list()?.items ?? []));
 

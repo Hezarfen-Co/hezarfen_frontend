@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { Show, Suspense, createMemo, createSignal } from "solid-js";
+import { Show, Suspense, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { getUsers } from "@/api/users";
 import { patchUserRole } from "@/api/users";
@@ -44,15 +44,22 @@ function AdminUsersContent() {
   const [editTarget, setEditTarget] = createSignal<User | null>(null);
 
   const [list, { refetch }] = createResource(
-    async () => ({ items: await loadAllPages(getUsers, USER_PAGE_SIZE) }),
+    // The source keys on the tab so switching tabs refetches from the server.
+    // Manager tab is the merged staff roster; every other tab is that one
+    // role. "all" omits the key entirely. Every page of the filtered set is
+    // read — no cap hides rows.
+    () => roleTab(),
+    async (tab) => ({
+      items: await loadAllPages(
+        (params) =>
+          getUsers({
+            ...params,
+            roles: tab === "all" ? undefined : tab === "manager" ? ["manager", "admin"] : [tab],
+          }),
+        USER_PAGE_SIZE,
+      ),
+    }),
   );
-  const allUsers = () => list()?.items ?? [];
-  const visibleUsers = createMemo(() => {
-    const tab = roleTab();
-    if (tab === "all") return allUsers();
-    if (tab === "manager") return allUsers().filter((user) => user.role === "manager" || user.role === "admin");
-    return allUsers().filter((user) => user.role === tab);
-  });
 
   const [flash, setFlash] = createFlash();
 
@@ -96,7 +103,7 @@ function AdminUsersContent() {
                   {t("admin.createUser")}
                 </Button>
               }
-              users={visibleUsers() as User[]}
+              users={list()?.items as User[]}
               currentUserId={auth.user()!.id}
               onRoleChange={onRoleChange}
               onUserClick={(user) => navigate({ to: "/admin/users/$id", params: { id: user.id } })}

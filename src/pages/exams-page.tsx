@@ -59,11 +59,6 @@ function ExamsContent() {
   const { locale } = usePreferences();
   const now = createNow();
   type ExamTab = "all" | "upcoming" | "completed" | "draft";
-  const examTabGroup = (status: ExamDisplayStatus): ExamTab => {
-    if (status === "draft") return "draft";
-    if (status === "upcoming" || status === "active" || status === "unscheduled") return "upcoming";
-    return "completed";
-  };
   // Tab and filters live in the URL beside the table's own search/page/sort,
   // so Back from an exam lands on the same slice of the list.
   const [tab, setTab] = createUrlEnum<ExamTab>("tab", ["all", "upcoming", "completed", "draft"], "all");
@@ -134,7 +129,12 @@ function ExamsContent() {
     const allowed = isStudent() ? new Set(visibleCourses().map((row) => row.id)) : null;
     return items.filter((exam) => {
       if (allowed && !allowed.has(exam.class_course)) return false;
-      if (tab() !== "all" && examTabGroup(examStatus(exam)) !== tab()) return false;
+      // Upcoming/completed membership is the server's job now (see the fetch
+      // bounds); the client keeps only the draft split, which no schedule
+      // window can express.
+      const status = examStatus(exam);
+      if (tab() === "draft" && status !== "draft") return false;
+      if (tab() !== "all" && tab() !== "draft" && status === "draft") return false;
       if (courseFilter() !== "all" && exam.class_course !== courseFilter()) return false;
       if (kindFilter() !== "all" && String(exam.kind) !== kindFilter()) return false;
       return true;
@@ -150,13 +150,23 @@ function ExamsContent() {
       statusLabel(exam.displayStatus),
     );
 
+  // Tab windows are enforced server-side, at the moment of the request:
+  // completed keeps rows that finished before now (`ends_before`), upcoming
+  // keeps rows whose window has not finished (`ends_after`); `all` and
+  // `draft` send nothing — drafts carry no schedule, so no bound can select
+  // them and the client splits them instead. The window rides in the source
+  // key so switching tabs refetches with that tab's bounds; every page of
+  // the filtered set is read (no cap, no truncation notice).
   const [list, { refetch: refetchExams }] = createResource(
     () => {
       if (sections() === undefined) return null;
-      return `${visibleCourses().map((row) => row.id).join(",")}`;
+      const windowScope = tab() === "completed" ? "completed" : tab() === "upcoming" ? "upcoming" : "unbounded";
+      return `${windowScope}|${visibleCourses().map((row) => row.id).join(",")}`;
     },
-    async () => {
-      const items = await loadAllPages(getExams);
+    async (key) => {
+      const scope = key.split("|")[0];
+      const bounds = scope === "completed" ? { ends_before: now() } : scope === "upcoming" ? { ends_after: now() } : undefined;
+      const items = await loadAllPages<Exam>((params) => getExams(bounds ? { ...params, ...bounds } : params));
       const page = { items };
       const known = new Map(visibleCourses().map((row) => [row.id, row.label]));
       const missing = [...new Set(items.map((exam) => exam.class_course))].filter((instanceId) => !known.has(instanceId));

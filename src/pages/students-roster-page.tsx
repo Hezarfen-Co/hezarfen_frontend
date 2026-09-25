@@ -4,9 +4,8 @@ import { Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { matchesSearch } from "@/lib/search-text";
 import { createUrlString } from "@/lib/url-state";
-import { getClassMembers, getClasses } from "@/api/classes";
+import { getClasses } from "@/api/classes";
 import { getAcademicYears } from "@/api/academic-years";
-import { getUserSearch } from "@/api/users";
 import { formatApiError, type ClassGroup, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { CreateUserPanel } from "@/components/users/create-user-panel";
@@ -20,7 +19,7 @@ import { DropdownSelect } from "@/components/ui/select";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { useT } from "@/stores/preferences-context";
 import { useAuth } from "@/stores/auth-context";
-import { sortByClass } from "@/lib/student-directory";
+import { getStudentDirectory } from "@/lib/student-directory";
 import { studentInfoSource } from "@/lib/student-info-access";
 
 const ROSTER_PAGE_SIZE = 10;
@@ -51,24 +50,22 @@ function StudentsRosterContent() {
   const [infoTarget, setInfoTarget] = createSignal<PersonRef | null>(null);
   const infoSource = (person: PersonRef) => studentInfoSource(auth.user(), { id: person.id, role: "student" });
 
-  const [data, { refetch }] = createResource(async () => {
-    const [students, classes, years] = await Promise.all([
-      getUserSearch("", undefined, "student"),
-      getClasses(),
-      getAcademicYears().catch(() => ({ items: [] })),
-    ]);
-    // No endpoint maps students to classes in bulk; one members read per class
-    // is bounded by the class count, not the student count.
-    const memberships = await Promise.all(
-      classes.items.map(async (cls) => ({ cls, members: (await getClassMembers(cls.id)).items })),
-    );
-    const byStudent = new Map<string, ClassGroup[]>();
-    for (const { cls, members } of memberships) {
-      for (const member of members) byStudent.set(member.user.id, [...(byStudent.get(member.user.id) ?? []), cls]);
-    }
-    const rows: StudentRow[] = sortByClass(students.items.map((person) => ({ person, classes: byStudent.get(person.id) ?? [] })));
-    return { rows, classes: classes.items, years: years.items };
-  });
+  const [data, { refetch }] = createResource(
+    () => classFilter(),
+    async (classId) => {
+      const [classes, years] = await Promise.all([
+        getClasses(),
+        getAcademicYears().catch(() => ({ items: [] })),
+      ]);
+      // A picked class (?class=) scopes the roster read to that class's
+      // members; with no class every student and every class's members are
+      // read. The class and year lists always come along: the filter
+      // dropdowns need them either way.
+      const picked = classId ? classes.items.find((cls) => cls.id === classId) : undefined;
+      const rows = await getStudentDirectory(picked);
+      return { rows, classes: classes.items, years: years.items };
+    },
+  );
 
   const rows = createMemo(() =>
     (data()?.rows ?? []).filter((row) => {

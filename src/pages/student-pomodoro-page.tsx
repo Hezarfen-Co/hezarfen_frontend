@@ -2,7 +2,7 @@ import { Show, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { getPomodoroByUser } from "@/api/pomodoro";
-import type { PersonRef } from "@/api/client";
+import type { ClassGroup, PersonRef } from "@/api/client";
 import { ApiError, formatApiError } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { PomodoroLogView } from "@/components/pomodoro/pomodoro-log-view";
@@ -34,15 +34,36 @@ function StudentPomodoroContent() {
   const [viewUser, setViewUser] = createSignal<PersonRef | null>(null);
   const [error, setError] = createSignal("");
 
-  const [list] = createResource(async () => {
-    try {
-      setError("");
-      return await getStudentDirectory();
-    } catch (err) {
-      setError(formatApiError(err));
-      return [];
-    }
-  }, { initialValue: [] as StudentDirectoryRow[] });
+  // No endpoint reports attendance or focus time for a list of students —
+  // only one student at a time — so the list stays a roster (a column per
+  // student would be one report read per row). Picking a class scopes the
+  // directory read to that class's roster; with no class every student is read.
+  const [classFilter, setClassFilter] = createSignal("");
+  // Classes seen on the last full read: the scoped read returns only the
+  // picked class's roster, so the dropdown keeps listing every class and the
+  // scoped fetch resolves the picked class without another request.
+  const [allClasses, setAllClasses] = createSignal<ClassGroup[]>([]);
+  const [list] = createResource(
+    () => classFilter(),
+    async (classId) => {
+      try {
+        setError("");
+        if (!classId) {
+          const rows = await getStudentDirectory();
+          const seen = new Map<string, ClassGroup>();
+          for (const row of rows) for (const cls of row.classes) seen.set(cls.id, cls);
+          setAllClasses([...seen.values()]);
+          return rows;
+        }
+        const picked = allClasses().find((cls) => cls.id === classId);
+        return await getStudentDirectory(picked);
+      } catch (err) {
+        setError(formatApiError(err));
+        return [];
+      }
+    },
+    { initialValue: [] as StudentDirectoryRow[] },
+  );
 
   const [log, { refetch: refetchLog }] = createResource(
     () => viewUser()?.id ?? null,
@@ -61,18 +82,11 @@ function StudentPomodoroContent() {
     },
   );
 
-  // No endpoint reports attendance or focus time for a list of students —
-  // only one student at a time — so the list stays a roster (a column per
-  // student would be one report read per row). The class filter narrows it
-  // with the memberships the directory already read.
-  const [classFilter, setClassFilter] = createSignal("");
-  const classOptions = createMemo(() => {
-    const seen = new Map<string, string>();
-    for (const row of list()) for (const cls of row.classes) seen.set(cls.id, cls.name);
-    return [...seen]
-      .sort((a, b) => a[1].localeCompare(b[1], "tr", { numeric: true }))
-      .map(([value, label]) => ({ value, label }));
-  });
+  const classOptions = createMemo(() =>
+    [...allClasses()]
+      .sort((a, b) => a.name.localeCompare(b.name, "tr", { numeric: true }))
+      .map((cls) => ({ value: cls.id, label: cls.name })),
+  );
   const rows = () => (classFilter() ? list().filter((row) => row.classes.some((cls) => cls.id === classFilter())) : list());
   const listLoading = () => list.loading;
   const searchPerson = (row: StudentDirectoryRow, query: string) =>

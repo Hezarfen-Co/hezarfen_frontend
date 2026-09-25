@@ -150,6 +150,15 @@ describe("instances API", () => {
     expect(url).toBe("/api/instances/i1/sessions");
   });
 
+  it("getInstanceSessions sends the half-open start window when set", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+
+    await getInstanceSessions("i1", { starts_after: 1700000000000, starts_before: 1800000000000, limit: 100 });
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/instances/i1/sessions?limit=100&starts_after=1700000000000&starts_before=1800000000000");
+  });
+
   it("postInstanceSession POSTs /instances/:id/sessions with the body", async () => {
     mockFetchSuccess({ id: "se1" });
     const body = { starts_at: 1900000000000, topic: "Limits" };

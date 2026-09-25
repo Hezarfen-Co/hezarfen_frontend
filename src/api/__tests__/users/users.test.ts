@@ -60,6 +60,33 @@ describe("users API", () => {
     expect(init?.method).toBe("GET");
   });
 
+  it("getUsers comma-joins multiple roles (manager tab = manager+admin)", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+
+    await getUsers({ roles: ["manager", "admin"], limit: 200 });
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/users?limit=200&roles=manager%2Cadmin");
+  });
+
+  it("getUsers sends a single role unchanged", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+
+    await getUsers({ roles: ["teacher"] });
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/users?roles=teacher");
+  });
+
+  it("getUsers omits roles when the array is empty", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+
+    await getUsers({ roles: [], limit: 5 });
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/users?limit=5");
+  });
+
   it("getUserSearch calls /users/search with query, role, and pagination", async () => {
     const mockPage = { items: [{ id: "u1" }], total: 1 };
     mockFetchSuccess(mockPage);

@@ -44,6 +44,12 @@ describe("appointments API", () => {
     expect(init?.method).toBe("GET");
   });
 
+  it("getSlots sends teacher and start window when set", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getSlots({ teacher: "me", starts_after: 1700000000000, limit: 10 });
+    expect(lastFetchCall()[0]).toBe("/api/appointments/slots?limit=10&starts_after=1700000000000&teacher=me");
+  });
+
   it("deleteSlotById calls /appointments/slots/:id", async () => {
     mockFetch204();
 
@@ -88,6 +94,18 @@ describe("appointments API", () => {
     const [url, init] = lastFetchCall();
     expect(url).toBe("/api/appointments?limit=10");
     expect(init?.method).toBe("GET");
+  });
+
+  it("getAppointments sends status, teacher and start window when set", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getAppointments({ status: "pending", teacher: "me", starts_after: 1700000000000, starts_before: 1800000000000, limit: 10, offset: 20 });
+    expect(lastFetchCall()[0]).toBe("/api/appointments?limit=10&offset=20&starts_after=1700000000000&starts_before=1800000000000&status=pending&teacher=me");
+  });
+
+  it("getAppointments omits unset filters — no bare keys", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getAppointments();
+    expect(lastFetchCall()[0]).toBe("/api/appointments");
   });
 
   it("patchApproveAppointment calls /appointments/:id/approve", async () => {

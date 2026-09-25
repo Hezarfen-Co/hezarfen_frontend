@@ -5,10 +5,11 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { getInstanceSubjects, postInstanceHomework } from "@/api/instances";
 import { loadInstanceOptions } from "@/lib/instance-options";
 import { loadInstanceLabels } from "@/lib/instance-labels";
-import { getHomework } from "@/api/homework";
+import { getHomework, type HomeworkListParams } from "@/api/homework";
 import { getTime } from "@/api/time";
 import { formatApiError } from "@/api/client";
 import type { Homework } from "@/api/client";
+import { LIST_CAP, loadWindowedList } from "@/lib/capped-list";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { DropdownSelect } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
@@ -77,12 +79,6 @@ function HomeworkContent() {
   // in two şubeler yields rows with the same title, so a row's label names
   // both — "<ders> — <şube>", as the exams list does.
   const [courseNames, setCourseNames] = createSignal<Record<string, string>>({});
-  const [list, { refetch }] = createResource(async () => {
-    const items = (await getHomework({ limit: 100 })).items;
-    const labels = await loadInstanceLabels(items.map((item) => item.class_course), auth.user()?.role);
-    setCourseNames(Object.fromEntries([...labels].map(([id, entry]) => [id, entry.label])));
-    return items;
-  });
   // The caller's sections, labelled "<ders> — <şube>" and ordered class by
   // class: the şube filter lists them all, the create form only for teachers.
   const [instances] = createResource(
@@ -98,7 +94,7 @@ function HomeworkContent() {
     const knownIds = new Set(known.map((row) => row.id));
     // Homework in a şube the picker does not list (e.g. one the caller only
     // sees through an assignment) still gets its own entry, after the rest.
-    const extra = [...new Set((list() ?? []).map((item) => item.class_course))]
+    const extra = [...new Set((list()?.items ?? []).map((item) => item.class_course))]
       .filter((id) => !knownIds.has(id) && courseNames()[id])
       .map((id) => ({ value: id, label: courseNames()[id] }));
     return [{ value: "all", label: t("common.all") }, ...known.map((row) => ({ value: row.id, label: row.label })), ...extra];
@@ -114,13 +110,26 @@ function HomeworkContent() {
   const pageTitle = () => auth.user()?.role === "student" ? t("homework.mineTitle") : t("homework.title");
   type DueTab = "all" | "open" | "past";
   const [dueTab, setDueTab] = createSignal<DueTab>("all");
-  const dueFilteredList = createMemo(() => {
-    const now = serverTime()?.now ?? Date.now();
-    const items = (list() ?? []).filter((item) => courseFilter() === "all" || item.class_course === courseFilter());
-    if (dueTab() === "open") return items.filter((item) => item.due_at >= now);
-    if (dueTab() === "past") return items.filter((item) => item.due_at < now);
-    return items;
-  });
+  // Tab and section filters are enforced server-side, at the moment of the
+  // request: Open keeps rows still due (`due_after`), Past keeps rows already
+  // due (`due_before`), a picked section narrows to it (`class_course`); `all`
+  // sends no bound. The window rides in the source key so switching tabs
+  // refetches with that tab's bound, and every page of the filtered set is
+  // read (no cap, no truncation notice).
+  const [list, { refetch }] = createResource(
+    () => `${dueTab()}|${courseFilter()}`,
+    async (key) => {
+      const [tab, course] = key.split("|");
+      const params: HomeworkListParams = {};
+      if (tab === "open") params.due_after = Date.now();
+      if (tab === "past") params.due_before = Date.now();
+      if (course !== "all") params.class_course = course;
+      const page = await loadWindowedList((paging) => getHomework({ ...params, ...paging }), LIST_CAP);
+      const labels = await loadInstanceLabels(page.items.map((item) => item.class_course), auth.user()?.role);
+      setCourseNames(Object.fromEntries([...labels].map(([id, entry]) => [id, entry.label])));
+      return page;
+    },
+  );
 
   createEffect(() => {
     if (!createOpen()) return;
@@ -269,10 +278,11 @@ function HomeworkContent() {
             <Show when={list.error}>
               <Alert variant="destructive">{formatApiError(list.error)}</Alert>
             </Show>
+
             <DataTable
               urlState
               columns={columns()}
-              data={dueFilteredList()}
+              data={list()?.items ?? []}
               tableClass="table-fixed min-w-[44rem]"
               filterColumn="title"
               filterHint={t("search.hint.homework")}

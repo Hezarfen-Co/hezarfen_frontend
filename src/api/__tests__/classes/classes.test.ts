@@ -51,6 +51,15 @@ describe("classes API", () => {
     expect(init?.method ?? "GET").toBe("GET");
   });
 
+  it("getClasses sends grade_level only when set", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getClasses({ grade_level: 9, limit: 5 });
+    expect(lastFetchCall()[0]).toBe("/api/classes?limit=5&grade_level=9");
+
+    await getClasses({ grade_level: undefined, limit: 5 });
+    expect(lastFetchCall()[0]).toBe("/api/classes?limit=5");
+  });
+
   it("getClassById GETs /classes/:id", async () => {
     mockFetchSuccess({ id: "c1" });
     await getClassById("c1");

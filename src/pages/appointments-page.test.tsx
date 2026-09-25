@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@solidjs/testing-library";
+import { cleanup, fireEvent, render, screen, waitFor } from "@solidjs/testing-library";
 import AppointmentsPage from "@/pages/appointments-page";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
@@ -53,4 +53,11 @@ test("separates bookings and available times into tabs", async () => {
 
   expect(availableTab.getAttribute("aria-selected")).toBe("true");
   expect(screen.getByRole("tab", { name: /Teachers’ open times/ })).toBeTruthy();
+
+  // A requester reads upcoming slots for every teacher (starts_after, no
+  // teacher=me) and their own bookings without a start window: neither read
+  // downloads history.
+  await waitFor(() => expect(getSlots).toHaveBeenCalled());
+  expect(getSlots).toHaveBeenCalledWith({ starts_after: expect.any(Number), limit: 100 });
+  expect(getAppointments).toHaveBeenCalledWith({ limit: 100 });
 });

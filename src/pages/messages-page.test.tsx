@@ -69,3 +69,20 @@ test("emptying trash waits for confirmation and names what it deletes", async ()
   fireEvent.click(within(dialog).getByRole("button", { name: /Empty trash|Çöp kutusunu boşalt/ }));
   await waitFor(() => expect(deleteMessageById).toHaveBeenCalledTimes(2));
 });
+
+test("searching hits the server with a trimmed q at first-page offset", async () => {
+  getMessages.mockResolvedValue({ items: [message(1)], total: 1, limit: 30, offset: 0 });
+
+  render(() => (
+    <PreferencesProvider>
+      <MessagesPage />
+    </PreferencesProvider>
+  ));
+
+  const search = await screen.findByPlaceholderText(/Search messages|Mesajlarda ara/);
+  fireEvent.input(search, { target: { value: "  Subject 7  " } });
+
+  await waitFor(() =>
+    expect(getMessages).toHaveBeenCalledWith("inbox", { limit: 30, offset: 0, q: "Subject 7" }),
+  );
+});

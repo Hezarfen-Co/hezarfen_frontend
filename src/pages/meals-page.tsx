@@ -43,10 +43,14 @@ function MealsContent() {
   const [flash, setFlash] = createFlash();
   const [settings] = createResource(() => getSettings());
   const [limits, { refetch: refetchLimits }] = createResource(() => (canManage() ? getLimits() : null));
-  const [menus, { refetch }] = createResource(weekStart, (start) =>
+  const [menus, { refetch }] = createResource(
+    () => [weekStart(), slot()] as const,
     // `to` is a day past Sunday so the week is whole whether the API reads it
-    // inclusively or not; the filter below trims anything past Sunday.
-    getMealMenus({ from: start, to: addDaysIso(start, 7), limit: WEEK_LIMIT, offset: 0 }),
+    // inclusively or not; the filter below trims anything past Sunday. A real
+    // slot is filtered server-side; "all" is a pseudo-option the api helper
+    // drops, so the request stays unfiltered then.
+    ([start, chosenSlot]) =>
+      getMealMenus({ from: start, to: addDaysIso(start, 7), slot: chosenSlot, limit: WEEK_LIMIT, offset: 0 }),
   );
 
   const slots = () => settings()?.meal_slots ?? [];

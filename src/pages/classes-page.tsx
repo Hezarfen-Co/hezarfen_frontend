@@ -73,13 +73,28 @@ function ClassesContent() {
 
   const [years] = createResource(async () => (await getAcademicYears({ limit: 100 })).items);
   const [limits] = createResource(() => canManage() ? getLimits() : null);
-  const [list, { refetch }] = createResource(async () => (await getClasses()).items);
+  // The grade filter narrows on the server now: the table fetch carries
+  // `grade_level` and re-runs when the filter changes. An unreadable `?grade=`
+  // (only possible by hand) falls back to unfiltered, like every URL param.
+  const [list, { refetch }] = createResource(
+    () => gradeFilter(),
+    async (grade) => {
+      const level = Number(grade);
+      return (await getClasses(grade === "all" || !Number.isInteger(level) ? undefined : { grade_level: level })).items;
+    },
+  );
+  // The dropdown's options must not collapse to the selected grade, so they
+  // come from their own unfiltered read, not from the filtered table rows.
+  const [gradeList, { refetch: refetchGrades }] = createResource(
+    async () => (await getClasses({ limit: 200 })).items,
+  );
   const courseTitle = (id: string) => skippedCourseTitles()[id] ?? "—";
   const listData = () => list.latest ?? list() ?? [];
+  const gradeData = () => gradeList.latest ?? gradeList() ?? [];
   const yearName = (id: string | null) => (id ? years.latest?.find((year) => year.id === id)?.name ?? "—" : t("academicYears.unassigned"));
 
   // The grade filter offers only the rungs this school's classes sit on.
-  const grades = createMemo(() => [...new Set(listData().map((cls) => cls.grade_level))].sort((a, b) => a - b));
+  const grades = createMemo(() => [...new Set(gradeData().map((cls) => cls.grade_level))].sort((a, b) => a - b));
 
   const memberCountIds = createMemo(() => {
     const ids = listData().map((cls) => cls.id);
@@ -98,11 +113,9 @@ function ClassesContent() {
   // A memo: the columns read it, and must not rebuild on every list refetch.
   const memberCountsCapped = createMemo(() => listData().length > MEMBER_COUNT_FETCH_CAP);
 
-  // Class by class (9-A, 9-B, 10-A…) until a column header re-sorts it.
-  const gradeFiltered = createMemo(() => {
-    const g = gradeFilter();
-    return (g === "all" ? listData() : listData().filter((cls) => String(cls.grade_level) === g)).slice().sort(compareClasses);
-  });
+  // Class by class (9-A, 9-B, 10-A…) until a column header re-sorts it. The
+  // grade narrowing itself happens on the server.
+  const gradeFiltered = createMemo(() => listData().slice().sort(compareClasses));
   // A fresh array once the member counts land: the table redraws a row only
   // when its data changes, so the counts would otherwise stay "—".
   const rows = createMemo(() => {
@@ -117,7 +130,9 @@ function ClassesContent() {
   const [deleteTarget, setDeleteTarget] = createSignal<ClassGroup | null>(null);
   const [rowError, setRowError] = createSignal("");
   const refreshList = async () => {
-    try { await refetch(); } catch { /* stale rows until the next load */ }
+    // The grade dropdown reads its own unfiltered page, so a create, edit or
+    // delete that changes which rungs have classes must refresh it too.
+    try { await Promise.all([refetch(), refetchGrades()]); } catch { /* stale rows until the next load */ }
   };
   // Applying is best-effort: the request succeeds and reports the pairs it
   // could not attach, so a shortfall opens the same report the create uses.
@@ -257,7 +272,7 @@ function ClassesContent() {
       // failure here used to be reported as if the class had not been created,
       // and it swallowed the navigation to the class that plainly existed.
       try {
-        await refetch();
+        await Promise.all([refetch(), refetchGrades()]);
       } catch {
         // The list reloads on the next visit; the class was created.
       }

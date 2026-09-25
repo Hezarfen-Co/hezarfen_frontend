@@ -46,6 +46,17 @@ describe("events API", () => {
     expect(lastFetchCall()[0]).toBe("/api/events?limit=10");
     expect(lastFetchCall()[0]).not.toContain("ends_after");
     expect(lastFetchCall()[0]).not.toContain("starts_after");
+
+    // Upper bounds serialize after the earlier keys, in declaration order.
+    mockFetchSuccess({ items: [], total: 0 });
+    await getEvents({ starts_after: 1, ends_after: 2, starts_before: 3, ends_before: 4 });
+    expect(lastFetchCall()[0]).toBe("/api/events?starts_after=1&ends_after=2&starts_before=3&ends_before=4");
+
+    mockFetchSuccess({ items: [], total: 0 });
+    await getEvents({ limit: 10, starts_before: undefined, ends_before: undefined });
+    expect(lastFetchCall()[0]).toBe("/api/events?limit=10");
+    expect(lastFetchCall()[0]).not.toContain("starts_before");
+    expect(lastFetchCall()[0]).not.toContain("ends_before");
   });
 
   it("getEventById calls /events/:id", async () => {

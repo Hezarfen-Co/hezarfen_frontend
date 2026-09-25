@@ -28,10 +28,29 @@ describe("courses API", () => {
     expect(init?.method).toBe("GET");
   });
 
-  it("getCourses sends pagination only — the endpoint has no kind/term/search filter", async () => {
+  it("getCourses keeps pagination when no filter is set", async () => {
     mockFetchSuccess({ items: [], total: 0 });
     await getCourses({ limit: 12, offset: 24 });
     expect(lastFetchCall()[0]).toBe("/api/courses?limit=12&offset=24");
+  });
+
+  it("getCourses sends kind and a trimmed q only when set", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getCourses({ limit: 10, offset: 20, kind: "study", q: "  algebra  " });
+    expect(lastFetchCall()[0]).toBe("/api/courses?limit=10&offset=20&kind=study&q=algebra");
+  });
+
+  it("getCourses serializes taught as true/false and omits blank q", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    // Blank q drops the key entirely — the API 400s on `?q=`.
+    await getCourses({ q: "   " });
+    expect(lastFetchCall()[0]).toBe("/api/courses");
+
+    await getCourses({ taught: true, limit: 10 });
+    expect(lastFetchCall()[0]).toBe("/api/courses?limit=10&taught=true");
+
+    await getCourses({ taught: false, offset: 5 });
+    expect(lastFetchCall()[0]).toBe("/api/courses?offset=5&taught=false");
   });
 
   it("getCourseById calls /courses/:id", async () => {

@@ -56,3 +56,27 @@ export async function loadAllPages<T>(
   }
   return items.concat(...pages);
 }
+
+
+/**
+ * Fetch every row of an already-windowed list, following offsets until the
+ * envelope total. The window (a date range or filter set) is the caller's
+ * job — this only pages through what the server answers, so no blind cap
+ * decides which rows exist. Stops on an empty page so rows deleted mid-read
+ * cannot loop it forever.
+ */
+export async function loadWindowedList<T>(
+  fetch: (params?: PageParams) => Promise<Page<T>>,
+  pageSize: number,
+): Promise<CappedList<T>> {
+  const first = await fetch({ limit: pageSize, offset: 0 });
+  const items = Array.isArray(first.items) ? [...first.items] : [];
+  let total = typeof first.total === "number" ? Math.max(first.total, items.length) : items.length;
+  for (let offset = items.length; offset < total; offset = items.length) {
+    const page = await fetch({ limit: pageSize, offset });
+    if (!Array.isArray(page.items) || page.items.length === 0) break;
+    items.push(...page.items);
+    total = typeof page.total === "number" ? Math.max(page.total, items.length) : items.length;
+  }
+  return { items, total };
+}

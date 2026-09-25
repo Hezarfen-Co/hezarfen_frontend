@@ -23,6 +23,7 @@ import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { createFlash } from "@/lib/flash";
+import { LIST_CAP, loadWindowedList } from "@/lib/capped-list";
 import { formatDateTime } from "@/lib/format";
 import { personLabel } from "@/lib/person";
 import { usePreferences, useT } from "@/stores/preferences-context";
@@ -73,7 +74,14 @@ export function CourseSessionsPanel(props: {
   const { locale } = usePreferences();
   const [sessions, { refetch }] = createResource(
     () => (props.active ? props.instanceId : null),
-    async (instanceId) => (instanceId ? (await getInstanceSessions(instanceId)).items : []),
+    async (instanceId) => {
+      if (!instanceId) return [];
+      // The table lists the section's whole lesson history, so the window is
+      // unfiltered — but the read is still paged: offsets are followed until
+      // the envelope total instead of one unpaged GET of every session ever.
+      const list = await loadWindowedList((params) => getInstanceSessions(instanceId, params), LIST_CAP);
+      return list.items;
+    },
   );
   const [selectedSession, setSelectedSession] = createSignal<CourseSession | null>(null);
   let linkedRollCallOpened = false;

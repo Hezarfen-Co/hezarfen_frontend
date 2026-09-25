@@ -8,7 +8,7 @@ import { getHomework } from "@/api/homework";
 import { getAppointments } from "@/api/appointments";
 import { getCourses } from "@/api/courses";
 import { getInstanceSessions, getMyInstances } from "@/api/instances";
-import type { Appointment, AppointmentStatus, Course } from "@/api/client";
+import type { Appointment, AppointmentStatus, Course, Page } from "@/api/client";
 import { appointmentStatusClass, appointmentStatusDotClass, appointmentStatusLabelKey } from "@/lib/appointment-status";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { Badge } from "@/components/ui/badge";
@@ -125,6 +125,26 @@ const KIND_ORDER = Object.keys(KIND_STYLES) as CalendarKind[];
  *  offer. The month grid alone is unreadable at 45px per cell. */
 type CalendarView = "day" | "week" | "month";
 
+/** Page size for the windowed reads below; a busy month outgrows one page. */
+const FEED_PAGE = 100;
+
+/**
+ * Read every row the server window matches: follow `offset` until the
+ * envelope's `total` is drained. The loop is bounded by the server total — a
+ * stale total can cost one extra page, never spin, and nothing is dropped
+ * behind a silent cap.
+ */
+async function fetchWindow<T>(fetchPage: (params: { limit: number; offset: number }) => Promise<Page<T>>): Promise<T[]> {
+  const first = await fetchPage({ limit: FEED_PAGE, offset: 0 });
+  const items = [...first.items];
+  while (items.length < first.total) {
+    const next = await fetchPage({ limit: FEED_PAGE, offset: items.length });
+    if (next.items.length === 0) break;
+    items.push(...next.items);
+  }
+  return items;
+}
+
 const VIEWS: { id: CalendarView; labelKey: MessageKey }[] = [
   { id: "day", labelKey: "calendar.viewDay" },
   { id: "week", labelKey: "calendar.viewWeek" },
@@ -196,24 +216,43 @@ function CalendarContent() {
   // notice above the grid, instead of blanking the whole calendar.
   const board = createBoardResources();
   // Events and exams take a schedule window, so they are read from the first
-  // day the grid can show (the month's leading week included) onward, with no
-  // row cap — a fixed `limit` silently emptied later months once a school had
-  // more rows than the cap. The window only ever widens backwards: paging
-  // forward stays inside what is loaded, paging to an earlier month refetches.
+  // day the grid can show (the month's leading week included) onward. The
+  // window only ever widens backwards: paging forward stays inside what is
+  // loaded, paging to an earlier month refetches. Offsets follow the envelope
+  // total, so a window busier than one page still arrives whole.
   const viewStart = () => new Date(viewYear(), viewMonth(), 1).getTime() - 7 * DAY_MS;
   const loadedFrom = createMemo<number>((prev) => Math.min(prev, viewStart()), viewStart());
-  const [events] = board.createResource(loadedFrom, async (from) => (await getEvents({ ends_after: from })).items);
-  const [exams] = board.createResource(loadedFrom, async (from) => (await getExams({ ends_after: from })).items);
-  // Appointments and homework have no date filter and list newest-created
-  // first, so a cap would drop rows by creation order, not by date: read all.
-  const [appointments] = board.createResource(async () => (await getAppointments()).items);
-  const [homework] = board.createResource(async () => (await getHomework()).items);
+  const [events] = board.createResource(loadedFrom, async (from) => fetchWindow((page) => getEvents({ ...page, ends_after: from })));
+  const [exams] = board.createResource(loadedFrom, async (from) => fetchWindow((page) => getExams({ ...page, ends_after: from })));
+  // Homework and appointments are bound to the visible month itself: a
+  // two-sided window cannot widen incrementally, so the source key is the
+  // month and paging months refetches. Homework filters on its due date,
+  // appointments on their start.
+  const monthWindow = () => ({
+    start: new Date(viewYear(), viewMonth(), 1).getTime(),
+    end: new Date(viewYear(), viewMonth() + 1, 1).getTime(),
+  });
+  const [appointments] = board.createResource(
+    monthWindow,
+    async (bounds) => fetchWindow((page) => getAppointments({ ...page, starts_after: bounds.start, starts_before: bounds.end })),
+  );
+  const [homework] = board.createResource(
+    monthWindow,
+    async (bounds) => fetchWindow((page) => getHomework({ ...page, due_after: bounds.start, due_before: bounds.end })),
+  );
 
   // Lessons and study/club meetings both come from course sessions; the course's
   // own `kind` is what separates them.
   const [sessions] = board.createResource(
-    () => auth.user()?.role ?? null,
-    async () => {
+    () => {
+      const role = auth.user()?.role ?? null;
+      return role ? `${role}|${loadedFrom()}` : null;
+    },
+    async (key) => {
+      // Sessions read from the earliest viewed month onward — like events and
+      // exams, the window only widens backwards, so future months ride the
+      // already-loaded rows and paging to an earlier month refetches.
+      const from = Number(key.split("|")[1]);
       // Sessions hang off the instance (şube × ders) now; the catalog course is
       // still what says whether a meeting is a ders, an etüt or a kulüp.
       const [instances, courses] = await Promise.all([
@@ -226,10 +265,8 @@ function CalendarContent() {
           const course = byId.get(instance.course);
           if (!course) return [];
           try {
-            // No cap: a weekly lesson alone passes 100 sessions in a school
-            // year, and the rows past a cap were the later months.
-            const page = await getInstanceSessions(instance.id);
-            return page.items.map((session) => ({ session, course }));
+            const items = await fetchWindow((page) => getInstanceSessions(instance.id, { ...page, starts_after: from }));
+            return items.map((session) => ({ session, course }));
           } catch {
             // One unreadable section must not empty the whole calendar.
             return [];

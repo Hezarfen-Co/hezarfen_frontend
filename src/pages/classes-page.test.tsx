@@ -103,3 +103,41 @@ test("a blank class name is flagged under the field, not sent", async () => {
   expect(field.getAttribute("aria-describedby")).toBe("class-name-error");
   expect(postClass).not.toHaveBeenCalled();
 });
+
+// The grade dropdown's options come from their own unfiltered read: if they
+// came from the table rows, picking a grade would collapse the option list to
+// that one grade and there would be no way back.
+test("the grade filter narrows on the server and keeps every option listed", async () => {
+  const grade9 = { id: "c9", creator: null, name: "9-A", grade_level: 9, year: null, teacher: null };
+  const grade10 = { id: "c10", creator: null, name: "10-A", grade_level: 10, year: null, teacher: null };
+  // The table fetch narrows by grade_level; the dropdown's own read never does.
+  getClasses.mockImplementation((params?: { grade_level?: number }) => {
+    if (params?.grade_level != null) {
+      const items = [grade9, grade10].filter((cls) => cls.grade_level === params.grade_level);
+      return Promise.resolve({ items, total: items.length, limit: 200, offset: 0 });
+    }
+    return Promise.resolve({ items: [grade9, grade10], total: 2, limit: 200, offset: 0 });
+  });
+  getClassMembers.mockResolvedValue({ items: [], total: 0 });
+
+  render(() => <PreferencesProvider><ClassesPage /></PreferencesProvider>);
+
+  expect(await screen.findByRole("button", { name: /^9-A/ })).toBeTruthy();
+  expect(screen.getByRole("button", { name: /Grade:/ })).toBeTruthy();
+
+  fireEvent.pointerDown(screen.getByRole("button", { name: /Grade:/ }), { button: 0, pointerType: "mouse" });
+  const grade9Item = await screen.findByRole("menuitem", { name: "Grade 9" });
+  fireEvent.pointerDown(grade9Item, { button: 0, pointerType: "mouse" });
+  fireEvent.pointerUp(grade9Item, { button: 0, pointerType: "mouse" });
+  fireEvent.click(grade9Item);
+
+  // The refetch carries `grade_level`; the unfiltered options read does not.
+  await waitFor(() => expect(getClasses.mock.calls.at(-1)[0]).toEqual({ grade_level: 9 }));
+  expect(getClasses.mock.calls.some((call) => call[0]?.grade_level === undefined && call[0]?.limit === 200)).toBe(true);
+  expect(await screen.findByRole("button", { name: /^9-A/ })).toBeTruthy();
+  await waitFor(() => expect(screen.queryByRole("button", { name: /^10-A/ })).toBeNull());
+
+  // Picking a grade must not erase the other options.
+  fireEvent.pointerDown(screen.getByRole("button", { name: /Grade:/ }), { button: 0, pointerType: "mouse" });
+  expect(await screen.findByRole("menuitem", { name: "Grade 10" })).toBeTruthy();
+});

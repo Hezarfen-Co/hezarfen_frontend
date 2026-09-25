@@ -34,8 +34,7 @@ import type { MessageKey } from "@/i18n/messages";
 import { formatApiError } from "@/api/client";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
-import { matchesSearch } from "@/lib/search-text";
-import { personLabel } from "@/lib/person";
+import { createDebouncedSignal } from "@/lib/create-debounced-signal";
 import { createFlash } from "@/lib/flash";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -53,15 +52,20 @@ export default function MessagesPage() {
   const [page, setPage] = createSignal(1);
   const limit = 30;
   const [selectedId, setSelectedId] = createSignal<string>("");
-  const [query, setQuery] = createSignal("");
+  const [query, setQuery, debouncedQuery] = createDebouncedSignal();
   const [composeOpen, setComposeOpen] = createSignal(false);
   const [isRefreshing, setIsRefreshing] = createSignal(false);
   const [isPending, startTransition] = useTransition();
   const [, setFlash] = createFlash();
 
   const [messagePage, { refetch }] = createResource(
-    () => ({ f: folder(), p: page() }),
-    async (args) => await getMessages(args.f, { limit, offset: (args.p - 1) * limit })
+    () => ({ f: folder(), p: page(), q: debouncedQuery().trim() }),
+    async (args) =>
+      await getMessages(args.f, {
+        limit,
+        offset: (args.p - 1) * limit,
+        ...(args.q ? { q: args.q } : {}),
+      })
   );
 
   const [unreadCount, { refetch: refetchUnread }] = createResource(
@@ -74,17 +78,6 @@ export default function MessagesPage() {
   const messages = createMemo(() =>
     rawMessages().slice().sort((a, b) => b.sent_at - a.sent_at)
   );
-
-  const filtered = createMemo(() => {
-    const q = query().trim();
-    if (!q) return messages();
-    return messages().filter((m) => {
-      const isSent = folder() === "sent" || m.sender.id === auth.user()?.id;
-      const peer = isSent ? m.recipient : m.sender;
-      const other = personLabel(peer);
-      return matchesSearch(q, other, m.subject, m.body, m.label);
-    });
-  });
 
   const selected = createMemo(() => messages().find((m) => m.id === selectedId()) ?? null);
   const isOwnSentMessage = (msg: Message) => msg.sender.id === auth.user()?.id;
@@ -278,7 +271,11 @@ export default function MessagesPage() {
                         class="h-8 rounded-lg bg-surface-tint pl-9 pr-4 text-[13px] border-none focus-visible:ring-1"
                         placeholder={t("messages.search")}
                         value={query()}
-                        onInput={(event) => setQuery(event.currentTarget.value)}
+                        onInput={(event) => {
+                          setQuery(event.currentTarget.value);
+                          // The server filters from the first row; offset restarts with each search.
+                          setPage(1);
+                        }}
                       />
                     </div>
                   </div>
@@ -327,14 +324,14 @@ export default function MessagesPage() {
                         }
                       >
                         <Show
-                          when={filtered().length > 0}
+                          when={messages().length > 0}
                           fallback={
                             <div class="p-12 text-center text-xs text-muted-foreground">
                               {t("messages.noMessages")}
                             </div>
                           }
                         >
-                          <For each={filtered()}>
+                          <For each={messages()}>
                             {(message) => (
                               <GmailMailRow
                                 message={message}

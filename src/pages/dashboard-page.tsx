@@ -62,6 +62,7 @@ import { FAN_OUT_LIMIT, mapConcurrent } from "@/lib/map-concurrent";
 import { getModulesCatalog } from "@/api/modules";
 import { useModules } from "@/stores/modules-context";
 import { useAuth } from "@/stores/auth-context";
+import { LIST_CAP, loadWindowedList } from "@/lib/capped-list";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -78,6 +79,8 @@ const TREND_EXAM_CAP = 20;
 const TREND_MARK_CAP = 20;
 /** Classes whose roster size the admin "Şubeler" quick links read. */
 const CLASS_LINK_CAP = 12;
+/** Page size for the paged heatmap window read of `/pomodoro/me`. */
+const POMODORO_PAGE = 400;
 
 /**
  * Chronological key for an exam: its schedule when it has one, else when it
@@ -175,6 +178,9 @@ function DashboardContent() {
       throw err;
     });
   const [clock] = createResource(() => getTime().catch(() => ({ now: Date.now() })));
+  // Server-anchored time (local fallback). Declared before the resources that
+  // read it in their fetchers.
+  const now = () => clock()?.now ?? Date.now();
   // Unpaged: the backend has no `kind` filter, so a "courses" count that
   // excludes studies and clubs has to be counted here over the whole list.
   const [courses] = createResource(
@@ -194,23 +200,34 @@ function DashboardContent() {
     () => role() === "parent" || !on("exams") ? null : role(),
     () => quiet(getExams({ limit: 100 })),
   );
-  // Unfiltered: `/homework` has no due-date window, so this one read serves both
-  // the deadlines table (filtered by `scheduleStatus`) and the backwards-looking
-  // heatmap.
-  // `limit: 100` matches the shell's feed read, so the two coalesce.
+  // One windowed read serves all three homework consumers: the deadlines
+  // table keeps the upcoming rows via its scheduleStatus filter, the teacher
+  // queue grades homework due around now, and the activity heatmap looks
+  // back exactly this far. Pages are followed until the envelope total —
+  // no blind cap decides which rows exist.
   const [homework] = createResource(
     () => role() === "parent" || !on("homework") ? null : role(),
-    () => quiet(getHomework({ limit: 100 })),
+    () =>
+      quiet(loadWindowedList(
+        (params) => getHomework({ ...params, due_after: now() - HEATMAP_WEEKS * WEEK_MS }),
+        LIST_CAP,
+      )),
   );
   const [children] = createResource(
     () => role() === "parent" ? true : null,
     () => quiet(getMyStudents({ limit: 12 })),
   );
-  // Same page as the shell's notification poll (`limit: 100`), so the two
-  // concurrent first-paint reads coalesce into one request in `client`.
+  // Windowed like homework: the pending-approvals rail, the deadlines table
+  // and the activity heatmap all read this. 26 weeks back keeps a stale but
+  // still-pending request visible while the heatmap gets its history; pages
+  // are followed until the envelope total instead of a blind cap.
   const [appointments] = createResource(
     () => (on("appointments") ? true : null),
-    () => quiet(getAppointments({ limit: 100 })),
+    () =>
+      quiet(loadWindowedList(
+        (params) => getAppointments({ ...params, starts_after: now() - HEATMAP_WEEKS * WEEK_MS }),
+        LIST_CAP,
+      )),
   );
   const [menus] = createResource(
     () => (on("meals") ? clock()?.now : null),
@@ -230,9 +247,16 @@ function DashboardContent() {
   );
   // Focus heatmap source. Only a student owns pomodoro sessions — reading
   // another user's log is the teacher+ /management/pomodoros page's job.
+  // The 26-week grid window rides in the query (`from` inclusive, `to`
+  // exclusive, unix ms) and every page is followed until the envelope total,
+  // so neither a blind cap nor a JS cutoff decides what the grid shows.
   const [pomodoro] = createResource(
     () => role() === "student" && on("pomodoro") ? true : null,
-    () => quiet(getPomodoroMe({ limit: 400 })),
+    () =>
+      quiet(loadWindowedList(
+        (params) => getPomodoroMe({ ...params, from: now() - HEATMAP_WEEKS * WEEK_MS, to: now() }),
+        POMODORO_PAGE,
+      )),
   );
   // `/events` is the one list here that really is filtered server-side, by the
   // `ends_after` window the deadlines table needs. The heatmap looks backwards
@@ -431,7 +455,6 @@ function DashboardContent() {
   });
 
   const fullName = () => [user().name, user().surname].filter(Boolean).join(" ") || user().username;
-  const now = () => clock()?.now ?? Date.now();
 
   // STU-01 "Bu Hafta" rail — this week's pomodoro focus minutes, Monday
   // through Sunday. Distinct granularity from the 26-week heatmap below;

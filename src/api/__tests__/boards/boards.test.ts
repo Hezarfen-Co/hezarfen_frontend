@@ -41,6 +41,22 @@ describe("boards API", () => {
     expect(init?.method).toBe("GET");
   });
 
+  it("getBoards sends q with pagination when given", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getBoards({ limit: 10, offset: 20, q: "math, physics" });
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/boards?q=math%2C+physics&limit=10&offset=20");
+  });
+
+  it("getBoards omits a blank q", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getBoards({ q: "   " });
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/boards");
+  });
+
   it("getBoardById calls GET /boards/:id", async () => {
     mockFetchSuccess({ id: "b1" });
     await getBoardById("b1");

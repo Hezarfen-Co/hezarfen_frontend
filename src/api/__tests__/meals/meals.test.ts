@@ -30,9 +30,17 @@ describe("meals API", () => {
   const json = () => mockFetchSuccess({});
   const page = () => mockFetchSuccess({ items: [], total: 0 });
 
-  it("lists menus with dates and pagination", async () => {
-    page(); await getMealMenus({ from: "2026-07-28", to: "2026-08-01", limit: 12, offset: 12 });
-    expect(lastFetchCall()[0]).toBe("/api/meals/menus?limit=12&offset=12&from=2026-07-28&to=2026-08-01");
+  it("lists menus with dates, slot, and pagination", async () => {
+    page(); await getMealMenus({ from: "2026-07-28", to: "2026-08-01", slot: "lunch", limit: 12, offset: 12 });
+    expect(lastFetchCall()[0]).toBe("/api/meals/menus?limit=12&offset=12&from=2026-07-28&to=2026-08-01&slot=lunch");
+  });
+  it("omits the slot key for the all pseudo-option, blank, and unset", async () => {
+    page(); await getMealMenus({ slot: "all", limit: 5 });
+    expect(lastFetchCall()[0]).toBe("/api/meals/menus?limit=5");
+    page(); await getMealMenus({ slot: "   " });
+    expect(lastFetchCall()[0]).toBe("/api/meals/menus");
+    page(); await getMealMenus();
+    expect(lastFetchCall()[0]).toBe("/api/meals/menus");
   });
   it("gets a menu", async () => { json(); await getMealMenuById("m/1"); expect(lastFetchCall()[0]).toBe("/api/meals/menus/m%2F1"); });
   it("publishes a menu", async () => {

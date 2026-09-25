@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/solid-router";
 import { For, Show, Suspense, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
 import { createResponsivePageSize } from "@/lib/create-page-size";
+import { createDebouncedSignal } from "@/lib/create-debounced-signal";
 import { createResource } from "@/lib/create-resource";
 import { getBoards, postBoard, type Board } from "@/api/boards";
 import { getUserSearch } from "@/api/users";
@@ -19,7 +20,6 @@ import { SidePanel } from "@/components/ui/side-panel";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
-import { matchesSearch } from "@/lib/search-text";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -42,21 +42,21 @@ function WhiteboardsContent() {
   const pageSize = createResponsivePageSize(12);
   const [page, setPage] = createSignal(0);
   createEffect(on(pageSize, () => setPage(0), { defer: true }));
+  const [query, setQuery, debouncedQuery] = createDebouncedSignal();
   const [boards, { refetch }] = createResource(
-    () => ({ page: page(), size: pageSize() }),
-    (source) => getBoards({ limit: source.size, offset: source.page * source.size }),
+    () => ({ page: page(), size: pageSize(), q: debouncedQuery().trim() }),
+    (source) =>
+      getBoards({
+        limit: source.size,
+        offset: source.page * source.size,
+        ...(source.q ? { q: source.q } : {}),
+      }),
   );
   const [createOpen, setCreateOpen] = createSignal(false);
   const pageCount = createMemo(() => Math.max(1, Math.ceil((boards.latest?.total ?? 0) / pageSize())));
-  const [query, setQuery] = createSignal("");
-  // The board list endpoint has no server-side text filter, so this narrows
-  // only the current page's real titles — a client-side search over real
-  // data, not a promise of searching every board the caller has ever opened.
-  const visibleBoards = createMemo(() => {
-    const q = query().trim();
-    const items = boards()?.items ?? [];
-    return q ? items.filter((b) => matchesSearch(q, b.title)) : items;
-  });
+  // The server narrows by title via `q`; the page holds whatever the current
+  // query matched, so totals and pagination already reflect the search.
+  const visibleBoards = createMemo(() => boards()?.items ?? []);
 
   const meId = () => auth.user()?.id ?? "";
 
@@ -68,7 +68,11 @@ function WhiteboardsContent() {
             searchValue={query()}
             searchPlaceholder={t("whiteboard.searchPlaceholder")}
             searchHint={t("search.hint.whiteboards")}
-            onSearchInput={setQuery}
+            onSearchInput={(value) => {
+              setQuery(value);
+              // The server filters from the first row; offset restarts with each search.
+              setPage(0);
+            }}
             actions={
               <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
                 <IconPlus class="h-4 w-4" />
@@ -82,7 +86,7 @@ function WhiteboardsContent() {
             <ErrorAlert message={formatApiError(boards.error, locale())} />
           </Show>
           <Show
-            when={(boards()?.items ?? []).length > 0}
+            when={query().trim() || (boards()?.items ?? []).length > 0}
             fallback={<EmptyState kind="whiteboard" title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
           >
             <div class="space-y-3">

@@ -24,8 +24,8 @@ export class PageShapeError extends Error {
 
 /**
  * Schedule-window filters, UTC unix ms. Only `/events` and `/exams` honour
- * them; both are optional and AND-ed when both sent, and a row with no
- * schedule at all is excluded by either. Sending either flips the server
+ * them; all are optional and AND-ed when several are sent, and a row with no
+ * schedule at all is excluded by any of them. Sending any flips the server
  * order to ASCENDING by schedule (soonest first) instead of newest-created.
  */
 export type ScheduleWindowParams = {
@@ -33,6 +33,10 @@ export type ScheduleWindowParams = {
   starts_after?: number;
   /** Keeps rows whose window has not finished: `ends_at > T`, else `starts_at > T`. */
   ends_after?: number;
+  /** Keeps rows that have already begun or begin earlier: `starts_at < T`. */
+  starts_before?: number;
+  /** Keeps rows whose window has already finished: `ends_at < T`. */
+  ends_before?: number;
 };
 
 export function pageQuery(params?: PageParams & ScheduleWindowParams): string {
@@ -44,6 +48,8 @@ export function pageQuery(params?: PageParams & ScheduleWindowParams): string {
   if (params.offset != null) query.set("offset", String(params.offset));
   if (params.starts_after != null) query.set("starts_after", String(params.starts_after));
   if (params.ends_after != null) query.set("ends_after", String(params.ends_after));
+  if (params.starts_before != null) query.set("starts_before", String(params.starts_before));
+  if (params.ends_before != null) query.set("ends_before", String(params.ends_before));
   const value = query.toString();
   return value ? `?${value}` : "";
 }

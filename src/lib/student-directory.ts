@@ -1,14 +1,35 @@
 import { getClassMembers, getClasses } from "@/api/classes";
 import { getUserSearch } from "@/api/users";
-import type { ClassGroup, PersonRef } from "@/api/client";
+import type { ClassGroup, ClassMember, PersonRef } from "@/api/client";
 
 export type StudentDirectoryRow = {
   person: PersonRef;
   classes: ClassGroup[];
 };
 
-/** Shared student list for teacher-facing reports: one name column and the classes it belongs to. */
-export async function getStudentDirectory(): Promise<StudentDirectoryRow[]> {
+/** Page size for the class-roster reads; the same one the full sweep asks for. */
+const MEMBERS_PAGE = 500;
+
+/** Every live member of one class: the route is paged, so follow offsets to `total`. */
+async function readClassMembers(classId: string): Promise<ClassMember[]> {
+  const members: ClassMember[] = [];
+  let offset = 0;
+  for (;;) {
+    const page = await getClassMembers(classId, { limit: MEMBERS_PAGE, offset });
+    members.push(...page.items);
+    offset += page.items.length;
+    if (page.items.length === 0 || offset >= page.total) return members;
+  }
+}
+
+/**
+ * Shared student list for teacher-facing reports: one name column and the classes it belongs to.
+ * With `cls` the read is scoped to that class: only its roster is fetched, and
+ * each row's `classes` is just that class. Without it every student and every
+ * class's members are read, as before.
+ */
+export async function getStudentDirectory(cls?: ClassGroup): Promise<StudentDirectoryRow[]> {
+  if (cls) return sortByClass((await readClassMembers(cls.id)).map((member) => ({ person: member.user, classes: [cls] })));
   const [students, classes] = await Promise.all([
     getUserSearch("", undefined, "student"),
     getClasses({ limit: 200 }),

@@ -22,6 +22,22 @@ describe("messages API", () => {
     expect(init?.method).toBe("GET");
   });
 
+  it("getMessages sends q with folder, read and pagination", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getMessages("inbox", { limit: 10, offset: 20, read: false, q: "math, physics" });
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/messages?folder=inbox&read=false&q=math%2C+physics&limit=10&offset=20");
+  });
+
+  it("getMessages omits a blank q", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getMessages("sent", { q: "   " });
+
+    const [url] = lastFetchCall();
+    expect(url).toBe("/api/messages?folder=sent");
+  });
+
   it("postMessage calls /messages with data", async () => {
     const mockMessage = { id: "m1" };
     mockFetchSuccess(mockMessage);

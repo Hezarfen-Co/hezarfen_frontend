@@ -16,6 +16,7 @@ import {
   postSlots,
 } from "@/api/appointments";
 import { APPOINTMENT_LIMITS, formatApiError } from "@/api/client";
+import type { AppointmentListParams, SlotListParams } from "@/api/appointments";
 import { createLivePoll } from "@/lib/create-live-poll";
 import type { Appointment, AppointmentSlot, AppointmentStatus } from "@/api/client";
 import type { MessageKey } from "@/i18n/messages";
@@ -75,21 +76,25 @@ function AppointmentsContent() {
   const isStaff = () => hasMinRole(me()?.role, "teacher");
   const isManager = () => hasMinRole(me()?.role, "manager");
 
-  // Staff get EVERY slot they ever published (`list_for_teacher`, `starts_at ASC`,
-  // no past filter), so past ~100 lifetime slots page one is nothing but expired
-  // rows and the upcoming ones are unreachable. Take the last page instead — they
-  // always sit at the tail. Requesters get `list_upcoming` (future-only, ASC), so
-  // their first page is the near one and must stay first.
-  // ponytail: shows the newest PAGE_LIMIT slots; >100 upcoming slots would need
-  // real paging, and the endpoint takes only limit/offset today.
+  // Both slot reads only need what has not started (`starts_after`), which is
+  // also what keeps the read off the whole history — the old last-page trick
+  // existed because the endpoint had neither a window nor a teacher filter.
+  // Non-manager staff get their own published slots (`teacher=me`); managers
+  // supervise every teacher's, requesters everyone's open ones.
   const fetchSlots = async () => {
-    const first = await getSlots({ limit: PAGE_LIMIT });
-    if (!isStaff() || first.total <= PAGE_LIMIT) return first.items;
-    return (await getSlots({ limit: PAGE_LIMIT, offset: first.total - PAGE_LIMIT })).items;
+    const params: SlotListParams = { starts_after: Date.now(), limit: PAGE_LIMIT };
+    if (isStaff() && !isManager()) params.teacher = "me";
+    return (await getSlots(params)).items;
   };
   const [slots, { refetch: refetchSlots }] = createResource(fetchSlots);
-  // Appointments come back newest-first (`ORDER BY id DESC`), so page one is right.
-  const [appts, { refetch: refetchAppts }] = createResource(async () => (await getAppointments({ limit: PAGE_LIMIT })).items);
+  // Appointments come back newest-first (`ORDER BY id DESC`), so page one is
+  // right. The requests table shows decided rows too, so no status window;
+  // non-manager staff narrow to their own rows server-side (`teacher=me`).
+  const [appts, { refetch: refetchAppts }] = createResource(async () => {
+    const params: AppointmentListParams = { limit: PAGE_LIMIT };
+    if (isStaff() && !isManager()) params.teacher = "me";
+    return (await getAppointments(params)).items;
+  });
 
   const refetchAll = () => Promise.all([refetchSlots(), refetchAppts()]);
   const loaded = () => slots.latest !== undefined && appts.latest !== undefined;
@@ -192,13 +197,9 @@ function AppointmentsContent() {
   const recordReason = (a: Appointment) => (a.status === "rejected" ? a.reject_reason : a.cancel_reason);
   const recordReasonLabel = (a: Appointment) => (a.status === "rejected" ? t("appointments.rejectReason") : t("appointments.cancelReason"));
 
-  // --- staff: my published slots ---
-  const mySlots = () => {
-    const list = slots.latest ?? [];
-    if (isManager()) return list;
-    const uid = me()?.id;
-    return list.filter((s) => s.teacher.id === uid);
-  };
+  // --- staff: my published slots (the server already narrows to `teacher=me`
+  // for non-manager staff; managers see every teacher's) ---
+  const mySlots = () => slots.latest ?? [];
   const slotBooking = (slotId: string) => (appts.latest ?? []).find((a) => a.slot === slotId && isLive(a.status));
 
   const slotColumns = createMemo<ColumnDef<AppointmentSlot>[]>(() => [
@@ -244,13 +245,9 @@ function AppointmentsContent() {
     },
   ]);
 
-  // --- staff: booking requests for my slots ---
-  const requests = () => {
-    const list = appts.latest ?? [];
-    if (isManager()) return list;
-    const uid = me()?.id;
-    return list.filter((a) => a.teacher?.id === uid);
-  };
+  // --- staff: booking requests for my slots (server-narrowed via `teacher=me`
+  // for non-manager staff, as with the slots above) ---
+  const requests = () => appts.latest ?? [];
 
   const requestColumns = createMemo<ColumnDef<Appointment>[]>(() => [
     {

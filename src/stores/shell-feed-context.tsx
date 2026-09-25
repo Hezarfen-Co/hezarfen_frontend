@@ -46,7 +46,16 @@ type ShellFeedContextValue = {
 
 const ShellFeedContext = createContext<ShellFeedContextValue>();
 
-const HOMEWORK_FEED_LIMIT = 100;
+// 50: the feed drives "upcoming" badges and the notification rows — it needs
+// the next handful, not the archive, and every windowed source orders by its
+// own schedule now. 50 soonest-first rows cover a busy month per source; the
+// consumers render only not-yet-passed rows, so the dropped rows were never
+// rendered.
+// ponytail: a school with >50 simultaneously-open items per source loses the
+// tail — upgrade path is narrowing the window further, not a bigger cap.
+const FEED_LIMIT = 50;
+
+const upcoming = () => ({ ends_after: Date.now(), limit: FEED_LIMIT });
 
 const emptyPage = <T,>(): Page<T> => ({ items: [], total: 0, limit: null, offset: 0 });
 
@@ -96,19 +105,6 @@ function createUserFeed(loggedIn: boolean, modulesLoading: () => boolean, isEnab
     { initialValue: emptyPage<Message>() }
   );
 
-  // `ends_after=now` keeps only rows whose window has not finished AND flips
-  // the server order to soonest-first, so a cap finally truncates the archive
-  // end instead of the upcoming end. Without it the whole school history rode
-  // along (~3.4 MB/poll at 5k+5k rows) only to be filtered out client-side.
-  //
-  // 50: the feed drives "upcoming" badges and the calendar dot — it needs the
-  // next handful, not the archive. 50 soonest-first rows cover a busy month
-  // per source. Both consumers already show only not-yet-ended items, so the
-  // dropped rows were never rendered.
-  // ponytail: a school with >50 simultaneously-open events loses the tail —
-  // upgrade path is narrowing the window (add an upper bound), not a bigger cap.
-  const upcoming = () => ({ ends_after: Date.now(), limit: 50 });
-
   const [eventsRes, { refetch: refetchEvents }] = createResource(
     source,
     async () => {
@@ -135,12 +131,15 @@ function createUserFeed(loggedIn: boolean, modulesLoading: () => boolean, isEnab
     { initialValue: emptyPage<Exam>() }
   );
 
+  // Same feed semantics as events/exams: only what is still ahead. The
+  // notification feed renders homework whose due date has not passed, and both
+  // polls used to carry a blind newest-100 cap only because no window existed.
   const [appointmentsRes, { refetch: refetchAppointments }] = createResource(
     source,
     async () => {
       try {
         if (!isEnabled("appointments")) return emptyPage<Appointment>();
-        return await getAppointments({ limit: 100 });
+        return await getAppointments({ starts_after: Date.now(), limit: FEED_LIMIT });
       } catch {
         return emptyPage<Appointment>();
       }
@@ -153,11 +152,7 @@ function createUserFeed(loggedIn: boolean, modulesLoading: () => boolean, isEnab
     async () => {
       try {
         if (!isEnabled("homework")) return emptyPage<Homework>();
-        // `/homework` has no due-date filter and lists newest-created first,
-        // so a page of the most recent rows holds everything still upcoming
-        // in practice. Unbounded, this poll pulled the school's whole
-        // homework history every minute on every page.
-        return await getHomework({ limit: HOMEWORK_FEED_LIMIT });
+        return await getHomework({ due_after: Date.now(), limit: FEED_LIMIT });
       } catch {
         return emptyPage<Homework>();
       }

@@ -1,5 +1,5 @@
 import type { Page, PageParams } from "@/api/client";
-import { isTruncated, loadAllPages, loadCappedList } from "./capped-list";
+import { isTruncated, loadAllPages, loadCappedList, loadWindowedList } from "./capped-list";
 
 const page = (items: number[], total: number): Page<number> => ({ items, total, limit: null, offset: 0 });
 
@@ -39,4 +39,26 @@ it("stops after one request when the first page holds everything", async () => {
   const fetch = vi.fn(async () => page([1, 2], 2));
   expect(await loadAllPages(fetch, 100)).toEqual([1, 2]);
   expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+it("follows offsets until the windowed total", async () => {
+  const fetch = vi.fn(async (params?: PageParams) => {
+    if (!params?.offset) return page([1, 2], 5);
+    if (params.offset === 2) return page([3, 4], 5);
+    return page([5], 5);
+  });
+  const list = await loadWindowedList(fetch, 2);
+  expect(fetch).toHaveBeenNthCalledWith(1, { limit: 2, offset: 0 });
+  expect(fetch).toHaveBeenNthCalledWith(2, { limit: 2, offset: 2 });
+  expect(fetch).toHaveBeenNthCalledWith(3, { limit: 2, offset: 4 });
+  expect(list).toEqual({ items: [1, 2, 3, 4, 5], total: 5 });
+  expect(isTruncated(list)).toBe(false);
+});
+
+it("stops on an empty page instead of looping a shrinking window", async () => {
+  const fetch = vi.fn(async (params?: PageParams) => (params?.offset ? page([], 5) : page([1, 2], 5)));
+  const list = await loadWindowedList(fetch, 2);
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(list.items).toEqual([1, 2]);
+  expect(list.total).toBe(5);
 });

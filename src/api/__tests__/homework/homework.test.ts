@@ -36,10 +36,18 @@ describe("homework API", () => {
     expect(init?.method).toBe("GET");
   });
 
-  it("getHomework sends pagination only — the endpoint has no due-date window", async () => {
+  it("getHomework sends the due window and class_course when set", async () => {
+    mockFetchSuccess({ items: [], total: 0 });
+    await getHomework({ due_after: 1700000000000, due_before: 1800000000000, class_course: "i1", limit: 50 });
+    expect(lastFetchCall()[0]).toBe("/api/homework?limit=50&due_after=1700000000000&due_before=1800000000000&class_course=i1");
+  });
+
+  it("getHomework omits unset filters — no bare keys", async () => {
     mockFetchSuccess({ items: [], total: 0 });
     await getHomework({ limit: 1 });
     expect(lastFetchCall()[0]).toBe("/api/homework?limit=1");
+    await getHomework({ class_course: " " });
+    expect(lastFetchCall()[0]).toBe("/api/homework");
   });
 
   it("getHomeworkById calls /homework/:id", async () => {
