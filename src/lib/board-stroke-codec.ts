@@ -1,4 +1,4 @@
-import type { Point, Stroke } from "./draw-stroke";
+import { isDash, type Point, type Stroke, type StrokeDash } from "./draw-stroke";
 
 // The whiteboard backend caps each stroke `payload` at 4096 bytes
 // (board.max_stroke_payload_len, published at GET /limits). A long freehand
@@ -12,6 +12,9 @@ export const MAX_STROKE_PAYLOAD_BYTES = 4096;
 // boundary the server rejects.
 const DEFAULT_MAX_BYTES = MAX_STROKE_PAYLOAD_BYTES - 64;
 
+/** A stroke on the live board, tagged with the `sid` it travelled under. */
+export type BoardStroke = Stroke & { id?: string };
+
 // Wire envelope for one segment of a logical stroke. Coordinates are
 // board-space (device/zoom independent); points travel as [x, y] tuples to
 // keep the payload small.
@@ -23,6 +26,14 @@ export type StrokeSegment = {
   color: string;
   width: number;
   erase: boolean;
+  /** Absent for a solid line, so a solid stroke's payload is unchanged. */
+  dash?: StrokeDash;
+  /**
+   * Erase marker: the sids of earlier strokes this entry removes (Excalidraw's
+   * object eraser). The stroke log is append-only, so a deletion is itself a
+   * logged entry; a marker carries no ink (`pts` is empty).
+   */
+  del?: string[];
   pts: [number, number][];
 };
 
@@ -42,7 +53,7 @@ function segmentString(
   sid: string,
   seg: number,
   last: boolean,
-  stroke: Pick<Stroke, "color" | "width" | "erase">,
+  stroke: Pick<Stroke, "color" | "width" | "erase" | "dash">,
   pts: [number, number][],
 ): string {
   const envelope: StrokeSegment = {
@@ -53,6 +64,7 @@ function segmentString(
     color: stroke.color,
     width: stroke.width,
     erase: stroke.erase,
+    ...(stroke.dash ? { dash: stroke.dash } : {}),
     pts,
   };
   return JSON.stringify(envelope);
@@ -106,6 +118,26 @@ function isTuple(v: unknown): v is [number, number] {
   );
 }
 
+/**
+ * Serialize an erase of the strokes `ids` into marker payloads, each under
+ * `maxBytes` (a long sweep can remove more sids than fit in one payload).
+ */
+export function encodeEraseMarkers(ids: string[], sid: string, maxBytes: number = DEFAULT_MAX_BYTES): string[] {
+  const out: string[] = [];
+  const marker = (del: string[], n: number) =>
+    JSON.stringify({ v: 1, sid: `${sid}-${n}`, seg: 0, last: true, color: "", width: 0, erase: true, del, pts: [] } satisfies StrokeSegment);
+  let batch: string[] = [];
+  for (const id of ids) {
+    if (batch.length > 0 && byteLength(marker([...batch, id], out.length)) > maxBytes) {
+      out.push(marker(batch, out.length));
+      batch = [];
+    }
+    batch.push(id);
+  }
+  if (batch.length > 0) out.push(marker(batch, out.length));
+  return out;
+}
+
 /** Parse one segment payload, or null on anything malformed (payloads are untrusted). */
 export function decodeSegment(payload: string | null): StrokeSegment | null {
   if (!payload) return null;
@@ -125,6 +157,8 @@ export function decodeSegment(payload: string | null): StrokeSegment | null {
     typeof s.color !== "string" ||
     typeof s.width !== "number" ||
     typeof s.erase !== "boolean" ||
+    (s.dash !== undefined && !isDash(s.dash)) ||
+    (s.del !== undefined && !(Array.isArray(s.del) && s.del.every((id) => typeof id === "string"))) ||
     !Array.isArray(s.pts) ||
     !s.pts.every(isTuple)
   ) {
@@ -139,6 +173,7 @@ export function segmentToStroke(seg: StrokeSegment): Stroke {
     color: seg.color,
     width: seg.width,
     erase: seg.erase,
+    ...(seg.dash ? { dash: seg.dash } : {}),
     points: seg.pts.map(([x, y]) => ({ x, y }) as Point),
   };
 }
@@ -147,26 +182,38 @@ export function segmentToStroke(seg: StrokeSegment): Stroke {
  * Reassemble full strokes from an ordered list of stroke payloads (e.g. a
  * history/epoch page). Segments are grouped by `sid` in arrival order; the
  * overlap point each later segment repeats is dropped so the joined stroke has
- * no duplicate vertex. Non-stroke rows (null payloads, clear markers) are
+ * no duplicate vertex. Strokes removed by a later erase marker are dropped,
+ * so a replay ends on what the board actually showed. Non-stroke rows (null payloads, clear markers) are
  * skipped by the caller passing only stroke payloads.
  */
 export function reassembleStrokes(payloads: (string | null)[]): Stroke[] {
   const order: string[] = [];
   const bySid = new Map<string, Stroke>();
+  const deleted = new Set<string>();
 
   for (const payload of payloads) {
     const seg = decodeSegment(payload);
     if (!seg) continue;
+    if (seg.del) {
+      for (const id of seg.del) deleted.add(id);
+      continue;
+    }
     const pts = seg.pts.map(([x, y]) => ({ x, y }) as Point);
     const existing = bySid.get(seg.sid);
     if (!existing) {
       order.push(seg.sid);
-      bySid.set(seg.sid, { color: seg.color, width: seg.width, erase: seg.erase, points: pts });
+      bySid.set(seg.sid, {
+        color: seg.color,
+        width: seg.width,
+        erase: seg.erase,
+        ...(seg.dash ? { dash: seg.dash } : {}),
+        points: pts,
+      });
     } else {
       // Drop the leading overlap point that duplicates the previous last point.
       existing.points.push(...(seg.seg > 0 ? pts.slice(1) : pts));
     }
   }
 
-  return order.map((sid) => bySid.get(sid)!);
+  return order.filter((sid) => !deleted.has(sid)).map((sid) => bySid.get(sid)!);
 }

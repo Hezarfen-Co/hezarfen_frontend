@@ -41,6 +41,12 @@ import magnifyingGlassUrl from "@phosphor-icons/core/regular/magnifying-glass.sv
 import packageUrl from "@phosphor-icons/core/regular/package.svg?url";
 import paperPlaneTiltUrl from "@phosphor-icons/core/regular/paper-plane-tilt.svg?url";
 import pencilSimpleUrl from "@phosphor-icons/core/regular/pencil-simple.svg?url";
+import handUrl from "@phosphor-icons/core/regular/hand.svg?url";
+import squareUrl from "@phosphor-icons/core/regular/square.svg?url";
+import diamondUrl from "@phosphor-icons/core/regular/diamond.svg?url";
+import circleUrl from "@phosphor-icons/core/regular/circle.svg?url";
+import arrowRightUrl from "@phosphor-icons/core/regular/arrow-right.svg?url";
+import lineSegmentUrl from "@phosphor-icons/core/regular/line-segment.svg?url";
 import plusUrl from "@phosphor-icons/core/regular/plus.svg?url";
 import questionUrl from "@phosphor-icons/core/regular/question.svg?url";
 import scanUrl from "@phosphor-icons/core/regular/scan.svg?url";
@@ -207,6 +213,30 @@ export function IconSave(props: IconProps) {
 
 export function IconEdit(props: IconProps) {
   return <PhosphorIcon {...props} src={pencilSimpleUrl} />;
+}
+
+export function IconHand(props: IconProps) {
+  return <PhosphorIcon {...props} src={handUrl} />;
+}
+
+export function IconSquare(props: IconProps) {
+  return <PhosphorIcon {...props} src={squareUrl} />;
+}
+
+export function IconDiamond(props: IconProps) {
+  return <PhosphorIcon {...props} src={diamondUrl} />;
+}
+
+export function IconCircle(props: IconProps) {
+  return <PhosphorIcon {...props} src={circleUrl} />;
+}
+
+export function IconArrowRight(props: IconProps) {
+  return <PhosphorIcon {...props} src={arrowRightUrl} />;
+}
+
+export function IconLineSegment(props: IconProps) {
+  return <PhosphorIcon {...props} src={lineSegmentUrl} />;
 }
 
 export function IconEraser(props: IconProps) {

@@ -1,5 +1,7 @@
 export type Point = { x: number; y: number };
-export type Stroke = { color: string; width: number; erase: boolean; points: Point[] };
+/** Line pattern of a stroke; absent means solid (every older stroke). */
+export type StrokeDash = "dashed" | "dotted";
+export type Stroke = { color: string; width: number; erase: boolean; points: Point[]; dash?: StrokeDash };
 export type BgKind = "none" | "lines" | "grid";
 /** `w`/`h` are DPR-free world px; `dpr` is the device ratio the PNG beside them was baked at. */
 export type DrawScene = { v: 1; w: number; h: number; strokes: Stroke[]; bg?: BgKind; dpr?: number };
@@ -25,6 +27,10 @@ function isSide(n: unknown): n is number {
   return typeof n === "number" && n > 0 && n <= MAX_SIDE; // NaN/Infinity fail the comparisons
 }
 
+export function isDash(d: unknown): d is StrokeDash {
+  return d === "dashed" || d === "dotted";
+}
+
 function isStroke(s: unknown): s is Stroke {
   if (!s || typeof s !== "object") return false;
   const st = s as Stroke;
@@ -33,7 +39,8 @@ function isStroke(s: unknown): s is Stroke {
     typeof st.width === "number" &&
     typeof st.erase === "boolean" &&
     Array.isArray(st.points) &&
-    st.points.every(isPoint)
+    st.points.every(isPoint) &&
+    (st.dash === undefined || isDash(st.dash))
   );
 }
 
@@ -143,6 +150,11 @@ function applyBrush(c: CanvasRenderingContext2D, stroke: Stroke) {
   c.lineWidth = stroke.width;
   c.lineCap = "round";
   c.lineJoin = "round";
+  // A zero-length dash with a round cap paints a dot; gaps scale with the width
+  // so a thick dashed line keeps the same rhythm as a thin one.
+  if (stroke.dash === "dashed") c.setLineDash([stroke.width * 4, stroke.width * 3]);
+  else if (stroke.dash === "dotted") c.setLineDash([0, stroke.width * 2.2]);
+  else c.setLineDash([]);
 }
 
 /** Replay a finished stroke. Midpoint quadratics so a fast drag reads as a curve, not a polygon. */

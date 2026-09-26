@@ -20,6 +20,10 @@ function stubContext() {
     arc: record("arc"),
     fill: record("fill"),
     stroke: record("stroke"),
+    // a style setter, not geometry — kept out of `calls` like the other styles
+    setLineDash: (segments: number[]) => {
+      props.lineDash = segments;
+    },
   };
   // trap the style assignments so composite mode / width can be asserted too
   return new Proxy(c, {
@@ -81,6 +85,16 @@ describe("paintStroke", () => {
     expect(c.props.globalCompositeOperation).toBe("destination-out");
   });
 
+  it("draws a solid line unless the stroke carries a dash pattern", () => {
+    const c = stubContext();
+    paintStroke(c, stroke([{ x: 1, y: 1 }, { x: 2, y: 2 }]));
+    expect(c.props.lineDash).toEqual([]);
+    paintStroke(c, stroke([{ x: 1, y: 1 }, { x: 2, y: 2 }], { dash: "dashed" }));
+    expect(c.props.lineDash).toEqual([16, 12]);
+    paintStroke(c, stroke([{ x: 1, y: 1 }, { x: 2, y: 2 }], { dash: "dotted" }));
+    expect((c.props.lineDash as number[])[0]).toBe(0);
+  });
+
   it("paints over the layer when not erasing", () => {
     const c = stubContext();
     paintStroke(c, stroke([{ x: 1, y: 1 }, { x: 2, y: 2 }]));
@@ -114,6 +128,12 @@ describe("parseScene", () => {
 
   it("parses a valid scene", () => {
     expect(parseScene(JSON.stringify(scene))).toEqual(scene);
+  });
+
+  it("keeps a known dash pattern and rejects an unknown one", () => {
+    const dashed = { ...scene, strokes: [{ ...scene.strokes[0], dash: "dotted" }] };
+    expect(parseScene(JSON.stringify(dashed))).toEqual(dashed);
+    expect(parseScene(JSON.stringify({ ...scene, strokes: [{ ...scene.strokes[0], dash: "wavy" }] }))).toBeNull();
   });
 
   it("rejects a wrong version", () => {

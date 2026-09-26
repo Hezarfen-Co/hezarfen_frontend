@@ -1,9 +1,13 @@
-import { Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
+import { createEffect, createSignal, onCleanup, onMount, type JSX } from "solid-js";
 import { getBoardStrokes, type Board } from "@/api/boards";
 import { formatApiErrorMessage } from "@/api/client";
-import { IconAlert } from "@/components/ui/icons";
-import { encodeStrokeSegments, decodeSegment, segmentToStroke } from "@/lib/board-stroke-codec";
-import type { Stroke } from "@/lib/draw-stroke";
+import {
+  decodeSegment,
+  encodeEraseMarkers,
+  encodeStrokeSegments,
+  segmentToStroke,
+  type BoardStroke,
+} from "@/lib/board-stroke-codec";
 import { parseBoardWsMessage, type BoardWsMessage } from "@/lib/websocket-messages";
 import { usePreferences } from "@/stores/preferences-context";
 import { WhiteboardCanvas, type WhiteboardCanvasController } from "./whiteboard-canvas";
@@ -21,6 +25,8 @@ export type BoardLiveState = {
 };
 
 const MAX_RECONNECT = 6;
+/** A socket error stays on the canvas banner this long. */
+const NOTICE_MS = 6000;
 
 export function WhiteboardRoom(props: {
   board: Board;
@@ -28,6 +34,12 @@ export function WhiteboardRoom(props: {
   onState?: (patch: BoardLiveState) => void;
   onConnectionChange?: (state: WsState) => void;
   onDeleted?: () => void;
+  /** Passed through to the canvas corners and banner. */
+  topLeft?: JSX.Element;
+  topRight?: JSX.Element;
+  banner?: string;
+  bannerTone?: "info" | "error";
+  class?: string;
 }) {
   const { locale } = usePreferences();
 
@@ -47,6 +59,7 @@ export function WhiteboardRoom(props: {
   const seen = new Set<string>();
 
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let noticeTimer: ReturnType<typeof setTimeout> | undefined;
   let reconnectAttempts = 0;
   let closedByUs = false;
 
@@ -81,7 +94,9 @@ export function WhiteboardRoom(props: {
     if (seen.has(row.id)) return;
     seen.add(row.id);
     const seg = decodeSegment(row.payload);
-    if (seg) controller?.applyStroke(segmentToStroke(seg));
+    if (!seg) return;
+    if (seg.del) controller?.removeStrokes(seg.del);
+    else controller?.applyStroke({ ...segmentToStroke(seg), id: seg.sid });
   };
 
   const wipe = () => {
@@ -204,6 +219,8 @@ export function WhiteboardRoom(props: {
       case "error": {
         const message = formatApiErrorMessage(msg.message, locale());
         setNotice(message);
+        if (noticeTimer) clearTimeout(noticeTimer);
+        noticeTimer = setTimeout(() => setNotice(""), NOTICE_MS);
         // A rejected draw (locked, full epoch, closed) or a room resync means the
         // optimistic local canvas is out of step — take the truth from the DB.
         if (["epoch_full", "board_closed", "locked", "resync", "conflict", "forbidden"].includes(msg.code)) {
@@ -214,10 +231,22 @@ export function WhiteboardRoom(props: {
     }
   };
 
-  const onLocalStroke = (stroke: Stroke) => {
+  const nextSid = () => `${props.meId}-${Date.now()}-${(clientSeq += 1)}`;
+
+  // The canvas tags every local stroke with an id; it is the sid on the wire,
+  // so a later erase — ours or anyone's — can name it.
+  const onLocalStroke = (stroke: BoardStroke) => {
     if (!canDraw()) return;
-    const sid = `${props.meId}-${Date.now()}-${(clientSeq += 1)}`;
-    for (const payload of encodeStrokeSegments(stroke, sid)) {
+    for (const payload of encodeStrokeSegments(stroke, stroke.id ?? nextSid())) {
+      sendWs({ type: "stroke", payload, client_seq: (clientSeq += 1) });
+    }
+  };
+
+  // The log is append-only, so an erase is logged as a marker naming the
+  // removed sids; every client (and the history replay) drops them.
+  const onLocalErase = (ids: string[]) => {
+    if (!canDraw()) return;
+    for (const payload of encodeEraseMarkers(ids, nextSid())) {
       sendWs({ type: "stroke", payload, client_seq: (clientSeq += 1) });
     }
   };
@@ -229,29 +258,26 @@ export function WhiteboardRoom(props: {
   onCleanup(() => {
     closedByUs = true;
     clearReconnect();
+    if (noticeTimer) clearTimeout(noticeTimer);
     if (ws) ws.close();
   });
 
   createEffect(() => props.onConnectionChange?.(wsState()));
 
   return (
-    <div class="space-y-3">
-      <Show when={notice()}>
-        {(msg) => (
-          <div class="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
-            <IconAlert class="mt-0.5 h-5 w-5 shrink-0 text-destructive-text" />
-            <p class="min-w-0 text-sm text-destructive-text">{msg()}</p>
-          </div>
-        )}
-      </Show>
-
-      <WhiteboardCanvas
-        disabled={!canDraw()}
-        onStroke={onLocalStroke}
-        controllerRef={(c) => {
-          controller = c;
-        }}
-      />
-    </div>
+    <WhiteboardCanvas
+      fill
+      class={props.class}
+      disabled={!canDraw()}
+      onStroke={onLocalStroke}
+      onErase={onLocalErase}
+      topLeft={props.topLeft}
+      topRight={props.topRight}
+      banner={notice() || props.banner}
+      bannerTone={notice() ? "error" : props.bannerTone}
+      controllerRef={(c) => {
+        controller = c;
+      }}
+    />
   );
 }

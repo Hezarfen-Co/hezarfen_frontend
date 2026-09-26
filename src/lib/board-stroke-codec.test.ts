@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   decodeSegment,
+  encodeEraseMarkers,
   encodeStrokeSegments,
   reassembleStrokes,
   segmentToStroke,
@@ -79,5 +80,47 @@ describe("board-stroke-codec", () => {
     const good = encodeStrokeSegments(makeStroke(2), "g");
     const strokes = reassembleStrokes([null, "garbage", ...good]);
     expect(strokes).toHaveLength(1);
+  });
+
+  it("round-trips a dash pattern and leaves a solid payload without one", () => {
+    const dashed = { ...makeStroke(300), dash: "dashed" as const };
+    const payloads = encodeStrokeSegments(dashed, "d", 512);
+    expect(payloads.length).toBeGreaterThan(1);
+    expect(payloads.every((p) => decodeSegment(p)?.dash === "dashed")).toBe(true);
+    expect(reassembleStrokes(payloads)[0].dash).toBe("dashed");
+    expect(segmentToStroke(decodeSegment(payloads[0])!).dash).toBe("dashed");
+    expect(encodeStrokeSegments(makeStroke(2), "s")[0]).not.toContain("dash");
+  });
+
+  it("rejects an unknown dash pattern", () => {
+    const payload = JSON.parse(encodeStrokeSegments(makeStroke(2), "x")[0]);
+    expect(decodeSegment(JSON.stringify({ ...payload, dash: "wavy" }))).toBeNull();
+  });
+
+  it("encodes an erase as ink-free markers split under the cap", () => {
+    const ids = Array.from({ length: 60 }, (_, i) => `user-${i}-1700000000000-${i}`);
+    const payloads = encodeEraseMarkers(ids, "e", 512);
+    expect(payloads.length).toBeGreaterThan(1);
+    const all: string[] = [];
+    for (const p of payloads) {
+      expect(new TextEncoder().encode(p).length).toBeLessThanOrEqual(512);
+      const seg = decodeSegment(p)!;
+      expect(seg.pts).toEqual([]);
+      all.push(...seg.del!);
+    }
+    expect(all).toEqual(ids);
+  });
+
+  it("drops erased strokes from a reassembled history", () => {
+    const keep = encodeStrokeSegments(makeStroke(3), "keep");
+    const gone = encodeStrokeSegments(makeStroke(300), "gone", 512);
+    const strokes = reassembleStrokes([...gone, ...keep, ...encodeEraseMarkers(["gone"], "e")]);
+    expect(strokes).toHaveLength(1);
+    expect(strokes[0].points).toHaveLength(3);
+  });
+
+  it("rejects a marker whose del list is not strings", () => {
+    const payload = JSON.parse(encodeEraseMarkers(["a"], "e")[0]);
+    expect(decodeSegment(JSON.stringify({ ...payload, del: [1] }))).toBeNull();
   });
 });

@@ -16,19 +16,28 @@ import type { MessageKey } from "@/i18n/messages";
 import { WhiteboardRoom, type BoardLiveState } from "@/components/whiteboard/whiteboard-room-ws";
 import { BoardSettingsPanel } from "@/components/whiteboard/board-settings-panel";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { PageHeader } from "@/components/layout/page-header";
-import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DrawingPlayback } from "@/components/ui/drawing-playback";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { IconDotsVertical, IconEraser, IconLock, IconTrash, IconX } from "@/components/ui/icons";
+import {
+  IconChevronLeft,
+  IconEraser,
+  IconLock,
+  IconMenu,
+  IconRotateCcw,
+  IconSettings,
+  IconTrash,
+  IconX,
+} from "@/components/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { reassembleStrokes } from "@/lib/board-stroke-codec";
 import { strokesBounds, type DrawScene } from "@/lib/draw-stroke";
+import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -43,6 +52,20 @@ export default function WhiteboardPage() {
 }
 
 const EXPORT_MARGIN = 8;
+// Same island look as the canvas's own tool island.
+const CORNER_ISLAND = "rounded-lg border border-border/70 bg-card shadow-[0_1px_4px_rgb(0_0_0/0.08)]";
+const CORNER_BUTTON = cn(
+  CORNER_ISLAND,
+  "inline-flex h-10 w-10 items-center justify-center text-foreground/80 outline-hidden transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 data-expanded:bg-primary/15 data-expanded:text-primary-text",
+);
+
+/** A soft per-person colour, stable for an id, like Excalidraw's collaborator chips. */
+function avatarStyle(userId: string) {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i += 1) hash = (hash * 31 + userId.charCodeAt(i)) | 0;
+  const hue = Math.abs(hash) % 360;
+  return { "background-color": `hsl(${hue} 70% 86%)`, color: `hsl(${hue} 45% 26%)` };
+}
 
 // Build a replayable scene from a set of reassembled strokes (an epoch's marks),
 // shifted into a tight box like the drawing export pipeline.
@@ -207,6 +230,165 @@ function WhiteboardContent() {
     }
   };
 
+  // One status line on the canvas, most important first; an action error
+  // outranks all of them.
+  const banner = () => {
+    if (error()) return error();
+    if (closed()) return t("whiteboard.closedBanner");
+    if (locked()) return t("whiteboard.lockedBanner");
+    if (!isParticipant()) return t("whiteboard.readOnlyBanner");
+    if (connection() === "disconnected") return t("ws.disconnected");
+    return "";
+  };
+
+  const initialOf = (userId: string) => nameOf(userId).slice(0, 1).toLocaleUpperCase(locale());
+
+  const BoardMenu = () => (
+    <>
+      <DropdownMenu placement="bottom-start" gutter={8}>
+        <DropdownMenuTrigger class={CORNER_BUTTON} aria-label={t("whiteboard.menu")} title={t("whiteboard.menu")}>
+          <IconMenu class="h-4.5 w-4.5" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent class="w-56">
+          <DropdownMenuItem onSelect={() => navigate({ to: "/whiteboards" })}>
+            <IconChevronLeft class="h-4 w-4" />
+            {t("whiteboard.back")}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => setTimeout(() => setHistoryOpen(true), 0)}>
+            <IconRotateCcw class="h-4 w-4" />
+            {t("whiteboard.history")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setTimeout(() => setSettingsOpen(true), 0)}>
+            <IconSettings class="h-4 w-4" />
+            {t("whiteboard.edit")}
+          </DropdownMenuItem>
+          <Show when={isCreator() && !closed()}>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled={busy()} onSelect={() => void toggleLock()}>
+              <IconLock class="h-4 w-4" />
+              {locked() ? t("whiteboard.unlock") : t("whiteboard.lock")}
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={busy()} onSelect={() => setTimeout(() => setClearOpen(true), 0)}>
+              <IconEraser class="h-4 w-4" />
+              {t("whiteboard.clear")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              class="text-warning-text focus:bg-warning/10 focus:text-warning-text data-highlighted:bg-warning/10 data-highlighted:text-warning-text"
+              disabled={busy()}
+              onSelect={() => setTimeout(() => setCloseOpen(true), 0)}
+            >
+              <IconLock class="h-4 w-4" />
+              {t("whiteboard.close")}
+            </DropdownMenuItem>
+          </Show>
+          <Show when={isCreator()}>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem destructive disabled={busy()} onSelect={() => setTimeout(() => setDeleteOpen(true), 0)}>
+              <IconTrash class="h-4 w-4" />
+              {t("whiteboard.delete")}
+            </DropdownMenuItem>
+          </Show>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <span class="hidden min-w-0 truncate rounded-md bg-card/80 px-2 py-1 text-sm font-semibold text-text-strong backdrop-blur-xs sm:block" title={boardTitle()}>
+        {boardTitle()}
+      </span>
+    </>
+  );
+
+  const BoardPresence = () => (
+    <>
+      <Popover placement="bottom-end" gutter={8}>
+        <PopoverTrigger
+          class={cn(CORNER_ISLAND, "flex h-10 items-center gap-2 pl-1.5 pr-2.5 outline-hidden focus-visible:ring-2 focus-visible:ring-ring")}
+          aria-label={`${t("whiteboard.roster")}: ${roster().length}`}
+          title={t("whiteboard.roster")}
+        >
+          <span class="flex -space-x-2">
+            <For each={roster().slice(0, 3)}>
+              {(userId) => (
+                <span
+                  class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ring-2 ring-card"
+                  style={avatarStyle(userId)}
+                  aria-hidden="true"
+                >
+                  {initialOf(userId)}
+                </span>
+              )}
+            </For>
+          </span>
+          <Show when={roster().length > 3}>
+            <span class="text-xs font-semibold text-muted-foreground">+{roster().length - 3}</span>
+          </Show>
+          <span class={cn("h-2 w-2 rounded-full", connection() === "connected" ? "bg-success" : "bg-warning")} aria-hidden="true" />
+        </PopoverTrigger>
+        <PopoverContent class="w-72 p-0">
+          <div class="flex items-center justify-between gap-2 border-b border-border-hairline px-4 py-3">
+            <h3 class="text-sm font-semibold text-text-strong">{t("whiteboard.roster")}</h3>
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <span class={cn("h-2 w-2 rounded-full", connection() === "connected" ? "bg-success" : "bg-warning")} />
+              {connection() === "connected" ? t("ws.connected") : connection() === "connecting" ? t("ws.connecting") : t("ws.disconnected")}
+            </span>
+          </div>
+          <ul class="max-h-80 space-y-0.5 overflow-y-auto p-2">
+            <For each={roster()}>
+              {(userId) => (
+                <li class="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/60">
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={avatarStyle(userId)}>
+                    {initialOf(userId)}
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="flex min-w-0 items-center gap-1.5">
+                      <span class="truncate text-sm font-medium">{nameOf(userId)}</span>
+                      <Show when={userId === meId()}>
+                        <span class="shrink-0 text-xs text-muted-foreground">({t("whiteboard.you")})</span>
+                      </Show>
+                      <Show when={userId === live().creator}>
+                        <Badge variant="outline" class="shrink-0 text-[11px]">{t("whiteboard.creator")}</Badge>
+                      </Show>
+                    </span>
+                    <span class="block truncate text-xs text-muted-foreground">{roleOf(userId) || userId}</span>
+                  </span>
+                  <Show when={isCreator() && !closed() && userId !== live().creator}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      class="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text"
+                      disabled={busy()}
+                      title={t("whiteboard.removeParticipant")}
+                      aria-label={t("whiteboard.removeParticipant")}
+                      onClick={() => void updateBoard({ participants: (live().participants ?? []).filter((id) => id !== userId) })}
+                    >
+                      <IconX class="h-4 w-4" />
+                    </Button>
+                  </Show>
+                </li>
+              )}
+            </For>
+          </ul>
+        </PopoverContent>
+      </Popover>
+      <Show when={isCreator() && !closed()}>
+        <button
+          type="button"
+          class={cn(CORNER_BUTTON, locked() && "border-warning/50 bg-warning/15 text-warning-text hover:bg-warning/20")}
+          disabled={busy()}
+          aria-pressed={locked()}
+          aria-label={locked() ? t("whiteboard.unlock") : t("whiteboard.lock")}
+          title={locked() ? t("whiteboard.unlock") : t("whiteboard.lock")}
+          onClick={() => void toggleLock()}
+        >
+          <IconLock class="h-4.5 w-4.5" />
+        </button>
+        <Button type="button" size="sm" class="hidden h-10 rounded-lg px-4 sm:inline-flex" onClick={() => setSettingsOpen(true)}>
+          {t("whiteboard.inviteAction")}
+        </Button>
+      </Show>
+    </>
+  );
+
   return (
     <Suspense fallback={<PageSpinner />}>
       <Show
@@ -218,120 +400,23 @@ function WhiteboardContent() {
         }
       >
         {(b) => (
-          <div class="space-y-4">
-            <Breadcrumbs items={[{ label: t("whiteboard.title"), to: "/whiteboards" }, { label: boardTitle() }]} />
-            <PageHeader
-              compact
-              title={boardTitle()}
-              actions={
-                <div class="flex flex-wrap items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setHistoryOpen(true)}>
-                    {t("whiteboard.history")}
-                  </Button>
-                  <Button type="button" size="sm" class="rounded-lg" onClick={() => setSettingsOpen(true)}>
-                    {t("whiteboard.edit")}
-                  </Button>
-                  <Show when={isCreator()}>
-                    <DropdownMenu placement="bottom-end" gutter={8}>
-                      <DropdownMenuTrigger
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-line bg-surface-tint text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary-text"
-                        aria-label={t("common.actions")}
-                        title={t("common.actions")}
-                      >
-                        <IconDotsVertical class="h-4 w-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent class="w-52">
-                        <Show when={!closed()}>
-                          <DropdownMenuItem disabled={busy()} onSelect={() => void toggleLock()}>
-                            <IconLock class="h-4 w-4" />
-                            {locked() ? t("whiteboard.unlock") : t("whiteboard.lock")}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem disabled={busy()} onSelect={() => setTimeout(() => setClearOpen(true), 0)}>
-                            <IconEraser class="h-4 w-4" />
-                            {t("whiteboard.clear")}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem class="text-warning-text focus:bg-warning/10 focus:text-warning-text data-highlighted:bg-warning/10 data-highlighted:text-warning-text" disabled={busy()} onSelect={() => setTimeout(() => setCloseOpen(true), 0)}>
-                            <IconLock class="h-4 w-4" />
-                            {t("whiteboard.close")}
-                          </DropdownMenuItem>
-                        </Show>
-                        <Show when={!closed()}><DropdownMenuSeparator /></Show>
-                        <DropdownMenuItem destructive disabled={busy()} onSelect={() => setTimeout(() => setDeleteOpen(true), 0)}>
-                          <IconTrash class="h-4 w-4" />
-                          {t("whiteboard.delete")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </Show>
-                </div>
-              }
+          // Edge to edge over the content column's padding, like Excalidraw
+          // owning the viewport; the height leaves room for the shell header
+          // (desktop) or the tab bar (phone).
+          <div class="-mx-4 -mt-6 sm:-mx-6 lg:-mx-10 lg:-mb-6">
+            <h1 class="sr-only">{boardTitle()}</h1>
+            <WhiteboardRoom
+              board={b()}
+              meId={meId()}
+              class="h-[calc(100dvh-3.5rem-max(env(safe-area-inset-bottom),var(--android-nav-inset,0px)))] min-h-96 lg:h-[calc(100dvh-49px-env(safe-area-inset-top))]"
+              topLeft={<BoardMenu />}
+              topRight={<BoardPresence />}
+              banner={banner()}
+              bannerTone={error() ? "error" : "info"}
+              onState={mergeLive}
+              onConnectionChange={setConnection}
+              onDeleted={() => navigate({ to: "/whiteboards" })}
             />
-
-            <Show when={error()}>
-              <Alert variant="destructive">{error()}</Alert>
-            </Show>
-
-            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
-              <WhiteboardRoom
-                board={b()}
-                meId={meId()}
-                onState={mergeLive}
-                onConnectionChange={setConnection}
-                onDeleted={() => navigate({ to: "/whiteboards" })}
-              />
-              <aside class="overflow-hidden rounded-xl border border-border-line bg-surface-base shadow-xs">
-                <div class="space-y-2 border-b border-border-hairline bg-surface-tint px-4 py-3">
-                  <div class="flex items-center justify-between gap-2">
-                    <h3 class="text-sm font-semibold text-text-strong">{t("whiteboard.roster")}</h3>
-                    <Badge variant="secondary">{roster().length}</Badge>
-                  </div>
-                  <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <span class={connection() === "connected" ? "h-2 w-2 rounded-full bg-success" : "h-2 w-2 rounded-full bg-warning"} />
-                    {connection() === "connected" ? t("ws.connected") : connection() === "connecting" ? t("ws.connecting") : t("ws.disconnected")}
-                  </span>
-                  <div class="flex flex-wrap gap-1.5">
-                    <Show when={closed()}><Badge variant="warning">{t("whiteboard.closedBadge")}</Badge></Show>
-                    <Show when={locked() && !closed()}><Badge variant="outline">{t("whiteboard.lockedBadge")}</Badge></Show>
-                    <Show when={!isParticipant()}><Badge variant="outline">{t("whiteboard.readOnlyBadge")}</Badge></Show>
-                  </div>
-                </div>
-                <ul class="space-y-1 p-2">
-                  <For each={roster()}>
-                    {(userId) => (
-                      <li class="group flex items-center gap-2 rounded-xl px-2 py-2 transition-colors hover:bg-muted/60">
-                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary-text">
-                          {nameOf(userId).slice(0, 1).toLocaleUpperCase(locale())}
-                        </span>
-                        <span class="min-w-0 flex-1">
-                          <span class="flex min-w-0 items-center gap-1.5">
-                            <span class="truncate text-sm font-medium">{nameOf(userId)}</span>
-                            <Show when={userId === live().creator}>
-                              <Badge variant="outline" class="shrink-0 text-[11px]">{t("whiteboard.creator")}</Badge>
-                            </Show>
-                          </span>
-                          <span class="block truncate text-xs text-muted-foreground">{roleOf(userId) || userId}</span>
-                        </span>
-                        <Show when={isCreator() && !closed() && userId !== live().creator}>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            class="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive-text"
-                            disabled={busy()}
-                            title={t("whiteboard.removeParticipant")}
-                            aria-label={t("whiteboard.removeParticipant")}
-                            onClick={() => void updateBoard({ participants: (live().participants ?? []).filter((id) => id !== userId) })}
-                          >
-                            <IconX class="h-4 w-4" />
-                          </Button>
-                        </Show>
-                      </li>
-                    )}
-                  </For>
-                </ul>
-              </aside>
-            </div>
 
             <BoardSettingsPanel
               open={settingsOpen()}
