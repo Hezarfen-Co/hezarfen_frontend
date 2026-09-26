@@ -7,8 +7,16 @@ Use one of two patterns for every new interaction:
 
 ## Application shell
 
-- Desktop uses one fixed role navigation: `15rem` expanded and `4rem`
-  collapsed. Collapse preference persists.
+- Desktop uses one fixed role navigation: `260px` expanded and a `56px`
+  icon rail collapsed. Collapse preference persists. The collapse toggle sits
+  in the sidebar footer beside the account chip (stacked above the avatar on
+  the rail), off the pointer's path from the nav to the page.
+- The rail: 36px square hit areas with centred icons, a label tooltip on the
+  right for every control, a hairline instead of section headers, and the
+  active item marked by its tint plus a bar on the rail's outer edge. The
+  sidebar's logo row matches the top header (49px) so their hairlines meet.
+- The school name opens the top header as account context, "School / Page",
+  muted and truncated; the sidebar names it only in the logo's tooltip.
 - Everything comes from `src/components/layout/nav-items.ts`: a group tree
   per role (`ADMIN_GROUPS` for manager and admin, `TEACHER_GROUPS`,
   `STUDENT_GROUPS`, `PARENT_GROUPS`), filtered by role (`minRole`,

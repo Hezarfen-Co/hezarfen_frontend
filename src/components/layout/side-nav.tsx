@@ -3,6 +3,8 @@ import { Link, useNavigate, useRouterState } from "@tanstack/solid-router";
 import { HOME_ITEM, routeNavItem, visibleNavGroups, type NavGroup, type NavItem } from "@/components/layout/nav-items";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { IconChevronRight } from "@/components/ui/icons";
+import { TooltipTrigger } from "@/components/ui/tooltip";
+import { RailTip } from "@/components/layout/rail-tip";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
@@ -10,6 +12,15 @@ import { useShellFeed } from "@/stores/shell-feed-context";
 import { useT } from "@/stores/preferences-context";
 
 const FOLDED_KEY = "hezarfen.navFolded";
+
+// The collapsed rail: one square hit area per control, icon dead centre, and
+// the active control marked twice — the tinted square plus a bar on the rail's
+// outer edge — because an icon alone carries no label to read the state from.
+const RAIL_ITEM =
+  "relative mx-auto flex size-9 shrink-0 items-center justify-center rounded-lg outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring";
+const RAIL_ACTIVE =
+  "bg-primary/10 text-primary-text before:absolute before:-left-2.5 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-primary";
+const RAIL_IDLE = "text-muted-foreground hover:bg-muted/70 hover:text-foreground";
 
 function readFolded(): Record<string, boolean> {
   try {
@@ -81,26 +92,40 @@ export function SideNav(props: {
           {(item) => {
             const active = () => current()?.id === item.id;
             return (
-              <Link
-                to={item.to}
-                onClick={() => props.onNavigate?.()}
-                title={t(item.labelKey)}
-                aria-current={active() ? "page" : undefined}
-                class={cn(
-                  "relative flex h-[34px] items-center rounded-lg text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-                  props.collapsed ? "mx-auto h-10 w-12 justify-center px-0" : "gap-3 px-3",
-                  active()
-                    ? "bg-primary/10 text-primary-text"
-                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                )}
-              >
-                <item.Icon class="h-4 w-4 shrink-0" />
-                <span class={props.collapsed ? "sr-only" : "truncate"}>{t(item.labelKey)}</span>
-              </Link>
+              <RailTip label={t(item.labelKey)} enabled={Boolean(props.collapsed)}>
+                <TooltipTrigger
+                  as={Link}
+                  to={item.to}
+                  onClick={() => props.onNavigate?.()}
+                  title={props.collapsed ? undefined : t(item.labelKey)}
+                  aria-label={props.collapsed ? t(item.labelKey) : undefined}
+                  aria-current={active() ? "page" : undefined}
+                  class={cn(
+                    props.collapsed
+                      ? cn(RAIL_ITEM, active() ? RAIL_ACTIVE : RAIL_IDLE)
+                      : cn(
+                          "relative flex h-[34px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                          active()
+                            ? "bg-primary/10 text-primary-text"
+                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                        ),
+                  )}
+                >
+                  <item.Icon class="h-4 w-4 shrink-0" />
+                  <Show when={!props.collapsed}>
+                    <span class="truncate">{t(item.labelKey)}</span>
+                  </Show>
+                </TooltipTrigger>
+              </RailTip>
             );
           }}
         </For>
       </div>
+      {/* The rail has no section headers to read, so a hairline separates
+          Home from the section menus instead. */}
+      <Show when={props.collapsed && home().length > 0}>
+        <div role="separator" class="mx-auto my-1 h-px w-6 shrink-0 bg-border" />
+      </Show>
       <For each={groups()}>
         {(group) => {
           const active = () => group.items.some((item) => current()?.id === item.id);
@@ -176,20 +201,16 @@ export function SideNav(props: {
                 </section>
               }
             >
-              <DropdownMenu placement="right-start" gutter={8}>
-                <DropdownMenuTrigger
-                  class={cn(
-                    "relative mx-auto flex h-10 w-12 items-center justify-center rounded-md outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-                    active()
-                      ? "bg-primary/10 text-primary-text"
-                      : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                  )}
-                  aria-label={t(group.labelKey)}
-                  title={t(group.labelKey)}
-                >
-                  <group.Icon class="h-4 w-4 shrink-0" />
-                  <IconChevronRight class={cn("absolute right-1 h-3 w-3", active() ? "opacity-100" : "opacity-60")} />
-                </DropdownMenuTrigger>
+              <DropdownMenu placement="right-start" gutter={12}>
+                <RailTip label={t(group.labelKey)} enabled>
+                  <TooltipTrigger
+                    as={DropdownMenuTrigger}
+                    class={cn(RAIL_ITEM, active() ? RAIL_ACTIVE : RAIL_IDLE)}
+                    aria-label={t(group.labelKey)}
+                  >
+                    <group.Icon class="h-4 w-4 shrink-0" />
+                  </TooltipTrigger>
+                </RailTip>
                 <DropdownMenuContent class="w-52 p-1">
                   <div class="px-2.5 py-1.5 text-xs font-semibold text-muted-foreground">
                     {t(group.labelKey)}

@@ -15,7 +15,9 @@ import { ShellMessagesButton } from "@/components/layout/shell-messages-button";
 import { MobileNavSheet } from "@/components/layout/mobile-nav-sheet";
 import { SideNav } from "@/components/layout/side-nav";
 import { SidebarAccount } from "@/components/layout/sidebar-account";
-import { IconPanelLeft, IconSparkles } from "@/components/ui/icons";
+import { IconSparkles } from "@/components/ui/icons";
+import { TooltipTrigger } from "@/components/ui/tooltip";
+import { RailTip } from "@/components/layout/rail-tip";
 import { Toaster } from "@/components/ui/toast";
 import { useAuth } from "@/stores/auth-context";
 import { useModules } from "@/stores/modules-context";
@@ -30,7 +32,8 @@ import { createMediaQuery } from "@/lib/create-media-query";
 import { ModuleGate } from "@/components/layout/module-gate";
 
 const SIDEBAR_EXPANDED = "w-[260px]";
-const SIDEBAR_COLLAPSED = "w-24";
+// 56px: the icon rail, in the 48–56px band Linear and shadcn's icon mode use.
+const SIDEBAR_COLLAPSED = "w-14";
 
 export function AppShell(props: ParentProps) {
   const auth = useAuth();
@@ -42,6 +45,7 @@ export function AppShell(props: ParentProps) {
   const [mobileOpen, setMobileOpen] = createSignal(false);
   const [profileOpen, setProfileOpen] = createSignal(false);
   const collapsed = () => prefs.sidebarCollapsed();
+  const brandLabel = () => (school.name() ? `${t("app.name")} · ${school.name()}` : t("app.name"));
   const location = useLocation();
   const fullScreen = () => location().pathname.startsWith("/exam-room/");
   // Below lg the header gives way to the floating action button. Chosen in
@@ -105,29 +109,34 @@ export function AppShell(props: ParentProps) {
               collapsed() ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
             )}
           >
+            {/* Same box as the top header (49px, pt-1.5, border-border/70), so
+                the two hairlines run as one line across the page in both
+                sidebar states. */}
             <div
               class={cn(
-                "flex h-[45px] shrink-0 items-center border-b border-border/70",
+                "flex h-[49px] shrink-0 items-center border-b border-border/70 pt-1.5",
                 collapsed() ? "justify-center px-2" : "px-3",
               )}
             >
-              <Link
-                to="/"
-                class={cn("flex min-w-0 items-center gap-2.5", collapsed() ? "justify-center" : "flex-1")}
-                title={school.name() ? `${t("app.name")} · ${school.name()}` : t("app.name")}
-              >
-                <span class="flex h-8 w-8 shrink-0 items-center justify-center text-foreground">
-                  <LogoMark size={28} />
-                </span>
-                <Show when={!collapsed()}>
-                  <span class="flex min-w-0 flex-col leading-tight">
-                    <span class="truncate text-base font-semibold tracking-tight text-foreground dark:text-white 2xl:text-lg">{t("app.name")}</span>
-                    <Show when={school.name()}>
-                      {(name) => <span class="truncate text-xs font-medium text-muted-foreground">{name()}</span>}
-                    </Show>
+              <RailTip label={brandLabel()} enabled={collapsed()}>
+                <TooltipTrigger
+                  as={Link}
+                  to="/"
+                  class={cn(
+                    "flex min-w-0 items-center gap-2.5 rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                    collapsed() ? "justify-center" : "flex-1",
+                  )}
+                  aria-label={brandLabel()}
+                  title={collapsed() ? undefined : brandLabel()}
+                >
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center text-foreground">
+                    <LogoMark size={collapsed() ? 24 : 28} />
                   </span>
-                </Show>
-              </Link>
+                  <Show when={!collapsed()}>
+                    <span class="truncate text-base font-semibold tracking-tight text-foreground dark:text-white 2xl:text-lg">{t("app.name")}</span>
+                  </Show>
+                </TooltipTrigger>
+              </RailTip>
             </div>
 
             <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-2.5">
@@ -138,21 +147,7 @@ export function AppShell(props: ParentProps) {
               />
             </div>
 
-            <SidebarAccount collapsed={collapsed()} onLogout={logout} />
-
-            {/* Collapse toggle rides the corner where the sidebar's right edge
-                meets the header's bottom border. */}
-            <button
-              type="button"
-              class="absolute right-0 top-[45px] z-10 flex h-7 w-7 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-md border border-border bg-background text-muted-foreground shadow-xs outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={collapsed() ? t("nav.expand") : t("nav.collapse")}
-              aria-expanded={!collapsed()}
-              title={collapsed() ? t("nav.expand") : t("nav.collapse")}
-              onClick={() => prefs.toggleSidebar()}
-            >
-              <IconPanelLeft class={cn("h-4 w-4 transition-transform duration-200", collapsed() && "rotate-180")} />
-            </button>
-
+            <SidebarAccount collapsed={collapsed()} onLogout={logout} onToggleCollapse={() => prefs.toggleSidebar()} />
           </aside>
         </Show>
 
@@ -171,7 +166,18 @@ export function AppShell(props: ParentProps) {
         <main class="min-w-0 flex-1" inert={mobileOpen() || undefined}>
           <Show when={auth.user() && !fullScreen() && !phone()}>
             <header class="sticky top-[env(safe-area-inset-top)] z-30 flex h-[49px] items-center gap-3 border-b border-border/70 bg-background px-4 pt-1.5 sm:px-6 lg:px-4">
-              <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-52 lg:w-[260px]">
+              <div class="flex min-w-0 items-center gap-2 text-sm">
+                {/* Account context first, Cloudflare-style: "School / Page". */}
+                <Show when={school.name()}>
+                  {(name) => (
+                    <>
+                      <span class="hidden max-w-56 truncate font-medium text-muted-foreground sm:block" title={name()}>
+                        {name()}
+                      </span>
+                      <span aria-hidden="true" class="hidden shrink-0 text-muted-foreground/50 sm:block">/</span>
+                    </>
+                  )}
+                </Show>
                 {/* The page's h1 unless the page renders its own. */}
                 <Dynamic
                   component={pageHeading() === null ? "h1" : "span"}
