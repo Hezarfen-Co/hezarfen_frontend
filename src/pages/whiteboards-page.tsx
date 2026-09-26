@@ -44,6 +44,7 @@ function WhiteboardsContent() {
   const boards = createInfiniteList(
     () => debouncedQuery().trim(),
     (q, paging) => getBoards({ ...paging, ...(q ? { q } : {}) }),
+    { restoreKey: "whiteboards" },
   );
   const [createOpen, setCreateOpen] = createSignal(false);
   const visibleBoards = () => boards.items();

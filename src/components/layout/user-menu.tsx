@@ -50,7 +50,7 @@ function ChoiceButton(props: {
         "flex min-h-16 w-full flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2.5 text-center text-xs font-medium transition-colors",
         "outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         props.active
-          ? "border-primary bg-primary text-primary-foreground shadow-xs"
+          ? "border-transparent bg-primary bg-clip-padding text-primary-foreground shadow-xs"
           : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground",
       )}
       onClick={props.onSelect}

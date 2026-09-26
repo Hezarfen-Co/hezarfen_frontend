@@ -54,11 +54,11 @@ export function ThemeModeControl(props: ThemeModeControlProps) {
 
   return (
     <div class="grid grid-cols-2 gap-2" role="group" aria-label={prefs.t("theme.toggle")}>
-      <button type="button" role="menuitemradio" aria-checked={!isDark()} class={cn("flex min-h-16 w-full flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2.5 text-center text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isDark() ? "border-primary bg-primary text-primary-foreground shadow-xs" : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground")} onClick={() => selectTheme("light")}>
+      <button type="button" role="menuitemradio" aria-checked={!isDark()} class={cn("flex min-h-16 w-full flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2.5 text-center text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isDark() ? "border-transparent bg-primary bg-clip-padding text-primary-foreground shadow-xs" : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground")} onClick={() => selectTheme("light")}>
         <span class="flex h-7 w-7 items-center justify-center"><IconSun class="h-5 w-5" /></span>
         <span class="leading-tight">{lightLabel()}</span>
       </button>
-      <button type="button" role="menuitemradio" aria-checked={isDark()} class={cn("flex min-h-16 w-full flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2.5 text-center text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring", isDark() ? "border-primary bg-primary text-primary-foreground shadow-xs" : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground")} onClick={() => selectTheme("dark")}>
+      <button type="button" role="menuitemradio" aria-checked={isDark()} class={cn("flex min-h-16 w-full flex-col items-center justify-center gap-1.5 rounded-md border px-2 py-2.5 text-center text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring", isDark() ? "border-transparent bg-primary bg-clip-padding text-primary-foreground shadow-xs" : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground")} onClick={() => selectTheme("dark")}>
         <span class="flex h-7 w-7 items-center justify-center"><IconMoon class="h-5 w-5" /></span>
         <span class="leading-tight">{darkLabel()}</span>
       </button>

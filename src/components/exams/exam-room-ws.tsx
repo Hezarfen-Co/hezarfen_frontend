@@ -898,7 +898,7 @@ function QuestionAnswerCardWS(props: {
                   setValue(choice.id);
                 }}
               >
-                <span class={value() === choice.id ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary bg-primary text-xs font-semibold text-primary-foreground" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input bg-background text-xs font-semibold text-foreground"}>
+                <span class={value() === choice.id ? "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-transparent bg-primary bg-clip-padding text-xs font-semibold text-primary-foreground" : "flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-input bg-background text-xs font-semibold text-foreground"}>
                   {String.fromCharCode(65 + choiceIndex())}
                 </span>
                 <span class="min-w-0 space-y-2">

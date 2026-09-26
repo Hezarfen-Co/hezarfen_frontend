@@ -92,4 +92,41 @@ describe("createInfiniteList", () => {
       dispose();
     });
   });
+
+  it("refresh refetches the loaded rows in one request and keeps them", async () => {
+    const fetch = server(120);
+    await createRoot(async (dispose) => {
+      const list = createInfiniteList(() => "r", fetch, { pageSize: 50 });
+      await flush();
+      list.loadMore();
+      await flush();
+      expect(list.items()).toHaveLength(100);
+      await list.refresh();
+      expect(fetch).toHaveBeenLastCalledWith("r", { limit: 100, offset: 0 });
+      expect(list.items()).toHaveLength(100);
+      expect(list.hasMore()).toBe(true);
+      dispose();
+    });
+  });
+
+  it("restores the loaded row count for a query from session storage", async () => {
+    sessionStorage.clear();
+    const fetch = server(120);
+    await createRoot(async (dispose) => {
+      const list = createInfiniteList(() => "r", fetch, { pageSize: 50, restoreKey: "t" });
+      await flush();
+      list.loadMore();
+      await flush();
+      dispose();
+    });
+    fetch.mockClear();
+    await createRoot(async (dispose) => {
+      const list = createInfiniteList(() => "r", fetch, { pageSize: 50, restoreKey: "t" });
+      await flush();
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenLastCalledWith("r", { limit: 100, offset: 0 });
+      expect(list.items()).toHaveLength(100);
+      dispose();
+    });
+  });
 });

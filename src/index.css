@@ -260,6 +260,26 @@
   border-right-color: var(--color-border-hairline);
 }
 
+/* The header row stays in view while the page scrolls. `overflow-x: auto`
+ * makes the frame its own scroller, which pins a sticky thead inside a box
+ * that never scrolls vertically; a table that fits needs no sideways scroll,
+ * so its frame only clips (rounded corners) and the thead sticks to the
+ * page instead. A table wide enough to scroll sideways keeps its scroller
+ * and a header that scrolls with it. */
+.data-table-wrap:not([data-scrollable]) {
+  overflow: clip;
+}
+/* In the page (not a side panel) the header clears the app's sticky top
+ * bar, which only exists from lg up. */
+#main-content .data-table-wrap:not([data-scrollable]) .data-table thead {
+  top: 0;
+}
+@media (min-width: 64rem) {
+  #main-content .data-table-wrap:not([data-scrollable]) .data-table thead {
+    top: calc(49px + env(safe-area-inset-top));
+  }
+}
+
 /* İşlemler sütunu: sabit 110x45. */
 .data-table td.table-action-cell,
 .data-table th.table-action-cell {

@@ -3,6 +3,8 @@ import type { Page, PageParams } from "@/api/client";
 
 /** Rows fetched per request while the reader scrolls a server-paged list. */
 export const INFINITE_PAGE_SIZE = 50;
+/** The most rows one request may ask for when refetching or restoring. */
+const MAX_BATCH = 500;
 
 export type InfiniteList<T> = {
   /** Every row fetched so far, in server order. */
@@ -17,8 +19,14 @@ export type InfiniteList<T> = {
   hasMore: () => boolean;
   /** Fetch the next page; a no-op while one is in flight or none is left. */
   loadMore: () => void;
-  /** Start the current query over from its first page (after a create/delete). */
+  /** Start the current query over from its first page. */
   reload: () => void;
+  /**
+   * Refetch every row loaded so far in one request and swap them in place,
+   * keeping the reader's place (a poll, or after an edit or delete). Skipped
+   * while a page is in flight.
+   */
+  refresh: () => Promise<void>;
   /** Patch the loaded rows in place (an edit that needs no refetch). */
   mutate: (update: (items: T[]) => T[]) => void;
 };
@@ -36,7 +44,16 @@ export type InfiniteList<T> = {
 export function createInfiniteList<T, K>(
   source: () => K | null | undefined | false,
   fetchPage: (key: K, params: PageParams) => Promise<Page<T>>,
-  options: { pageSize?: number; equals?: (a: K, b: K) => boolean } = {},
+  options: {
+    pageSize?: number;
+    equals?: (a: K, b: K) => boolean;
+    /**
+     * Remember how many rows were loaded (per query, for this tab) so coming
+     * back from a detail page loads them again in one request and the
+     * browser's scroll restoration has the rows to land on.
+     */
+    restoreKey?: string;
+  } = {},
 ): InfiniteList<T> {
   const pageSize = options.pageSize ?? INFINITE_PAGE_SIZE;
   const [items, setItems] = createSignal<T[]>([]);
@@ -48,23 +65,48 @@ export function createInfiniteList<T, K>(
   let generation = 0;
   let key: K | null = null;
 
+  const storageKey = () => (options.restoreKey && key !== null ? `infinite:${options.restoreKey}:${JSON.stringify(key)}` : null);
+  const savedCount = () => {
+    const name = storageKey();
+    if (!name) return 0;
+    try {
+      const count = Number(sessionStorage.getItem(name));
+      return Number.isFinite(count) ? Math.min(Math.max(0, Math.floor(count)), MAX_BATCH) : 0;
+    } catch {
+      return 0;
+    }
+  };
+  const saveCount = (count: number) => {
+    const name = storageKey();
+    if (!name) return;
+    try {
+      sessionStorage.setItem(name, String(count));
+    } catch {
+      // storage full or blocked: the list still works, it just starts short
+    }
+  };
+
   const fetchNext = async () => {
     if (key === null || loading()) return;
     const run = generation;
     const current = key;
     const offset = items().length;
+    // The first page of a query restored from session storage asks for as
+    // many rows as were loaded before, in one request.
+    const limit = offset === 0 ? Math.max(pageSize, savedCount()) : pageSize;
     setLoading(true);
     setError(undefined);
     try {
-      const page = await fetchPage(current, { limit: pageSize, offset });
+      const page = await fetchPage(current, { limit, offset });
       if (run !== generation) return;
       const rows = Array.isArray(page.items) ? page.items : [];
       setItems((prev) => (offset === 0 ? rows : [...prev, ...rows]));
       const next = offset + rows.length;
       // A short page ends the list even if `total` says otherwise, so a stale
       // count never keeps asking for pages that are not there.
-      setTotal(rows.length < pageSize ? next : Math.max(typeof page.total === "number" ? page.total : next, next));
+      setTotal(rows.length < limit ? next : Math.max(typeof page.total === "number" ? page.total : next, next));
       setLoaded(true);
+      saveCount(next);
     } catch (err) {
       if (run === generation) setError(err);
     } finally {
@@ -107,6 +149,22 @@ export function createInfiniteList<T, K>(
       if (hasMore()) void fetchNext();
     },
     reload: start,
+    refresh: async () => {
+      if (key === null || loading() || !loaded()) return;
+      const run = generation;
+      const current = key;
+      const limit = Math.min(Math.max(pageSize, items().length), MAX_BATCH);
+      try {
+        const page = await fetchPage(current, { limit, offset: 0 });
+        if (run !== generation) return;
+        const rows = Array.isArray(page.items) ? page.items : [];
+        setItems(rows);
+        setTotal(rows.length < limit ? rows.length : Math.max(typeof page.total === "number" ? page.total : rows.length, rows.length));
+        setError(undefined);
+      } catch (err) {
+        if (run === generation) setError(err);
+      }
+    },
     mutate: (update) => setItems((prev) => update(prev)),
   };
 }

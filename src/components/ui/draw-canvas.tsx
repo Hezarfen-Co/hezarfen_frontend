@@ -360,7 +360,7 @@ export function DrawCanvas(props: {
     cn(
       "flex h-11 w-11 items-center justify-center rounded-lg border transition-colors",
       active
-        ? "border-primary bg-primary text-primary-foreground shadow-xs"
+        ? "border-transparent bg-primary bg-clip-padding text-primary-foreground shadow-xs"
         : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
     );
 

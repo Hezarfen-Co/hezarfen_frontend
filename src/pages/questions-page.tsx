@@ -52,9 +52,10 @@ function QuestionsContent() {
   const questions = createInfiniteList(
     () => statusFilter(),
     (status, paging) => getQuestions(status, paging),
+    { restoreKey: "questions" },
   );
   const list = () => questions.items();
-  const refetch = () => questions.reload();
+  const refetch = () => questions.refresh();
 
   const [askOpen, setAskOpen] = createSignal(location().searchStr.includes("action=new"));
   const [questionToDelete, setQuestionToDelete] = createSignal<any | null>(null);

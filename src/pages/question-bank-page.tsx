@@ -75,10 +75,11 @@ function QuestionBankContent() {
       });
       return result;
     },
-    { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
+    { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b), restoreKey: "question-bank" },
   );
   const total = () => list.total();
-  const refetch = () => list.reload();
+  // An edit or delete refreshes the loaded rows in place, keeping the reader's spot.
+  const refetch = () => list.refresh();
 
   // Only courses the teacher can author in supply subjects for a new template.
   const [courses] = createResource(async () => (await getCourses({ limit: 100 })).items);

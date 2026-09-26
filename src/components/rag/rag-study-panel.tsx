@@ -527,7 +527,7 @@ export function RagStudyPanel() {
             class={cn(
               "absolute bottom-3 left-1/2 inline-flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 text-xs font-medium shadow-md backdrop-blur transition-colors",
               unread()
-                ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+                ? "border-transparent bg-primary bg-clip-padding text-primary-foreground hover:bg-primary/90"
                 : "border-border bg-surface-base/95 text-foreground hover:bg-surface-overlay",
             )}
             onClick={scrollToLatest}

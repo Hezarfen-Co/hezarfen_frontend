@@ -1,5 +1,5 @@
 import { Show, createMemo, createSignal } from "solid-js";
-import { createResource } from "@/lib/create-resource";
+import { createInfiniteList } from "@/lib/infinite-list";
 import type { ColumnDef } from "@tanstack/solid-table";
 import {
   deleteSlotById,
@@ -45,8 +45,6 @@ import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-const PAGE_SIZE = 10;
-const PAGE_LIMIT = 100;
 const isLive = (status: AppointmentStatus) => status === "pending" || status === "approved";
 
 export default function AppointmentsPage() {
@@ -81,23 +79,31 @@ function AppointmentsContent() {
   // existed because the endpoint had neither a window nor a teacher filter.
   // Non-manager staff get their own published slots (`teacher=me`); managers
   // supervise every teacher's, requesters everyone's open ones.
-  const fetchSlots = async () => {
-    const params: SlotListParams = { starts_after: Date.now(), limit: PAGE_LIMIT };
-    if (isStaff() && !isManager()) params.teacher = "me";
-    return (await getSlots(params)).items;
-  };
-  const [slots, { refetch: refetchSlots }] = createResource(fetchSlots);
-  // Appointments come back newest-first (`ORDER BY id DESC`), so page one is
-  // right. The requests table shows decided rows too, so no status window;
-  // non-manager staff narrow to their own rows server-side (`teacher=me`).
-  const [appts, { refetch: refetchAppts }] = createResource(async () => {
-    const params: AppointmentListParams = { limit: PAGE_LIMIT };
-    if (isStaff() && !isManager()) params.teacher = "me";
-    return (await getAppointments(params)).items;
+  // Both lists load a page at a time as the reader scrolls (they used to stop
+  // silently at the first 100). The query is the role scope only; the slot
+  // window's `starts_after` is taken at each fetch so a poll drops slots that
+  // have started meanwhile.
+  const scope = () => (auth.user() ? (isStaff() && !isManager() ? "me" : "all") : null);
+  const slotList = createInfiniteList(scope, (teacher, paging) => {
+    const params: SlotListParams = { ...paging, starts_after: Date.now() };
+    if (teacher === "me") params.teacher = "me";
+    return getSlots(params);
   });
+  // Appointments come back newest-first (`ORDER BY id DESC`). The requests
+  // table shows decided rows too, so no status window; non-manager staff
+  // narrow to their own rows server-side (`teacher=me`).
+  const apptList = createInfiniteList(scope, (teacher, paging) => {
+    const params: AppointmentListParams = { ...paging };
+    if (teacher === "me") params.teacher = "me";
+    return getAppointments(params);
+  });
+  const slots = () => slotList.items();
+  const appts = () => apptList.items();
 
-  const refetchAll = () => Promise.all([refetchSlots(), refetchAppts()]);
-  const loaded = () => slots.latest !== undefined && appts.latest !== undefined;
+  // Polls and actions re-read the loaded rows in place, so a status change
+  // never throws the reader back to the top of a long list.
+  const refetchAll = () => Promise.all([slotList.refresh(), apptList.refresh()]);
+  const loaded = () => !slotList.initialLoading() && !apptList.initialLoading();
 
   // Poll so statuses stay in sync when the other party acts (approve, book,
   // cancel…). Visibility-aware: pauses on hidden tabs, refetches on tab-back so
@@ -199,8 +205,8 @@ function AppointmentsContent() {
 
   // --- staff: my published slots (the server already narrows to `teacher=me`
   // for non-manager staff; managers see every teacher's) ---
-  const mySlots = () => slots.latest ?? [];
-  const slotBooking = (slotId: string) => (appts.latest ?? []).find((a) => a.slot === slotId && isLive(a.status));
+  const mySlots = () => slots();
+  const slotBooking = (slotId: string) => appts().find((a) => a.slot === slotId && isLive(a.status));
 
   const slotColumns = createMemo<ColumnDef<AppointmentSlot>[]>(() => [
     ...windowColumns<AppointmentSlot>(),
@@ -247,7 +253,7 @@ function AppointmentsContent() {
 
   // --- staff: booking requests for my slots (server-narrowed via `teacher=me`
   // for non-manager staff, as with the slots above) ---
-  const requests = () => appts.latest ?? [];
+  const requests = () => appts();
 
   const requestColumns = createMemo<ColumnDef<Appointment>[]>(() => [
     {
@@ -283,13 +289,13 @@ function AppointmentsContent() {
   ]);
 
   // --- booker: available slots ---
-  const myLiveSlotIds = () => new Set((appts.latest ?? []).filter((a) => a.requester.id === me()?.id && isLive(a.status)).map((a) => a.slot));
+  const myLiveSlotIds = () => new Set(appts().filter((a) => a.requester.id === me()?.id && isLive(a.status)).map((a) => a.slot));
   const availableSlots = () => {
     const taken = myLiveSlotIds();
     // `book` refuses a slot whose window has OPENED ("the slot has already
     // started", no skew grace), not one that has ended — an in-progress slot
     // listed here would show a Book button that always 409s.
-    return (slots.latest ?? []).filter((s) => s.starts_at > now() && !taken.has(s.id));
+    return slots().filter((s) => s.starts_at > now() && !taken.has(s.id));
   };
 
   const availableColumns = createMemo<ColumnDef<AppointmentSlot>[]>(() => [
@@ -316,7 +322,7 @@ function AppointmentsContent() {
   ]);
 
   // --- booker: my bookings ---
-  const myBookings = () => (appts.latest ?? []).filter((a) => a.requester.id === me()?.id);
+  const myBookings = () => appts().filter((a) => a.requester.id === me()?.id);
   const nextBooking = createMemo(() =>
     myBookings()
       .filter((a) => isLive(a.status) && a.starts_at != null && a.starts_at > now())
@@ -440,14 +446,14 @@ function AppointmentsContent() {
             <IconCalendarDays class="h-4 w-4" />
             {isStaff() ? t("appointments.requests") : t("appointments.myBookings")}
             <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">
-              {isStaff() ? requests().length : myBookings().length}
+              {apptList.total()}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="availability" class="min-w-0">
             <IconClock class="h-4 w-4" />
             {isStaff() ? t("appointments.mySlots") : t("appointments.availableSlots")}
             <Badge variant="secondary" class="h-5 min-w-5 justify-center rounded-full px-1.5 py-0 text-[11px] group-data-selected:bg-background group-data-selected:text-foreground">
-              {isStaff() ? mySlots().length : availableSlots().length}
+              {isStaff() ? slotList.total() : availableSlots().length}
             </Badge>
           </TabsTrigger>
         </TabsList>
@@ -456,7 +462,7 @@ function AppointmentsContent() {
           <Show when={isStaff()} fallback={
             <section class="space-y-4 p-0">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
-                <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
+                <Show when={apptList.error()}>{(err) => <Alert variant="destructive">{formatApiError(err())}</Alert>}</Show>
                 <Show when={nextBooking()}>
                   {(booking) => (
                     <div class="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-border-line bg-surface-tint p-4">
@@ -477,8 +483,7 @@ function AppointmentsContent() {
                   columns={bookingColumns()}
                   data={myBookings()}
                   tableClass="table-fixed min-w-[46rem]"
-                  enablePagination
-                  pageSize={PAGE_SIZE}
+                  infinite={{ hasMore: apptList.hasMore(), loading: apptList.loading(), total: apptList.total(), onLoadMore: apptList.loadMore }}
                   storageKey="appointment-bookings"
                   onRowClick={setDetailAppt}
                   empty={t("appointments.noBookings")}
@@ -488,15 +493,14 @@ function AppointmentsContent() {
           }>
             <section class="space-y-4 p-0">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
-                <Show when={appts.error}><Alert variant="destructive">{formatApiError(appts.error)}</Alert></Show>
+                <Show when={apptList.error()}>{(err) => <Alert variant="destructive">{formatApiError(err())}</Alert>}</Show>
                 <DataTable
                   title={t("appointments.requests")}
                   description={t("appointments.requestsHint")}
                   columns={requestColumns()}
                   data={requests()}
                   tableClass="table-fixed min-w-[46rem]"
-                  enablePagination
-                  pageSize={PAGE_SIZE}
+                  infinite={{ hasMore: apptList.hasMore(), loading: apptList.loading(), total: apptList.total(), onLoadMore: apptList.loadMore }}
                   storageKey="appointment-requests"
                   onRowClick={setDetailAppt}
                   empty={t("appointments.noRequests")}
@@ -510,15 +514,14 @@ function AppointmentsContent() {
           <Show when={isStaff()} fallback={
             <section class="space-y-4 p-0">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={4} rows={6} />}>
-                <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
+                <Show when={slotList.error()}>{(err) => <Alert variant="destructive">{formatApiError(err())}</Alert>}</Show>
                 <DataTable
                   title={t("appointments.availableSlots")}
                   description={t("appointments.availableSlotsHint")}
                   columns={availableColumns()}
                   data={availableSlots()}
                   tableClass="table-fixed min-w-[46rem]"
-                  enablePagination
-                  pageSize={PAGE_SIZE}
+                  infinite={{ hasMore: slotList.hasMore(), loading: slotList.loading(), total: slotList.total(), onLoadMore: slotList.loadMore }}
                   storageKey="appointment-available-slots"
                   onRowClick={setDetailSlot}
                   empty={t("appointments.noSlots")}
@@ -528,7 +531,7 @@ function AppointmentsContent() {
           }>
             <section class="space-y-4 p-0">
               <Show when={loaded()} fallback={<DataTableSkeleton columns={5} rows={6} />}>
-                <Show when={slots.error}><Alert variant="destructive">{formatApiError(slots.error)}</Alert></Show>
+                <Show when={slotList.error()}>{(err) => <Alert variant="destructive">{formatApiError(err())}</Alert>}</Show>
                 <DataTable
                   title={t("appointments.mySlots")}
                   description={t("appointments.mySlotsHint")}
@@ -541,8 +544,7 @@ function AppointmentsContent() {
                   columns={slotColumns()}
                   data={mySlots()}
                   tableClass="table-fixed min-w-[46rem]"
-                  enablePagination
-                  pageSize={PAGE_SIZE}
+                  infinite={{ hasMore: slotList.hasMore(), loading: slotList.loading(), total: slotList.total(), onLoadMore: slotList.loadMore }}
                   storageKey="appointment-my-slots"
                   onRowClick={setDetailSlot}
                   empty={t("appointments.noSlots")}

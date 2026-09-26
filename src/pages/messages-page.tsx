@@ -62,9 +62,11 @@ export default function MessagesPage() {
   const messageList = createInfiniteList(
     () => ({ f: folder(), q: debouncedQuery().trim() }),
     (args, paging) => getMessages(args.f, { ...paging, ...(args.q ? { q: args.q } : {}) }),
-    { equals: (a, b) => a.f === b.f && a.q === b.q },
+    { equals: (a, b) => a.f === b.f && a.q === b.q, restoreKey: "messages" },
   );
-  const refetch = async () => messageList.reload();
+  // Moves, deletes and the refresh button re-read the loaded rows in place,
+  // so acting on a message far down the list keeps the reader there.
+  const refetch = () => messageList.refresh();
 
   const [unreadCount, { refetch: refetchUnread }] = createResource(
     async () => (await getMessages("inbox", { read: false, limit: 1 })).total

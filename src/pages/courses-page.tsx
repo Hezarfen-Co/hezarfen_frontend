@@ -82,9 +82,11 @@ function CoursesContent() {
         ...(filters.q ? { q: filters.q } : {}),
         ...(filters.taught != null ? { taught: filters.taught } : {}),
       }),
-    { equals: (a, b) => a.role === b.role && a.kind === b.kind && a.q === b.q && a.taught === b.taught },
+    { equals: (a, b) => a.role === b.role && a.kind === b.kind && a.q === b.q && a.taught === b.taught, restoreKey: "courses" },
   );
-  const refetch = () => list.reload();
+  // Edits and deletes re-read the loaded rows in place; the retry after an
+  // error starts over.
+  const refetch = () => list.refresh();
   const openCourse = (course: Course) => void navigate({ to: "/courses/$id", params: { id: course.id } });
   // Catalog rights, as on the detail page: the creator or a manager+.
   const canManageCatalog = (course: Course) => {
@@ -273,7 +275,7 @@ function CoursesContent() {
 
         <TabsContent value={pageKind() ?? "all"} class="mt-4 space-y-4 border-0 bg-transparent p-0 shadow-none">
           <Show when={list.error()}>
-            {(err) => <ErrorAlert message={formatApiError(err())} onRetry={refetch} />}
+            {(err) => <ErrorAlert message={formatApiError(err())} onRetry={list.reload} />}
           </Show>
           <Show when={!list.initialLoading()} fallback={<DataTableSkeleton columns={5} rows={8} />}>
             <DataTable

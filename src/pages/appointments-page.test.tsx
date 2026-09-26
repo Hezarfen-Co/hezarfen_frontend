@@ -58,6 +58,7 @@ test("separates bookings and available times into tabs", async () => {
   // teacher=me) and their own bookings without a start window: neither read
   // downloads history.
   await waitFor(() => expect(getSlots).toHaveBeenCalled());
-  expect(getSlots).toHaveBeenCalledWith({ starts_after: expect.any(Number), limit: 100 });
-  expect(getAppointments).toHaveBeenCalledWith({ limit: 100 });
+  // First scroll page only, not a silent 100-row cap.
+  expect(getSlots).toHaveBeenCalledWith({ starts_after: expect.any(Number), limit: 50, offset: 0 });
+  expect(getAppointments).toHaveBeenCalledWith({ limit: 50, offset: 0 });
 });

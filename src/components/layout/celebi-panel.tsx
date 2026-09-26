@@ -557,7 +557,7 @@ export function CelebiPanel(props: { open: boolean; onOpenChange: (open: boolean
             type="button"
             class={cn(
               "absolute bottom-3 left-1/2 inline-flex h-8 -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 text-xs font-medium shadow-md backdrop-blur transition-colors",
-              unread() ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90" : "border-border bg-card/95 text-foreground hover:bg-accent",
+              unread() ? "border-transparent bg-primary bg-clip-padding text-primary-foreground hover:bg-primary/90" : "border-border bg-card/95 text-foreground hover:bg-accent",
             )}
             onClick={scrollToLatest}
           >

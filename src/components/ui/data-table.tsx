@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createSignal, on, onCleanup } from "solid-js";
+import { For, Show, createEffect, createSignal, on, onCleanup, onMount } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
 import {
   type Column,
@@ -159,8 +159,39 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   // Client-side tables drop page numbers for scroll-to-reveal; only a
   // server-paged table (`manualPagination`) still pages.
   const revealing = () => paginationEnabled && !props.manualPagination && !props.infinite;
-  const [revealed, setRevealed] = createSignal(REVEAL_STEP);
+  // How far the reader had revealed, per page and table, for this tab: coming
+  // back from a detail page renders those rows again, so the router's scroll
+  // restoration has somewhere to land.
+  const revealKey = typeof window === "undefined"
+    ? null
+    : `reveal:${window.location.pathname}${window.location.search}:${props.storageKey ?? props.title ?? ""}`;
+  const readRevealed = () => {
+    try {
+      const count = Number(revealKey ? sessionStorage.getItem(revealKey) : null);
+      return Number.isFinite(count) && count > REVEAL_STEP ? Math.floor(count) : REVEAL_STEP;
+    } catch {
+      return REVEAL_STEP;
+    }
+  };
+  const [revealed, setRevealed] = createSignal(readRevealed());
+  createEffect(on(revealed, (count) => {
+    if (!revealKey || count === Number.MAX_SAFE_INTEGER) return;
+    try {
+      sessionStorage.setItem(revealKey, String(count));
+    } catch {
+      // storage blocked: the table just starts at the first step
+    }
+  }, { defer: true }));
   const resetReveal = () => setRevealed(REVEAL_STEP);
+  // The router's own scroll restoration runs before a list's rows arrive, so
+  // a long list came back at the top. Remember the page offset against this
+  // history entry and put it back once the rows are drawn — only on a return
+  // to the same entry (Back), never on a fresh visit.
+  const scrollKey = revealKey ? `${revealKey}:scroll` : null;
+  const historyEntry = () => {
+    const state = history.state as Record<string, unknown> | null;
+    return String(state?.__TSR_key ?? state?.key ?? "");
+  };
   createEffect(on(() => props.pageResetKey, resetReveal, { defer: true }));
   // The search box's text when the table owns it — the `searchPredicate`
   // query, or the `filterColumn` filter value.
@@ -370,6 +401,47 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     if (busy === false && observing) queueMicrotask(revealMore);
   }, { defer: true }));
   if (!observing) setRevealed(Number.MAX_SAFE_INTEGER);
+  if (scrollKey) {
+    let saveTimer: ReturnType<typeof setTimeout> | undefined;
+    const saveScroll = () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        try {
+          sessionStorage.setItem(scrollKey, JSON.stringify({ y: Math.round(window.scrollY), entry: historyEntry() }));
+        } catch {
+          // storage blocked: no restore, nothing else breaks
+        }
+      }, 150);
+    };
+    onMount(() => {
+      window.addEventListener("scroll", saveScroll, { passive: true });
+      onCleanup(() => {
+        clearTimeout(saveTimer);
+        window.removeEventListener("scroll", saveScroll);
+      });
+    });
+    let restored = false;
+    createEffect(() => {
+      if (restored || visibleRows().length === 0) return;
+      restored = true;
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(scrollKey) ?? "null") as { y?: number; entry?: string } | null;
+        // The router may already have tried, clamped to a page that was still
+        // short; correct it once the rows are laid out, and once more after
+        // late content (avatars, badges) settles.
+        const target = saved?.y;
+        if (target && saved.entry === historyEntry()) {
+          const settle = () => {
+            if (Math.abs(window.scrollY - target) > 8) window.scrollTo(0, target);
+          };
+          requestAnimationFrame(settle);
+          setTimeout(settle, 300);
+        }
+      } catch {
+        // malformed entry: start at the top
+      }
+    });
+  }
   const searchFieldValue = () => {
     if (props.onSearchInput || props.searchPredicate || props.filterColumn) return searchValue();
     return "";
