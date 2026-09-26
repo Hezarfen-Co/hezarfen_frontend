@@ -62,11 +62,15 @@ export function AccountProfileDialog(props: { open: boolean; onOpenChange: (open
                 {navItem("appearance", t("settings.tabAppearance"), <IconSun class="h-4 w-4 shrink-0" />)}
               </nav>
 
-              <div class="min-w-0 flex-1 overflow-y-auto p-5 pr-12">
+              {/* The account form's save bar is sticky at the bottom of this
+                  scroll area, so that section drops the bottom padding — any
+                  padding under a sticky bar shows content scrolling past it. */}
+              <div class={cn("min-w-0 flex-1 overflow-y-auto p-5 pr-12", section() === "account" && "pb-0")}>
                 <Switch>
                   <Match when={section() === "account"}>
                     <ProfileForm
                       user={user}
+                      footerClass="-mr-12 pr-12 pb-5"
                       onSaved={async () => {
                         await auth.refresh();
                         props.onOpenChange(false);

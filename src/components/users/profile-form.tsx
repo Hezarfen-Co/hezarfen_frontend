@@ -1,4 +1,5 @@
 import { For, Show, createSignal } from "solid-js";
+import { cn } from "@/lib/cn";
 import { patchMe } from "@/api/users";
 import type { Gender, ProfileUpdate, User } from "@/api/client";
 import { formatApiError } from "@/api/client";
@@ -57,6 +58,11 @@ export function ProfileForm(props: {
   branches?: string[];
   maxDisplayNameLen?: number;
   maxBioLen?: number;
+  /**
+   * Extra classes for the sticky save bar, so a host whose scroll area has
+   * other padding can pull the bar flush to its edges (the settings dialog).
+   */
+  footerClass?: string;
   /** Cap for the address field, from limits.user.max_address_len. */
   maxAddressLen?: number;
   /**
@@ -274,7 +280,7 @@ export function ProfileForm(props: {
         </div>
       </div>
       {error() && <p class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive-text">{error()}</p>}
-      <div class="!mt-auto sticky bottom-0 -mx-5 flex justify-end border-t border-border-hairline bg-surface-base px-5 pb-1 pt-4">
+      <div class={cn("!mt-auto sticky bottom-0 -mx-5 flex justify-end border-t border-border-hairline bg-surface-base px-5 pb-1 pt-4", props.footerClass)}>
         <Button type="submit" class="h-10 w-full sm:w-auto" disabled={pending()}>{t("common.save")}</Button>
       </div>
     </form>
