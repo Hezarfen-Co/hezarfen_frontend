@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 
 /** Shared trigger look for every dropdown-style picker (Select, DropdownSelect). */
 const SELECT_TRIGGER =
-  "inline-flex items-center justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/40 px-2.5 text-[13px] font-medium text-foreground transition-colors hover:border-border hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 data-expanded:border-border data-expanded:bg-muted";
+  "inline-flex items-center justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/40 px-2.5 text-[13px] font-medium text-foreground transition-colors hover:border-border hover:bg-muted/60 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50 data-expanded:border-border data-expanded:bg-muted/60";
 
 export type SelectOption<T extends string | number = string> = {
   value: T;
@@ -37,6 +37,9 @@ export function DropdownSelect<T extends string | number = string>(props: Dropdo
     <DropdownMenu placement="bottom-start" gutter={6}>
       <DropdownMenuTrigger
         disabled={props.disabled}
+        // A prefixed picker is a filter chip, whose first option is its "all"
+        // default; any other value marks it active so the toolbar can tint it.
+        data-filter-active={props.labelPrefix && props.options.length > 0 && props.value !== props.options[0].value ? "" : undefined}
         class={cn(
           SELECT_TRIGGER,
           "h-8",

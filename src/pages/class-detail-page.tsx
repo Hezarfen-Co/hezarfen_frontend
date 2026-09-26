@@ -61,8 +61,9 @@ const TILE = "min-w-0 rounded-xl border border-border-hairline bg-surface-tint p
 const TILE_LABEL = "text-xs font-medium uppercase tracking-[0.08em] text-text-subtle";
 const TILE_VALUE = "mt-1 break-words font-medium text-text-default";
 
-// Header and section buttons share the row-actions trigger's box (h-8,
-// rounded-lg) so a button and the ⋮ menu beside it line up.
+// Header buttons share the row-actions trigger's box (h-8, rounded-lg) so a
+// button and the ⋮ menu beside it line up. Tab toolbar actions go through
+// DataTable's `actions` slot, which sizes them as pills like "Sütunlar".
 const ACTION_BUTTON = "h-8 min-w-[7.5rem] rounded-lg! px-3 text-[13px]";
 
 function ClassDetailContent() {
@@ -383,7 +384,7 @@ function ClassDetailContent() {
                       <DataTable
                         title={t("classGroups.membersTab")}
                         actions={canManage() ? (
-                          <Button type="button" size="sm" variant="outline" class={ACTION_BUTTON} onClick={() => setShowAddMember(true)}>
+                          <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowAddMember(true)}>
                             <IconPlus class="h-4 w-4" />{t("classGroups.addStudent")}
                           </Button>
                         ) : undefined}
@@ -406,7 +407,7 @@ function ClassDetailContent() {
                       <DataTable
                         title={t("classGroups.coursesTab")}
                         actions={canManage() ? (
-                          <Button type="button" size="sm" variant="outline" class={ACTION_BUTTON} onClick={() => setShowAttachCourse(true)}>
+                          <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowAttachCourse(true)}>
                             <IconPlus class="h-4 w-4" />{t("classGroups.attachCourse")}
                           </Button>
                         ) : undefined}

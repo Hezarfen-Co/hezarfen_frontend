@@ -466,7 +466,7 @@ function CourseDetailContent() {
                             empty={t("exams.emptyRoster")}
                             emptyIllustration="people"
                             actions={
-                              <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowMemberForm(true)}>
+                              <Button type="button" size="sm" onClick={() => setShowMemberForm(true)}>
                                 <IconPlus class="h-4 w-4" />{t("courses.addMember")}
                               </Button>
                             }

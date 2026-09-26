@@ -202,15 +202,16 @@ function ProfileContent() {
                     </Show>
                   </div>
                   </div>
-                  <div class="mt-3 flex flex-wrap gap-2">
+                  {/* Header actions are toolbar pills: h-10 below `sm` and on touch, h-8 above. */}
+                  <div class="mt-3 flex flex-wrap gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10">
                     <Show when={infoSource(p())}>
-                      <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setInfoOpen(true)}>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setInfoOpen(true)}>
                         <IconUserCircle class="mr-1.5 h-4 w-4" />
                         {t("profile.studentInfo")}
                       </Button>
                     </Show>
                     <Show when={isSelf(p()) && auth.user()}>
-                      <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setEditing(true)}>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
                         <IconEdit class="mr-1.5 h-4 w-4" />
                         {t("profile.edit")}
                       </Button>

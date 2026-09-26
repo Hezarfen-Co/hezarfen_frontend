@@ -124,14 +124,18 @@ test("student course list filters on the server via kind, q and taught", async (
   expect(screen.queryByRole("button", { name: /^Robotics/ })).toBeNull();
 });
 
-test("course search checks returned rows when the backend ignores q", async () => {
-  getCourses.mockResolvedValue({ items: catalog, total: catalog.length, limit: 100, offset: 0 });
+test("course search goes to the server and starts again from the first page", async () => {
+  getCourses.mockImplementation(async (params: { q?: string; offset?: number }) =>
+    params.q
+      ? { items: [], total: 0, limit: 50, offset: 0 }
+      : { items: catalog, total: catalog.length, limit: 50, offset: 0 },
+  );
   render(() => <PreferencesProvider><CoursesPage /></PreferencesProvider>);
 
   expect(await screen.findByRole("button", { name: /^Algebra/ })).toBeTruthy();
+  expect(getCourses.mock.calls[0][0]).toMatchObject({ limit: 50, offset: 0 });
   fireEvent.input(screen.getByPlaceholderText("Search…"), { target: { value: "no-such-course" } });
 
-  await waitFor(() => expect(getCourses.mock.calls.at(-1)[0].q).toBe("no-such-course"), { timeout: 2000 });
+  await waitFor(() => expect(getCourses.mock.calls.at(-1)[0]).toMatchObject({ q: "no-such-course", limit: 50, offset: 0 }), { timeout: 2000 });
   await waitFor(() => expect(screen.queryByRole("button", { name: /^Algebra/ })).toBeNull());
-  expect(screen.queryByRole("button", { name: /^Study Lab/ })).toBeNull();
 });

@@ -52,40 +52,42 @@ export function InstanceWeeklyPlanPanel(props: {
     <DataSection
       title={t("weeklyPlan.title")}
       description={own() ? t("weeklyPlan.ownHint") : t("weeklyPlan.inheritedHint")}
-      actions={
-        <Show when={props.canManage}>
-          <Show when={own()}>
-            <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setResetOpen(true)}>
-              <IconRotateCcw class="h-4 w-4" />
-              {t("override.reset")}
-            </Button>
-          </Show>
-          <Show when={props.canGenerate}>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              class="rounded-lg"
-              disabled={props.instance.weekly_plan.length === 0 || props.instance.teachers.length === 0}
-              title={props.instance.teachers.length === 0 ? t("weeklyPlan.noTeacherHint") : undefined}
-              onClick={() => setGenerating(true)}
-            >
-              <IconCalendarCheck class="h-4 w-4" />
-              {t("weeklyPlan.generate")}
-            </Button>
-          </Show>
-          <Button type="button" size="sm" class="rounded-lg" onClick={() => setAdding(true)}>
-            <IconPlus class="h-4 w-4" />
-            {t("weeklyPlan.addSlot")}
-          </Button>
-        </Show>
-      }
     >
       <div class="flex items-center gap-2">
         <OverrideBadge own={own()} />
       </div>
       <Show when={error()}><Alert variant="destructive">{error()}</Alert></Show>
-      <WeeklyPlanTable slots={props.instance.weekly_plan} onRemove={props.canManage ? (slot) => void remove(slot) : undefined} />
+      <WeeklyPlanTable
+        slots={props.instance.weekly_plan}
+        onRemove={props.canManage ? (slot) => void remove(slot) : undefined}
+        actions={
+          <Show when={props.canManage}>
+            <Show when={own()}>
+              <Button type="button" size="sm" variant="outline" onClick={() => setResetOpen(true)}>
+                <IconRotateCcw class="h-4 w-4" />
+                {t("override.reset")}
+              </Button>
+            </Show>
+            <Show when={props.canGenerate}>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={props.instance.weekly_plan.length === 0 || props.instance.teachers.length === 0}
+                title={props.instance.teachers.length === 0 ? t("weeklyPlan.noTeacherHint") : undefined}
+                onClick={() => setGenerating(true)}
+              >
+                <IconCalendarCheck class="h-4 w-4" />
+                {t("weeklyPlan.generate")}
+              </Button>
+            </Show>
+            <Button type="button" size="sm" onClick={() => setAdding(true)}>
+              <IconPlus class="h-4 w-4" />
+              {t("weeklyPlan.addSlot")}
+            </Button>
+          </Show>
+        }
+      />
 
       <WeeklySlotForm
         open={adding()}

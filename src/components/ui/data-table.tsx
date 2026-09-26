@@ -11,7 +11,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
 } from "@tanstack/solid-table";
 import { Illustration } from "@/components/ui/illustration";
@@ -24,9 +23,9 @@ import { IconArrowDown, IconArrowUp, IconChevronsUpDown } from "@/components/ui/
 import { InfoTip } from "@/components/ui/info-tip";
 import { cn } from "@/lib/cn";
 import { createMediaQuery } from "@/lib/create-media-query";
-import { COMPACT_SCREEN_QUERY, createResponsivePageSize } from "@/lib/create-page-size";
+import { COMPACT_SCREEN_QUERY } from "@/lib/create-page-size";
 import { createTablePreferences } from "@/lib/table-preferences";
-import { createUrlPageIndex, createUrlParam, createUrlString, decodeSort, encodeSort, listParamKeys } from "@/lib/url-state";
+import { createUrlParam, createUrlString, decodeSort, encodeSort, listParamKeys } from "@/lib/url-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useT } from "@/stores/preferences-context";
 
@@ -79,6 +78,19 @@ export type DataTableProps<TData, TValue = unknown> = {
     onPageChange: (pageIndex: number) => void;
   };
   /**
+   * Fetch-as-you-scroll: `data` holds the rows loaded so far and the table
+   * asks for the next page (`onLoadMore`) as the reader nears its end. Pair
+   * with `createInfiniteList` (lib/infinite-list); search must reach the
+   * server through `onSearchInput`, and sorting is off (the backend takes no
+   * sort parameter, so a header sort would order the loaded rows alone).
+   */
+  infinite?: {
+    hasMore: boolean;
+    loading: boolean;
+    total: number;
+    onLoadMore: () => void;
+  };
+  /**
    * Below the `sm` breakpoint rows render as cards (first column as the
    * title, actions top-right, the rest as label/value pairs) instead of a
    * table that scrolls sideways. "scroll" keeps the table on phones too.
@@ -86,7 +98,10 @@ export type DataTableProps<TData, TValue = unknown> = {
   mobileLayout?: "cards" | "scroll";
   onRowClick?: (row: TData) => void;
   onSearchInput?: (value: string) => void;
-  /** Rows per page on a wide screen; phones get `compactPageSize` of it. */
+  /**
+   * Server-paged tables only: rows per page on a wide screen. A client-side
+   * table has no pages — it reveals rows as the reader scrolls.
+   */
   pageSize?: number;
   searchPredicate?: (row: TData, query: string) => boolean;
   searchValue?: string;
@@ -105,7 +120,7 @@ export type DataTableProps<TData, TValue = unknown> = {
    * `searchValue` / `onSearchInput` keeps its own.
    */
   urlState?: boolean | string;
-  /** Back to page one whenever this changes — pass the caller's own filters. */
+  /** Back to the top of the list whenever this changes — pass the caller's own filters. */
   pageResetKey?: unknown;
   /**
    * The caller's own filters narrow the list. An empty result then offers
@@ -120,6 +135,15 @@ const resolveUpdater = <T,>(updater: Updater<T>, old: T): T =>
 
 const alignClass = { left: "text-left", center: "text-center", right: "text-right" } as const;
 
+/**
+ * A client-side table renders this many rows, then this many more each time
+ * the reader nears the end. The data is already in memory, so sorting, search
+ * and filters still see every row — only the DOM is paced.
+ */
+const REVEAL_STEP = 50;
+/** Start revealing the next rows this far before the list's end comes into view. */
+const REVEAL_MARGIN_PX = 600;
+
 export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, TValue>) {
   const t = useT();
   const paginationEnabled = props.enablePagination ?? true;
@@ -132,15 +156,12 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     ? createUrlParam<SortingState>(urlKeys.sort, { parse: decodeSort, serialize: encodeSort })
     : createSignal<SortingState>([]);
   const [otherColumnFilters, setOtherColumnFilters] = createSignal<ColumnFiltersState>([]);
-  const clientPageSize = createResponsivePageSize(props.pageSize ?? 10);
-  const [clientPageIndex, setClientPageIndex] = urlKeys && !props.manualPagination
-    ? createUrlPageIndex(urlKeys.page)
-    : createSignal(0);
-  const pagination = (): PaginationState => ({ pageIndex: clientPageIndex(), pageSize: clientPageSize() });
-  // A page index means nothing once the page size changes under it (a phone
-  // rotated, a window narrowed): start over rather than land mid-list.
-  createEffect(on(clientPageSize, () => setClientPageIndex(0), { defer: true }));
-  createEffect(on(() => props.pageResetKey, () => setClientPageIndex(0), { defer: true }));
+  // Client-side tables drop page numbers for scroll-to-reveal; only a
+  // server-paged table (`manualPagination`) still pages.
+  const revealing = () => paginationEnabled && !props.manualPagination && !props.infinite;
+  const [revealed, setRevealed] = createSignal(REVEAL_STEP);
+  const resetReveal = () => setRevealed(REVEAL_STEP);
+  createEffect(on(() => props.pageResetKey, resetReveal, { defer: true }));
   // The search box's text when the table owns it — the `searchPredicate`
   // query, or the `filterColumn` filter value.
   const [search, setSearch] = urlKeys && props.searchValue === undefined && !props.onSearchInput
@@ -164,16 +185,17 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     const own = next.find((filter) => filter.id === column);
     setSearch(typeof own?.value === "string" ? own.value : "");
     setOtherColumnFilters(next.filter((filter) => filter.id !== column));
+    resetReveal();
   };
-  // A sort order reshuffles every page: start from the first one.
+  // A new sort order is a new list: start again from its top.
   const setSorting = (next: SortingState) => {
     setSortingState(next);
-    setClientPageIndex(0);
+    resetReveal();
   };
   // Sorting is client-side only, and the backend takes no sort parameter: on
   // a server-paged table it would reorder the visible page alone while the
   // header claimed the whole list. Off there unless a caller opts in.
-  const sortingEnabled = () => props.enableSorting ?? !props.manualPagination;
+  const sortingEnabled = () => props.enableSorting ?? !(props.manualPagination || props.infinite);
   const tableData = () => {
     const query = searchValue().trim();
     if (!query || !props.searchPredicate) return props.data;
@@ -195,17 +217,12 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    ...(paginationEnabled && !props.manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
-    // The page index is ours, not the table's: an automatic reset on every
-    // new `data` array sent a page that rebuilds its rows on each read (a
-    // clock tick, a fresh map) straight back to page one on "Sonraki", and
-    // would wipe a page restored from the URL on the first refetch.
+    // Server paging is the caller's; the table itself never slices pages.
     autoResetPageIndex: false,
     onSortingChange: (updater) => setSorting(resolveUpdater(updater, sorting())),
     onColumnFiltersChange: (updater) => setColumnFilters(resolveUpdater(updater, columnFilters())),
     onColumnVisibilityChange: (updater) =>
       prefs.setVisibility(resolveUpdater(updater, prefs.preferences().visibility)),
-    onPaginationChange: (updater) => setClientPageIndex(resolveUpdater(updater, pagination()).pageIndex),
     state: {
       get sorting() {
         return sorting();
@@ -216,10 +233,10 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       get columnVisibility() {
         return prefs.preferences().visibility;
       },
-      get pagination() {
+      get pagination(): PaginationState {
         return props.manualPagination
           ? { pageIndex: props.manualPagination.pageIndex, pageSize: props.manualPagination.pageSize }
-          : pagination();
+          : { pageIndex: 0, pageSize: Number.MAX_SAFE_INTEGER };
       },
     },
   });
@@ -303,28 +320,56 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
   const sectioned = () => props.surfaceSections !== false;
   const showHeader = () => false;
   const showToolbar = () => showSearch() || props.filters != null || showColumnMenu() || props.actions != null;
-  // A lone "Sütunlar" button does not need a card of its own: a full-width
-  // box with one button at its far end only adds a layer (a third nested box
-  // inside a detail tab). It sits bare at the right edge instead.
-  const columnMenuOnly = () => showColumnMenu() && !showSearch() && props.filters == null && props.actions == null;
-  const pageCount = () => props.manualPagination ? Math.max(1, Math.ceil(props.manualPagination.total / props.manualPagination.pageSize)) : table.getPageCount();
-  const pageIndex = () => props.manualPagination?.pageIndex ?? table.getState().pagination.pageIndex;
-  const pageSize = () => props.manualPagination?.pageSize ?? table.getState().pagination.pageSize;
-  const totalRows = () => props.manualPagination?.total ?? table.getFilteredRowModel().rows.length;
+  // Toolbar controls — search, filters, actions, "Sütunlar" — are one pill
+  // shape and one height on every page: touch-sized (h-10) below `sm` and on touch screens, h-8
+  // above. Page actions arrive as plain Buttons (size="sm" is 26px), so the
+  // slot sizes them rather than trusting each page to.
+  const TOOLBAR_ACTIONS =
+    "[&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10 [&_a]:h-10 [&_a]:rounded-full [&_a]:px-3.5 [&_a]:text-[13px] sm:[&_a]:h-8 touch:[&_a]:h-10";
+  const totalRows = () => props.manualPagination?.total ?? props.infinite?.total ?? table.getRowModel().rows.length;
   const setPageIndex = (next: number) => {
     if (props.manualPagination) props.manualPagination.onPageChange(next);
-    else setClientPageIndex(next);
+    else resetReveal();
   };
-  // A page past the end — rows deleted, a filter narrowed the list, a stale
-  // `?page=` — slides back to the last page there is. Only once rows exist:
-  // before the data arrives every page is "past the end".
+  /** The rows actually rendered: all of them, or the revealed head of the list. */
+  const visibleRows = () => {
+    const rows = table.getRowModel().rows;
+    return revealing() ? rows.slice(0, revealed()) : rows;
+  };
+  const hasHidden = () => revealing() && table.getRowModel().rows.length > revealed();
+  // A sentinel under the list reveals the next rows as it nears the viewport.
+  // Without IntersectionObserver (old engines, jsdom) everything renders.
+  let sentinel: HTMLDivElement | undefined;
+  const observing = typeof IntersectionObserver !== "undefined";
+  const nearEnd = () => !!sentinel && sentinel.getBoundingClientRect().top < window.innerHeight + REVEAL_MARGIN_PX;
+  const revealMore = () => {
+    if (!nearEnd()) return;
+    const infinite = props.infinite;
+    if (infinite) {
+      if (infinite.hasMore && !infinite.loading) infinite.onLoadMore();
+      return;
+    }
+    if (hasHidden()) setRevealed((count) => count + REVEAL_STEP);
+  };
   createEffect(() => {
-    if (props.manualPagination || !paginationEnabled) return;
-    const rows = table.getFilteredRowModel().rows.length;
-    if (rows === 0) return;
-    const last = Math.max(0, Math.ceil(rows / clientPageSize()) - 1);
-    if (clientPageIndex() > last) setClientPageIndex(last);
+    if (!(revealing() || props.infinite) || !observing) return;
+    const node = sentinel;
+    if (!node) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) revealMore();
+    }, { rootMargin: `0px 0px ${REVEAL_MARGIN_PX}px 0px` });
+    observer.observe(node);
+    onCleanup(() => observer.disconnect());
   });
+  // The observer only fires when the sentinel crosses the margin; after a
+  // reveal of short rows it can still sit inside it, so check again.
+  createEffect(on(revealed, () => queueMicrotask(revealMore), { defer: true }));
+  // Same for a fetched page: once it lands, a short page may leave the end
+  // in view, so ask for the next one straight away.
+  createEffect(on(() => props.infinite?.loading, (busy) => {
+    if (busy === false && observing) queueMicrotask(revealMore);
+  }, { defer: true }));
+  if (!observing) setRevealed(Number.MAX_SAFE_INTEGER);
   const searchFieldValue = () => {
     if (props.onSearchInput || props.searchPredicate || props.filterColumn) return searchValue();
     return "";
@@ -333,6 +378,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     if (props.onSearchInput) props.onSearchInput(value);
     else setSearch(value);
     setPageIndex(0);
+    resetReveal();
   };
   const isInteractiveTarget = (target: EventTarget | null, row: EventTarget | null) => {
     if (!(target instanceof Element)) return false;
@@ -451,7 +497,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             </Show>
           </div>
           <Show when={props.actions}>
-            <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md">{props.actions}</div>
+            <div class={cn("flex min-w-0 flex-wrap items-center gap-2", TOOLBAR_ACTIONS)}>{props.actions}</div>
           </Show>
         </div>
       </Show>
@@ -461,7 +507,9 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             sideways instead of stacking one control per line. From `lg`:
             search, filters, then actions pushed to the right edge. Controls
             are touch-sized (h-10) below `sm` and compact (h-8) above it. */}
-        <div class={cn("flex flex-wrap items-center gap-2", sectioned() && !columnMenuOnly() && "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs")}>
+        {/* Always a card when sectioned, even when "Sütunlar" is its only
+            control, so every list page's toolbar reads the same. */}
+        <div class={cn("flex flex-wrap items-center gap-2", sectioned() && "rounded-xl border border-border-line bg-surface-base p-3 shadow-xs")}>
           <Show when={showSearch()}>
             <DataTableSearch
               class="order-1 w-auto min-w-40 flex-1 grow-[100] sm:max-w-xs"
@@ -472,7 +520,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
             />
           </Show>
           <Show when={props.filters}>
-            <div class="order-3 -my-1 flex w-full items-center gap-2 overflow-x-auto py-1 [scrollbar-width:none] sm:my-0 sm:py-0 sm:flex-wrap sm:overflow-visible lg:order-2 lg:w-auto [&_button]:h-10 [&_button]:shrink-0 [&_button]:rounded-lg [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10 [&_select]:h-10 [&_select]:rounded-lg [&_select]:text-[13px] sm:[&_select]:h-8 touch:[&_select]:h-10 max-sm:[&>*]:flex-nowrap max-sm:[&>*]:shrink-0">{props.filters}</div>
+            <div class="order-3 -my-1 flex w-full items-center gap-2 overflow-x-auto py-1 [scrollbar-width:none] sm:my-0 sm:py-0 sm:flex-wrap sm:overflow-visible lg:order-2 lg:w-auto [&_button]:h-10 [&_button]:shrink-0 [&_button]:rounded-full [&_button]:px-3 [&_button]:text-[13px] [&_[data-filter-active]]:border-primary [&_[data-filter-active]]:text-primary-text sm:[&_button]:h-8 touch:[&_button]:h-10 [&_select]:h-10 [&_select]:rounded-full [&_select]:text-[13px] sm:[&_select]:h-8 touch:[&_select]:h-10 max-sm:[&>*]:flex-nowrap max-sm:[&>*]:shrink-0">{props.filters}</div>
           </Show>
           <Show when={props.actions || showColumnMenu()}>
             {/* Beside the search the actions keep their own width (the search
@@ -481,7 +529,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                 the button stretches instead of hanging off the right edge. */}
             <div class="order-2 ml-auto flex shrink-0 grow flex-wrap items-center justify-end gap-2 sm:grow-0 lg:order-3">
               <Show when={props.actions}>
-                <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:rounded-md max-sm:flex-1 touch:[&_button]:h-10 max-sm:[&_button]:flex-1">{props.actions}</div>
+                <div class={cn("flex min-w-0 flex-wrap items-center gap-2 max-sm:flex-1 max-sm:[&_button]:flex-1", TOOLBAR_ACTIONS)}>{props.actions}</div>
               </Show>
               <Show when={showColumnMenu()}>
                 <DataTableViewMenu columns={viewMenuColumns()} />
@@ -493,10 +541,10 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
       <Show when={useCards()}>
         <ul class="space-y-2" aria-label={props.title}>
           <Show
-            when={table.getRowModel().rows.length > 0}
+            when={visibleRows().length > 0}
             fallback={<li class="rounded-lg border border-border-line bg-surface-base px-4 py-8 text-center text-sm text-muted-foreground">{emptyContent()}</li>}
           >
-            <For each={table.getRowModel().rows}>
+            <For each={visibleRows()}>
               {(row, rowIndex) => {
                 const cells = () =>
                   row.getVisibleCells().filter((cell) => cell.column.id !== "select" && !cell.column.columnDef.meta?.hideInCards);
@@ -610,7 +658,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
           </TableHeader>
           <TableBody>
             <Show
-              when={table.getRowModel().rows.length > 0}
+              when={visibleRows().length > 0}
               fallback={
                 <TableRow>
                   <TableCell colSpan={colSpan()} class="py-8 text-center text-muted-foreground">
@@ -619,7 +667,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
                 </TableRow>
               }
             >
-              <For each={table.getRowModel().rows}>
+              <For each={visibleRows()}>
                 {(row) => (
                   <TableRow
                     data-state={row.getIsSelected() ? "selected" : undefined}
@@ -693,14 +741,35 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
         </Table>
       </DataTableFrame>
       </Show>
-      <Show when={paginationEnabled && totalRows() > 0}>
-        <TablePagination
-          pageIndex={pageIndex()}
-          pageCount={pageCount()}
-          pageSize={pageSize()}
-          total={totalRows()}
-          onPageChange={setPageIndex}
-        />
+      <Show when={props.manualPagination}>
+        {(manual) => (
+          <Show when={manual().total > 0}>
+            <TablePagination
+              pageIndex={manual().pageIndex}
+              pageCount={Math.max(1, Math.ceil(manual().total / manual().pageSize))}
+              pageSize={manual().pageSize}
+              total={manual().total}
+              onPageChange={setPageIndex}
+            />
+          </Show>
+        )}
+      </Show>
+      <Show when={(revealing() || props.infinite) && totalRows() > 0}>
+        <div ref={sentinel} aria-hidden="true" class="h-px" />
+        <p class="px-1 text-xs font-medium tabular-nums text-muted-foreground sm:text-[11px]" aria-live="polite">
+          {props.infinite?.loading
+            ? t("common.loadingMore")
+            : props.infinite?.hasMore
+              ? t("common.showingOf", { shown: props.data.length, total: totalRows() })
+              : hasHidden()
+                ? t("common.showingOf", { shown: revealed(), total: totalRows() })
+                : t("common.rowCount", { total: totalRows() })}
+        </p>
+        <Show when={!observing && props.infinite?.hasMore && !props.infinite.loading}>
+          <Button type="button" variant="outline" size="sm" class="self-start" onClick={() => props.infinite?.onLoadMore()}>
+            {t("common.loadMore")}
+          </Button>
+        </Show>
       </Show>
     </div>
   );

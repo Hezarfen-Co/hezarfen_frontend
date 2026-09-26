@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, type JSX } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { formatApiError } from "@/api/client";
 import type { ExamWeightEntry } from "@/api/client";
@@ -16,7 +16,8 @@ import { useT } from "@/stores/preferences-context";
 
 /**
  * An exam-kind weight map. `editing` opens the set-a-weight panel (the parent
- * owns its header button); rows can be edited or removed when `canEdit`.
+ * passes its add button through `actions`, into the table toolbar beside
+ * "Sütunlar"); rows can be edited or removed when `canEdit`.
  */
 export function ExamWeightsEditor(props: {
   weights: ExamWeightEntry[];
@@ -27,6 +28,8 @@ export function ExamWeightsEditor(props: {
   onRemove?: (kind: string) => Promise<void>;
   editing: ExamWeightEntry | "new" | null;
   onEditingChange: (entry: ExamWeightEntry | "new" | null) => void;
+  /** Toolbar controls (add, reset), rendered in the table's toolbar card. */
+  actions?: JSX.Element;
 }) {
   const t = useT();
   const [kind, setKind] = createSignal("");
@@ -108,7 +111,7 @@ export function ExamWeightsEditor(props: {
   return (
     <>
       <Show when={removeError()}><Alert variant="destructive">{removeError()}</Alert></Show>
-      <DataTable columns={columns()} data={props.weights} empty={t("common.noMatches")} />
+      <DataTable columns={columns()} data={props.weights} empty={t("common.noMatches")} actions={props.actions} />
       <SidePanel
         open={props.editing !== null}
         onOpenChange={(open) => !open && props.onEditingChange(null)}

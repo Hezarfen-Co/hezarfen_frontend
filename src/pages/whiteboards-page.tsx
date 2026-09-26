@@ -1,13 +1,12 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { For, Show, Suspense, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
-import { createResponsivePageSize } from "@/lib/create-page-size";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { createDebouncedSignal } from "@/lib/create-debounced-signal";
-import { createResource } from "@/lib/create-resource";
+import { createInfiniteList } from "@/lib/infinite-list";
 import { getBoards, postBoard, type Board } from "@/api/boards";
 import { getUserSearch } from "@/api/users";
 import { formatApiError, type PersonRef } from "@/api/client";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { DataToolbar } from "@/components/ui/data-toolbar";
+import { DataToolbar, TOOLBAR_CARD } from "@/components/ui/data-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -17,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { personLabel } from "@/lib/person";
@@ -39,57 +38,41 @@ function WhiteboardsContent() {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  const pageSize = createResponsivePageSize(12);
-  const [page, setPage] = createSignal(0);
-  createEffect(on(pageSize, () => setPage(0), { defer: true }));
   const [query, setQuery, debouncedQuery] = createDebouncedSignal();
-  const [boards, { refetch }] = createResource(
-    () => ({ page: page(), size: pageSize(), q: debouncedQuery().trim() }),
-    (source) =>
-      getBoards({
-        limit: source.size,
-        offset: source.page * source.size,
-        ...(source.q ? { q: source.q } : {}),
-      }),
+  // The server narrows by title via `q`, so boards load a page at a time as
+  // the reader scrolls; a new search starts again from the first board.
+  const boards = createInfiniteList(
+    () => debouncedQuery().trim(),
+    (q, paging) => getBoards({ ...paging, ...(q ? { q } : {}) }),
   );
   const [createOpen, setCreateOpen] = createSignal(false);
-  const pageCount = createMemo(() => Math.max(1, Math.ceil((boards.latest?.total ?? 0) / pageSize())));
-  createEffect(() => {
-    if (boards.latest && page() >= pageCount()) setPage(pageCount() - 1);
-  });
-  // The server narrows by title via `q`; the page holds whatever the current
-  // query matched, so totals and pagination already reflect the search.
-  const visibleBoards = createMemo(() => boards()?.items ?? []);
+  const visibleBoards = () => boards.items();
 
   const meId = () => auth.user()?.id ?? "";
 
   return (
     <div class="space-y-5">
       <div class="space-y-4">
-        <div class="rounded-xl border border-border-line bg-surface-base p-3 shadow-xs" aria-label={t("common.search")}>
+        <div class={TOOLBAR_CARD} aria-label={t("common.search")}>
           <DataToolbar
             searchValue={query()}
             searchPlaceholder={t("whiteboard.searchPlaceholder")}
             searchHint={t("search.hint.whiteboards")}
-            onSearchInput={(value) => {
-              setQuery(value);
-              // The server filters from the first row; offset restarts with each search.
-              setPage(0);
-            }}
+            onSearchInput={setQuery}
             actions={
-              <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
+              <Button type="button" size="sm" onClick={() => setCreateOpen(true)}>
                 <IconPlus class="h-4 w-4" />
                 {t("whiteboard.create")}
               </Button>
             }
           />
         </div>
-        <Suspense fallback={<PageSpinner />}>
-          <Show when={boards.error}>
-            <ErrorAlert message={formatApiError(boards.error, locale())} />
-          </Show>
+        <Show when={boards.error()}>
+          {(err) => <ErrorAlert message={formatApiError(err(), locale())} />}
+        </Show>
+        <Show when={!boards.initialLoading()} fallback={<PageSpinner />}>
           <Show
-            when={query().trim() || (boards()?.items ?? []).length > 0}
+            when={query().trim() || visibleBoards().length > 0}
             fallback={<EmptyState kind="whiteboard" title={t("whiteboard.empty")} description={t("whiteboard.subtitle")} />}
           >
             <div class="space-y-3">
@@ -107,18 +90,16 @@ function WhiteboardsContent() {
                   </For>
                 </div>
               </Show>
-              <Show when={(boards()?.total ?? 0) > pageSize()}>
-                <TablePagination
-                  pageIndex={page()}
-                  pageCount={pageCount()}
-                  pageSize={pageSize()}
-                  total={boards()?.total ?? 0}
-                  onPageChange={setPage}
-                />
-              </Show>
+              <InfiniteSentinel
+                hasMore={boards.hasMore()}
+                loading={boards.loading()}
+                onLoadMore={boards.loadMore}
+                shown={visibleBoards().length}
+                total={boards.total()}
+              />
             </div>
           </Show>
-        </Suspense>
+        </Show>
       </div>
 
       <CreateBoardPanel
@@ -126,7 +107,7 @@ function WhiteboardsContent() {
         onOpenChange={setCreateOpen}
         onCreated={(board) => {
           setCreateOpen(false);
-          void refetch();
+          boards.reload();
           navigate({ to: "/whiteboards/$id", params: { id: board.id } });
         }}
       />

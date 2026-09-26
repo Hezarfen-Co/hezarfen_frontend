@@ -7,6 +7,7 @@ import type { AttendanceStatus, EventRosterEntry } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataTableSearch } from "@/components/ui/data-table-search";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfoTip } from "@/components/ui/info-tip";
 import { IconCheck } from "@/components/ui/icons";
@@ -212,7 +213,7 @@ export function EventRollCall(props: {
               type="button"
               size="sm"
               variant="outline"
-              class="h-8 rounded-lg"
+              class={cn(TOOLBAR_CONTROL, "px-3.5")}
               disabled={locked() || unmarkedIds().length === 0}
               onClick={markRestPresent}
             >
@@ -223,7 +224,7 @@ export function EventRollCall(props: {
               type="button"
               size="sm"
               variant="outline"
-              class="h-8 rounded-lg"
+              class={cn(TOOLBAR_CONTROL, "px-3.5")}
               aria-pressed={onlyUnmarked()}
               onClick={() => setOnlyUnmarked((value) => !value)}
             >

@@ -1,7 +1,6 @@
-import { Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
-import { createResponsivePageSize } from "@/lib/create-page-size";
-import { loadAllPages } from "@/lib/capped-list";
+import { Show, createEffect, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
+import { createInfiniteList } from "@/lib/infinite-list";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteCourseById, getCourses, postCourse } from "@/api/courses";
@@ -28,12 +27,9 @@ import { createDebouncedSignal } from "@/lib/create-debounced-signal";
 import { createFlash } from "@/lib/flash";
 import { personLabel } from "@/lib/person";
 import { hasMinRole } from "@/lib/roles";
-import { matchesSearch } from "@/lib/search-text";
-import { createUrlEnum, readPageIndex, readString } from "@/lib/url-state";
+import { createUrlEnum, readString } from "@/lib/url-state";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
-
-const PAGE_SIZE = 10;
 
 export default function CoursesPage() {
   return <RouteGuard><CoursesContent /></RouteGuard>;
@@ -55,14 +51,9 @@ function CoursesContent() {
   const [showForm, setShowForm] = createSignal(routeSearch().action === "new");
   const [title, setTitle] = createSignal("");
   const [description, setDescription] = createSignal("");
-  // URL parameters restore the kind, search, taught filter and page on reload.
-  // Deployed backends can ignore list filters, so filtered results are checked
-  // locally after fetching the complete list.
+  // URL parameters restore the kind, search and taught filter on reload.
   const [taughtFilter, setTaughtFilter] = createUrlEnum("taught", ["all", "taught", "untaught"] as const, "all");
   const taughtParam = () => (taughtFilter() === "taught" ? true : taughtFilter() === "untaught" ? false : undefined);
-  const pageSize = createResponsivePageSize(PAGE_SIZE);
-  const [page, setPage] = createSignal(readPageIndex(routeSearch().page));
-  createEffect(on(pageSize, () => setPage(0), { defer: true }));
   const [search, setSearch, debouncedSearch] = createDebouncedSignal(readString(routeSearch().q));
   const [error, setError] = createSignal("");
   const [pending, setPending] = createSignal(false);
@@ -76,50 +67,24 @@ function CoursesContent() {
   });
 
   const [limits, { refetch: refetchLimits }] = createResource(() => canCreate() ? getLimits() : null);
-  const filtersActive = () => pageKind() != null || debouncedSearch().trim() !== "" || taughtParam() != null;
-  // Scoped server-side: a student reads only the courses they take. The
-  // source carries every input the fetch reads. Filtered lists are read in
-  // full and checked locally because the current deployment accepts filter
-  // query keys but can return the unfiltered page and total.
-  const [list, { refetch }] = createResource(
-    () => ({
-      role: auth.user()?.role ?? null,
-      kind: pageKind(),
-      q: debouncedSearch().trim(),
-      taught: taughtParam(),
-      page: filtersActive() ? 0 : page(),
-      size: pageSize(),
-    }),
-    async (filters) => {
-      const requested = {
+  // Scoped server-side: a student reads only the courses they take. Kind,
+  // search and the taught filter are all applied by the backend (checked
+  // live on 2026-09-26), so the catalog loads a page at a time as the reader
+  // scrolls and any filter change starts again from the top.
+  const list = createInfiniteList(
+    () => auth.user()
+      ? { role: auth.user()!.role, kind: pageKind(), q: debouncedSearch().trim(), taught: taughtParam() }
+      : null,
+    (filters, paging) =>
+      getCourses({
+        ...paging,
         ...(filters.kind ? { kind: filters.kind } : {}),
         ...(filters.q ? { q: filters.q } : {}),
         ...(filters.taught != null ? { taught: filters.taught } : {}),
-      };
-      if (!filters.kind && !filters.q && filters.taught == null) {
-        return getCourses({ limit: filters.size, offset: filters.page * filters.size });
-      }
-      const all = await loadAllPages((paging) => getCourses({ ...requested, ...paging }));
-      const items = all.filter((course) =>
-        (!filters.kind || course.kind === filters.kind) &&
-        (!filters.q || matchesSearch(filters.q, course.title, course.description)) &&
-        (filters.taught == null || (course.class_course_count > 0) === filters.taught),
-      );
-      return { items, total: items.length, limit: filters.size, offset: 0 };
-    },
+      }),
+    { equals: (a, b) => a.role === b.role && a.kind === b.kind && a.q === b.q && a.taught === b.taught },
   );
-  const listData = () => list.latest ?? list();
-  const total = () => listData()?.total ?? 0;
-  const visibleItems = () => {
-    const items = listData()?.items ?? [];
-    return filtersActive() ? items.slice(page() * pageSize(), (page() + 1) * pageSize()) : items;
-  };
-  // Deleting the last row of the last page shrinks the page count under the
-  // current page; clamp instead of stranding the user off the end.
-  const pageCount = () => Math.max(1, Math.ceil(total() / pageSize()));
-  createEffect(() => {
-    if (page() >= pageCount()) setPage(pageCount() - 1);
-  });
+  const refetch = () => list.reload();
   const openCourse = (course: Course) => void navigate({ to: "/courses/$id", params: { id: course.id } });
   // Catalog rights, as on the detail page: the creator or a manager+.
   const canManageCatalog = (course: Course) => {
@@ -129,9 +94,7 @@ function CoursesContent() {
   const [editTarget, setEditTarget] = createSignal<Course | null>(null);
   const [deleteTarget, setDeleteTarget] = createSignal<Course | null>(null);
   const [rowError, setRowError] = createSignal("");
-  const refreshList = async () => {
-    try { await refetch(); } catch { /* stale rows until the next load */ }
-  };
+  const refreshList = async () => refetch();
   const columns = createMemo<ColumnDef<Course>[]>(() => [
     {
       accessorKey: "title",
@@ -294,7 +257,6 @@ function CoursesContent() {
         onChange={(value) => {
           const kind = value === "course" || value === "study" || value === "club" ? value : undefined;
           setPageKind(kind);
-          setPage(0);
           void navigate({
             to: "/courses",
             search: (prev) => ({ q: prev.q, taught: prev.taught, sort: prev.sort, action: undefined, kind, page: undefined }),
@@ -310,27 +272,22 @@ function CoursesContent() {
         </TabsList>
 
         <TabsContent value={pageKind() ?? "all"} class="mt-4 space-y-4 border-0 bg-transparent p-0 shadow-none">
-          <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-            <Show when={list.error}>
-              <ErrorAlert message={formatApiError(list.error)} onRetry={() => void refetch()} />
-            </Show>
+          <Show when={list.error()}>
+            {(err) => <ErrorAlert message={formatApiError(err())} onRetry={refetch} />}
+          </Show>
+          <Show when={!list.initialLoading()} fallback={<DataTableSkeleton columns={5} rows={8} />}>
             <DataTable
               columns={columns()}
-              data={visibleItems()}
+              data={list.items()}
               tableClass="table-fixed min-w-[44rem]"
               filterPlaceholder={t("common.searchPlaceholder")}
               filterHint={t("search.hint.courses")}
               searchValue={search()}
-              onSearchInput={(value) => {
-                setSearch(value);
-                setPage(0);
-              }}
-              enablePagination
-              manualPagination={{ pageIndex: page(), pageSize: pageSize(), total: total(), onPageChange: setPage }}
+              onSearchInput={setSearch}
+              infinite={{ hasMore: list.hasMore(), loading: list.loading(), total: list.total(), onLoadMore: list.loadMore }}
               filtersActive={taughtFilter() !== "all"}
               onClearFilters={() => {
                 setTaughtFilter("all");
-                setPage(0);
               }}
               empty={t("courses.empty", { item: kindInSentence() })}
               onRowClick={openCourse}
@@ -341,7 +298,6 @@ function CoursesContent() {
                   value={taughtFilter()}
                   onChange={(value) => {
                     setTaughtFilter(value === "taught" || value === "untaught" ? value : "all");
-                    setPage(0);
                   }}
                   options={[
                     { value: "all", label: t("common.all") },
@@ -352,14 +308,14 @@ function CoursesContent() {
               }
               actions={
                 <Show when={canCreate()}>
-                  <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowForm(true)}>
+                  <Button type="button" size="sm" onClick={() => setShowForm(true)}>
                     <IconPlus class="h-4 w-4" />
                     {t("common.createItem", { item: kindInSentence() })}
                   </Button>
                 </Show>
               }
             />
-          </Suspense>
+          </Show>
         </TabsContent>
       </Tabs>
     </div>

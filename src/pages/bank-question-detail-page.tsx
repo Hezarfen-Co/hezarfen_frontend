@@ -28,6 +28,12 @@ import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 
+// Edit and the actions menu share one row: the toolbar pill, touch-sized
+// (h-10) below `sm` and on touch screens, h-8 above. The menu trigger is a
+// <button> too, so one rule sizes both.
+const HEADER_CONTROLS =
+  "flex flex-wrap items-center gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10";
+
 export default function BankQuestionDetailPage() {
   return (
     <RouteGuard minRole="teacher">
@@ -107,9 +113,9 @@ function BankQuestionDetailContent() {
               title={current().text}
               description={current().subject_name || undefined}
               actions={
-                <>
+                <div class={HEADER_CONTROLS}>
                   <Show when={canEdit()}>
-                    <Button variant="outline" size="sm" class="rounded-lg" onClick={() => setEditing(true)}>
+                    <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                       <IconEdit class="h-4 w-4" />
                       {t("common.edit")}
                     </Button>
@@ -123,7 +129,7 @@ function BankQuestionDetailContent() {
                       }]}
                     />
                   </Show>
-                </>
+                </div>
               }
             />
             </div>

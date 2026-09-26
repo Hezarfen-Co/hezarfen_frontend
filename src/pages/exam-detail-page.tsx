@@ -29,6 +29,7 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_CONTROL, TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { IconCalendarDays, IconChart, IconChevronDown, IconClipboardCheck, IconClock, IconEdit, IconExam, IconEye, IconRefresh, IconSchool, IconTrash } from "@/components/ui/icons";
@@ -408,13 +409,16 @@ function ExamDetailContent() {
                 title={ex().title}
                 description={ex().description || undefined}
                 actions={
-                  <div class="flex flex-wrap items-center gap-2">
+                  // Header buttons and the ⋮ menu are toolbar controls: one pill
+                  // height. The Links are `contents` so the slot sizes the Button
+                  // inside rather than padding the anchor around it.
+                  <div class={cn("flex flex-wrap items-center gap-2", TOOLBAR_SLOT)}>
                     <Show when={isStudent() && !isDraft() && isSittable()}>
                       <Show when={!isUpcoming() && !isFinished()}>
                         <Show when={noAttemptsLeft()}
                           fallback={
-                            <Link to="/exam-room/$id" params={{ id: id() }}>
-                              <Button size="sm" class="flex-1 rounded-lg sm:flex-none">
+                            <Link to="/exam-room/$id" params={{ id: id() }} class="contents">
+                              <Button size="sm" class="flex-1 sm:flex-none">
                                 <IconExam class="h-4 w-4" />
                                 {ownAttempt()?.status === "in_progress" && !ownAttemptClosedByExit() ? t("attempt.resume") : t("attempt.openRoom")}
                               </Button>
@@ -428,8 +432,8 @@ function ExamDetailContent() {
                       </Show>
                     </Show>
                     <Show when={hasCourseManagementRights() && !isDraft() && !isUpcoming() && isSittable()}>
-                      <Link to="/exams/$id/live" params={{ id: id() }}>
-                        <Button size="sm" class="flex-1 rounded-lg sm:flex-none">
+                      <Link to="/exams/$id/live" params={{ id: id() }} class="contents">
+                        <Button size="sm" class="flex-1 sm:flex-none">
                           <IconEye class="h-4 w-4" />
                           {isFinished() ? t("exams.finalState") : t("exams.liveMonitor")}
                         </Button>
@@ -737,7 +741,9 @@ function ExamDetailContent() {
                           <Show when={isFinished()}>
                             <label
                               class={cn(
-                                "inline-flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-muted/50",
+                                // Sits in the toolbar beside "Sütunlar": same pill height.
+                                "inline-flex cursor-pointer items-center gap-2 px-3 transition-colors hover:bg-muted/50",
+                                TOOLBAR_CONTROL,
                                 reviewOn() && "text-primary-text",
                               )}
                               title={t("exams.allowReviewHelp")}
@@ -756,7 +762,7 @@ function ExamDetailContent() {
                               </span>
                             </label>
                           </Show>
-                          <Button type="button" variant="outline" size="sm" class="rounded-lg" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
+                          <Button type="button" size="sm" disabled={isDraft()} onClick={() => setGradeOpen(true)}>
                             <IconEdit class="h-4 w-4" />
                             {t("exams.gradeStudent")}
                           </Button>

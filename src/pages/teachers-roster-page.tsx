@@ -130,7 +130,7 @@ function TeachersRosterContent() {
                 title={t("nav.teachersRoster")}
                 description={t("roster.teachersSubtitle")}
                 actions={<><Show when={auth.user()?.role === "admin"}>
-            <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreating(true)}>
+            <Button size="sm" class="min-w-[7.5rem]" onClick={() => setCreating(true)}>
               <IconPlus class="h-4 w-4" />
               {t("roster.addTeacher")}
             </Button>

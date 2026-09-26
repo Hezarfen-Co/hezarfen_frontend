@@ -47,11 +47,13 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconEdit, IconTrash, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { TableRowActions } from "@/components/ui/table-row-actions";
+import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { formatMealDay, formatTry, mealCutoffAt, mealSlotLabel } from "@/lib/meals";
 import { personLabel } from "@/lib/person";
@@ -214,12 +216,12 @@ function MealDetailContent() {
                   description={formatMealDay(current().date, moneyLocale(), true)}
                   actions={
                     canManage() ? (
-                      <div class="detail-action-group">
-                        <Button variant="outline" size="sm" class="flex-1 rounded-lg sm:flex-none" onClick={() => { setError(""); setShowRecord(true); }}>
+                      <div class={cn("detail-action-group", TOOLBAR_SLOT)}>
+                        <Button variant="outline" size="sm" class="flex-1 sm:flex-none" onClick={() => { setError(""); setShowRecord(true); }}>
                           <IconUsers class="h-4 w-4" />
                           {t("meals.studentRecord")}
                         </Button>
-                        <Button variant="outline" size="sm" class="flex-1 rounded-lg sm:flex-none" onClick={() => { setError(""); setShowMenuEdit(true); }}>
+                        <Button variant="outline" size="sm" class="flex-1 sm:flex-none" onClick={() => { setError(""); setShowMenuEdit(true); }}>
                           <IconEdit class="h-4 w-4" />
                           {t("common.edit")}
                         </Button>

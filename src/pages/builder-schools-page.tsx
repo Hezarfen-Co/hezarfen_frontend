@@ -144,7 +144,7 @@ function BuilderSchoolsContent() {
               title={t("builder.schools")}
               description={t("builder.schoolsSubtitle")}
               actions={
-                <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreateOpen(true)}>
+                <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setCreateOpen(true)}>
                   <IconPlus class="h-4 w-4" />
                   {t("builder.createSchool")}
                 </Button>

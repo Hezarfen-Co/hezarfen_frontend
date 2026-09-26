@@ -673,7 +673,7 @@ function InstanceDetailContent() {
                     pageSize={10}
                     empty={t("exams.empty")}
                     actions={canManage() ? (
-                      <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowExamForm(true)}>
+                      <Button type="button" size="sm" onClick={() => setShowExamForm(true)}>
                         <IconPlus class="h-4 w-4" />{t("courses.addExam")}
                       </Button>
                     ) : undefined}
@@ -752,7 +752,7 @@ function InstanceDetailContent() {
                       empty={t("exams.emptyRoster")}
                       emptyIllustration="people"
                       actions={
-                        <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setShowEnrollPanel(true)}>
+                        <Button type="button" size="sm" onClick={() => setShowEnrollPanel(true)}>
                           <IconPlus class="h-4 w-4" />{t("courses.enroll")}
                         </Button>
                       }

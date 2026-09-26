@@ -17,6 +17,7 @@ import { PageSpinner } from "@/components/ui/page-spinner";
 import { SidePanel } from "@/components/ui/side-panel";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableEmpty } from "@/components/ui/data-table";
+import { cn } from "@/lib/cn";
 import { personLabel } from "@/lib/person";
 import { useT } from "@/stores/preferences-context";
 import { IconChart, IconChevronRight, IconClipboardCheck, IconClock, IconExam, IconExternalLink, IconHomework, IconMessage } from "@/components/ui/icons";
@@ -27,6 +28,11 @@ import { useModules } from "@/stores/modules-context";
 import { examKindLabel } from "@/lib/exam-labels";
 
 type StudentTab = "marks" | "attendance" | "exams" | "homework" | "study";
+
+// The panel's action and tab buttons are toolbar pills: touch-sized (h-10)
+// below `sm` and on touch screens, h-8 above, so both rows read as one set.
+const PANEL_CONTROLS =
+  "[&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10";
 
 // /students opens a child on the progress report; the parent sidebar's
 // Devamsızlık / Sınav sonuçları / Çalışma planı entries are the same page
@@ -198,7 +204,7 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
     <SidePanel open={!!props.student} onOpenChange={(open) => !open && props.onClose()} title={props.student ? personLabel(props.student) : ""} description={`@${props.student?.username}`}>
       <div class="flex h-full flex-col">
         <div class="border-b border-border-hairline p-4">
-          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div class={cn("mb-3 flex flex-wrap items-center justify-between gap-2", PANEL_CONTROLS)}>
             {/* A parent may read their linked students' profiles, so this is safe
                 — it 403s only for someone else's child. Close the panel before
                 navigating: a click that stays inside this modal never leaves it. */}
@@ -207,7 +213,6 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
                 <Button
                   variant="outline"
                   size="sm"
-                  class="rounded-lg"
                   onClick={() => {
                     props.onClose();
                     void navigate({ to: "/profile/$userId", params: { userId: s().id } });
@@ -227,7 +232,6 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
             </Show>
             <Button
               size="sm"
-              class="rounded-lg"
               onClick={() => {
                 props.onClose();
                 void navigate({ to: "/messages" });
@@ -237,7 +241,7 @@ function StudentDetailPanel(props: { student: PersonRef | null; initialTab: Stud
               {t("messages.newMessage")}
             </Button>
           </div>
-          <div class="flex flex-wrap gap-2">
+          <div class={cn("flex flex-wrap gap-2", PANEL_CONTROLS)}>
             <For each={tabs()}>
               {(tab) => {
                 const Icon = tab.icon;

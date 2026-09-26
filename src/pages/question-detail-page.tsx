@@ -29,6 +29,12 @@ import { formatBytes, maxUploadBytes } from "@/lib/upload-limits";
 // Lazy so the drawing pad rides its own chunk, off the question detail's initial load.
 const DrawCanvas = lazy(() => import("@/components/ui/draw-canvas").then((m) => ({ default: m.DrawCanvas })));
 
+// Approve and the actions menu share one row: the toolbar pill, touch-sized
+// (h-10) below `sm` and on touch screens, h-8 above. The menu trigger is a
+// <button> too, so one rule sizes both.
+const HEADER_CONTROLS =
+  "flex flex-wrap items-center gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10";
+
 export default function QuestionDetailPage() {
   return (
     <RouteGuard minRole="student">
@@ -131,9 +137,9 @@ function QuestionDetailContent() {
                     <span>{new Date(q().asked_at).toLocaleString()}</span>
                   </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
+                <div class={HEADER_CONTROLS}>
                   <Show when={q().status === "pending" && isModerator()}>
-                    <Button onClick={handleApprove}>
+                    <Button size="sm" onClick={handleApprove}>
                       <IconCheck class="mr-2 h-4 w-4" />
                       {t("common.approve")}
                     </Button>

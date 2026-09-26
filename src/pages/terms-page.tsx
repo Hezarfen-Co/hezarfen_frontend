@@ -260,7 +260,7 @@ function TermsContent() {
             title={t("terms.title")}
             description={t("terms.subtitle")}
             actions={
-              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
+              <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={openCreate}>
                 <IconPlus class="h-4 w-4" />
                 {t("terms.create")}
               </Button>

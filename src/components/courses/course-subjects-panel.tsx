@@ -177,7 +177,7 @@ export function CourseSubjectsPanel(props: { courseId: string; canManage: boolea
           empty={t("subjects.empty")}
           emptyIllustration="courses"
           actions={props.canManage ? (
-            <Button type="button" size="sm" class="rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
+            <Button type="button" size="sm" onClick={() => props.onCreateOpenChange(true)}>
               <IconPlus class="h-4 w-4" />{t("subjects.add")}
             </Button>
           ) : undefined}

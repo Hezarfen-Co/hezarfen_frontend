@@ -121,7 +121,7 @@ export function CourseTeachersPanel(props: {
         empty={t("courses.noTeachers")}
         emptyIllustration="people"
         actions={props.canStaff ? (
-          <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => props.onAssignOpenChange(true)}>
+          <Button type="button" size="sm" onClick={() => props.onAssignOpenChange(true)}>
             <IconPlus class="h-4 w-4" />{t("courses.assignTeacher")}
           </Button>
         ) : undefined}

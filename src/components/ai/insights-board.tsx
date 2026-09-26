@@ -98,7 +98,7 @@ export function InsightsBoard() {
                   <Show when={canManageRuns()}>
                     <Button
                       size="sm"
-                      class="min-w-[7.5rem] rounded-lg"
+                      class="min-w-[7.5rem]"
                       disabled={refreshingAll()}
                       onClick={() => void queueSchoolRefresh()}
                     >

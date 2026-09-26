@@ -3,8 +3,8 @@ import { Show } from "solid-js";
 import QuestionBankPage from "@/pages/question-bank-page";
 import { PreferencesProvider } from "@/stores/preferences-context";
 
-// 11 templates, page size 10: the last page holds exactly one row.
-let templates = Array.from({ length: 11 }, (_, index) => ({
+// More templates than one scroll page (50) holds.
+let templates = Array.from({ length: 60 }, (_, index) => ({
   id: `bq-${index}`,
   text: `Template ${index}`,
   kind: "text",
@@ -59,23 +59,24 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 afterEach(() => vi.restoreAllMocks());
 
-test("deleting the last row of the last page clamps back instead of stranding the user", async () => {
+test("fetches one page at a time and starts over from the top after a delete", async () => {
   render(() => (
     <PreferencesProvider>
       <QuestionBankPage />
     </PreferencesProvider>
   ));
 
-  fireEvent.click(await screen.findByRole("button", { name: "Next" }));
-  expect(await screen.findByText("Template 10")).toBeTruthy();
-  expect(screen.getByText("2 / 2")).toBeTruthy();
+  // Only the first page is fetched until the reader scrolls.
+  expect(await screen.findByText("Template 49")).toBeTruthy();
+  expect(screen.queryByText("Template 50")).toBeNull();
 
-  fireEvent.click(screen.getByRole("button", { name: "delete-row" }));
+  fireEvent.click(screen.getAllByRole("button", { name: "delete-row" })[0]);
   fireEvent.click(screen.getByRole("button", { name: "confirm-delete" }));
   await tick();
   await tick();
 
-  // 10 left → one page: the user must be on it, not on the vanished page 2.
-  expect(screen.queryByText("Template 10")).toBeNull();
-  expect(await screen.findByText("Template 0")).toBeTruthy();
+  // The list reloads from offset 0: the deleted row is gone and the next one
+  // moves up into the first page.
+  expect(screen.queryByText("Template 0")).toBeNull();
+  expect(await screen.findByText("Template 50")).toBeTruthy();
 });

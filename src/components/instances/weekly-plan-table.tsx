@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js";
+import { createMemo, type JSX } from "solid-js";
 import type { ColumnDef } from "@tanstack/solid-table";
 import type { WeeklySlot } from "@/api/client";
 import { DataTable } from "@/components/ui/data-table";
@@ -7,8 +7,12 @@ import { TableRowActions } from "@/components/ui/table-row-actions";
 import { minutesToHHmm, sortSlots, weekdayLabel } from "@/lib/weekly-plan";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
-/** A weekly plan's slots, weekday first; removable when `onRemove` is given. */
-export function WeeklyPlanTable(props: { slots: WeeklySlot[]; onRemove?: (slot: WeeklySlot) => void; empty?: string }) {
+/**
+ * A weekly plan's slots, weekday first; removable when `onRemove` is given.
+ * `actions` (add slot, generate, reset) sit in the table's toolbar card beside
+ * "Sütunlar", not in a header row above it.
+ */
+export function WeeklyPlanTable(props: { slots: WeeklySlot[]; onRemove?: (slot: WeeklySlot) => void; empty?: string; actions?: JSX.Element }) {
   const t = useT();
   const { locale } = usePreferences();
   const rows = createMemo(() => sortSlots(props.slots));
@@ -50,5 +54,5 @@ export function WeeklyPlanTable(props: { slots: WeeklySlot[]; onRemove?: (slot: 
         ]
       : []),
   ]);
-  return <DataTable columns={columns()} data={rows()} empty={props.empty ?? t("weeklyPlan.empty")} />;
+  return <DataTable columns={columns()} data={rows()} empty={props.empty ?? t("weeklyPlan.empty")} actions={props.actions} />;
 }

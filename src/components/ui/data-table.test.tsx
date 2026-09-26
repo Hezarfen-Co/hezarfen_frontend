@@ -82,28 +82,25 @@ test("freezes the meta.stickyLeft column and centres headers and left-aligns cel
   expect(roleCell.classList).toContain("text-left");
 });
 
-test("paginates tables by default", () => {
-  const rows = Array.from({ length: 11 }, (_, index) => ({ name: `Person ${index + 1}` }));
-  render(() => (
-    <PreferencesProvider>
-      <DataTable columns={[columns[0]]} data={rows} enableColumnVisibility={false} />
-    </PreferencesProvider>
-  ));
+/** Stand-in IntersectionObserver whose callback a test fires by hand. */
+function stubIntersectionObserver() {
+  const callbacks: IntersectionObserverCallback[] = [];
+  class FakeObserver {
+    constructor(callback: IntersectionObserverCallback) {
+      callbacks.push(callback);
+    }
+    observe() {}
+    disconnect() {}
+  }
+  vi.stubGlobal("IntersectionObserver", FakeObserver);
+  return () => {
+    for (const callback of callbacks) callback([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver);
+  };
+}
 
-  expect(screen.getByText("Person 10")).toBeTruthy();
-  expect(screen.queryByText("Person 11")).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
-  expect(screen.getByText("Person 11")).toBeTruthy();
-});
-
-test("halves the page on a phone", () => {
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: true,
-    media: query,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
-  const rows = Array.from({ length: 11 }, (_, index) => ({ name: `Person ${index + 1}` }));
+test("reveals rows in steps instead of paging", async () => {
+  const reachEnd = stubIntersectionObserver();
+  const rows = Array.from({ length: 120 }, (_, index) => ({ name: `Person ${index + 1}` }));
   try {
     render(() => (
       <PreferencesProvider>
@@ -111,26 +108,35 @@ test("halves the page on a phone", () => {
       </PreferencesProvider>
     ));
 
-    expect(screen.getByText("Person 5")).toBeTruthy();
-    expect(screen.queryByText("Person 6")).toBeNull();
-    expect(screen.getByText("1 / 3")).toBeTruthy();
+    expect(screen.getByText("Person 50")).toBeTruthy();
+    expect(screen.queryByText("Person 51")).toBeNull();
+    expect(screen.getByText(/(Showing 50 of 120|120 kayıttan 50)/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Next" })).toBeNull();
+    reachEnd();
+    // jsdom lays nothing out, so the sentinel always reads as near the end
+    // and each reveal chains into the next until the list is complete.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByText("Person 120")).toBeTruthy();
   } finally {
     vi.unstubAllGlobals();
   }
 });
 
-test("a single page keeps the row count but drops the page buttons", () => {
-  render(() => (
-    <PreferencesProvider>
-      <DataTable columns={[columns[0]]} data={[{ name: "Ada" }]} enableColumnVisibility={false} />
-    </PreferencesProvider>
-  ));
-
-  expect(screen.getByText("1-1 / 1")).toBeTruthy();
-  expect(screen.queryByRole("button", { name: "Previous" })).toBeNull();
-  expect(screen.queryByRole("button", { name: "Next" })).toBeNull();
+test("without IntersectionObserver every row renders, with the total under the list", () => {
+  vi.stubGlobal("IntersectionObserver", undefined);
+  const rows = Array.from({ length: 60 }, (_, index) => ({ name: `Person ${index + 1}` }));
+  try {
+    render(() => (
+      <PreferencesProvider>
+        <DataTable columns={[columns[0]]} data={rows} enableColumnVisibility={false} />
+      </PreferencesProvider>
+    ));
+    expect(screen.getByText("Person 60")).toBeTruthy();
+    expect(screen.getByText(/^(Total|Toplam): 60$/)).toBeTruthy();
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });
-
 test("a display column renders its own cell instead of the empty dash", () => {
   // A column with no accessorFn has no value to be empty, so the empty-cell
   // fallback must not swallow its render function.
@@ -309,30 +315,48 @@ test("an empty list narrowed by the caller's filters offers to clear them", () =
   expect(onClearFilters).toHaveBeenCalledOnce();
 });
 
-test("the next page holds when the caller hands over a fresh data array", async () => {
+test("revealed rows hold when the caller hands over a fresh data array", async () => {
+  const reachEnd = stubIntersectionObserver();
   const [tick, setTick] = createSignal(0);
-  const people = Array.from({ length: 12 }, (_, i) => ({ name: `P${String(i).padStart(2, "0")}` }));
-  render(() => (
-    <PreferencesProvider>
-      {/* A new array on every read, like a page that maps rows inline. */}
-      <DataTable columns={[{ accessorKey: "name", header: "Name" }]} data={(tick(), people.map((row) => ({ ...row })))} enableColumnVisibility={false} />
-    </PreferencesProvider>
-  ));
-  fireEvent.click(screen.getByRole("button", { name: /Next|Sonraki/ }));
-  expect(screen.getByText("P10")).toBeTruthy();
-  setTick(1);
-  expect(screen.getByText("P10")).toBeTruthy();
-  expect(screen.queryByText("P00")).toBeNull();
+  const people = Array.from({ length: 70 }, (_, i) => ({ name: `P${String(i).padStart(2, "0")}` }));
+  try {
+    render(() => (
+      <PreferencesProvider>
+        {/* A new array on every read, like a page that maps rows inline. */}
+        <DataTable columns={[{ accessorKey: "name", header: "Name" }]} data={(tick(), people.map((row) => ({ ...row })))} enableColumnVisibility={false} />
+      </PreferencesProvider>
+    ));
+    reachEnd();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByText("P69")).toBeTruthy();
+    setTick(1);
+    expect(screen.getByText("P69")).toBeTruthy();
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });
-
-test("a toolbar holding only the column menu is not boxed", () => {
+test("a toolbar holding only the column menu still gets its card", () => {
   const { container } = render(() => (
     <PreferencesProvider>
       <DataTable columns={[{ accessorKey: "name", header: "Name" }, { accessorKey: "role", header: "Role" }]} data={[{ name: "Ada", role: "a" }]} />
     </PreferencesProvider>
   ));
   const toolbar = container.querySelector(".space-y-3 > div");
-  expect(toolbar?.className).not.toContain("rounded-xl");
+  expect(toolbar?.className).toContain("rounded-xl");
+});
+
+test("page actions in the toolbar take the shared control height", () => {
+  const { container } = render(() => (
+    <PreferencesProvider>
+      <DataTable
+        columns={[{ accessorKey: "name", header: "Name" }, { accessorKey: "role", header: "Role" }]}
+        data={[{ name: "Ada", role: "a" }]}
+        actions={<button type="button">Add</button>}
+      />
+    </PreferencesProvider>
+  ));
+  const add = [...container.querySelectorAll("button")].find((el) => el.textContent === "Add");
+  expect(add?.parentElement?.className).toContain("sm:[&_button]:h-8");
 });
 
 test("meta.headerInfo puts a labelled info icon beside the header that opens without sorting", async () => {
@@ -358,4 +382,29 @@ test("meta.headerInfo puts a labelled info icon beside the header that opens wit
   expect(await screen.findByText("Filled in for small schools only.")).toBeTruthy();
   // No always-visible copy of the note is left in the table.
   expect(document.querySelector("table")?.textContent).not.toContain("Filled in for small schools only.");
+});
+
+test("an infinite table asks for the next page near its end and does not sort", async () => {
+  const reachEnd = stubIntersectionObserver();
+  const onLoadMore = vi.fn();
+  const rows = Array.from({ length: 50 }, (_, index) => ({ name: `Person ${index + 1}` }));
+  try {
+    render(() => (
+      <PreferencesProvider>
+        <DataTable
+          columns={[columns[0]]}
+          data={rows}
+          enableColumnVisibility={false}
+          infinite={{ hasMore: true, loading: false, total: 120, onLoadMore }}
+        />
+      </PreferencesProvider>
+    ));
+    expect(screen.getByText("Person 50")).toBeTruthy();
+    expect(screen.getByText(/(Showing 50 of 120|120 kayıttan 50)/)).toBeTruthy();
+    expect(screen.getByRole("columnheader").getAttribute("aria-sort")).not.toBe("ascending");
+    reachEnd();
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });

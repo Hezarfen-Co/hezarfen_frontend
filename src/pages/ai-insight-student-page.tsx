@@ -158,9 +158,10 @@ function AiInsightStudentContent() {
                       </Show>
                     </div>
                   </div>
-                  <div class="flex flex-wrap items-center gap-2">
+                  {/* Header actions are toolbar pills: h-10 below `sm` and on touch, h-8 above. */}
+                  <div class="flex flex-wrap items-center gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10">
                     <Show when={canRecompute()}>
-                      <Button size="sm" class="rounded-lg" disabled={queuing()} onClick={() => void recompute()}>
+                      <Button size="sm" disabled={queuing()} onClick={() => void recompute()}>
                         <IconSparkles class="h-4 w-4" />
                         {queuing() ? t("insights.recomputing") : t("insights.recompute")}
                       </Button>

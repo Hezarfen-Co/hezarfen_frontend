@@ -21,6 +21,7 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -185,8 +186,8 @@ function EventDetailContent() {
                 description={ev().description || undefined}
                 actions={
                   canManage() ? (
-                    <div class="detail-action-group">
-                      <Button type="button" variant="outline" size="sm" class="flex-1 rounded-xl sm:flex-none" onClick={() => setEditing(true)}>
+                    <div class={cn("detail-action-group", TOOLBAR_SLOT)}>
+                      <Button type="button" variant="outline" size="sm" class="flex-1 sm:flex-none" onClick={() => setEditing(true)}>
                         <IconEdit class="h-4 w-4" />
                         {t("common.edit")}
                       </Button>

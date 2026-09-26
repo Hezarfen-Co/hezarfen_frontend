@@ -443,16 +443,18 @@ export function InsightRunReport(props: { run: InsightRun }) {
 
   return (
     <div class="space-y-5">
-      <div class="flex flex-wrap items-center justify-end gap-2">
-        <Button variant="outline" size="sm" class="rounded-lg" disabled={loading()} onClick={() => void copyReport()}>
+      {/* Report actions are toolbar pills: touch-sized (h-10) below `sm` and on
+          touch screens, h-8 above. */}
+      <div class="flex flex-wrap items-center justify-end gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10">
+        <Button variant="outline" size="sm" disabled={loading()} onClick={() => void copyReport()}>
           <IconCopy class="h-4 w-4" />
           {tx("copy")}
         </Button>
-        <Button variant="outline" size="sm" class="rounded-lg" disabled={loading()} onClick={downloadReport}>
+        <Button variant="outline" size="sm" disabled={loading()} onClick={downloadReport}>
           <IconDownload class="h-4 w-4" />
           {tx("download")}
         </Button>
-        <Button variant="outline" size="sm" class="rounded-lg" disabled={loading()} onClick={() => window.print()}>
+        <Button variant="outline" size="sm" disabled={loading()} onClick={() => window.print()}>
           <IconFileText class="h-4 w-4" />
           {tx("print")}
         </Button>
@@ -460,7 +462,6 @@ export function InsightRunReport(props: { run: InsightRun }) {
           <Button
             variant="outline"
             size="sm"
-            class="rounded-lg"
             disabled={generatingReport()}
             aria-busy={generatingReport()}
             onClick={() => void generateSchoolReport()}

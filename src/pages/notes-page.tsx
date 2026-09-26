@@ -12,10 +12,12 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { NoteImportPanel } from "@/components/notes/note-import-panel";
 import { NoteList } from "@/components/notes/note-list";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_CARD, TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { IconPlus, IconUploadCloud } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { SidePanel } from "@/components/ui/side-panel";
+import { cn } from "@/lib/cn";
 import { createFlash } from "@/lib/flash";
 import { loadListPage, totalPages as pagesOf } from "@/lib/list-page";
 import { personalNoteFiles } from "@/lib/note-source";
@@ -93,12 +95,12 @@ function NotesContent() {
       </SidePanel>
 
       <div class="space-y-4">
-        <div class="flex flex-wrap items-center justify-end gap-2 rounded-xl border border-border-line bg-surface-base p-3 shadow-xs">
-          <Button type="button" size="sm" class="rounded-lg" onClick={() => void navigate({ to: "/notes/new" })}>
+        <div class={cn("flex flex-wrap items-center justify-end gap-2 max-sm:[&_button]:flex-1", TOOLBAR_CARD, TOOLBAR_SLOT)}>
+          <Button type="button" size="sm" onClick={() => void navigate({ to: "/notes/new" })}>
             <IconPlus class="h-4 w-4" />
             {t("notes.new")}
           </Button>
-          <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setImportOpen(true)}>
+          <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(true)}>
             <IconUploadCloud class="h-4 w-4" />
             {t("notes.import")}
           </Button>

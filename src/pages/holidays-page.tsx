@@ -158,7 +158,7 @@ function HolidaysContent() {
             title={t("holidays.title")}
             description={t("holidays.subtitle")}
             actions={
-              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => openForm(null)}>
+              <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => openForm(null)}>
                 <IconPlus class="h-4 w-4" />
                 {t("holidays.new")}
               </Button>

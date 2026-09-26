@@ -20,11 +20,13 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { SidePanel } from "@/components/ui/side-panel";
 import { BankQuestionPicker } from "@/components/exams/bank-question-picker";
 import { QuestionForm, type QuestionValues } from "@/components/exams/question-form";
 import { IconArchive, IconChevronLeft, IconChevronRight, IconPlus, IconRefresh, IconTrash } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
+import { cn } from "@/lib/cn";
 import { createFlash } from "@/lib/flash";
 import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
@@ -265,13 +267,13 @@ export function ExamQuestionsPanel(props: {
           </Badge>
         </div>
         <Show when={!props.readOnly}>
-          <div class="flex flex-wrap items-center gap-1.5">
+          <div class={cn("flex flex-wrap items-center gap-2", TOOLBAR_SLOT)}>
             <Show when={isTeacherPlus()}>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                class="h-8 gap-1.5 rounded-md text-xs font-semibold"
+                class="gap-1.5 font-semibold"
                 onClick={() => setBankOpen(true)}
               >
                 <IconArchive class="h-3.5 w-3.5" />
@@ -282,7 +284,7 @@ export function ExamQuestionsPanel(props: {
               type="button"
               variant="default"
               size="sm"
-              class="h-8 gap-1.5 rounded-md text-xs font-semibold"
+              class="gap-1.5 font-semibold"
               onClick={() => {
                 setEditing(null);
                 setFormOpen(true);

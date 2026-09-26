@@ -36,7 +36,7 @@ import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconChevronLeft, IconEdit, IconEye, IconPlus, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { DropdownSelect, Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -628,11 +628,15 @@ function PaymentsContent() {
                     description={t("payments.subtitle")}
                     empty={t("form.noStudents")}
                     filters={
-                      <Select value={planFilter()} onChange={(e) => { setPlanFilter(e.currentTarget.value); setStudentPage(0); }} wrapperClass="w-56">
-                        <option value="">{t("payments.allPlans")}</option>
-                        <For each={planList()}>{(plan) => <option value={plan.id}>{plan.name}</option>}</For>
-                      </Select>
+                      <DropdownSelect
+                        labelPrefix={t("payments.plan")}
+                        value={planFilter()}
+                        onChange={(value) => { setPlanFilter(value); setStudentPage(0); }}
+                        options={[{ value: "", label: t("common.all") }, ...planList().map((plan) => ({ value: plan.id, label: plan.name }))]}
+                      />
                     }
+                    filtersActive={planFilter() !== ""}
+                    onClearFilters={() => { setPlanFilter(""); setStudentPage(0); }}
                     tableClass="min-w-160"
                     storageKey="payment-students"
                     enableSorting
@@ -655,7 +659,7 @@ function PaymentsContent() {
                 <h2 class="text-lg font-semibold">{personLabel(current())}</h2>
                 <p class="text-sm text-muted-foreground">@{current().username}</p>
               </div>
-              <Button variant="outline" size="sm" class="rounded-lg" onClick={() => navigate({ to: "/management/payments" })}>
+              <Button variant="outline" size="sm" class="h-10 rounded-full px-3.5 text-[13px] sm:h-8 touch:h-10" onClick={() => navigate({ to: "/management/payments" })}>
                 <IconChevronLeft class="h-4 w-4" />{t("payments.allStudents")}
               </Button>
             </div>
@@ -682,25 +686,33 @@ function PaymentsContent() {
                     </div>
                   }
                 >
-                  <div class="space-y-3">
-                    <Tabs value={entryTab()} onChange={setEntryTab}>
-                      <TabsList>
-                        <TabsTrigger value="all">{t("payments.entryTabAll")}</TabsTrigger>
-                        <TabsTrigger value="overdue">{t("payments.entryTabOverdue")}</TabsTrigger>
-                        <TabsTrigger value="month">{t("payments.entryTabMonth")}</TabsTrigger>
-                        <TabsTrigger value="closed">{t("payments.entryTabClosed")}</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                    <DataTable
-                      columns={statementColumns()}
-                      data={tabFilteredEntries()}
-                      tableClass="min-w-160"
-                      storageKey="payment-statement"
-                      enablePagination
-                      pageSize={STATEMENT_PAGE_SIZE}
-                      onRowClick={setViewEntry}
-                    />
-                  </div>
+                  {/* The status filter is a chip in the table's own toolbar card,
+                      beside "Sütunlar", so both share one row and one height. */}
+                  <DataTable
+                    columns={statementColumns()}
+                    data={tabFilteredEntries()}
+                    tableClass="min-w-160"
+                    storageKey="payment-statement"
+                    filters={
+                      <DropdownSelect
+                        labelPrefix={t("payments.status")}
+                        value={entryTab()}
+                        onChange={setEntryTab}
+                        options={[
+                          { value: "all", label: t("payments.entryTabAll") },
+                          { value: "overdue", label: t("payments.entryTabOverdue") },
+                          { value: "month", label: t("payments.entryTabMonth") },
+                          { value: "closed", label: t("payments.entryTabClosed") },
+                        ]}
+                      />
+                    }
+                    filtersActive={entryTab() !== "all"}
+                    pageResetKey={entryTab()}
+                    onClearFilters={() => setEntryTab("all")}
+                    enablePagination
+                    pageSize={STATEMENT_PAGE_SIZE}
+                    onRowClick={setViewEntry}
+                  />
                 </Show>
               </Suspense>
             </section>
@@ -756,7 +768,7 @@ function PaymentsContent() {
                 title={t("payments.tabPlans")}
                 description={t("payments.subtitle")}
                 actions={
-                  <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
+                  <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={openCreate}>
                     <IconPlus class="h-4 w-4" />
                     {t("payments.createPlan")}
                   </Button>

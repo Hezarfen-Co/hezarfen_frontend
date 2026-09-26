@@ -437,18 +437,19 @@ function CalendarContent() {
           <div class="min-w-0">
             <h1 class="truncate text-lg font-semibold tracking-tight text-foreground sm:text-xl">{t("calendar.title")}</h1>
             <div class="mt-1.5 flex items-center gap-1 sm:gap-2">
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={goPrev} aria-label={t("common.prev")}>
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-full p-0" onClick={goPrev} aria-label={t("common.prev")}>
                 <IconChevronLeft class="h-4 w-4" />
               </Button>
               <span class="truncate text-sm font-semibold tracking-tight sm:text-base">{rangeLabel()}</span>
-              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-lg p-0" onClick={goNext} aria-label={t("common.next")}>
+              <Button type="button" variant="ghost" size="sm" class="h-8 w-8 rounded-full p-0" onClick={goNext} aria-label={t("common.next")}>
                 <IconChevronRight class="h-4 w-4" />
               </Button>
             </div>
           </div>
           <div class="flex items-center gap-2">
             {/* Day / week / month, the way a phone calendar switches zoom. */}
-            <div class="inline-flex shrink-0 rounded-lg border border-border bg-muted/40 p-0.5">
+            {/* Same height and pill as the "Bugün" button beside it. */}
+            <div class="inline-flex h-10 shrink-0 items-center rounded-full border border-border bg-muted/40 p-0.5 sm:h-8 touch:h-10">
               <For each={VIEWS}>
                 {(entry) => (
                   <button
@@ -456,7 +457,7 @@ function CalendarContent() {
                     aria-pressed={view() === entry.id}
                     onClick={() => setView(entry.id)}
                     class={cn(
-                      "rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
+                      "h-full rounded-full px-3 text-[13px] font-semibold transition-colors",
                       view() === entry.id ? "bg-background text-foreground shadow-xs" : "text-muted-foreground",
                     )}
                   >
@@ -465,7 +466,7 @@ function CalendarContent() {
                 )}
               </For>
             </div>
-            <Button type="button" variant="outline" size="sm" class="h-9 shrink-0 rounded-lg gap-1 text-sm font-semibold" onClick={goToday}>
+            <Button type="button" variant="outline" size="sm" class="h-10 shrink-0 gap-1 rounded-full px-3.5 text-[13px] font-semibold sm:h-8 touch:h-10" onClick={goToday}>
               <IconCalendarDays class="h-3.5 w-3.5" />
               <span class="hidden sm:inline">{t("calendar.today")}</span>
             </Button>

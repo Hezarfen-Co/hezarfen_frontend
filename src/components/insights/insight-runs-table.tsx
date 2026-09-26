@@ -159,7 +159,7 @@ export function InsightRunsTable(props: { runs: InsightRun[] }) {
               </div>
               <button
                 type="button"
-                class="rounded-lg border border-border/70 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                class="inline-flex h-10 items-center rounded-full border border-border/70 px-3.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-8 touch:h-10"
                 onClick={() => setSelectedRun(null)}
               >
                 {tx("common.close")}

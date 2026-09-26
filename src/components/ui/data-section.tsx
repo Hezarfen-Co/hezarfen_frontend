@@ -1,4 +1,5 @@
 import { Show, type JSX, type ParentProps } from "solid-js";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { cn } from "@/lib/cn";
 
 /**
@@ -22,7 +23,9 @@ export function DataSection(
             </Show>
           </div>
           <Show when={props.actions}>
-            <div class="flex min-w-0 flex-wrap items-center gap-2 [&_button]:h-9 [&_button]:rounded-md">{props.actions}</div>
+            {/* Header actions are toolbar controls too: the same pill and height
+                as a DataTable toolbar, never a taller h-9 button of their own. */}
+            <div class={cn("flex min-w-0 flex-wrap items-center gap-2", TOOLBAR_SLOT)}>{props.actions}</div>
           </Show>
         </div>
       </Show>

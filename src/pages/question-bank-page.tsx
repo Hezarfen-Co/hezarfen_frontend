@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/solid-router";
-import { Show, Suspense, createEffect, createMemo, createSignal, on } from "solid-js";
-import { createResponsivePageSize } from "@/lib/create-page-size";
+import { Show, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
+import { createInfiniteList } from "@/lib/infinite-list";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { deleteBankQuestionById, getBankQuestions } from "@/api/bank-questions";
 import { getCourses } from "@/api/courses";
@@ -25,8 +25,6 @@ import { hasMinRole } from "@/lib/roles";
 import { useAuth } from "@/stores/auth-context";
 import { useT } from "@/stores/preferences-context";
 
-const BANK_PAGE_SIZE = 10;
-
 export default function QuestionBankPage() {
   return (
     <RouteGuard minRole="teacher">
@@ -43,9 +41,6 @@ function QuestionBankContent() {
   const ownerFilter = () => (bankTab() === "mine" ? "me" : "all") as "all" | "me";
   const visibilityFilter = () => (bankTab() === "school" ? "school" : "all") as "all" | "private" | "school";
   const [subjectFilter, setSubjectFilter] = createSignal("all");
-  const [page, setPage] = createSignal(0);
-  const pageSize = createResponsivePageSize(BANK_PAGE_SIZE);
-  createEffect(on(pageSize, () => setPage(0), { defer: true }));
   const [query, setQuery, debouncedQuery] = createDebouncedSignal();
   const [createOpen, setCreateOpen] = createSignal(false);
   const [editing, setEditing] = createSignal<BankQuestion | null>(null);
@@ -56,19 +51,18 @@ function QuestionBankContent() {
   const [flash, setFlash] = createFlash();
   const [error, setError] = createSignal("");
 
-  const [list, { refetch }] = createResource(
+  // Every filter here is applied by the backend, so the bank loads a page at
+  // a time as the reader scrolls; a new filter starts again from the top.
+  const list = createInfiniteList(
     () => ({
-      page: page(),
-      size: pageSize(),
       owner: ownerFilter(),
       subject: subjectFilter(),
       visibility: visibilityFilter(),
       q: debouncedQuery().trim(),
     }),
-    async (filters) => {
+    async (filters, paging) => {
       const result = await getBankQuestions({
-        limit: filters.size,
-        offset: filters.page * filters.size,
+        ...paging,
         ...(filters.owner === "me" ? { owner: "me" } : {}),
         ...(filters.subject !== "all" ? { subject: filters.subject } : {}),
         ...(filters.visibility !== "all" ? { visibility: filters.visibility } : {}),
@@ -81,15 +75,10 @@ function QuestionBankContent() {
       });
       return result;
     },
+    { equals: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
   );
-  const total = () => list.latest?.total ?? 0;
-  // Deleting the last row of the last page shrinks the page count under the
-  // current page; the table then hides its pagination bar entirely and the user
-  // is stranded with no control to get back. Same clamp as exam-questions-panel.
-  const pageCount = () => Math.max(1, Math.ceil(total() / pageSize()));
-  createEffect(() => {
-    if (page() >= pageCount()) setPage(pageCount() - 1);
-  });
+  const total = () => list.total();
+  const refetch = () => list.reload();
 
   // Only courses the teacher can author in supply subjects for a new template.
   const [courses] = createResource(async () => (await getCourses({ limit: 100 })).items);
@@ -220,7 +209,6 @@ function QuestionBankContent() {
         value={bankTab()}
         onChange={(value) => {
           setBankTab(value as "all" | "mine" | "school");
-          setPage(0);
         }}
       >
         <TabsList aria-label={t("bank.title")}>
@@ -231,33 +219,29 @@ function QuestionBankContent() {
 
         <TabsContent value={bankTab()} class="mt-4 border-0 bg-transparent p-0 shadow-none">
           <section class="space-y-4 p-0">
-            <Suspense fallback={<DataTableSkeleton columns={5} rows={8} />}>
-              <Show when={list.error}>
-                <Alert variant="destructive">{formatApiError(list.error)}</Alert>
-              </Show>
+            <Show when={list.error()}>
+              {(err) => <Alert variant="destructive">{formatApiError(err())}</Alert>}
+            </Show>
+            <Show when={!list.initialLoading()} fallback={<DataTableSkeleton columns={5} rows={8} />}>
               <DataTable
                 title={t("bank.title")}
                 description={t("bank.countTotal", { total: total() })}
                 actions={
                   <Show when={manageableCourses().length > 0}>
-                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setCreateOpen(true)}>
+                    <Button type="button" size="sm" onClick={() => setCreateOpen(true)}>
                       <IconPlus class="h-4 w-4" />
                       {t("bank.create")}
                     </Button>
                   </Show>
                 }
                 columns={columns()}
-                data={list()?.items ?? []}
+                data={list.items()}
                 tableClass="min-w-[40rem]"
                 filterPlaceholder={t("bank.search")}
                 filterHint={t("search.hint.bank")}
                 searchValue={query()}
-                onSearchInput={(value) => {
-                  setQuery(value);
-                  setPage(0);
-                }}
-                enablePagination
-                manualPagination={{ pageIndex: page(), pageSize: pageSize(), total: total(), onPageChange: setPage }}
+                onSearchInput={setQuery}
+                infinite={{ hasMore: list.hasMore(), loading: list.loading(), total: total(), onLoadMore: list.loadMore }}
                 empty={t("bank.empty")}
                 storageKey="question-bank"
                 onRowClick={(question) => navigate({ to: "/question-bank/$id", params: { id: question.id } })}
@@ -266,16 +250,13 @@ function QuestionBankContent() {
                     <DropdownSelect
                       labelPrefix={t("subjects.subject")}
                       value={subjectFilter()}
-                      onChange={(value) => {
-                        setSubjectFilter(value);
-                        setPage(0);
-                      }}
+                      onChange={setSubjectFilter}
                       options={subjectOptions()}
                     />
                   </div>
                 }
               />
-            </Suspense>
+            </Show>
           </section>
         </TabsContent>
       </Tabs>

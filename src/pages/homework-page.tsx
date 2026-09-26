@@ -14,6 +14,7 @@ import { RouteGuard } from "@/components/layout/route-guard";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { DatePicker } from "@/components/ui/date-picker";
 import { IconEye, IconPlus, IconRotateCcw } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
 import { hasMinRole } from "@/lib/roles";
 import { createUrlString } from "@/lib/url-state";
+import { cn } from "@/lib/cn";
 import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
@@ -45,6 +47,10 @@ function dateInputToMs(date: string, time: string): number | null {
   if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day || d.getHours() !== hour || d.getMinutes() !== minute) return null;
   return d.getTime();
 }
+
+// The course combobox is a bordered div, not a <button>, so the DataTable
+// filters slot cannot size it: it takes the toolbar pill by hand.
+const COURSE_FILTER_CLASS = cn(TOOLBAR_CONTROL, "min-w-[12rem] max-w-[18rem] [&_input]:text-[13px]");
 
 export default function HomeworkPage() {
   return (
@@ -304,7 +310,7 @@ function HomeworkContent() {
                   <label for="homework-course-filter" class="text-xs font-semibold text-muted-foreground">{t("nav.courses")}:</label>
                   <SearchableSelect
                     id="homework-course-filter"
-                    class="h-8 min-w-[12rem] max-w-[18rem]"
+                    class={cn(COURSE_FILTER_CLASS, courseFilter() !== "all" && "border-primary text-primary-text")}
                     value={courseFilter()}
                     onChange={(val) => setCourseFilter(val)}
                     options={courseFilterOptions()}
@@ -314,7 +320,7 @@ function HomeworkContent() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      class="h-8 rounded-lg px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground"
+                      class="font-medium text-muted-foreground hover:text-foreground"
                       onClick={() => setCourseFilter("all")}
                     >
                       <IconRotateCcw class="mr-1 h-3.5 w-3.5" />
@@ -325,7 +331,7 @@ function HomeworkContent() {
               }
               actions={
                 <Show when={canCreate()}>
-                  <Button type="button" size="sm" class="rounded-lg" onClick={() => { setSelectedCourseId(preferredCourseId()); setCreateOpen(true); }}>
+                  <Button type="button" size="sm" onClick={() => { setSelectedCourseId(preferredCourseId()); setCreateOpen(true); }}>
                     <IconPlus class="h-4 w-4" />
                     {t("homework.add")}
                   </Button>

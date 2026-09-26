@@ -1,5 +1,7 @@
 import { For, Show, Suspense, createEffect, createSignal, lazy } from "solid-js";
 import { createResource } from "@/lib/create-resource";
+import { createInfiniteList } from "@/lib/infinite-list";
+import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
 import { Link, useLocation, useNavigate, useSearch } from "@tanstack/solid-router";
 import { getQuestions, postQuestion, deleteQuestionById } from "@/api/shared";
 import { getSettings } from "@/api/settings";
@@ -45,10 +47,14 @@ function QuestionsContent() {
 
   const statusFilter = () => ((searchParams() as any).status === "pending" ? "pending" : "approved");
 
-  const [list, { refetch }] = createResource(
-    () => ({ status: statusFilter(), limit: 50, offset: 0 }),
-    async (params) => (await getQuestions(params.status as "pending" | "approved", params)).items
+  // The status is the only filter and the backend applies it, so the pool
+  // loads a page at a time as the reader scrolls (it used to stop at 50).
+  const questions = createInfiniteList(
+    () => statusFilter(),
+    (status, paging) => getQuestions(status, paging),
   );
+  const list = () => questions.items();
+  const refetch = () => questions.reload();
 
   const [askOpen, setAskOpen] = createSignal(location().searchStr.includes("action=new"));
   const [questionToDelete, setQuestionToDelete] = createSignal<any | null>(null);
@@ -100,7 +106,7 @@ function QuestionsContent() {
         description={t("pool.subtitle")}
         actions={
           <Show when={auth.user()?.role === "student"}>
-            <Button type="button" size="sm" class="rounded-lg" onClick={() => setAskOpen(true)}>
+            <Button type="button" size="sm" onClick={() => setAskOpen(true)}>
               <IconPlus class="h-4 w-4" />
               {t("pool.ask")}
             </Button>
@@ -108,9 +114,11 @@ function QuestionsContent() {
         }
       >
         <div class="-mx-4 -mb-4 border-t border-border-hairline">
-        <Suspense fallback={<PageSpinner />}>
-          <Show when={list()}>
-            <Show when={list()!.length > 0} fallback={<EmptyState kind="search" title={t("pool.noQuestions")} />}>
+        <Show when={questions.error()}>
+          {(err) => <p class="p-4 text-sm text-destructive-text">{formatApiError(err())}</p>}
+        </Show>
+        <Show when={!questions.initialLoading()} fallback={<PageSpinner />}>
+            <Show when={list().length > 0} fallback={<EmptyState kind="search" title={t("pool.noQuestions")} />}>
               <div class="divide-y divide-border">
                 <For each={list()}>
                   {(question) => (
@@ -164,9 +172,16 @@ function QuestionsContent() {
                   )}
                 </For>
               </div>
+              <InfiniteSentinel
+                class="px-4 py-3"
+                hasMore={questions.hasMore()}
+                loading={questions.loading()}
+                onLoadMore={questions.loadMore}
+                shown={list().length}
+                total={questions.total()}
+              />
             </Show>
-          </Show>
-        </Suspense>
+        </Show>
         </div>
       </DataSection>
 

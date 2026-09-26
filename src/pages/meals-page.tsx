@@ -95,7 +95,7 @@ function MealsContent() {
         description={t("meals.subtitle")}
         actions={
           <Show when={canManage()}>
-            <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setShowCreate(true)}>
+            <Button size="sm" class="min-w-[7.5rem]" onClick={() => setShowCreate(true)}>
               <IconPlus class="h-4 w-4" />
               {t("meals.publish")}
             </Button>

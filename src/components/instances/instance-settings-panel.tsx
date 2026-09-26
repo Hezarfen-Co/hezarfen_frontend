@@ -137,7 +137,7 @@ export function InstanceSettingsPanel(props: {
         description={t("instances.contentHelp")}
         actions={
           <Show when={props.canManage}>
-            <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setEditingContent(true)}>
+            <Button type="button" size="sm" variant="outline" onClick={() => setEditingContent(true)}>
               <IconEdit class="h-4 w-4" />
               {t("instances.editContent")}
             </Button>
@@ -179,17 +179,6 @@ export function InstanceSettingsPanel(props: {
       <DataSection
         title={t("instances.examWeightsTitle")}
         description={`${t("instances.examWeightsHelp")} ${props.instance.exam_weights_inherited ? t("instances.examWeightsInheritedHint") : t("instances.examWeightsOwnHint")}`}
-        actions={
-          <Show when={props.canManage}>
-            <Show when={!props.instance.exam_weights_inherited}>
-              {resetButton({ fields: ["exam_weights"], label: t("instances.examWeightsTitle"), run: () => deleteInstanceExamWeights(props.instance.id) })}
-            </Show>
-            <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setWeightEditing("new")}>
-              <IconPlus class="h-4 w-4" />
-              {t("instances.addWeight")}
-            </Button>
-          </Show>
-        }
       >
         <OverrideBadge own={!props.instance.exam_weights_inherited} />
         <ExamWeightsEditor
@@ -200,6 +189,17 @@ export function InstanceSettingsPanel(props: {
           onEditingChange={setWeightEditing}
           onSet={(entry) => mutate(() => patchInstanceExamWeight(props.instance.id, entry))}
           onRemove={props.instance.exam_weights_inherited ? undefined : (kind) => mutate(() => deleteInstanceExamWeightByKind(props.instance.id, kind))}
+          actions={
+            <Show when={props.canManage}>
+              <Show when={!props.instance.exam_weights_inherited}>
+                {resetButton({ fields: ["exam_weights"], label: t("instances.examWeightsTitle"), run: () => deleteInstanceExamWeights(props.instance.id) })}
+              </Show>
+              <Button type="button" size="sm" onClick={() => setWeightEditing("new")}>
+                <IconPlus class="h-4 w-4" />
+                {t("instances.addWeight")}
+              </Button>
+            </Show>
+          }
         />
       </DataSection>
 

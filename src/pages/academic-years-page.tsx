@@ -23,7 +23,6 @@ import { ErrorAlert } from "@/components/ui/error-alert";
 import { IconArchive, IconEdit, IconEye, IconPlus, IconRotateCcw, IconTrash } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PageHeader } from "@/components/layout/page-header";
 import { Select } from "@/components/ui/select";
 import { SidePanel } from "@/components/ui/side-panel";
 import { TableRowActions } from "@/components/ui/table-row-actions";
@@ -246,8 +245,6 @@ function AcademicYearsContent() {
 
   return (
     <div class="space-y-6">
-      <PageHeader title={t("academicYears.title")} description={t("academicYears.subtitle")} />
-
       <Show when={flash()}>
         <Alert variant="success">{flash()}</Alert>
       </Show>
@@ -265,7 +262,7 @@ function AcademicYearsContent() {
             title={t("academicYears.title")}
             description={t("academicYears.subtitle")}
             actions={
-              <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreate}>
+              <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={openCreate}>
                 <IconPlus class="h-4 w-4" />
                 {t("academicYears.new")}
               </Button>

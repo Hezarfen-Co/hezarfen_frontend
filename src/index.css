@@ -160,9 +160,12 @@
   @apply border border-border/70 bg-transparent text-muted-foreground transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground;
 }
 
-/* AI action button uses the landing-page brand blue. */
+/* AI action button uses the landing-page brand blue. The border is
+   transparent and the tint is clipped inside it: a brand/20 rim on a
+   brand/10 fill read as one blob that looked bigger than the h-9 icon
+   controls beside it. */
 @utility topbar-ai-control {
-  @apply border border-brand/20 bg-brand/10 text-brand transition-colors hover:bg-brand/16 hover:text-brand;
+  @apply border border-transparent bg-brand/10 bg-clip-padding text-brand transition-colors hover:bg-brand/16 hover:text-brand;
 }
 
 @utility data-shell {

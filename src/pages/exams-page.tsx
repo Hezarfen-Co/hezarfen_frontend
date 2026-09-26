@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { IconChart, IconCheck, IconEdit, IconEye, IconPlus, IconRotateCcw, IconTrash } from "@/components/ui/icons";
 import { DropdownSelect } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -40,6 +41,9 @@ import { useAuth } from "@/stores/auth-context";
 import { usePreferences, useT } from "@/stores/preferences-context";
 
 const EXAM_PAGE_SIZE = 10;
+// The course combobox is a bordered div, not a <button>, so the DataTable
+// filters slot cannot size it: it takes the toolbar pill by hand.
+const COURSE_FILTER_CLASS = cn(TOOLBAR_CONTROL, "min-w-[12rem] max-w-[18rem] [&_input]:text-[13px]");
 
 type ExamRow = Exam & { displayStatus: ExamDisplayStatus };
 
@@ -397,7 +401,7 @@ function ExamsContent() {
                 description={t("exams.subtitle")}
                 actions={
                   canCreate() ? (
-                    <Button type="button" size="sm" class="min-w-[7.5rem] rounded-lg" onClick={openCreateModal}>
+                    <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={openCreateModal}>
                       <IconPlus class="h-4 w-4" />
                       {t("exams.create")}
                     </Button>
@@ -422,7 +426,7 @@ function ExamsContent() {
                     <label for="exams-course-filter" class="text-xs font-semibold text-muted-foreground">{t("nav.courses")}:</label>
                     <SearchableSelect
                       id="exams-course-filter"
-                      class="h-8 min-w-[12rem] max-w-[18rem]"
+                      class={cn(COURSE_FILTER_CLASS, courseFilter() !== "all" && "border-primary text-primary-text")}
                       value={courseFilter()}
                       onChange={(val) => setCourseFilter(val)}
                       options={[
@@ -446,7 +450,7 @@ function ExamsContent() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        class="h-8 rounded-lg px-3 text-[13px] font-medium text-muted-foreground hover:text-foreground"
+                        class="font-medium text-muted-foreground hover:text-foreground"
                         onClick={clearFilters}
                       >
                         <IconRotateCcw class="h-3.5 w-3.5 mr-1" />

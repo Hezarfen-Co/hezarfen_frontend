@@ -2,14 +2,14 @@ import {
   For,
   Show,
   createMemo,
-  createEffect,
   createSignal,
   Suspense,
   useTransition,
 } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { RouteGuard } from "@/components/layout/route-guard";
-import { TablePagination } from "@/components/ui/table-pagination";
+import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
+import { createInfiniteList } from "@/lib/infinite-list";
 import { Button } from "@/components/ui/button";
 import {
   IconArchive,
@@ -20,6 +20,7 @@ import {
   IconRefresh,
 } from "@/components/ui/icons";
 import { DataTableSearch } from "@/components/ui/data-table-search";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { GmailMailRow } from "@/components/messages/gmail-mail-row";
 import { GmailMailDetail } from "@/components/messages/gmail-mail-detail";
 import { GmailComposeBox } from "@/components/messages/gmail-compose-box";
@@ -49,8 +50,6 @@ export default function MessagesPage() {
   const t = useT();
   const auth = useAuth();
   const [folder, setFolder] = createSignal<MessageFolder>("inbox");
-  const [page, setPage] = createSignal(1);
-  const limit = 30;
   const [selectedId, setSelectedId] = createSignal<string>("");
   const [query, setQuery, debouncedQuery] = createDebouncedSignal();
   const [composeOpen, setComposeOpen] = createSignal(false);
@@ -58,27 +57,20 @@ export default function MessagesPage() {
   const [isPending, startTransition] = useTransition();
   const [, setFlash] = createFlash();
 
-  const [messagePage, { refetch }] = createResource(
-    () => ({ f: folder(), p: page(), q: debouncedQuery().trim() }),
-    async (args) =>
-      await getMessages(args.f, {
-        limit,
-        offset: (args.p - 1) * limit,
-        ...(args.q ? { q: args.q } : {}),
-      })
+  // Folder and search are both applied by the backend, so the list loads a
+  // page at a time as the reader scrolls and starts over on either change.
+  const messageList = createInfiniteList(
+    () => ({ f: folder(), q: debouncedQuery().trim() }),
+    (args, paging) => getMessages(args.f, { ...paging, ...(args.q ? { q: args.q } : {}) }),
+    { equals: (a, b) => a.f === b.f && a.q === b.q },
   );
-  createEffect(() => {
-    const total = messagePage()?.total;
-    if (total === undefined) return;
-    const lastPage = Math.max(1, Math.ceil(total / limit));
-    if (page() > lastPage) setPage(lastPage);
-  });
+  const refetch = async () => messageList.reload();
 
   const [unreadCount, { refetch: refetchUnread }] = createResource(
     async () => (await getMessages("inbox", { read: false, limit: 1 })).total
   );
 
-  const rawMessages = createMemo(() => messagePage()?.items ?? []);
+  const rawMessages = createMemo(() => messageList.items());
 
   // En yeni mesaj en üstte sıralama
   const messages = createMemo(() =>
@@ -155,7 +147,7 @@ export default function MessagesPage() {
   /** Empty trash deletes the loaded page only; the summary says so when more remain. */
   const emptyTrashSummary = () => {
     const count = messages().length;
-    const total = messagePage()?.total ?? count;
+    const total = messageList.total() || count;
     return total > count
       ? t("messages.emptyTrashPageSummary", { count, total })
       : t("messages.emptyTrashSummary", { count });
@@ -202,7 +194,7 @@ export default function MessagesPage() {
                         type="button"
                         aria-current={active() ? "page" : undefined}
                         class={cn(
-                          "relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-0 py-1.5 text-[11px] font-semibold tracking-tight transition-colors sm:h-8 sm:tracking-normal sm:shrink-0 sm:flex-row sm:gap-2 sm:px-3 sm:py-0 sm:text-xs",
+                          "relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg px-0 py-1.5 text-[11px] font-semibold tracking-tight transition-colors sm:h-8 sm:rounded-full sm:tracking-normal sm:shrink-0 sm:flex-row sm:gap-2 sm:px-3.5 sm:py-0 sm:text-[13px]",
                           active()
                             ? entry.id === "trash"
                               ? "bg-destructive/10 text-destructive-text"
@@ -212,7 +204,6 @@ export default function MessagesPage() {
                         onClick={() =>
                           startTransition(() => {
                             setFolder(entry.id);
-                            setPage(1);
                             setSelectedId("");
                           })
                         }
@@ -239,7 +230,7 @@ export default function MessagesPage() {
               </nav>
               <Button
                 size="sm"
-                class="w-full shrink-0 rounded-lg sm:w-auto"
+                class={cn(TOOLBAR_CONTROL, "w-full shrink-0 px-3.5 sm:w-auto")}
                 onClick={() => setComposeOpen(true)}
               >
                 <IconPlus class="h-4 w-4" />
@@ -257,7 +248,7 @@ export default function MessagesPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      class="h-8 px-3 rounded-lg text-[13px] font-semibold shrink-0"
+                      class={cn(TOOLBAR_CONTROL, "shrink-0 px-3.5 font-semibold")}
                       onClick={handleRefresh}
                       disabled={isRefreshing()}
                       title={t("messages.refreshList")}
@@ -275,11 +266,7 @@ export default function MessagesPage() {
                       class="max-w-none"
                       placeholder={t("messages.search")}
                       value={query()}
-                      onChange={(value) => {
-                        setQuery(value);
-                        // The server filters from the first row; offset restarts with each search.
-                        setPage(1);
-                      }}
+                      onChange={setQuery}
                     />
                   </div>
 
@@ -288,7 +275,7 @@ export default function MessagesPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        class="h-8 rounded-lg text-[13px] text-destructive-text hover:bg-destructive/10"
+                        class={cn(TOOLBAR_CONTROL, "px-3.5 text-destructive-text hover:bg-destructive/10")}
                         onClick={() => setConfirmEmptyTrash(true)}
                       >
                         <IconTrash class="mr-1.5 h-3.5 w-3.5" />
@@ -296,13 +283,7 @@ export default function MessagesPage() {
                       </Button>
                     </Show>
 
-                    <Show when={messagePage()}>
-                      <span class="font-mono text-xs text-text-subtle shrink-0">
-                        {messagePage()!.total > 0
-                          ? `${(page() - 1) * limit + 1}-${Math.min(page() * limit, messagePage()!.total)} / ${messagePage()!.total}`
-                          : "0 / 0"}
-                      </span>
-                    </Show>
+
                   </div>
                 </div>
               </Show>
@@ -368,15 +349,15 @@ export default function MessagesPage() {
                         </Show>
                       </Suspense>
 
-                      <Show when={messagePage() && messagePage()!.total > limit}>
-                        <div class="p-4 border-t border-border-hairline">
-                          <TablePagination
-                            pageIndex={page()}
-                            onPageChange={setPage}
-                            pageCount={Math.ceil((messagePage()?.total ?? 0) / limit)}
-                          />
-                        </div>
-                      </Show>
+                      <div class="border-t border-border-hairline px-4 py-3">
+                        <InfiniteSentinel
+                          hasMore={messageList.hasMore()}
+                          loading={messageList.loading()}
+                          onLoadMore={messageList.loadMore}
+                          shown={messages().length}
+                          total={messageList.total()}
+                        />
+                      </div>
                     </div>
                   }
                 >

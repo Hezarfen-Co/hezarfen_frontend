@@ -92,7 +92,7 @@ export function CourseNotesPanel(props: {
           onSearchInput={setSearch}
           actions={
             <Show when={props.canManage}>
-              <Button type="button" size="sm" class="shrink-0 rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
+              <Button type="button" size="sm" class="shrink-0" onClick={() => props.onCreateOpenChange(true)}>
                 <IconPlus class="h-4 w-4" />{t("courseNotes.add")}
               </Button>
             </Show>

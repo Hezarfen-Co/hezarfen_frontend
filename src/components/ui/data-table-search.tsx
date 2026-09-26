@@ -51,7 +51,8 @@ export function DataTableSearch(props: DataTableSearchProps) {
         aria-describedby={props.hint ? hintId : undefined}
         // Touch screens get a touch-sized box at 16px (index.css): below that
         // iOS Safari zooms the page into a focused field. Compact otherwise.
-        class={cn("h-10 rounded-lg bg-muted/40 text-base sm:h-8 sm:text-[13px] md:text-[13px] touch:h-10", props.value ? "pl-9 pr-8" : "pl-9")}
+        // A pill, like every other toolbar control beside it.
+        class={cn("h-10 rounded-full bg-muted/40 text-base sm:h-8 sm:text-[13px] md:text-[13px] touch:h-10", props.value ? "pl-9 pr-8" : "pl-9")}
       />
       <Show when={props.value}>
         <button

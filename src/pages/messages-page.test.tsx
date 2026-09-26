@@ -46,8 +46,9 @@ afterEach(() => {
 test("emptying trash waits for confirmation and names what it deletes", async () => {
   getMessages.mockImplementation(async (folder: string) =>
     folder === "trash"
-      ? { items: [message(1), message(2)], total: 5, limit: 30, offset: 0 }
-      : { items: [], total: 0, limit: 30, offset: 0 },
+      // A full first page (50) of a 55-message trash: the rest is not loaded yet.
+      ? { items: Array.from({ length: 50 }, (_, i) => message(i + 1)), total: 55, limit: 50, offset: 0 }
+      : { items: [], total: 0, limit: 50, offset: 0 },
   );
   deleteMessageById.mockResolvedValue(undefined);
 
@@ -62,16 +63,16 @@ test("emptying trash waits for confirmation and names what it deletes", async ()
   fireEvent.click(await screen.findByRole("button", { name: /Empty trash|Çöp kutusunu boşalt/ }));
 
   const dialog = await screen.findByRole("alertdialog");
-  expect(dialog.textContent).toMatch(/2 mesaj|2 messages/);
-  expect(dialog.textContent).toMatch(/toplam 5|5 in trash/);
+  expect(dialog.textContent).toMatch(/50 mesaj|50 messages/);
+  expect(dialog.textContent).toMatch(/toplam 55|55 in trash/);
   expect(deleteMessageById).not.toHaveBeenCalled();
 
   fireEvent.click(within(dialog).getByRole("button", { name: /Empty trash|Çöp kutusunu boşalt/ }));
-  await waitFor(() => expect(deleteMessageById).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(deleteMessageById).toHaveBeenCalledTimes(50));
 });
 
 test("searching hits the server with a trimmed q at first-page offset", async () => {
-  getMessages.mockResolvedValue({ items: [message(1)], total: 1, limit: 30, offset: 0 });
+  getMessages.mockResolvedValue({ items: [message(1)], total: 1, limit: 50, offset: 0 });
 
   render(() => (
     <PreferencesProvider>
@@ -83,6 +84,6 @@ test("searching hits the server with a trimmed q at first-page offset", async ()
   fireEvent.input(search, { target: { value: "  Subject 7  " } });
 
   await waitFor(() =>
-    expect(getMessages).toHaveBeenCalledWith("inbox", { limit: 30, offset: 0, q: "Subject 7" }),
+    expect(getMessages).toHaveBeenCalledWith("inbox", { limit: 50, offset: 0, q: "Subject 7" }),
   );
 });

@@ -52,7 +52,7 @@ export function TableRowActions(props: { label: string; actions: TableRowAction[
         <DropdownMenuTrigger
           class={props.compact
             ? "inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-muted-foreground outline-hidden transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-expanded:bg-muted data-expanded:text-foreground"
-            : "inline-flex h-8 min-w-[78px] cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border/80 bg-muted/45 px-2 text-xs font-semibold text-foreground outline-hidden transition-colors hover:border-primary/30 hover:bg-primary/8 hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-primary/30 data-expanded:bg-primary/10 data-expanded:text-primary-text"}
+            : "inline-flex h-8 min-w-[78px] cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border/80 bg-muted/45 px-2 text-xs font-semibold text-foreground outline-hidden transition-colors hover:border-border hover:bg-primary/8 hover:text-primary-text focus-visible:ring-2 focus-visible:ring-ring data-expanded:border-border data-expanded:bg-primary/10 data-expanded:text-primary-text"}
           data-row-actions-trigger
           aria-label={props.label}
           title={props.label}

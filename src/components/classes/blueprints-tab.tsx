@@ -201,7 +201,7 @@ export function BlueprintsTab(props: {
           actions={
             <Button
               size="sm"
-              class="rounded-lg"
+              class="min-w-[7.5rem]"
               onClick={() => {
                 setEditing(null);
                 setPanelOpen(true);

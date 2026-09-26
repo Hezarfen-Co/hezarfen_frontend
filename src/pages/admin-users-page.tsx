@@ -98,7 +98,7 @@ function AdminUsersContent() {
               title={t("admin.title")}
               description={t("admin.subtitle")}
               actions={
-                <Button size="sm" class="min-w-[7.5rem] rounded-lg" onClick={() => setCreating(true)}>
+                <Button size="sm" class="min-w-[7.5rem]" onClick={() => setCreating(true)}>
                   <IconPlus class="mr-1.5 h-4 w-4" />
                   {t("admin.createUser")}
                 </Button>

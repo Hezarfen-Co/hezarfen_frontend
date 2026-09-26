@@ -3,8 +3,10 @@ import { formatApiError } from "@/api/client";
 import type { Subject } from "@/api/client";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { IconPlus, IconX } from "@/components/ui/icons";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { cn } from "@/lib/cn";
 import { useT } from "@/stores/preferences-context";
 
 /**
@@ -67,9 +69,11 @@ export function SubjectSetEditor(props: {
       </Show>
       <Show when={props.canEdit}>
         <Show when={addable().length > 0} fallback={<p class="text-xs text-muted-foreground">{t("instances.allSubjectsSelected")}</p>}>
+          {/* Picker and button are one control row: both take the toolbar
+              pill so the button is not a 26px chip beside a 36px field. */}
           <div class="flex flex-wrap items-center gap-2">
             <SearchableSelect
-              class="min-w-56 flex-1 sm:max-w-sm"
+              class={cn(TOOLBAR_CONTROL, "min-w-56 flex-1 sm:max-w-sm [&_input]:text-[13px]")}
               value={pick()}
               onChange={setPick}
               placeholder={t("instances.addSubject")}
@@ -79,7 +83,7 @@ export function SubjectSetEditor(props: {
               type="button"
               size="sm"
               variant="outline"
-              class="rounded-lg"
+              class={cn(TOOLBAR_CONTROL, "px-3.5")}
               disabled={!pick() || pending()}
               onClick={() => void run(async () => { await props.onAdd(pick()); setPick(""); })}
             >

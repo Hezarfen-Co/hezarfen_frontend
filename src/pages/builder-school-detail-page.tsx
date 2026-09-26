@@ -104,17 +104,19 @@ function BuilderSchoolDetailContent() {
                 title={current().name}
                 description={`${current().id} · ${t("builder.createdAt")}: ${formatDateTime(current().created_at, locale())}`}
                 actions={
-                  <div class="flex flex-wrap items-center gap-2">
+                  // One pill height for every header control: the buttons and
+                  // the row-actions trigger (h-8 on its own) sit in one row.
+                  <div class="flex flex-wrap items-center gap-2 [&_button]:h-10 [&_button]:rounded-full [&_button]:px-3.5 [&_button]:text-[13px] sm:[&_button]:h-8 touch:[&_button]:h-10">
                     <SchoolStatusBadge status={current().status} />
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={openEdit}>
+                    <Button type="button" variant="outline" size="sm" onClick={openEdit}>
                       <IconEdit class="h-4 w-4" />
                       {t("common.edit")}
                     </Button>
-                    <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setAccessMode("password")}>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setAccessMode("password")}>
                       <IconLock class="h-4 w-4" />
                       {t("builder.resetAdminPassword")}
                     </Button>
-                    <Button type="button" size="sm" class="rounded-lg" disabled={current().status === "suspended"} title={current().status === "suspended" ? t("builder.enterSuspendedHint") : undefined} onClick={() => setAccessMode("enter")}>
+                    <Button type="button" size="sm" disabled={current().status === "suspended"} title={current().status === "suspended" ? t("builder.enterSuspendedHint") : undefined} onClick={() => setAccessMode("enter")}>
                       <IconExternalLink class="h-4 w-4" />
                       {t("builder.enterSchool")}
                     </Button>

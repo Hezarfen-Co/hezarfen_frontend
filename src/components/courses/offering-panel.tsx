@@ -33,7 +33,6 @@ import { gradeLevelLabel } from "@/lib/grade-level";
 import { useT } from "@/stores/preferences-context";
 
 const SECTION = "space-y-3 border-t border-border-hairline pt-4";
-const SECTION_HEAD = "flex flex-wrap items-start justify-between gap-2";
 
 /**
  * One grade template of a catalog course: `offering` null creates it (grade
@@ -199,36 +198,28 @@ export function OfferingPanel(props: {
               </section>
 
               <section class={SECTION}>
-                <div class={SECTION_HEAD}>
-                  <div class="flex items-center gap-1">
-                    <h3 class="text-sm font-semibold">{t("weeklyPlan.title")}</h3>
-                    <InfoTip text={t("offerings.weeklyPlanHelp")} label={t("common.infoAbout", { item: t("weeklyPlan.title") })} />
-                  </div>
-                  <Show when={props.canEdit}>
-                    <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setAddingSlot(true)}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("weeklyPlan.addSlot")}
-                    </Button>
-                  </Show>
+                <div class="flex items-center gap-1">
+                  <h3 class="text-sm font-semibold">{t("weeklyPlan.title")}</h3>
+                  <InfoTip text={t("offerings.weeklyPlanHelp")} label={t("common.infoAbout", { item: t("weeklyPlan.title") })} />
                 </div>
                 <WeeklyPlanTable
                   slots={slots.latest ?? []}
                   onRemove={props.canEdit ? (slot: WeeklySlot) => void guard(async () => { await deleteOfferingWeeklySlotById(offering().id, slot.id); await refetchSlots(); }) : undefined}
+                  actions={
+                    <Show when={props.canEdit}>
+                      <Button type="button" size="sm" onClick={() => setAddingSlot(true)}>
+                        <IconPlus class="h-4 w-4" />
+                        {t("weeklyPlan.addSlot")}
+                      </Button>
+                    </Show>
+                  }
                 />
               </section>
 
               <section class={SECTION}>
-                <div class={SECTION_HEAD}>
-                  <div class="flex items-center gap-1">
-                    <h3 class="text-sm font-semibold">{t("instances.examWeightsTitle")}</h3>
-                    <InfoTip text={t("offerings.weightsHelp")} label={t("common.infoAbout", { item: t("instances.examWeightsTitle") })} />
-                  </div>
-                  <Show when={props.canEdit}>
-                    <Button type="button" size="sm" variant="outline" class="rounded-lg" onClick={() => setWeightEditing("new")}>
-                      <IconPlus class="h-4 w-4" />
-                      {t("instances.addWeight")}
-                    </Button>
-                  </Show>
+                <div class="flex items-center gap-1">
+                  <h3 class="text-sm font-semibold">{t("instances.examWeightsTitle")}</h3>
+                  <InfoTip text={t("offerings.weightsHelp")} label={t("common.infoAbout", { item: t("instances.examWeightsTitle") })} />
                 </div>
                 <ExamWeightsEditor
                   weights={weights.latest ?? []}
@@ -238,6 +229,14 @@ export function OfferingPanel(props: {
                   onEditingChange={setWeightEditing}
                   onSet={async (entry) => { await patchOfferingExamWeight(offering().id, entry); await refetchWeights(); }}
                   onRemove={async (kind) => { await deleteOfferingExamWeightByKind(offering().id, kind); await refetchWeights(); }}
+                  actions={
+                    <Show when={props.canEdit}>
+                      <Button type="button" size="sm" onClick={() => setWeightEditing("new")}>
+                        <IconPlus class="h-4 w-4" />
+                        {t("instances.addWeight")}
+                      </Button>
+                    </Show>
+                  }
                 />
               </section>
 

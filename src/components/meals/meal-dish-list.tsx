@@ -2,8 +2,10 @@ import { For, Show } from "solid-js";
 import type { MealDish } from "@/api/client";
 import { MealDishRow } from "@/components/meals/meal-dish-row";
 import { Button } from "@/components/ui/button";
+import { TOOLBAR_CONTROL } from "@/components/ui/data-toolbar";
 import { EmptyInline } from "@/components/ui/empty-inline";
 import { IconAlert, IconPlus } from "@/components/ui/icons";
+import { cn } from "@/lib/cn";
 import { dietaryTagLabel, formatTry } from "@/lib/meals";
 import { useT } from "@/stores/preferences-context";
 
@@ -27,7 +29,7 @@ export function MealDishList(props: {
           <p class="mt-1 text-sm text-muted-foreground">{t("meals.dishCount", { count: props.dishes.length })}</p>
         </div>
         <Show when={props.canManage}>
-          <Button variant="outline" size="sm" class="rounded-lg" onClick={props.onAdd}>
+          <Button variant="outline" size="sm" class={cn(TOOLBAR_CONTROL, "px-3.5")} onClick={props.onAdd}>
             <IconPlus class="h-4 w-4" />
             {t("meals.addDish")}
           </Button>

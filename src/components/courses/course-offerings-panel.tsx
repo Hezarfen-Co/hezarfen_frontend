@@ -105,7 +105,7 @@ export function CourseOfferingsPanel(props: { courseId: string; courseTitle: str
           onRowClick={(offering) => open(offering)}
           actions={
             <Show when={props.canEdit}>
-              <Button type="button" size="sm" class="rounded-lg" onClick={() => open(null)}>
+              <Button type="button" size="sm" onClick={() => open(null)}>
                 <IconPlus class="h-4 w-4" />
                 {t("offerings.new")}
               </Button>

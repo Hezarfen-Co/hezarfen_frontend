@@ -13,6 +13,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { TOOLBAR_SLOT } from "@/components/ui/data-toolbar";
 import { DetailField } from "@/components/ui/detail-field";
 import { IconAlert, IconCheck, IconChevronLeft, IconClock, IconExam, IconEye, IconUsers } from "@/components/ui/icons";
 import { PageSpinner } from "@/components/ui/page-spinner";
@@ -263,9 +264,12 @@ function LiveMonitorContent() {
                 title={ex().title}
                 description={isFinished() ? t("exams.finalStateDesc") : t("exams.liveMonitorDesc")}
                 actions={
-                  <div class="flex w-full flex-wrap items-center gap-1 rounded-lg border bg-background/80 p-1 shadow-xs sm:w-auto">
-                    <Link to="/exams/$id" params={{ id: id() }}>
-                      <Button variant="ghost" size="sm" class="w-full rounded-md sm:w-auto">
+                  // A header control takes the toolbar pill, not a 26px ghost
+                  // button inside a box of its own. The Link is `contents` so
+                  // the slot sizes the Button, not the anchor around it.
+                  <div class={cn("flex w-full flex-wrap items-center gap-2 sm:w-auto", TOOLBAR_SLOT)}>
+                    <Link to="/exams/$id" params={{ id: id() }} class="contents">
+                      <Button variant="outline" size="sm" class="w-full sm:w-auto">
                         <IconChevronLeft class="h-4 w-4" />
                         {t("common.back")}
                       </Button>

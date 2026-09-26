@@ -427,7 +427,7 @@ function ClassesContent() {
                 }
                 actions={
                   <Show when={canManage()}>
-                    <Button type="button" size="sm" class="rounded-lg" onClick={() => setShowForm(true)}>
+                    <Button type="button" size="sm" class="min-w-[7.5rem]" onClick={() => setShowForm(true)}>
                       <IconPlus class="h-4 w-4" />
                       {t("classGroups.newClass")}
                     </Button>

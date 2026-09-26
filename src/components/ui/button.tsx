@@ -9,11 +9,18 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         // Flat (no shadows), neutral fills, subtle hairline outlines.
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        // Filled variants carry a transparent 1px border and clip their fill
+        // to the padding box: the box matches an outline button's height, and
+        // the visible fill sits 1px inside it like an outline's hairline, so a
+        // filled pill never reads bigger than the bordered pill next to it.
+        // A filled button never gets a border in its own fill colour.
+        default: "border border-transparent bg-primary bg-clip-padding text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "border border-transparent bg-destructive bg-clip-padding text-destructive-foreground hover:bg-destructive/90",
         outline:
           "border border-border/70 bg-transparent hover:border-border hover:bg-muted/60 hover:text-foreground",
-        secondary: "border border-border/60 bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        secondary:
+          "border border-transparent bg-secondary bg-clip-padding text-secondary-foreground hover:bg-secondary/80",
         ghost: "text-foreground/75 hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
         link: "text-primary-text underline-offset-4 hover:underline active:scale-100",
       },

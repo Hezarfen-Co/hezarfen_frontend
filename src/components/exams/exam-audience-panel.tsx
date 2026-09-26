@@ -186,7 +186,7 @@ export function ExamAudiencePanel(props: {
             enableColumnVisibility={false}
             actions={
               <Show when={props.canManage}>
-                <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => setAddOpen(true)}>
+                <Button type="button" size="sm" onClick={() => setAddOpen(true)}>
                   <IconPlus class="h-4 w-4" />
                   {t("exams.audience.add")}
                 </Button>

@@ -224,7 +224,7 @@ export function CourseHomeworkPanel(props: {
           emptyIllustration="homework"
           onRowClick={(item) => void navigate({ to: "/homework/$id", params: { id: item.id } })}
           actions={props.canManage ? (
-            <Button type="button" variant="outline" size="sm" class="rounded-lg" onClick={() => props.onCreateOpenChange(true)}>
+            <Button type="button" size="sm" onClick={() => props.onCreateOpenChange(true)}>
               <IconPlus class="h-4 w-4" />{t("homework.add")}
             </Button>
           ) : undefined}
