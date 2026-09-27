@@ -99,6 +99,8 @@ export type DataTableProps<TData, TValue = unknown> = {
    */
   mobileLayout?: "cards" | "scroll";
   onRowClick?: (row: TData) => void;
+  /** Reports the rows on the rendered page after paging, search, or sorting changes. */
+  onPageRowsChange?: (rows: TData[]) => void;
   onSearchInput?: (value: string) => void;
   /** Rows per page on a wide screen; client tables use fewer on phones. */
   pageSize?: number;
@@ -339,6 +341,7 @@ export function DataTable<TData, TValue = unknown>(props: DataTableProps<TData, 
     if (clientPageIndex() > last) setClientPageIndex(last);
   });
   const visibleRows = () => table.getRowModel().rows;
+  createEffect(on(visibleRows, (rows) => props.onPageRowsChange?.(rows.map((row) => row.original))));
   let sentinel: HTMLDivElement | undefined;
   const observing = typeof IntersectionObserver !== "undefined";
   const nearEnd = () => !!sentinel && sentinel.getBoundingClientRect().top < window.innerHeight + REVEAL_MARGIN_PX;

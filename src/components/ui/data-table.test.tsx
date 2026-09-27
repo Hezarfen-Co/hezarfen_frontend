@@ -119,6 +119,37 @@ test("paginates client rows without observing the scroll position", () => {
   }
 });
 
+test("reports rendered client and manual page rows", () => {
+  const rows = Array.from({ length: 12 }, (_, index) => ({ name: `Person ${index + 1}` }));
+  const onPageRowsChange = vi.fn();
+  const client = render(() => (
+    <PreferencesProvider>
+      <DataTable columns={[columns[0]]} data={rows} onPageRowsChange={onPageRowsChange} enableColumnVisibility={false} />
+    </PreferencesProvider>
+  ));
+  expect(onPageRowsChange.mock.lastCall?.[0].map((row: Row) => row.name)).toEqual(rows.slice(0, 10).map((row) => row.name));
+  fireEvent.click(screen.getByRole("button", { name: /Next|Sonraki/ }));
+  expect(onPageRowsChange.mock.lastCall?.[0].map((row: Row) => row.name)).toEqual(["Person 11", "Person 12"]);
+  client.unmount();
+
+  onPageRowsChange.mockClear();
+  const [page, setPage] = createSignal(0);
+  render(() => (
+    <PreferencesProvider>
+      <DataTable
+        columns={[columns[0]]}
+        data={rows.slice(page() * 5, page() * 5 + 5)}
+        manualPagination={{ pageIndex: page(), pageSize: 5, total: rows.length, onPageChange: setPage }}
+        onPageRowsChange={onPageRowsChange}
+        enableColumnVisibility={false}
+      />
+    </PreferencesProvider>
+  ));
+  expect(onPageRowsChange.mock.lastCall?.[0].map((row: Row) => row.name)).toEqual(rows.slice(0, 5).map((row) => row.name));
+  fireEvent.click(screen.getByRole("button", { name: /Next|Sonraki/ }));
+  expect(onPageRowsChange.mock.lastCall?.[0].map((row: Row) => row.name)).toEqual(rows.slice(5, 10).map((row) => row.name));
+});
+
 test("without IntersectionObserver client rows still paginate", () => {
   vi.stubGlobal("IntersectionObserver", undefined);
   const rows = Array.from({ length: 60 }, (_, index) => ({ name: `Person ${index + 1}` }));

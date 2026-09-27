@@ -27,14 +27,37 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-test("shows teachers while section reads are still pending", async () => {
+test("shows teachers before the class list and fills both columns as reads finish", async () => {
+  let resolveClasses!: (value: unknown) => void;
+  let resolveInstances!: (value: unknown) => void;
   getUserSearch.mockResolvedValue({ items: [{ id: "t1", username: "teacher", display_name: "Ayşe" }] });
-  getClasses.mockResolvedValue({ items: [{ id: "c1", name: "9-A", grade_level: 9, teacher: null }] });
-  getCourses.mockResolvedValue({ items: [{ id: "math", title: "Math" }] });
-  getClassInstances.mockImplementation(() => new Promise(() => {}));
+  getClasses.mockImplementation(() => new Promise((resolve) => { resolveClasses = resolve; }));
+  getClassInstances.mockImplementation(() => new Promise((resolve) => { resolveInstances = resolve; }));
 
   render(() => <PreferencesProvider><TeachersRosterPage /></PreferencesProvider>);
 
   expect(await screen.findByText("Ayşe")).toBeTruthy();
+  expect(screen.getAllByLabelText("Loading…")).toHaveLength(2);
+  expect(getClasses).toHaveBeenCalledTimes(1);
+  expect(getClassInstances).not.toHaveBeenCalled();
+
+  resolveClasses({ items: [{ id: "c1", name: "9-A", grade_level: 9, teacher: { id: "t1" } }] });
+  expect(await screen.findByText("9-A")).toBeTruthy();
   await waitFor(() => expect(getClassInstances).toHaveBeenCalledTimes(1));
+  expect(screen.getAllByLabelText("Loading…")).toHaveLength(1);
+
+  resolveInstances({ items: [{ id: "i1", course: "math", title: "Advanced Math", teachers: [{ id: "t1" }] }] });
+  expect(await screen.findByText("Advanced Math — 9-A")).toBeTruthy();
+  expect(getCourses).not.toHaveBeenCalled();
+});
+
+test("does not walk classes when the teacher list is empty", async () => {
+  getUserSearch.mockResolvedValue({ items: [] });
+
+  render(() => <PreferencesProvider><TeachersRosterPage /></PreferencesProvider>);
+
+  expect(await screen.findByText("No teachers yet.")).toBeTruthy();
+  expect(getClasses).not.toHaveBeenCalled();
+  expect(getClassInstances).not.toHaveBeenCalled();
+  expect(getCourses).not.toHaveBeenCalled();
 });

@@ -1,3 +1,4 @@
+import { createEffect } from "solid-js";
 import { cleanup, fireEvent, render, screen, waitFor } from "@solidjs/testing-library";
 import { afterEach, expect, it, vi } from "vitest";
 import { InsightsBoard } from "./insights-board";
@@ -24,9 +25,15 @@ vi.mock("@/stores/preferences-context", () => ({
 vi.mock("@/components/ui/data-table", () => ({ DataTableSkeleton: () => null }));
 vi.mock("@/components/insights/insight-overview", () => ({ InsightOverview: () => null }));
 vi.mock("@/components/insights/insight-students-table", () => ({
-  InsightStudentsTable: (props: { onNeedMore: () => void }) => (
-    <button type="button" onClick={props.onNeedMore}>Load next rows</button>
-  ),
+  InsightStudentsTable: (props: { rows: { id: string }[]; onPageRowsChange: (rows: { id: string }[]) => void; onInspectAll: () => void }) => {
+    createEffect(() => props.onPageRowsChange(props.rows.slice(0, 10)));
+    return (
+      <div>
+        <button type="button" onClick={() => props.onPageRowsChange(props.rows.slice(10, 20))}>Next page</button>
+        <button type="button" onClick={props.onInspectAll}>Filter by signal</button>
+      </div>
+    );
+  },
 }));
 
 afterEach(() => {
@@ -35,7 +42,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-it("reads only the first 50 student insights until more rows are requested", async () => {
+it("reads only the displayed page, then new pages or a signal filter", async () => {
   api.getMyStudents.mockResolvedValue({ items: Array.from({ length: 200 }, (_, index) => ({
     id: `student-${index}`, username: `student-${index}`, display_name: `Student ${index}`,
   })) });
@@ -43,7 +50,10 @@ it("reads only the first 50 student insights until more rows are requested", asy
     user_id: id, summary: null, attention: [], cards: [], segments: [],
   }));
   render(() => <InsightsBoard />);
-  await waitFor(() => expect(api.getInsightByUserId).toHaveBeenCalledTimes(50));
-  fireEvent.click(screen.getByRole("button", { name: "Load next rows" }));
-  await waitFor(() => expect(api.getInsightByUserId).toHaveBeenCalledTimes(100));
+  await waitFor(() => expect(api.getInsightByUserId).toHaveBeenCalledTimes(10));
+  expect(api.getInsightByUserId).toHaveBeenCalledTimes(10);
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  await waitFor(() => expect(api.getInsightByUserId).toHaveBeenCalledTimes(20));
+  fireEvent.click(screen.getByRole("button", { name: "Filter by signal" }));
+  await waitFor(() => expect(api.getInsightByUserId).toHaveBeenCalledTimes(200));
 });

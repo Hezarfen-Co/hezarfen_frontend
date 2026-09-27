@@ -20,5 +20,5 @@ it("labels partial counts and averages with their current coverage", () => {
   }} />);
   expect(screen.getByText("40 / 200")).toBeTruthy();
   expect(screen.getByText("7 / 50")).toBeTruthy();
-  expect(screen.getAllByText("Reading 50 of 200 students…").length).toBeGreaterThan(0);
+  expect(screen.getAllByText("50 / 200").length).toBeGreaterThan(0);
 });

@@ -52,25 +52,27 @@ export function InsightsBoard() {
   // Each student's analysis lands in its row as it is read; rows start as
   // "not loaded" so the table and the overview never show a guessed value.
   const [signals, setSignals] = createSignal<Record<string, StudentSignal>>({});
-  const [requestedCount, setRequestedCount] = createSignal(0);
   let readGeneration = 0;
-  let requestThrough = (_count: number) => {};
+  let requestRows = (_rows: StudentSignal[]) => {};
+  let requestAll = () => {};
   createEffect(on(() => students.latest, (list) => {
     if (!list) return;
     const generation = ++readGeneration;
     const scope = auth.user()?.id ?? "";
-    let queued = 0;
+    const people = new Map(list.map((person) => [person.id, person]));
+    const requested = new Set<string>();
     let reads = Promise.resolve();
     setSignals(Object.fromEntries(list.map((person) => [person.id,
       cachedStudentSignal(person, scope) ?? toStudentSignal({ id: person.id, name: personLabel(person) }, null, null),
     ])));
-    setRequestedCount(Math.min(50, list.length));
-    requestThrough = (count) => {
-      const end = Math.min(count, list.length);
-      if (end <= queued) return;
-      const batch = list.slice(queued, end);
-      queued = end;
-      setRequestedCount(end);
+    const requestIds = (ids: string[]) => {
+      const batch = ids.flatMap((id) => {
+        const person = people.get(id);
+        if (!person || requested.has(id)) return [];
+        requested.add(id);
+        return [person];
+      });
+      if (!batch.length) return;
       reads = reads.then(() => {
         if (generation !== readGeneration) return;
         return loadStudentSignals(batch, (row) => {
@@ -78,7 +80,8 @@ export function InsightsBoard() {
         }, undefined, scope);
       });
     };
-    requestThrough(50);
+    requestRows = (pageRows) => requestIds(pageRows.map((row) => row.id));
+    requestAll = () => requestIds(list.map((person) => person.id));
   }));
   const rows = createMemo(() => Object.values(signals()));
   const overview = createMemo(() => insightOverview(rows(), students.latest?.length ?? 0));
@@ -112,9 +115,8 @@ export function InsightsBoard() {
           <section>
             <InsightStudentsTable
               rows={rows()}
-              hasMore={requestedCount() < (students.latest?.length ?? 0)}
-              onNeedMore={() => requestThrough(requestedCount() + 50)}
-              onInspectAll={() => requestThrough(students.latest?.length ?? 0)}
+              onPageRowsChange={(pageRows) => requestRows(pageRows)}
+              onInspectAll={() => requestAll()}
               title={tx("insights.title")}
               description={role() === "parent" ? tx("insights.parentSubtitle") : tx("insights.subtitle")}
               empty={role() === "parent" ? tx("insights.emptyLinkedStudents") : tx("insights.emptyStudents")}

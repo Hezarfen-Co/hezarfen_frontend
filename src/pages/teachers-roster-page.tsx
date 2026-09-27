@@ -3,9 +3,8 @@ import type { ColumnDef } from "@tanstack/solid-table";
 import { Show, Suspense, createMemo, createSignal } from "solid-js";
 import { createResource } from "@/lib/create-resource";
 import { matchesSearch } from "@/lib/search-text";
-import { getCourses } from "@/api/courses";
 import { getUserSearch } from "@/api/users";
-import { formatApiError, type Course, type PersonRef } from "@/api/client";
+import { formatApiError, type PersonRef } from "@/api/client";
 import { formatInstanceLabel, loadSchoolSections, classList } from "@/lib/instance-labels";
 import { RouteGuard } from "@/components/layout/route-guard";
 import { CreateUserPanel } from "@/components/users/create-user-panel";
@@ -23,9 +22,9 @@ const ROSTER_PAGE_SIZE = 10;
 type TeacherRow = {
   person: PersonRef;
   /** Classes this teacher is the homeroom teacher (sınıf öğretmeni) of. */
-  homeroom: string[];
+  homeroom: string[] | null;
   /** The sections they teach, as "<ders> — <şube>". */
-  sections: string[];
+  sections: string[] | null;
 };
 
 export default function TeachersRosterPage() {
@@ -47,37 +46,33 @@ function TeachersRosterContent() {
   const navigate = useNavigate();
   const [creating, setCreating] = createSignal(false);
 
-  const [data, { refetch }] = createResource(async () => {
-    const [teachers, classes] = await Promise.all([
-      getUserSearch("", undefined, "teacher"),
-      classList().then((items) => ({ items })),
-    ]);
+  const [data, { refetch }] = createResource(() => getUserSearch("", undefined, "teacher"));
+  const [homeroomNames] = createResource(() => data.latest?.items.length ? true : null, async () => {
+    const classes = await classList();
     const push = (map: Map<string, string[]>, id: string, value: string) => map.set(id, [...(map.get(id) ?? []), value]);
     const byName = (a: string, b: string) => a.localeCompare(b, "tr", { numeric: true });
     const homeroom = new Map<string, string[]>();
-    for (const cls of classes.items) if (cls.teacher) push(homeroom, cls.teacher.id, cls.name);
-    return teachers.items.map<TeacherRow>((person) => ({
-      person,
-      homeroom: (homeroom.get(person.id) ?? []).sort(byName),
-      sections: [],
-    }));
+    for (const cls of classes) if (cls.teacher) push(homeroom, cls.teacher.id, cls.name);
+    return new Map([...homeroom].map(([id, names]) => [id, names.sort(byName)]));
   });
-  const [sectionNames] = createResource(() => data.latest ? true : null, async () => {
-    const courses = await getCourses().catch(() => ({ items: [] as Course[] }));
-    const titles = new Map(courses.items.map((course) => [course.id, course.title]));
+  const [sectionNames] = createResource(() => data.latest?.items.length ? true : null, async () => {
     const push = (map: Map<string, string[]>, id: string, value: string) => map.set(id, [...(map.get(id) ?? []), value]);
     const byName = (a: string, b: string) => a.localeCompare(b, "tr", { numeric: true });
     const perClass = await loadSchoolSections();
     const sections = new Map<string, string[]>();
     for (const { klass, sections: instances } of perClass) {
       for (const instance of instances) {
-        const label = formatInstanceLabel(titles.get(instance.course) ?? null, klass.name);
+        const label = formatInstanceLabel(instance.title?.trim() || null, klass.name);
         for (const teacher of instance.teachers) push(sections, teacher.id, label);
       }
     }
     return new Map([...sections].map(([id, names]) => [id, [...new Set(names)].sort(byName)]));
   });
-  const mergedRows = createMemo(() => (data.latest ?? []).map((row) => ({ ...row, sections: sectionNames.latest?.get(row.person.id) ?? [] })));
+  const mergedRows = createMemo(() => (data.latest?.items ?? []).map<TeacherRow>((person) => ({
+    person,
+    homeroom: homeroomNames.latest ? homeroomNames.latest.get(person.id) ?? [] : null,
+    sections: sectionNames.latest ? sectionNames.latest.get(person.id) ?? [] : null,
+  })));
 
   const open = (row: TeacherRow) => void navigate({ to: "/profile/$userId", params: { userId: row.person.id } });
 
@@ -88,21 +83,25 @@ function TeachersRosterContent() {
       size: 260,
       // Empty lists read as "" so DataTable draws its one empty-cell dash,
       // the same one the homeroom column gets.
-      accessorFn: (row) => row.sections.join(", "),
+      accessorFn: (row) => row.sections?.join(", ") ?? "…",
       header: t("roster.taughtSections"),
       meta: { cellClass: "max-w-0" },
       cell: (cell) => {
         const list = cell.row.original.sections;
-        return <span class="block truncate text-sm" title={list.join("\n")}>{list.join(", ")}</span>;
+        return <Show when={list} fallback={<span class="inline-block h-4 w-20 animate-pulse rounded bg-muted" aria-label={t("common.loading")} />}>
+          {(names) => <span class="block truncate text-sm" title={names().join("\n")}>{names().join(", ")}</span>}
+        </Show>;
       },
     },
     {
       id: "homeroom",
       size: 130,
-      accessorFn: (row) => row.homeroom.join(", "),
+      accessorFn: (row) => row.homeroom?.join(", ") ?? "…",
       header: t("roster.homeroomOf"),
       meta: { cellClass: "max-w-0" },
-      cell: (cell) => <span class="block truncate text-sm" title={cell.row.original.homeroom.join(", ")}>{cell.row.original.homeroom.join(", ")}</span>,
+      cell: (cell) => <Show when={cell.row.original.homeroom} fallback={<span class="inline-block h-4 w-16 animate-pulse rounded bg-muted" aria-label={t("common.loading")} />}>
+        {(names) => <span class="block truncate text-sm" title={names().join(", ")}>{names().join(", ")}</span>}
+      </Show>,
     },
     {
       id: "actions",

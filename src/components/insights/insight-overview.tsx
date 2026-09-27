@@ -22,7 +22,7 @@ export function InsightOverview(props: { overview: Overview }) {
   const o = () => props.overview;
   const partial = () => o().loaded < o().total;
   const coverage = () => partial()
-    ? t("insights.overview.reading", { loaded: o().loaded, total: o().total })
+    ? `${o().loaded} / ${o().total}`
     : t("insights.overview.ofTotal", { total: o().total });
   return (
     <section class="space-y-2" aria-label={t("insights.summary")}>
@@ -47,7 +47,7 @@ export function InsightOverview(props: { overview: Overview }) {
       </div>
       <Show when={o().loaded < o().total}>
         <p class="text-xs text-muted-foreground" role="status">
-          {t("insights.overview.reading", { loaded: o().loaded, total: o().total })}
+          {coverage()}
         </p>
       </Show>
     </section>

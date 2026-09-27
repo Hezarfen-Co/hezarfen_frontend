@@ -1,4 +1,4 @@
-import { createMemo, createSignal, onCleanup, onMount, type JSX } from "solid-js";
+import { createMemo, createSignal, type JSX } from "solid-js";
 import { Link, useNavigate } from "@tanstack/solid-router";
 import type { ColumnDef } from "@tanstack/solid-table";
 import { Badge } from "@/components/ui/badge";
@@ -35,8 +35,7 @@ export function InsightStudentsTable(props: {
   description: string;
   empty: string;
   actions?: JSX.Element;
-  hasMore?: boolean;
-  onNeedMore?: () => void;
+  onPageRowsChange?: (rows: StudentSignal[]) => void;
   onInspectAll?: () => void;
 }) {
   const prefs = usePreferences();
@@ -45,19 +44,6 @@ export function InsightStudentsTable(props: {
   const t = (key: string, vars?: Record<string, string | number>) => prefs.t(key as never, vars);
   const rt = (key: Parameters<typeof runReportText>[1]) => runReportText(locale(), key);
   const [filter, setFilter] = createSignal<Filter>("all");
-  let sentinel: HTMLDivElement | undefined;
-  onMount(() => {
-    if (!sentinel) return;
-    if (typeof IntersectionObserver === "undefined") {
-      props.onInspectAll?.();
-      return;
-    }
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting) && props.hasMore) props.onNeedMore?.();
-    }, { rootMargin: "0px 0px 600px 0px" });
-    observer.observe(sentinel);
-    onCleanup(() => observer.disconnect());
-  });
   const visible = createMemo(() =>
     props.rows.filter((row) =>
       filter() === "attention" ? row.attention > 0 : filter() === "none" ? row.state === "no_summary" : true,
@@ -240,6 +226,7 @@ export function InsightStudentsTable(props: {
       actions={props.actions}
       columns={columns()}
       data={visible()}
+      onPageRowsChange={props.onPageRowsChange}
       onRowClick={(row) => void navigate({ to: "/ai/insights/$userId", params: { userId: row.id } })}
       empty={props.empty}
       emptyIllustration="people"
@@ -263,7 +250,6 @@ export function InsightStudentsTable(props: {
       tableClass="insight-grid-table min-w-[60rem]"
       storageKey="insight-students-v2"
     />
-    <div ref={sentinel} aria-hidden="true" class="h-px" />
     </div>
   );
 }
